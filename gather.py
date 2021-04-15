@@ -6,107 +6,14 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
-from citeproc.source.bibtex import BibTeX
-from citeproc import CitationStylesStyle, CitationStylesBibliography
-from citeproc import formatter
-from citeproc import Citation, CitationItem
-
 import os
-import sys
-import xlsxwriter
-import csv
-import tempfile
+import re
 import logging
 import hashlib
 
+from string import ascii_lowercase
+
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
-
-excel_row_index = 0
-
-def write_row(spreadsheet, row):
-    if isinstance(spreadsheet, xlsxwriter.worksheet.Worksheet):
-        global excel_row_index
-        column_index = 0
-        for item in row:
-            spreadsheet.write(excel_row_index, column_index, item)
-            column_index = column_index + 1
-        excel_row_index = excel_row_index + 1
-    else:
-        spreadsheet.writerow(row)
-    return
-
-def generate_spreadsheet(spreadsheet, bibfilename):
-    with open(bibfilename) as bibtex_file:
-        bp = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-
-        write_row(spreadsheet, ["citation_key",
-                                "author",
-                                "author_count",
-                                "title",
-                                "year",
-                                "type",
-                                "journal",
-                                "volume",
-                                "issue",
-                                "pages",
-                                "file_name",
-                                "number-of-cited-references",
-                                "times-cited",
-                                "doi"])
-        for entry in bp.get_entry_list():
-            # print(entry)
-            row = []
-            citation_key = entry.get("ID", "no id")
-            row.append(citation_key)
-            author = entry.get("author", "no author")
-            for src, target in replacements_author.items():
-                author = author.replace(src, target)
-            row.append(author)
-            author_count = str(author.count(","))
-            row.append(author_count)
-            title = entry.get("title", "no title")
-            for src, target in replacements_title.items():
-                title = title.replace(src, target)
-            row.append(title)
-            year = entry.get("year", "no year")
-            row.append(year)
-            publication_type = entry.get("type", "no type")
-            for src, target in replacements_publication_type.items():
-                publication_type = publication_type.replace(src, target)
-            row.append(publication_type)
-            journal = entry.get("journal", "no journal")
-            for src, target in replacements_journal.items():
-                journal = journal.replace(src, target)
-            booktitle = entry.get("booktitle", "no booktitle")
-            if journal == "no journal" and booktitle != "no booktitle":
-                journal = booktitle
-            row.append(journal)
-            volume = entry.get("volume", "no volume")
-            row.append(volume)
-            issue = entry.get("number", "no issue")
-            row.append(issue)
-            pages = entry.get("pages", "no pages")
-            row.append(pages)
-            file_name = entry.get("file", "no file")
-            for src, target in replacements_filename1.items():
-                file_name = file_name.replace(src, target)
-            for src, target in replacements_filename2.items():
-                file_name = file_name.replace(src, target)
-            row.append(file_name)
-            nr_cited_refs = entry.get(
-                "number-of-cited-references", "no Number-of-Cited-References")
-            row.append(nr_cited_refs)
-            no_cited = entry.get("times-cited", "no Times-Cited")
-            row.append(no_cited)
-            doi = entry.get("doi", "no doi")
-            row.append(doi)
-
-            write_row(spreadsheet, row)
-
-        bibtex_file.close()
-    return
-
 
 
 def gather(bibfilename, combined_bib_database):
@@ -118,29 +25,76 @@ def gather(bibfilename, combined_bib_database):
             
             string_to_hash = ''
             if('author' in entry):
+                entry['author'] = entry['author'].replace('\n', ' ')
+                # fix name format
+                if (' and ' in entry['author'] and not ', ' in entry['author']) or (1 == len(entry['author'].split(' ')[0])):
+                    names = entry['author'].split(' and ')
+                    entry['author'] = ''
+                    for name in names:
+                        name_parts = name.split(' ')
+                        print(' '.join(name_parts[1:]) + ', ' + name_parts[0])
+                        name = ' '.join(name_parts[1:]) + ', ' + name_parts[0]
+                        entry['author'] = entry['author'] + ' and ' + name
+                    if entry['author'].startswith(' and '):
+                        entry['author'] = entry['author'][5:]
+
                 string_to_hash += entry['author']
             if('title' in entry):
                 string_to_hash += entry['title']
+                entry['title'] = entry['title'].replace('\n', ' ')
+                words = entry['title'].split()
+                if sum([word.isupper() for word in words])/len(words) > 0.8:
+                    entry['title'] = entry['title'].capitalize()
             if('year' in entry):
                 string_to_hash += entry['year']
             if('journal' in entry):
                 string_to_hash += entry['journal']
-#            string_to_hash = string_to_hash.replace(' ','').lower()
-            entry['GS_ID'] = hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
-            print(entry['GS_ID'])
+            # string_to_hash = string_to_hash.replace(' ','').lower()
+            if('booktitle' in entry):
+                string_to_hash += entry['booktitle']
+                words = entry['booktitle'].split()
+                if sum([word.isupper() for word in words])/len(words) > 0.8:
+                    entry['booktitle'] = ' '.join([word.capitalize() for word in words])
+            if('abstract' in entry):
+                entry['abstract'] = entry['abstract'].replace('\n', ' ')
+
+            unwanted = ["note", "annote", "institution", "issn", "month", "researcherid-numbers", "unique-id", "orcid-numbers", "eissn", "type"]
+            for val in unwanted:
+                if(val in entry):
+                    entry.pop(val)
+
+            entry['hash_id'] = hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
+            entry['ID'] = entry['author'].split(' ')[0] + (entry['year'] if 'year' in entry else '')
+            entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
             
-    if combined_bib_database is None:
-        return bib_database
+            
+            # TODO: quality-improvements (e.g., sentence case for titles, format author names, remove trailing dot...)
+            # May even run a reference consolidation service?!?!
+            # https://citationstyles.org/authors/#/titles-in-sentence-and-title-case
+            
 
-    # TODO: case if there are already entries in the combined_bib (need to compare/integrate)
+    for entry in bib_database.entries:
+        
+        if 0 == len(combined_bib_database.entries):
+            combined_bib_database.entries.append(entry)
+            continue
+        
+        if not entry['hash_id'] in [x['hash_id'] for x in combined_bib_database.entries]: 
+
+            # Make sure the ID is unique (otherwise: append letters until this is the case)
+            temp_id = entry['ID']
+            letters = iter(ascii_lowercase)
+            while temp_id in [x['ID'] for x in combined_bib_database.entries]:
+                temp_id = entry['ID'] + next(letters)
+            entry['ID'] = temp_id
+            
+            combined_bib_database.entries.append(entry)
     
-    return bib_database
-
+    return combined_bib_database
 
 if __name__ == "__main__":
     
     target_file = 'data/processed/references.bib'
-    
 
     if os.path.exists(os.path.join(os.getcwd(), target_file)):
         with open(target_file, 'r') as target_db:
@@ -148,18 +102,19 @@ if __name__ == "__main__":
                 customization=convert_to_unicode, common_strings=True).parse_file(target_db, partial=True)
     else:
         print('No target database detected.')
-        combined_bib_database = None
+        combined_bib_database = BibDatabase()
 
     writer = BibTexWriter()
 
     # TODO: this should become a for-loop
-    #TODO: define preferences (start by processing e.g., WoS, then GS) or use heuristics to start with the highest quality (most complete) entries first.
+    # TODO: define preferences (start by processing e.g., WoS, then GS) or use heuristics to start with the highest quality (most complete) entries first.
 
     combined_bib_database = gather('data/raw/2018-12-01-GoogleScholar.bib', combined_bib_database)
-#    combined_bib_database = gather('data/raw/2020-12-01-GoogleScholar.bib', combined_bib_database)
+    combined_bib_database = gather('data/raw/2020-12-01-GoogleScholar.bib', combined_bib_database)
+    combined_bib_database = gather('data/raw/2021-01-01-WebOfScience.bib', combined_bib_database)
 
     writer.contents = ['comments', 'entries']
-    writer.indent = '  '
+    writer.indent = '    '
     writer.order_entries_by = ('ID', 'author', 'year')
     bibtex_str = bibtexparser.dumps(combined_bib_database, writer)
     
