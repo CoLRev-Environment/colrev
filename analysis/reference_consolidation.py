@@ -10,8 +10,12 @@ import os
 import re
 import logging
 import hashlib
+from fuzzywuzzy import fuzz
 
 from string import ascii_lowercase
+
+from crossref.restful import Works
+from urllib.parse import quote_plus, urlencode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -22,6 +26,7 @@ def gather(bibfilename, combined_bib_database):
         bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
         for entry in bib_database.entries:
+            print(entry['title'])
             
             string_to_hash = ''
             if('author' in entry):
@@ -72,6 +77,27 @@ def gather(bibfilename, combined_bib_database):
             # May even run a reference consolidation service?!?!
             # https://citationstyles.org/authors/#/titles-in-sentence-and-title-case
             
+#            print(entry['title'])
+            if "living spaces in digital nomads" in entry['title']:
+                 
+                api_url = "https://api.crossref.org/works?"
+                params = {"rows": "5", "query.bibliographic": entry['title']}
+                url = api_url + urlencode(params, quote_via=quote_plus)
+                print(url)
+
+                # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
+                 
+                 
+                works = Works()
+                print(entry['title'])
+                #                print(entry['author'])
+                w1 = works.query(container_title=entry['title'], author=entry['author'])
+                for item in w1:
+                    if fuzz.ratio(item['title'], entry['title']) > 60:
+                        print(item['title'])
+                        print('------------------')
+                input('continue')
+
 
     for entry in bib_database.entries:
         
@@ -111,10 +137,9 @@ if __name__ == "__main__":
     writer = BibTexWriter()
 
     # TODO: this should become a for-loop
-    # TODO: define preferences (start by processing e.g., WoS, then GS) or use heuristics to start with the highest quality (most complete) entries first.
 
-    combined_bib_database = gather('data/raw/2018-12-01-GoogleScholar.bib', combined_bib_database)
-    combined_bib_database = gather('data/raw/2020-12-01-GoogleScholar.bib', combined_bib_database)
+#    combined_bib_database = gather('data/raw/2018-12-01-GoogleScholar.bib', combined_bib_database)
+#    combined_bib_database = gather('data/raw/2020-12-01-GoogleScholar.bib', combined_bib_database)
     combined_bib_database = gather('data/raw/2021-01-01-WebOfScience.bib', combined_bib_database)
 
     writer.contents = ['comments', 'entries']

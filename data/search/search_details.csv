@@ -1,0 +1,4 @@
+"search_id","iteration","date_start","date_completion","source_url","search_parameters","responsible","comment"
+"search_db_ais_library",1,"2019-12-01","2019-12-20","https://aisel.aisnet.org/","keywords: k1, field: abstract","gerit_wagner",
+"search_db_google_scholar",1,"2019-12-10","2019-12-25","https://scholar.google.de/","keywords: k1","gerit_wagner",
+"search_toc",1,"2019-11-01","2019-12-15","https://misq.org/archive/","None","gerit_wagner","Manual search"
