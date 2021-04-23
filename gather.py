@@ -96,6 +96,10 @@ if __name__ == "__main__":
     
     target_file = 'data/processed/references.bib'
 
+    # fix formats
+    # web of science exports field "Early Access Date" (spaces are a problem)
+    print('TODO: replace Early Access Date in bibfile before loading!')
+
     if os.path.exists(os.path.join(os.getcwd(), target_file)):
         with open(target_file, 'r') as target_db:
             combined_bib_database = bibtexparser.bparser.BibTexParser(
