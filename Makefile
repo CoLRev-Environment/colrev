@@ -1,4 +1,4 @@
-.PHONY : run
+.PHONY : run status search cleanse_records screen data
 
 help :
 	@echo "Usage: make [command]"
@@ -8,4 +8,19 @@ help :
 	@echo "        Run analyses of the complete repository"
 
 run :
-	[ -f analysis/Makefile ] && $(MAKE) -C analysis run || true # Skip if no Makefile in analysis directory
+	$(MAKE) -C analysis run
+
+status :
+	$(MAKE) -C analysis status
+
+search :
+	$(MAKE) -C analysis search
+
+cleanse_records :
+	$(MAKE) -C analysis cleanse_records
+
+screen :
+	$(MAKE) -C analysis screen
+
+data :
+	$(MAKE) -C analysis data

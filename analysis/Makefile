@@ -1,4 +1,4 @@
-.PHONY : run
+.PHONY : run status search cleanse_records screen data
 
 help :
 	@echo "Usage: make [command]"
@@ -7,25 +7,39 @@ help :
 	@echo "    run"
 	@echo "        Run analyses of the complete repository"
 
-run : gather create_screening_sheet create_data_extraction_sheet
+run : status search cleanse_records screen data
 
-gather :
+status :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/gather.py
+	python3 analysis/status.py
 
-create_screening_sheet :
+search :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/create_screen.py
+	python3 analysis/search.py
 
-create_data_extraction_sheet :
+cleanse_records :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/create_data_extraction.py
+	python3 analysis/cleanse_records.py
+
+screen :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/screen.py
+
+data :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/data.py
