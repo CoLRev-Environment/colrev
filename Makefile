@@ -1,4 +1,4 @@
-.PHONY : run status search cleanse_records screen data
+.PHONY : run status search backward_search cleanse_records screen data
 
 help :
 	@echo "Usage: make [command]"
@@ -15,6 +15,9 @@ status :
 
 search :
 	$(MAKE) -C analysis search
+
+backward_search :
+	$(MAKE) -C analysis backward_search
 
 cleanse_records :
 	$(MAKE) -C analysis cleanse_records

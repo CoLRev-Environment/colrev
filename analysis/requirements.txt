@@ -4,3 +4,4 @@ fuzzywuzzy==0.18.0
 python-Levenshtein==0.12.2
 requests==2.25.1
 tqdm==4.55.0
+lxml==3.7.1

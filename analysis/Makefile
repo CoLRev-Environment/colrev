@@ -1,4 +1,4 @@
-.PHONY : run status search cleanse_records screen data
+ke.PHONY : run status search backward_search cleanse_records screen data
 
 help :
 	@echo "Usage: make [command]"
@@ -22,6 +22,13 @@ search :
 	--user `id -u`:`id -g` \
 	python3_review_template \
 	python3 analysis/search.py
+
+backward_search :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/backward_search.py
 
 cleanse_records :
 	docker run -ti \

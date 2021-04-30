@@ -98,7 +98,7 @@ def gather(bibfilename, combined_bib_database):
 
             entry['hash_id'] = hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
 
-            entry['ID'] = entry.get('author', '').split(' ')[0] + entry.get('year', '')
+            entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
             entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
 
             if('abstract' in entry): entry['abstract'] = entry['abstract'].replace('\n', ' ')

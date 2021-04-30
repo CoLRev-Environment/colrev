@@ -15,7 +15,7 @@ make status
 ```
 make search
 ```
-- Run cleanse_records, which improves the quality of the records. Please note that this can take some time (depending on the number of records) since it calls the [Crossref API](https://www.crossref.org/education/retrieve-metadata/rest-api/) to retrieve DOIs and the [DOI resolution service](doi.org). For 1,000 records, this might take approx. XXXX hours.
+- Run cleanse_records, which improves the quality of the records. Please note that this can take some time (depending on the number of records) since it calls the [Crossref API](https://www.crossref.org/education/retrieve-metadata/rest-api/) to retrieve DOIs and the [DOI resolution service](doi.org). For 1,000 records, this might take approx. 1:30 hours.
 ```
 make cleanse_records
 ```
