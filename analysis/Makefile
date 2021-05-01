@@ -44,6 +44,13 @@ screen :
 	python3_review_template \
 	python3 analysis/screen.py
 
+screen_1 :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/screen_1.py
+
 data :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

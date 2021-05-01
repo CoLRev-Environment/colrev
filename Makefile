@@ -25,5 +25,8 @@ cleanse_records :
 screen :
 	$(MAKE) -C analysis screen
 
+screen_1 :
+	$(MAKE) -C analysis screen_1
+
 data :
 	$(MAKE) -C analysis data
