@@ -2,17 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import bibtexparser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import os
-import re
 import logging
 import csv
 import pandas as pd
-
-from string import ascii_lowercase
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -20,7 +15,7 @@ nr_entries_added = 0
 nr_current_entries = 0
 
 
-def generate_screen_csv(screen_filename, bibfilename):
+def generate_screen_csv(screen_filename, exclusion_criteria, bibfilename):
     global nr_entries_added
     
     with open(bibfilename) as bibtex_file:
@@ -31,32 +26,18 @@ def generate_screen_csv(screen_filename, bibfilename):
 
     for entry in bp.get_entry_list():
         nr_entries_added = nr_entries_added + 1
-
-        data.append([entry.get("ID", "no id"),
-                     entry.get("author", "no author"),
-                     entry.get("title", "no title"),
-                     entry.get("year", "no year"),
-                     entry.get("journal", entry.get("booktitle", "no journal/booktitle")),
-                     entry.get("volume", "no volume"),
-                     entry.get("number", "no issue"),
-                     entry.get("pages", "no pages"),
-                     entry.get("doi", "no doi"),
-                     entry.get("file", "no file"),
-                     'TODO',  # inclusion_1
-                     'TODO']) # inclusion_2
+        
+        if not 'ID' in entry:
+            print('Error: entry without citation_key in references.bib (skipping')
+            continue
+        
+        data.append([entry['ID'],
+                     'TODO',
+                     'TODO'] + ['TODO']*len(exclusion_criteria) + [''])
     
     screen = pd.DataFrame(data, columns=["citation_key",
-                                "author",
-                                "title",
-                                "year",
-                                "journal",
-                                "volume",
-                                "issue",
-                                "pages",
-                                "doi",
-                                "file_name",
                                 "inclusion_1",
-                                "inclusion_2"])
+                                "inclusion_2"] + exclusion_criteria + ['comment'])
 
     screen.sort_values(by=['citation_key'], inplace=True)
     screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
@@ -80,20 +61,14 @@ def update_screen_csv(screen_filename, bibfilename):
         # skip when already available
         if 0 < len(screen[screen['citation_key'].str.startswith(entry['ID'])]):
             continue
-        # print(entry['ID'])
         
-        screen = pd.concat([screen, pd.DataFrame({"citation_key":[entry['ID']],
-                                                  "author":entry.get("author", "no author"),
-                                                  "title":entry.get("title", "no title"),
-                                                  "year":entry.get("year", "no year"),
-                                                  "journal":entry.get("journal", entry.get("booktitle", "no journal/booktitle")),
-                                                  "volume":entry.get("volume", "no volume"),
-                                                  "issue":entry.get("number", "no issue"),
-                                                  "pages":entry.get("pages", "no pages"),
-                                                  "doi":entry.get("doi", "no doi"),
-                                                  "file_name":entry.get("file", "no file"),
+        add_entry = pd.DataFrame({"citation_key":[entry['ID']],
                                                   "inclusion_1":['TODO'],
-                                                  "inclusion_2":['TODO']})], axis=0, ignore_index=True)
+                                                  "inclusion_2":['TODO']})
+        add_entry = add_entry.reindex(columns=screen.columns, fill_value='TODO')
+        add_entry['comment'] = ''
+
+        screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
         nr_entries_added = nr_entries_added + 1
 
     screen.sort_values(by=['citation_key'], inplace=True)
@@ -115,9 +90,19 @@ if __name__ == "__main__":
 
     
     if not os.path.exists(screen_file):
+        print('Creating screen.csv')
+        exclusion_criteria = input('Please provide a list of exclusion criteria [criterion1,criterion2,...]')        
+        
+        exclusion_criteria = exclusion_criteria.strip('[]').replace(' ','').split(',')
+        
+        exclusion_criteria = ['ec_' + criterion for criterion in exclusion_criteria]
+        
+        # Exclusion criteria should be unique
+        assert len(exclusion_criteria) == len(set(exclusion_criteria))
+
+        generate_screen_csv(screen_file, exclusion_criteria, bibfilename)
         print('Created screen.csv')
         print('0 records in screen.csv')
-        generate_screen_csv(screen_file, bibfilename)
     else:
         print('Loaded existing screen.csv')
         file = open(screen_file)

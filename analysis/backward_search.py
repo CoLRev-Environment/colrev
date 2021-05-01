@@ -7,24 +7,12 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import os
-import json
-import time
 from time import gmtime, strftime
 import re
 import logging
-from fuzzywuzzy import fuzz
-from Levenshtein import ratio
-from tqdm import tqdm
 
 from lxml import etree
 
-from string import ascii_lowercase
-
-#from crossref.restful import Works
-from urllib.error import HTTPError
-from urllib.parse import quote_plus, urlencode
-from urllib.request import urlopen, Request
-import requests
 import pandas as pd
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -118,7 +106,7 @@ def get_reference_author(reference):
 
     author_string = ''
     for author in author_list:
-        author_string = '; '.join(author_list)
+        author_string = ' and '.join(author_list)
     author_string = author_string.replace('\n', ' ').replace('\r', '')
 
     if author_string is None:

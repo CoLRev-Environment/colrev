@@ -1,29 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <TEI xml:space="preserve" xmlns="http://www.tei-c.org/ns/1.0" 
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/xsd/Grobid.xsd"
+xsi:schemaLocation="http://www.tei-c.org/ns/1.0 https://raw.githubusercontent.com/kermitt2/grobid/master/grobid-home/schemas/xsd/Grobid.xsd"
  xmlns:xlink="http://www.w3.org/1999/xlink">
 	<teiHeader xml:lang="en">
 		<fileDesc>
 			<titleStmt>
-				<title level="a" type="main">A COLLABORATIVE DISCOURSE OR ONLY A COLLECTION OF VOICES? AN EXPLORATORY STUDY OF THE USE OF SOCIAL MEDIA IN THE E-PARTICIPATION DOMAIN</title>
+				<title level="a" type="main">A COLLABORATIVE DISCOURSE OR ONLY A COLLECTION OF VOICES? AN EXPLORATORY STUDY OF THE USE OF SOCIAL MEDIA IN THE E-PARTICIPATION DOMAIN Research paper</title>
 			</titleStmt>
 			<publicationStmt>
 				<publisher/>
 				<availability status="unknown"><licence/></availability>
-				<date type="published" when="2018">2018</date>
 			</publicationStmt>
 			<sourceDesc>
 				<biblStruct>
 					<analytic>
-						<author role="corresp">
-							<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Alessio</forename><forename type="middle">Maria</forename><surname>Braccini</surname></persName>
+						<author>
+							<persName><forename type="first">Alessio</forename><forename type="middle">Maria</forename><surname>Braccini</surname></persName>
 							<email>abraccini@unitus.it</email>
-						</author>
-						<author>
-							<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Stefano</forename><surname>Za</surname></persName>
-						</author>
-						<author>
 							<affiliation key="aff0">
 								<orgName type="institution">Università degli Studi della Tuscia</orgName>
 								<address>
@@ -33,6 +27,7 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/
 							</affiliation>
 						</author>
 						<author>
+							<persName><forename type="first">Stefano</forename><surname>Za</surname></persName>
 							<affiliation key="aff1">
 								<orgName type="institution">Università LUISS Guido Carli</orgName>
 								<address>
@@ -42,6 +37,8 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/
 							</affiliation>
 						</author>
 						<author>
+							<persName><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
+							<email>oystein.sabo@uia.no</email>
 							<affiliation key="aff2">
 								<orgName type="institution">Universitetet i Agder</orgName>
 								<address>
@@ -50,28 +47,25 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/
 								</address>
 							</affiliation>
 						</author>
-						<title level="a" type="main">A COLLABORATIVE DISCOURSE OR ONLY A COLLECTION OF VOICES? AN EXPLORATORY STUDY OF THE USE OF SOCIAL MEDIA IN THE E-PARTICIPATION DOMAIN</title>
+						<title level="a" type="main">A COLLABORATIVE DISCOURSE OR ONLY A COLLECTION OF VOICES? AN EXPLORATORY STUDY OF THE USE OF SOCIAL MEDIA IN THE E-PARTICIPATION DOMAIN Research paper</title>
 					</analytic>
 					<monogr>
-						<title level="m">Twenty-Sixth European Conference on Information Systems (ECIS2018)</title>
-						<meeting> <address><addrLine>Portsmouth,UK</addrLine></address>
-						</meeting>
 						<imprint>
-							<date type="published" when="2018">2018</date>
+							<date/>
 						</imprint>
 					</monogr>
-					<note>Research paper</note>
 				</biblStruct>
 			</sourceDesc>
 		</fileDesc>
-
 		<encodingDesc>
 			<appInfo>
-				<application version="0.5.6" ident="GROBID" when="2020-02-14T17:05+0000">
-					<ref target="https://github.com/kermitt2/grobid">GROBID - A machine learning software for extracting information from scholarly documents</ref>
+				<application version="0.6.2-SNAPSHOT" ident="GROBID" when="2021-04-30T13:01+0000">
+					<desc>GROBID - A machine learning software for extracting information from scholarly documents</desc>
+					<ref target="https://github.com/kermitt2/grobid"/>
 				</application>
 			</appInfo>
-		</encodingDesc>		<profileDesc>
+		</encodingDesc>
+		<profileDesc>
 			<textClass>
 				<keywords>
 					<term>Social Media</term>
@@ -79,7 +73,7 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/
 					<term>Online Communities</term>
 					<term>Public Sphere</term>
 					<term>Topic Analysis</term>
-					<term>The Five Star Movement</term>
+					<term>The Five</term>
 				</keywords>
 			</textClass>
 			<abstract>
@@ -89,69 +83,23 @@ xsi:schemaLocation="http://www.tei-c.org/ns/1.0 /opt/grobid/grobid-home/schemas/
 	</teiHeader>
 	<text xml:lang="en">
 		<body>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="1">Introduction</head><p>Social media are increasingly being used for communication within the public sector <ref type="bibr" target="#b5">(Bertot, Jaeger, and Hansen 2012)</ref>, and in relation to democratic discourse within the eParticipation domain <ref type="bibr" target="#b15">(Van Dijk 2000;</ref><ref type="bibr" target="#b23">Magro 2012;</ref><ref type="bibr" target="#b25">Medaglia 2012;</ref><ref type="bibr" target="#b33">Saebø, Rose, and Skiftenes Flak 2008)</ref>. As society becomes increasingly digitised, governments are attempting to boost democratic interest through various eParticipation programmes <ref type="bibr" target="#b19">(Johannessen, Saebø, and Flak 2015)</ref>. Social media are used in eParticipation settings both as new communication channels and as platforms for discussion and confrontation with citizens (Van Dijk 2000; <ref type="bibr" target="#b25">Medaglia 2012</ref>). These digital platforms are also used to form communities of citizens and representatives in political movements and intervene in political actions and decision making . The use of social media, here defined as 'groups of Internet-based technologies that allows users to easily create, edit, evaluate and/or link to content or other creators of content' <ref type="bibr" target="#b20">(Kaplan and Haenlein 2010)</ref>, is increasingly discussed within the eParticipation domain <ref type="bibr" target="#b1">(Alarabiat, Soares, and Estevez 2016;</ref><ref type="bibr" target="#b12">Criado, Sandoval-Almazan, and Gil-Garcia 2013)</ref>, while the literature on online communities has studied how social media support knowledge exchange among a group of people united by a common interest <ref type="bibr" target="#b22">(Ma and Agarwal 2007;</ref><ref type="bibr" target="#b24">Majchrzak, Wagner, and Yates 2013)</ref>. Moreover, studies are investigating reasons and motivations that keep people committed to participating in an online discussion <ref type="bibr" target="#b7">(Butler et al. 2002;</ref><ref type="bibr" target="#b31">Ren et al. 2012</ref>). However, we find that few sources have actually studied the consequences of social media adoption on the online discourse that develops among people. While many are reflecting on such consequences, few studies present empirical findings to shed light on this phenomenon. In this paper, we aim to do so by conducting an exploratory analysis of the cooperative discourse within the social media channel of Facebook in the Italian Five Star Movement (M5S), a recently-born political movement which presents as an open and participative forum for discussion and debate among citizens and representatives using exclusively online channels <ref type="bibr" target="#b32">Saebø, Braccini, and Federici 2015)</ref>. Our work is motivated by the following research question: how does collaborative discourse develop over social media in eParticipation settings? To answer this research question, first, we performed a topic analysis combining quantitative methods with qualitative observations to identify arguments of discussions across social media. Second, we studied how these arguments developed across the threads on the social media channels by representing relationships among discussion topics and discussion threads by means of graphs, and by calculating descriptive statistics on user engagement. Hence, our study is different from mainstream studies adopting social network analysis to study online communities, since they often aim to investigate the relationships between actors, their characteristics <ref type="bibr" target="#b21">(Kim and Hastak 2018)</ref>, or the connections between topics <ref type="bibr" target="#b37">(Wang et al. 2013)</ref>. Our exploratory analysis is based on the study of three representatives of the M5S. We reflect on our findings based on key characteristics of the public sphere <ref type="bibr" target="#b13">(Dahlberg 2001)</ref>, and from the literature on eParticipation, to explore how social media content influences democracies.</p><p>Our results show that social media are mainly venues for support messages and for exaltation of engagement between people, and do not contribute to discussion in the public sphere. Indeed, they lead to its fragmentation across many different topics. Even though our work should be further confirmed in a larger study, our study allows us to formulate implications for future trajectories of research willing to further investigate the phenomenon, and we formulate considerations on the methodological challenges for analysing social media data.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="2">Related Research within eParticipation</head><p>The eParticipation research domain focuses on the identification of the processes and structures through which Information and Communication Technology (ICT) supports the relationships among citizens, governments, and public bodies; it is particularly interested in studying how the use of social media improves and increases citizen participation initiatives <ref type="bibr" target="#b25">(Medaglia 2012;</ref><ref type="bibr" target="#b33">Saebø, Rose, and Skiftenes Flak 2008)</ref>. The use of social media offers new opportunities for communication, consultation, and public debate among citizens, and between citizens and public organizations <ref type="bibr" target="#b25">(Medaglia 2012)</ref>. Social media might provide citizens the opportunity to initiate policy changes from the bottom up <ref type="bibr" target="#b0">(Abdelsalam et al. 2013</ref>) and act as transformative agents in generating engagement <ref type="bibr" target="#b10">(Chun and Luna Reyes 2012)</ref>, allowing for a large number of citizens to participate in shaping politics <ref type="bibr" target="#b3">(Bekkers, Edwards &amp; de Kool, 2013)</ref>.</p><p>Social media are seen as drivers of potential change and opportunities for communication, consultation, and dialogue with citizens <ref type="bibr" target="#b12">(Criado, Sandoval-Almazan, and Gil-Garcia 2013;</ref><ref type="bibr" target="#b23">Magro 2012)</ref>. The role of social media has gained increased attention within the eParticipation area in recent years <ref type="bibr" target="#b1">(Alarabiat, Soares, and Estevez 2016)</ref>. Mainstream social media, such as Facebook, Twitter, and Instagram, have several limitations in facilitating the attainment of goals set by the government, since such media are not specifically designed to support political deliberation <ref type="bibr" target="#b18">(Johannessen and Munkvold 2012)</ref>. More research is needed to understand the organisational and democratic consequences of introducing social media within eParticipation contexts <ref type="bibr" target="#b12">(Criado, Sandoval-Almazan, and Gil-Garcia 2013)</ref> and to advance the practical understanding of how to use social media and integrate them into existing institutional processes <ref type="bibr" target="#b17">(Ferro, Loukis, Charalabidis &amp; Osella, 2013)</ref>.</p><p>To understand the role of social media within the eParticipation domain, we here introduce knowledge from research on the public sphere. A key element within modern democracies is a well-functioning public sphere, which is the social life domain where public opinions are formed. It is an autonomous 'place' where citizens can debate government policy and act as an informal correction when governments step out of bounds <ref type="bibr" target="#b8">(Calhoun 1992)</ref>. The public sphere can be understood as a mediating layer between governments and citizens where citizens discuss and agree on issues of public interest <ref type="bibr" target="#b9">(Castells 2008)</ref>. Democracies need an informed and vocal public sphere <ref type="bibr" target="#b36">(Smith and Dewey 1929)</ref> where opinions can be shared and discussed by rational citizens <ref type="bibr" target="#b19">(Johannessen, Saebø, and Flak 2015)</ref>. Under this perspective, social media promise great potential in engaging citizens with representatives in transparent and collective online discourses.</p><p>Although any discussion space can be seen as forming public opinion, several scholars, including Habermas, have presented strict criteria for spaces that can be identified as part of the public sphere. <ref type="bibr" target="#b13">Dahlberg (2001)</ref>, building on Habermas' original work, has identified six requirements for a functioning public sphere:</p><p>1. It must be autonomous from state and economic power. 2. It should be based on a rational-critical discourse, where participants are engaged in reciprocal critique of normative positions that are criticisable rather than dogmatic claims. 3. Participants must be reflective and critically examine their cultural values, assumptions, and interests as well as the larger social context. 4. Participants must attempt to understand the argument from the other's perspective. 5. Each participant must make an effort to make known all information relevant to the particular problem under consideration. 6. Everyone is equally entitled to introduce and question ideas and issues.</p><p>In this paper, we investigate the role of collaborative discourse and collaborative information sharing to better understand the deliberative qualities of online political activities and explore the scale of information sharing and the heterogeneity of messages posted within social media <ref type="bibr" target="#b11">(Coleman and Shane 2012)</ref>. Social media entail content-sharing capabilities <ref type="bibr" target="#b30">(O'Reilly 2007)</ref> and the speedy exchange of information amongst users <ref type="bibr" target="#b29">(Mossberger, Wu, and Crawford 2013)</ref>. Further research is needed to better understand how social media influence the mobilisation of people, and to explain how the given structures change due to environmental challenges <ref type="bibr" target="#b35">(Selander and Jarvenpaa 2016)</ref>. We here argue that the role of social media within the eParticipation domain could be analysed in light of the characteristic of the public sphere, to better understand the value of the content and role of social media within our democracies.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="3">Research Design</head><p>In this work, we investigate how the collaborative discourse takes place across social media by studying the case of the M5S, an Italian eParticipation movement, which heavily builds on social media to involve citizens in discussions online with representatives elected to government institutions . Our work is motivated by the understatement, common in the eParticipation literature, that social media are used as arenas for open confrontation, communication, and debate, and are loci in which people discuss topics of common interest. In this paper, we tackle this research issue by studying three representatives of the M5S elected to government institutions, with different levels of social media usage intensity. We used the Facebook profiles of the three representatives as data sources, and we downloaded and anonymized the data of one year of activity (2016). The data were in the form of discussion threads on the public Facebook profiles of the representatives. In our dataset, a thread is a combination of a post and all the comments and replies which refer to it. The dataset we analysed is composed of a text corpus, structured as shown in <ref type="table">Table 1</ref> To observe how the collaborative discourse takes place through social media, we split the activity of each representative into four three-months periods, named Q1, Q2, Q3, and Q4. The data sub-set for each period grouped all the threads that showed activity in the given time window. Subsequently, we identified the discussion topics through an automatic textual analysis and qualitative text coding, and we visually represented the structure of the online discourse with network theory and descriptive statistics.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="3.1">Data analysis</head><p>Our data analysis protocol was composed of three steps: (i) automatic topic extraction, (ii) manual topic analysis and summary topics definition, (iii) and automatic analysis of the relationships between topics and threads. The automatic topic extraction (step i) allowed us to analyse the contents of the online discourse. We used an automatic analysis of textual data technique, extracting probabilistic topic models from the text corpora using the Latent Dirichlet Allocation (LDA) algorithm <ref type="bibr" target="#b14">(Blei, Ng, and Jordan 2003)</ref>. A probabilistic topic model describes the discussion topics in a given corpus. The topics identified are composed of a set of keywords relevant for defining the argument under discussion. Each topic identified is assigned to the documents in the corpus with a probabilistic score. This automatic method of analysis depends on two assumptions: (i) the given corpus contains a coherent set of topics, and (ii) the number n of topics is a finite set of elements. We estimated the value of n by choosing the model that maximizes the harmonic mean of the likelihood values of the different analyses run for a number of topics from two to 100. Given the same corpus, if two topic models with n and m topics have different harmonic means, the distribution with the higher mean is one in which the topics are, on average, strongly correlated with the corpus and, hence, are more representative of the corpus.</p><p>Having the topics automatically extracted, and the corpus annotated with the probabilistic allocation of the topics, we proceeded with the next steps referring only to the topic which has the highest level of probability. We then qualitatively reviewed (step ii) all the topics and the associated documents. Reading the text of the entries (posts, comments, and replies) we were able to get an understanding of the different topics, to qualitatively assign them a conceptual category, and to eventually classify the different topics into nine core categories with coherent semantic meaning. Finally, we used network theory (step iii) to visually represent the structure of the cooperative discourse. For each entry in the original corpus, we selected the topics with the highest probability score, and we drew a graph for each period, visually representing the connections between the topics being discussed and the threads active in the period. For each thread, we identified:</p><p>• The opening topic, i.e. the topic discussed in the post;</p><p>• The subsequent topics, i.e. the topics discussed in comments and replies; and</p><p>• The relevance in the collaborative discourse of the different topics and threads. We analysed the flow of the collaborative discourse by exploring how topics related to threads visually, through the graphs, and by calculating descriptive statistics summarizing the data set and the performed analysis.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="1">Introduction</head><p>Social media are increasingly being used for communication within the public sector <ref type="bibr" target="#b5">(Bertot, Jaeger, and Hansen 2012)</ref>, and in relation to democratic discourse within the eParticipation domain <ref type="bibr" target="#b15">(Van Dijk 2000;</ref><ref type="bibr" target="#b23">Magro 2012;</ref><ref type="bibr" target="#b25">Medaglia 2012;</ref><ref type="bibr" target="#b33">Saebø, Rose, and Skiftenes Flak 2008)</ref>. As society becomes increasingly digitised, governments are attempting to boost democratic interest through various eParticipation programmes <ref type="bibr" target="#b19">(Johannessen, Saebø, and Flak 2015)</ref>. Social media are used in eParticipation settings both as new communication channels and as platforms for discussion and confrontation with citizens <ref type="bibr" target="#b15">(Van Dijk 2000;</ref><ref type="bibr" target="#b25">Medaglia 2012</ref>). These digital platforms are also used to form communities of citizens and representatives in political movements and intervene in political actions and decision making <ref type="bibr" target="#b16">(Federici, Braccini, and Saebø 2015)</ref>. The use of social media, here defined as 'groups of Internet-based technologies that allows users to easily create, edit, evaluate and/or link to content or other creators of content' <ref type="bibr" target="#b20">(Kaplan and Haenlein 2010)</ref>, is increasingly discussed within the eParticipation domain <ref type="bibr" target="#b1">(Alarabiat, Soares, and Estevez 2016;</ref><ref type="bibr" target="#b12">Criado, Sandoval-Almazan, and Gil-Garcia 2013)</ref>, while the literature on online communities has studied how social media support knowledge exchange among a group of people united by a common interest <ref type="bibr" target="#b22">(Ma and Agarwal 2007;</ref><ref type="bibr" target="#b24">Majchrzak, Wagner, and Yates 2013)</ref>. Moreover, studies are investigating reasons and motivations that keep people committed to participating in an online discussion <ref type="bibr" target="#b7">(Butler et al. 2002;</ref><ref type="bibr" target="#b31">Ren et al. 2012)</ref>. However, we find that few sources have actually studied the consequences of social media adoption on the online discourse that develops among people. While many are reflecting on such consequences, few studies present empirical findings to shed light on this phenomenon. In this paper, we aim to do so by conducting an exploratory analysis of the cooperative discourse within the social media channel of Facebook in the Italian Five Star Movement (M5S), a recently-born political movement which presents as an open and participative forum for discussion and debate among citizens and representatives using exclusively online channels <ref type="bibr" target="#b16">(Federici, Braccini, and Saebø 2015;</ref><ref type="bibr" target="#b32">Saebø, Braccini, and Federici 2015)</ref>.</p><p>Our work is motivated by the following research question: how does collaborative discourse develop over social media in eParticipation settings? To answer this research question, first, we performed a topic analysis combining quantitative methods with qualitative observations to identify arguments of discussions across social media. Second, we studied how these arguments developed across the threads on the social media channels by representing relationships among discussion topics and discussion threads by means of graphs, and by calculating descriptive statistics on user engagement. Hence, our study is different from mainstream studies adopting social network analysis to study online communities, since they often aim to investigate the relationships between actors, their characteristics <ref type="bibr" target="#b21">(Kim and Hastak 2018)</ref>, or the connections between topics <ref type="bibr" target="#b37">(Wang et al. 2013)</ref>. Our exploratory analysis is based on the study of three representatives of the M5S. We reflect on our findings based on key characteristics of the public sphere <ref type="bibr" target="#b13">(Dahlberg 2001)</ref>, and from the literature on eParticipation, to explore how social media content influences democracies.</p><p>Our results show that social media are mainly venues for support messages and for exaltation of engagement between people, and do not contribute to discussion in the public sphere. Indeed, they lead to its fragmentation across many different topics. Even though our work should be further confirmed in a larger study, our study allows us to formulate implications for future trajectories of research willing to further investigate the phenomenon, and we formulate considerations on the methodological challenges for analysing social media data.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="2">Related Research within eParticipation</head><p>The eParticipation research domain focuses on the identification of the processes and structures through which Information and Communication Technology (ICT) supports the relationships among citizens, governments, and public bodies; it is particularly interested in studying how the use of social media improves and increases citizen participation initiatives <ref type="bibr" target="#b25">(Medaglia 2012;</ref><ref type="bibr" target="#b33">Saebø, Rose, and Skiftenes Flak 2008)</ref>. The use of social media offers new opportunities for communication, consultation, and public debate among citizens, and between citizens and public organizations <ref type="bibr" target="#b25">(Medaglia 2012)</ref>. Social media might provide citizens the opportunity to initiate policy changes from the bottom up <ref type="bibr" target="#b0">(Abdelsalam et al. 2013</ref>) and act as transformative agents in generating engagement <ref type="bibr" target="#b10">(Chun and Luna Reyes 2012)</ref>, allowing for a large number of citizens to participate in shaping politics <ref type="bibr" target="#b3">(Bekkers, Edwards &amp; de Kool, 2013)</ref>.</p><p>Social media are seen as drivers of potential change and opportunities for communication, consultation, and dialogue with citizens <ref type="bibr" target="#b12">(Criado, Sandoval-Almazan, and Gil-Garcia 2013;</ref><ref type="bibr" target="#b23">Magro 2012</ref>). The role of social media has gained increased attention within the eParticipation area in recent years <ref type="bibr" target="#b1">(Alarabiat, Soares, and Estevez 2016)</ref>. Mainstream social media, such as Facebook, Twitter, and Instagram, have several limitations in facilitating the attainment of goals set by the government, since such media are not specifically designed to support political deliberation <ref type="bibr" target="#b18">(Johannessen and Munkvold 2012)</ref>. More research is needed to understand the organisational and democratic consequences of introducing social media within eParticipation contexts <ref type="bibr" target="#b12">(Criado, Sandoval-Almazan, and Gil-Garcia 2013)</ref> and to advance the practical understanding of how to use social media and integrate them into existing institutional processes <ref type="bibr" target="#b17">(Ferro, Loukis, Charalabidis &amp; Osella, 2013)</ref>.</p><p>To understand the role of social media within the eParticipation domain, we here introduce knowledge from research on the public sphere. A key element within modern democracies is a well-functioning public sphere, which is the social life domain where public opinions are formed. It is an autonomous 'place' where citizens can debate government policy and act as an informal correction when governments step out of bounds <ref type="bibr" target="#b8">(Calhoun 1992</ref>). The public sphere can be understood as a mediating layer between governments and citizens where citizens discuss and agree on issues of public interest <ref type="bibr" target="#b9">(Castells 2008)</ref>. Democracies need an informed and vocal public sphere <ref type="bibr" target="#b36">(Smith and Dewey 1929)</ref> where opinions can be shared and discussed by rational citizens <ref type="bibr" target="#b19">(Johannessen, Saebø, and Flak 2015)</ref>. Under this perspective, social media promise great potential in engaging citizens with representatives in transparent and collective online discourses.</p><p>Although any discussion space can be seen as forming public opinion, several scholars, including Habermas, have presented strict criteria for spaces that can be identified as part of the public sphere. <ref type="bibr" target="#b13">Dahlberg (2001)</ref>, building on Habermas' original work, has identified six requirements for a functioning public sphere:</p><p>1. It must be autonomous from state and economic power.</p><p>2. It should be based on a rational-critical discourse, where participants are engaged in reciprocal critique of normative positions that are criticisable rather than dogmatic claims. 3. Participants must be reflective and critically examine their cultural values, assumptions, and interests as well as the larger social context. 4. Participants must attempt to understand the argument from the other's perspective. 5. Each participant must make an effort to make known all information relevant to the particular problem under consideration. 6. Everyone is equally entitled to introduce and question ideas and issues.</p><p>In this paper, we investigate the role of collaborative discourse and collaborative information sharing to better understand the deliberative qualities of online political activities and explore the scale of information sharing and the heterogeneity of messages posted within social media <ref type="bibr" target="#b11">(Coleman and Shane 2012)</ref>. Social media entail content-sharing capabilities (O'Reilly 2007) and the speedy exchange of information amongst users <ref type="bibr" target="#b29">(Mossberger, Wu, and Crawford 2013)</ref>. Further research is needed to better understand how social media influence the mobilisation of people, and to explain how the given structures change due to environmental challenges <ref type="bibr" target="#b35">(Selander and Jarvenpaa 2016)</ref>. We here argue that the role of social media within the eParticipation domain could be analysed in light of the characteristic of the public sphere, to better understand the value of the content and role of social media within our democracies.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="3">Research Design</head><p>In this work, we investigate how the collaborative discourse takes place across social media by studying the case of the M5S, an Italian eParticipation movement, which heavily builds on social media to involve citizens in discussions online with representatives elected to government institutions <ref type="bibr" target="#b16">(Federici, Braccini, and Saebø 2015)</ref>. Our work is motivated by the understatement, common in the eParticipation literature, that social media are used as arenas for open confrontation, communication, and debate, and are loci in which people discuss topics of common interest. In this paper, we tackle this research issue by studying three representatives of the M5S elected to government institutions, with different levels of social media usage intensity. We used the Facebook profiles of the three representatives as data sources, and we downloaded and anonymized the data of one year of activity <ref type="bibr">(2016)</ref>. The data were in the form of discussion threads on the public Facebook profiles of the representatives. In our dataset, a thread is a combination of a post and all the comments and replies which refer to it. The dataset we analysed is composed of a text corpus, structured as shown in Table <ref type="table">1</ref>. To observe how the collaborative discourse takes place through social media, we split the activity of each representative into four three-months periods, named Q1, Q2, Q3, and Q4. The data sub-set for each period grouped all the threads that showed activity in the given time window. Subsequently, we identified the discussion topics through an automatic textual analysis and qualitative text coding, and we visually represented the structure of the online discourse with network theory and descriptive statistics.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="3.1">Data analysis</head><p>Our data analysis protocol was composed of three steps: (i) automatic topic extraction, (ii) manual topic analysis and summary topics definition, (iii) and automatic analysis of the relationships between topics and threads. The automatic topic extraction (step i) allowed us to analyse the contents of the online discourse. We used an automatic analysis of textual data technique, extracting probabilistic topic models from the text corpora using the Latent Dirichlet Allocation (LDA) algorithm <ref type="bibr" target="#b14">(Blei, Ng, and Jordan 2003)</ref>. A probabilistic topic model describes the discussion topics in a given corpus. The topics identified are composed of a set of keywords relevant for defining the argument under discussion. Each topic identified is assigned to the documents in the corpus with a probabilistic score. This automatic method of analysis depends on two assumptions: (i) the given corpus contains a coherent set of topics, and (ii) the number n of topics is a finite set of elements. We estimated the value of n by choosing the model that maximizes the harmonic mean of the likelihood values of the different analyses run for a number of topics from two to 100. Given the same corpus, if two topic models with n and m topics have different harmonic means, the distribution with the higher mean is one in which the topics are, on average, strongly correlated with the corpus and, hence, are more representative of the corpus.</p><p>Having the topics automatically extracted, and the corpus annotated with the probabilistic allocation of the topics, we proceeded with the next steps referring only to the topic which has the highest level of probability. We then qualitatively reviewed (step ii) all the topics and the associated documents. Reading the text of the entries (posts, comments, and replies) we were able to get an understanding of the different topics, to qualitatively assign them a conceptual category, and to eventually classify the different topics into nine core categories with coherent semantic meaning. Finally, we used network theory (step iii) to visually represent the structure of the cooperative discourse.</p><p>For each entry in the original corpus, we selected the topics with the highest probability score, and we drew a graph for each period, visually representing the connections between the topics being discussed and the threads active in the period. For each thread, we identified:</p><p>• The opening topic, i.e. the topic discussed in the post;</p><p>• The subsequent topics, i.e. the topics discussed in comments and replies; and</p><p>• The relevance in the collaborative discourse of the different topics and threads. We analysed the flow of the collaborative discourse by exploring how topics related to threads visually, through the graphs, and by calculating descriptive statistics summarizing the data set and the performed analysis.</p></div>
 <div xmlns="http://www.tei-c.org/ns/1.0"><head n="4">Results of the analysis</head><p>This section presents the results of the exploratory analysis, discussing both the classification of the text corpus in topics and summary topics, and the analysis of the discourse done through the network theory.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.1">Topic Analysis</head><p>The automatic analysis of the text corpus identified 177 topics in total, composed of ten keywords each, which were distributed across the different profiles and different time periods, as shown in <ref type="table" target="#tab_1">Table 2</ref>. The automatic analysis failed to assign a topic to entries containing only graphics without text, e.g. emoticons, images, or videos being shared, or containing a text too short for the analysis (less than three characters). Therefore, we assigned the topic number 0 (T0) to these entries to be able to include this kind of unlabelled content in the rest of our analysis. Many topics showed a certain level of similarity, having many keywords in common. At the same time, the meaning of some topics was not immediately clear. Following our analysis protocol, we continued to review the topics by qualitatively analysing the corpus. Oct -Nov -Dec 21 11 12 As shown in <ref type="table" target="#tab_3">Table 3</ref>, the qualitative analysis identified nine core categories, with their extended descriptions, distributed across the corpus, two of which were sub-categories of other topics:</p><p>• Appreciation of work: congratulations, appreciation, and thankful expressions for the work done by the representative. A few of these messages were mixed with statements or hashtags supporting M5S activities other than those performed by the representative (giving rise to a further topic indicated by '-And support' on a different row in <ref type="table" target="#tab_3">Table 3</ref>); • Trust in the M5S: expressions of trust regarding the actions of the M5S and its representatives;</p><p>• Reports on activities: messages containing descriptions of the activities performed by the representative. A few of those messages mixed report activities with statements or hashtags supporting M5S activities other than those performed by the representative (giving rise to further topics indicated by '-And support' on a different row in <ref type="table" target="#tab_3">Table 3</ref>);</p><p>• Blame for opponents: critiques or direct attacks on the actions of rival political parties, or lack of action by representatives of other political parties; • Support for the movement: support statements by citizens for the actions of the M5S inside or outside the institutions in which the three representatives worked; • Invitations to participate: stimuli and pleas to fellow citizens to participate in events, follow activities, or contribute to online or offline discussions; and • Concern about political problems: messages expressing concern on political difficulties faced by the M5S or some of its representatives (other than the three analysed here).  </p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.2">Structure of the Collaborative Discourse</head><p>The analysis of the collaborative discourse using network theory produced, for each profile and each period, a graph with the following structure: 1. Nodes: blue for threads, orange for topics (the red one is used just for T0); 2. Arcs: red for opening topics (assigned to the post) and grey for other topics assigned to comments and replies belonging to the same thread. Each arc connects a blue node and a red/orange node; 3. Size of nodes: number of entries belonging to a specific thread (blue node) or discussing a specific topic (orange node); and 4. Thickness of the edge: number of entries associated with the corresponding topic in the specific thread. The number of topics shown in the graphs is smaller, in some cases, than the total amount identified by the LDA algorithm <ref type="table" target="#tab_1">(Table 2)</ref>, since, for each entry, we only considered the topic with the highest level of probability. Based on these assumptions, the structure of the graph representing the collaborative discourse can indicate a different level of convergence (or divergence) based on the number of topics addressed in one unique thread. The case with a complete convergent discourse is represented by a graph with one thread and one single topic, where each entry in the thread discussed the same topic. In contrast, a complete divergent discourse is represented by a graph with different topic for each entry in the thread. These two cases can be seen as the two extremes of a continuum in which a graph representing the collaborative discourse can be found. The divergence of the discourse increases with the increase in the number of topics. The theoretical maximum level of divergence inside a thread is reached when the number of topics equals the number of entries. <ref type="figure">Figure 1</ref> describes these two extreme cases.</p><p>7 <ref type="figure">Figure 1</ref>. Graphs representing the two extreme cases of a convergent and a divergent collaborative discourse <ref type="table">Table 4</ref> shows one exemplar graph for each representative, corresponding to the quarter in which there was the highest number of users engaged in the collaborative discourse. Looking at each graph, we can recognize two main characteristics in common:</p><p>i) There are few red arcs with a strong thickness; and ii)</p><p>There are several arcs incident on each thread (blue node). The red connection identifies the topic on which the thread was started (often promoted by the representative). For this reason, there is no more than one red arc incident on the thread (blue node) connected with one of the possible topics (red/orange node). The result we would have expected to find in the case of a collaborative discourse would have been a thread that started with a post on a specific topic, identified by the red connection, with most of the comments and replies in the same thread discussing the same topic, contributing to the thickness of the red arc (as close as possible to a convergent conversation case). The grey arcs would have identified comments or replies debating alternative topics to the main argument of discussion. Conversely, in all the cases analysed we can recognize a small number of thick red arcs, underling the presence of little focus on a specific subject in each thread, especially if the topic on which the thick red arcs were incident was T0. At the same time, we have several grey arcs (in some cases, they are also quite thick), depicting a high level of divergence in the discussion topics inside each thread (closer to the divergent conversation case depicted in <ref type="figure">Figure 1</ref>). We complemented the graphs with descriptive and summary statistics of the activities performed by each profile in the four different periods (where 'T0 in' or 'T0 out' indicate whether T0 was included or excluded from the analysis):</p><p>• Profile owner engagement: percentage of entries (posts, comments, and replies) authored by the profile owner;   <ref type="table" target="#tab_1">T0   T1  T2  T3 T4   T5  T6  T7  T8 T9   T10  T11  T12   T13  T14  T15  T16  T17  T18  T19  T20  T21   T0   T1  T2  T3   T4  T5  T6  T7   T8   T9   T10   T11   T0   T1  T2   T3   T4  T5  T6   T7   T8   T9   T10   T11</ref>   In the case of Representative 1 (R1) there is a higher percentage of citizen engagement compared to that of the representative. While for Representative 2 (R2) and Representative 3 (R3), the representatives often produced more than 60% of the entries. This is consistent with the consideration that R1 is the representative with the highest social media usage intensity and the largest number of followers. This figure is to be interpreted with the datum from 'Profile owner engagement without post'. In all three cases, the representatives contributed mainly by starting the discussion with a post; indeed, the percentage of engagement is often less than 10%. Therefore, the representatives we analysed use social media to start a discourse, but, in rare occasions, intervene in the discussion by replying or commenting on other users' comments.</p><p>Investigating the frequency of contributions, we find a long-tail shape within all three cases (see <ref type="figure" target="#fig_2">Figure  2</ref>), since the main contributor was always the profile owner (removed for improved readability from <ref type="figure" target="#fig_2">Figure 2</ref>). Very few people were actively writing content and contributing to the discussions, with a large majority adding only one or very few messages, often resulting in increased fragmentation within the discussions. As can be seen for R2 and R3, the number of active users, the 'Profile owner engagement', was higher when the number of active people was small. Furthermore, since there was a limited number of active users, all threads were started by the representatives. In contrast, R1 had a higher number of active users, and the representative was not the only one starting a discussion (indeed the '% Initiator' value was often around 80%), since there were other users creating posts and starting new threads. Therefore, for R1, social media were used as bidirectional channels with followers, who also addressed content to the representative directly by posting on his Facebook profile. This did not happen for R2 and R3; those representatives were using their profiles as mono-directional channels for communication, at least for posting activities.</p><p>Finally, in all cases, the number of entries per person was quite limited. To better interpret this datum, we calculated the quartiles for the entry distribution per user. For each representative, we considered all entries in the entire year. The list of entries was sorted according to who posted the entry and the total number of entries posted by the same user. For example, we can consider the case in which we have 12 entries-from entry 1 (e1) to entry 12 (e12)-and four users engaged in the discussion-User1 (U1), User2 (U2), User3 (U3) and User4 (U4), where: U1 posted seven entries, U2 posted three entries, and U3 and U4 each posted one entry. The resulting sorted list of entries and the data calculations for each quartile are depicted in <ref type="figure" target="#fig_3">Figure 3</ref>. The lower the number of people involved in the first, second, and eventually third, quartile, the higher the number of entries authored by a few people and, hence, the closer the discourse to one-to-many or few-to-many communications.  <ref type="table" target="#tab_9">Table 6</ref> shows the quartile distribution of the frequency of message posting across the three representative's profiles. In all three profiles, most people have an average of one post. Moreover, the profile owner is obviously responsible for most of the content available in the dataset.   </p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5">Discussion</head><p>This work was motivated by the following exploratory research question: how does collaborative discourse develop over social media in eParticipation settings? Concerning the aim of the study, the results of our exploratory analysis can be summarized into three main areas: First, social media channels are loci for the emergence of discussion topics, which span several communication threads, engage a number of citizens, and differ according to the number of followers of the specific representative. In all three analysed cases, despite differences levels of contribution, the number of discussion topics was consistently lower than the number of discussion threads. This result confirms what has been stated by the literature concerning the nature of social media use, namely, that social media are areas for the discussion of topics of common interest (Van Dijk 2000; <ref type="bibr" target="#b19">Johannessen, Saebø, and Flak 2015;</ref><ref type="bibr" target="#b25">Medaglia 2012)</ref>. Second, if the discussion is focused on a limited number of topics of interest, the discussion is also fragmented across several different threads with a potential dispersion effect (see <ref type="table">Table 4</ref>). The literature highlights that, in collective online efforts-like those analysed here-the contribution is discontinuous because few members of a community actually contribute, while the rest remain passive <ref type="bibr" target="#b22">(Ma and Agarwal 2007)</ref>. The social media we analysed do not include memberships. It was therefore not possible for us to calculate the number of followers, but we may expect to see a number of users not contributing, consistent with what has been stated in the literature. However, the result of our exploratory work lets us state that inertia is not the only problem in an online setting. Another problem is the depth of contribution, i.e. the number of contributions provided by members, given that many users in our case showed a very low frequency of contribution. Third, the discussions going over the social media studied here were not topic oriented. In only a few occasions, the discussion developed on the topic assigned for the post (as shown by the small thickness of the red arc connecting topics and threads in the graphs in <ref type="table">Table 4</ref>). This means that, in a few cases, people replied to posts of the representative by continuing to discuss the same argument, but instead brought to the discussion different sets of arguments. From this point of view, more detailed information is delivered through the qualitative rather than the quantitative analysis. To define the summary topics during the qualitative analysis, we sampled entries from the different threads, read them to interpret their meaning, and assigned the topics produced by the automatic analysis of the textual data to a qualitative defined category. We were able to identify entries which contained a specific message different from the discussion topic, such as posts raising a problem for workers in a public company within a thread where people were congratulating the representative for the action performed. These messages created engagement with the representative only in the profiles where the number of participants were smaller. In situations where the number of contributors was high (like R1), the representative seemed to have the same difficulty that the automatic text analysis algorithm had: the information was lost amid the many single messages.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5.1">Contents of the discourse</head><p>Our analysis suggests that the discourse of topics being discussed was very fragmented; it was divided across a huge number of individual messages, mainly from sporadic contributors. The topics being discussed <ref type="table" target="#tab_3">(Table 3)</ref> indicate that the social media studied here are mostly arenas for expressing support and engagement, blaming and attacking political opponents, and for the representatives to report their own activities. Only within one discussion (on political problems) did we identify messages where users discussed problems related to the actions and decisions made by the M5S (not only the actions made by the specific representative involved). Furthermore, in two of the three profiles, contents were influenced by events which did not involve the representative in question, but were related to the M5S in general. Some users took full advantage of the flexibility of social media to personalize the content of the messages that were shared <ref type="bibr" target="#b4">(Bennett and Segerberg 2012)</ref>, such as by combining many messages in the same text or binding a statement of support for the movement to an appreciation message to the representative or to the discussion of the reporting of the activity.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5.2">The Role of Social Media in eParticipation</head><p>Though the results of our exploratory analysis do not allow us to draw any kind of generalization, they suggest some hypotheses on the role of social media in eParticipation and some methodological considerations for further research.</p><p>Our findings allow us to re-visit Dahlberg´s <ref type="formula">(2001)</ref> criteria for well-functioning public discourse, which were introduced above. Keeping in mind that they are meant as ideal types (and may never be fully achieved), these criteria allow us to reflect on the value of the contributions investigated here. We have only limited opportunities to discuss the autonomy or the equal entitlement to initiate new topics for discussion, since our study is restricted to accounts owned by prominent members of the party, where they were initiating most of the new topics. Concerning the other criteria, our findings suggest rather disappointing results. First, only a very limited number of newly introduced topics attracted more than a very limited number of comments, indicating a lack of reciprocity within our empirical material. Second, we were surprised to find that the main topics within the thread of comments following from a message quickly focused on something different than the original message. From a public sphere point of view, we would argue that these findings indicate a lack of reflectiveness or desire to understand other arguments, as users within the ongoing discourse quickly moved towards other areas of interests. Our exploratory analysis suggests that the discourse over social media is superficial and does not exceed an exchange that goes beyond appreciation and support. The discourse develops with the involvement of very few contributors, and a huge number of sporadic users who will write one or a few messages. While they contribute to increasing the size and the visibility of the discussion, they also probably contribute to the dispersion of the contents. So, one consideration would be that social media are just venues for engagement. Content does not matter and indeed any content-even irrelevant contentwould add to the visibility and relevance of the political movement which, by its very nature, needs to stimulate the attention and the support of an increasing number of people. The contents shared over social media channels can be divided into messages of support (to the M5S) and messages of blame (to their rivals), where the messages of blame were probably stimulated by contextual conditions, since these emerged during periods when the movement was harshly criticized for choices it made in a few municipalities (including the capital city) in which representatives were elected as governors. According to these results, social media seem to be only venues for marking differences against rivals and allowing people to express supporting opinions or discontent. Finally, we would like to share concerns about how representatives used the social media channels. One of the topics that emerged on the profiles studied was the communication of the activities performed by the representative, which usually stimulated supporting statements by citizens and followers. Therefore, social media are different channels through which representatives may transparently communicate and disseminate their activites in institutions, without engaging citizens in any kind of information exchange that goes beyond support.</p></div>
-<div xmlns="http://www.tei-c.org/ns/1.0"><head n="6">Conclusion</head><p>In this work, we have explored how the collective discourse develops over social media in the eParticipation setting. Our work may provide disappointing news for those eager to introduce social media within the eParticipation area for issues, such as empowering politicians, engaging citizens, or improving trust in government <ref type="bibr" target="#b26">(Medaglia and Zheng 2017)</ref>. Further elaboration of our investigation is needed to develop solid policy implications from our work. Our findings indicate that bringing social media into eParticipation projects may have only limited effects; few people are really engaged by social media discussions, discussion topics quickly disperse into something different than the intended topic, and it is difficult to argue for any in-depth knowledge production based on our work. We are not in the position to propose that social media will not have any positive effects, but we would argue for careful consideration of how to design and use social media, as well as sober expectations on what to expect from such usage. Given the nature of our study-focusing only on three cases from the M5S, representing one of the most significant eParticipation settings in the world <ref type="bibr" target="#b2">(Bartlett 2014;</ref><ref type="bibr" target="#b6">Bordignon and Ceccarini 2013;</ref><ref type="bibr" target="#b27">Miconi 2014;</ref><ref type="bibr" target="#b34">Scherer 2012</ref>)-we are not making any claims in terms of generalizability, and we acknowledge that our work calls for future research. The main subject for investigation is determining the real value of social media in eParticipation beyond engaging citizens, supporting participants and holding representatives accountable for their actions. Moreover, we need to acknowledge several limitations in the current study, which also have methodological implications for our future steps, and for other scholars willing to perform similar investigations. One limitation concerns the exclusion of part of the corpus from the automatic analysis of textual data. As indicated in this paper, this is a specific behaviour of the LDA algorithm, which requires text to work. All excluded messages were those related to images or videos being shared, as well as those containing only emoticons and less than three lines of text. For future studies, we recommend transcribing the graphic sources (images and videos) before feeding the corpus into the automatic extraction of topics, since this protocol would reduce the amount of data not covered by the textual analysis. It would then be possible to formulate considerations on the significance of T0, i.e. the topic we identified without content. Another area of improvement concerns the amount of analysis performed. Given the exploratory nature of our analysis, we limited our study to a small number of cases. In future research, we shall include more cases for analysis, not only to enlarge the internal validity of the analysis of the different representatives-also considering that different people show different usage intensity, which is reflected in slightly different information being conveyed by the results of the analysis-but also to acquire a better understanding of the dynamics internal to the eParticipation movement. Previous studies of the same settings , identified that these settings are internally diversified, with different areas in the community showing different user behaviours.</p></div><figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_1"><head>•</head><label></label><figDesc>User engagement: percentage of entries (posts, comments, and replies) authored by other users; • Profile owner engagement without post: percentage of comments and replies authored by the profile owner (indicating engagement of the profile in responding to other users); • % Initiator: percentage of threads started by the profile owner; • Number of active users: number of active users in the period • Entries per user: average number of entries per user; • Number of active topics: number of topics discussed by the users in the period; and • Number of threads: number of active threads in the period.</figDesc></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_2"><head>Figure 2 .</head><label>2</label><figDesc>Frequency of contribution across the three profiles (excluding the profile owner)</figDesc></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_3"><head>Figure 3 .</head><label>3</label><figDesc>Example of quartiles of the number of contributions</figDesc></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_0" validated="false"><head></head><label></label><figDesc>.</figDesc><table>Representative 1 Representative 2 
-Representative 3 
-
-Number of threads 
-717 
-369 
-156 
-
-Total number of entries 
-3,756 
-639 
-303 
-Total length of text (characters) 
-668,539 
-180,180 
-27,276 
-
-Number of comments 
-2,488 
-222 
-127 
-
-Number of replies 
-550 
-48 
-20 
-
-Min word length of entry 
-0 
-0 
-0 
-
-Average word length of entry 
-29,34 
-19,0 
-9 
-
-Max word length of entry 
-1,276 
-1,067 
-293 
-
-Table 1. Size of corpus 
-
-</table></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_1" validated="false"><head>Table 2 .</head><label>2</label><figDesc>Number of topics found in the different periods for the three representatives</figDesc><table></table></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_3" validated="false"><head>Table 3 .</head><label>3</label><figDesc>Summary of topics across the different periods and the different profiles</figDesc><table></table></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_4" validated="false"><head></head><label></label><figDesc>Representative 1 Q4, Number of active users: 515Representative 2 Q3, Number of active users: 48Representative 3 Q2, Number of active users: 40Table 4. Graphs depicting the collaborative discourse</figDesc><table></table></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_7" validated="false"><head>Table 5 .</head><label>5</label><figDesc>Summary of the collaborative discourse</figDesc><table></table></figure>
-<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_9" validated="false"><head>Table 6 .</head><label>6</label><figDesc>Quartiles of the number of contributions by users</figDesc><table></table></figure>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.1">Topic Analysis</head><p>The automatic analysis of the text corpus identified 177 topics in total, composed of ten keywords each, which were distributed across the different profiles and different time periods, as shown in Table <ref type="table" target="#tab_1">2</ref>. The automatic analysis failed to assign a topic to entries containing only graphics without text, e.g. emoticons, images, or videos being shared, or containing a text too short for the analysis (less than three characters). Therefore, we assigned the topic number 0 (T0) to these entries to be able to include this kind of unlabelled content in the rest of our analysis. Many topics showed a certain level of similarity, having many keywords in common. At the same time, the meaning of some topics was not immediately clear. Following our analysis protocol, we continued to review the topics by qualitatively analysing the corpus. As shown in Table <ref type="table" target="#tab_3">3</ref>, the qualitative analysis identified nine core categories, with their extended descriptions, distributed across the corpus, two of which were sub-categories of other topics:</p><p>• Appreciation of work: congratulations, appreciation, and thankful expressions for the work done by the representative. A few of these messages were mixed with statements or hashtags supporting M5S activities other than those performed by the representative (giving rise to a further topic indicated by '-And support' on a different row in Table <ref type="table" target="#tab_3">3</ref>); • Trust in the M5S: expressions of trust regarding the actions of the M5S and its representatives; • Reports on activities: messages containing descriptions of the activities performed by the representative. A few of those messages mixed report activities with statements or hashtags supporting M5S activities other than those performed by the representative (giving rise to further topics indicated by '-And support' on a different row in Table <ref type="table" target="#tab_3">3</ref>);</p><p>• Blame for opponents: critiques or direct attacks on the actions of rival political parties, or lack of action by representatives of other political parties; • Support for the movement: support statements by citizens for the actions of the M5S inside or outside the institutions in which the three representatives worked; • Invitations to participate: stimuli and pleas to fellow citizens to participate in events, follow activities, or contribute to online or offline discussions; and • Concern about political problems: messages expressing concern on political difficulties faced by the M5S or some of its representatives (other than the three analysed here).  </p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="4.2">Structure of the Collaborative Discourse</head><p>The analysis of the collaborative discourse using network theory produced, for each profile and each period, a graph with the following structure: 1. Nodes: blue for threads, orange for topics (the red one is used just for T0); 2. Arcs: red for opening topics (assigned to the post) and grey for other topics assigned to comments and replies belonging to the same thread. Each arc connects a blue node and a red/orange node; 3. Size of nodes: number of entries belonging to a specific thread (blue node) or discussing a specific topic (orange node); and 4. Thickness of the edge: number of entries associated with the corresponding topic in the specific thread. The number of topics shown in the graphs is smaller, in some cases, than the total amount identified by the LDA algorithm (Table <ref type="table" target="#tab_1">2</ref>), since, for each entry, we only considered the topic with the highest level of probability. Based on these assumptions, the structure of the graph representing the collaborative discourse can indicate a different level of convergence (or divergence) based on the number of topics addressed in one unique thread. The case with a complete convergent discourse is represented by a graph with one thread and one single topic, where each entry in the thread discussed the same topic. In contrast, a complete divergent discourse is represented by a graph with different topic for each entry in the thread. These two cases can be seen as the two extremes of a continuum in which a graph representing the collaborative discourse can be found. The divergence of the discourse increases with the increase in the number of topics. The theoretical maximum level of divergence inside a thread is reached when the number of topics equals the number of entries. Figure <ref type="figure">1</ref> describes these two extreme cases.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Figure 1. Graphs representing the two extreme cases of a convergent and a divergent collaborative discourse</head><p>Table <ref type="table">4</ref> shows one exemplar graph for each representative, corresponding to the quarter in which there was the highest number of users engaged in the collaborative discourse. Looking at each graph, we can recognize two main characteristics in common:</p><p>i) There are few red arcs with a strong thickness; and ii)</p><p>There are several arcs incident on each thread (blue node). The red connection identifies the topic on which the thread was started (often promoted by the representative). For this reason, there is no more than one red arc incident on the thread (blue node) connected with one of the possible topics (red/orange node). The result we would have expected to find in the case of a collaborative discourse would have been a thread that started with a post on a specific topic, identified by the red connection, with most of the comments and replies in the same thread discussing the same topic, contributing to the thickness of the red arc (as close as possible to a convergent conversation case). The grey arcs would have identified comments or replies debating alternative topics to the main argument of discussion. Conversely, in all the cases analysed we can recognize a small number of thick red arcs, underling the presence of little focus on a specific subject in each thread, especially if the topic on which the thick red arcs were incident was T0. At the same time, we have several grey arcs (in some cases, they are also quite thick), depicting a high level of divergence in the discussion topics inside each thread (closer to the divergent conversation case depicted in Figure <ref type="figure">1</ref>). We complemented the graphs with descriptive and summary statistics of the activities performed by each profile in the four different periods (where 'T0 in' or 'T0 out' indicate whether T0 was included or excluded from the analysis):</p><p>•  In the case of Representative 1 (R1) there is a higher percentage of citizen engagement compared to that of the representative. While for Representative 2 (R2) and Representative 3 (R3), the representatives often produced more than 60% of the entries. This is consistent with the consideration that R1 is the representative with the highest social media usage intensity and the largest number of followers. This figure is to be interpreted with the datum from 'Profile owner engagement without post'. In all three cases, the representatives contributed mainly by starting the discussion with a post; indeed, the percentage of engagement is often less than 10%. Therefore, the representatives we analysed use social media to start a discourse, but, in rare occasions, intervene in the discussion by replying or commenting on other users' comments.</p><p>Investigating the frequency of contributions, we find a long-tail shape within all three cases (see Figure <ref type="figure" target="#fig_1">2</ref>), since the main contributor was always the profile owner (removed for improved readability from Figure <ref type="figure" target="#fig_1">2</ref>). Very few people were actively writing content and contributing to the discussions, with a large majority adding only one or very few messages, often resulting in increased fragmentation within the discussions. As can be seen for R2 and R3, the number of active users, the 'Profile owner engagement', was higher when the number of active people was small. Furthermore, since there was a limited number of active users, all threads were started by the representatives. In contrast, R1 had a higher number of active users, and the representative was not the only one starting a discussion (indeed the '% Initiator' value was often around 80%), since there were other users creating posts and starting new threads. Therefore, for R1, social media were used as bidirectional channels with followers, who also addressed content to the representative directly by posting on his Facebook profile. This did not happen for R2 and R3; those representatives were using their profiles as mono-directional channels for communication, at least for posting activities.</p><p>Finally, in all cases, the number of entries per person was quite limited. To better interpret this datum, we calculated the quartiles for the entry distribution per user. For each representative, we considered all entries in the entire year. The list of entries was sorted according to who posted the entry and the total number of entries posted by the same user. For example, we can consider the case in which we have 12 entries-from entry 1 (e1) to entry 12 (e12)-and four users engaged in the discussion-User1 (U1), User2 (U2), User3 (U3) and User4 (U4), where: U1 posted seven entries, U2 posted three entries, and U3 and U4 each posted one entry. The resulting sorted list of entries and the data calculations for each quartile are depicted in Figure <ref type="figure">3</ref>. The lower the number of people involved in the first, second, and eventually third, quartile, the higher the number of entries authored by a few people and, hence, the closer the discourse to one-to-many or few-to-many communications.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head>Figure 3. Example of quartiles of the number of contributions</head><p>Table <ref type="table" target="#tab_7">6</ref> shows the quartile distribution of the frequency of message posting across the three representative's profiles. In all three profiles, most people have an average of one post. Moreover, the profile owner is obviously responsible for most of the content available in the dataset.   </p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5">Discussion</head><p>This work was motivated by the following exploratory research question: how does collaborative discourse develop over social media in eParticipation settings? Concerning the aim of the study, the results of our exploratory analysis can be summarized into three main areas: First, social media channels are loci for the emergence of discussion topics, which span several communication threads, engage a number of citizens, and differ according to the number of followers of the specific representative. In all three analysed cases, despite differences levels of contribution, the number of discussion topics was consistently lower than the number of discussion threads. This result confirms what has been stated by the literature concerning the nature of social media use, namely, that social media are areas for the discussion of topics of common interest <ref type="bibr" target="#b15">(Van Dijk 2000;</ref><ref type="bibr" target="#b19">Johannessen, Saebø, and Flak 2015;</ref><ref type="bibr" target="#b25">Medaglia 2012)</ref>. Second, if the discussion is focused on a limited number of topics of interest, the discussion is also fragmented across several different threads with a potential dispersion effect (see Table <ref type="table">4</ref>). The literature highlights that, in collective online efforts-like those analysed here-the contribution is discontinuous because few members of a community actually contribute, while the rest remain passive <ref type="bibr" target="#b22">(Ma and Agarwal 2007)</ref>. The social media we analysed do not include memberships. It was therefore not possible for us to calculate the number of followers, but we may expect to see a number of users not contributing, consistent with what has been stated in the literature. However, the result of our exploratory work lets us state that inertia is not the only problem in an online setting. Another problem is the depth of contribution, i.e. the number of contributions provided by members, given that many users in our case showed a very low frequency of contribution. Third, the discussions going over the social media studied here were not topic oriented. In only a few occasions, the discussion developed on the topic assigned for the post (as shown by the small thickness of the red arc connecting topics and threads in the graphs in Table <ref type="table">4</ref>). This means that, in a few cases, people replied to posts of the representative by continuing to discuss the same argument, but instead brought to the discussion different sets of arguments. From this point of view, more detailed information is delivered through the qualitative rather than the quantitative analysis. To define the summary topics during the qualitative analysis, we sampled entries from the different threads, read them to interpret their meaning, and assigned the topics produced by the automatic analysis of the textual data to a qualitative defined category. We were able to identify entries which contained a specific message different from the discussion topic, such as posts raising a problem for workers in a public company within a thread where people were congratulating the representative for the action performed. These messages created engagement with the representative only in the profiles where the number of participants were smaller.</p><p>In situations where the number of contributors was high (like R1), the representative seemed to have the same difficulty that the automatic text analysis algorithm had: the information was lost amid the many single messages.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5.1">Contents of the discourse</head><p>Our analysis suggests that the discourse of topics being discussed was very fragmented; it was divided across a huge number of individual messages, mainly from sporadic contributors. The topics being discussed (Table <ref type="table" target="#tab_3">3</ref>) indicate that the social media studied here are mostly arenas for expressing support and engagement, blaming and attacking political opponents, and for the representatives to report their own activities. Only within one discussion (on political problems) did we identify messages where users discussed problems related to the actions and decisions made by the M5S (not only the actions made by the specific representative involved). Furthermore, in two of the three profiles, contents were influenced by events which did not involve the representative in question, but were related to the M5S in general. Some users took full advantage of the flexibility of social media to personalize the content of the messages that were shared <ref type="bibr" target="#b4">(Bennett and Segerberg 2012)</ref>, such as by combining many messages in the same text or binding a statement of support for the movement to an appreciation message to the representative or to the discussion of the reporting of the activity.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="5.2">The Role of Social Media in eParticipation</head><p>Though the results of our exploratory analysis do not allow us to draw any kind of generalization, they suggest some hypotheses on the role of social media in eParticipation and some methodological considerations for further research.</p><p>Our findings allow us to re-visit Dahlberg´s ( <ref type="formula">2001</ref>) criteria for well-functioning public discourse, which were introduced above. Keeping in mind that they are meant as ideal types (and may never be fully achieved), these criteria allow us to reflect on the value of the contributions investigated here. We have only limited opportunities to discuss the autonomy or the equal entitlement to initiate new topics for discussion, since our study is restricted to accounts owned by prominent members of the party, where they were initiating most of the new topics. Concerning the other criteria, our findings suggest rather disappointing results. First, only a very limited number of newly introduced topics attracted more than a very limited number of comments, indicating a lack of reciprocity within our empirical material. Second, we were surprised to find that the main topics within the thread of comments following from a message quickly focused on something different than the original message. From a public sphere point of view, we would argue that these findings indicate a lack of reflectiveness or desire to understand other arguments, as users within the ongoing discourse quickly moved towards other areas of interests.</p><p>Our exploratory analysis suggests that the discourse over social media is superficial and does not exceed an exchange that goes beyond appreciation and support. The discourse develops with the involvement of very few contributors, and a huge number of sporadic users who will write one or a few messages. While they contribute to increasing the size and the visibility of the discussion, they also probably contribute to the dispersion of the contents. So, one consideration would be that social media are just venues for engagement. Content does not matter and indeed any content-even irrelevant contentwould add to the visibility and relevance of the political movement which, by its very nature, needs to stimulate the attention and the support of an increasing number of people. The contents shared over social media channels can be divided into messages of support (to the M5S) and messages of blame (to their rivals), where the messages of blame were probably stimulated by contextual conditions, since these emerged during periods when the movement was harshly criticized for choices it made in a few municipalities (including the capital city) in which representatives were elected as governors. According to these results, social media seem to be only venues for marking differences against rivals and allowing people to express supporting opinions or discontent. Finally, we would like to share concerns about how representatives used the social media channels. One of the topics that emerged on the profiles studied was the communication of the activities performed by the representative, which usually stimulated supporting statements by citizens and followers. Therefore, social media are different channels through which representatives may transparently communicate and disseminate their activites in institutions, without engaging citizens in any kind of information exchange that goes beyond support.</p></div>
+<div xmlns="http://www.tei-c.org/ns/1.0"><head n="6">Conclusion</head><p>In this work, we have explored how the collective discourse develops over social media in the eParticipation setting. Our work may provide disappointing news for those eager to introduce social media within the eParticipation area for issues, such as empowering politicians, engaging citizens, or improving trust in government <ref type="bibr" target="#b26">(Medaglia and Zheng 2017)</ref>. Further elaboration of our investigation is needed to develop solid policy implications from our work. Our findings indicate that bringing social media into eParticipation projects may have only limited effects; few people are really engaged by social media discussions, discussion topics quickly disperse into something different than the intended topic, and it is difficult to argue for any in-depth knowledge production based on our work. We are not in the position to propose that social media will not have any positive effects, but we would argue for careful consideration of how to design and use social media, as well as sober expectations on what to expect from such usage.</p><p>Given the nature of our study-focusing only on three cases from the M5S, representing one of the most significant eParticipation settings in the world <ref type="bibr" target="#b2">(Bartlett 2014;</ref><ref type="bibr" target="#b6">Bordignon and Ceccarini 2013;</ref><ref type="bibr" target="#b27">Miconi 2014;</ref><ref type="bibr" target="#b34">Scherer 2012</ref>)-we are not making any claims in terms of generalizability, and we acknowledge that our work calls for future research. The main subject for investigation is determining the real value of social media in eParticipation beyond engaging citizens, supporting participants and holding representatives accountable for their actions. Moreover, we need to acknowledge several limitations in the current study, which also have methodological implications for our future steps, and for other scholars willing to perform similar investigations. One limitation concerns the exclusion of part of the corpus from the automatic analysis of textual data. As indicated in this paper, this is a specific behaviour of the LDA algorithm, which requires text to work. All excluded messages were those related to images or videos being shared, as well as those containing only emoticons and less than three lines of text. For future studies, we recommend transcribing the graphic sources (images and videos) before feeding the corpus into the automatic extraction of topics, since this protocol would reduce the amount of data not covered by the textual analysis. It would then be possible to formulate considerations on the significance of T0, i.e. the topic we identified without content. Another area of improvement concerns the amount of analysis performed. Given the exploratory nature of our analysis, we limited our study to a small number of cases. In future research, we shall include more cases for analysis, not only to enlarge the internal validity of the analysis of the different representatives-also considering that different people show different usage intensity, which is reflected in slightly different information being conveyed by the results of the analysis-but also to acquire a better understanding of the dynamics internal to the eParticipation movement. Previous studies of the same settings <ref type="bibr" target="#b16">(Federici, Braccini, and Saebø 2015)</ref>, identified that these settings are internally diversified, with different areas in the community showing different user behaviours.</p></div><figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_0"><head></head><label></label><figDesc>Profile owner engagement: percentage of entries (posts, comments, and replies) authored by the profile owner; • User engagement: percentage of entries (posts, comments, and replies) authored by other users; • Profile owner engagement without post: percentage of comments and replies authored by the profile owner (indicating engagement of the profile in responding to other users); • % Initiator: percentage of threads started by the profile owner; • Number of active users: number of active users in the period • Entries per user: average number of entries per user; • Number of active topics: number of topics discussed by the users in the period; and • Number of threads: number of active threads in the period.</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" xml:id="fig_1"><head>Figure 2 .</head><label>2</label><figDesc>Figure 2. Frequency of contribution across the three profiles (excluding the profile owner)</figDesc></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_1"><head>Table 2 .</head><label>2</label><figDesc>Number of topics found in the different periods for the three representatives</figDesc><table><row><cell></cell><cell>Representative 1</cell><cell>Representative 2</cell><cell>Representative 3</cell></row><row><cell>Jan -Feb -Mar</cell><cell>13</cell><cell>15</cell><cell></cell></row><row><cell>Apr -May -Jun</cell><cell>15</cell><cell>14</cell><cell>12</cell></row><row><cell>Jul -Aug -Sep</cell><cell>20</cell><cell>11</cell><cell></cell></row><row><cell>Oct -Nov -Dec</cell><cell>21</cell><cell>11</cell><cell>12</cell></row></table></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_3"><head>Table 3 .</head><label>3</label><figDesc></figDesc><table /><note>Summary of topics across the different periods and the different profiles</note></figure>
+<figure xmlns="http://www.tei-c.org/ns/1.0" type="table" xml:id="tab_7"><head>Table 6 .</head><label>6</label><figDesc>Quartiles of the number of contributions by users</figDesc><table /></figure>
 		</body>
 		<back>
 			<div type="references">
@@ -160,53 +108,53 @@ Table 1. Size of corpus
 
 <biblStruct xml:id="b0">
 	<analytic>
-		<title level="a" type="main">Social Media in Egyptian Government Websites: Presence, Usage, and Effectiveness</title>
+		<title level="a" type="main">Social media in Egyptian government websites: Presence, usage, and effectiveness</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Hisham</forename><forename type="middle">M</forename><surname>Abdelsalam</surname></persName>
+			<persName><forename type="first">Hisham</forename><forename type="middle">M</forename><surname>Abdelsalam</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">G</forename><surname>Christopher</surname></persName>
+			<persName><forename type="first">Christopher</forename><forename type="middle">G</forename><surname>Reddick</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Sara</forename><surname>Reddick</surname></persName>
+			<persName><forename type="first">Sara</forename><surname>Gamal</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Abdulrahamn</forename><surname>Gamal</surname></persName>
+			<persName><forename type="first">Abdulrahamn</forename><surname>Al-Shaar</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Al-Shaar</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2013.05.020</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">30</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="406" to="422" />
-			<date type="published" when="2013" />
+			<biblScope unit="page" from="406" to="416" />
+			<date type="published" when="2013-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b1">
 	<analytic>
-		<title level="a" type="main">Electronic Participation with a Special Reference to Social Media -A Literature Review</title>
+		<title level="a" type="main">Electronic Participation with a Special Reference to Social Media - A Literature Review</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Ayman</forename><surname>Alarabiat</surname></persName>
+			<persName><forename type="first">Ayman</forename><surname>Alarabiat</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Delfina</forename><forename type="middle">Sá</forename><surname>Soares</surname></persName>
+			<persName><forename type="first">Delfina</forename><forename type="middle">Sá</forename><surname>Soares</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Elsa</forename><surname>Estevez</surname></persName>
+			<persName><forename type="first">Elsa</forename><surname>Estevez</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">;</forename><forename type="middle">E</forename><surname>Tambouris</surname></persName>
-		</author>
+		<idno type="DOI">10.1007/978-3-319-45074-2_4</idno>
 	</analytic>
 	<monogr>
-		<title level="m">International Conference on Electronic Participation ePart 2016</title>
-		<imprint>
+		<title level="m">Electronic Participation</title>
+				<imprint>
+			<publisher>Springer International Publishing</publisher>
 			<date type="published" when="2016" />
 			<biblScope unit="page" from="41" to="52" />
 		</imprint>
@@ -215,12 +163,14 @@ Table 1. Size of corpus
 
 <biblStruct xml:id="b2">
 	<monogr>
-		<title level="m" type="main">How Beppe Grillo&apos;s Social Media Politics Took Italy by Storm</title>
+		<title level="m" type="main">Blog Storm</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Jamie</forename><surname>Bartlett</surname></persName>
+			<persName><forename type="first">Jamie</forename><surname>Bartlett</surname></persName>
 		</author>
+		<idno type="DOI">10.4135/9781452244723.n43</idno>
 		<imprint>
 			<date type="published" when="2014" />
+			<publisher>SAGE Publications, Inc.</publisher>
 		</imprint>
 	</monogr>
 	<note>The Guardian</note>
@@ -228,101 +178,110 @@ Table 1. Size of corpus
 
 <biblStruct xml:id="b3">
 	<analytic>
-		<title level="a" type="main">Social Media Monitoring: Responsive Governance in the Shadow of Surveillance?</title>
+		<title level="a" type="main">Social media monitoring: Responsive governance in the shadow of surveillance?</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Bekkers</surname></persName>
+			<persName><forename type="first">Victor</forename><surname>Bekkers</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Arthur</forename><surname>Victor</surname></persName>
+			<persName><forename type="first">Arthur</forename><surname>Edwards</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Dennis</forename><surname>Edwards</surname></persName>
+			<persName><forename type="first">Dennis</forename><surname>De Kool</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>De Kool</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2013.05.024</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">30</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="335" to="377" />
-			<date type="published" when="2013" />
+			<biblScope unit="page" from="335" to="342" />
+			<date type="published" when="2013-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b4">
 	<analytic>
-		<title level="a" type="main">The Logic of Connective Action</title>
+		<title level="a" type="main">THE LOGIC OF CONNECTIVE ACTION</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">W</forename><surname>Bennett</surname></persName>
+			<persName><forename type="first">W</forename><forename type="middle">Lance</forename><surname>Bennett</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Alexandra</forename><surname>Lance</surname></persName>
+			<persName><forename type="first">Alexandra</forename><surname>Segerberg</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Segerberg</surname></persName>
-		</author>
+		<idno type="DOI">10.1080/1369118x.2012.670661</idno>
 		<ptr target="http://www.tandfonline.com" />
 	</analytic>
 	<monogr>
 		<title level="j">Information, Communication &amp; Society</title>
+		<title level="j" type="abbrev">Information, Communication &amp; Society</title>
+		<idno type="ISSN">1369-118X</idno>
+		<idno type="ISSNe">1468-4462</idno>
 		<imprint>
 			<biblScope unit="volume">15</biblScope>
 			<biblScope unit="issue">5</biblScope>
-			<biblScope unit="page" from="739" to="68" />
-			<date type="published" when="2012-09-06" />
+			<biblScope unit="page" from="739" to="768" />
+			<date type="published" when="2012-06" />
+			<publisher>Informa UK Limited</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b5">
 	<analytic>
-		<title level="a" type="main">The Impact of Polices on Government Social Media Usage: Issues, Challenges, and Recommendations</title>
+		<title level="a" type="main">The impact of polices on government social media usage: Issues, challenges, and recommendations</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">John</forename><surname>Bertot</surname></persName>
+			<persName><forename type="first">John</forename><forename type="middle">Carlo</forename><surname>Bertot</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Paul</forename><forename type="middle">T</forename><surname>Carlo</surname></persName>
+			<persName><forename type="first">Paul</forename><forename type="middle">T</forename><surname>Jaeger</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Derek</forename><surname>Jaeger</surname></persName>
+			<persName><forename type="first">Derek</forename><surname>Hansen</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Hansen</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2011.04.004</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">29</biblScope>
 			<biblScope unit="issue">1</biblScope>
 			<biblScope unit="page" from="30" to="40" />
-			<date type="published" when="2012" />
+			<date type="published" when="2012-01" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b6">
 	<analytic>
-		<title level="a" type="main">Beppe Grillo Shakes Italian Politics</title>
+		<title level="a" type="main">Five Stars and a Cricket. Beppe Grillo Shakes Italian Politics</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Fabio</forename><surname>Bordignon</surname></persName>
+			<persName><forename type="first">Fabio</forename><surname>Bordignon</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Luigi</forename><surname>Ceccarini</surname></persName>
+			<persName><forename type="first">Luigi</forename><surname>Ceccarini</surname></persName>
 		</author>
 		<idno type="DOI">10.1080/13608746.2013.775720</idno>
 		<ptr target="http://www.tandfonline.com/doi/abs/10.1080/13608746.2013.775720" />
 	</analytic>
 	<monogr>
 		<title level="j">South European Society and Politics</title>
+		<title level="j" type="abbrev">South European Society and Politics</title>
+		<idno type="ISSN">1360-8746</idno>
+		<idno type="ISSNe">1743-9612</idno>
 		<imprint>
 			<biblScope unit="volume">18</biblScope>
-			<biblScope unit="page" from="427" to="476" />
-			<date type="published" when="2013-01" />
+			<biblScope unit="issue">4</biblScope>
+			<biblScope unit="page" from="427" to="449" />
+			<date type="published" when="2013-12" />
+			<publisher>Informa UK Limited</publisher>
 		</imprint>
 	</monogr>
 	<note>Five Stars and a Cricket</note>
@@ -332,16 +291,16 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Community Effort in Online Groups: Who Does the Work and Why?</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Brian</forename><surname>Butler</surname></persName>
+			<persName><forename type="first">Brian</forename><surname>Butler</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Lee</forename><surname>Sproull</surname></persName>
+			<persName><forename type="first">Lee</forename><surname>Sproull</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Sara</forename><surname>Kiesler</surname></persName>
+			<persName><forename type="first">Sara</forename><surname>Kiesler</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Robert</forename><surname>Kraut</surname></persName>
+			<persName><forename type="first">Robert</forename><surname>Kraut</surname></persName>
 		</author>
 	</analytic>
 	<monogr>
@@ -349,7 +308,7 @@ Table 1. Size of corpus
 		<imprint>
 			<biblScope unit="volume">5</biblScope>
 			<biblScope unit="issue">11</biblScope>
-			<biblScope unit="page" from="455" to="69" />
+			<biblScope unit="page" from="455" to="469" />
 			<date type="published" when="2002" />
 		</imprint>
 	</monogr>
@@ -359,7 +318,7 @@ Table 1. Size of corpus
 	<monogr>
 		<title level="m" type="main">Habermas and the Public Sphere</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Craig</forename><forename type="middle">J</forename><surname>Calhoun</surname></persName>
+			<persName><forename type="first">Craig</forename><forename type="middle">J</forename><surname>Calhoun</surname></persName>
 		</author>
 		<imprint>
 			<date type="published" when="1992" />
@@ -372,85 +331,93 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">The New Public Sphere: Global Civil Society, Communication Networks, and Global Governance</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">M</forename><surname>Castells</surname></persName>
+			<persName><forename type="first">Manuel</forename><surname>Castells</surname></persName>
 		</author>
+		<idno type="DOI">10.1177/0002716207311877</idno>
 	</analytic>
 	<monogr>
 		<title level="j">The ANNALS of the American Academy of Political and Social Science</title>
+		<title level="j" type="abbrev">The ANNALS of the American Academy of Political and Social Science</title>
+		<idno type="ISSN">0002-7162</idno>
+		<idno type="ISSNe">1552-3349</idno>
 		<imprint>
 			<biblScope unit="volume">616</biblScope>
 			<biblScope unit="issue">1</biblScope>
 			<biblScope unit="page" from="78" to="93" />
-			<date type="published" when="2008" />
+			<date type="published" when="2008-03" />
+			<publisher>SAGE Publications</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b10">
 	<analytic>
-		<title level="a" type="main">Social Media in Government</title>
+		<title level="a" type="main">Social media in government</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Soon</forename><surname>Chun</surname></persName>
+			<persName><forename type="first">Soon</forename><forename type="middle">Ae</forename><surname>Chun</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Luis</forename><forename type="middle">F Luna</forename><surname>Ae</surname></persName>
+			<persName><forename type="first">Luis</forename><forename type="middle">F</forename><surname>Luna Reyes</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Reyes</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2012.07.003</idno>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X12001037" />
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">29</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="441" to="486" />
-			<date type="published" when="2012-07-09" />
+			<biblScope unit="page" from="441" to="445" />
+			<date type="published" when="2012-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b11">
 	<monogr>
-		<title level="m" type="main">Connecting Democracy: Online Consultation and the Flow of Political Communication</title>
+		<title level="m" type="main">Connecting Democracy</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Stephen</forename><surname>Coleman</surname></persName>
+			<persName><forename type="first">Stephen</forename><surname>Coleman</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Peter N</forename><surname>Shane</surname></persName>
+			<persName><forename type="first">Peter N</forename><surname>Shane</surname></persName>
 		</author>
+		<idno type="DOI">10.7551/mitpress/9006.001.0001</idno>
 		<imprint>
-			<date type="published" when="2012" />
-			<publisher>MIT Press</publisher>
+			<date type="published" when="2011" />
+			<publisher>The MIT Press</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b12">
 	<analytic>
-		<title level="a" type="main">Government Innovation through Social Media</title>
+		<title level="a" type="main">Government innovation through social media</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">J</forename><surname>Criado</surname></persName>
+			<persName><forename type="first">J</forename><forename type="middle">Ignacio</forename><surname>Criado</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Rodrigo</forename><surname>Ignacio</surname></persName>
+			<persName><forename type="first">Rodrigo</forename><surname>Sandoval-Almazan</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">J. Ramon</forename><surname>Sandoval-Almazan</surname></persName>
+			<persName><forename type="first">J</forename><forename type="middle">Ramon</forename><surname>Gil-Garcia</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Gil-Garcia</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2013.10.003</idno>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X1300083X" />
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">30</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="319" to="345" />
-			<date type="published" when="2013-05-28" />
+			<biblScope unit="page" from="319" to="326" />
+			<date type="published" when="2013-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -459,16 +426,21 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">The Internet and Democratic Discourse: Exploring The Prospects of Online Deliberative Forums Extending the Public Sphere</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Lincoln</forename><surname>Dahlberg</surname></persName>
+			<persName><forename type="first">Lincoln</forename><surname>Dahlberg</surname></persName>
 		</author>
+		<idno type="DOI">10.1080/13691180110097030</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Information, Communication &amp; Society</title>
+		<title level="j" type="abbrev">Information, Communication &amp; Society</title>
+		<idno type="ISSN">1369-118X</idno>
+		<idno type="ISSNe">1468-4462</idno>
 		<imprint>
 			<biblScope unit="volume">4</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="615" to="648" />
-			<date type="published" when="2001" />
+			<biblScope unit="page" from="615" to="633" />
+			<date type="published" when="2001-01" />
+			<publisher>Informa UK Limited</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -477,19 +449,19 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Latent Dirichlet Allocation</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">M</forename><surname>David</surname></persName>
+			<persName><forename type="first">M</forename><surname>David</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Ng</forename><surname>Blei</surname></persName>
+			<persName><forename type="first">Ng</forename><surname>Blei</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Y</forename><surname>Andrew</surname></persName>
+			<persName><forename type="first">Y</forename><surname>Andrew</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Jordan</forename><surname>Michael</surname></persName>
+			<persName><forename type="first">Jordan</forename><surname>Michael</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">I</forename></persName>
+			<persName><forename type="first">I</forename></persName>
 		</author>
 		<ptr target="http://ai.stanford.edu/~ang/papers/nips01-lda.pdf" />
 	</analytic>
@@ -497,7 +469,7 @@ Table 1. Size of corpus
 		<title level="j">Journal of Machine Learning Research</title>
 		<imprint>
 			<biblScope unit="volume">3</biblScope>
-			<biblScope unit="page" from="1566" to="81" />
+			<biblScope unit="page" from="1566" to="1581" />
 			<date type="published" when="2003-10-27" />
 		</imprint>
 	</monogr>
@@ -507,12 +479,15 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Models of Democracy and Concepts of Communication</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">J</forename><surname>Van Dijk</surname></persName>
+			<persName><forename type="first">J</forename><surname>Van Dijk</surname></persName>
 		</author>
 	</analytic>
 	<monogr>
 		<title level="m">Digital Democracy, Issues of Theory and Practice</title>
-		<editor>K.L. Hacker and J. Van Dijk</editor>
+				<editor>
+			<persName><forename type="first">K</forename><forename type="middle">L</forename><surname>Hacker</surname></persName>
+			<persName><forename type="first">J</forename><surname>Van Dijk</surname></persName>
+		</editor>
 		<meeting><address><addrLine>London</addrLine></address></meeting>
 		<imprint>
 			<publisher>SAGE Publications</publisher>
@@ -523,56 +498,63 @@ Table 1. Size of corpus
 
 <biblStruct xml:id="b16">
 	<analytic>
-		<title level="a" type="main">Gentlemen, All Aboard!&apos; ICT and Party Politics: Reflections from a Mass-eParticipation Experience</title>
+		<title level="a" type="main">‘Gentlemen, all aboard!’ ICT and party politics: Reflections from a Mass-eParticipation experience</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Tommaso</forename><surname>Federici</surname></persName>
+			<persName><forename type="first">Tommaso</forename><surname>Federici</surname></persName>
+			<idno type="ORCID">0000-0001-6016-5868</idno>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Alessio</forename><forename type="middle">Maria</forename><surname>Braccini</surname></persName>
+			<persName><forename type="first">Alessio</forename><forename type="middle">Maria</forename><surname>Braccini</surname></persName>
+			<idno type="ORCID">0000-0002-2004-4735</idno>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
+			<persName><forename type="first">Øystein</forename><surname>Sæbø</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.giq.2015.04.009</idno>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X15000635" />
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">32</biblScope>
 			<biblScope unit="issue">3</biblScope>
-			<biblScope unit="page" from="287" to="98" />
-			<date type="published" when="2015" />
+			<biblScope unit="page" from="287" to="298" />
+			<date type="published" when="2015-07" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b17">
 	<analytic>
-		<title level="a" type="main">Policy Making 2.0: From Theory to Practice</title>
+		<title level="a" type="main">Policy making 2.0: From theory to practice</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Enrico</forename><surname>Ferro</surname></persName>
+			<persName><forename type="first">Enrico</forename><surname>Ferro</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">N</forename><surname>Euripidis</surname></persName>
+			<persName><forename type="first">Euripidis</forename><forename type="middle">N</forename><surname>Loukis</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Yannis</forename><surname>Loukis</surname></persName>
+			<persName><forename type="first">Yannis</forename><surname>Charalabidis</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Michele</forename><surname>Charalabidis</surname></persName>
+			<persName><forename type="first">Michele</forename><surname>Osella</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Osella</surname></persName>
-		</author>
+		<idno type="DOI">10.1016/j.giq.2013.05.018</idno>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X13000798" />
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">30</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="359" to="68" />
-			<date type="published" when="2013-07-16" />
+			<biblScope unit="page" from="359" to="368" />
+			<date type="published" when="2013-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -581,18 +563,18 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Defining the IT Artefact in Social Media for Eparticipation: An Ensemble View</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Marius</forename><surname>Johannessen</surname></persName>
+			<persName><forename type="first">Marius</forename><surname>Johannessen</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Bjørn</forename><forename type="middle">Erik</forename><surname>Rohde</surname></persName>
+			<persName><forename type="first">Bjørn</forename><forename type="middle">Erik</forename><surname>Rohde</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Munkvold</surname></persName>
+			<persName><surname>Munkvold</surname></persName>
 		</author>
 	</analytic>
 	<monogr>
 		<title level="m">20th European Conference on Information Systems (ECIS 2012)</title>
-		<imprint>
+				<imprint>
 			<date type="published" when="2012" />
 			<biblScope unit="page" from="1" to="10" />
 		</imprint>
@@ -601,68 +583,78 @@ Table 1. Size of corpus
 
 <biblStruct xml:id="b19">
 	<analytic>
-		<title level="a" type="main">Social Media as Public Sphere: A Stakeholder Perspective</title>
+		<title level="a" type="main">Social media as public sphere: a stakeholder perspective</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Marius</forename><surname>Johannessen</surname></persName>
+			<persName><forename type="first">Marius</forename><forename type="middle">Rohde</forename><surname>Johannessen</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Øystein</forename><surname>Rohde</surname></persName>
+			<persName><forename type="first">Øystein</forename><surname>Sæbø</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Leif</forename><forename type="middle">Skiftenes</forename><surname>Saebø</surname></persName>
+			<persName><forename type="first">Leif</forename><forename type="middle">Skiftenes</forename><surname>Flak</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Flak</surname></persName>
-		</author>
+		<idno type="DOI">10.1108/tg-01-2015-0003</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Transforming Government: People, Process and Policy</title>
+		<title level="j" type="abbrev">TG</title>
+		<idno type="ISSN">1750-6166</idno>
 		<imprint>
 			<biblScope unit="volume">10</biblScope>
 			<biblScope unit="issue">2</biblScope>
-			<date type="published" when="2015" />
+			<biblScope unit="page" from="212" to="238" />
+			<date type="published" when="2016-05-16" />
+			<publisher>Emerald</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b20">
 	<analytic>
-		<title level="a" type="main">Users of the World, Unite! The Challenges and Opportunities of Social Media</title>
+		<title level="a" type="main">Users of the world, unite! The challenges and opportunities of Social Media</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Andreas</forename><forename type="middle">M</forename><surname>Kaplan</surname></persName>
+			<persName><forename type="first">Andreas</forename><forename type="middle">M</forename><surname>Kaplan</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Michael</forename><surname>Haenlein</surname></persName>
+			<persName><forename type="first">Michael</forename><surname>Haenlein</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.bushor.2009.09.003</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Business Horizons</title>
+		<title level="j" type="abbrev">Business Horizons</title>
+		<idno type="ISSN">0007-6813</idno>
 		<imprint>
 			<biblScope unit="volume">53</biblScope>
 			<biblScope unit="issue">1</biblScope>
 			<biblScope unit="page" from="59" to="68" />
-			<date type="published" when="2010" />
+			<date type="published" when="2010-01" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b21">
 	<analytic>
-		<title level="a" type="main">Social Network Analysis: Characteristics of Online Social Networks after a Disaster</title>
+		<title level="a" type="main">Social network analysis: Characteristics of online social networks after a disaster</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Jooho</forename><surname>Kim</surname></persName>
+			<persName><forename type="first">Jooho</forename><surname>Kim</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Makarand</forename><surname>Hastak</surname></persName>
+			<persName><forename type="first">Makarand</forename><surname>Hastak</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.ijinfomgt.2017.08.003</idno>
 	</analytic>
 	<monogr>
 		<title level="j">International Journal of Information Management</title>
+		<title level="j" type="abbrev">International Journal of Information Management</title>
+		<idno type="ISSN">0268-4012</idno>
 		<imprint>
 			<biblScope unit="volume">38</biblScope>
 			<biblScope unit="issue">1</biblScope>
 			<biblScope unit="page" from="86" to="96" />
-			<date type="published" when="2018" />
+			<date type="published" when="2018-02" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -671,21 +663,25 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Through a Glass Darkly: Information Technology Design, Identity Verification, and Knowledge Contribution in Online Communities</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Meng</forename><surname>Ma</surname></persName>
+			<persName><forename type="first">Meng</forename><surname>Ma</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Ritu</forename><surname>Agarwal</surname></persName>
+			<persName><forename type="first">Ritu</forename><surname>Agarwal</surname></persName>
 		</author>
 		<idno type="DOI">10.1287/isre.1070.0113</idno>
 		<ptr target="http://pubsonline.informs.org/doi/abs/10.1287/isre.1070.0113" />
 	</analytic>
 	<monogr>
-		<title level="j">Information Systems Reserach</title>
+		<title level="j">Information Systems Research</title>
+		<title level="j" type="abbrev">Information Systems Research</title>
+		<idno type="ISSN">1047-7047</idno>
+		<idno type="ISSNe">1526-5536</idno>
 		<imprint>
 			<biblScope unit="volume">18</biblScope>
 			<biblScope unit="issue">1</biblScope>
 			<biblScope unit="page" from="42" to="67" />
-			<date type="published" when="2007" />
+			<date type="published" when="2007-03" />
+			<publisher>Institute for Operations Research and the Management Sciences (INFORMS)</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -694,17 +690,21 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">A Review of Social Media Use in E-Government</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Michael</forename><forename type="middle">J</forename><surname>Magro</surname></persName>
+			<persName><forename type="first">Michael</forename><forename type="middle">J</forename><surname>Magro</surname></persName>
 		</author>
+		<idno type="DOI">10.3390/admsci2020148</idno>
 		<ptr target="http://www.mdpi.com/2076-3387/2/2/148/" />
 	</analytic>
 	<monogr>
 		<title level="j">Administrative Sciences</title>
+		<title level="j" type="abbrev">Administrative Sciences</title>
+		<idno type="ISSNe">2076-3387</idno>
 		<imprint>
 			<biblScope unit="volume">2</biblScope>
-			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="148" to="61" />
-			<date type="published" when="2012" />
+			<biblScope unit="issue">2</biblScope>
+			<biblScope unit="page" from="148" to="161" />
+			<date type="published" when="2012-04-10" />
+			<publisher>MDPI AG</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -713,107 +713,150 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">The Impact of Shaping on Knowledge Reuse for Organizational Improvement with Wikis</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Ann</forename><surname>Majchrzak</surname></persName>
+			<persName><forename type="first">Ann</forename><surname>Majchrzak</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Christian</forename><surname>Wagner</surname></persName>
+			<persName><forename type="first">Christian</forename><surname>Wagner</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Dave</forename><surname>Yates</surname></persName>
+			<persName><forename type="first">Dave</forename><surname>Yates</surname></persName>
 		</author>
+		<idno type="DOI">10.25300/misq/2013/37.2.07</idno>
 	</analytic>
 	<monogr>
 		<title level="j">MIS Quarterly</title>
+		<title level="j" type="abbrev">MISQ</title>
+		<idno type="ISSN">0276-7783</idno>
+		<idno type="ISSNe">2162-9730</idno>
 		<imprint>
 			<biblScope unit="volume">37</biblScope>
 			<biblScope unit="issue">2</biblScope>
-			<biblScope unit="page" from="455" to="69" />
-			<date type="published" when="2013" />
+			<biblScope unit="page" from="455" to="469" />
+			<date type="published" when="2013-02-02" />
+			<publisher>MIS Quarterly</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b25">
 	<analytic>
-				<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Rony</forename><surname>Medaglia</surname></persName>
+		<title level="a" type="main">eParticipation research: Moving characterization forward (2006–2011)</title>
+		<author>
+			<persName><forename type="first">Rony</forename><surname>Medaglia</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.giq.2012.02.010</idno>
 	</analytic>
 	<monogr>
-		<title level="m">eParticipation Research: Moving Characterization Forward</title>
+		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
-			<date type="published" when="2006" />
 			<biblScope unit="volume">29</biblScope>
-			<biblScope unit="page" from="346" to="60" />
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="346" to="360" />
+			<date type="published" when="2012-07" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b26">
 	<analytic>
-		<title level="a" type="main">Mapping Government Social Media Research and Moving It Forward: A Framework and a Research Agenda</title>
+		<title level="a" type="main">Mapping government social media research and moving it forward: A framework and a research agenda</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Rony</forename><surname>Medaglia</surname></persName>
+			<persName><forename type="first">Rony</forename><surname>Medaglia</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Lei</forename><surname>Zheng</surname></persName>
+			<persName><forename type="first">Lei</forename><surname>Zheng</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.giq.2017.06.001</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
-			<date type="published" when="2017" />
+			<biblScope unit="volume">34</biblScope>
+			<biblScope unit="issue">3</biblScope>
+			<biblScope unit="page" from="496" to="510" />
+			<date type="published" when="2017-09" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b27">
 	<analytic>
-		<title level="a" type="main">Italy&apos;s &apos;Five Stars&apos; movement and the Role of a Leader: Or, How Charismatic Power Can Resurface through the Web</title>
+		<title level="a" type="main">Italy’s “Five Stars” movement and the role of a leader: Or, how charismatic power can resurface through the web</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Andrea</forename><surname>Miconi</surname></persName>
+			<persName><forename type="first">Andrea</forename><surname>Miconi</surname></persName>
 		</author>
+		<idno type="DOI">10.1177/1461444814520872</idno>
 	</analytic>
 	<monogr>
 		<title level="j">New Media &amp; Society</title>
+		<title level="j" type="abbrev">New Media &amp; Society</title>
+		<idno type="ISSN">1461-4448</idno>
+		<idno type="ISSNe">1461-7315</idno>
 		<imprint>
-			<date type="published" when="2014" />
+			<biblScope unit="volume">17</biblScope>
+			<biblScope unit="issue">7</biblScope>
+			<biblScope unit="page" from="1043" to="1058" />
+			<date type="published" when="2014-01-28" />
+			<publisher>SAGE Publications</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b28">
-	<monogr>
-		<title/>
+	<analytic>
+		<title level="a" type="main">Italy’s “Five Stars” movement and the role of a leader: Or, how charismatic power can resurface through the web</title>
+		<author>
+			<persName><forename type="first">Andrea</forename><surname>Miconi</surname></persName>
+		</author>
 		<idno type="DOI">10.1177/1461444814520872</idno>
 		<ptr target="http://nms.sagepub.com/cgi/doi/10.1177/1461444814520872" />
+	</analytic>
+	<monogr>
+		<title level="j">New Media &amp; Society</title>
+		<title level="j" type="abbrev">New Media &amp; Society</title>
+		<idno type="ISSN">1461-4448</idno>
+		<idno type="ISSNe">1461-7315</idno>
 		<imprint>
-			<date type="published" when="2014-07-02" />
+			<biblScope unit="volume">17</biblScope>
+			<biblScope unit="issue">7</biblScope>
+			<biblScope unit="page" from="1043" to="1058" />
+			<date type="published" when="2014-01-28" />
+			<publisher>SAGE Publications</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b29">
 	<analytic>
-		<title level="a" type="main">Connecting Citizens and Local Governments? Social Media and Interactivity in Major U.S. Cities</title>
+		<title level="a" type="main">Connecting citizens and local governments? Social media and interactivity in major U.S. cities</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Karen</forename><surname>Mossberger</surname></persName>
+			<persName><forename type="first">Karen</forename><surname>Mossberger</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Yonghong</forename><surname>Wu</surname></persName>
+			<persName><forename type="first">Yonghong</forename><surname>Wu</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Jared</forename><surname>Crawford</surname></persName>
+			<persName><forename type="first">Jared</forename><surname>Crawford</surname></persName>
 		</author>
+		<idno type="DOI">10.1016/j.giq.2013.05.016</idno>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X13000774" />
 	</analytic>
 	<monogr>
 		<title level="j">Government Information Quarterly</title>
+		<title level="j" type="abbrev">Government Information Quarterly</title>
+		<idno type="ISSN">0740-624X</idno>
 		<imprint>
 			<biblScope unit="volume">30</biblScope>
 			<biblScope unit="issue">4</biblScope>
-			<biblScope unit="page" from="351" to="58" />
-			<date type="published" when="2013-07-13" />
+			<biblScope unit="page" from="351" to="358" />
+			<date type="published" when="2013-10" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -822,7 +865,7 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">What Is Web 2.0: Design Patterns and Business Models for the Next Generation of Software</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Tim</forename><surname>O&amp;apos;reilly</surname></persName>
+			<persName><forename type="first">Tim</forename><surname>O'reilly</surname></persName>
 		</author>
 	</analytic>
 	<monogr>
@@ -839,58 +882,80 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Building Member Attachment in Online Communities: Applying Theories of Group Identity and Interpersonal Bonds</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Yuqing</forename><surname>Ren</surname></persName>
+			<persName><surname>Ren</surname></persName>
 		</author>
+		<author>
+			<persName><surname>Harper</surname></persName>
+		</author>
+		<author>
+			<persName><surname>Drenner</surname></persName>
+		</author>
+		<author>
+			<persName><surname>Terveen</surname></persName>
+		</author>
+		<author>
+			<persName><surname>Kiesler</surname></persName>
+		</author>
+		<author>
+			<persName><surname>Riedl</surname></persName>
+		</author>
+		<author>
+			<persName><surname>Kraut</surname></persName>
+		</author>
+		<idno type="DOI">10.2307/41703483</idno>
 	</analytic>
 	<monogr>
 		<title level="j">MIS Quarterly</title>
+		<title level="j" type="abbrev">MIS Quarterly</title>
+		<idno type="ISSN">0276-7783</idno>
 		<imprint>
 			<biblScope unit="volume">36</biblScope>
 			<biblScope unit="issue">3</biblScope>
-			<biblScope unit="page" from="841" to="64" />
+			<biblScope unit="page">841</biblScope>
 			<date type="published" when="2012" />
+			<publisher>JSTOR</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b32">
 	<analytic>
-		<title level="a" type="main">From the Blogosphere into Real Politics: The Use of ICT by the Five Star Movement</title>
+		<title level="a" type="main">From Information to Smart Society</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
+			<persName><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">A</forename><forename type="middle">M</forename><surname>Alessio Maria Braccini</surname></persName>
+			<persName><forename type="first">A</forename><forename type="middle">M</forename><surname>Alessio Maria Braccini</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Tommaso</forename><surname>Federici</surname></persName>
+			<persName><forename type="first">Tommaso</forename><surname>Federici</surname></persName>
 		</author>
 		<idno type="DOI">10.1007/978-3-319-09450-2</idno>
 		<ptr target="http://link.springer.com/10.1007/978-3-319-09450-2" />
 	</analytic>
 	<monogr>
-		<title level="m">Lapo Mola, Ferdinando Pennarola, and Stefano Za</title>
-		<meeting><address><addrLine>Cham</addrLine></address></meeting>
+		<title level="m">Lecture Notes in Information Systems and Organisation</title>
+				<meeting><address><addrLine>Cham</addrLine></address></meeting>
 		<imprint>
 			<publisher>Springer International Publishing</publisher>
-			<date type="published" when="2014" />
-			<biblScope unit="page" from="241" to="50" />
+			<date type="published" when="2015" />
+			<biblScope unit="page" from="241" to="250" />
 		</imprint>
 	</monogr>
-	<note>In From Information to Smart Society -Environment</note>
+	<note>Lapo Mola, Ferdinando Pennarola, and Stefano Za</note>
 </biblStruct>
 
 <biblStruct xml:id="b33">
 	<analytic>
 		<title level="a" type="main">The Shape of eParticipation: Characterizing an Emerging Research Area</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
+			<persName><forename type="first">Øystein</forename><surname>Saebø</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Jeremy</forename><surname>Rose</surname></persName>
+			<persName><forename type="first">Jeremy</forename><surname>Rose</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Leif</forename><forename type="middle">Skiftenes</forename><surname>Flak</surname></persName>
+			<persName><forename type="first">Leif</forename><forename type="middle">Skiftenes</forename><surname>Flak</surname></persName>
 		</author>
 		<ptr target="http://linkinghub.elsevier.com/retrieve/pii/S0740624X0700055X" />
 	</analytic>
@@ -906,17 +971,16 @@ Table 1. Size of corpus
 </biblStruct>
 
 <biblStruct xml:id="b34">
-	<analytic>
-		<title level="a" type="main">Italy&apos;s Populist Movement Holds Online Vote to Pick Candidates</title>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">S</forename><surname>Scherer</surname></persName>
-		</author>
-		<ptr target="http://www.reuters.com/article/2012/12/06/us-italy-grillo-primary-idUSBRE8B50UQ20121206" />
-	</analytic>
 	<monogr>
-		<title level="m">Reuters</title>
+		<title level="m" type="main">Reuters Ltd.</title>
+		<author>
+			<persName><forename type="first">S</forename><surname>Scherer</surname></persName>
+		</author>
+		<idno type="DOI">10.1163/9789004337862__com_180567</idno>
+		<ptr target="http://www.reuters.com/article/2012/12/06/us-italy-grillo-primary-idUSBRE8B50UQ20121206" />
 		<imprint>
-			<date type="published" when="2012" />
+			<date>2012</date>
+			<publisher>Brill</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
@@ -925,64 +989,83 @@ Table 1. Size of corpus
 	<analytic>
 		<title level="a" type="main">Digital Action Repertoires and Transforming a Social Movement Organization</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">Lisen</forename><surname>Selander</surname></persName>
+			<persName><forename type="first">Lisen</forename><surname>Selander</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">L</forename><surname>Sirkka</surname></persName>
+			<persName><forename type="first">Sirkka</forename><forename type="middle">L</forename><surname>Jarvenpaa</surname></persName>
 		</author>
-		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Jarvenpaa</surname></persName>
-		</author>
+		<idno type="DOI">10.25300/misq/2016/40.2.03</idno>
 	</analytic>
 	<monogr>
 		<title level="j">MIS Quarterly</title>
+		<title level="j" type="abbrev">MISQ</title>
+		<idno type="ISSN">0276-7783</idno>
+		<idno type="ISSNe">2162-9730</idno>
 		<imprint>
 			<biblScope unit="volume">40</biblScope>
 			<biblScope unit="issue">2</biblScope>
-			<biblScope unit="page" from="331" to="52" />
-			<date type="published" when="2016" />
+			<biblScope unit="page" from="331" to="352" />
+			<date type="published" when="2016-02-02" />
+			<publisher>MIS Quarterly</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b36">
 	<analytic>
-		<title level="a" type="main">The Public and Its Problems</title>
+		<title level="a" type="main">The Public and Its Problems.</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">T</forename><forename type="middle">V</forename><surname>Smith</surname></persName>
+			<persName><forename type="first">T</forename><forename type="middle">V</forename><surname>Smith</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">John</forename><surname>Dewey</surname></persName>
+			<persName><forename type="first">John</forename><surname>Dewey</surname></persName>
 		</author>
+		<idno type="DOI">10.2307/2180172</idno>
 	</analytic>
 	<monogr>
 		<title level="j">The Philosophical Review</title>
+		<title level="j" type="abbrev">The Philosophical Review</title>
+		<idno type="ISSN">0031-8108</idno>
 		<imprint>
 			<biblScope unit="volume">38</biblScope>
-			<biblScope unit="issue">1</biblScope>
+			<biblScope unit="issue">2</biblScope>
 			<biblScope unit="page">177</biblScope>
-			<date type="published" when="1929" />
+			<date type="published" when="1929-03" />
+			<publisher>JSTOR</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>
 
 <biblStruct xml:id="b37">
 	<analytic>
-		<title level="a" type="main">ExpertRank: A Topic-Aware Expert Finding Algorithm for Online Knowledge Communities</title>
+		<title level="a" type="main">ExpertRank: A topic-aware expert finding algorithm for online knowledge communities</title>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><forename type="first">G</forename><surname>Wang</surname></persName>
+			<persName><forename type="first">G</forename><forename type="middle">Alan</forename><surname>Wang</surname></persName>
 		</author>
 		<author>
-			<persName xmlns="http://www.tei-c.org/ns/1.0"><surname>Alan</surname></persName>
+			<persName><forename type="first">Jian</forename><surname>Jiao</surname></persName>
 		</author>
+		<author>
+			<persName><forename type="first">Alan</forename><forename type="middle">S</forename><surname>Abrahams</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Weiguo</forename><surname>Fan</surname></persName>
+		</author>
+		<author>
+			<persName><forename type="first">Zhongju</forename><surname>Zhang</surname></persName>
+		</author>
+		<idno type="DOI">10.1016/j.dss.2012.12.020</idno>
 	</analytic>
 	<monogr>
 		<title level="j">Decision Support Systems</title>
+		<title level="j" type="abbrev">Decision Support Systems</title>
+		<idno type="ISSN">0167-9236</idno>
 		<imprint>
 			<biblScope unit="volume">54</biblScope>
 			<biblScope unit="issue">3</biblScope>
-			<biblScope unit="page" from="1442" to="51" />
-			<date type="published" when="2013" />
+			<biblScope unit="page" from="1442" to="1451" />
+			<date type="published" when="2013-02" />
+			<publisher>Elsevier BV</publisher>
 		</imprint>
 	</monogr>
 </biblStruct>

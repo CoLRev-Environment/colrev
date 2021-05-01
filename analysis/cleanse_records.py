@@ -3,7 +3,6 @@
 
 import bibtexparser
 from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import os
@@ -12,11 +11,8 @@ import time
 from time import gmtime, strftime
 import re
 import logging
-from fuzzywuzzy import fuzz
 from Levenshtein import ratio
 from tqdm import tqdm
-
-from string import ascii_lowercase
 
 #from crossref.restful import Works
 from urllib.error import HTTPError
@@ -123,7 +119,7 @@ def quality_improvements(bibfilename):
                     retries = 0
                     while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
                         retries += 1
-                        msg = "Error while querying CrossRef API ({}), retrying ({})...".format(ret["exception"], retries)
+#                        msg = "Error while querying CrossRef API ({}), retrying ({})...".format(ret["exception"], retries)
     #                    print(msg)
                         ret = crossref_query_title(entry['title'])
                     if ret["result"]['similarity'] > 0.95:
