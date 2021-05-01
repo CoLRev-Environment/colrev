@@ -70,20 +70,25 @@ def run_screen_1(screen_filename, bibfilename):
 
     references = load_bib_file(bibfilename)
     
-    screen = pd.merge(screen, references, on='citation_key')
 
     try:
         for i, row in screen.iterrows():
             if 'TODO' == row['inclusion_1']:
                 inclusion_decision = 'TODO'
+                reference = references.loc[references['citation_key'] == row['citation_key']].iloc[0].to_dict()
                 while inclusion_decision not in ['y','n']:
                     print()
                     print()
-                    print(row['title'] + '  -  ' + row['author'] + '  ' + row['journal'] + '  ' + row['year'] + '  (' + row['volume'] + ':' + row['issue'] + ') *' + row['citation_key'] + '*')
+                    print(reference['title'] + '  -  ' + reference['author'] + '  ' + reference['journal'] + '  ' + reference['year'] + '  (' + reference['volume'] + ':' + reference['issue'] + ') *' + reference['citation_key'] + '*')
                     print()
                     inclusion_decision = input('include (y) or exclude (n)?')
                 inclusion_decision = inclusion_decision.replace('y', 'yes').replace('n', 'no')
                 screen.at[i,'inclusion_1'] = inclusion_decision
+                if 'no' == inclusion_decision:
+                    screen.at[i,'inclusion_2'] = 'NA'
+                    for column in screen.columns:
+                        if 'ec_' in column:
+                            screen.at[i,column] = 'NA'
         
                 screen.sort_values(by=['citation_key'], inplace=True)
                 screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)

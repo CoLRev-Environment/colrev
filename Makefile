@@ -28,5 +28,8 @@ screen :
 screen_1 :
 	$(MAKE) -C analysis screen_1
 
+screen_2 :
+	$(MAKE) -C analysis screen_2
+
 data :
 	$(MAKE) -C analysis data

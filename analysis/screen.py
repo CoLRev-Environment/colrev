@@ -91,9 +91,9 @@ if __name__ == "__main__":
     
     if not os.path.exists(screen_file):
         print('Creating screen.csv')
-        exclusion_criteria = input('Please provide a list of exclusion criteria [criterion1,criterion2,...]')        
+        exclusion_criteria = input('Please provide a list of exclusion criteria [criterion1,criterion2,...]: ')        
         
-        exclusion_criteria = exclusion_criteria.strip('[]').replace(' ','').split(',')
+        exclusion_criteria = exclusion_criteria.strip('[]').replace(' ','_').split(',')
         
         exclusion_criteria = ['ec_' + criterion for criterion in exclusion_criteria]
         

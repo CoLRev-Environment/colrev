@@ -59,8 +59,7 @@ def load_bib_file(bibfilename):
 
         return data_df
 
-
-def run_screen_1(screen_filename, bibfilename):
+def run_screen_2(screen_filename, bibfilename):
 
     screen = pd.read_csv(screen_filename, dtype=str)
     
@@ -70,21 +69,38 @@ def run_screen_1(screen_filename, bibfilename):
 
     references = load_bib_file(bibfilename)
     
-    screen = pd.merge(screen, references, on='citation_key')
-
+    exclusion_criteria_available = 0 < len([col for col in screen.columns if col.startswith('ec_')])
+    
     try:
         for i, row in screen.iterrows():
-            if 'TODO' == row['inclusion_1']:
-                inclusion_decision = 'TODO'
-                while inclusion_decision not in ['y','n']:
-                    print()
-                    print()
-                    print(row['title'] + '  -  ' + row['author'] + '  ' + row['journal'] + '  ' + row['year'] + '  (' + row['volume'] + ':' + row['issue'] + ') *' + row['citation_key'] + '*')
-                    print()
-                    inclusion_decision = input('include (y) or exclude (n)?')
-                inclusion_decision = inclusion_decision.replace('y', 'yes').replace('n', 'no')
-                screen.at[i,'inclusion_1'] = inclusion_decision
-        
+            if 'TODO' == row['inclusion_2']:
+                reference = references.loc[references['citation_key'] == row['citation_key']].iloc[0].to_dict()
+                print()
+                print()
+                print()
+                print(reference['title'] + '  -  ' + reference['author'] + '  ' + reference['journal'] + '  ' + reference['year'] + '  (' + reference['volume'] + ':' + reference['issue'] + ') ' +  reference['file_name'] + ' *' + reference['citation_key'] + '*')
+                if exclusion_criteria_available:
+                    for column in [col for col in screen.columns if col.startswith('ec_')]:
+                        decision = 'TODO'
+                        
+                        while decision not in ['y','n']:
+                            decision = input('Violates ' + column + ' (y/n)?')
+                        decision = decision.replace('y', 'yes').replace('n', 'no')
+                        screen.at[i,column] = decision
+                    
+                    if all([screen.at[i,col] == 'no' for col in screen.columns if col.startswith('ec_')]):
+                        screen.at[i,'inclusion_2'] = 'yes'
+                        print('Inclusion recored')
+                    else:
+                        screen.at[i,'inclusion_2'] = 'no'
+                        print('Exclusion recored')
+                else:
+                    decision = 'TODO'
+                    while decision not in ['y','n']:
+                        decision = input('Include (y/n)?')
+                    decision = decision.replace('y', 'yes').replace('n', 'no')
+                    screen.at[i,'inclusion_2'] = 'yes'
+                    
                 screen.sort_values(by=['citation_key'], inplace=True)
                 screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
     except KeyboardInterrupt:
@@ -102,14 +118,14 @@ if __name__ == "__main__":
     print('')
     print('')    
     
-#    print('Run screen 1')
-#    
-#    bibfilename = 'data/references.bib'
-#    screen_file = 'data/screen.csv'
-#    assert os.path.exists(screen_file)
-#    assert os.path.exists(bibfilename)
-#    
-#    run_screen_1(screen_file, bibfilename)
-#
+    print('Run screen 2')
+    
+    bibfilename = 'data/references.bib'
+    screen_file = 'data/screen.csv'
+    assert os.path.exists(screen_file)
+    assert os.path.exists(bibfilename)
+    
+    run_screen_2(screen_file, bibfilename)
+
 
     print('same as screen 1 if there are no exclusion criteria, otherwise: ask for each criterion and then fill the inclusion2 decision based on criteria')

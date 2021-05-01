@@ -88,9 +88,9 @@ if __name__ == "__main__":
     
     if not os.path.exists(data_file):
         print('Creating data.csv')
-        coding_dimensions = input('Please provide a list of coding dimensions [dim1,dim2,...]')        
+        coding_dimensions = input('Please provide a list of coding dimensions [dim1,dim2,...]: ')        
         
-        coding_dimensions = coding_dimensions.strip('[]').replace(' ','').split(',')
+        coding_dimensions = coding_dimensions.strip('[]').replace(' ','_').split(',')
                 
         # Coding dimensions should be unique
         assert len(coding_dimensions) == len(set(coding_dimensions))
