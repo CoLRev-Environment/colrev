@@ -20,6 +20,8 @@ from urllib.parse import quote_plus, urlencode
 from urllib.request import urlopen, Request
 import requests
 
+import shutil
+
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 EMPTY_RESULT = {
@@ -169,4 +171,5 @@ if __name__ == "__main__":
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     quality_improvements(bib_database)
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-
+    
+    shutil.copyfile(bib_database, 'data/references_last_automated.bib')

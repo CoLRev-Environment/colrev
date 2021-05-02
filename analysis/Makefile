@@ -44,6 +44,13 @@ pre_merging_quality_check :
 	python3_review_template \
 	python3 analysis/pre_merging_quality_check.py
 
+extract_manual_pre_merging_edits :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/extract_manual_pre_merging_edits.py
+
 screen :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

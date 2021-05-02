@@ -10,8 +10,9 @@ import os
 import re
 import sys
 import logging
-import hashlib
 import pandas as pd
+
+import utils
 
 from string import ascii_lowercase
 
@@ -66,16 +67,6 @@ def validate_bib_file(filename):
     
     return True
 
-def robust_append(string_to_hash, to_append):
-    
-    to_append = to_append.replace('\n', ' ').rstrip().lstrip()
-    to_append = re.sub('\s+',' ', to_append)
-    to_append = to_append.lower()
-    
-    string_to_hash = string_to_hash + to_append
-    
-    return string_to_hash
-
 def gather(bibfilename, combined_bib_database):
     global nr_entries_added 
     global nr_duplicates_hash_ids
@@ -86,18 +77,8 @@ def gather(bibfilename, combined_bib_database):
         
         for entry in bib_database.entries:
             
-            string_to_hash = robust_append('', entry.get("author", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("author", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("title", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("journal", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("booktitle", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("year", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("volume", ""))
-            string_to_hash = robust_append(string_to_hash, entry.get("issue", ""))
-
-
-            entry['hash_id'] = hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
-
+            entry['hash_id'] = utils.create_hash(entry)
+            
             entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
             entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
 

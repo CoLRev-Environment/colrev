@@ -25,6 +25,9 @@ cleanse_records :
 pre_merging_quality_check :
 	$(MAKE) -C analysis pre_merging_quality_check
 
+extract_manual_pre_merging_edits :
+	$(MAKE) -C analysis extract_manual_pre_merging_edits
+
 screen :
 	$(MAKE) -C analysis screen
 
