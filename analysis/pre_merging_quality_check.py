@@ -15,19 +15,21 @@ def pre_merging_quality_check(bibfilename):
 
             if not ('author' in entry) :
                 print('Record ' + entry.get('ID', 'no ID') + ' missing author')
-                entry['keywords'] = 'quality_improvement_needed'
+#                entry['keywords'] = 'quality_improvement_needed'
             if not ('title' in entry):
                 print('Record ' + entry.get('ID', 'no ID') + ' missing title ')
-                entry['keywords'] = 'quality_improvement_needed'
+#                entry['keywords'] = 'quality_improvement_needed'
+            if not ('year' in entry) :
+                print('Record ' + entry.get('ID', 'no ID') + ' missing year')
 
-    writer = BibTexWriter()
-    writer.contents = ['comments', 'entries']
-    writer.indent = '    '
-    writer.order_entries_by = ('ID', 'author', 'year')
-    bibtex_str = bibtexparser.dumps(bib_database, writer)
-    
-    with open(bibfilename, 'w') as out:
-        out.write(bibtex_str + '\n')
+#    writer = BibTexWriter()
+#    writer.contents = ['comments', 'entries']
+#    writer.indent = '    '
+#    writer.order_entries_by = ('ID', 'author', 'year')
+#    bibtex_str = bibtexparser.dumps(bib_database, writer)
+#    
+#    with open(bibfilename, 'w') as out:
+#        out.write(bibtex_str + '\n')
         
     return
 

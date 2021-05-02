@@ -13,8 +13,8 @@ run :
 status :
 	$(MAKE) -C analysis status
 
-search :
-	$(MAKE) -C analysis search
+combine_individual_search_results :
+	$(MAKE) -C analysis combine_individual_search_results
 
 backward_search :
 	$(MAKE) -C analysis backward_search
@@ -28,8 +28,8 @@ pre_merging_quality_check :
 extract_manual_pre_merging_edits :
 	$(MAKE) -C analysis extract_manual_pre_merging_edits
 
-screen :
-	$(MAKE) -C analysis screen
+screen_sheet :
+	$(MAKE) -C analysis screen_sheet
 
 screen_1 :
 	$(MAKE) -C analysis screen_1
@@ -37,5 +37,5 @@ screen_1 :
 screen_2 :
 	$(MAKE) -C analysis screen_2
 
-data :
-	$(MAKE) -C analysis data
+data_sheet :
+	$(MAKE) -C analysis data_sheet

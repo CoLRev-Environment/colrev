@@ -16,12 +16,12 @@ status :
 	python3_review_template \
 	python3 analysis/status.py
 
-search :
+combine_individual_search_results :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/search.py
+	python3 analysis/combine_individual_search_results.py
 
 backward_search :
 	docker run -ti \
@@ -51,12 +51,12 @@ extract_manual_pre_merging_edits :
 	python3_review_template \
 	python3 analysis/extract_manual_pre_merging_edits.py
 
-screen :
+screen_sheet :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/screen.py
+	python3 analysis/screen_sheet.py
 
 screen_1 :
 	docker run -ti \
@@ -72,9 +72,9 @@ screen_2 :
 	python3_review_template \
 	python3 analysis/screen_2.py
 
-data :
+data_sheet :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
 	--user `id -u`:`id -g` \
 	python3_review_template \
-	python3 analysis/data.py
+	python3 analysis/data_sheet.py

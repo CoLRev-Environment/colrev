@@ -38,6 +38,8 @@ def extract_manual_pre_merging_edits(bibfilename_manual, bibfilename_automated):
                 continue
 
 
+    print('TODO: if edits.csv exists, open and merge!')
+
     edits_df = pd.DataFrame(edits, columns =["hash_id",
                     "field",
                     "from_automated",
