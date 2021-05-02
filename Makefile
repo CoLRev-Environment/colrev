@@ -22,6 +22,9 @@ backward_search :
 cleanse_records :
 	$(MAKE) -C analysis cleanse_records
 
+pre_merging_quality_check :
+	$(MAKE) -C analysis pre_merging_quality_check
+
 screen :
 	$(MAKE) -C analysis screen
 

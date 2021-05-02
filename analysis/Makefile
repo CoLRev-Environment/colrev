@@ -37,6 +37,13 @@ cleanse_records :
 	python3_review_template \
 	python3 analysis/cleanse_records.py
 
+pre_merging_quality_check :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	python3_review_template \
+	python3 analysis/pre_merging_quality_check.py
+
 screen :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
