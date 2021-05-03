@@ -8,37 +8,37 @@ help :
 	@echo "        Run analyses of the complete repository"
 
 run :
-	$(MAKE) -C analysis run
+	$(MAKE) -s -C analysis run
 
 status :
-	$(MAKE) -C analysis status
+	$(MAKE) -s -C analysis status
 
 combine_individual_search_results :
-	$(MAKE) -C analysis combine_individual_search_results
+	$(MAKE) -s -C analysis combine_individual_search_results
 
 backward_search :
-	$(MAKE) -C analysis backward_search
+	$(MAKE) -s -C analysis backward_search
 
 cleanse_records :
-	$(MAKE) -C analysis cleanse_records
+	$(MAKE) -s -C analysis cleanse_records
 
 pre_merging_quality_check :
-	$(MAKE) -C analysis pre_merging_quality_check
+	$(MAKE) -s -C analysis pre_merging_quality_check
 
 extract_manual_pre_merging_edits :
-	$(MAKE) -C analysis extract_manual_pre_merging_edits
+	$(MAKE) -s -C analysis extract_manual_pre_merging_edits
 
 screen_sheet :
-	$(MAKE) -C analysis screen_sheet
+	$(MAKE) -s -C analysis screen_sheet
 
 screen_1 :
-	$(MAKE) -C analysis screen_1
+	$(MAKE) -s -C analysis screen_1
 
 screen_2 :
-	$(MAKE) -C analysis screen_2
+	$(MAKE) -s -C analysis screen_2
 
 data_sheet :
-	$(MAKE) -C analysis data_sheet
+	$(MAKE) -s -C analysis data_sheet
 
 
 # To use local instead of shared versions, replace the following and use the code in comments

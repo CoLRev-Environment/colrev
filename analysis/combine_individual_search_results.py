@@ -86,14 +86,12 @@ def gather(bibfilename, combined_bib_database):
             if('author' in entry): entry['author'] = entry['author'].replace('\n', ' ')
             if('title' in entry): entry['title'] = entry['title'].replace('\n', ' ')
             if('booktitle' in entry): entry['booktitle'] = entry['booktitle'].replace('\n', ' ')
-
-            drop_fields = ["note", "annote", "institution", "issn", "month", "researcherid-numbers", "unique-id", "orcid-numbers", "eissn", "type", "url", "organization"]
-            for val in drop_fields:
-                if(val in entry):
+            
+            keep_fields = ["ID", "author", "year", "title", "journal", "booktitle", "volume", "issue", "pages", "doi", "abstract"]
+            for val in keep_fields :
+                if(val not in entry):
                     entry.pop(val)
             
-
-
         for entry in bib_database.entries:
             
             if 0 == len(combined_bib_database.entries):
@@ -114,7 +112,6 @@ def gather(bibfilename, combined_bib_database):
                 combined_bib_database.entries.append(entry)
                 nr_entries_added += 1
             else:
-                # print(entry['hash_id'] + ' for ' + entry['title'] + 'already included')
                 nr_duplicates_hash_ids += 1
 
     return combined_bib_database
