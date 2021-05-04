@@ -8,6 +8,7 @@ from bibtexparser.customization import convert_to_unicode
 
 import os
 from time import gmtime, strftime
+from datetime import datetime
 import re
 import logging
 from lxml import etree
@@ -196,6 +197,11 @@ def extract_bibliography(root):
 
 def process_backward_search(tei):
 
+    search_details = pd.read_csv('data/search/search_details.csv')
+    
+    if tei in search_details['source_url']:
+        return
+
     with open(tei) as xml_file:
         root = etree.parse(xml_file).getroot()
     bibliography = extract_bibliography(root)
@@ -234,8 +240,19 @@ def process_backward_search(tei):
     writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
     writer.order_entries_by = ('ID', 'author', 'year')
     bibtex_str = bibtexparser.dumps(db, writer)
-    with open(tei.replace('.tei.xml', '') + 'bw_search.bib', 'w') as out:
+    bib_filename = tei.replace('.tei.xml', '') + 'bw_search.bib'
+    with open(bib_filename, 'w') as out:
         out.write(bibtex_str + '\n')
+
+    if len(search_details.index) == 0:
+        iteration_number = 1
+    else:
+        iteration_number = str(int(search_details['iteration'].max()))
+
+    new_record = pd.DataFrame([['backward/' + bib_filename, len(db.entries), iteration_number, datetime.today().strftime('%Y-%m-%d'), datetime.today().strftime('%Y-%m-%d'), tei, '', 'automated_script', '']],
+                                columns=['filename', 'number_records', 'iteration', 'date_start', 'date_completion', 'source_url', 'search_parameters', 'responsible', 'comment'])
+    search_details = pd.concat([search_details, new_record])
+    search_details.to_csv('data/search/search_details.csv', index=False)
 
     return
 
@@ -254,5 +271,4 @@ if __name__ == "__main__":
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     
     os.remove('data/search/backward_search_pdfs.csv')
-
-#    add YYYY-MM-DD-backward-search* to data/search/search_details.csv (and update search.py)
+    

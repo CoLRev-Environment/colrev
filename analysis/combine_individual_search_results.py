@@ -46,24 +46,27 @@ def validate_bib_file(filename):
     # Do not load/warn when bib-file contains the field "Early Access Date"
     # https://github.com/sciunto-org/python-bibtexparser/issues/230
     
-    with open(os.path.join('data/search/', filename)) as bibfile:
+    with open(filename) as bibfile:
         if 'Early Access Date' in bibfile.read():
             print('Error while loading the file: replace Early Access Date in bibfile before loading!')
             return False
 
     # check number_records matching search_details.csv    
     search_details = pd.read_csv('data/search/search_details.csv')
-    records_expected = search_details.loc[search_details['filename'] == filename].number_records.item()
-    with open(os.path.join('data/search/', filename), 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-    
-    if len(bib_database.entries) != records_expected:
-        print('Error while loading the file: number of records imported not identical to data/search/search_details.csv$number_records')
-        print('Loaded: ' + str(len(bib_database.entries)))
-        print('Expected: ' + str(records_expected))
-        return False
-    
+    try:
+        records_expected = search_details.loc['data/search/' + search_details['filename'] == filename].number_records.item()
+        with open(filename, 'r') as bibtex_file:
+            bib_database = bibtexparser.bparser.BibTexParser(
+                customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
+        
+        if len(bib_database.entries) != records_expected:
+            print('Error while loading the file: number of records imported not identical to data/search/search_details.csv$number_records')
+            print('Loaded: ' + str(len(bib_database.entries)))
+            print('Expected: ' + str(records_expected))
+            return False
+    except ValueError:
+        print('WARNING: no details on ' + filename + ' provided in data/search/search_details.csv')
+        pass
     return True
 
 def gather(bibfilename, combined_bib_database):
@@ -134,6 +137,23 @@ def gather(bibfilename, combined_bib_database):
 
     return combined_bib_database
 
+def get_bib_files():
+    bib_files = []
+#    pattern_search_results= re.compile('bib$')
+
+    for (dirpath, dirnames, filenames) in os.walk(os.path.join(os.getcwd(), 'data/search/')):
+        for filename in filenames:
+            file_path = os.path.join(dirpath, filename).replace('/opt/workdir/','')
+#            print(re.match(pattern_search_results, file_path))
+#            if re.match(pattern_search_results, file_path):
+            if file_path.endswith('.bib'):
+                print(file_path)
+                if not validate_bib_file(file_path):
+                    continue
+                bib_files = bib_files + [file_path]
+    print(bib_files)
+    return bib_files
+
 if __name__ == "__main__":
 
     print('')
@@ -155,21 +175,16 @@ if __name__ == "__main__":
 
     nr_current_entries = len(combined_bib_database.entries)
 
-    writer = BibTexWriter()
-
     # TODO: define preferences (start by processing e.g., WoS, then GS) or use heuristics to start with the highest quality (most complete) entries first.
 
-    pattern_search_results= re.compile('[1-2][0-9][0-9][0-9]-[0-1][0-9]-[0-3][0-9]-.*bib$')
+    search_details = pd.read_csv('data/search/search_details.csv')
 
     print(str(nr_current_entries) + ' records in references.bib')
-    for (dirpath, dirnames, filenames) in os.walk(os.path.join(os.getcwd(), 'data/search/')):
-        for filename in filenames:
-            if re.match(pattern_search_results, filename):
-                print('Loading ' + filename) 
-                if not validate_bib_file(filename):
-                    continue
-                combined_bib_database = gather(os.path.join('data/search/', filename), combined_bib_database)
-
+    for bib_file in get_bib_files():
+        print('Loading ' + bib_file) 
+#        combined_bib_database = gather(bib_file, combined_bib_database)
+    input('stop')
+    writer = BibTexWriter()
     writer.contents = ['comments', 'entries']
     writer.indent = '    '
     writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']

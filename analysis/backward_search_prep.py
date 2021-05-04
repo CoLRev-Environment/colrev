@@ -48,7 +48,9 @@ if __name__ == "__main__":
     assert os.path.exists(screen_file)
 
     pdfs = get_included_pdfs(screen_file, bibtex_file)
-        
+    print('to check: pdf paths should start with data/pdf/')
+#    pdfs = ['data/pdf/example1.pdf','data/pdf/example2.pdf']
+    
     df = pd.DataFrame({"filenames" : pdfs})
     
     df.to_csv('data/search/backward_search_pdfs.csv', index=False)

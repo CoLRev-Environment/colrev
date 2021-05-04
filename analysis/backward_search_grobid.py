@@ -45,7 +45,7 @@ def start_grobid():
 def grobid_transformation(pdf):
     
     print(pdf)
-    tei_filename = pdf.replace('.pdf','.tei.xml').replace('data/pdfs/', 'data/search/backward/')
+    tei_filename = pdf.replace('.pdf','.tei.xml').replace('data/pdf/', 'data/search/backward/')
     if os.path.exists(tei_filename):
         print('file already transformed: ' + tei_filename)
         return
@@ -82,5 +82,3 @@ if __name__ == "__main__":
     for pdf in tqdm(pdfs['filenames'].tolist()):
         grobid_transformation(pdf)
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-#
-#    add YYYY-MM-DD-backward-search* to data/search/search_details.csv (and update search.py)
