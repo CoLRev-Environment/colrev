@@ -51,7 +51,6 @@ def validate_bib_file(filename):
             print('Error while loading the file: replace Early Access Date in bibfile before loading!')
             return False
 
-    
     # check number_records matching search_details.csv    
     search_details = pd.read_csv('data/search/search_details.csv')
     records_expected = search_details.loc[search_details['filename'] == filename].number_records.item()
@@ -77,6 +76,8 @@ def gather(bibfilename, combined_bib_database):
         
         for entry in bib_database.entries:
             
+            entry['keywords'] = 'not_cleansed'
+ 
             entry['hash_id'] = utils.create_hash(entry)
             
             entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
@@ -86,13 +87,30 @@ def gather(bibfilename, combined_bib_database):
             if('author' in entry): entry['author'] = entry['author'].replace('\n', ' ')
             if('title' in entry): entry['title'] = entry['title'].replace('\n', ' ')
             if('booktitle' in entry): entry['booktitle'] = entry['booktitle'].replace('\n', ' ')
+            if('doi' in entry): entry['doi'] = entry['doi'].replace('http://dx.doi.org/', '')
+            if('pages' in entry): 
+                if 1 == entry['pages'].count('-'):
+                    entry['pages'] = entry['pages'].replace('-', '--')
             
-            keep_fields = ["ID", "author", "year", "title", "journal", "booktitle", "volume", "issue", "pages", "doi", "abstract"]
-            for val in keep_fields :
-                if(val not in entry):
-                    entry.pop(val)
+            # Consistency checks
+            if 'journal' in entry:
+                if any(conf_string in entry['journal'].lower() for conf_string in ['proceedings', 'conference']):
+                    conf_name = entry['journal']
+                    del entry['journal']
+                    entry['booktitle'] = conf_name
+                    entry['ENTRYTYPE'] = 'inproceedings'
+                    
+            
+            fields_to_keep = ["ID", "hash_id", "ENTRYTYPE", "author", "year", "title", "journal", "booktitle", "series", "volume", "issue", "number", "pages", "doi", "abstract", "editor", "book-group-author", "book-author", "keywords"]
+            fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number"]
+            for val in list(entry):
+                if(val not in fields_to_keep):
+                    if val in fields_to_drop:
+                        print('  dropped ' + val + ' field')
+                        entry.pop(val)
             
         for entry in bib_database.entries:
+            
             
             if 0 == len(combined_bib_database.entries):
                 combined_bib_database.entries.append(entry)
@@ -154,6 +172,7 @@ if __name__ == "__main__":
 
     writer.contents = ['comments', 'entries']
     writer.indent = '    '
+    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
     writer.order_entries_by = ('ID', 'author', 'year')
     bibtex_str = bibtexparser.dumps(combined_bib_database, writer)
     

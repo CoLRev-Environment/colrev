@@ -10,10 +10,10 @@ import os
 from time import gmtime, strftime
 import re
 import logging
-
 from lxml import etree
-
 import pandas as pd
+
+#import tei_tools
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -21,28 +21,14 @@ ns =    {'tei': '{http://www.tei-c.org/ns/1.0}',
          'w3' : '{http://www.w3.org/XML/1998/namespace}'}
 
 
-def get_included_pdfs(screen_file, bibtex_file):
+def get_tei_files(directory):
     
-    pdfs = []
-    
-    screen = pd.read_csv(screen_file, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
-
-    for record_id in screen['citation_key'].tolist():
-        
-        with open(bibtex_file, 'r') as bib_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(bib_file, partial=True)
-            
-            for entry in bib_database.entries:
-                if entry.get('ID', '') == record_id:
-                    if 'file' in entry:
-                        if os.path.exists(entry['file']):
-                            pdfs.append(entry['file'])
-                        else:
-                            print('- Error: file not available ' + entry['file'] + ' (' + entry['ID'] + ')')
-
-    return pdfs
+    list_of_files = []
+    for (dirpath, dirnames, filenames) in os.walk(directory):
+        for filename in filenames:
+            if filename.endswith('.tei.xml'): 
+                list_of_files.append(os.sep.join([dirpath, filename]))
+    return list_of_files
 
 def get_reference_title(reference):
     title_string = ''
@@ -209,38 +195,22 @@ def extract_bibliography(root):
     BIBLIOGRAPHY = BIBLIOGRAPHY.reset_index(drop=True)
     return BIBLIOGRAPHY
 
-def backward_search(pdf):
+def process_backward_search(tei):
 
-    #TODO: possibly using docker-compose?    
-#    if not tei_tools.start_grobid():
-#        print('Cannot start Docker/Grobid')
-#        return
-#    
-#    print('index file: ' + pdf)
-#    root = tei_tools.get_tei_header(pdf)
-#    if isinstance(root, str):
-#        if root == 'NA':
-#           print('Service not available')
-#           return
-#        else:
-#            print('Service not available')
-#
-#        return
-#    grobid with consolidation
-
-    print('called')
-    # replace the following with the get_tei(pdf, preprocess=False)    
-    with open(pdf) as xml_file:
+    with open(tei) as xml_file:
         root = etree.parse(xml_file).getroot()
-#    print(root)
     bibliography = extract_bibliography(root)
-#    print(bibliography)
     db = BibDatabase()
     for index, row in bibliography.iterrows():
 #        print(row['authors'], row['title'], row['year'], row['journal'], row['volume'], row['issue'], row['pages'], row['doi'])
         entry = {}
         #.split()[0]
-        entry['ID'] = row['authors'].capitalize() + row['year']
+        author_string = row['authors'].capitalize().replace(',', '').replace(' ', '')
+        try:
+            author_string = row['authors'].split(' ')[0].capitalize().replace(',', '')
+        except:
+            pass
+        entry['ID'] = author_string + row['year']
         entry["ENTRYTYPE"] = 'article'
         entry["author"] = row['authors']
         entry["journal"] = row['journal']
@@ -254,20 +224,22 @@ def backward_search(pdf):
             db.entries = [entry]
         else:
             db.entries.append(entry)
-    
+
+    for entry in db.entries:
+        empty_field_keys = [key for key in entry.keys() if entry[key] == '']
+        for key in empty_field_keys:
+            if entry[key] == '':
+                del entry[key]
+
     writer = BibTexWriter()
     writer.contents = ['comments', 'entries']
     writer.indent = '    '
+    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
     writer.order_entries_by = ('ID', 'author', 'year')
     bibtex_str = bibtexparser.dumps(db, writer)
-    with open(pdf + 'bw_search.bib', 'w') as out:
+    with open(tei.replace('.tei.xml', '') + 'bw_search.bib', 'w') as out:
         out.write(bibtex_str + '\n')
 
-     
-#    tei to bibtex
-#    
-#    save as YYYY-MM-DD-backward-search-CITATION_KEY.bib
-    
     return
 
 if __name__ == "__main__":
@@ -275,21 +247,13 @@ if __name__ == "__main__":
     print('')
     print('')    
     
-    print('Backward search')
-    
-    bibtex_file = 'data/references.bib'
-    assert os.path.exists(bibtex_file)
+    print('Backward search - Process')
 
-    screen_file = 'data/screen.csv'
-    assert os.path.exists(screen_file)
-
-    pdfs = get_included_pdfs(screen_file, bibtex_file)
-    
-    pdfs = ['data/search/backward/test.tei.xml']
+    teis = get_tei_files('data/search/backward')
 
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-    for pdf in pdfs:
-        backward_search(pdf)
+    for tei in teis:
+        process_backward_search(tei)
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
 #
 #    add YYYY-MM-DD-backward-search* to data/search/search_details.csv (and update search.py)
