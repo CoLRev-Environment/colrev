@@ -13,7 +13,6 @@ import logging
 from lxml import etree
 import pandas as pd
 
-#import tei_tools
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -202,9 +201,7 @@ def process_backward_search(tei):
     bibliography = extract_bibliography(root)
     db = BibDatabase()
     for index, row in bibliography.iterrows():
-#        print(row['authors'], row['title'], row['year'], row['journal'], row['volume'], row['issue'], row['pages'], row['doi'])
         entry = {}
-        #.split()[0]
         author_string = row['authors'].capitalize().replace(',', '').replace(' ', '')
         try:
             author_string = row['authors'].split(' ')[0].capitalize().replace(',', '')
@@ -255,5 +252,7 @@ if __name__ == "__main__":
     for tei in teis:
         process_backward_search(tei)
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-#
+    
+    os.remove('data/search/backward_search_pdfs.csv')
+
 #    add YYYY-MM-DD-backward-search* to data/search/search_details.csv (and update search.py)

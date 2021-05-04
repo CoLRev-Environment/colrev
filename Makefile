@@ -19,6 +19,15 @@ combine_individual_search_results :
 backward_search :
 	$(MAKE) -s -C analysis backward_search
 
+backward_search_prep :
+	$(MAKE) -s -C analysis backward_search_prep
+
+backward_search_grobid :
+	$(MAKE) -s -C analysis backward_search_grobid
+
+backward_search_process :
+	$(MAKE) -s -C analysis backward_search_process
+
 cleanse_records :
 	$(MAKE) -s -C analysis cleanse_records
 

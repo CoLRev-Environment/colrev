@@ -38,6 +38,9 @@ if __name__ == "__main__":
     
     print('Backward search - prep')
     
+    if not os.path.exists('data/search/backward'):
+        os.mkdir('data/search/backward')
+    
     bibtex_file = 'data/references.bib'
     assert os.path.exists(bibtex_file)
 
@@ -45,10 +48,7 @@ if __name__ == "__main__":
     assert os.path.exists(screen_file)
 
     pdfs = get_included_pdfs(screen_file, bibtex_file)
-    
-    print('TODO: remove the following and test')
-    pdfs= ['data/pdfs/example1.pdf', 'data/pdfs/example2.pdf']
-    
+        
     df = pd.DataFrame({"filenames" : pdfs})
     
     df.to_csv('data/search/backward_search_pdfs.csv', index=False)
