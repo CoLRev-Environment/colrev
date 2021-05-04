@@ -93,11 +93,13 @@ if __name__ == "__main__":
         print('Creating screen.csv')
         exclusion_criteria = input('Please provide a list of exclusion criteria [criterion1,criterion2,...]: ')        
         
-        exclusion_criteria = exclusion_criteria.strip('[]').replace(' ','_').split(',')
-        
-        exclusion_criteria = ['ec_' + criterion for criterion in exclusion_criteria]
-        
-        # Exclusion criteria should be unique
+        if exclusion_criteria == '':
+            exclusion_criteria = []
+        else:
+            exclusion_criteria = exclusion_criteria.strip('[]').replace(' ','_').split(',')
+            exclusion_criteria = ['ec_' + criterion for criterion in exclusion_criteria]
+ 
+       # Exclusion criteria should be unique
         assert len(exclusion_criteria) == len(set(exclusion_criteria))
 
         generate_screen_csv(screen_file, exclusion_criteria, bibfilename)

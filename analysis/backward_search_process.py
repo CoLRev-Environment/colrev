@@ -7,6 +7,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import os
+import csv
 from time import gmtime, strftime
 from datetime import datetime
 import re
@@ -252,7 +253,7 @@ def process_backward_search(tei):
     new_record = pd.DataFrame([['backward/' + bib_filename, len(db.entries), iteration_number, datetime.today().strftime('%Y-%m-%d'), datetime.today().strftime('%Y-%m-%d'), tei, '', 'automated_script', '']],
                                 columns=['filename', 'number_records', 'iteration', 'date_start', 'date_completion', 'source_url', 'search_parameters', 'responsible', 'comment'])
     search_details = pd.concat([search_details, new_record])
-    search_details.to_csv('data/search/search_details.csv', index=False)
+    search_details.to_csv('data/search/search_details.csv', index=False, quoting=csv.QUOTE_ALL)
 
     return
 

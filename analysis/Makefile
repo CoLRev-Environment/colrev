@@ -1,4 +1,4 @@
-ke.PHONY : run status search backward_search cleanse_records screen data
+.PHONY : run status search backward_search cleanse_records screen data
 
 help :
 	@echo "Usage: make [command]"

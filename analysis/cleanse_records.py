@@ -6,6 +6,7 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 
 import os
+import csv
 import json
 import time
 from time import gmtime, strftime
@@ -19,6 +20,8 @@ from urllib.error import HTTPError
 from urllib.parse import quote_plus, urlencode
 from urllib.request import urlopen, Request
 import requests
+import pandas as pd
+import sys
 
 import shutil
 
@@ -67,25 +70,26 @@ def doi2json(doi):
     r = requests.get(url, headers = headers)
     return r.text
 
-
 def quality_improvements(bibfilename):
     
     with open(bibfilename, 'r') as bibtex_file:
         bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-        
-        # TODO: fix tqdm index
-        # nr_to_cleanse = len([entry['ID'] for entry in bib_database.entries if 'not_cleansed' == entry.get('keywords', 'no keywords')])
-        
-        for entry in tqdm(bib_database.entries):
-
-            # TODO: quality-improvements (e.g., sentence case for titles, format author names, remove trailing dot...)
-            # May even run a reference consolidation service?!?!
-            # https://citationstyles.org/authors/#/titles-in-sentence-and-title-case
-            
-
-            if 'not_cleansed' == entry.get('keywords', 'no keyword'):
                 
+        bib_details_path = 'data/search/bib_details.csv'
+        if os.path.exists(bib_details_path):
+            bib_details = pd.read_csv(bib_details_path)
+        else:
+            bib_details = pd.DataFrame(columns=['hash_id', 'cleansed'])
+
+        for entry in tqdm(bib_database.entries):
+    
+            # TODO: reconsider the logic considering iterations
+            # Note: the case cleansed==no should not occur... if there is no entry in the bib_details, it needs to be cleansed.
+            if  0 == len(bib_details[bib_details['hash_id'] == entry['hash_id']]):
+                new_record = pd.DataFrame([[entry['hash_id'],'yes']], columns=['hash_id','cleansed'])
+                bib_details = pd.concat([bib_details, new_record])
+
                 if('author' in entry):
                     entry['author'] = entry['author'].rstrip().lstrip()
                     # fix name format
@@ -105,17 +109,46 @@ def quality_improvements(bibfilename):
                     words = entry['title'].split()
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['title'] = entry['title'].capitalize()
-    #            if('year' in entry):
-    #                print('todo')
+                        
+                # Consistency checks
+                if 'journal' in entry:
+                    if any(conf_string in entry['journal'].lower() for conf_string in ['proceedings', 'conference', 'ECIS', 'AMICS', 'ICIS', 'PACIS', 'HICSS']):
+                        conf_name = entry['journal']
+                        del entry['journal']
+                        entry['booktitle'] = conf_name
+                        entry['ENTRYTYPE'] = 'inproceedings'
+    
+                if 'book' == entry['ENTRYTYPE']:
+                    if 'series' in entry:
+                        if any(conf_string in entry['series'].lower() for conf_string in ['proceedings', 'conference', 'ECIS', 'AMICS', 'ICIS', 'PACIS', 'HICSS']):                        
+                            conf_name = entry['series']
+                            del entry['series']
+                            entry['booktitle'] = conf_name
+                            entry['ENTRYTYPE'] = 'inproceedings'
+                            
                 if('journal' in entry):
                     words = entry['journal'].split()
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['journal'] = entry['journal'].capitalize()
-                # string_to_hash = string_to_hash.replace(' ','').lower()
+                        
+                        for i, row in JOURNAL_VARIATIONS.iterrows():
+                             if entry['journal'].lower() == row['variation'].lower():
+                                 entry['journal'] = row['journal']
+                        for i, row in JOURNAL_ABBREVIATIONS.iterrows():
+                             if entry['journal'].lower() == row['abbreviation'].lower():
+                                 entry['journal'] = row['journal']
+
                 if('booktitle' in entry):
                     words = entry['booktitle'].split()
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['booktitle'] = ' '.join([word.capitalize() for word in words])
+                        # For ECIS/ICIS proceedings:
+                        entry['booktitle'] = entry['booktitle'].replace(' Completed Research Papers','').replace(' Completed Research','').replace(' Research-in-Progress Papers','').replace(' Research Papers','')
+                        
+                        for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
+                             if row['abbreviation'].lower() in entry['booktitle'].lower():
+                                 entry['booktitle'] = row['conference']
+                        
                 if('abstract' in entry):
                     entry['abstract'] = entry['abstract'].replace('\n', ' ')
                 
@@ -127,14 +160,14 @@ def quality_improvements(bibfilename):
                         retries = 0
                         while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
                             retries += 1
-    #                        msg = "Error while querying CrossRef API ({}), retrying ({})...".format(ret["exception"], retries)
-        #                    print(msg)
+                            # msg = "Error while querying CrossRef API ({}), retrying ({})...".format(ret["exception"], retries)
+                            # print(msg)
                             ret = crossref_query_title(entry['title'])
                         if ret["result"]['similarity'] > 0.95:
                             entry['doi'] = ret["result"]['doi']
-        #                    print('retrieved doi:' + entry['doi'])
-                    except:
-                        pass
+                            # print('retrieved doi:' + entry['doi'])
+                    except KeyboardInterrupt:
+                        sys.exit()
         
                 # Retrieve metadata from DOI repository
                 if 'doi' in entry:
@@ -152,7 +185,7 @@ def quality_improvements(bibfilename):
                         
                         retrieved_title = retrieved_record.get('title', '')
                         if not retrieved_title == '':
-                            entry['title'] = str(retrieved_title)
+                            entry['title'] = str(retrieved_title).replace('\n','')
                         try:
                             entry['year'] = str(retrieved_record['published-print']['date-parts'][0][0])
                         except:
@@ -182,7 +215,6 @@ def quality_improvements(bibfilename):
     
                     except:
                         pass
-                del entry['keywords']
 
             
             writer = BibTexWriter()
@@ -194,7 +226,8 @@ def quality_improvements(bibfilename):
             
             with open(bibfilename, 'w') as out:
                 out.write(bibtex_str + '\n')
-        
+
+            bib_details.to_csv(bib_details_path, index=False, quoting=csv.QUOTE_ALL)
     return
 
 if __name__ == "__main__":
@@ -206,6 +239,10 @@ if __name__ == "__main__":
     
     bib_database = 'data/references.bib'
     assert os.path.exists(bib_database)
+
+    JOURNAL_ABBREVIATIONS = pd.read_csv('analysis/JOURNAL_ABBREVIATIONS.csv')
+    JOURNAL_VARIATIONS = pd.read_csv('analysis/JOURNAL_VARIATIONS.csv')
+    CONFERENCE_ABBREVIATIONS = pd.read_csv('analysis/CONFERENCE_ABBREVIATIONS.csv')
 
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     quality_improvements(bib_database)

@@ -18,7 +18,6 @@ from string import ascii_lowercase
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-nr_duplicates_hash_ids = 0
 nr_entries_added = 0
 nr_current_entries = 0
 
@@ -71,16 +70,13 @@ def validate_bib_file(filename):
 
 def gather(bibfilename, combined_bib_database):
     global nr_entries_added 
-    global nr_duplicates_hash_ids
 
     with open(bibfilename, 'r') as bibtex_file:
         bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
         
         for entry in bib_database.entries:
-            
-            entry['keywords'] = 'not_cleansed'
- 
+             
             entry['hash_id'] = utils.create_hash(entry)
             
             entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
@@ -95,63 +91,47 @@ def gather(bibfilename, combined_bib_database):
                 if 1 == entry['pages'].count('-'):
                     entry['pages'] = entry['pages'].replace('-', '--')
             
-            # Consistency checks
-            if 'journal' in entry:
-                if any(conf_string in entry['journal'].lower() for conf_string in ['proceedings', 'conference']):
-                    conf_name = entry['journal']
-                    del entry['journal']
-                    entry['booktitle'] = conf_name
-                    entry['ENTRYTYPE'] = 'inproceedings'
-                    
             
             fields_to_keep = ["ID", "hash_id", "ENTRYTYPE", "author", "year", "title", "journal", "booktitle", "series", "volume", "issue", "number", "pages", "doi", "abstract", "editor", "book-group-author", "book-author", "keywords"]
             fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number"]
             for val in list(entry):
                 if(val not in fields_to_keep):
-                    if val in fields_to_drop:
+                    # drop all fields not in fields_to_keep
+                    entry.pop(val)
+                    # but warn if fields are dropped that are not in the typical fields_to_drop
+                    if not val in fields_to_drop:
                         print('  dropped ' + val + ' field')
-                        entry.pop(val)
             
         for entry in bib_database.entries:
-            
             
             if 0 == len(combined_bib_database.entries):
                 combined_bib_database.entries.append(entry)
                 nr_entries_added += 1
 
                 continue
+              
+            # Make sure the ID is unique (otherwise: append letters until this is the case)
+            temp_id = entry['ID']
+            letters = iter(ascii_lowercase)
+            while temp_id in [x['ID'] for x in combined_bib_database.entries]:
+                temp_id = entry['ID'] + next(letters)
+            entry['ID'] = temp_id
             
-            if not entry['hash_id'] in [x['hash_id'] for x in combined_bib_database.entries]: 
-                
-                # Make sure the ID is unique (otherwise: append letters until this is the case)
-                temp_id = entry['ID']
-                letters = iter(ascii_lowercase)
-                while temp_id in [x['ID'] for x in combined_bib_database.entries]:
-                    temp_id = entry['ID'] + next(letters)
-                entry['ID'] = temp_id
-                
-                combined_bib_database.entries.append(entry)
-                nr_entries_added += 1
-            else:
-                nr_duplicates_hash_ids += 1
+            combined_bib_database.entries.append(entry)
+            nr_entries_added += 1
 
     return combined_bib_database
 
 def get_bib_files():
     bib_files = []
-#    pattern_search_results= re.compile('bib$')
 
     for (dirpath, dirnames, filenames) in os.walk(os.path.join(os.getcwd(), 'data/search/')):
         for filename in filenames:
             file_path = os.path.join(dirpath, filename).replace('/opt/workdir/','')
-#            print(re.match(pattern_search_results, file_path))
-#            if re.match(pattern_search_results, file_path):
             if file_path.endswith('.bib'):
-                print(file_path)
                 if not validate_bib_file(file_path):
                     continue
                 bib_files = bib_files + [file_path]
-    print(bib_files)
     return bib_files
 
 if __name__ == "__main__":
@@ -182,8 +162,8 @@ if __name__ == "__main__":
     print(str(nr_current_entries) + ' records in references.bib')
     for bib_file in get_bib_files():
         print('Loading ' + bib_file) 
-#        combined_bib_database = gather(bib_file, combined_bib_database)
-    input('stop')
+        combined_bib_database = gather(bib_file, combined_bib_database)
+
     writer = BibTexWriter()
     writer.contents = ['comments', 'entries']
     writer.indent = '    '
@@ -194,8 +174,6 @@ if __name__ == "__main__":
     with open(target_file, 'w') as out:
         out.write(bibtex_str + '\n')
     
-    if nr_duplicates_hash_ids > 0:
-        print(str(nr_duplicates_hash_ids) + ' duplicate records identified due to identical hash_ids')
     print(str(nr_entries_added) + ' records added to references.bib')
     print(str(len(combined_bib_database.entries)) + ' records in references.bib')
     print('')

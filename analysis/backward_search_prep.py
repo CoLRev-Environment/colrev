@@ -5,8 +5,8 @@ import bibtexparser
 from bibtexparser.customization import convert_to_unicode
 
 import os
+import csv
 import pandas as pd
-
 
 def get_included_pdfs(screen_file, bibtex_file):
     
@@ -53,4 +53,4 @@ if __name__ == "__main__":
     
     df = pd.DataFrame({"filenames" : pdfs})
     
-    df.to_csv('data/search/backward_search_pdfs.csv', index=False)
+    df.to_csv('data/search/backward_search_pdfs.csv', index=False, quoting=csv.QUOTE_ALL)

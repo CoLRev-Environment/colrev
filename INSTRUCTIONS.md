@@ -87,7 +87,7 @@ The search combines automated and manual steps as follows:
 make combine_individual_search_results
 ```
 
-- This procedure combines all search results in the [references.bib](data/references.bib), adds a hash_id to each entry, and marks each entry with a `keywords = {not_cleansed}` tag.
+- This procedure combines all search results in the [references.bib](data/references.bib), adds a hash_id to each entry.
 
 3. Cleanse records (script)
 
@@ -95,7 +95,7 @@ make combine_individual_search_results
 make cleanse_records
 ```
 
-- Improves the quality for all records marked with the `keywords = {not_cleansed}` tag.
+- Improves the quality for all records not yet included in the `data/search/bib_details.csv`.
 Please note that this can take some time (depending on the number of records) since it calls the [Crossref API](https://www.crossref.org/education/retrieve-metadata/rest-api/) to retrieve DOIs and the [DOI resolution service](https://www.doi.org/) to retrieve corresponding meta-data.
 For 1,000 records, this might take approx. 1:30 hours.
 
@@ -104,9 +104,8 @@ For 1,000 records, this might take approx. 1:30 hours.
 ```
 make pre_merging_quality_check
 ```
-- Prints all records lacking the title, author, or year field (minimum requirement for duplicate removal).
-- TODO: a better heuristic would combine entropy (information theory) and number of missing fields (low entropy (compared to the other records in the database) suggests that a lack of information may interfere with duplicate detection rates. At the same time, when all fields are available and entropy is still low, a duplicate may be more likely. The quality improvements should therefore focus on those cases in which entropy is relatively low and can be improved by adding missing fields.)
-- Manually add missing fields
+- Estimates the degree of incompleteness (missing fields per record) and probability of duplication and saves results in `data/references_pre_screen_quality_check.csv`.
+- Check the first entries (sorted in descending order of completeness and probability of duplication) and manually add missing fields to the `data/references.bib`.
 
 5. Identify and merge duplicates (manual task)
 

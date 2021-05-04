@@ -46,6 +46,9 @@ screen_1 :
 screen_2 :
 	$(MAKE) -s -C analysis screen_2
 
+sample_profile :
+	$(MAKE) -s -C analysis/R sample_profile
+
 data_sheet :
 	$(MAKE) -s -C analysis data_sheet
 
