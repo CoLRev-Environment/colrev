@@ -105,7 +105,6 @@ def quality_improvements(bibfilename):
                             entry['author'] = entry['author'][5:]
     
                 if('title' in entry):
-                    entry['title'] = entry['title']
                     entry['title'] = re.sub('\s+',' ', entry['title'])
                     words = entry['title'].split()
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
@@ -115,10 +114,9 @@ def quality_improvements(bibfilename):
                 # Consistency checks
                 if 'journal' in entry:
                     if any(conf_string in entry['journal'].lower() for conf_string in conf_strings):
-                        conf_name = entry['journal']
-                        del entry['journal']
-                        entry['booktitle'] = conf_name
+                        entry['booktitle'] = entry['journal']
                         entry['ENTRYTYPE'] = 'inproceedings'
+                        del entry['journal']
                 if 'booktitle' in entry:
                     if any(conf_string in entry['booktitle'].lower() for conf_string in conf_strings):
                         entry['ENTRYTYPE'] = 'inproceedings'
@@ -130,6 +128,7 @@ def quality_improvements(bibfilename):
                             entry['journal'] = entry['booktitle']
                             del entry['booktitle']
                     if 'series' in entry:
+                        entry['series'] = entry['series'].replace('\n', '')
                         if not 'journal' in entry:
                             entry['journal'] = entry['series']
                             del entry['series']
@@ -201,13 +200,17 @@ def quality_improvements(bibfilename):
                             if not 'family' in author:
                                 continue
                             if '' != author_string: author_string = author_string + ' and '
-                            author_string = author_string + author.get('family', '') + ', ' + author.get('given', '')
+                            author_given = author.get('given', '')
+                            if '' == author_given:
+                                author_string = author_string + author.get('family', '')
+                            else:
+                                author_string = author_string + author.get('family', '') + ', ' + author.get('given', '')
                         if not author_string == '':
                             entry['author'] = str(author_string)
                         
                         retrieved_title = retrieved_record.get('title', '')
                         if not retrieved_title == '':
-                            entry['title'] = str(retrieved_title).replace('\n','')
+                            entry['title'] = str(re.sub('\s+',' ', retrieved_title)).replace('\n','')
                         try:
                             entry['year'] = str(retrieved_record['published-print']['date-parts'][0][0])
                         except:
@@ -240,7 +243,7 @@ def quality_improvements(bibfilename):
             
             # Note: formating with utils.save_bib_file() will be done at the end.
             writer = BibTexWriter()
-            writer.contents = ['comments', 'entries']
+            writer.contents = ['entries']
             writer.indent = '  '
             writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
             writer.order_entries_by = ('ID', 'author', 'year')

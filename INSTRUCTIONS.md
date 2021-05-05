@@ -87,7 +87,8 @@ The search combines automated and manual steps as follows:
 make combine_individual_search_results
 ```
 
-- This procedure combines all search results in the [references.bib](data/references.bib), adds a hash_id to each entry.
+- This procedure creates a hash_id for each entry and adds all entries with a unique hash_id to the [references.bib](data/references.bib).
+This means that duplicate entries with an identical hash_id (based on titles, authors, journal, ...) are merged automatically (which is particularly important when running `make combine_individual_search_results` in incremental mode).
 
 3. Cleanse records (script)
 
@@ -107,15 +108,12 @@ make pre_merging_quality_check
 - Estimates the degree of incompleteness (missing fields per record) and probability of duplication and saves results in `data/references_pre_screen_quality_check.csv`.
 - Check the first entries (sorted in descending order of completeness and probability of duplication) and manually add missing fields to the `data/references.bib`.
 
-5. Identify and merge duplicates (manual task, supported by a script)
+5. Identify and merge duplicates (manual task, supported by JabRef)
 
-```
-make merge_duplicates
-```
-
-- TODO: This script identifies and merges duplicates when confidence is very high.
 - Check and remove duplicates using the hash-id compatible version of JabRef. When using JabRef, make sure to call the `find duplicates` function multiple times since it only completes two-way merges.
 - When editing `references.bib` manually, and to maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
+
+TODO: `make merge_duplicates` is work-in-progress. The script identifies and merges duplicates when confidence is very high.
 
 6. Check/update citation_keys (manual task)
 
