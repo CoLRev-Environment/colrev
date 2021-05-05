@@ -37,6 +37,9 @@ pre_merging_quality_check :
 extract_manual_pre_merging_edits :
 	$(MAKE) -s -C analysis extract_manual_pre_merging_edits
 
+merge_duplicates :
+	$(MAKE) -s -C analysis merge_duplicates
+
 screen_sheet :
 	$(MAKE) -s -C analysis screen_sheet
 

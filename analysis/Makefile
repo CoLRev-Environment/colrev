@@ -65,6 +65,13 @@ extract_manual_pre_merging_edits :
 	review_template_python3 \
 	python3 analysis/extract_manual_pre_merging_edits.py
 
+merge_duplicates :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/merge_duplicates.py
+
 screen_sheet :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

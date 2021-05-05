@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import bibtexparser
-from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
@@ -20,6 +19,7 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 nr_entries_added = 0
 nr_current_entries = 0
+nr_duplicates_hash_ids = 0
 
 def validate_search_details():
     
@@ -70,7 +70,8 @@ def validate_bib_file(filename):
 
 def gather(bibfilename, combined_bib_database):
     global nr_entries_added 
-
+    global nr_duplicates_hash_ids
+    
     with open(bibfilename, 'r') as bibtex_file:
         bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
@@ -109,16 +110,21 @@ def gather(bibfilename, combined_bib_database):
                 nr_entries_added += 1
 
                 continue
-              
-            # Make sure the ID is unique (otherwise: append letters until this is the case)
-            temp_id = entry['ID']
-            letters = iter(ascii_lowercase)
-            while temp_id in [x['ID'] for x in combined_bib_database.entries]:
-                temp_id = entry['ID'] + next(letters)
-            entry['ID'] = temp_id
+
+            if not entry['hash_id'] in [x['hash_id'] for x in combined_bib_database.entries]:
             
-            combined_bib_database.entries.append(entry)
-            nr_entries_added += 1
+                # Make sure the ID is unique (otherwise: append letters until this is the case)
+                temp_id = entry['ID']
+                letters = iter(ascii_lowercase)
+                while temp_id in [x['ID'] for x in combined_bib_database.entries]:
+                    temp_id = entry['ID'] + next(letters)
+                entry['ID'] = temp_id
+                
+                combined_bib_database.entries.append(entry)
+                nr_entries_added += 1
+            
+            else:
+                nr_duplicates_hash_ids += 1
 
     return combined_bib_database
 
@@ -164,46 +170,10 @@ if __name__ == "__main__":
         print('Loading ' + bib_file) 
         combined_bib_database = gather(bib_file, combined_bib_database)
 
-    writer = BibTexWriter()
-    writer.contents = ['comments', 'entries']
-    writer.indent = '  '
-    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'editor', 'number', 'pages', 'series', 'volume', 'abstract', 'doi', 'hash_id']
-    writer.order_entries_by = ('ID', 'author', 'year')
-    bibtex_str = bibtexparser.dumps(combined_bib_database, writer)
-    
-    with open(target_file, 'w') as out:
-        out.write(bibtex_str + '\n')
+    utils.save_bib_file(combined_bib_database, target_file)
 
-
-    # The following fixes the formatting to prevent JabRef from introducing format changes (there may be a more elegant way to achieve this)
-    os.rename('data/references.bib', 'data/references_temp.bib')
-    
-    with open('data/references_temp.bib', 'r') as reader:
-        lines = reader.readlines()
-    
-    with open('data/references.bib', 'w') as writer:
-        writer.write('% Encoding: UTF-8\n\n')
-
-        for line in lines:
-            line = line.replace('title = {', 'title   = {') \
-                        .replace('year = {','year    = {') \
-                        .replace('number = {','number  = {') \
-                        .replace('pages = {','pages   = {') \
-                        .replace('volume = {','volume  = {') \
-                        .replace('doi = {','doi     = {') \
-                        .replace('pages = {','pages   = {') \
-                        .replace('@article', '@Article') \
-                        .replace('@inproceedings', '@InProceedings')
-            if line.startswith('  hash_id ') and not ',' in line:
-                line = line.replace('\n', ',\n') # this is for the last 
-            # line_parts = line.split(' = ')
-            # line_parts[0] = '{message: <11}'.format(message=line_parts[0])
-            # line = ' = '.join(line_parts)
-            writer.write(line)
-        writer.write('@Comment{jabref-meta: databaseType:bibtex;}')
-
-    os.remove('data/references_temp.bib')
-
+    if nr_duplicates_hash_ids > 0:
+           print(str(nr_duplicates_hash_ids) + ' duplicate records identified due to identical hash_ids')
     print(str(nr_entries_added) + ' records added to references.bib')
     print(str(len(combined_bib_database.entries)) + ' records in references.bib')
     print('')

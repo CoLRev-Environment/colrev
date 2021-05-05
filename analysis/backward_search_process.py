@@ -1,10 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.customization import convert_to_unicode
 
 import os
 import csv
@@ -15,6 +12,7 @@ import logging
 from lxml import etree
 import pandas as pd
 
+import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -235,15 +233,8 @@ def process_backward_search(tei):
             if entry[key] == '':
                 del entry[key]
 
-    writer = BibTexWriter()
-    writer.contents = ['comments', 'entries']
-    writer.indent = '  '
-    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
-    writer.order_entries_by = ('ID', 'author', 'year')
-    bibtex_str = bibtexparser.dumps(db, writer)
     bib_filename = tei.replace('.tei.xml', '') + 'bw_search.bib'
-    with open(bib_filename, 'w') as out:
-        out.write(bibtex_str + '\n')
+    utils.save_bib_file(db, bib_filename)
 
     if len(search_details.index) == 0:
         iteration_number = 1

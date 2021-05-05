@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import bibtexparser
-from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
+from bibtexparser.bwriter import BibTexWriter
 
 import os
 import csv
@@ -24,6 +24,7 @@ import pandas as pd
 import sys
 
 import shutil
+import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -110,14 +111,29 @@ def quality_improvements(bibfilename):
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['title'] = entry['title'].capitalize()
                         
+                conf_strings = ['proceedings', 'conference', 'ecis', 'amcis', 'icis', 'pacis', 'hicss']
                 # Consistency checks
                 if 'journal' in entry:
-                    if any(conf_string in entry['journal'].lower() for conf_string in ['proceedings', 'conference', 'ECIS', 'AMICS', 'ICIS', 'PACIS', 'HICSS']):
+                    if any(conf_string in entry['journal'].lower() for conf_string in conf_strings):
                         conf_name = entry['journal']
                         del entry['journal']
                         entry['booktitle'] = conf_name
                         entry['ENTRYTYPE'] = 'inproceedings'
-    
+                if 'booktitle' in entry:
+                    if any(conf_string in entry['booktitle'].lower() for conf_string in conf_strings):
+                        entry['ENTRYTYPE'] = 'inproceedings'
+                
+                # Journal articles should not have booktitles/series set.
+                if 'article' == entry['ENTRYTYPE']:
+                    if 'booktitle' in entry:
+                        if not 'journal' in entry:
+                            entry['journal'] = entry['booktitle']
+                            del entry['booktitle']
+                    if 'series' in entry:
+                        if not 'journal' in entry:
+                            entry['journal'] = entry['series']
+                            del entry['series']
+
                 if 'book' == entry['ENTRYTYPE']:
                     if 'series' in entry:
                         if any(conf_string in entry['series'].lower() for conf_string in ['proceedings', 'conference', 'ECIS', 'AMICS', 'ICIS', 'PACIS', 'HICSS']):                        
@@ -149,6 +165,12 @@ def quality_improvements(bibfilename):
                              if row['abbreviation'].lower() in entry['booktitle'].lower():
                                  entry['booktitle'] = row['conference']
                         
+                if 'article' == entry['ENTRYTYPE']:
+                    if not 'journal' in entry:
+                        if 'series' in entry:
+                            journal_string = entry['series']
+                            entry['journal'] = journal_string
+                            del entry['series']
                 if('abstract' in entry):
                     entry['abstract'] = entry['abstract'].replace('\n', ' ')
                 
@@ -215,8 +237,8 @@ def quality_improvements(bibfilename):
     
                     except:
                         pass
-
             
+            # Note: formating with utils.save_bib_file() will be done at the end.
             writer = BibTexWriter()
             writer.contents = ['comments', 'entries']
             writer.indent = '  '
@@ -228,7 +250,7 @@ def quality_improvements(bibfilename):
                 out.write(bibtex_str + '\n')
 
             bib_details.to_csv(bib_details_path, index=False, quoting=csv.QUOTE_ALL)
-    return
+    return bib_database
 
 if __name__ == "__main__":
     
@@ -237,15 +259,17 @@ if __name__ == "__main__":
     
     print('Cleanse records')
     
-    bib_database = 'data/references.bib'
-    assert os.path.exists(bib_database)
+    bibfilename = 'data/references.bib'
+    assert os.path.exists(bibfilename)
 
     JOURNAL_ABBREVIATIONS = pd.read_csv('analysis/JOURNAL_ABBREVIATIONS.csv')
     JOURNAL_VARIATIONS = pd.read_csv('analysis/JOURNAL_VARIATIONS.csv')
     CONFERENCE_ABBREVIATIONS = pd.read_csv('analysis/CONFERENCE_ABBREVIATIONS.csv')
 
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-    quality_improvements(bib_database)
+    bib_database = quality_improvements(bibfilename)
     print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     
+    utils.save_bib_file(bib_database, bibfilename)
+
 #   shutil.copyfile(bib_database, 'data/references_last_automated.bib')

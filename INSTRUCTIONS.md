@@ -107,10 +107,15 @@ make pre_merging_quality_check
 - Estimates the degree of incompleteness (missing fields per record) and probability of duplication and saves results in `data/references_pre_screen_quality_check.csv`.
 - Check the first entries (sorted in descending order of completeness and probability of duplication) and manually add missing fields to the `data/references.bib`.
 
-5. Identify and merge duplicates (manual task)
+5. Identify and merge duplicates (manual task, supported by a script)
 
-- TODO: script for automated merging when confidence is high
-- Manually check and remove duplicates using the hash-id compatible version of JabRef. To maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
+```
+make merge_duplicates
+```
+
+- TODO: This script identifies and merges duplicates when confidence is very high.
+- Check and remove duplicates using the hash-id compatible version of JabRef. When using JabRef, make sure to call the `find duplicates` function multiple times since it only completes two-way merges.
+- When editing `references.bib` manually, and to maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
 
 6. Check/update citation_keys (manual task)
 
