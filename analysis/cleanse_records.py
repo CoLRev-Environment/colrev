@@ -87,9 +87,19 @@ def quality_improvements(bibfilename):
     
             # TODO: reconsider the logic considering iterations
             # Note: the case cleansed==no should not occur... if there is no entry in the bib_details, it needs to be cleansed.
-            if  0 == len(bib_details[bib_details['hash_id'] == entry['hash_id']]):
-                new_record = pd.DataFrame([[entry['hash_id'],'yes']], columns=['hash_id','cleansed'])
-                bib_details = pd.concat([bib_details, new_record])
+            
+            to_cleanse = True
+            for individual_hash_id in entry['hash_id'].split(','):
+                if 0 < len(bib_details[bib_details['hash_id'] == individual_hash_id]):
+                    to_cleanse = False
+                else:
+                    # Note: as soon as a single hash_id (in an entry containing multiple hash_ids) has been cleansed, all other hash_ids are considered as cleansed
+                    # (since the have been merged with/reviewed a cleansed record)
+                    for individual_hash_id in entry['hash_id'].split(','):           
+                        new_record = pd.DataFrame([[individual_hash_id,'yes']], columns=['hash_id','cleansed'])
+                        bib_details = pd.concat([bib_details, new_record])
+            
+            if to_cleanse:
 
                 if('author' in entry):
                     entry['author'] = entry['author'].rstrip().lstrip()
@@ -146,12 +156,12 @@ def quality_improvements(bibfilename):
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['journal'] = entry['journal'].capitalize()
                         
-                        for i, row in JOURNAL_VARIATIONS.iterrows():
-                             if entry['journal'].lower() == row['variation'].lower():
-                                 entry['journal'] = row['journal']
-                        for i, row in JOURNAL_ABBREVIATIONS.iterrows():
-                             if entry['journal'].lower() == row['abbreviation'].lower():
-                                 entry['journal'] = row['journal']
+                    for i, row in JOURNAL_VARIATIONS.iterrows():
+                         if entry['journal'].lower() == row['variation'].lower():
+                             entry['journal'] = row['journal']
+                    for i, row in JOURNAL_ABBREVIATIONS.iterrows():
+                         if entry['journal'].lower() == row['abbreviation'].lower():
+                             entry['journal'] = row['journal']
 
                 if('booktitle' in entry):
                     words = entry['booktitle'].split()
@@ -160,9 +170,9 @@ def quality_improvements(bibfilename):
                         # For ECIS/ICIS proceedings:
                         entry['booktitle'] = entry['booktitle'].replace(' Completed Research Papers','').replace(' Completed Research','').replace(' Research-in-Progress Papers','').replace(' Research Papers','')
                         
-                        for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
-                             if row['abbreviation'].lower() in entry['booktitle'].lower():
-                                 entry['booktitle'] = row['conference']
+                    for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
+                         if row['abbreviation'].lower() in entry['booktitle'].lower():
+                             entry['booktitle'] = row['conference']
                         
                 if 'article' == entry['ENTRYTYPE']:
                     if not 'journal' in entry:
@@ -251,7 +261,8 @@ def quality_improvements(bibfilename):
             
             with open(bibfilename, 'w') as out:
                 out.write(bibtex_str + '\n')
-
+                
+            bib_details.sort_values(by=['hash_id'], inplace=True)
             bib_details.to_csv(bib_details_path, index=False, quoting=csv.QUOTE_ALL)
     return bib_database
 
