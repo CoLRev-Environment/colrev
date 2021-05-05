@@ -219,7 +219,7 @@ def quality_improvements(bibfilename):
             
             writer = BibTexWriter()
             writer.contents = ['comments', 'entries']
-            writer.indent = '    '
+            writer.indent = '  '
             writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
             writer.order_entries_by = ('ID', 'author', 'year')
             bibtex_str = bibtexparser.dumps(bib_database, writer)

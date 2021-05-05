@@ -166,14 +166,44 @@ if __name__ == "__main__":
 
     writer = BibTexWriter()
     writer.contents = ['comments', 'entries']
-    writer.indent = '    '
-    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'number', 'pages', 'volume', 'doi', 'hash_id']
+    writer.indent = '  '
+    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'editor', 'number', 'pages', 'series', 'volume', 'abstract', 'doi', 'hash_id']
     writer.order_entries_by = ('ID', 'author', 'year')
     bibtex_str = bibtexparser.dumps(combined_bib_database, writer)
     
     with open(target_file, 'w') as out:
         out.write(bibtex_str + '\n')
+
+
+    # The following fixes the formatting to prevent JabRef from introducing format changes (there may be a more elegant way to achieve this)
+    os.rename('data/references.bib', 'data/references_temp.bib')
     
+    with open('data/references_temp.bib', 'r') as reader:
+        lines = reader.readlines()
+    
+    with open('data/references.bib', 'w') as writer:
+        writer.write('% Encoding: UTF-8\n\n')
+
+        for line in lines:
+            line = line.replace('title = {', 'title   = {') \
+                        .replace('year = {','year    = {') \
+                        .replace('number = {','number  = {') \
+                        .replace('pages = {','pages   = {') \
+                        .replace('volume = {','volume  = {') \
+                        .replace('doi = {','doi     = {') \
+                        .replace('pages = {','pages   = {') \
+                        .replace('@article', '@Article') \
+                        .replace('@inproceedings', '@InProceedings')
+            if line.startswith('  hash_id ') and not ',' in line:
+                line = line.replace('\n', ',\n') # this is for the last 
+            # line_parts = line.split(' = ')
+            # line_parts[0] = '{message: <11}'.format(message=line_parts[0])
+            # line = ' = '.join(line_parts)
+            writer.write(line)
+        writer.write('@Comment{jabref-meta: databaseType:bibtex;}')
+
+    os.remove('data/references_temp.bib')
+
     print(str(nr_entries_added) + ' records added to references.bib')
     print(str(len(combined_bib_database.entries)) + ' records in references.bib')
     print('')
