@@ -63,14 +63,13 @@ def load_bib_file(bibfilename):
 def run_screen_1(screen_filename, bibfilename):
 
     screen = pd.read_csv(screen_filename, dtype=str)
-    
-    #TODO: join references.bib
-    
-    print('To stop screening, press ctrl-c')
-
     references = load_bib_file(bibfilename)
-    
 
+    print('To stop screening, press ctrl-c')
+    
+    # Note: this seems to be necessary to ensure that pandas saves quotes around the last column
+    screen.comment = screen.comment.fillna('-')
+    
     try:
         for i, row in screen.iterrows():
             if 'TODO' == row['inclusion_1']:
@@ -89,9 +88,9 @@ def run_screen_1(screen_filename, bibfilename):
                     for column in screen.columns:
                         if 'ec_' in column:
                             screen.at[i,column] = 'NA'
-        
+
                 screen.sort_values(by=['citation_key'], inplace=True)
-                screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
+                screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
     except KeyboardInterrupt:
         print()
         print()
