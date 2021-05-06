@@ -93,6 +93,13 @@ acquire_pdfs :
 	review_template_python3 \
 	python3 analysis/acquire_pdfs.py
 
+validate_pdfs :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/validate_pdfs.py
+
 screen_1 :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

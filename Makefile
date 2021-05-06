@@ -63,6 +63,9 @@ merge_duplicates :
 acquire_pdfs :
 	$(MAKE) -s -C analysis acquire_pdfs
 
+validate_pdfs :
+	$(MAKE) -s -C analysis validate_pdfs
+
 sample_profile :
 	$(MAKE) -s -C analysis/R sample_profile
 
