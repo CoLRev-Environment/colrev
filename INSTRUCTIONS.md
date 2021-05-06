@@ -1,3 +1,13 @@
+Note: The status of the pipeline is developmental (as indicated in the [Makefile](Makefile)).
+The following scripts should work for v0.1:
+- combine_search_results
+- cleanse_records
+- screen_sheet
+- screen_1
+- screen_2
+- data_sheet
+
+
 # Instructions
 
 Instructions for setting up the environment and applications for the pipeline are available in the [setup](SETUP.md).
@@ -21,7 +31,7 @@ To reset the analyses, each of these files can be deleted.
   - When editing files with external applications or manually, a general recommendation is to save the file after a few changes and check the changes via `git status`.
   If it shows few changes, continue editing the files and check the `git status` before creating a commit.
   If git identifies changes in the whole file, check whether the formatting can be adjusted in the application (e.g., setting quoting defaults in LibreOffice or sort order in Jabref).
-  It is always possible to `git restore ...` the file and start over.
+  It is always possible to run `make reformat_bibliography`, or to `git restore ...` the file and start over.
 
 To ensure that the repository complies with this structure and to get information on the current progress of the review, execute
 ```
@@ -80,6 +90,19 @@ The search combines automated and manual steps as follows:
   - Each of these search processes is assumed to produce a BibTeX file. Other file formats must be converted to BibTeX. For .ris files, this works best with Endnote (import as endnote file, select BibTeX as the output style, mark all and export).
   - Search results are stored as `data/search/YYYY-MM-DD-search_id.bib`.
   - Details on the search are stored in the [search_details.csv](search/search_details.csv).
+
+2. Backward search: requires first pipeline iteration to be completed
+
+- i.e., screen.csv/inclusion_2 must have included papers and PDF available.
+- The Grobid Docker image must be available (`docker clone lfoppiano/grobid:0.6.2`).
+
+```
+make backward_search
+
+```
+- The `backward_search_prep` step collects paths of the PDFs to be considered in a csv file.
+- The `backward_search_grobid` creates tei-xmls from each PDF.
+- The `backward_search_process` creates a bib-file form each tei-xml.
 
 2. Combine files containing individual search results (script)
 
@@ -149,8 +172,25 @@ The following steps apply only to records retained after screen 1 (coded as incl
 
 5. PDF acquisition etc. (manual task)
 
-TODO: include the script
-- Acquire PDF for full-text eligibility assessment (store in data/pdfs and link in references.bib)
+```
+make acquire_pdfs
+```
+
+- TODO: The script acquires PDFs for the full-text eligibility assessment in screen 2.
+- It queries the unpaywall api.
+- If there are unliked files in the `data/pdfs` directory, it links them
+- It creates a csv file (`data/missing_pdf_files.csv`) listing all PDFs that need to be retrieved manually.
+
+- Manual PDF acquisition: acquire PDF and rename PDFs as `citation_key.pdf`, move to `dat/pdfs` directory. Rerun the `acquire_pdfs` script to link the pdfs into the `references.bib`.
+
+- Check whether PDFs can be opened from Jabref. This might require you to set the Library > Library properties > General file directory to the `data/pdfs` directory, which is stored in the `references.bib` as follows:
+
+```
+@Comment{jabref-meta: fileDirectory-username-username-computer:/home/username/path-to-/review-template;}
+```
+
+- PDF file links should take the form `file = {:data/pdfs/citation_key.pdf:PDF}`
+
 
 6. PDF validation (manual task)
 

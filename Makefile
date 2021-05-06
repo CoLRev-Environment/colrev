@@ -10,11 +10,34 @@ help :
 run :
 	$(MAKE) -s -C analysis run
 
+
 status :
 	$(MAKE) -s -C analysis status
 
+reformat_bibliography :
+	$(MAKE) -s -C analysis reformat_bibliography
+
+# to test:
 combine_individual_search_results :
 	$(MAKE) -s -C analysis combine_individual_search_results
+
+cleanse_records :
+	$(MAKE) -s -C analysis cleanse_records
+
+screen_sheet :
+	$(MAKE) -s -C analysis screen_sheet
+
+screen_1 :
+	$(MAKE) -s -C analysis screen_1
+
+screen_2 :
+	$(MAKE) -s -C analysis screen_2
+
+data_sheet :
+	$(MAKE) -s -C analysis data_sheet
+
+
+# development:
 
 backward_search :
 	$(MAKE) -s -C analysis backward_search
@@ -28,9 +51,6 @@ backward_search_grobid :
 backward_search_process :
 	$(MAKE) -s -C analysis backward_search_process
 
-cleanse_records :
-	$(MAKE) -s -C analysis cleanse_records
-
 pre_merging_quality_check :
 	$(MAKE) -s -C analysis pre_merging_quality_check
 
@@ -40,20 +60,11 @@ extract_manual_pre_merging_edits :
 merge_duplicates :
 	$(MAKE) -s -C analysis merge_duplicates
 
-screen_sheet :
-	$(MAKE) -s -C analysis screen_sheet
-
-screen_1 :
-	$(MAKE) -s -C analysis screen_1
-
-screen_2 :
-	$(MAKE) -s -C analysis screen_2
+acquire_pdfs :
+	$(MAKE) -s -C analysis acquire_pdfs
 
 sample_profile :
 	$(MAKE) -s -C analysis/R sample_profile
-
-data_sheet :
-	$(MAKE) -s -C analysis data_sheet
 
 
 # To use local instead of shared versions, replace the following and use the code in comments

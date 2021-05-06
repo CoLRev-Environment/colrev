@@ -3,3 +3,5 @@ data/references_last_automated.bib
 analysis/__pycache__/*
 .local/*
 .rstudio/*
+data/pdfs/*
+data/missing_pdf_files.csv

@@ -16,6 +16,13 @@ status :
 	review_template_python3 \
 	python3 analysis/status.py
 
+reformat_bibliography :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/reformat_bibliography.py
+
 combine_individual_search_results :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \
@@ -78,6 +85,13 @@ screen_sheet :
 	--user `id -u`:`id -g` \
 	review_template_python3 \
 	python3 analysis/screen_sheet.py
+
+acquire_pdfs :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/acquire_pdfs.py
 
 screen_1 :
 	docker run -ti \

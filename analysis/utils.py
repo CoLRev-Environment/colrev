@@ -50,7 +50,7 @@ def save_bib_file(bib_database, target_file):
     writer.contents = ['entries', 'comments']
     writer.indent = '  '
     # The order should match JabRefs ordering of fields used when saving a file
-    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'editor', 'number', 'pages', 'series', 'volume', 'abstract', 'book-author', 'book-group-author', 'doi', 'hash_id']
+    writer.display_order = ['author', 'booktitle', 'journal', 'title', 'year', 'editor', 'number', 'pages', 'series', 'volume', 'abstract', 'book-author', 'book-group-author', 'doi', 'file', 'hash_id']
     # to test this order, run merge_duplicates, add version in git, edit in JabRef and inspect differences
     # There seem to be dependencies in the save order (e.g., the pages are saved in a different position by JabRef if it is a book or an article)
     # the sort order seems to be a problem when @Books have both a title and a booktitle
