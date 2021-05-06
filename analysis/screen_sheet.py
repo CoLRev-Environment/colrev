@@ -46,7 +46,6 @@ def generate_screen_csv(screen_filename, exclusion_criteria, bibfilename):
 
     return
 
-
 def update_screen_csv(screen_filename, bibfilename):
     
     global nr_entries_added
@@ -55,24 +54,30 @@ def update_screen_csv(screen_filename, bibfilename):
         bp = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
     
+    bibliography_file = pd.DataFrame.from_dict(bp.entries)
     screen = pd.read_csv(screen_filename, dtype=str)
-
-    for entry in bp.get_entry_list():
-        # skip when already available
-        if 0 < len(screen[screen['citation_key'].str.startswith(entry['ID'])]):
-            continue
-        
-        add_entry = pd.DataFrame({"citation_key":[entry['ID']],
+    
+    papers_to_screen = bibliography_file['ID'].tolist()
+    screened_papers = screen['citation_key'].tolist()
+    
+    papers_no_longer_in_search = [x for x in screened_papers if x not in papers_to_screen]
+    if len(papers_no_longer_in_search) > 0:
+        print('WARNING: papers in screen.csv are no longer in search (references.bib): [' + ', '.join(papers_no_longer_in_search) + ']')
+        print('note: check and remove the citation_keys/rows from screen.csv')
+    
+    for paper_to_screen in papers_to_screen:
+        if paper_to_screen not in screened_papers:
+            add_entry = pd.DataFrame({"citation_key":[paper_to_screen],
                                                   "inclusion_1":['TODO'],
                                                   "inclusion_2":['TODO']})
-        add_entry = add_entry.reindex(columns=screen.columns, fill_value='TODO')
-        add_entry['comment'] = ''
-
-        screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
-        nr_entries_added = nr_entries_added + 1
+            add_entry = add_entry.reindex(columns=screen.columns, fill_value='TODO')
+            add_entry['comment'] = ''
+    
+            screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
+            nr_entries_added = nr_entries_added + 1
 
     screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
+    screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
     
     return
     
