@@ -1,15 +1,13 @@
 # Setup
 
-To set the repository up, create a separate repository for the data and include it as a symlink in the review-template repository
+To set the repository up, execute the following commands to create a git-versioned data directory:
 
 ```
-mkdir review_project_name
-cd review_project_name
+mkdir data
+cd data
 git init
 mkdir search
 mkdir pdfs
-cd ../review-teplate
-ln -s ../review_project_name
 ```
 
 # Install git

@@ -102,7 +102,7 @@ def run_screen_2(screen_filename, bibfilename):
                     screen.at[i,'inclusion_2'] = 'yes'
                     
                 screen.sort_values(by=['citation_key'], inplace=True)
-                screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
+                screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
     except KeyboardInterrupt:
         print()
         print()
