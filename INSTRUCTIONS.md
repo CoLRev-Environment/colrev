@@ -165,6 +165,8 @@ make pre_merging_quality_check
 
 - Check and remove duplicates using the hash-id compatible version of JabRef. When using JabRef, make sure to call the `find duplicates` function multiple times since it only completes two-way merges.
 - IMPORTANT: sort entries according to title and authors and manually check for duplicates (JabRef does not always identify all duplicates).
+For merging, select both entries and press `ctrl+M`.
+- After merging duplicates in JabRef, it might be necessary to run `make reformat` to improve the readability of the history (for better readability in gitk, increase lines of context).
 - When editing `references.bib` manually, and to maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
 
 TODO: `make merge_duplicates` is work-in-progress. The script identifies and merges duplicates when confidence is very high.

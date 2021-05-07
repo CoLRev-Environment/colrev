@@ -33,14 +33,14 @@ def generate_screen_csv(screen_filename, exclusion_criteria, bibfilename):
         
         data.append([entry['ID'],
                      'TODO',
-                     'TODO'] + ['TODO']*len(exclusion_criteria) + [''])
-    
+                     'TODO'] + ['TODO']*len(exclusion_criteria) + ['-'])
+
     screen = pd.DataFrame(data, columns=["citation_key",
                                 "inclusion_1",
                                 "inclusion_2"] + exclusion_criteria + ['comment'])
 
     screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL)
+    screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
     
     bibtex_file.close()
 
@@ -71,7 +71,7 @@ def update_screen_csv(screen_filename, bibfilename):
                                                   "inclusion_1":['TODO'],
                                                   "inclusion_2":['TODO']})
             add_entry = add_entry.reindex(columns=screen.columns, fill_value='TODO')
-            add_entry['comment'] = ''
+            add_entry['comment'] = '-'
     
             screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
             nr_entries_added = nr_entries_added + 1

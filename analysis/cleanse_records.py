@@ -136,7 +136,7 @@ def quality_improvements(bibfilename):
                             entry['author'] = entry['author'][5:]
     
                 if('title' in entry):
-                    entry['title'] = re.sub('\s+',' ', entry['title'])
+                    entry['title'] = re.sub('\s+',' ', entry['title']).rstrip('.')
                     words = entry['title'].split()
                     if sum([word.isupper() for word in words])/len(words) > 0.8:
                         entry['title'] = entry['title'].capitalize()
