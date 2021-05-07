@@ -23,6 +23,20 @@ reformat_bibliography :
 	review_template_python3 \
 	python3 analysis/reformat_bibliography.py
 
+trace_hash_id :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/trace_hash_id.py
+
+trace_entry :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/trace_entry.py
+
 combine_individual_search_results :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

@@ -17,6 +17,12 @@ status :
 reformat_bibliography :
 	$(MAKE) -s -C analysis reformat_bibliography
 
+trace_hash_id :
+	$(MAKE) -s -C analysis trace_hash_id
+
+trace_entry :
+	$(MAKE) -s -C analysis trace_entry
+
 # to test:
 combine_individual_search_results :
 	$(MAKE) -s -C analysis combine_individual_search_results

@@ -1,5 +1,6 @@
 Note: The status of the pipeline is developmental (as indicated in the [Makefile](Makefile)).
 The following scripts should work for v0.1:
+
 - combine_search_results
 - cleanse_records
 - screen_sheet
@@ -64,6 +65,28 @@ Status
 
 ```
 
+Traceability is ensured through unique `hash_id` (in the search phase and the `references.bib`) and unique `citation_key` fields.
+Note that one `citation_key`, representing a unique record, can be associated with multiple `hash_ids` the record has been returned multiple times in the search.
+Once `citation_key` fields are set at the end of the search step (iteration), they should not be changed to ensure traceability through the following steps.
+
+Forward traceability is ensured through the `trace_entry` procedure
+
+```
+make trace_entry
+
+Example input:
+@book{Author2010, author = {Author, Name}, title = {Paper on Tracing},  series = {Proceedings}, year = {2017}, }"
+
+```
+
+Backward traceability is ensured through the `trace_hash_id` procedure
+
+```
+make trace_hash_id
+```
+
+- This procedure traces a hash_id to the original entry in the `data/search/YYYY-MM-DD-search_id.bib` file.
+
 The following overview explains each step of the review pipeline, providing information on the steps that are executed manually and the steps that are augmented or automated by scripts.
 
 ## Protocol
@@ -119,7 +142,8 @@ This means that duplicate entries with an identical hash_id (based on titles, au
 make cleanse_records
 ```
 
-- Improves the quality for all records not yet included in the `data/search/bib_details.csv`.
+- Improves the quality of entries stored in `data/references.bib`.
+If an entry has been cleansed, its hash_id is stored in the `data/search/bib_details.csv` to avoid re-cleansing (and potentially overriding manual edits).
 Please note that this can take some time (depending on the number of records) since it calls the [Crossref API](https://www.crossref.org/education/retrieve-metadata/rest-api/) to retrieve DOIs and the [DOI resolution service](https://www.doi.org/) to retrieve corresponding meta-data.
 For 1,000 records, this might take approx. 1:30 hours.
 

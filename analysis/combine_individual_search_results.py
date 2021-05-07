@@ -6,67 +6,18 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import os
-import re
 import sys
 import logging
 import pandas as pd
+from string import ascii_lowercase
 
 import utils
-
-from string import ascii_lowercase
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 nr_entries_added = 0
 nr_current_entries = 0
 nr_duplicates_hash_ids = 0
-
-def validate_search_details():
-    
-    search_details = pd.read_csv('data/search/search_details.csv')
-    
-    # check columns
-    predef_colnames = {'filename', 'number_records', 'iteration', 'date_start', 'date_completion', 'source_url', 'search_parameters', 'responsible', 'comment'}
-    if not set(search_details.columns) == predef_colnames:
-        print('Problem: columns in data/search/search_details.csv not matching predefined colnames')
-        print(set(search_details.columns))
-        print('Should be')
-        print(predef_colnames)
-        print('')
-        sys.exit()
-    
-    # TODO: filenames should exist, all files should have a row, iteration, number_records should be int, start
-    print('TODO: further checks to be implemented here')
-    
-    return
-
-def validate_bib_file(filename):
-    
-    # Do not load/warn when bib-file contains the field "Early Access Date"
-    # https://github.com/sciunto-org/python-bibtexparser/issues/230
-    
-    with open(filename) as bibfile:
-        if 'Early Access Date' in bibfile.read():
-            print('Error while loading the file: replace Early Access Date in bibfile before loading!')
-            return False
-
-    # check number_records matching search_details.csv    
-    search_details = pd.read_csv('data/search/search_details.csv')
-    try:
-        records_expected = search_details.loc['data/search/' + search_details['filename'] == filename].number_records.item()
-        with open(filename, 'r') as bibtex_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-        
-        if len(bib_database.entries) != records_expected:
-            print('Error while loading the file: number of records imported not identical to data/search/search_details.csv$number_records')
-            print('Loaded: ' + str(len(bib_database.entries)))
-            print('Expected: ' + str(records_expected))
-            return False
-    except ValueError:
-        print('WARNING: no details on ' + filename + ' provided in data/search/search_details.csv')
-        pass
-    return True
 
 def gather(bibfilename, combined_bib_database):
     global nr_entries_added 
@@ -79,9 +30,6 @@ def gather(bibfilename, combined_bib_database):
         for entry in bib_database.entries:
              
             entry['hash_id'] = utils.create_hash(entry)
-            
-            entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
-            entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
 
             if('abstract' in entry): entry['abstract'] = entry['abstract'].replace('\n', ' ')
             if('author' in entry): entry['author'] = entry['author'].replace('\n', ' ')
@@ -128,25 +76,13 @@ def gather(bibfilename, combined_bib_database):
 
     return combined_bib_database
 
-def get_bib_files():
-    bib_files = []
-
-    for (dirpath, dirnames, filenames) in os.walk(os.path.join(os.getcwd(), 'data/search/')):
-        for filename in filenames:
-            file_path = os.path.join(dirpath, filename).replace('/opt/workdir/','')
-            if file_path.endswith('.bib'):
-                if not validate_bib_file(file_path):
-                    continue
-                bib_files = bib_files + [file_path]
-    return bib_files
-
 if __name__ == "__main__":
 
     print('')
     print('')    
     
     print('Search')
-    validate_search_details()
+    utils.validate_search_details()
     
     target_file = 'data/references.bib'
 
@@ -158,6 +94,8 @@ if __name__ == "__main__":
     else:
         print('Created references.bib.')
         combined_bib_database = BibDatabase()
+        if os.path.exists('data/search/bib_details.csv'):
+            os.remove('data/search/bib_details.csv')
 
     nr_current_entries = len(combined_bib_database.entries)
 
@@ -166,7 +104,7 @@ if __name__ == "__main__":
     search_details = pd.read_csv('data/search/search_details.csv')
 
     print(str(nr_current_entries) + ' records in references.bib')
-    for bib_file in get_bib_files():
+    for bib_file in utils.get_bib_files():
         print('Loading ' + bib_file) 
         combined_bib_database = gather(bib_file, combined_bib_database)
 

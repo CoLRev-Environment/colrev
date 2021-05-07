@@ -26,6 +26,8 @@ import sys
 import shutil
 import utils
 
+from string import ascii_lowercase
+
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 EMPTY_RESULT = {
@@ -205,6 +207,9 @@ def quality_improvements(bibfilename):
                     try:
                         full_data = doi2json(entry['doi'])
                         retrieved_record = json.loads(full_data)
+#                        json_string = json.dumps(retrieved_record)
+#                        if 'crossmark' in json_string:
+#                            print(retrieved_record)
                         author_string = ''
                         for author in retrieved_record.get('author', ''):
                             if not 'family' in author:
@@ -248,6 +253,12 @@ def quality_improvements(bibfilename):
                                     else:
                                         entry['booktitle'] =  retrieved_container_title
     
+                        if 'abstract' not in entry:
+                            retrieved_abstract = retrieved_record.get('abstract', '')
+                            if not retrieved_abstract == '':
+                                # replacing <jats:...> and </jats:...> tags
+                                entry['abstract'] =  str(re.sub('<\/?jats\:[^>]*>',' ', retrieved_abstract)).replace('\n','')
+                                print(entry['abstract'])
                     except:
                         pass
             
@@ -264,6 +275,20 @@ def quality_improvements(bibfilename):
                 
             bib_details.sort_values(by=['hash_id'], inplace=True)
             bib_details.to_csv(bib_details_path, index=False, quoting=csv.QUOTE_ALL)
+
+            # Set citation_keys and make sure they are unique
+            for entry in bib_database.entries:
+                entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
+                entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
+    
+                temp_id = entry['ID']
+                letters = iter(ascii_lowercase)
+                while temp_id in [x['ID'] for x in bib_database.entries]:
+                    temp_id = entry['ID'] + next(letters)
+                entry['ID'] = temp_id
+                
+                #TODO: consider additional bib-database when assigning citation_keys
+
     return bib_database
 
 if __name__ == "__main__":
