@@ -42,6 +42,9 @@ screen_2 :
 data_sheet :
 	$(MAKE) -s -C analysis data_sheet
 
+data_pages :
+	$(MAKE) -s -C analysis data_pages
+
 
 # development:
 

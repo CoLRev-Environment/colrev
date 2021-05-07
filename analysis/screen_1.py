@@ -5,6 +5,7 @@ import bibtexparser
 from bibtexparser.customization import convert_to_unicode
 
 import os
+import sys
 import csv
 import pandas as pd
 
@@ -107,6 +108,9 @@ if __name__ == "__main__":
     print('')    
     
     print('Run screen 1')
+    
+    if 'y' != input('Note: start screening only after removing duplicates from references.bib! Proceed with the screen (y/n)?'):
+        sys.exit()
     
     bibfilename = 'data/references.bib'
     screen_file = 'data/screen.csv'

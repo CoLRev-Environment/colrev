@@ -134,3 +134,10 @@ data_sheet :
 	--user `id -u`:`id -g` \
 	review_template_python3 \
 	python3 analysis/data_sheet.py
+
+data_pages :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/data_pages.py

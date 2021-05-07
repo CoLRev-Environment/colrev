@@ -17,6 +17,12 @@ Principles of the review pipeline
 
 - The pipeline propagates search results from the individual search outputs (`data/search/YYYY-MM-DD-search_id.bib`) to the `data/references.bib` to the `data/screen.csv` to the `data/data.csv`.
 To reset the analyses, each of these files can be deleted.
+- The pipeline maintains the **chain of evidence** by identifying individual search results by their *hash_id*.
+At the end of the search process, each entry (containing one or many *hash_ids*) is assigned a unique *citation_key*.
+At this stage, the *citation_key* can be modified.
+It is recommended to use a semantic *citation_key*, such as "Webster2002" (instead of cryptic strings or random numbers).
+Once a *citation_key* progresses to the screening and data extraction steps, it should not be changed (this would break the chain of evidence).
+
 - The pipeline relies on the principle of *incremental propagation of changes*. When updating data at any stage in the pipeline and rerunning the scripts,  
   - existing records in the subsequent files will not be changed
   - additional records will be processed and added to the subsequent file
@@ -158,6 +164,7 @@ make pre_merging_quality_check
 5. Identify and merge duplicates (manual task, supported by JabRef)
 
 - Check and remove duplicates using the hash-id compatible version of JabRef. When using JabRef, make sure to call the `find duplicates` function multiple times since it only completes two-way merges.
+- IMPORTANT: sort entries according to title and authors and manually check for duplicates (JabRef does not always identify all duplicates).
 - When editing `references.bib` manually, and to maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
 
 TODO: `make merge_duplicates` is work-in-progress. The script identifies and merges duplicates when confidence is very high.

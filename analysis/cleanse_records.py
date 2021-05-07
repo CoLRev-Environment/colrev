@@ -37,6 +37,25 @@ EMPTY_RESULT = {
 }
 MAX_RETRIES_ON_ERROR = 3
 
+def propagated_citation_key(citation_key):
+    
+    propagated = False
+    
+    if os.path.exists('data/screen.csv'):
+        screen = pd.read_csv('data/screen.csv', dtype=str)
+        if citation_key in screen['citation_key'].tolist():
+            propagated = True
+    
+    if os.path.exists('data/data.csv'):
+        # Note: this may be redundant, but just to be sure:
+        data = pd.read_csv('data/data.csv', dtype=str)
+        if citation_key in data['citation_key'].tolist():
+            propagated = True
+    
+    # TODO: also check data_pages?
+    
+    return propagated
+
 def crossref_query_title(title):
     api_url = "https://api.crossref.org/works?"
     params = {"rows": "5", "query.bibliographic": title}
@@ -258,9 +277,32 @@ def quality_improvements(bibfilename):
                             if not retrieved_abstract == '':
                                 # replacing <jats:...> and </jats:...> tags
                                 entry['abstract'] =  str(re.sub('<\/?jats\:[^>]*>',' ', retrieved_abstract)).replace('\n','')
-                                print(entry['abstract'])
+                                entry['abstract'] = str(re.sub('\s+',' ', entry['abstract']))
                     except:
                         pass
+                    
+
+            # It is importnat that citation_keys are only created for entries that have not yet been cleansed before!
+            if to_cleanse:
+
+                temp_id = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
+                temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
+        
+                letters = iter(ascii_lowercase)
+                # TODO: we might have to split the x[hash_id] and the entry[hash_id]
+                while temp_id in [x['ID'] for x in bib_database.entries if not x['hash_id'] in entry['hash_id']]:
+                    temp_id = temp_id + next(letters)
+
+                # Set citation_keys and make sure they are unique
+                if not temp_id == entry['ID']:
+                    # Make sure that citation_keys that have been propagated to the screen or data will not be replaced (this would break the chain of evidence)
+                    if propagated_citation_key(entry['ID']):
+                        print('WARNING: do not change citation_keys that have been propagated to screen.csv and/or data.csv (' + entry['ID'] + ' / ' + temp_id + ')')
+                    else:
+                        entry['ID'] = temp_id
+                        
+                    #TODO: consider additional bib-database when assigning citation_keys
+
             
             # Note: formating with utils.save_bib_file() will be done at the end.
             writer = BibTexWriter()
@@ -275,19 +317,6 @@ def quality_improvements(bibfilename):
                 
             bib_details.sort_values(by=['hash_id'], inplace=True)
             bib_details.to_csv(bib_details_path, index=False, quoting=csv.QUOTE_ALL)
-
-            # Set citation_keys and make sure they are unique
-            for entry in bib_database.entries:
-                entry['ID'] = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
-                entry['ID'] = re.sub("[^0-9a-zA-Z]+", "", entry['ID'])
-    
-                temp_id = entry['ID']
-                letters = iter(ascii_lowercase)
-                while temp_id in [x['ID'] for x in bib_database.entries]:
-                    temp_id = entry['ID'] + next(letters)
-                entry['ID'] = temp_id
-                
-                #TODO: consider additional bib-database when assigning citation_keys
 
     return bib_database
 
