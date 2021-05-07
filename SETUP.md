@@ -1,5 +1,17 @@
 # Setup
 
+To set the repository up, create a separate repository for the data and include it as a symlink in the review-template repository
+
+```
+mkdir review_project_name
+cd review_project_name
+git init
+mkdir search
+mkdir pdfs
+cd ../review-teplate
+ln -s ../review_project_name
+```
+
 # Install git
 
 Install git following the [instructions](https://git-scm.com/) available online.

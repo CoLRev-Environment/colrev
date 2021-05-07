@@ -107,7 +107,7 @@ def acquire_pdfs(bibfilename, screen_file):
                         response = requests.get(url)
                         with open(pdf_filepath, 'wb') as f:
                             f.write(response.content)
-                        print('Retrieved pdf from crossref: ' + pdf_filepath)
+                        print('Retrieved pdf via unpaywall api: ' + pdf_filepath)
                         entry['file'] = ':' + pdf_filepath + ':PDF'
                         pdfs_retrieved += 1
 
@@ -138,14 +138,14 @@ if __name__ == "__main__":
 
     bib_database = acquire_pdfs(bibfilename, screen_file)
     
-    print(' - ' + str(total_to_retrieve) + ' pdfs to retrieve')
+    print(' - ' + str(total_to_retrieve) + ' pdfs required')
+    print(' - ' + str(pdfs_available) + ' pdfs available')
     if existing_pdfs_linked > 0:
         print(' - ' + str(existing_pdfs_linked) + ' existing pdfs linked in bib file')
     print(' - ' + str(pdfs_retrieved) + ' pdfs retrieved')
-    print(' - ' + str(pdfs_available) + ' pdfs available')
     if missing_pdfs > 0:
         print(' - ' + str(missing_pdfs) + ' pdfs missing (see data/missing_pdf_files.csv)')
-    
+   
     
 
     utils.save_bib_file(bib_database, bibfilename)

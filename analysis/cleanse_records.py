@@ -159,7 +159,7 @@ def quality_improvements(bibfilename):
                             entry['journal'] = entry['booktitle']
                             del entry['booktitle']
                     if 'series' in entry:
-                        entry['series'] = entry['series'].replace('\n', '')
+                        entry['series'] = entry['series'].replace('\n', ' ')
                         if not 'journal' in entry:
                             entry['journal'] = entry['series']
                             del entry['series']
@@ -244,7 +244,7 @@ def quality_improvements(bibfilename):
                         
                         retrieved_title = retrieved_record.get('title', '')
                         if not retrieved_title == '':
-                            entry['title'] = str(re.sub('\s+',' ', retrieved_title)).replace('\n','')
+                            entry['title'] = str(re.sub('\s+',' ', retrieved_title)).replace('\n',' ')
                         try:
                             entry['year'] = str(retrieved_record['published-print']['date-parts'][0][0])
                         except:
