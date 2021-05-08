@@ -49,7 +49,6 @@ def validate_search_details():
         sys.exit()
     
     # TODO: filenames should exist, all files should have a row, iteration, number_records should be int, start
-    print('TODO: further checks to be implemented here')
     
     return
 
@@ -106,7 +105,10 @@ def save_bib_file(bib_database, target_file):
     if bib_database.comments == []:
         bib_database.comments = ['jabref-meta: databaseType:bibtex;']
     else:
-        bib_database.comments.remove('% Encoding: UTF-8')
+        try:
+            bib_database.comments.remove('% Encoding: UTF-8')
+        except ValueError:
+            pass
     writer.contents = ['entries', 'comments']
     writer.indent = '  '
     # The order should match JabRefs ordering of fields used when saving a file
