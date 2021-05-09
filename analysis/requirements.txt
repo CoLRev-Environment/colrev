@@ -7,3 +7,4 @@ tqdm==4.55.0
 lxml==4.0
 pdfminer.six==20201018
 langdetect==1.0.8
+GitPython==3.1.14

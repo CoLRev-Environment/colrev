@@ -1,15 +1,5 @@
 # Setup
 
-To set the repository up, execute the following commands to create a git-versioned data directory:
-
-```
-mkdir data
-cd data
-git init
-mkdir search
-mkdir pdfs
-```
-
 # Install git
 
 Install git following the [instructions](https://git-scm.com/) available online.

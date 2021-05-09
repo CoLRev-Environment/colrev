@@ -10,6 +10,8 @@ help :
 run :
 	$(MAKE) -s -C analysis run
 
+initialize :
+	$(MAKE) -s -C analysis initialize
 
 status :
 	$(MAKE) -s -C analysis status

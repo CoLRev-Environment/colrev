@@ -9,6 +9,13 @@ help :
 
 run : status search cleanse_records screen data
 
+initialize :
+	docker run -ti \
+	--volume "$(PWD)":/opt/workdir \
+	--user `id -u`:`id -g` \
+	review_template_python3 \
+	python3 analysis/initialize.py
+
 status :
 	docker run -ti \
 	--volume "$(PWD)":/opt/workdir \

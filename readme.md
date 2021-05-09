@@ -6,6 +6,7 @@ Status of the main scripts:
 
 | Script                                | Status                   |
 | :------------------------------------ | :----------------------- |
+| make initialize                       | Implemented              |
 | make status                           | Implemented              |
 | make reformat_bibliography            | Implemented              |
 | make trace_entry                      | Implemented              |
@@ -109,6 +110,13 @@ make trace_hash_id
 - This procedure traces a hash_id to the original entry in the `data/search/YYYY-MM-DD-search_id.bib` file.
 
 The following overview explains each step of the review pipeline, providing information on the steps that are executed manually and the steps that are augmented or automated by scripts.
+
+```
+make initialize
+```
+
+- This procedure sets up the repository in the data directory.
+
 
 ## Protocol
 

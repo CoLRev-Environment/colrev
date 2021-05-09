@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Added
 
+- `initialize` to set up the data directory (including a readme and the search_details)
+
 ### Changed
 
 ### Fixed
