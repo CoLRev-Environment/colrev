@@ -16,7 +16,7 @@ To build the container, run
 cd analysis
 docker build -t review_template_python3 .
 cd R
-docker build -t review_template_R .
+docker build -t review_template_r .
 ```
 
 # Setup JabRef (hash-id compatible)

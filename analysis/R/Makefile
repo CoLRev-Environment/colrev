@@ -12,5 +12,5 @@ sample_profile :
 	docker run -ti \
 	--volume "$(PWD)":/home/rstudio \
 	--user `id -u`:`id -g` \
-	wur_rstudio \
+	review_template_r \
 	Rscript -e "source('analysis/R/analyses.R')"
