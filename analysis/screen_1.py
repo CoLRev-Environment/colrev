@@ -1,76 +1,36 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-from bibtexparser.customization import convert_to_unicode
-
 import os
 import sys
 import csv
 import pandas as pd
 
-def load_bib_file(bibfilename):
-    
-   with open(bibfilename) as bibtex_file:
-        bp = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-        
-        data = []
+import utils
 
-        for entry in bp.get_entry_list():
-            # print(entry)
-            row = []
-            citation_key = entry.get("ID", "no id")
-            row.append(citation_key)
-            author = entry.get("author", "no author")
-            row.append(author)
-            title = entry.get("title", "no title")
-            row.append(title)
-            year = entry.get("year", "no year")
-            row.append(year)
-            journal = entry.get("journal", "no journal")
-            booktitle = entry.get("booktitle", "no booktitle")
-            if journal == "no journal" and booktitle != "no booktitle":
-                journal = booktitle
-            row.append(journal)
-            volume = entry.get("volume", "no volume")
-            row.append(volume)
-            issue = entry.get("number", "no issue")
-            row.append(issue)
-            pages = entry.get("pages", "no pages")
-            row.append(pages)
-            file_name = entry.get("file", "no file")
-            row.append(file_name)
-            doi = entry.get("doi", "no doi")
-            row.append(doi)
+def run_screen_1(screen_filename, bibfilename):
 
-            data.append(row)    
+    screen = pd.read_csv(screen_filename, dtype=str)
+    # Note: this seems to be necessary to ensure that pandas saves quotes around the last column
+    screen.comment = screen.comment.fillna('-')
 
-        
-        data_df = pd.DataFrame(data, columns =["citation_key",
+    references = pd.DataFrame.from_dict(bib_database.entries)
+    references.rename(columns={'ID': 'citation_key'}, inplace=True)
+    references = references[["citation_key",
                         "author",
                         "title",
                         "year",
                         "journal",
                         "volume",
-                        "issue",
+                        "number",
                         "pages",
-                        "file_name",
-                        "doi"])
+                        "file",
+                        "doi"]]
+    references.fillna('', inplace=True)
 
-        return data_df
-
-
-def run_screen_1(screen_filename, bibfilename):
-
-    screen = pd.read_csv(screen_filename, dtype=str)
-    references = load_bib_file(bibfilename)
+    # TODO: check if citation_keys in references.bib and screen are identical?
 
     print('To stop screening, press ctrl-c')
-    
-    # Note: this seems to be necessary to ensure that pandas saves quotes around the last column
-    screen.comment = screen.comment.fillna('-')
-    
     try:
         for i, row in screen.iterrows():
             if 'TODO' == row['inclusion_1']:
@@ -79,7 +39,7 @@ def run_screen_1(screen_filename, bibfilename):
                 while inclusion_decision not in ['y','n']:
                     print()
                     print()
-                    print(reference['title'] + '  -  ' + reference['author'] + '  ' + reference['journal'] + '  ' + reference['year'] + '  (' + reference['volume'] + ':' + reference['issue'] + ') *' + reference['citation_key'] + '*')
+                    print(reference['title'] + '  -  ' + reference['author'] + '  ' + reference['journal'] + '  ' + str(reference['year']) + '  (' + str(reference['volume']) + ':' + str(reference['number']) + ') *' + reference['citation_key'] + '*')
                     print()
                     inclusion_decision = input('include (y) or exclude (n)?')
                 inclusion_decision = inclusion_decision.replace('y', 'yes').replace('n', 'no')
@@ -111,11 +71,13 @@ if __name__ == "__main__":
     
     if 'y' != input('Note: start screening only after removing duplicates from references.bib! Proceed with the screen (y/n)?'):
         sys.exit()
+
+    utils.git_modification_check('screen.csv')
     
-    bibfilename = 'data/references.bib'
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
+    
     screen_file = 'data/screen.csv'
     assert os.path.exists(screen_file)
-    assert os.path.exists(bibfilename)
     
-    run_screen_1(screen_file, bibfilename)
+    run_screen_1(screen_file, 'data/references.bib')
 

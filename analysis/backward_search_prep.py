@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-from bibtexparser.customization import convert_to_unicode
-
 import os
 import csv
 import pandas as pd
 
-def get_included_pdfs(screen_file, bibtex_file):
+import utils
+
+def get_included_pdfs(screen_file, bib_database):
     
     pdfs = []
     
@@ -17,17 +16,13 @@ def get_included_pdfs(screen_file, bibtex_file):
 
     for record_id in screen['citation_key'].tolist():
         
-        with open(bibtex_file, 'r') as bib_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(bib_file, partial=True)
-            
-            for entry in bib_database.entries:
-                if entry.get('ID', '') == record_id:
-                    if 'file' in entry:
-                        if os.path.exists(entry['file']):
-                            pdfs.append(entry['file'])
-                        else:
-                            print('- Error: file not available ' + entry['file'] + ' (' + entry['ID'] + ')')
+        for entry in bib_database.entries:
+            if entry.get('ID', '') == record_id:
+                if 'file' in entry:
+                    if os.path.exists(entry['file']):
+                        pdfs.append(entry['file'])
+                    else:
+                        print('- Error: file not available ' + entry['file'] + ' (' + entry['ID'] + ')')
 
     return pdfs
 
@@ -41,13 +36,12 @@ if __name__ == "__main__":
     if not os.path.exists('data/search/backward'):
         os.mkdir('data/search/backward')
     
-    bibtex_file = 'data/references.bib'
-    assert os.path.exists(bibtex_file)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
 
     screen_file = 'data/screen.csv'
     assert os.path.exists(screen_file)
 
-    pdfs = get_included_pdfs(screen_file, bibtex_file)
+    pdfs = get_included_pdfs(screen_file, bib_database)
     print('to check: pdf paths should start with data/pdf/')
 #    pdfs = ['data/pdf/example1.pdf','data/pdf/example2.pdf']
     

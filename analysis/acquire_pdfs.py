@@ -1,11 +1,8 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
 import csv
 import os
-import re
-from fuzzywuzzy import fuzz
 from bibtexparser.bibdatabase import BibDatabase
 import pandas as pd
 import requests
@@ -71,7 +68,7 @@ def unpaywall(doi, retry=0, pdfonly=True):
     return best_loc['url_for_pdf']
 
 
-def acquire_pdfs(bibfilename, screen_file):
+def acquire_pdfs(bib_database, screen):
     global total_to_retrieve
     global pdfs_retrieved
     global existing_pdfs_linked
@@ -80,10 +77,6 @@ def acquire_pdfs(bibfilename, screen_file):
 
 #    global total_to_retrieve
     
-    screen = pd.read_csv(screen_file, dtype=str)
-    with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(common_strings=True).parse_file(bibtex_file, partial=True)
-
     papers_to_acquire = screen.loc[screen.inclusion_2.notnull(), 'citation_key'].tolist()
     
     total_to_retrieve = len(papers_to_acquire)
@@ -131,12 +124,13 @@ if __name__ == "__main__":
     
     print('Acquire PDFs')
     
-    bibfilename = 'data/references.bib'
-    assert os.path.exists(bibfilename)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
+
     screen_file = 'data/screen.csv'
     assert os.path.exists(screen_file)
+    screen = pd.read_csv(screen_file, dtype=str)
 
-    bib_database = acquire_pdfs(bibfilename, screen_file)
+    bib_database = acquire_pdfs(bib_database, screen_file)
     
     print(' - ' + str(total_to_retrieve) + ' pdfs required')
     print(' - ' + str(pdfs_available) + ' pdfs available')
@@ -148,4 +142,4 @@ if __name__ == "__main__":
    
     
 
-    utils.save_bib_file(bib_database, bibfilename)
+    utils.save_bib_file(bib_database, 'data/references.bib')

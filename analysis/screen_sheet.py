@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-from bibtexparser.customization import convert_to_unicode
-
 import os
 import logging
 import csv
 import pandas as pd
+
+import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -15,16 +14,12 @@ nr_entries_added = 0
 nr_current_entries = 0
 
 
-def generate_screen_csv(screen_filename, exclusion_criteria, bibfilename):
+def generate_screen_csv(screen_filename, exclusion_criteria, bib_database):
     global nr_entries_added
     
-    with open(bibfilename) as bibtex_file:
-        bp = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-
     data = []
 
-    for entry in bp.get_entry_list():
+    for entry in bib_database.get_entry_list():
         nr_entries_added = nr_entries_added + 1
         
         if not 'ID' in entry:
@@ -42,19 +37,13 @@ def generate_screen_csv(screen_filename, exclusion_criteria, bibfilename):
     screen.sort_values(by=['citation_key'], inplace=True)
     screen.to_csv(screen_filename, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
     
-    bibtex_file.close()
-
     return
 
-def update_screen_csv(screen_filename, bibfilename):
+def update_screen_csv(screen_filename, bib_database):
     
     global nr_entries_added
-       
-    with open(bibfilename) as bibtex_file:
-        bp = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-    
-    bibliography_file = pd.DataFrame.from_dict(bp.entries)
+
+    bibliography_file = pd.DataFrame.from_dict(bib_database.entries)
     screen = pd.read_csv(screen_filename, dtype=str)
     
     papers_to_screen = bibliography_file['ID'].tolist()
@@ -90,9 +79,10 @@ if __name__ == "__main__":
     print('Screen')
     print('TODO: validation to be implemented here')
 
-    bibfilename = 'data/references.bib'
-    screen_file = 'data/screen.csv'
 
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
+
+    screen_file = 'data/screen.csv'
     
     if not os.path.exists(screen_file):
         print('Creating screen.csv')
@@ -107,7 +97,7 @@ if __name__ == "__main__":
        # Exclusion criteria should be unique
         assert len(exclusion_criteria) == len(set(exclusion_criteria))
 
-        generate_screen_csv(screen_file, exclusion_criteria, bibfilename)
+        generate_screen_csv(screen_file, exclusion_criteria, bib_database)
         print('Created screen.csv')
         print('0 records in screen.csv')
     else:
@@ -117,7 +107,7 @@ if __name__ == "__main__":
         lines= len(list(reader))-1
         print(str(lines) + ' records in screen.csv')
 
-        update_screen_csv(screen_file, bibfilename)
+        update_screen_csv(screen_file, bib_database)
 
     print(str(nr_entries_added) + ' records added to screen.csv')
     file = open(screen_file)

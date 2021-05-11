@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-import os
 
 import utils
 
@@ -13,10 +11,6 @@ if __name__ == "__main__":
     
     print('Reformat bibliography')
     
-    bibfilename = 'data/references.bib'
-    assert os.path.exists(bibfilename)
-
-    with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(common_strings=True).parse_file(bibtex_file, partial=True)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
     
-    utils.save_bib_file(bib_database, bibfilename)
+    utils.save_bib_file(bib_database, 'data/references.bib')

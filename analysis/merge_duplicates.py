@@ -1,17 +1,9 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.customization import convert_to_unicode
-
-import os
-import logging
-import pandas as pd
 
 import utils
-
-logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -40,21 +32,14 @@ if __name__ == "__main__":
     
     print('Merge duplicates')
     
-    target_file = 'data/references.bib'
-    temp_file = 'data/references_temp.bib'
-    assert os.path.exists(target_file)
-    os.rename(target_file, temp_file)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
 
-    with open(temp_file, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-        
     nr_current_entries = len(bib_database.entries)
 
     print(str(nr_current_entries) + ' records in references.bib')
     bib_database = merge_duplicates(bib_database)
 
-    utils.save_bib_file(bib_database, target_file)
+    utils.save_bib_file(bib_database, 'data/references.bib')
 
     duplicates_removed = nr_current_entries - len(bib_database.entries)
     print('Duplicates removed: ' + str(duplicates_removed))

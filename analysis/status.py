@@ -1,21 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.customization import convert_to_unicode
 
 import os
-import re
-import sys
-import logging
-import hashlib
 import pandas as pd
 
-from string import ascii_lowercase
-
-logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
+import utils
 
 nr_duplicates_hash_ids = 0
 nr_entries_added = 0
@@ -39,10 +29,8 @@ if __name__ == "__main__":
         print(' |  - Not yet initiated')
     else:
         # Search
-        with open('data/references.bib', 'r') as bibtex_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-        
+        bib_database = utils.load_references_bib(modification_check = True, initialize = True)
+
         search_details = pd.read_csv('data/search/search_details.csv', dtype=str)
         search_details['number_records'] = search_details['number_records'].astype(int)
      
