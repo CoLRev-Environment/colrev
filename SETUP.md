@@ -1,8 +1,6 @@
 # Setup
 
-# Install git
-
-Install git following the [instructions](https://git-scm.com/) available online.
+The pipeline is implemented in a Docker container, ensuring cross-platform compatibility.
 
 # Install Docker and build container
 
@@ -18,6 +16,9 @@ docker build -t review_template_python3 .
 cd R
 docker build -t review_template_r .
 ```
+
+Git and make are available in the Docker container.
+
 
 # Setup JabRef (hash-id compatible)
 

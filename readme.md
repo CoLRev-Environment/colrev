@@ -29,6 +29,16 @@ Status of the main scripts:
 
 Instructions for setting up the environment and applications for the pipeline are available in the [setup](SETUP.md).
 
+All commands must be executed inside the Docker container.
+For example:
+```
+# for Linux
+docker run -ti --volume ${PWD}:/opt/workdir --user `id -u`:`id -g` review_template_python3 /bin/bash
+# for Windows
+docker run -ti --volume $(pwd):/opt/workdir --user `id -u`:`id -g` review_template_python3 /bin/bash
+make status
+```
+
 Principles of the review pipeline
 
 - The pipeline propagates search results from the individual search outputs (`data/search/YYYY-MM-DD-search_id.bib`) to the `data/references.bib` to the `data/screen.csv` to the `data/data.csv`.
@@ -143,19 +153,6 @@ The search combines automated and manual steps as follows:
   - Search results are stored as `data/search/YYYY-MM-DD-search_id.bib`.
   - Details on the search are stored in the [search_details.csv](search/search_details.csv).
 
-2. Backward search: requires first pipeline iteration to be completed
-
-- i.e., screen.csv/inclusion_2 must have included papers and PDF available.
-- The Grobid Docker image must be available (`docker clone lfoppiano/grobid:0.6.2`).
-
-```
-make backward_search
-
-```
-- The `backward_search_prep` step collects paths of the PDFs to be considered in a csv file.
-- The `backward_search_grobid` creates tei-xmls from each PDF.
-- The `backward_search_process` creates a bib-file form each tei-xml.
-
 2. Combine files containing individual search results (script)
 
 ```
@@ -202,6 +199,20 @@ TODO: `make merge_duplicates` is work-in-progress. The script identifies and mer
 - Please note that after this step, the citation_keys will be propagated to the screen.csv and data.csv, i.e., they should not be changed afterwards.
 
 When updating the search, follow the same procedures as described above. Note that `make search` will only add new records to the references.bib and `cleanse_records` will only be executed for new records.
+
+
+7. Backward search: after completing the first iteration of the search (requires first pipeline iteration to be completed
+
+- i.e., screen.csv/inclusion_2 must have included papers and PDF available.
+- The Grobid Docker image must be available (`docker clone lfoppiano/grobid:0.6.2`).
+
+```
+make backward_search
+
+```
+- The `backward_search_prep` step collects paths of the PDFs to be considered in a csv file.
+- The `backward_search_grobid` creates tei-xmls from each PDF.
+- The `backward_search_process` creates a bib-file form each tei-xml.
 
 ## Inclusion screen
 
