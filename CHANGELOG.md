@@ -13,6 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Changed
 
+- Revised Makefiles to call scripts within Docker containers
+
+### Removed
+
+- R scripts for sample statistics (the goal is to implement them in Python)
+
 ### Fixed
 
 
