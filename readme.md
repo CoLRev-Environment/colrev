@@ -24,16 +24,13 @@ Status of the main scripts:
 | make pre_merging_quality_check        | Experimental/development |
 | make validate_pdfs                    | Experimental/development |
 
-
 Instructions for setting up the environment and applications for the pipeline are available in the [setup](SETUP.md).
 
 All commands must be executed inside the Docker container.
 For example:
 ```
-# for Linux
-docker run -ti --volume ${PWD}:/opt/workdir --user `id -u`:`id -g` review_template_python3 /bin/bash
-# for Windows
-docker run -ti --volume $(pwd):/opt/workdir --user `id -u`:`id -g` review_template_python3 /bin/bash
+docker-compose up
+docker-compose run --rm review_template_python3 /bin/bash
 make status
 ```
 
