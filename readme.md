@@ -18,9 +18,7 @@ Status of the main scripts:
 | make screen_2                         | Implemented              |
 | make data_sheet                       | Implemented              |
 | make data_pages                       | Implemented              |
-| make backward_search_grobid           | Experimental/development |
-| make backward_search_prep             | Experimental/development |
-| make backward_search_process          | Experimental/development |
+| make backward_search                  | Implemented              |
 | make extract_manual_pre_merging_edits | Experimental/development |
 | make merge_duplicates                 | Experimental/development |
 | make pre_merging_quality_check        | Experimental/development |
@@ -204,15 +202,12 @@ When updating the search, follow the same procedures as described above. Note th
 7. Backward search: after completing the first iteration of the search (requires first pipeline iteration to be completed
 
 - i.e., screen.csv/inclusion_2 must have included papers and PDF available.
-- The Grobid Docker image must be available (`docker clone lfoppiano/grobid:0.6.2`).
 
 ```
 make backward_search
 
 ```
-- The `backward_search_prep` step collects paths of the PDFs to be considered in a csv file.
-- The `backward_search_grobid` creates tei-xmls from each PDF.
-- The `backward_search_process` creates a bib-file form each tei-xml.
+- The procedure transforms all PDFs linked to included papers (inclusion_2 = yes) to tei files, extracts the reference sections and transforms them to BibTeX files.
 
 ## Inclusion screen
 

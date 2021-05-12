@@ -48,16 +48,6 @@ data_pages :
 backward_search :
 	python3 analysis/backward_search.py
 
-backward_search_prep :
-	python3 analysis/backward_search_prep.py
-
-backward_search_grobid :
-	echo "\n WARNING: backward_search_grobid still implemented outside Docker\n"
-#	python3 analysis/backward_search_grobid.py
-
-backward_search_process :
-	python3 analysis/backward_search_process.py
-
 pre_merging_quality_check :
 	python3 analysis/pre_merging_quality_check.py
 

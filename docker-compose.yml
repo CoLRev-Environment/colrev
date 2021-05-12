@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+  review_template_python3:
+    build: ./analysis
+    volumes:
+      - ./:/opt/workdir
+      - ./data:/usr/data
+    ports:
+      - "5001:5001"
+    user: "${UID:-1000}:${GID:-1000}"
+  grobid:
+    image: "lfoppiano/grobid:0.6.2"
+    ports:
+      - "8070:8070"
+    logging:
+      driver: none

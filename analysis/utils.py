@@ -183,3 +183,35 @@ def save_bib_file(bib_database, target_file):
 
     os.remove('data/references_temp_2.bib')
     return
+
+
+def get_included_papers():
+    
+    bibtex_file = 'data/references.bib'
+    assert os.path.exists(bibtex_file)
+
+    screen_file = 'data/screen.csv'
+    assert os.path.exists(screen_file)
+
+    pdfs = []
+    
+    screen = pd.read_csv(screen_file, dtype=str)
+
+    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
+
+    for record_id in screen['citation_key'].tolist():
+        
+        with open(bibtex_file, 'r') as bib_file:
+            bib_database = bibtexparser.bparser.BibTexParser(
+                customization=convert_to_unicode, common_strings=True).parse_file(bib_file, partial=True)
+            
+            for entry in bib_database.entries:
+                if entry.get('ID', '') == record_id:
+                    if 'file' in entry:
+                        pdf_path = os.path.join(os.getcwd(), entry['file'].replace('.pdf:PDF', '.pdf').replace(':', ''))                        
+                        if os.path.exists(pdf_path):
+                            pdfs.append(entry['ID'])
+                        else:
+                            print('- Error: file not available ' + entry['file'] + ' (' + entry['ID'] + ')')
+
+    return pdfs
