@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+- Bugs in `analysis/combine_individual_search_results.py` and in `analysis/acquire_pdfs.py`
 
 ### [0.1.0] -2021-05-08
 

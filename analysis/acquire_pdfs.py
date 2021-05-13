@@ -130,7 +130,8 @@ if __name__ == "__main__":
     assert os.path.exists(screen_file)
     screen = pd.read_csv(screen_file, dtype=str)
 
-    bib_database = acquire_pdfs(bib_database, screen_file)
+
+    bib_database = acquire_pdfs(bib_database, screen)
     
     print(' - ' + str(total_to_retrieve) + ' pdfs required')
     print(' - ' + str(pdfs_available) + ' pdfs available')

@@ -38,13 +38,13 @@ def gather(bibfilename, bib_database):
     nr_duplicates_hash_ids = 0
     
     with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
         
         print('')
-        print('Loading ' + bib_file.replace('data/search/','').ljust(52) + '(' + str(len(bib_database.entries)).rjust(5) + ' records)')
+        print('Loading ' + bib_file.replace('data/search/','').ljust(52) + '(' + str(len(individual_bib_database.entries)).rjust(5) + ' records)')
 
-        for entry in bib_database.entries:
+        for entry in individual_bib_database.entries:
              
             entry['hash_id'] = utils.create_hash(entry)
 
@@ -59,7 +59,7 @@ def gather(bibfilename, bib_database):
             
             
             fields_to_keep = ["ID", "hash_id", "ENTRYTYPE", "author", "year", "title", "journal", "booktitle", "series", "volume", "issue", "number", "pages", "doi", "abstract", "editor", "book-group-author", "book-author", "keywords"]
-            fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number", "publisher"]
+            fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number", "publisher", "author_keywords", "source", "affiliation", "document_type", "art_number"]
             for val in list(entry):
                 if(val not in fields_to_keep):
                     # drop all fields not in fields_to_keep
@@ -67,8 +67,8 @@ def gather(bibfilename, bib_database):
                     # but warn if fields are dropped that are not in the typical fields_to_drop
                     if not val in fields_to_drop:
                         print('  dropped ' + val + ' field')
-            
-        for entry in bib_database.entries:
+        
+        for entry in individual_bib_database.entries:
             
             if 0 == len(bib_database.entries):
                 bib_database.entries.append(entry)
@@ -112,7 +112,7 @@ if __name__ == "__main__":
     nr_current_entries = len(bib_database.entries)
 
     if 0 == nr_current_entries:
-        print('Created references.bib'.ljust(60)  + '(' + '0'.rjust(5) + 'records).')
+        print('Created references.bib'.ljust(60)  + '(' + '0'.rjust(5) + ' records).')
     else:
         print('Opening existing references.bib '.ljust(60) + '(' + str(nr_current_entries).rjust(5) + ' records)')
     print('')
