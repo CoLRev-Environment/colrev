@@ -43,9 +43,10 @@ def extract_text_by_page(pdf_path):
         return ''.join(text_list)
     
 def extract_text(pdf_path):
+    text_list = []
     for page in extract_text_by_page(pdf_path):
-        print(page)
-        print()
+        text_list += page
+    return ''.join(text_list)
 
 def probability_english(text):
 

@@ -7,6 +7,7 @@ from bibtexparser.bibdatabase import BibDatabase
 import pandas as pd
 import requests
 import json
+from pdfminer.high_level import extract_text
 
 import utils
 
@@ -68,6 +69,13 @@ def unpaywall(doi, retry=0, pdfonly=True):
     return best_loc['url_for_pdf']
 
 
+def is_pdf(path_to_file):
+    try:
+        extract_text(path_to_file)
+        return True
+    except:
+        return False
+
 def acquire_pdfs(bib_database, screen):
     global total_to_retrieve
     global pdfs_retrieved
@@ -97,12 +105,21 @@ def acquire_pdfs(bib_database, screen):
                 url = unpaywall(entry['doi'])
                 if not url is None:
                     if not 'Invalid/unknown DOI' in url:
-                        response = requests.get(url)
-                        with open(pdf_filepath, 'wb') as f:
-                            f.write(response.content)
-                        print('Retrieved pdf via unpaywall api: ' + pdf_filepath)
-                        entry['file'] = ':' + pdf_filepath + ':PDF'
-                        pdfs_retrieved += 1
+                        response = requests.get(url, headers = {
+                            'User-Agent': 'Chrome/51.0.2704.103',
+                            'referer': 'https://www.doi.org'
+                            })
+                        if 200 == response.status_code:
+                            with open(pdf_filepath, 'wb') as f:
+                                f.write(response.content)
+                            if is_pdf(pdf_filepath):
+                                print('Retrieved pdf via unpaywall api: ' + pdf_filepath)
+                                entry['file'] = ':' + pdf_filepath + ':PDF'
+                                pdfs_retrieved += 1
+                            else:
+                                os.remove(pdf_filepath)
+                        else:
+                            print('Problem retrieving PDF based on unpaywall link (' + str(response.status_code) + '): ' + url)
 
             if not os.path.exists(pdf_filepath):
                 missing_entries.entries.append(entry)
