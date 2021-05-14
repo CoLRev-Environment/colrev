@@ -22,6 +22,8 @@ import requests
 import pandas as pd
 import sys
 
+import unicodedata
+
 import utils
 
 from string import ascii_lowercase
@@ -34,6 +36,25 @@ EMPTY_RESULT = {
     "doi": ""
 }
 MAX_RETRIES_ON_ERROR = 3
+
+def rmdiacritics(char):
+    '''
+    Return the base character of char, by "removing" any
+    diacritics like accents or curls and strokes and the like.
+    '''
+    desc = unicodedata.name(char)
+    cutoff = desc.find(' WITH ')
+    if cutoff != -1:
+        desc = desc[:cutoff]
+        try:
+            char = unicodedata.lookup(desc)
+        except KeyError:
+            pass  # removing "WITH ..." produced an invalid name
+    return char
+
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    return u"".join([rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)])
 
 def propagated_citation_key(citation_key):
     
@@ -280,12 +301,17 @@ def quality_improvements(bib_database):
         if to_cleanse:
 
             temp_id = entry.get('author', '').split(' ')[0].capitalize() + entry.get('year', '')
+            # Replace special characters (because citation_keys may be used as file names)
+            temp_id = remove_accents(temp_id)
             temp_id = re.sub("[^0-9a-zA-Z]+", "", temp_id)
-    
             letters = iter(ascii_lowercase)
             # TODO: we might have to split the x[hash_id] and the entry[hash_id]
             while temp_id in [x['ID'] for x in bib_database.entries if not x['hash_id'] in entry['hash_id']]:
-                temp_id = temp_id + next(letters)
+                next_letter = next(letters)
+                if next_letter == 'a':
+                    temp_id = temp_id + next_letter
+                else:
+                    temp_id = temp_id[:-1] + next_letter
 
             # Set citation_keys and make sure they are unique
             if not temp_id == entry['ID']:
@@ -317,7 +343,7 @@ if __name__ == "__main__":
     
     print('')
     print('')    
-    
+        
     print('Cleanse records')
     
     bib_database = utils.load_references_bib(modification_check = True, initialize = False)

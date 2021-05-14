@@ -87,7 +87,7 @@ def load_references_bib(modification_check = True, initialize = False):
     references_bib_path = 'data/references.bib'
     if os.path.exists(os.path.join(os.getcwd(), references_bib_path)):
         if modification_check:
-            git_modification_check(references_bib_path)
+            git_modification_check('references.bib')
         with open(references_bib_path, 'r') as target_db:
             references_bib = bibtexparser.bparser.BibTexParser(
                 customization=convert_to_unicode, common_strings=True).parse_file(target_db, partial=True)
@@ -109,7 +109,7 @@ def git_modification_check(filename):
     # print('commit changes in references.bib before executing script?')
     index = repo.index
     if filename in [entry.a_path for entry in index.diff(None)]:
-        print('WARNING: There are changes in ' + filename + ' that are not yet added to the git index. They may be overwritten by this script. Please consider to MANUALLY add the ' + filename + 'to the index before executing script.')
+        print('WARNING: There are changes in ' + filename + ' that are not yet added to the git index. They may be overwritten by this script. Please consider to MANUALLY add the ' + filename + ' to the index before executing script.')
         if 'y' != input('override changes (y/n)?'):
             sys.exit()
     

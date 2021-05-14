@@ -85,5 +85,3 @@ if __name__ == "__main__":
     bib_database = utils.load_references_bib(modification_check = True, initialize = False)
     
     run_screen_2(screen_file, bib_database)
-
-    print('same as screen 1 if there are no exclusion criteria, otherwise: ask for each criterion and then fill the inclusion2 decision based on criteria')
