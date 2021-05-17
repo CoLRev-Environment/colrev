@@ -1,9 +1,16 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import bibtexparser
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bwriter import BibTexWriter
+from bibtexparser.customization import convert_to_unicode
 
 import os
+import time
+import tqdm
+import requests
+import sys
 import csv
 from time import gmtime, strftime
 from datetime import datetime
@@ -19,15 +26,6 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 ns =    {'tei': '{http://www.tei-c.org/ns/1.0}',
          'w3' : '{http://www.w3.org/XML/1998/namespace}'}
 
-
-def get_tei_files(directory):
-    
-    list_of_files = []
-    for (dirpath, dirnames, filenames) in os.walk(directory):
-        for filename in filenames:
-            if filename.endswith('.tei.xml'): 
-                list_of_files.append(os.sep.join([dirpath, filename]))
-    return list_of_files
 
 def get_reference_title(reference):
     title_string = ''
@@ -248,19 +246,58 @@ def process_backward_search(tei):
 
     return
 
+GROBID_URL = 'http://grobid:8070'
+
+data_dir = '/usr/data/'
+
+def check_grobid_availability():
+    i = 0
+    while True:
+        i += 1
+        time.sleep(1)
+        try:
+            r = requests.get(GROBID_URL  + '/api/isalive')
+            if r.text == 'true':
+#                print('Grobid service alive.')
+                i = -1
+        except:
+            pass
+        if i == -1:
+            break
+        if i > 20:
+            sys.exit(0)
+    return
+
+def transform(pdf_filename, tei_filename):
+    # alternative python-batch: https://github.com/kermitt2/grobid_client_python
+    check_grobid_availability()
+#    print('Processing ' + paper)
+    options = {'consolidateHeader': '1', 'consolidateCitations': '1'}
+    r = requests.post(GROBID_URL  + '/api/processFulltextDocument', 
+                      files=dict(input=open(pdf_filename, 'rb')), 
+                      data=options)
+    tei_content = r.text.encode('utf-8')
+    with open(tei_filename, 'wb') as f:
+        f.write(tei_content)
+    return
+
 if __name__ == "__main__":
     
     print('')
     print('')    
     
-    print('Backward search - Process')
+    print('Backward search')
 
-    teis = get_tei_files('data/search/backward')
-
-    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-    for tei in teis:
-        process_backward_search(tei)
-    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    citation_keys = utils.get_included_papers()
     
-    os.remove('data/search/backward_search_pdfs.csv')
+    if not os.path.exists('data/search/backward'):
+        os.mkdir('data/search/backward')
+
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    for citation_key in tqdm.tqdm(citation_keys):
+        tei_filename = data_dir + 'search/backward/' + citation_key + '.tei.xml'
+        pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
+        transform(pdf_filename, tei_filename)
+        process_backward_search(tei_filename)
+    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
     

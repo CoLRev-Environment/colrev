@@ -13,8 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Changed
 
+- Changed environment to Docker-compose and revised Makefiles to call scripts within Docker containers
 - Refactored code, including `analysis/utils.py/load_references_bib(modification_check, initialize)` and `analysis/utils.py/git_modification_check(filename)`
 - Improve treatment of diacritics and accents when generating citation_keys in `analysis/cleanse_records.py`
+- `backward_search` now works with tei-conversion provided by a grobid Docker container
+
+### Removed
+
+- R scripts for sample statistics (the goal is to implement them in Python)
 
 ### Fixed
 

@@ -1,23 +1,13 @@
 # Setup
 
-# Install git
+The pipeline is implemented in a Docker-compose environment, ensuring cross-platform compatibility.
 
-Install git following the [instructions](https://git-scm.com/) available online.
+# Install Docker-compose and Docker
 
-# Install Docker and build container
+The analyses are implemented in Python.
+Instructions for  [installing](https://docs.docker.com/install/linux/docker-ce/ubuntu/)  and [configuring](https://docs.docker.com/install/linux/linux-postinstall/) [Docker](https://www.docker.com/) and [Docker-compose](https://docs.docker.com/compose/install/) are available online.
 
-The analyses are implemented in Python and R.
-The Dockerfiles ([1](analysis/Dockerfile), [2](analyses/R/Dockerfile)) contain necessary dependencies to make the pipeline reproducible.
-Instructions for  [installing](https://docs.docker.com/install/linux/docker-ce/ubuntu/)  and [configuring](https://docs.docker.com/install/linux/linux-postinstall/) [Docker](https://www.docker.com/) are available online.
-
-To build the container, run
-
-```
-cd analysis
-docker build -t review_template_python3 .
-cd R
-docker build -t review_template_r .
-```
+Git and make are available in the Docker container.
 
 # Setup JabRef (hash-id compatible)
 
