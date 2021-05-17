@@ -31,20 +31,20 @@ def get_hash_ids(bib_database):
     return hash_id_list
 
 
-def gather(bibfilename, combined_bib_database):
+def gather(bibfilename, bib_database):
     global total_nr_entries_added 
     global total_nr_duplicates_hash_ids
     nr_entries_added = 0
     nr_duplicates_hash_ids = 0
     
     with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
         
         print('')
-        print('Loading ' + bib_file.replace('data/search/','').ljust(52) + '(' + str(len(bib_database.entries)).rjust(5) + ' records)')
+        print('Loading ' + bib_file.replace('data/search/','').ljust(52) + '(' + str(len(individual_bib_database.entries)).rjust(5) + ' records)')
 
-        for entry in bib_database.entries:
+        for entry in individual_bib_database.entries:
              
             entry['hash_id'] = utils.create_hash(entry)
 
@@ -59,7 +59,7 @@ def gather(bibfilename, combined_bib_database):
             
             
             fields_to_keep = ["ID", "hash_id", "ENTRYTYPE", "author", "year", "title", "journal", "booktitle", "series", "volume", "issue", "number", "pages", "doi", "abstract", "editor", "book-group-author", "book-author", "keywords"]
-            fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number", "publisher"]
+            fields_to_drop = ["type", "url", "organization", "issn", "isbn", "note", "unique-id", "month", "researcherid-numbers", "orcid-numbers", "eissn", "article-number", "publisher", "author_keywords", "source", "affiliation", "document_type", "art_number"]
             for val in list(entry):
                 if(val not in fields_to_keep):
                     # drop all fields not in fields_to_keep
@@ -67,26 +67,26 @@ def gather(bibfilename, combined_bib_database):
                     # but warn if fields are dropped that are not in the typical fields_to_drop
                     if not val in fields_to_drop:
                         print('  dropped ' + val + ' field')
+        
+        for entry in individual_bib_database.entries:
             
-        for entry in bib_database.entries:
-            
-            if 0 == len(combined_bib_database.entries):
-                combined_bib_database.entries.append(entry)
+            if 0 == len(bib_database.entries):
+                bib_database.entries.append(entry)
                 total_nr_entries_added += 1
                 nr_entries_added += 1
 
                 continue
 
-            if not entry['hash_id'] in get_hash_ids(combined_bib_database):
+            if not entry['hash_id'] in get_hash_ids(bib_database):
             
                 # Make sure the ID is unique (otherwise: append letters until this is the case)
                 temp_id = entry['ID']
                 letters = iter(ascii_lowercase)
-                while temp_id in [x['ID'] for x in combined_bib_database.entries]:
+                while temp_id in [x['ID'] for x in bib_database.entries]:
                     temp_id = entry['ID'] + next(letters)
                 entry['ID'] = temp_id
                 
-                combined_bib_database.entries.append(entry)
+                bib_database.entries.append(entry)
                 total_nr_entries_added += 1
                 nr_entries_added += 1
             
@@ -96,7 +96,7 @@ def gather(bibfilename, combined_bib_database):
 
     print(' - ' + str(nr_entries_added).rjust(5) + ' entries added, ' + str(nr_duplicates_hash_ids).rjust(5) + ' entries with identical hash_ids')
 
-    return combined_bib_database
+    return bib_database
 
 if __name__ == "__main__":
 
@@ -107,32 +107,26 @@ if __name__ == "__main__":
     print('')    
     utils.validate_search_details()
     
-    target_file = 'data/references.bib'
+    bib_database = utils.load_references_bib(modification_check = True, initialize = True)
 
-    if os.path.exists(os.path.join(os.getcwd(), target_file)):
-        with open(target_file, 'r') as target_db:
-            combined_bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True).parse_file(target_db, partial=True)
-            nr_current_entries = len(combined_bib_database.entries)
-            print('Opening existing references.bib '.ljust(60) + '(' + str(nr_current_entries).rjust(5) + ' records)')
-            print('')
+    nr_current_entries = len(bib_database.entries)
+
+    if 0 == nr_current_entries:
+        print('Created references.bib'.ljust(60)  + '(' + '0'.rjust(5) + ' records).')
     else:
-        print('Created references.bib'.ljust(60)  + '(' + '0'.rjust(5) + 'records).')
-        combined_bib_database = BibDatabase()
-        if os.path.exists('data/search/bib_details.csv'):
-            os.remove('data/search/bib_details.csv')
-
+        print('Opening existing references.bib '.ljust(60) + '(' + str(nr_current_entries).rjust(5) + ' records)')
+    print('')
 
     print('-------------------------------------------------------------------------')
     # TODO: define preferences (start by processing e.g., WoS, then GS) or use heuristics to start with the highest quality (most complete) entries first.
     search_details = pd.read_csv('data/search/search_details.csv')
 
     for bib_file in utils.get_bib_files():
-        combined_bib_database = gather(bib_file, combined_bib_database)
+        bib_database = gather(bib_file, bib_database)
 
-    utils.save_bib_file(combined_bib_database, target_file)
+    utils.save_bib_file(bib_database, 'data/references.bib')
 
     print('')
     print('-------------------------------------------------------------------------')
-    print('Overall: ' + str(total_nr_entries_added).rjust(5) + ' records added, ' + str(len(combined_bib_database.entries)).rjust(5) + ' records in references.bib')
+    print('Overall: ' + str(total_nr_entries_added).rjust(5) + ' records added, ' + str(len(bib_database.entries)).rjust(5) + ' records in references.bib')
     print('')

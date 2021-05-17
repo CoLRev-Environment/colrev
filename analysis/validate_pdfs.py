@@ -1,13 +1,10 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
 import os
 import re
-from bibtexparser.customization import convert_to_unicode
 
 from langdetect import detect_langs
-
 
 import io
 from pdfminer.converter import TextConverter
@@ -18,6 +15,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
 
+import utils
 
 YOUR_EMAIL = "gerit.wagner@hec.ca"
 
@@ -45,9 +43,10 @@ def extract_text_by_page(pdf_path):
         return ''.join(text_list)
     
 def extract_text(pdf_path):
+    text_list = []
     for page in extract_text_by_page(pdf_path):
-        print(page)
-        print()
+        text_list += page
+    return ''.join(text_list)
 
 def probability_english(text):
 
@@ -58,13 +57,9 @@ def probability_english(text):
             probability_english = lang.prob
     return probability_english
 
-def validate_pdf_metadata(bibfilename):
+def validate_pdf_metadata(bib_database):
     
-    with open(bibfilename) as bibtex_file:
-        bp = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
-
-    for entry in bp.entries:
+    for entry in bib_database.entries:
         if not 'file' in entry:
             continue
         
@@ -119,7 +114,5 @@ if __name__ == "__main__":
     
     print('Validate PDFs')
     
-    bibfilename = 'data/references.bib'
-    assert os.path.exists(bibfilename)
-
-    bib_database = validate_pdf_metadata(bibfilename)
+    bib_database = utils.load_references_bib(modification_check = False, initialize = False)
+    bib_database = validate_pdf_metadata(bib_database)

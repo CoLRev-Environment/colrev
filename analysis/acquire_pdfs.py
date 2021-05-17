@@ -1,15 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
 import csv
 import os
-import re
-from fuzzywuzzy import fuzz
 from bibtexparser.bibdatabase import BibDatabase
 import pandas as pd
 import requests
 import json
+from pdfminer.high_level import extract_text
 
 import utils
 
@@ -71,7 +69,14 @@ def unpaywall(doi, retry=0, pdfonly=True):
     return best_loc['url_for_pdf']
 
 
-def acquire_pdfs(bibfilename, screen_file):
+def is_pdf(path_to_file):
+    try:
+        extract_text(path_to_file)
+        return True
+    except:
+        return False
+
+def acquire_pdfs(bib_database, screen):
     global total_to_retrieve
     global pdfs_retrieved
     global existing_pdfs_linked
@@ -80,10 +85,6 @@ def acquire_pdfs(bibfilename, screen_file):
 
 #    global total_to_retrieve
     
-    screen = pd.read_csv(screen_file, dtype=str)
-    with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(common_strings=True).parse_file(bibtex_file, partial=True)
-
     papers_to_acquire = screen.loc[screen.inclusion_2.notnull(), 'citation_key'].tolist()
     
     total_to_retrieve = len(papers_to_acquire)
@@ -104,12 +105,21 @@ def acquire_pdfs(bibfilename, screen_file):
                 url = unpaywall(entry['doi'])
                 if not url is None:
                     if not 'Invalid/unknown DOI' in url:
-                        response = requests.get(url)
-                        with open(pdf_filepath, 'wb') as f:
-                            f.write(response.content)
-                        print('Retrieved pdf via unpaywall api: ' + pdf_filepath)
-                        entry['file'] = ':' + pdf_filepath + ':PDF'
-                        pdfs_retrieved += 1
+                        response = requests.get(url, headers = {
+                            'User-Agent': 'Chrome/51.0.2704.103',
+                            'referer': 'https://www.doi.org'
+                            })
+                        if 200 == response.status_code:
+                            with open(pdf_filepath, 'wb') as f:
+                                f.write(response.content)
+                            if is_pdf(pdf_filepath):
+                                print('Retrieved pdf via unpaywall api: ' + pdf_filepath)
+                                entry['file'] = ':' + pdf_filepath + ':PDF'
+                                pdfs_retrieved += 1
+                            else:
+                                os.remove(pdf_filepath)
+                        else:
+                            print('Problem retrieving PDF based on unpaywall link (' + str(response.status_code) + '): ' + url)
 
             if not os.path.exists(pdf_filepath):
                 missing_entries.entries.append(entry)
@@ -131,12 +141,14 @@ if __name__ == "__main__":
     
     print('Acquire PDFs')
     
-    bibfilename = 'data/references.bib'
-    assert os.path.exists(bibfilename)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
+
     screen_file = 'data/screen.csv'
     assert os.path.exists(screen_file)
+    screen = pd.read_csv(screen_file, dtype=str)
 
-    bib_database = acquire_pdfs(bibfilename, screen_file)
+
+    bib_database = acquire_pdfs(bib_database, screen)
     
     print(' - ' + str(total_to_retrieve) + ' pdfs required')
     print(' - ' + str(pdfs_available) + ' pdfs available')
@@ -148,4 +160,4 @@ if __name__ == "__main__":
    
     
 
-    utils.save_bib_file(bib_database, bibfilename)
+    utils.save_bib_file(bib_database, 'data/references.bib')

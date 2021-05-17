@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import bibtexparser
 import csv
-import os
 import re
 from fuzzywuzzy import fuzz
 import pandas as pd
 from tqdm import tqdm
 
+import utils
 
 def get_similarity(df_a, df_b):
     if 'author' in df_a and 'author' in df_b:
@@ -65,39 +64,36 @@ def get_duplication_probability(entry, bibliography_file):
 
     return max_similarity
 
-def pre_merging_quality_check(bibfilename):
+def pre_merging_quality_check(bib_database):
     
-    with open(bibfilename, 'r') as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(common_strings=True).parse_file(bibtex_file, partial=True)
+    bibliography_file = pd.DataFrame.from_dict(bib_database.entries)
+    
+    for entry in tqdm(bib_database.entries):
         
-        bibliography_file = pd.DataFrame.from_dict(bib_database.entries)
+        if 'article' == entry['ENTRYTYPE']:
+            required_fields = ["author", "year", "title", "journal", "volume", "issue", "number", "pages"]
+        elif 'inproceedings' == entry['ENTRYTYPE']:
+            required_fields = ["author", "year", "title", "booktitle"]
+        else:
+            required_fields = ["author", "year", "title"]
+
+        nr_available_fields = 0
         
-        for entry in tqdm(bib_database.entries):
-            
-            if 'article' == entry['ENTRYTYPE']:
-                required_fields = ["author", "year", "title", "journal", "volume", "issue", "number", "pages"]
-            elif 'inproceedings' == entry['ENTRYTYPE']:
-                required_fields = ["author", "year", "title", "booktitle"]
-            else:
-                required_fields = ["author", "year", "title"]
+        for key in entry.keys():
+            if key in required_fields:
+                nr_available_fields += 1
+        
+        # note: required field needs
+        completeness = nr_available_fields/(len(required_fields))
+        entry['completeness'] = completeness
 
-            nr_available_fields = 0
-            
-            for key in entry.keys():
-                if key in required_fields:
-                    nr_available_fields += 1
-            
-            # note: required field needs
-            completeness = nr_available_fields/(len(required_fields))
-            entry['completeness'] = completeness
-
-            duplication_probability = get_duplication_probability(entry, bibliography_file)
-            # possibly also return the most likely match?
-            entry['duplication_probability'] = duplication_probability
+        duplication_probability = get_duplication_probability(entry, bibliography_file)
+        # possibly also return the most likely match?
+        entry['duplication_probability'] = duplication_probability
 
 
-        bib_file = pd.DataFrame.from_dict(bib_database.entries)
-        bib_file.to_csv('data/references_pre_screen_quality_check.csv', index=False, quoting=csv.QUOTE_ALL)
+    bib_file = pd.DataFrame.from_dict(bib_database.entries)
+    bib_file.to_csv('data/references_pre_screen_quality_check.csv', index=False, quoting=csv.QUOTE_ALL)
     return
 
 if __name__ == "__main__":
@@ -107,8 +103,7 @@ if __name__ == "__main__":
     
     print('Pre-merging quality check')
     
-    bib_database = 'data/references.bib'
-    assert os.path.exists(bib_database)
+    bib_database = utils.load_references_bib(modification_check = True, initialize = False)
 
     JOURNAL_ABBREVIATIONS = pd.read_csv('analysis/JOURNAL_ABBREVIATIONS.csv')
     pre_merging_quality_check(bib_database)
