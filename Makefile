@@ -8,6 +8,9 @@ help :
 initialize :
 	python3 analysis/initialize.py
 
+validate :
+	cd data && pre-commit run -a
+
 status :
 	python3 analysis/status.py
 
@@ -48,12 +51,6 @@ data_pages :
 backward_search :
 	python3 analysis/backward_search.py
 
-pre_merging_quality_check :
-	python3 analysis/pre_merging_quality_check.py
-
-extract_manual_pre_merging_edits :
-	python3 analysis/extract_manual_pre_merging_edits.py
-
 merge_duplicates :
 	python3 analysis/merge_duplicates.py
 
@@ -64,4 +61,4 @@ validate_pdfs :
 	python3 analysis/validate_pdfs.py
 
 sample_profile :
-	python3 analysis/R sample_profile.py
+	python3 analysis/sample_profile.py

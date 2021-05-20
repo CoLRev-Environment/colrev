@@ -4,6 +4,7 @@
 import os
 import git
 from git import Actor
+import shutil
 
 if __name__ == "__main__":
 
@@ -13,6 +14,9 @@ if __name__ == "__main__":
     print('Initialize review repository')
 
     assert not os.path.exists('data')
+    project_title = input('Project title: ')
+
+
     os.mkdir('data')
     r = git.Repo.init('data')
     os.chdir('data')
@@ -21,9 +25,6 @@ if __name__ == "__main__":
     f = open("search/search_details.csv", "w")
     f.write('"filename","number_records","iteration","date_start","date_completion","source_url","search_parameters","responsible","comment"')
     f.close()
-    
-    
-    project_title = input('Project title: ')
     
     with open('../template/readme.md', 'r') as file :
       filedata = file.read()
@@ -34,6 +35,10 @@ if __name__ == "__main__":
       file.write(filedata)
     
     r.index.add(['readme.md', 'search/search_details.csv'])
+    
+    shutil.copyfile('../template/.pre-commit-config.yaml', '.pre-commit-config.yaml')
+
+    os.system('pre-commit install')    
 
 #    committer_name = input('Please provide your git-committer name')
 #    committer_email = input('Please provide your git-committer email')

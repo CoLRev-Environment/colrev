@@ -29,7 +29,7 @@ if __name__ == "__main__":
         print(' |  - Not yet initiated')
     else:
         # Search
-        bib_database = utils.load_references_bib(modification_check = True, initialize = True)
+        bib_database = utils.load_references_bib(modification_check = False, initialize = False)
 
         search_details = pd.read_csv('data/search/search_details.csv', dtype=str)
         search_details['number_records'] = search_details['number_records'].astype(int)
@@ -48,17 +48,19 @@ if __name__ == "__main__":
             screen = pd.read_csv('data/screen.csv', dtype=str)
             print(' ├ Screen 1')
             print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
-            print(' |  - included: ' + str(len(screen.drop(screen[screen['inclusion_1'] != 'yes'].index))).rjust(14, ' '))
-            print(' |  - excluded: ' + str(len(screen.drop(screen[screen['inclusion_1'] != 'no'].index))).rjust(14, ' '))
-            print(' |  - TODO: ' + str(len(screen.drop(screen[screen['inclusion_1'] != 'TODO'].index))).rjust(18, ' '))
+            print(' |  - included: ' + str(len(screen[screen['inclusion_1'] == 'yes'])).rjust(14, ' '))
+            print(' |  - excluded: ' + str(len(screen[screen['inclusion_1'] == 'no'])).rjust(14, ' '))
+            if 0 != len(screen[screen['inclusion_1'] == 'TODO']):
+                print(' |  - TODO: ' + str(len(screen.drop(screen[screen['inclusion_1'] != 'TODO'].index))).rjust(18, ' '))
             print(' |')
         
             screen.drop(screen[screen['inclusion_1'] == 'no'].index, inplace=True)
             print(' ├ Screen 2')
             print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
-            print(' |  - included: ' + str(len(screen.drop(screen[screen['inclusion_2'] != 'yes'].index))).rjust(14, ' '))
-            print(' |  - excluded: ' + str(len(screen.drop(screen[screen['inclusion_2'] != 'no'].index))).rjust(14, ' '))
-            print(' |  - TODO: ' + str(len(screen.drop(screen[screen['inclusion_2'] != 'TODO'].index))).rjust(18, ' '))
+            print(' |  - included: ' + str(len(screen[screen['inclusion_2'] == 'yes'])).rjust(14, ' '))
+            print(' |  - excluded: ' + str(len(screen[screen['inclusion_2'] == 'no'])).rjust(14, ' '))
+            if 0 != len(screen[screen['inclusion_2'] == 'TODO']):
+                print(' |  - TODO: ' + str(len(screen[screen['inclusion_2'] == 'TODO'])).rjust(18, ' '))
             print(' |') 
             
             # Data
@@ -69,7 +71,8 @@ if __name__ == "__main__":
                 data = pd.read_csv('data/data.csv', dtype=str)
                 print(' ├ Data extraction')
                 print(' |  - total: ' + str(len(data)).rjust(17, ' '))
-                print(' |  - TODO: ' + str(len(screen.drop(screen[screen['inclusion_2'] != 'TODO'].index))).rjust(18, ' '))
+                if 0 != len(screen[screen['inclusion_2'] == 'TODO']):
+                    print(' |  - TODO: ' + str(len(screen[screen['inclusion_2'] == 'TODO'])).rjust(18, ' '))
                 
                 print('')    
                 print('')    
