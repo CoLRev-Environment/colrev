@@ -7,7 +7,6 @@ services:
       - ./data:/usr/data
     ports:
       - "5001:5001"
-    user: "${UID:-1000}:${GID:-1000}"
   grobid:
     image: "lfoppiano/grobid:0.6.2"
     ports:
