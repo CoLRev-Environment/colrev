@@ -19,9 +19,9 @@ This also makes iterative updates extremely efficient because duplicates only ha
 
 - The pipeline includes powerful Python scripts that can handle quality problems in the bibliographic metadata and the PDFs (based on powerful APIs like crossref and the DOI lookup service and excellent open source projects like grobid, tesseract, pdfminersix).
 
-- **Planned**: There are two modes of operation: the default mode, which offers a graphical user interface, and the expert mode, which offers access to the Python scripts.
+- **Planned**: There are two modes of operation: the default mode, which offers a user interface, and a command-line interface (CLI), which offers access to the Python scripts.
 Making the same pipeline accessible through both modes is aimed at enabling collaboration between experts in the research domain and experts in research technology.
-Extensions will be developed and tested in the expert mode before implementation for the default mode.
+Extensions will be developed and tested in the CLI mode before implementation for the default mode.
 
 - Applicability to different types of reviews, including systematic reviews, theory development reviews, scoping reviews and many more.
 For meta-analyses, software like RevMan or R-meta-analysis packages are more appropriate.
@@ -207,7 +207,7 @@ docker-compose up
 # Note: when the default mode is implemented, the app should be available through the browser (information should be provided here).
 ```
 
-- **Expert mode (command-line interface)**: to start the default mode, execute the following:
+- **CLI mode**: to start the command-line mode, execute the following:
 
 ```
 docker-compose up
