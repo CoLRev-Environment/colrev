@@ -5,6 +5,9 @@ help :
 	@echo "    help"
 	@echo "        Show this help description"
 
+cli :
+	docker-compose up & gnome-terminal -e "bash -c \"docker-compose run --rm review_template_python3 /bin/bash\""
+
 initialize :
 	python3 analysis/initialize.py
 

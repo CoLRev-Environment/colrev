@@ -5,31 +5,11 @@ The pipeline is implemented in a Docker-compose environment, ensuring cross-plat
 The analyses are mostly implemented in Python.
 Git and make are available in the Docker container.
 
-## Setup JabRef (hash-id compatible)
-
-This is a modified version of JabRef that preserves hash-ids when merging records.
+To open the cli-mode, run
 
 ```
-git clone --depth=10 https://github.com/geritwagner/jabref.git
-cd jabref
-./gradlew assemble
-./gradlew run
-
+make cli
 ```
-
-Based on [JabRef instructions](https://devdocs.jabref.org/getting-into-the-code/guidelines-for-setting-up-a-local-workspace).
-
-## Install and configure LibreOffice
-
-Install LibreOffice
-
-In LibreOfficeCalc: set the following default parameters for CSV files (or manually select them everytime when opening/importing and saving a csv file through the "edit filter settings" dialogue) via Tools > Options > LibreOffice > advanced > Open Expert Configuration:
-
-- CSVExport/TextSeparator: "
-- CSVExport/FieldSeparator: ,
-- CSVExport/QuoteAllTextCells: true
-- CSVImport/QuotedFieldAsText: true
-
 
 # Pipeline management
 
@@ -234,3 +214,29 @@ When updating the data extraction, follow the same procedures as described above
 ## Synthesis, reporting, and dissemination
 
 The [paper](paper.md) is written in markdown following the contributing guidelines in the [paper-template](https://github.com/geritwagner/paper-template/blob/main/CONTRIBUTING.md).
+
+
+# Compatibility of complementary software
+
+- JabRef (hash-id compatible)
+
+This is a modified version of JabRef that preserves hash-ids when merging records.
+
+```
+git clone --depth=10 https://github.com/geritwagner/jabref.git
+cd jabref
+./gradlew assemble
+./gradlew run
+
+```
+
+Based on [JabRef instructions](https://devdocs.jabref.org/getting-into-the-code/guidelines-for-setting-up-a-local-workspace).
+
+- LibreOffice to modify csv files manually:
+
+Set the following default parameters for CSV files (or manually select them everytime when opening/importing and saving a csv file through the "edit filter settings" dialogue) via Tools > Options > LibreOffice > advanced > Open Expert Configuration:
+
+- CSVExport/TextSeparator: "
+- CSVExport/FieldSeparator: ,
+- CSVExport/QuoteAllTextCells: true
+- CSVImport/QuotedFieldAsText: true
