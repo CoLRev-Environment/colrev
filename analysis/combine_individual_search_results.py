@@ -11,12 +11,15 @@ import logging
 import pandas as pd
 from string import ascii_lowercase
 
+import git
+
 import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
+details_commit = []
 
 
 def get_hash_ids(bib_database):
@@ -34,6 +37,7 @@ def get_hash_ids(bib_database):
 def gather(bibfilename, bib_database):
     global total_nr_entries_added 
     global total_nr_duplicates_hash_ids
+    global details_commit
     nr_entries_added = 0
     nr_duplicates_hash_ids = 0
     
@@ -42,7 +46,7 @@ def gather(bibfilename, bib_database):
             customization=convert_to_unicode, common_strings=True).parse_file(bibtex_file, partial=True)
         
         print('')
-        print('Loading ' + bib_file.replace('data/search/','').ljust(52) + '(' + str(len(individual_bib_database.entries)).rjust(5) + ' records)')
+        print('Loading ' + os.path.basename(bib_file).ljust(52) + '(' + str(len(individual_bib_database.entries)).rjust(5) + ' records)')
 
         for entry in individual_bib_database.entries:
              
@@ -95,7 +99,10 @@ def gather(bibfilename, bib_database):
                 nr_duplicates_hash_ids += 1
 
     print(' - ' + str(nr_entries_added).rjust(5) + ' entries added, ' + str(nr_duplicates_hash_ids).rjust(5) + ' entries with identical hash_ids')
-
+    
+    if nr_entries_added > 0:
+        details_commit.append(os.path.basename(bib_file) + ' (' + str(nr_entries_added) + ' additional records)')
+    
     return bib_database
 
 if __name__ == "__main__":
@@ -106,6 +113,13 @@ if __name__ == "__main__":
     print('Combine search results')
     print('')    
     utils.validate_search_details()
+    
+    r = git.Repo('data')
+
+    if not r.is_dirty():
+        print('Commit files before importing new search results.')
+        sys.exit()
+
     
     bib_database = utils.load_references_bib(modification_check = True, initialize = True)
 
@@ -130,3 +144,9 @@ if __name__ == "__main__":
     print('-------------------------------------------------------------------------')
     print('Overall: ' + str(total_nr_entries_added).rjust(5) + ' records added, ' + str(len(bib_database.entries)).rjust(5) + ' records in references.bib')
     print('')
+
+    print('Creating commit ...')
+
+    r.index.add(['references.bib'])
+    print("Import search results \n - " + '\n - '.join(details_commit))
+    r.index.commit("Import search results \n - " + '\n - '.join(details_commit), author=git.Actor('script:combine_individual_search_results.py', ''))

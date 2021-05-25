@@ -3,7 +3,6 @@
 
 import os
 import git
-from git import Actor
 import shutil
 
 if __name__ == "__main__":
@@ -13,11 +12,12 @@ if __name__ == "__main__":
     
     print('Initialize review repository')
 
-    assert not os.path.exists('data')
+    if os.path.exists('data'):
+        assert len(os.listdir('data') ) == 0
     project_title = input('Project title: ')
 
-
-    os.mkdir('data')
+    if not os.path.exists('data'):
+        os.mkdir('data')
     r = git.Repo.init('data')
     os.chdir('data')
     os.mkdir('search')
@@ -34,14 +34,15 @@ if __name__ == "__main__":
     with open('readme.md', 'w') as file:
       file.write(filedata)
     
-    r.index.add(['readme.md', 'search/search_details.csv'])
     
     shutil.copyfile('../template/.pre-commit-config.yaml', '.pre-commit-config.yaml')
 
     os.system('pre-commit install')    
 
-#    committer_name = input('Please provide your git-committer name')
-#    committer_email = input('Please provide your git-committer email')
-    # TBD: store them in a config.py?? there may be further cases in which it is useful to have access to the committer name/email
-#    committer = Actor(committer_name, committer_email)
-#    r.index.commit("initial commit", committer = committer)
+    r.index.add(['readme.md', 'search/search_details.csv', '.pre-commit-config.yaml'])
+
+    committer_name  = input('Please provide your name (to be used as the git committer name)')
+    committer_email = input('Please provide your e-mail (to be used as the git committer e-mail)')
+    r.index.commit("Initial commit", author=git.Actor('script:initialize.py', ''), committer=git.Actor(committer_name, committer_email))
+
+    # TODO: connection to remote repo

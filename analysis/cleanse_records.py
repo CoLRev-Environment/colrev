@@ -14,6 +14,9 @@ import logging
 from Levenshtein import ratio
 from tqdm import tqdm
 
+import git
+
+
 #from crossref.restful import Works
 from urllib.error import HTTPError
 from urllib.parse import quote_plus, urlencode
@@ -348,6 +351,12 @@ if __name__ == "__main__":
     
     bib_database = utils.load_references_bib(modification_check = True, initialize = False)
 
+    r = git.Repo('data')
+
+    if r.is_dirty():
+        print('Commit files before cleansing.')
+        sys.exit()
+    
     JOURNAL_ABBREVIATIONS = pd.read_csv('analysis/JOURNAL_ABBREVIATIONS.csv')
     JOURNAL_VARIATIONS = pd.read_csv('analysis/JOURNAL_VARIATIONS.csv')
     CONFERENCE_ABBREVIATIONS = pd.read_csv('analysis/CONFERENCE_ABBREVIATIONS.csv')
@@ -358,4 +367,7 @@ if __name__ == "__main__":
     
     utils.save_bib_file(bib_database, 'data/references.bib')
 
-#   shutil.copyfile(bib_database, 'data/references_last_automated.bib')
+    r.index.add(['references.bib'])
+    r.index.add(['search/bib_details.csv']) # Note: we may want to remove this at some point.
+
+    r.index.commit("Cleanse references.bib", author=git.Actor('script:cleanse_records.py', ''))
