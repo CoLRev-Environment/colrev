@@ -146,7 +146,9 @@ if __name__ == "__main__":
     screen_file = 'data/screen.csv'
     assert os.path.exists(screen_file)
     screen = pd.read_csv(screen_file, dtype=str)
-
+    
+    if not os.path.exists(PDF_DIRECTORY):
+        os.mkdir(PDF_DIRECTORY)
 
     bib_database = acquire_pdfs(bib_database, screen)
     
