@@ -55,7 +55,7 @@ Never change the *citation_key* once it has been used in the screen or data extr
         	volume = {26},
         	issue = {2},
         	pages = {xiii-xxiii}
-      }   
+      }
       ```
 
       ```
@@ -125,7 +125,7 @@ To reset the analyses, each of these files can be deleted.
     <details>
       <summary>Details</summary>
 
-      When updating data at any stage in the pipeline and rerunning the scripts,  
+      When updating data at any stage in the pipeline and rerunning the scripts,
        - existing records in the subsequent files will not be changed
        - additional records will be processed and added to the subsequent file
        - if records have been removed, scripts will create a warning but not remove them from the subsequent file (to avoid accidental losses of data)

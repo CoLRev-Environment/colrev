@@ -1,53 +1,53 @@
 #! /usr/bin/env python
-# -*- coding: utf-8 -*-
-
-import bibtexparser
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.customization import convert_to_unicode
-
-import os
-import time
-import tqdm
-import requests
-import sys
 import csv
-from time import gmtime, strftime
-from datetime import datetime
-import re
 import logging
-from lxml import etree
-import pandas as pd
+import os
+import re
+import sys
+import time
+from datetime import datetime
+from time import gmtime
+from time import strftime
 
+import pandas as pd
+import requests
+import tqdm
 import utils
+from bibtexparser.bibdatabase import BibDatabase
+from lxml import etree
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-ns =    {'tei': '{http://www.tei-c.org/ns/1.0}',
-         'w3' : '{http://www.w3.org/XML/1998/namespace}'}
+ns = {
+    'tei': '{http://www.tei-c.org/ns/1.0}',
+    'w3': '{http://www.w3.org/XML/1998/namespace}',
+}
 
 
 def get_reference_title(reference):
     title_string = ''
     analytic_title_found = False
-    if reference.find(ns['tei'] + 'analytic') is not None:
-        if reference.find(ns['tei'] + 'analytic').find(ns['tei'] + 'title') is not None:
-            if reference.find(ns['tei'] + 'analytic').find(ns['tei'] + 'title').text is not None:
-                title_string = reference.find(ns['tei'] + 'analytic').find(ns['tei'] + 'title').text
+    ref_analytic = reference.find(ns['tei'] + 'analytic')
+    if ref_analytic is not None:
+        if ref_analytic.find(ns['tei'] + 'title') is not None:
+            if ref_analytic.find(ns['tei'] + 'title').text is not None:
+                title_string = ref_analytic.find(ns['tei'] + 'title').text
                 analytic_title_found = True
     if not analytic_title_found:
-        if reference.find(ns['tei'] + 'monogr') is not None:
-            if reference.find(ns['tei'] + 'monogr').find(ns['tei'] + 'title') is not None:
-                if reference.find(ns['tei'] + 'monogr').find(ns['tei'] + 'title').text is not None:
-                    title_string = reference.find(ns['tei'] + 'monogr').find(ns['tei'] + 'title').text
+        ref_monogr = reference.find(ns['tei'] + 'monogr')
+        if ref_monogr is not None:
+            if ref_monogr.find(ns['tei'] + 'title') is not None:
+                if ref_monogr.find(ns['tei'] + 'title').text is not None:
+                    title_string = ref_monogr.find(ns['tei'] + 'title').text
     try:
         words = title_string.split()
-        if sum([word.isupper() for word in words])/len(words) > 0.8:
+        if sum(word.isupper() for word in words)/len(words) > 0.8:
             words = [word.capitalize() for word in words]
-            title_string = " ".join(words)
+            title_string = ' '.join(words)
     except:
         pass
     return title_string
+
 
 def get_reference_author(reference):
     author_list = []
@@ -56,31 +56,33 @@ def get_reference_author(reference):
         author_node = reference.find(ns['tei'] + 'analytic')
     elif reference.find(ns['tei'] + 'monogr') is not None:
         author_node = reference.find(ns['tei'] + 'monogr')
-    
+
     if author_node == '':
         return ''
-    
+
     for author in author_node.iterfind(ns['tei'] + 'author'):
         authorname = ''
         try:
-            surname = author.find(ns['tei'] + 'persName').find(ns['tei'] + 'surname').text
+            surname = author.find(ns['tei'] + 'persName')\
+                            .find(ns['tei'] + 'surname').text
         except:
             surname = ''
             pass
         try:
-            forename = author.find(ns['tei'] + 'persName').find(ns['tei'] + 'forename').text
+            forename = author.find(ns['tei'] + 'persName')\
+                             .find(ns['tei'] + 'forename').text
         except:
             forename = ''
             pass
 
-        #check surname and prename len. and swap
+        # check surname and prename len. and swap
         if(len(surname) < len(forename)):
             authorname = forename + ', ' + surname
         else:
             authorname = surname + ', ' + forename
         author_list.append(authorname)
 
-    #fill author field with editor or organization if null
+    # fill author field with editor or organization if null
     if len(author_list) == 0:
         if reference.find(ns['tei'] + 'editor') is not None:
             author_list.append(reference.find(ns['tei'] + 'editor').text)
@@ -97,13 +99,18 @@ def get_reference_author(reference):
 
     return author_string
 
+
 def get_reference_journal(reference):
     journal_title = ''
-    if reference.find(ns['tei'] + 'monogr') is not None:
-        journal_title = reference.find(ns['tei'] + 'monogr').find(ns['tei'] + 'title').text
+    ref_monogr = reference.find(ns['tei'] + 'monogr')
+    if ref_monogr is not None:
+        journal_title = reference.find(
+            ns['tei'] + 'monogr',
+        ).find(ns['tei'] + 'title').text
     if journal_title is None:
         journal_title = ''
     return journal_title
+
 
 def get_reference_journal_volume(reference):
     volume = ''
@@ -111,10 +118,13 @@ def get_reference_journal_volume(reference):
         if reference.find('.//' + ns['tei'] + 'monogr') is not None:
             journal_node = reference.find('.//' + ns['tei'] + 'monogr')
             imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            volume = imprint_node.find('.//' + ns['tei'] + "biblScope[@unit='volume']").text
+            volume = imprint_node.find(
+                './/' + ns['tei'] + "biblScope[@unit='volume']",
+            ).text
     except:
         pass
     return volume
+
 
 def get_reference_journal_issue(reference):
     issue = ''
@@ -122,19 +132,26 @@ def get_reference_journal_issue(reference):
         if reference.find('.//' + ns['tei'] + 'monogr') is not None:
             journal_node = reference.find('.//' + ns['tei'] + 'monogr')
             imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            issue = imprint_node.find('.//' + ns['tei'] + "biblScope[@unit='issue']").text
+            issue = imprint_node.find(
+                './/' + ns['tei'] + "biblScope[@unit='issue']",
+            ).text
     except:
         pass
     return issue
 
+
 def get_reference_year(reference):
     year_string = ''
-    if reference.find(ns['tei'] + 'monogr') is not None:
-        year = reference.find(ns['tei'] + 'monogr').find(ns['tei'] + 'imprint').find(ns['tei'] + 'date')
-    elif reference.find(ns['tei'] + 'analytic') is not None:
-        year = reference.find(ns['tei'] + 'analytic').find(ns['tei'] + 'imprint').find(ns['tei'] + 'date')
+    ref_monogr = reference.find(ns['tei'] + 'monogr')
+    ref_analytic = reference.find(ns['tei'] + 'analytic')
+    if ref_monogr is not None:
+        year = ref_monogr.find(ns['tei'] + 'imprint')\
+                         .find(ns['tei'] + 'date')
+    elif ref_analytic is not None:
+        year = ref_analytic.find(ns['tei'] + 'imprint')\
+                           .find(ns['tei'] + 'date')
 
-    if not year is None:
+    if year is not None:
         for name, value in sorted(year.items()):
             if name == 'when':
                 year_string = value
@@ -142,8 +159,9 @@ def get_reference_year(reference):
                 year_string = 'NA'
     else:
         year_string = 'NA'
-    year_string = re.sub(".*([1-2][0-9]{3}).*", "\\1", year_string)
+    year_string = re.sub('.*([1-2][0-9]{3}).*', '\\1', year_string)
     return year_string
+
 
 def get_reference_pages(reference):
     pages = ''
@@ -151,11 +169,14 @@ def get_reference_pages(reference):
         if reference.find('.//' + ns['tei'] + 'monogr') is not None:
             journal_node = reference.find('.//' + ns['tei'] + 'monogr')
             imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            page_node = imprint_node.find('.//' + ns['tei'] + "biblScope[@unit='page']")
+            page_node = imprint_node.find(
+                './/' + ns['tei'] + "biblScope[@unit='page']",
+            )
             pages = page_node.get('from') + '--' + page_node.get('to')
     except:
         pass
     return pages
+
 
 def get_reference_doi(reference):
     doi = ''
@@ -166,36 +187,55 @@ def get_reference_doi(reference):
         pass
     return doi
 
+
 def extract_bibliography(root):
-    BIBLIOGRAPHY = pd.DataFrame(columns = ['authors', 'title', 'year', 'journal', 'volume', 'issue', 'pages', 'doi'])
+    BIBLIOGRAPHY = pd.DataFrame(
+        columns=[
+            'authors',
+            'title',
+            'year',
+            'journal',
+            'volume',
+            'issue',
+            'pages',
+            'doi',
+        ],
+    )
 
     for bibliography in root.iter(ns['tei'] + 'listBibl'):
         for reference in bibliography:
-            ENTRY = pd.DataFrame.from_records([[get_reference_author(reference), 
-                                                get_reference_title(reference), 
-                                                get_reference_year(reference), 
-                                                get_reference_journal(reference),
-                                                get_reference_journal_volume(reference),
-                                                get_reference_journal_issue(reference),
-                                                get_reference_pages(reference),
-                                                get_reference_doi(reference)]], 
-                                              columns = ['authors',
-                                                         'title', 
-                                                         'year', 
-                                                         'journal',
-                                                         'volume',
-                                                         'issue',
-                                                         'pages',
-                                                         'doi'])
+            ENTRY = pd.DataFrame.from_records(
+                [[
+                    get_reference_author(reference),
+                    get_reference_title(reference),
+                    get_reference_year(reference),
+                    get_reference_journal(reference),
+                    get_reference_journal_volume(reference),
+                    get_reference_journal_issue(reference),
+                    get_reference_pages(reference),
+                    get_reference_doi(reference),
+                ]],
+                columns=[
+                    'authors',
+                    'title',
+                    'year',
+                    'journal',
+                    'volume',
+                    'issue',
+                    'pages',
+                    'doi',
+                ],
+            )
             BIBLIOGRAPHY = BIBLIOGRAPHY.append(ENTRY)
 
     BIBLIOGRAPHY = BIBLIOGRAPHY.reset_index(drop=True)
     return BIBLIOGRAPHY
 
+
 def process_backward_search(tei):
 
     search_details = pd.read_csv('data/search/search_details.csv')
-    
+
     if tei in search_details['source_url']:
         return
 
@@ -205,21 +245,25 @@ def process_backward_search(tei):
     db = BibDatabase()
     for index, row in bibliography.iterrows():
         entry = {}
-        author_string = row['authors'].capitalize().replace(',', '').replace(' ', '')
+        author_string = row['authors'].capitalize()\
+                                      .replace(',', '')\
+                                      .replace(' ', '')
         try:
-            author_string = row['authors'].split(' ')[0].capitalize().replace(',', '')
+            author_string = row['authors'].split(' ')[0]\
+                                          .capitalize()\
+                                          .replace(',', '')
         except:
             pass
         entry['ID'] = author_string + row['year']
-        entry["ENTRYTYPE"] = 'article'
-        entry["author"] = row['authors']
-        entry["journal"] = row['journal']
-        entry["title"] = row['title']
-        entry["year"] = row['year']
-        entry["volume"] = row['volume']
-        entry["issue"] = row['issue']
-        entry["pages"] = row['pages']
-        entry["doi"] = row['doi']
+        entry['ENTRYTYPE'] = 'article'
+        entry['author'] = row['authors']
+        entry['journal'] = row['journal']
+        entry['title'] = row['title']
+        entry['year'] = row['year']
+        entry['volume'] = row['volume']
+        entry['issue'] = row['issue']
+        entry['pages'] = row['pages']
+        entry['doi'] = row['doi']
         if index == 0:
             db.entries = [entry]
         else:
@@ -239,16 +283,43 @@ def process_backward_search(tei):
     else:
         iteration_number = str(int(search_details['iteration'].max()))
 
-    new_record = pd.DataFrame([['backward/' + bib_filename, len(db.entries), iteration_number, datetime.today().strftime('%Y-%m-%d'), datetime.today().strftime('%Y-%m-%d'), tei, '', 'automated_script', '']],
-                                columns=['filename', 'number_records', 'iteration', 'date_start', 'date_completion', 'source_url', 'search_parameters', 'responsible', 'comment'])
+    new_record = pd.DataFrame(
+        [[
+            'backward/' + bib_filename,
+            len(db.entries),
+            iteration_number,
+            datetime.today().strftime('%Y-%m-%d'),
+            datetime.today().strftime('%Y-%m-%d'),
+            tei,
+            '',
+            'automated_script',
+            '',
+        ]],
+        columns=[
+            'filename',
+            'number_records',
+            'iteration',
+            'date_start',
+            'date_completion',
+            'source_url',
+            'search_parameters',
+            'responsible',
+            'comment',
+        ],
+    )
     search_details = pd.concat([search_details, new_record])
-    search_details.to_csv('data/search/search_details.csv', index=False, quoting=csv.QUOTE_ALL)
+    search_details.to_csv(
+        'data/search/search_details.csv',
+        index=False, quoting=csv.QUOTE_ALL,
+    )
 
     return
+
 
 GROBID_URL = 'http://grobid:8070'
 
 data_dir = '/usr/data/'
+
 
 def check_grobid_availability():
     i = 0
@@ -256,9 +327,8 @@ def check_grobid_availability():
         i += 1
         time.sleep(1)
         try:
-            r = requests.get(GROBID_URL  + '/api/isalive')
+            r = requests.get(GROBID_URL + '/api/isalive')
             if r.text == 'true':
-#                print('Grobid service alive.')
                 i = -1
         except:
             pass
@@ -268,36 +338,41 @@ def check_grobid_availability():
             sys.exit(0)
     return
 
+
 def transform(pdf_filename, tei_filename):
-    # alternative python-batch: https://github.com/kermitt2/grobid_client_python
+    # alternative python-batch:
+    # https://github.com/kermitt2/grobid_client_python
     check_grobid_availability()
 #    print('Processing ' + paper)
     options = {'consolidateHeader': '1', 'consolidateCitations': '1'}
-    r = requests.post(GROBID_URL  + '/api/processFulltextDocument', 
-                      files=dict(input=open(pdf_filename, 'rb')), 
-                      data=options)
+    r = requests.post(
+        GROBID_URL + '/api/processFulltextDocument',
+        files=dict(input=open(pdf_filename, 'rb')),
+        data=options,
+    )
     tei_content = r.text.encode('utf-8')
     with open(tei_filename, 'wb') as f:
         f.write(tei_content)
     return
 
-if __name__ == "__main__":
-    
+
+if __name__ == '__main__':
+
     print('')
-    print('')    
-    
+    print('')
+
     print('Backward search')
 
     citation_keys = utils.get_included_papers()
-    
+
     if not os.path.exists('data/search/backward'):
         os.mkdir('data/search/backward')
 
-    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
     for citation_key in tqdm.tqdm(citation_keys):
-        tei_filename = data_dir + 'search/backward/' + citation_key + '.tei.xml'
+        backward_search_path = data_dir + 'search/backward/'
+        tei_filename = backward_search_path + citation_key + '.tei.xml'
         pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
         transform(pdf_filename, tei_filename)
         process_backward_search(tei_filename)
-    print(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
-    
+    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
