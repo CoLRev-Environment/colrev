@@ -125,10 +125,10 @@ def gather(bibfilename, bib_database):
 
     if nr_entries_added > 0:
         details_commit.append(
-            os.path.basename(bib_file),
-            ' (',
-            str(nr_entries_added),
-            ' additional records)',
+            os.path.basename(bib_file) +
+            ' (' +
+            str(nr_entries_added) +
+            ' additional records)'
         )
 
     return bib_database
