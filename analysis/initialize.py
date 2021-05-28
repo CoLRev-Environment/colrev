@@ -41,6 +41,8 @@ if __name__ == '__main__':
         '.pre-commit-config.yaml',
     )
     shutil.copyfile('../docker-compose.yaml', 'docker-compose.yaml')
+    shutil.copyfile('../template/.gitattributes', '.gitattributes')
+    shutil.copyfile('../template/.gitignore', '.gitignore')
 
     os.system('pre-commit install')
 
@@ -48,6 +50,8 @@ if __name__ == '__main__':
         'readme.md',
         'search/search_details.csv',
         '.pre-commit-config.yaml',
+        '.gitattributes',
+        '.gitignore',
     ])
 
     committer_name = \
