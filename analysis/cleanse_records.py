@@ -6,8 +6,6 @@ import os
 import re
 import sys
 import time
-import unicodedata
-from string import ascii_lowercase
 from time import gmtime
 from time import strftime
 from urllib.error import HTTPError
@@ -33,52 +31,6 @@ EMPTY_RESULT = {
     'doi': '',
 }
 MAX_RETRIES_ON_ERROR = 3
-
-
-def rmdiacritics(char):
-    '''
-    Return the base character of char, by "removing" any
-    diacritics like accents or curls and strokes and the like.
-    '''
-    desc = unicodedata.name(char)
-    cutoff = desc.find(' WITH ')
-    if cutoff != -1:
-        desc = desc[:cutoff]
-        try:
-            char = unicodedata.lookup(desc)
-        except KeyError:
-            pass  # removing "WITH ..." produced an invalid name
-    return char
-
-
-def remove_accents(input_str):
-    nfkd_form = unicodedata.normalize('NFKD', input_str)
-    wo_ac = [
-        rmdiacritics(c)
-        for c in nfkd_form if not unicodedata.combining(c)
-    ]
-    wo_ac = ''.join(wo_ac)
-    return wo_ac
-
-
-def propagated_citation_key(citation_key):
-
-    propagated = False
-
-    if os.path.exists('data/screen.csv'):
-        screen = pd.read_csv('data/screen.csv', dtype=str)
-        if citation_key in screen['citation_key'].tolist():
-            propagated = True
-
-    if os.path.exists('data/data.csv'):
-        # Note: this may be redundant, but just to be sure:
-        data = pd.read_csv('data/data.csv', dtype=str)
-        if citation_key in data['citation_key'].tolist():
-            propagated = True
-
-    # TODO: also check data_pages?
-
-    return propagated
 
 
 def crossref_query_title(title):
@@ -158,6 +110,16 @@ def quality_improvements(bib_database):
                         ],
                     )
                     bib_details = pd.concat([bib_details, new_record])
+
+        # Recreate citation_keys for uncleansed entries
+        # (mainly if it differs, i.e., if there are changes in authors/years)
+        if to_cleanse:
+            try:
+                entry['ID'] = utils.generate_citation_key(entry, bib_database)
+            except utils.CitationKeyPropagationError:
+                print('WARNING: cleansing entry with propagated citation_key:',
+                      + entry['ID'])
+                pass
 
         if to_cleanse:
 
@@ -279,7 +241,7 @@ def quality_improvements(bib_database):
                         journal_string = entry['series']
                         entry['journal'] = journal_string
                         del entry['series']
-            if('abstract' in entry):
+            if 'abstract' in entry:
                 entry['abstract'] = entry['abstract'].replace('\n', ' ')
 
             # Check whether doi can be retrieved from CrossRef API
@@ -374,46 +336,10 @@ def quality_improvements(bib_database):
                             retrieved_abstract = \
                                 re.sub(r'\s+', ' ', retrieved_abstract)
                             entry['abstract'] = \
-                                str(retrieved_abstract).replace('\n', '')
+                                str(retrieved_abstract).replace('\n', '')\
+                                .lstrip().rstrip()
                 except:
                     pass
-
-        # Create citation_keys only for uncleansed entries
-        if to_cleanse:
-
-            temp_id = entry.get('author', '')\
-                .split(' ')[0]\
-                .capitalize() +\
-                entry.get('year', '')
-            # Replace special characters
-            # (because citation_keys may be used as file names)
-            temp_id = remove_accents(temp_id)
-            temp_id = re.sub('[^0-9a-zA-Z]+', '', temp_id)
-            letters = iter(ascii_lowercase)
-            # TODO: we might have to split the x[hash_id] and the entry[hash_id]
-            while temp_id in [
-                x['ID'] for x in bib_database.entries
-                if x['hash_id'] not in entry['hash_id']
-            ]:
-                next_letter = next(letters)
-                if next_letter == 'a':
-                    temp_id = temp_id + next_letter
-                else:
-                    temp_id = temp_id[:-1] + next_letter
-
-            # Set citation_keys and make sure they are unique
-            if not temp_id == entry['ID']:
-                # Make sure that citation_keys that have been propagated to the
-                # screen or data will not be replaced
-                # (this would break the chain of evidence)
-                if propagated_citation_key(entry['ID']):
-                    print(
-                        'WARNING: do not change citation_keys that have been ',
-                        'propagated to screen.csv and/or data.csv (' +
-                        entry['ID'] + ' / ' + temp_id + ')',
-                    )
-                else:
-                    entry['ID'] = temp_id
 
         # Note: formating with utils.save_bib_file() will be done at the end.
         writer = BibTexWriter()

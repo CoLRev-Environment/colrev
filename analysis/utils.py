@@ -3,7 +3,9 @@ import hashlib
 import os
 import re
 import sys
+import unicodedata
 from pathlib import Path
+from string import ascii_lowercase
 
 import bibtexparser
 import pandas as pd
@@ -35,6 +37,93 @@ def create_hash(entry):
     string_to_hash = robust_append(string_to_hash, entry.get('pages', ''))
 
     return hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
+
+
+def rmdiacritics(char):
+    '''
+    Return the base character of char, by "removing" any
+    diacritics like accents or curls and strokes and the like.
+    '''
+    desc = unicodedata.name(char)
+    cutoff = desc.find(' WITH ')
+    if cutoff != -1:
+        desc = desc[:cutoff]
+        try:
+            char = unicodedata.lookup(desc)
+        except KeyError:
+            pass  # removing "WITH ..." produced an invalid name
+    return char
+
+
+def remove_accents(input_str):
+    nfkd_form = unicodedata.normalize('NFKD', input_str)
+    wo_ac = [
+        rmdiacritics(c)
+        for c in nfkd_form if not unicodedata.combining(c)
+    ]
+    wo_ac = ''.join(wo_ac)
+    return wo_ac
+
+
+class CitationKeyPropagationError(Exception):
+    pass
+
+
+def propagated_citation_key(citation_key):
+
+    propagated = False
+
+    if os.path.exists('data/screen.csv'):
+        screen = pd.read_csv('data/screen.csv', dtype=str)
+        if citation_key in screen['citation_key'].tolist():
+            propagated = True
+
+    if os.path.exists('data/data.csv'):
+        # Note: this may be redundant, but just to be sure:
+        data = pd.read_csv('data/data.csv', dtype=str)
+        if citation_key in data['citation_key'].tolist():
+            propagated = True
+
+    # TODO: also check data_pages?
+
+    return propagated
+
+
+def generate_citation_key(entry, bib_database):
+
+    # Make sure that citation_keys that have been propagated to the
+    # screen or data will not be replaced
+    # (this would break the chain of evidence)
+    if propagated_citation_key(entry['ID']):
+        raise CitationKeyPropagationError(
+            'WARNING: do not change citation_keys that have been ',
+            'propagated to screen.csv and/or data.csv (' +
+            entry['ID'] + ')',
+        )
+
+    temp_citation_key = entry.get('author', '')\
+        .split(' ')[0]\
+        .capitalize() +\
+        entry.get('year', '')
+
+    # Replace special characters
+    # (because citation_keys may be used as file names)
+    temp_citation_key = remove_accents(temp_citation_key)
+    temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
+    letters = iter(ascii_lowercase)
+
+    # TODO: we might have to split the x[hash_id] and the entry[hash_id]
+    while temp_citation_key in [
+        x['ID'] for x in bib_database.entries
+        if x['hash_id'] not in entry['hash_id']
+    ]:
+        next_letter = next(letters)
+        if next_letter == 'a':
+            temp_citation_key = temp_citation_key + next_letter
+        else:
+            temp_citation_key = temp_citation_key[:-1] + next_letter
+
+    return temp_citation_key
 
 
 def validate_search_details():

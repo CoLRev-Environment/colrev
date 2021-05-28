@@ -2,7 +2,6 @@
 import logging
 import os
 import sys
-from string import ascii_lowercase
 
 import bibtexparser
 import git
@@ -101,13 +100,11 @@ def gather(bibfilename, bib_database):
 
             if not entry['hash_id'] in get_hash_ids(bib_database):
 
-                # Make sure the ID is unique
-                # (otherwise: append letters until this is the case)
-                temp_id = entry['ID']
-                letters = iter(ascii_lowercase)
-                while temp_id in [x['ID'] for x in bib_database.entries]:
-                    temp_id = entry['ID'] + next(letters)
-                entry['ID'] = temp_id
+                # We set the citation_key here (even though it may be updated
+                # after cleansing/updating author/year fields) to achieve a
+                # better sort order in references.bib
+                # (and a cleaner git history)
+                entry['ID'] = utils.generate_citation_key(entry, bib_database)
 
                 bib_database.entries.append(entry)
                 total_nr_entries_added += 1
