@@ -23,10 +23,11 @@ reformat_bibliography :
 trace_hash_id :
 	python3 analysis/trace_hash_id.py
 
+# to test:
+
 trace_entry :
 	python3 analysis/trace_entry.py
 
-# to test:
 combine_individual_search_results :
 	python3 analysis/combine_individual_search_results.py
 
@@ -48,9 +49,6 @@ data_sheet :
 data_pages :
 	python3 analysis/data_pages.py
 
-
-# development:
-
 backward_search :
 	python3 analysis/backward_search.py
 
@@ -59,6 +57,8 @@ merge_duplicates :
 
 acquire_pdfs :
 	python3 analysis/acquire_pdfs.py
+
+# development:
 
 validate_pdfs :
 	python3 analysis/validate_pdfs.py

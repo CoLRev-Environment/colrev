@@ -100,15 +100,19 @@ Please note that this can take some time (depending on the number of records) si
 For 1,000 records, this might take approx. 1:30 hours.
 
 
-4. Identify and merge duplicates (manual task, supported by JabRef)
+4. Identify and merge duplicates (partly automated, partly manual task)
 
-- Check and remove duplicates using the hash-id compatible version of JabRef. When using JabRef, make sure to call the `find duplicates` function multiple times since it only completes two-way merges.
-- IMPORTANT: sort entries according to title and authors and manually check for duplicates (JabRef does not always identify all duplicates).
-For merging, select both entries and press `ctrl+M`.
-- After merging duplicates in JabRef, it might be necessary to run `make reformat` to improve the readability of the history (for better readability in gitk, increase lines of context).
-- When editing `references.bib` manually, and to maintain the trace from the original search records to the merged record, it is important to add the hash_ids to the merged entry (this is done automatically in the hash-id compatible version of JabRef).
+```
+make merge_duplicates
+```
 
-TODO: `make merge_duplicates` is work-in-progress. The script identifies and merges duplicates when confidence is very high.
+- Creates a similarity matrix for all entries
+- Merges entries based on a threshold first (e.g., similarity = 0.99)
+- Iterates over the remaining candidates (e.g., 0.8 < similarity < 0.99) and asks the user to classify as duplicate/non-duplicate
+- When merging entries, it checks whether either of the *citation_keys* has been propagated. If the *citation_keys* of both entries have been propagated, it prints a warning and does not merge the entry. Otherwise, non-propagated *citation_keys* are removed when entries are merged.
+- Creates commits after the automated and manual merging procedures
+- It is recommended to check both commits for potential errors.
+
 
 5. Check/update citation_keys (manual task)
 

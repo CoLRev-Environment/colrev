@@ -181,7 +181,7 @@ Modes:
 |                                  | make cleanse_records                                                                      |             |
 | Search: backward_searcher 💻→🤓  | Extracts references from PDFs and includes them as search results.                        | CLI only    |
 |                                  | make backward_search                                                                      |             |
-| Search: merger 💻→🤓             | Merges duplicates based on identical _hash_ids_ and based on a threshold.                 | Development |
+| Search: merger 💻→🤓/🤓∞💻       | Merges duplicates based on identical _hash_ids_ and based on a threshold and manual input.| CLI only    |
 |                                  | make merge_duplicates                                                                     |             |
 | Screen: screener 🤓∞💻           | Creates screening sheets, guides users through the pre-screen and the full-text screen.   | CLI only    |
 |                                  | make screen_sheet \| screen_1 \| screen_2                                                 |             |
