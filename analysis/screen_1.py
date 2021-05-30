@@ -95,8 +95,8 @@ if __name__ == '__main__':
 
     # TODO: check prior commits whether duplicates have been removed
     if 'y' != input(
-        'Note: start screening only after removing duplicates ',
-        'from references.bib! Proceed with the screen (y/n)?',
+        'Note: start screening only after removing duplicates ' +
+        'from references.bib! Proceed with the screen (y/n)?'
     ):
         sys.exit()
 
