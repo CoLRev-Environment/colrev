@@ -34,10 +34,10 @@ MAX_RETRIES_ON_ERROR = 3
 
 
 def crossref_query_title(title):
+    # https://github.com/CrossRef/rest-api-doc
     api_url = 'https://api.crossref.org/works?'
     params = {'rows': '5', 'query.bibliographic': title}
     url = api_url + urlencode(params, quote_via=quote_plus)
-#    print('Query Crossref API: ' + url)
     request = Request(url)
     request.add_header(
         'User-Agent', 'RecordCleanser (mailto:gerit.wagner@hec.ca)',
@@ -118,7 +118,7 @@ def quality_improvements(bib_database):
                 entry['ID'] = utils.generate_citation_key(entry, bib_database)
             except utils.CitationKeyPropagationError:
                 print('WARNING: cleansing entry with propagated citation_key:',
-                      + entry['ID'])
+                      entry['ID'])
                 pass
 
         if to_cleanse:
@@ -150,11 +150,6 @@ def quality_improvements(bib_database):
             conf_strings = [
                 'proceedings',
                 'conference',
-                'ecis',
-                'amcis',
-                'icis',
-                'pacis',
-                'hicss',
             ]
             # Consistency checks
             if 'journal' in entry:
@@ -162,15 +157,21 @@ def quality_improvements(bib_database):
                     conf_string in entry['journal'].lower()
                     for conf_string in conf_strings
                 ):
-                    entry['booktitle'] = entry['journal']
-                    entry['ENTRYTYPE'] = 'inproceedings'
-                    del entry['journal']
+                    print('WARNING: conference string in journal field: ',
+                          entry['ID'],
+                          entry['journal'])
+                    # entry['booktitle'] = entry['journal']
+                    # entry['ENTRYTYPE'] = 'inproceedings'
+                    # del entry['journal']
             if 'booktitle' in entry:
                 if any(
                     conf_string in entry['booktitle'].lower()
                     for conf_string in conf_strings
                 ):
                     entry['ENTRYTYPE'] = 'inproceedings'
+
+            # TODO: create a warning if any conference strings (ecis, icis, ..)
+            # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
 
             # Journal articles should not have booktitles/series set.
             if 'article' == entry['ENTRYTYPE']:
@@ -188,15 +189,7 @@ def quality_improvements(bib_database):
                 if 'series' in entry:
                     if any(
                         conf_string in entry['series'].lower()
-                        for conf_string in [
-                            'proceedings',
-                            'conference',
-                            'ECIS',
-                            'AMICS',
-                            'ICIS',
-                            'PACIS',
-                            'HICSS',
-                        ]
+                        for conf_string in conf_strings
                     ):
                         conf_name = entry['series']
                         del entry['series']
@@ -212,7 +205,11 @@ def quality_improvements(bib_database):
                     if entry['journal'].lower() == row['variation'].lower():
                         entry['journal'] = row['journal']
                 for i, row in JOURNAL_ABBREVIATIONS.iterrows():
+                    # to un-abbreviate
                     if entry['journal'].lower() == row['abbreviation'].lower():
+                        entry['journal'] = row['journal']
+                    # to use the same capitalization
+                    if entry['journal'].lower() == row['journal'].lower():
                         entry['journal'] = row['journal']
 
             if 'booktitle' in entry:
@@ -222,17 +219,37 @@ def quality_improvements(bib_database):
                         word.capitalize() for word in words
                     )
 
-                    # For ECIS/ICIS proceedings:
-                    entry['booktitle'] = \
-                        entry['booktitle'] \
-                        .replace(' Completed Research Papers', '')\
-                        .replace(' Completed Research', '')\
-                        .replace(' Research-in-Progress Papers', '')\
-                        .replace(' Research Papers', '')
+                # For ECIS/ICIS proceedings:
+                entry['booktitle'] = \
+                    entry['booktitle'] \
+                    .replace(' Completed Research Papers', '')\
+                    .replace(' Completed Research', '')\
+                    .replace(' Research-in-Progress Papers', '')\
+                    .replace(' Research Papers', '')\
+                    .replace('- All Submissions', '')
 
                 for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
-                    if row['abbreviation'].lower() in \
-                            entry['booktitle'].lower():
+                    stripped_booktitle = re.sub(
+                        r'\d{4}', '', entry['booktitle'])
+                    stripped_booktitle = re.sub(
+                        r'\d{1,2}th', '', stripped_booktitle)
+                    stripped_booktitle = re.sub(
+                        r'\d{1,2}nd', '', stripped_booktitle)
+                    stripped_booktitle = re.sub(
+                        r'\d{1,2}rd', '', stripped_booktitle)
+                    stripped_booktitle = re.sub(
+                        r'\d{1,2}st', '', stripped_booktitle)
+                    stripped_booktitle = re.sub(
+                        r'\([A-Z]{3,6}\)', '', stripped_booktitle)
+                    stripped_booktitle = stripped_booktitle\
+                        .replace('Proceedings of the', '')\
+                        .replace('Proceedings', '')\
+                        .rstrip()\
+                        .lstrip()
+                    # print(entry['booktitle'])
+                    # print(stripped_booktitle)
+                    if row['abbreviation'].lower() == \
+                            stripped_booktitle.lower():
                         entry['booktitle'] = row['conference']
 
             if 'article' == entry['ENTRYTYPE']:

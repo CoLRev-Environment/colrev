@@ -78,10 +78,10 @@ def run_screen_2(screen_filename, bib_database):
                         if col.startswith('ec_')
                     ]):
                         screen.at[i, 'inclusion_2'] = 'yes'
-                        print('Inclusion recored')
+                        print('Inclusion recorded')
                     else:
                         screen.at[i, 'inclusion_2'] = 'no'
-                        print('Exclusion recored')
+                        print('Exclusion recorded')
                 else:
                     decision = 'TODO'
                     while decision not in ['y', 'n']:

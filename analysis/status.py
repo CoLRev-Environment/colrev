@@ -58,13 +58,13 @@ if __name__ == '__main__':
             print(' ├ Screen 1')
             print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
             print(
+                ' |  - excluded: ' +
+                str(len(screen[screen['inclusion_1'] == 'no'])).rjust(14, ' '),
+            )
+            print(
                 ' |  - included: ' +
                 str(len(screen[screen['inclusion_1'] == 'yes']))
                 .rjust(14, ' '),
-            )
-            print(
-                ' |  - excluded: ' +
-                str(len(screen[screen['inclusion_1'] == 'no'])).rjust(14, ' '),
             )
             if 0 != len(screen[screen['inclusion_1'] == 'TODO']):
                 print(
@@ -87,13 +87,13 @@ if __name__ == '__main__':
             print(' ├ Screen 2')
             print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
             print(
+                ' |  - excluded: ' +
+                str(len(screen[screen['inclusion_2'] == 'no'])).rjust(14, ' '),
+            )
+            print(
                 ' |  - included: ' +
                 str(len(screen[screen['inclusion_2'] == 'yes']))
                 .rjust(14, ' '),
-            )
-            print(
-                ' |  - excluded: ' +
-                str(len(screen[screen['inclusion_2'] == 'no'])).rjust(14, ' '),
             )
             if 0 != len(screen[screen['inclusion_2'] == 'TODO']):
                 print(
@@ -111,11 +111,12 @@ if __name__ == '__main__':
                 data = pd.read_csv('data/data.csv', dtype=str)
                 print(' ├ Data extraction')
                 print(' |  - total: ' + str(len(data)).rjust(17, ' '))
-                if 0 != len(screen[screen['inclusion_2'] == 'TODO']):
+                if 0 != len(screen[screen['inclusion_2'] == 'yes'])-len(data):
                     print(
-                        ' |  - TODO: ' +
-                        str(len(screen[screen['inclusion_2'] == 'TODO']))
-                        .rjust(18, ' '),
+                        ' |  - IMPORT FROM SCREEN: ' +
+                        str(len(
+                            screen[screen['inclusion_2'] == 'yes'])-len(data))
+                        .rjust(4, ' '),
                     )
 
                 print('')
