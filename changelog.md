@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Bugs in `analysis/combine_individual_search_results.py` and in `analysis/acquire_pdfs.py`
 - Catch exceptions and check bad responses in `analysis/acquire_pdfs.py`
 - Bug in git modification check for `references.bib` in `analysis/utils.py`
+- Exception in `anaylsis/screen_2.py` (IndexError)
 
 ### [0.1.0] -2021-05-08
 
