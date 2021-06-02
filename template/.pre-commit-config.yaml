@@ -2,50 +2,60 @@ default_language_version:
     python: python3
 repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
-    rev: 0c0db4c
+    rev: 1df34e5
     hooks:
     -   id: duplicates-references
         name: duplicates-references
         entry: pipeline_validation_hooks/duplicates_references.py
         language: script
-        types: [python]
+        types: [bib]
     -   id: duplicates-screen
         name: duplicates-screen
         entry: pipeline_validation_hooks/duplicates_screen.py
         language: script
-        types: [python]
+        types: [csv]
     -   id: duplicates-data
         name: duplicates-data
         entry: pipeline_validation_hooks/duplicates_data.py
         language: script
-        types: [python]
+        types: [csv]
+    -   id: id-integrity-references
+        name: id-integrity-references
+        entry: pipeline_validation_hooks/id_integrity_references.py
+        language: script
+        types: [bib]
     -   id: id-integrity-screen
         name: id-integrity-screen
         entry: pipeline_validation_hooks/id_integrity_screen.py
         language: script
-        types: [python]
+        types_or: [bib,csv]
     -   id: id-integrity-data
         name: id-integrity-data
         entry: pipeline_validation_hooks/id_integrity_data.py
         language: script
-        types: [python]
+        types_or: [bib,csv]
     -   id: value-ranges-screen
         name: value-ranges-screen
         entry: pipeline_validation_hooks/value_ranges_screen.py
         language: script
-        types: [python]
+        types: [csv]
     -   id: consistency-screen-1-2
         name: consistency-screen-1-2
         entry: pipeline_validation_hooks/consistency_screen_1_2.py
         language: script
-        types: [python]
+        types: [csv]
     -   id: consistency-screen-2-ec
         name: consistency-screen-2-ec
         entry: pipeline_validation_hooks/consistency_screen_2_ec.py
         language: script
-        types: [python]
+        types: [csv]
     -   id: consistency-screen-data
         name: consistency-screen-data
         entry: pipeline_validation_hooks/consistency_screen_data.py
         language: script
-        types: [python]
+        types: [csv]
+    -   id: formatting
+        name: formatting
+        entry: pipeline_validation_hooks/formatting.py
+        language: script
+        types_or: [bib,csv]

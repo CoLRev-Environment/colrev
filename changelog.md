@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Refactored code, including `analysis/utils.py/load_references_bib(modification_check, initialize)` and `analysis/utils.py/git_modification_check(filename)`
 - Improve treatment of diacritics and accents when generating citation_keys in `analysis/cleanse_records.py`
 - `backward_search` now works with tei-conversion provided by a grobid Docker container
+- Update `utils.py/save_bib()` and pre-commit hook/formatter
 
 ### Removed
 

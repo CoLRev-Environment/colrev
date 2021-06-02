@@ -263,24 +263,10 @@ def get_bib_files():
 
 def save_bib_file(bib_database, target_file):
 
-    for entry in bib_database.entries:
-        if entry['ENTRYTYPE'] == 'article':
-            entry['ENTRYTYPE'] = 'Article'
-        if entry['ENTRYTYPE'] == 'book':
-            entry['ENTRYTYPE'] = 'Book'
-        if entry['ENTRYTYPE'] == 'inproceedings':
-            entry['ENTRYTYPE'] = 'InProceedings'
     writer = BibTexWriter()
-    if bib_database.comments == []:
-        bib_database.comments = ['jabref-meta: databaseType:bibtex;']
-    else:
-        try:
-            bib_database.comments.remove('% Encoding: UTF-8')
-        except ValueError:
-            pass
+
     writer.contents = ['entries', 'comments']
     writer.indent = '  '
-    # The order should match JabRefs ordering of fields used when saving a file
     writer.display_order = [
         'author',
         'booktitle',
@@ -299,13 +285,7 @@ def save_bib_file(bib_database, target_file):
         'file',
         'hash_id',
     ]
-    # to test this order, run merge_duplicates, add version in git,
-    # edit in JabRef and inspect differences
-    # There seem to be dependencies in the save order
-    # (e.g., the pages are saved in a different position by JabRef
-    # if it is a book or an article).
-    # the sort order seems to be a problem when @Books have both a
-    # title and a booktitle
+
     writer.order_entries_by = ('ID', 'author', 'year')
     writer.add_trailing_comma = True
     writer.align_values = True
@@ -314,63 +294,6 @@ def save_bib_file(bib_database, target_file):
     with open(target_file, 'w') as out:
         out.write(bibtex_str + '\n')
 
-    # The following fixes the formatting to prevent JabRef from introducing
-    # format changes (there may be a more elegant way to achieve this)
-    os.rename('data/references.bib', 'data/references_temp_2.bib')
-
-    with open('data/references_temp_2.bib') as reader:
-        lines = reader.readlines()
-
-    with open('data/references.bib', 'w') as writer:
-        writer.write('% Encoding: UTF-8\n\n')
-
-        max_key_length = 0
-        book = False
-        saved_booktitle = ''
-        saved_pages = ''
-        for line in lines:
-
-            # Note: padding depends on the longest field/key in each entry...
-            if line[0] == '@':
-                citation_key = line[line.find('{')+1:-2]
-                # get longest key
-                max_key_length = 0
-                for entry in bib_database.entries:
-                    if entry['ID'] == citation_key:
-                        for key in entry.keys():
-                            if 'ENTRYTYPE' == key:
-                                continue
-                            if len(key) > max_key_length:
-                                max_key_length = len(key)
-                        break
-                shorten = (18-max_key_length)*' ' + '='
-                if line[0:6] == '@Book{':
-                    book = True
-                else:
-                    book = False
-                saved_booktitle = ''
-                saved_pages = ''
-            if max_key_length != 0:
-                line = line.replace(shorten, ' =')
-
-            if book:
-                if 'booktitle ' in line:
-                    saved_booktitle = line
-                    continue
-                if 'pages ' in line:
-                    saved_pages = line
-                    continue
-
-            writer.write(line)
-
-            if book and 'year ' in line:
-                writer.write(saved_booktitle)
-            if book and 'hash_id ' in line:
-                writer.write(saved_pages)
-
-    # writer.write('@Comment{jabref-meta: databaseType:bibtex;}\n')
-
-    os.remove('data/references_temp_2.bib')
     return
 
 
