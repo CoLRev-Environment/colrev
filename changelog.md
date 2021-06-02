@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 - `initialize` to set up the data directory (including a `readme.md` and the `search_details.csv`)
 - `merge_duplicates` with automated (threshold-based) and semi-automated identification of duplicates
+- `sample_profile` to generate a csv of the sample and to cross-tabulate journals vs years
 
 ### Changed
 
