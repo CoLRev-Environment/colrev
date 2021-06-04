@@ -307,10 +307,10 @@ def quality_improvements(bib_database):
                             str(re.sub(r'\s+', ' ', retrieved_title))\
                             .replace('\n', ' ')
                     try:
-                        entry['year'] = str(
-                            retrieved_record['published-print']['date-parts'][0][0],
-                        )
-                    except:
+                        date_parts = \
+                            retrieved_record['published-print']['date-parts']
+                        entry['year'] = str(date_parts[0][0])
+                    except TypeError:
                         pass
 
                     retrieved_pages = retrieved_record.get('page', '')
@@ -355,7 +355,7 @@ def quality_improvements(bib_database):
                             entry['abstract'] = \
                                 str(retrieved_abstract).replace('\n', '')\
                                 .lstrip().rstrip()
-                except:
+                except TypeError:
                     pass
 
         # Note: formating with utils.save_bib_file() will be done at the end.
@@ -425,3 +425,5 @@ if __name__ == '__main__':
         'Cleanse references.bib',
         author=git.Actor('script:cleanse_records.py', ''),
     )
+
+    print('Created commit: Cleanse references.bib')
