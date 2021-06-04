@@ -40,7 +40,7 @@ if __name__ == '__main__':
         '../template/.pre-commit-config.yaml',
         '.pre-commit-config.yaml',
     )
-    shutil.copyfile('../docker-compose.yaml', 'docker-compose.yaml')
+    shutil.copyfile('../docker-compose.yml', 'docker-compose.yml')
     shutil.copyfile('../template/.gitattributes', '.gitattributes')
     shutil.copyfile('../template/.gitignore', '.gitignore')
 
