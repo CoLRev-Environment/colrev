@@ -109,7 +109,7 @@ if __name__ == '__main__':
     if not os.path.exists(screen_file):
         print('Creating screen.csv')
         exclusion_criteria = input(
-            'Please provide a list of exclusion criteria ',
+            'Please provide a list of exclusion criteria ' +
             '[criterion1,criterion2,...]: ',
         )
 
