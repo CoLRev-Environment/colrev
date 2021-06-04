@@ -2,7 +2,7 @@ default_language_version:
     python: python3
 repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
-    rev: 1df34e5
+    rev: a812f44
     hooks:
     -   id: duplicates-references
         name: duplicates-references
