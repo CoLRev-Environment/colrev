@@ -14,6 +14,8 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from git import Repo
 
+from nameparser import HumanName
+
 
 def robust_append(string_to_hash, to_append):
 
@@ -25,16 +27,34 @@ def robust_append(string_to_hash, to_append):
 
     return string_to_hash
 
+def get_container_title(entry):
+    container_title = ''
+    # the latter fields take precedence    
+    if 'series' in entry:
+        container_title = entry['series']
+    if 'booktitle' in entry:
+        container_title = entry['booktitle']
+    if 'journal' in entry:
+        container_title = entry['journal']
+    return container_title
 
 def create_hash(entry):
+    # TODO: maybe include the version of the hash_function as the first part of string_to_hash? This would prevent cases in which almost all hash_ids are identical (and very few hash_ids change) when updatingthe hash function (this may look like an anomaly and be hard to explain)
+    # TODO: format authors (discuss: could this create challenges?)
     string_to_hash = robust_append('', entry.get('author', ''))
     string_to_hash = robust_append(string_to_hash, entry.get('year', ''))
     string_to_hash = robust_append(string_to_hash, entry.get('title', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('journal', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('booktitle', ''))
+    string_to_hash = robust_append(string_to_hash, get_container_title(entry))
     string_to_hash = robust_append(string_to_hash, entry.get('volume', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('issue', ''))
+    string_to_hash = robust_append(string_to_hash, entry.get('number', ''))
     string_to_hash = robust_append(string_to_hash, entry.get('pages', ''))
+
+    # TODO: revise, considering different types of bib-entries, examples
+    # book: publisher? (NO!) editor??
+    # organization (manual) institution (tech.report)
+    # school (thesis?) - as the container title for theses?
+    # howpublished/url for misc/electronic: -> container title?
+    # include type (thesis/article/...)?
 
     return hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
 
@@ -68,6 +88,17 @@ def remove_accents(input_str):
 class CitationKeyPropagationError(Exception):
     pass
 
+def get_hash_ids(bib_database):
+
+    hash_id_list = []
+    for entry in bib_database.entries:
+        if 'hash_id' in entry:
+            if ',' in entry['hash_id']:
+                hash_id_list = hash_id_list + entry['hash_id'].split(',')
+            else:
+                hash_id_list = hash_id_list + [entry['hash_id']]
+
+    return hash_id_list
 
 def propagated_citation_key(citation_key):
 
@@ -89,34 +120,43 @@ def propagated_citation_key(citation_key):
     return propagated
 
 
-def generate_citation_key(entry, bib_database):
+def generate_citation_key(entry, bib_database, raise_error=True):
 
     # Make sure that citation_keys that have been propagated to the
     # screen or data will not be replaced
     # (this would break the chain of evidence)
-    if propagated_citation_key(entry['ID']):
+    if propagated_citation_key(entry['ID']) and raise_error:
         raise CitationKeyPropagationError(
             'WARNING: do not change citation_keys that have been ',
             'propagated to screen.csv and/or data.csv (' +
             entry['ID'] + ')',
         )
 
-    temp_citation_key = entry.get('author', '')\
-        .split(' ')[0]\
-        .capitalize() +\
-        entry.get('year', '')
-
+    if ',' in entry.get('author', ''):
+        temp_citation_key = entry.get('author', '')\
+            .split(',')[0].replace(' ', '') +\
+            entry.get('year', '')
+    else:
+        temp_citation_key = entry.get('author', '')\
+            .split(' ')[0] +\
+            entry.get('year', '')
+    
+    if temp_citation_key.isupper():
+        temp_citation_key = temp_citation_key.capitalize()
     # Replace special characters
     # (because citation_keys may be used as file names)
     temp_citation_key = remove_accents(temp_citation_key)
+    temp_citation_key = re.sub('\(.*\)', '', temp_citation_key)
     temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
     letters = iter(ascii_lowercase)
 
-    # TODO: we might have to split the x[hash_id] and the entry[hash_id]
-    while temp_citation_key in [
+    # make sure that there are no other entries with the same ID
+    # TODO: we might have to split the x[hash_id] and the entry.get(hash_id, )
+    other_ids = [
         x['ID'] for x in bib_database.entries
-        if x['hash_id'] not in entry['hash_id']
-    ]:
+        if x['ID'] != entry['ID']
+    ]
+    while temp_citation_key in other_ids:
         next_letter = next(letters)
         if next_letter == 'a':
             temp_citation_key = temp_citation_key + next_letter
@@ -125,6 +165,55 @@ def generate_citation_key(entry, bib_database):
 
     return temp_citation_key
 
+def mostly_upper_case(input_string):
+    input_string = input_string.replace('.', '').replace(',','')
+    words = input_string.split()
+    return sum(word.isupper() for word in words)/len(words) > 0.8
+
+def title_if_mostly_upper_case(input_string):
+    words = input_string.split()
+    if sum(word.isupper() for word in words)/len(words) > 0.8:
+        return input_string.capitalize()
+    else:
+        return input_string
+
+def format_author_field(input_string):
+    
+    names = input_string.split(' and ')
+    author_string = ''
+    for name in names:
+        # Note: https://github.com/derek73/python-nameparser
+        # is very effective (maybe not perfect)
+        parsed_name = HumanName(name)
+        # TODO: if all capitalized:
+        # utils.mostly_upper_case(author_string.replace(' and ', '').replace('Jr',''))
+        # https://nameparser.readthedocs.io/en/latest/usage.html#capitalization-support
+        # name.capitalize(force=True)
+        parsed_name.string_format = "{last} {suffix}, {first} ({nickname}) {middle}"
+        # .capitalize(force=True)
+        if author_string == '':
+            author_string = str(parsed_name).replace(' , ', ', ')
+        else:
+            author_string = author_string + ' and ' + str(parsed_name).replace(' , ', ', ')
+
+    return author_string
+
+def unify_pages_field(input_string):
+    if not isinstance(input_string, str):
+        return input_string
+    if not re.match(r'^\d*--\d*$', input_string) and not '--' in input_string:
+        input_string = input_string\
+                        .replace('-', '--')\
+                        .replace('–', '--')\
+                        .replace('----', '--')\
+                        .replace(' -- ', '--')\
+                        .rstrip('.')
+
+    if not re.match(r'^\d*$', input_string) and \
+       not re.match(r'^\d*--\d*$', input_string) and\
+       not re.match(r'^[xivXIV]*--[xivXIV]*$', input_string):
+        print('Unusual pages: ' + input_string)
+    return input_string
 
 def validate_search_details():
 

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - `initialize` to set up the data directory (including a `readme.md` and the `search_details.csv`)
 - `merge_duplicates` with automated (threshold-based) and semi-automated identification of duplicates
 - `sample_profile` to generate a csv of the sample and to cross-tabulate journals vs years
+- Use of submodules for crowd-sourced data
 
 ### Changed
 
@@ -20,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Improve treatment of diacritics and accents when generating citation_keys in `analysis/cleanse_records.py`
 - `backward_search` now works with tei-conversion provided by a grobid Docker container
 - Update `utils.py/save_bib()` and pre-commit hook/formatter
+- Updated `analysis/cleanse_records.py` based on derek73/python-nameparser
+- Updated `analysis/combine_individual_search_results.py`, `analysis/merge_duplicates.py`
+- Update hash_id function
 
 ### Removed
 

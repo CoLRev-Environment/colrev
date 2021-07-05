@@ -1,5 +1,8 @@
 # Literature review template
 
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
+
 Conducting high-quality literature reviews is a key challenge for generations.
 Researchers must be prepared to develop high-quality, rigorous, and insightful reviews while coping with staggering growth and diversity of research output.
 This project aims at facilitating review projects based on a robust, scalable, and traceable pipeline.
@@ -213,6 +216,12 @@ docker-compose up
 docker-compose up
 docker-compose run --rm review_template_python3 /bin/bash
 make status
+```
+
+To install crowd-sourced resources, include them as submodules as follows:
+
+```
+git submodule add https://github.com/geritwagner/crowd_resource_information_systems
 ```
 
 Further instructions are available in the [analysis/readme.md](analysis/readme.md).

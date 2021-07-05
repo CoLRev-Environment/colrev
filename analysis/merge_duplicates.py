@@ -1,6 +1,11 @@
 #! /usr/bin/env python
 import re
 import sys
+import csv
+import os
+
+import bibtexparser
+from bibtexparser.customization import convert_to_unicode
 
 import dictdiffer
 import git
@@ -16,7 +21,8 @@ nr_current_entries = 0
 
 def store_changes(references, bib_database):
     # convert the dataframe back to a list of dicts, assign to bib_database
-    ref_list = references.drop(columns='similarity').to_dict('records')
+    # .drop(columns='similarity')
+    ref_list = references.to_dict('records')
     for idx, my_dict in enumerate(ref_list):
         ref_list[idx] = {k: str(v)
                          for k, v in my_dict.items() if str(v) != 'nan'}
@@ -38,48 +44,118 @@ def remove_entry(references, citation_key):
 #            break
     return references
 
+def format_authors_string(authors):
+    authors = str(authors).lower()
+    authors_string = ''
+    authors = utils.remove_accents(authors)
+
+    # abbreviate first names
+    # "Webster, Jane" -> "Webster, J"
+    # also remove all special characters and do not include a separator (" and ")
+    for author in authors.split(' and '):
+        if ',' in author:
+            last_names = [word[0] for word in author.split(',')[1].split(' ') if len(word) > 0]
+            authors_string = authors_string + author.split(',')[0] + ' ' + ' '.join(last_names) + ' '
+        else:
+            authors_string = authors_string + author + ' '
+    authors_string = re.sub(r'[^A-Za-z0-9, ]+', '', authors_string.rstrip())
+    return authors_string
 
 def get_similarity(df_a, df_b):
 
-    authors_a = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_a['author']).lower())
-    authors_b = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_b['author']).lower())
+    authors_a = format_authors_string(df_a['author'])
+    authors_b = format_authors_string(df_b['author'])
     author_similarity = fuzz.ratio(authors_a, authors_b)/100
-
-    # partial ratio (catching 2010-10 or 2001-2002)
-    year_similarity = \
-        fuzz.partial_ratio(str(df_a['year']), str(df_b['year']))/100
-
-    journal_a = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_a['journal']).lower())
-    journal_b = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_b['journal']).lower())
-    journal_similarity = fuzz.ratio(journal_a, journal_b)/100
 
     title_a = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_a['title']).lower())
     title_b = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_b['title']).lower())
     title_similarity = fuzz.ratio(title_a, title_b)/100
 
-    weights = [0.15, 0.75, 0.05, 0.05]
-    similarities = [author_similarity,
-                    title_similarity,
-                    year_similarity,
-                    journal_similarity]
+    # partial ratio (catching 2010-10 or 2001-2002)
+    year_similarity = \
+        fuzz.partial_ratio(str(df_a['year']), str(df_b['year']))/100
+        
+    if (str(df_a['journal']) != 'nan'):
+        journal_a = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_a['journal']).lower())
+        journal_b = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_b['journal']).lower())
+        outlet_similarity = fuzz.ratio(journal_a, journal_b)/100
+        
+        if df_a['volume'] == df_b['volume']:
+            volume_similarity = 1
+        else:
+            volume_similarity = 0
+        if df_a['number'] == df_b['number']:
+            number_similarity = 1
+        else:
+            number_similarity = 0
+        # sometimes, only the first page is provided.
+        if str(df_a['pages']) == 'nan' or str(df_b['pages']) == 'nan':
+            pages_similarity = 1
+        else:           
+            if df_a['pages'] == df_b['pages']:
+                pages_similarity = 1
+            else:
+                if df_a['pages'].split('-')[0] == df_b['pages'].split('-')[0]:
+                    pages_similarity = 1
+                else:
+                    pages_similarity = 0
+        
+        # Put more weithe on other fields if the title is very common
+        # ie., non-distinctive
+        # The list is based on a large export of distinct papers, tabulated 
+        # according to titles and sorted by frequency
+        if [df_a['title'].lower(), df_b['title'].lower()] in \
+            [['editorial', 'editorial'],
+            ['editorial introduction', 'editorial introduction'],
+            ['editorial notes', 'editorial notes'],
+            ["editor's comments", "editor's comments"],
+            ['book reviews', 'book reviews'],
+            ['editorial note', 'editorial note'],
+            ]:
+            weights = [0.175, 0, 0.175, 0.175, 0.175, 0.175, 0.125]
+        else:
+            weights = [0.25, 0.3, 0.13, 0.2, 0.05, 0.05, 0.02]
+ 
+        similarities = [author_similarity,
+                        title_similarity,
+                        year_similarity,
+                        outlet_similarity,
+                        volume_similarity,
+                        number_similarity,
+                        pages_similarity]
+
+    else:
+        booktitle_a = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_a['booktitle']).lower())
+        booktitle_b = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_b['booktitle']).lower())
+        outlet_similarity = fuzz.ratio(booktitle_a, booktitle_b)/100
+
+        weights = [0.15, 0.75, 0.05, 0.05]
+        similarities = [author_similarity,
+                        title_similarity,
+                        year_similarity,
+                        outlet_similarity]
+
     weighted_average = sum(similarities[g] * weights[g]
                            for g in range(len(similarities)))
 
     return weighted_average
 
 
-def calculate_similarities(references, duplicate_min_similarity_threshold):
-    nr_entries = references.shape[0]
-    SimilarityArray = np.zeros([nr_entries, nr_entries])
+def calculate_similarities(SimilarityArray, references, duplicate_min_similarity_threshold):
 
     # Fill out the similarity matrix first
-    for base_entry_index, base_entry in \
-            tqdm(references.iterrows(), total=references.shape[0]):
-        references['similarity'] = 0
-        for comparison_entry_index, comparison_entry in references.iterrows():
+#    for base_entry_index, base_entry in \
+#            tqdm(references.iterrows(), total=references.shape[0]):
+    for base_entry_index in \
+            tqdm(range(1, references.shape[0])):
+#        references['similarity'] = 0
+#        for comparison_entry_index, comparison_entry in references.iterrows():
+        for comparison_entry_index in \
+            range(1, references.shape[0]):
             if base_entry_index > comparison_entry_index:
-                SimilarityArray[base_entry_index, comparison_entry_index] = \
-                    get_similarity(base_entry, comparison_entry)
+                if -1 != SimilarityArray[base_entry_index, comparison_entry_index]:
+                    SimilarityArray[base_entry_index, comparison_entry_index] = \
+                        get_similarity(references.iloc[base_entry_index], references.iloc[comparison_entry_index])
 
     tuples_to_process = []
     maximum_similarity = 1
@@ -100,6 +176,29 @@ def calculate_similarities(references, duplicate_min_similarity_threshold):
     return SimilarityArray, tuples_to_process
 
 
+def get_combined_hash_id_list(references, ref_id_tuple):
+    
+    hash_ids_entry_1 = \
+        references.loc[references['ID'] ==
+                       ref_id_tuple[0]]['hash_id'].values[0]
+    hash_ids_entry_2 = \
+        references.loc[references['ID'] ==
+                       ref_id_tuple[1]]['hash_id'].values[0]
+    if not isinstance(hash_ids_entry_1, str):
+        hash_ids_entry_1 = []
+    else:
+        hash_ids_entry_1 = hash_ids_entry_1.split(',')
+    if not isinstance(hash_ids_entry_2, str):
+        hash_ids_entry_2 = []
+    else:
+        hash_ids_entry_2 = hash_ids_entry_2.split(',')
+
+    combined_hash_list = set(hash_ids_entry_1
+                             + hash_ids_entry_2)
+    
+    return ','.join(combined_hash_list)
+
+
 def auto_merge_entries(references, tuples, threshold):
 
     for i in range(len(tuples)):
@@ -117,35 +216,33 @@ def auto_merge_entries(references, tuples, threshold):
             continue
         else:
             try:
+
+                if not first_propagated and not second_propagated:
+                    
+                    # Use the entry['ID'] that has no appended letters if possible
+                    # Set first_propagated=True if entry['ID'] should be kept for the first entry
+                     if tuples[i][0][-1:].isnumeric() and not tuples[i][0][-1:].isnumeric():
+                       first_propagated = True
+                     else:
+                       second_propagated = True
+                       # This arbitrarily uses the second entry['ID'] if none of 
+                       # the IDs has a letter appended.
+                
                 if first_propagated:  # remove the second one
-
-                    existing_hash_ids = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][0]]['hash_id'].values[0]
-                    hash_ids_to_add = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][1]]['hash_id'].values[0]
-                    combined_hash_list = set(hash_ids_to_add.split(',')
-                                             + existing_hash_ids.split(','))
-
+                    combined_hash_list = get_combined_hash_id_list(references,
+                                                                   tuples[i])
                     references.at[references['ID'] == tuples[i][0],
-                                  'hash_id'] = ','.join(combined_hash_list)
+                                  'hash_id'] = combined_hash_list
 
                     references = remove_entry(references, tuples[i][1])
                     tuples[i][3] = 'merged'
 
                 if second_propagated:  # remove the first one
-                    existing_hash_ids = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][1]]['hash_id'].values[0]
-                    hash_ids_to_add = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][0]]['hash_id'].values[0]
-                    combined_hash_list = set(hash_ids_to_add.split(',')
-                                             + existing_hash_ids.split(','))
+                    combined_hash_list = get_combined_hash_id_list(references,
+                                                                   tuples[i])
 
                     references.at[references['ID'] == tuples[i][1],
-                                  'hash_id'] = ','.join(combined_hash_list)
+                                  'hash_id'] = combined_hash_list
 
                     references = remove_entry(references, tuples[i][0])
                     tuples[i][3] = 'merged'
@@ -160,98 +257,64 @@ def auto_merge_entries(references, tuples, threshold):
     return references, tuples
 
 
-def interactively_merge_entries(references, tuples):
+def update_entries_considered_non_duplicates(SimilarityArray, references):
+    
+    # If a case-by-case decisions is preferred
+    # consider_non_duplicated = []
+    # for bib_file in utils.get_bib_files():
+    #     print(bib_file)
+    #     non_duplicated = input('consider non-duplicates? (y/n)')
+    #     if 'y' == non_duplicated:
+    #         consider_non_duplicated.append(bib_file)
+    consider_non_duplicated = [os.path.basename(x) for x in utils.get_bib_files()]
 
-    print('TODO: check whether hash-id mappings were classified ',
-          'as non-duplicates before')
-    input('TODO: add hash_ids / unique')
+    for non_duplicated_bib in consider_non_duplicated:
+        print('Skipping within-file duplices for ' + non_duplicated_bib)
+        hash_id_list = []
+        with open(os.path.join('data/search', non_duplicated_bib)) as bibtex_file:
+            non_duplicated_bib_database = bibtexparser.bparser.BibTexParser(
+                customization=convert_to_unicode, common_strings=True,
+            ).parse_file(bibtex_file, partial=True)
+            for entry in non_duplicated_bib_database.entries:
+                hash_id_list.append(utils.create_hash(entry))
+            
+            # all permutations within the bib file are considered non-duplicates
+            # NOTE: creating the list of all possible permutations may require too much memory
+            # non_duplicated_hash_id_pairs = list(itertools.permutations(hash_id_list, 2))
+            # print(non_duplicated_hash_id_pairs)
+            # for hash_id, non_equivalent_hash_id in non_duplicated_hash_id_pairs:
+            
+            non_duplicated_indices = []
+            for i, entry in references.iterrows():
+                if any(x in str(entry.get('hash_id', 'NA')).split(',') for x in hash_id_list):
+                    non_duplicated_indices.append(i)
+            
+            for non_dup_ind1 in non_duplicated_indices:
+                for non_dup_ind2 in non_duplicated_indices:
+                    SimilarityArray[non_dup_ind1, non_dup_ind2] = -1
 
-    for i in range(len(tuples)):
-        first_propagated = utils.propagated_citation_key(tuples[i][0])
-        second_propagated = utils.propagated_citation_key(tuples[i][1])
+    return SimilarityArray
 
-        if tuples[i][3] in ['merged', 'skipped', 'propagation_problem']:
-            continue
-
-        if first_propagated and second_propagated:
-            print('WARNING: both citation_keys propagated: ',
-                  tuples[i][0],
-                  ', ',
-                  tuples[i][1])
-            tuples[i][3] = 'propagation_problem'
-            continue
-        else:
-            decision = ''
-            while decision not in ['y', 'n']:
-                print()
-                print()
-                print('------------------')
-                print(tuples[i])
-                print()
-
-                base_entry = references.loc[references['ID'] == tuples[i][0]]\
-                                       .to_dict('records')
-                comparison_entry = \
-                    references.loc[references['ID'] == tuples[i][1]]\
-                    .to_dict('records')
-
-                [print(x) for x in dictdiffer.diff(base_entry,
-                                                   comparison_entry)]
-
-                decision = input('Duplicate (y/n)?')
-
-            if 'n' == decision:
-                tuples[i][3] = 'no_duplicate'
-                print('TODO: save hash-id mapping for non-duplicates')
-
-                continue
-
-            try:
-                if first_propagated:  # remove the second one
-
-                    existing_hash_ids = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][0]]['hash_id'].values[0]
-                    hash_ids_to_add = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][1]]['hash_id'].values[0]
-                    combined_hash_list = set(hash_ids_to_add.split(',')
-                                             + existing_hash_ids.split(','))
-
-                    references.at[references['ID'] == tuples[i][0],
-                                  'hash_id'] = ','.join(combined_hash_list)
-
-                    references = remove_entry(references, tuples[i][1])
-                    tuples[i][3] = 'merged'
-
-                if second_propagated:  # remove the first one
-                    existing_hash_ids = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][1]]['hash_id'].values[0]
-                    hash_ids_to_add = \
-                        references.loc[references['ID'] ==
-                                       tuples[i][0]]['hash_id'].values[0]
-                    combined_hash_list = set(hash_ids_to_add.split(',')
-                                             + existing_hash_ids.split(','))
-
-                    references.at[references['ID'] == tuples[i][1],
-                                  'hash_id'] = ','.join(combined_hash_list)
-
-                    references = remove_entry(references, tuples[i][0])
-                    tuples[i][3] = 'merged'
-            except IndexError:
-                # cases in which multiple entries have a high similarity
-                # and the first ones have already been removed from references
-                # creating an IndexError in the references[....].values[0]
-                tuples[i][3] = 'skipped'
-                pass
-        print(tuples[i])
-
-    return references, tuples
-
+def update_known_non_duplicates(SimilarityArray, references):
+    
+    known_non_duplicates = pd.read_csv('data/merging.csv')
+   
+    for hash_id_pair in known_non_duplicates[known_non_duplicates['duplicate'] == 'no']['hash_id']:
+        hash_id_pair = hash_id_pair.split(',')
+        for hash_id in hash_id_pair:
+            # get indices of the other hash_ids and set the corresponding similarity_array to 0
+            for non_equivalent_hash_id in hash_id_pair:
+                id1 = references.index[references['hash_id'] == hash_id].tolist()[0]
+                id2 = references.index[references['hash_id'] == non_equivalent_hash_id].tolist()[0]
+                SimilarityArray[id1, id2] = -1
+                SimilarityArray[id2, id1] = -1
+                
+    
+    return SimilarityArray
 
 if __name__ == '__main__':
-
+    
+    
     print('')
     print('')
 
@@ -271,51 +334,75 @@ if __name__ == '__main__':
     # bib_database.entries = bib_database.entries[:100]
 
     references = pd.DataFrame.from_dict(bib_database.entries)
+    
+    nr_entries = references.shape[0]
+    SimilarityArray = np.zeros([nr_entries, nr_entries])
 
-    duplicate_min_similarity_threshold = 0.8
+    SimilarityArray = update_entries_considered_non_duplicates(SimilarityArray, references)
+
+    duplicate_min_similarity_threshold = 0.7
     SimilarityArray, tuples_to_process = \
-        calculate_similarities(references, duplicate_min_similarity_threshold)
+        calculate_similarities(SimilarityArray, references, duplicate_min_similarity_threshold)
 
-#    nr_current_entries = len(bib_database.entries)
-#
-#    print(str(nr_current_entries) + ' records in references.bib')
+    # set cells to -1 if the papers have been coded as non-duplicates
+    input('TODO: reinclude the following')
+    # SimilarityArray = update_known_non_duplicates(SimilarityArray, references)
+
+    # nr_current_entries = len(bib_database.entries)
+    # print(str(nr_current_entries) + ' records in references.bib')
 
     print('TODO: check whether hash-id mappings were classified as ',
           'non-duplicates before (and update tuples_to_process accordingly)')
 
-    auto_threshold = 1.0
+    # auto_threshold = 1.0
     # merge identical entries (ie., similarity = 1)
+    # references, tuples_to_process = auto_merge_entries(references,
+    #                                                    tuples_to_process,
+    #                                                    auto_threshold)
+    #
+    # store_changes(references, bib_database)
+    # r.index.add(['references.bib'])
+
+    print('TODO: we could implement a loop here, iteratively lowering the threshold, checking / adding to index and repeating')
+    
+    # no errors with a 0.95 threshold.
+    auto_threshold = 0.95
     references, tuples_to_process = auto_merge_entries(references,
                                                        tuples_to_process,
                                                        auto_threshold)
 
+    tuples_df = pd.DataFrame.from_dict(tuples_to_process)
+
+    tuples_df.to_csv('data/tuples_for_merging.csv', index=False, quoting=csv.QUOTE_ALL)
+    
     store_changes(references, bib_database)
 
-    # create a commit if there are changes (removed duplicates)
-    if 'references.bib' in [item.a_path for item in r.index.diff(None)]:
-        r.index.add(['references.bib'])
-        # r.index.add(['search/bib_details.csv'])
-        r.index.commit(
-            'Merge duplicates (script)',
-            author=git.Actor('script:merge_duplicates.py (automated)', ''),
-        )
 
-    references, tuples_to_process = \
-        interactively_merge_entries(references,
-                                    tuples_to_process)
-
-    store_changes(references, bib_database)
-
-    # create a commit if there are changes (removed duplicates)
-    if 'references.bib' in [item.a_path for item in r.index.diff(None)]:
-        r.index.add(['references.bib'])
-        # r.index.add(['search/bib_details.csv'])
-        r.index.commit(
-            'Merge duplicates (manual) \n\n - using merge_duplicates.py')
-
-    print('TODO: update get_similarity: ',
-          'consider issue, volume, pages, booktitle (sensitivity: editorials?')
-
-#    duplicates_removed = nr_current_entries - len(bib_database.entries)
-#    print('Duplicates removed: ' + str(duplicates_removed))
-#    print('')
+#    # create a commit if there are changes (removed duplicates)
+#    if 'references.bib' in [item.a_path for item in r.index.diff(None)]:
+#        r.index.add(['references.bib'])
+#        # r.index.add(['search/bib_details.csv'])
+#        r.index.commit(
+#            'Merge duplicates (script)',
+#            author=git.Actor('script:merge_duplicates.py (automated)', ''),
+#        )
+#
+#    references, tuples_to_process = \
+#        interactively_merge_entries(references,
+#                                    tuples_to_process)
+#
+#    store_changes(references, bib_database)
+#
+#    # create a commit if there are changes (removed duplicates)
+#    if 'references.bib' in [item.a_path for item in r.index.diff(None)]:
+#        r.index.add(['references.bib'])
+#        # r.index.add(['search/bib_details.csv'])
+#        r.index.commit(
+#            'Merge duplicates (manual) \n\n - using merge_duplicates.py')
+#
+#    print('TODO: update get_similarity: ',
+#          'consider issue, volume, pages, booktitle (sensitivity: editorials?')
+#
+##    duplicates_removed = nr_current_entries - len(bib_database.entries)
+##    print('Duplicates removed: ' + str(duplicates_removed))
+##    print('')
