@@ -2,6 +2,7 @@
 import logging
 
 import bibtexparser
+import entry_hash_function
 import utils
 from bibtexparser.customization import convert_to_unicode
 
@@ -17,7 +18,9 @@ def trace_hash(bibfilename, hash_id_needed):
         ).parse_file(bibtex_file, partial=True)
 
         for entry in bib_database.entries:
-            if utils.create_hash(entry) == hash_id_needed:
+            # If there are transformations before the hash is created,
+            # they need to be executed before the following.
+            if entry_hash_function.create_hash(entry) == hash_id_needed:
                 print(
                     '\n\n Found hash ',
                     hash_id_needed,
@@ -36,6 +39,8 @@ if __name__ == '__main__':
     print('')
 
     print('Trace hash_id')
+
+    assert utils.hash_function_up_to_date()
 
     hash_id_needed = input('provide hash_id')
 

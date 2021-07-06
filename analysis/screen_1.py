@@ -3,13 +3,32 @@ import csv
 import os
 import sys
 
+import config
 import pandas as pd
 import utils
 
+MAIN_REFERENCES = config.paths['SCREEN']
+SCREEN = config.paths['SCREEN']
 
-def run_screen_1(screen_filename, bibfilename):
 
-    screen = pd.read_csv(screen_filename, dtype=str)
+def run_screen_1():
+
+    # TODO: check prior commits whether duplicates have been removed
+    if 'y' != input(
+        'Note: start screening only after removing duplicates ' +
+        'from ' + MAIN_REFERENCES + '! Proceed with the screen (y/n)?'
+    ):
+        sys.exit()
+
+    utils.git_modification_check(SCREEN)
+
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+
+    assert os.path.exists(SCREEN)
+
+    screen = pd.read_csv(SCREEN, dtype=str)
     # Note: this seems to be necessary to ensure that
     # pandas saves quotes around the last column
     screen.comment = screen.comment.fillna('-')
@@ -30,7 +49,7 @@ def run_screen_1(screen_filename, bibfilename):
     ]]
     references.fillna('', inplace=True)
 
-    # TODO: check if citation_keys in references.bib and screen are identical?
+    # TODO: check if citation_keys in MAIN_REFERENCES and SCREEN are identical?
 
     print('To stop screening, press ctrl-c')
     try:
@@ -73,7 +92,7 @@ def run_screen_1(screen_filename, bibfilename):
 
                 screen.sort_values(by=['citation_key'], inplace=True)
                 screen.to_csv(
-                    screen_filename, index=False,
+                    SCREEN, index=False,
                     quoting=csv.QUOTE_ALL, na_rep='NA',
                 )
     except KeyboardInterrupt:
@@ -93,20 +112,4 @@ if __name__ == '__main__':
 
     print('Run screen 1')
 
-    # TODO: check prior commits whether duplicates have been removed
-    if 'y' != input(
-        'Note: start screening only after removing duplicates ' +
-        'from references.bib! Proceed with the screen (y/n)?'
-    ):
-        sys.exit()
-
-    utils.git_modification_check('screen.csv')
-
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    screen_file = 'data/screen.csv'
-    assert os.path.exists(screen_file)
-
-    run_screen_1(screen_file, 'data/references.bib')
+    run_screen_1()

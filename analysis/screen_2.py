@@ -2,13 +2,21 @@
 import csv
 import os
 
+import config
 import pandas as pd
 import utils
 
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+SCREEN = config.paths['SCREEN']
 
-def run_screen_2(screen_filename, bib_database):
 
-    screen = pd.read_csv(screen_filename, dtype=str)
+def run_screen_2():
+
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+
+    screen = pd.read_csv(SCREEN, dtype=str)
 
     print('To stop screening, press ctrl-c')
 
@@ -94,11 +102,12 @@ def run_screen_2(screen_filename, bib_database):
 
                     screen.sort_values(by=['citation_key'], inplace=True)
                     screen.to_csv(
-                        screen_filename, index=False,
+                        SCREEN, index=False,
                         quoting=csv.QUOTE_ALL, na_rep='NA',
                     )
             except IndexError:
-                print('Index error/citation_key not found in references.bib: ',
+                print('Index error/citation_key not found in ' +
+                      MAIN_REFERENCES + ': ',
                       row['citation_key'])
                 pass
     except KeyboardInterrupt:
@@ -118,12 +127,7 @@ if __name__ == '__main__':
 
     print('Run screen 2')
 
-    screen_file = 'data/screen.csv'
-    assert os.path.exists(screen_file)
-    utils.git_modification_check('screen.csv')
+    assert os.path.exists(SCREEN)
+    utils.git_modification_check(SCREEN)
 
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    run_screen_2(screen_file, bib_database)
+    run_screen_2()

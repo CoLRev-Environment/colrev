@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import csv
 import hashlib
 import os
 import re
@@ -8,55 +9,73 @@ from pathlib import Path
 from string import ascii_lowercase
 
 import bibtexparser
+import config
 import pandas as pd
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from git import Repo
-
 from nameparser import HumanName
 
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+SCREEN_FILE = config.paths['SCREEN']
+DATA = config.paths['DATA']
+SCREEN = config.paths['SCREEN']
+SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
 
-def robust_append(string_to_hash, to_append):
 
-    to_append = to_append.replace('\n', ' ').rstrip().lstrip()
-    to_append = re.sub(r'\s+', ' ', to_append)
-    to_append = to_append.lower()
+def retrieve_crowd_resources():
 
-    string_to_hash = string_to_hash + to_append
+    JOURNAL_ABBREVIATIONS = pd.DataFrame(
+        [], columns=['journal', 'abbreviation'])
+    JOURNAL_VARIATIONS = pd.DataFrame([], columns=['journal', 'variation'])
+    CONFERENCE_ABBREVIATIONS = pd.DataFrame(
+        [], columns=['conference', 'abbreviation'])
 
-    return string_to_hash
+    for resource in [x for x in os.listdir() if 'crowd_resource_' == x[:15]]:
 
-def get_container_title(entry):
-    container_title = ''
-    # the latter fields take precedence    
-    if 'series' in entry:
-        container_title = entry['series']
-    if 'booktitle' in entry:
-        container_title = entry['booktitle']
-    if 'journal' in entry:
-        container_title = entry['journal']
-    return container_title
+        JOURNAL_ABBREVIATIONS_ADD = pd.read_csv(
+            resource + '/lexicon/JOURNAL_ABBREVIATIONS.csv')
+        JOURNAL_ABBREVIATIONS = pd.concat([JOURNAL_ABBREVIATIONS,
+                                           JOURNAL_ABBREVIATIONS_ADD])
 
-def create_hash(entry):
-    # TODO: maybe include the version of the hash_function as the first part of string_to_hash? This would prevent cases in which almost all hash_ids are identical (and very few hash_ids change) when updatingthe hash function (this may look like an anomaly and be hard to explain)
-    # TODO: format authors (discuss: could this create challenges?)
-    string_to_hash = robust_append('', entry.get('author', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('year', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('title', ''))
-    string_to_hash = robust_append(string_to_hash, get_container_title(entry))
-    string_to_hash = robust_append(string_to_hash, entry.get('volume', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('number', ''))
-    string_to_hash = robust_append(string_to_hash, entry.get('pages', ''))
+        JOURNAL_VARIATIONS_ADD = pd.read_csv(
+            resource + '/lexicon/JOURNAL_VARIATIONS.csv')
+        JOURNAL_VARIATIONS = pd.concat([JOURNAL_VARIATIONS,
+                                        JOURNAL_VARIATIONS_ADD])
 
-    # TODO: revise, considering different types of bib-entries, examples
-    # book: publisher? (NO!) editor??
-    # organization (manual) institution (tech.report)
-    # school (thesis?) - as the container title for theses?
-    # howpublished/url for misc/electronic: -> container title?
-    # include type (thesis/article/...)?
+        CONFERENCE_ABBREVIATIONS_ADD = pd.read_csv(
+            resource + '/lexicon/CONFERENCE_ABBREVIATIONS.csv')
+        CONFERENCE_ABBREVIATIONS = pd.concat([CONFERENCE_ABBREVIATIONS,
+                                              CONFERENCE_ABBREVIATIONS_ADD])
 
-    return hashlib.sha256(string_to_hash.encode('utf-8')).hexdigest()
+    return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
+
+
+def hash_function_up_to_date():
+
+    with open('../analysis/entry_hash_function.py') as file:
+        hash_of_hash_function = hashlib.sha256(
+            file.read().encode('utf-8')).hexdigest()
+
+    pipeline_commit_id = ''
+    with open('.pre-commit-config.yaml') as f:
+        data_loaded = yaml.safe_load(f)
+        for repo in data_loaded['repos']:
+            if repo.get('repo') == \
+                    'https://github.com/geritwagner/pipeline-validation-hooks':
+                pipeline_commit_id = repo.get('rev')
+
+    with open('../analysis/hash_function_pipeline_commit_id.csv') as read_obj:
+        csv_reader = csv.reader(read_obj)
+        list_of_rows = list(csv_reader)
+
+    up_to_date = False
+    if [hash_of_hash_function, pipeline_commit_id] in list_of_rows:
+        up_to_date = True
+
+    return up_to_date
 
 
 def rmdiacritics(char):
@@ -88,6 +107,7 @@ def remove_accents(input_str):
 class CitationKeyPropagationError(Exception):
     pass
 
+
 def get_hash_ids(bib_database):
 
     hash_id_list = []
@@ -100,18 +120,19 @@ def get_hash_ids(bib_database):
 
     return hash_id_list
 
+
 def propagated_citation_key(citation_key):
 
     propagated = False
 
-    if os.path.exists('data/screen.csv'):
-        screen = pd.read_csv('data/screen.csv', dtype=str)
+    if os.path.exists(SCREEN_FILE):
+        screen = pd.read_csv(SCREEN_FILE, dtype=str)
         if citation_key in screen['citation_key'].tolist():
             propagated = True
 
-    if os.path.exists('data/data.csv'):
+    if os.path.exists(DATA):
         # Note: this may be redundant, but just to be sure:
-        data = pd.read_csv('data/data.csv', dtype=str)
+        data = pd.read_csv(DATA, dtype=str)
         if citation_key in data['citation_key'].tolist():
             propagated = True
 
@@ -128,7 +149,7 @@ def generate_citation_key(entry, bib_database, raise_error=True):
     if propagated_citation_key(entry['ID']) and raise_error:
         raise CitationKeyPropagationError(
             'WARNING: do not change citation_keys that have been ',
-            'propagated to screen.csv and/or data.csv (' +
+            'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
             entry['ID'] + ')',
         )
 
@@ -140,13 +161,13 @@ def generate_citation_key(entry, bib_database, raise_error=True):
         temp_citation_key = entry.get('author', '')\
             .split(' ')[0] +\
             entry.get('year', '')
-    
+
     if temp_citation_key.isupper():
         temp_citation_key = temp_citation_key.capitalize()
     # Replace special characters
     # (because citation_keys may be used as file names)
     temp_citation_key = remove_accents(temp_citation_key)
-    temp_citation_key = re.sub('\(.*\)', '', temp_citation_key)
+    temp_citation_key = re.sub(r'\(.*\)', '', temp_citation_key)
     temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
     letters = iter(ascii_lowercase)
 
@@ -165,10 +186,13 @@ def generate_citation_key(entry, bib_database, raise_error=True):
 
     return temp_citation_key
 
+
 def mostly_upper_case(input_string):
-    input_string = input_string.replace('.', '').replace(',','')
+    # also in entry_hash_function.py - consider updating it separately
+    input_string = input_string.replace('.', '').replace(',', '')
     words = input_string.split()
     return sum(word.isupper() for word in words)/len(words) > 0.8
+
 
 def title_if_mostly_upper_case(input_string):
     words = input_string.split()
@@ -177,37 +201,44 @@ def title_if_mostly_upper_case(input_string):
     else:
         return input_string
 
+
 def format_author_field(input_string):
-    
+    # also in entry_hash_function.py - consider updating it separately
+
     names = input_string.split(' and ')
     author_string = ''
     for name in names:
         # Note: https://github.com/derek73/python-nameparser
         # is very effective (maybe not perfect)
+
         parsed_name = HumanName(name)
-        # TODO: if all capitalized:
-        # utils.mostly_upper_case(author_string.replace(' and ', '').replace('Jr',''))
-        # https://nameparser.readthedocs.io/en/latest/usage.html#capitalization-support
-        # name.capitalize(force=True)
-        parsed_name.string_format = "{last} {suffix}, {first} ({nickname}) {middle}"
-        # .capitalize(force=True)
+        if mostly_upper_case(input_string
+                             .replace(' and ', '')
+                             .replace('Jr', '')):
+            parsed_name.capitalize(force=True)
+
+        parsed_name.string_format = \
+            '{last} {suffix}, {first} ({nickname}) {middle}'
         if author_string == '':
             author_string = str(parsed_name).replace(' , ', ', ')
         else:
-            author_string = author_string + ' and ' + str(parsed_name).replace(' , ', ', ')
+            author_string = author_string + ' and ' + \
+                str(parsed_name).replace(' , ', ', ')
 
     return author_string
 
+
 def unify_pages_field(input_string):
+    # also in entry_hash_function.py - consider updating it separately
     if not isinstance(input_string, str):
         return input_string
-    if not re.match(r'^\d*--\d*$', input_string) and not '--' in input_string:
+    if not re.match(r'^\d*--\d*$', input_string) and '--' not in input_string:
         input_string = input_string\
-                        .replace('-', '--')\
-                        .replace('–', '--')\
-                        .replace('----', '--')\
-                        .replace(' -- ', '--')\
-                        .rstrip('.')
+            .replace('-', '--')\
+            .replace('–', '--')\
+            .replace('----', '--')\
+            .replace(' -- ', '--')\
+            .rstrip('.')
 
     if not re.match(r'^\d*$', input_string) and \
        not re.match(r'^\d*--\d*$', input_string) and\
@@ -215,9 +246,10 @@ def unify_pages_field(input_string):
         print('Unusual pages: ' + input_string)
     return input_string
 
+
 def validate_search_details():
 
-    search_details = pd.read_csv('data/search/search_details.csv')
+    search_details = pd.read_csv(SEARCH_DETAILS)
 
     # check columns
     predef_colnames = {
@@ -262,7 +294,7 @@ def validate_bib_file(filename):
             return False
 
     # check number_records matching search_details.csv
-    search_details = pd.read_csv('data/search/search_details.csv')
+    search_details = pd.read_csv(SEARCH_DETAILS)
     try:
         records_expected = search_details.loc[
             search_details['filename'] == Path(
@@ -286,7 +318,7 @@ def validate_bib_file(filename):
         print(
             'WARNING: no details on ',
             filename,
-            ' provided in data/search/search_details.csv',
+            ' provided in ' + SEARCH_DETAILS,
         )
         pass
     return True
@@ -294,11 +326,10 @@ def validate_bib_file(filename):
 
 def load_references_bib(modification_check=True, initialize=False):
 
-    references_bib_path = 'data/references.bib'
-    if os.path.exists(os.path.join(os.getcwd(), references_bib_path)):
+    if os.path.exists(os.path.join(os.getcwd(), MAIN_REFERENCES)):
         if modification_check:
-            git_modification_check('references.bib')
-        with open(references_bib_path) as target_db:
+            git_modification_check(MAIN_REFERENCES)
+        with open(MAIN_REFERENCES) as target_db:
             references_bib = bibtexparser.bparser.BibTexParser(
                 customization=convert_to_unicode, common_strings=True,
             ).parse_file(target_db, partial=True)
@@ -306,7 +337,7 @@ def load_references_bib(modification_check=True, initialize=False):
         if initialize:
             references_bib = BibDatabase()
         else:
-            print('data/reference.bib does not exist')
+            print(MAIN_REFERENCES + ' does not exist')
             sys.exit()
 
     return references_bib
@@ -314,10 +345,10 @@ def load_references_bib(modification_check=True, initialize=False):
 
 def git_modification_check(filename):
 
-    repo = Repo('data')
+    repo = Repo()
     # hcommit = repo.head.commit
-    # if 'references.bib' in [entry.a_path for entry in hcommit.diff(None)]:
-    # print('commit changes in references.bib before executing script?')
+    # if MAIN_REFERENCES in [entry.a_path for entry in hcommit.diff(None)]:
+    # print('commit changes in MAIN_REFERENCES before executing script?')
     index = repo.index
     if filename in [entry.a_path for entry in index.diff(None)]:
         print(
@@ -339,7 +370,7 @@ def get_bib_files():
     bib_files = []
 
     for (dirpath, dirnames, filenames) in \
-            os.walk(os.path.join(os.getcwd(), 'data/search/')):
+            os.walk(os.path.join(os.getcwd(), 'search/')):
         for filename in filenames:
             file_path = os.path.join(dirpath, filename)\
                 .replace('/opt/workdir/', '')
@@ -388,21 +419,18 @@ def save_bib_file(bib_database, target_file):
 
 def get_included_papers():
 
-    bibtex_file = 'data/references.bib'
-    assert os.path.exists(bibtex_file)
-
-    screen_file = 'data/screen.csv'
-    assert os.path.exists(screen_file)
+    assert os.path.exists(MAIN_REFERENCES)
+    assert os.path.exists(SCREEN_FILE)
 
     pdfs = []
 
-    screen = pd.read_csv(screen_file, dtype=str)
+    screen = pd.read_csv(SCREEN_FILE, dtype=str)
 
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     for record_id in screen['citation_key'].tolist():
 
-        with open(bibtex_file) as bib_file:
+        with open(MAIN_REFERENCES) as bib_file:
             bib_database = bibtexparser.bparser.BibTexParser(
                 customization=convert_to_unicode, common_strings=True,
             ).parse_file(bib_file, partial=True)

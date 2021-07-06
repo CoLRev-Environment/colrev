@@ -1,9 +1,13 @@
 #! /usr/bin/env python
 import os
 
+import config
 import numpy as np
 import pandas as pd
 import utils
+
+SCREEN = config.paths['SCREEN']
+DATA = config.paths['SCREEN']
 
 if __name__ == '__main__':
 
@@ -17,8 +21,8 @@ if __name__ == '__main__':
         initialize=False,
     )
 
-    if not os.path.exists('data/output'):
-        os.mkdir('data/output')
+    if not os.path.exists('output'):
+        os.mkdir('output')
 
     references = pd.DataFrame.from_dict(bib_database.entries)
     references.rename(columns={'ID': 'citation_key'}, inplace=True)
@@ -40,8 +44,8 @@ if __name__ == '__main__':
                              'doi',
                              ]]
 
-    screen = pd.read_csv('data/screen.csv', dtype=str)
-    data = pd.read_csv('data/data.csv', dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
+    data = pd.read_csv(DATA, dtype=str)
 
     observations = \
         references[references['citation_key'].isin(
@@ -52,7 +56,7 @@ if __name__ == '__main__':
 
     observations = pd.merge(observations, data, how='left', on='citation_key')
 
-    observations.to_csv('data/output/sample.csv', index=False)
+    observations.to_csv('output/sample.csv', index=False)
     # print(observations.crosstab)
     tabulated = pd.pivot_table(observations[['outlet', 'year']],
                                index=['outlet'],
@@ -60,4 +64,4 @@ if __name__ == '__main__':
                                aggfunc=len,
                                fill_value=0,
                                margins=True)
-    tabulated.to_csv('data/output/journals_years.csv')
+    tabulated.to_csv('output/journals_years.csv')

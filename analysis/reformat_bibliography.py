@@ -1,5 +1,8 @@
 #! /usr/bin/env python
+import config
 import utils
+
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
 
 if __name__ == '__main__':
 
@@ -12,4 +15,4 @@ if __name__ == '__main__':
         modification_check=True, initialize=False,
     )
 
-    utils.save_bib_file(bib_database, 'data/references.bib')
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)

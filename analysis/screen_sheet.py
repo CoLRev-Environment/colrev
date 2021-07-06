@@ -3,6 +3,7 @@ import csv
 import logging
 import os
 
+import config
 import pandas as pd
 import utils
 
@@ -11,17 +12,24 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 nr_entries_added = 0
 nr_current_entries = 0
 
+SCREEN = config.paths['SCREEN']
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
 
-def generate_screen_csv(screen_filename, exclusion_criteria, bib_database):
+
+def generate_screen_csv(exclusion_criteria):
     global nr_entries_added
 
     data = []
 
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
     for entry in bib_database.get_entry_list():
         nr_entries_added = nr_entries_added + 1
 
         if 'ID' not in entry:
-            print('Error: citation_key not in references.bib (skipping')
+            print('Error: citation_key not in ' +
+                  MAIN_REFERENCES + ' (skipping')
             continue
 
         data.append([
@@ -40,21 +48,24 @@ def generate_screen_csv(screen_filename, exclusion_criteria, bib_database):
 
     screen.sort_values(by=['citation_key'], inplace=True)
     screen.to_csv(
-        screen_filename, index=False,
+        SCREEN, index=False,
         quoting=csv.QUOTE_ALL, na_rep='NA',
     )
 
     return
 
 
-def update_screen_csv(screen_filename, bib_database):
+def update_screen_csv():
 
     global nr_entries_added
 
-    bibliography_file = pd.DataFrame.from_dict(bib_database.entries)
-    screen = pd.read_csv(screen_filename, dtype=str)
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+    bibliography_df = pd.DataFrame.from_dict(bib_database.entries)
+    screen = pd.read_csv(SCREEN, dtype=str)
 
-    papers_to_screen = bibliography_file['ID'].tolist()
+    papers_to_screen = bibliography_df['ID'].tolist()
     screened_papers = screen['citation_key'].tolist()
 
     papers_no_longer_in_search = [
@@ -62,11 +73,12 @@ def update_screen_csv(screen_filename, bib_database):
     ]
     if len(papers_no_longer_in_search) > 0:
         print(
-            'WARNING: papers in screen.csv are no longer in references.bib: [',
+            'WARNING: papers in ' + SCREEN +
+            ' are no longer in ' + MAIN_REFERENCES + ': [',
             ', '.join(papers_no_longer_in_search),
             ']',
         )
-        print('note: check and remove the citation_keys/rows from screen.csv')
+        print('note: check and remove the citation_keys/rows from ' + SCREEN)
 
     for paper_to_screen in papers_to_screen:
         if paper_to_screen not in screened_papers:
@@ -85,7 +97,7 @@ def update_screen_csv(screen_filename, bib_database):
 
     screen.sort_values(by=['citation_key'], inplace=True)
     screen.to_csv(
-        screen_filename, index=False,
+        SCREEN, index=False,
         quoting=csv.QUOTE_ALL, na_rep='NA',
     )
 
@@ -100,14 +112,8 @@ if __name__ == '__main__':
     print('Screen')
     print('TODO: validation to be implemented here')
 
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    screen_file = 'data/screen.csv'
-
-    if not os.path.exists(screen_file):
-        print('Creating screen.csv')
+    if not os.path.exists(SCREEN):
+        print('Creating ' + SCREEN)
         exclusion_criteria = input(
             'Please provide a list of exclusion criteria ' +
             '[criterion1,criterion2,...]: ',
@@ -126,21 +132,21 @@ if __name__ == '__main__':
         # Exclusion criteria should be unique
         assert len(exclusion_criteria) == len(set(exclusion_criteria))
 
-        generate_screen_csv(screen_file, exclusion_criteria, bib_database)
-        print('Created screen.csv')
-        print('0 records in screen.csv')
+        generate_screen_csv(exclusion_criteria)
+        print('Created ' + SCREEN)
+        print('0 records in ' + SCREEN)
     else:
-        print('Loaded existing screen.csv')
-        file = open(screen_file)
+        print('Loaded existing ' + SCREEN)
+        file = open(SCREEN)
         reader = csv.reader(file)
         lines = len(list(reader))-1
-        print(str(lines) + ' records in screen.csv')
+        print(str(lines) + ' records in ' + SCREEN)
 
-        update_screen_csv(screen_file, bib_database)
+        update_screen_csv()
 
-    print(str(nr_entries_added) + ' records added to screen.csv')
-    file = open(screen_file)
+    print(str(nr_entries_added) + ' records added to ' + SCREEN)
+    file = open(SCREEN)
     reader = csv.reader(file)
     lines = len(list(reader))-1
-    print(str(lines) + ' records in screen.csv')
+    print(str(lines) + ' records in ' + SCREEN)
     print('')

@@ -3,6 +3,7 @@ import io
 import os
 import re
 
+import config
 import utils
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
@@ -12,9 +13,8 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
-YOUR_EMAIL = 'gerit.wagner@hec.ca'
-
-PDF_DIRECTORY = 'data/pdfs/'
+EMAIL = config.paths['EMAIL']
+PDF_DIRECTORY = config.paths['PDF_DIRECTORY']
 
 
 def extract_text_by_page(pdf_path):

@@ -9,6 +9,7 @@ from datetime import datetime
 from time import gmtime
 from time import strftime
 
+import config
 import pandas as pd
 import requests
 import tqdm
@@ -22,6 +23,11 @@ ns = {
     'tei': '{http://www.tei-c.org/ns/1.0}',
     'w3': '{http://www.w3.org/XML/1998/namespace}',
 }
+
+GROBID_URL = 'http://grobid:8070'
+data_dir = '/usr/data/'
+
+SEARCH_DETAILS_PATH = config.paths['SEARCH_DETAILS_PATH']
 
 
 def get_reference_title(reference):
@@ -234,7 +240,7 @@ def extract_bibliography(root):
 
 def process_backward_search(tei):
 
-    search_details = pd.read_csv('data/search/search_details.csv')
+    search_details = pd.read_csv(SEARCH_DETAILS_PATH)
 
     if tei in search_details['source_url']:
         return
@@ -309,16 +315,11 @@ def process_backward_search(tei):
     )
     search_details = pd.concat([search_details, new_record])
     search_details.to_csv(
-        'data/search/search_details.csv',
+        SEARCH_DETAILS_PATH,
         index=False, quoting=csv.QUOTE_ALL,
     )
 
     return
-
-
-GROBID_URL = 'http://grobid:8070'
-
-data_dir = '/usr/data/'
 
 
 def check_grobid_availability():
@@ -365,8 +366,8 @@ if __name__ == '__main__':
 
     citation_keys = utils.get_included_papers()
 
-    if not os.path.exists('data/search/backward'):
-        os.mkdir('data/search/backward')
+    if not os.path.exists('search/backward'):
+        os.mkdir('search/backward')
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
     for citation_key in tqdm.tqdm(citation_keys):

@@ -3,15 +3,17 @@ import csv
 import json
 import os
 
+import config
 import pandas as pd
 import requests
 import utils
 from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
 
-YOUR_EMAIL = 'gerit.wagner@hec.ca'
-
-PDF_DIRECTORY = 'data/pdfs/'
+EMAIL = config.details['EMAIL']
+PDF_DIRECTORY = config.paths['PDF_DIRECTORY']
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+SCREEN_FILE = config.paths['SCREEN']
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
@@ -23,8 +25,8 @@ pdfs_available = 0
 def unpaywall(doi, retry=0, pdfonly=True):
 
     r = requests.get(
-        f'https://api.unpaywall.org/v2/{doi}',
-        params={'email': YOUR_EMAIL},
+        'https://api.unpaywall.org/v2/{doi}',
+        params={'email': EMAIL},
     )
 
     if r.status_code == 404:
@@ -51,10 +53,10 @@ def unpaywall(doi, retry=0, pdfonly=True):
         # print("best_oa_location not set")
         # print(r.text)
         return None
-    except:
+    # except:
         # print("Something weird happened")
         # print(r.text)
-        return None
+        #  return None
 
     if not r.json()['is_oa'] or best_loc is None:
         # print("No OA paper found for {}".format(doi))
@@ -71,11 +73,13 @@ def unpaywall(doi, retry=0, pdfonly=True):
 
 
 def is_pdf(path_to_file):
-    try:
-        extract_text(path_to_file)
-        return True
-    except:
-        return False
+
+    # TODO: add exceptions
+    # try:
+    extract_text(path_to_file)
+    return True
+    # except:
+    #    return False
 
 
 def acquire_pdfs(bib_database, screen):
@@ -120,18 +124,15 @@ def acquire_pdfs(bib_database, screen):
                             with open(pdf_filepath, 'wb') as f:
                                 f.write(response.content)
                             if is_pdf(pdf_filepath):
-                                print(
-                                    'Retrieved pdf via unpaywall api: ' + pdf_filepath,
-                                )
+                                print('Retrieved pdf via unpaywall api: ' +
+                                      pdf_filepath)
                                 entry['file'] = ':' + pdf_filepath + ':PDF'
                                 pdfs_retrieved += 1
                             else:
                                 os.remove(pdf_filepath)
                         else:
-                            print(
-                                'Problem retrieving PDF based on unpaywall link (' +
-                                str(response.status_code) + '): ' + url,
-                            )
+                            print('Problem retrieving PDF/unpaywall link (' +
+                                  str(response.status_code) + '): ' + url)
 
             if not os.path.exists(pdf_filepath):
                 missing_entries.entries.append(entry)
@@ -150,7 +151,7 @@ def acquire_pdfs(bib_database, screen):
             columns={'ID': 'citation_key'},
         )
         missing_entries_df.to_csv(
-            'data/missing_pdf_files.csv', index=False, quoting=csv.QUOTE_ALL,
+            'missing_pdf_files.csv', index=False, quoting=csv.QUOTE_ALL,
         )
 
         missing_pdfs = len(missing_entries.entries)
@@ -169,9 +170,8 @@ if __name__ == '__main__':
         modification_check=True, initialize=False,
     )
 
-    screen_file = 'data/screen.csv'
-    assert os.path.exists(screen_file)
-    screen = pd.read_csv(screen_file, dtype=str)
+    assert os.path.exists(SCREEN_FILE)
+    screen = pd.read_csv(SCREEN_FILE, dtype=str)
 
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     if missing_pdfs > 0:
         print(
             ' - ' + str(missing_pdfs) +
-            ' pdfs missing (see data/missing_pdf_files.csv)',
+            ' pdfs missing (see missing_pdf_files.csv)',
         )
 
-    utils.save_bib_file(bib_database, 'data/references.bib')
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)

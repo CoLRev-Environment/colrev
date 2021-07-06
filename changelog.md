@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - `merge_duplicates` with automated (threshold-based) and semi-automated identification of duplicates
 - `sample_profile` to generate a csv of the sample and to cross-tabulate journals vs years
 - Use of submodules for crowd-sourced data
+- Checks whether the hash_id function is up-to-date with the commit-id in the `.pre-commit-config.yaml`
+- `analysis/fix_errors.py` to fix missing hash_ids and to rename propagated citation_keys
+- `analysis/renew_hash_id_function.py` to keep track of hash functions and commit ids of pipeline_validation_hooks in `analysis/hash_function_pipeline_commit_id.csv`
+- `analysis/trace_search_result.py` to trace search records (in BibTeX format)
 
 ### Changed
 
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Updated `analysis/cleanse_records.py` based on derek73/python-nameparser
 - Updated `analysis/combine_individual_search_results.py`, `analysis/merge_duplicates.py`
 - Update hash_id function
+- Updated path handling (`analysis/config.py`)
 
 ### Removed
 

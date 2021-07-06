@@ -13,15 +13,14 @@ from urllib.parse import quote_plus
 from urllib.parse import urlencode
 from urllib.request import Request
 from urllib.request import urlopen
-from nameparser import HumanName
 
-import bibtexparser
+import config
 import git
 import pandas as pd
 import requests
 import utils
-from bibtexparser.bwriter import BibTexWriter
 from Levenshtein import ratio
+from nameparser import HumanName
 from tqdm import tqdm
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -33,6 +32,10 @@ EMPTY_RESULT = {
 }
 MAX_RETRIES_ON_ERROR = 3
 
+BIB_DETAILS = config.paths['BIB_DETAILS']
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+EMAIL = config.details['EMAIL']
+
 
 def crossref_query(entry):
     # https://github.com/CrossRef/rest-api-doc
@@ -41,7 +44,8 @@ def crossref_query(entry):
     url = api_url + urlencode(params, quote_via=quote_plus)
     request = Request(url)
     request.add_header(
-        'User-Agent', 'RecordCleanser (mailto:gerit.wagner@hec.ca)',
+        'User-Agent', 'RecordCleanser (mailto:' +
+        EMAIL + ')',
     )
     try:
         ret = urlopen(request)
@@ -52,25 +56,25 @@ def crossref_query(entry):
         for item in items:
             if 'title' not in item:
                 continue
-            
+
             # TODO: author
             try:
                 title_similarity = ratio(
-                        item['title'].pop().lower(),
-                        entry['title'].lower(),
-                    )
+                    item['title'].pop().lower(),
+                    entry['title'].lower(),
+                )
                 # TODO: could also be a proceedings paper...
                 container_similarity = ratio(
-                        item['container-title'].pop().lower(),
-                        entry['journal'].lower(),
-                    )
+                    item['container-title'].pop().lower(),
+                    entry['journal'].lower(),
+                )
                 weights = [0.6, 0.4]
                 similarities = [title_similarity,
-                                    container_similarity]
-            
+                                container_similarity]
+
                 similarity = sum(similarities[g] * weights[g]
-                                       for g in range(len(similarities)))
-                
+                                 for g in range(len(similarities)))
+
                 result = {
                     'similarity': similarity,
                     'doi': item['DOI'],
@@ -85,6 +89,7 @@ def crossref_query(entry):
     time.sleep(1)
     return
 
+
 def doi2json(doi):
     url = 'http://dx.doi.org/' + doi
     headers = {'accept': 'application/vnd.citationstyles.csl+json'}
@@ -94,7 +99,7 @@ def doi2json(doi):
 
 def cleanse(entry, bib_details):
     cleansed = True
-    
+
     if 'author' in entry:
         entry['author'] = entry['author'].rstrip().lstrip()
         # fix name format
@@ -102,19 +107,7 @@ def cleanse(entry, bib_details):
             (
                 ', ' not in entry['author']
         ):
-            names = entry['author'].split(' and ')
-            entry['author'] = ''
-            for name in names:
-                # Note: https://github.com/derek73/python-nameparser
-                # is very effective (maybe not perfect)
-                parsed_name = HumanName(name)
-                # TODO: if all capitalized:
-                # https://nameparser.readthedocs.io/en/latest/usage.html#capitalization-support
-                # name.capitalize(force=True)
-                parsed_name.string_format = "{last} {suffix}, {first} ({nickname}) {middle}"
-                entry['author'] = entry['author'] + ' and ' + str(parsed_name).replace(' , ', ', ')
-            if entry['author'].startswith(' and '):
-                entry['author'] = entry['author'][5:]
+            entry['author'] = utils.format_author_field(entry['author'])
 
     if 'title' in entry:
         entry['title'] = re.sub(r'\s+', ' ', entry['title'])\
@@ -172,7 +165,8 @@ def cleanse(entry, bib_details):
     # Moved journal processing to combine_individual_search_results
 
     if 'booktitle' in entry:
-        entry['booktitle'] = utils.title_if_mostly_upper_case(entry['booktitle'])
+        entry['booktitle'] = utils.title_if_mostly_upper_case(
+            entry['booktitle'])
 
         # For ECIS/ICIS proceedings:
         entry['booktitle'] = \
@@ -250,13 +244,16 @@ def cleanse(entry, bib_details):
                 author_given = author.get('given', '')
                 # Use local given name when no given name is provided by doi
                 if '' == author_given:
-                    local_author_string = [x for x in entry['author'].split(' and ') if author.get('family', '').lower() in x.lower()]
+                    authors = entry['author'].split(' and ')
+                    local_author_string = [x for x in authors
+                                           if author.get('family', '').lower()
+                                           in x.lower()]
                     local_author = HumanName(local_author_string.pop())
 
                     author_string = author_string + \
                         author.get('family', '') + ', ' + \
                         local_author.first + ' ' + local_author.middle
-                    # Note: the following should be used if there is an exception
+                    # Note: if there is an exception, use:
                     # author_string = author_string + \
                     # author.get('family', '')
                 else:
@@ -265,7 +262,9 @@ def cleanse(entry, bib_details):
                         author.get('given', '')
 
             if not author_string == '':
-                if utils.mostly_upper_case(author_string.replace(' and ', '').replace('Jr','')):
+                if utils.mostly_upper_case(author_string
+                                           .replace(' and ', '')
+                                           .replace('Jr', '')):
 
                     names = author_string.split(' and ')
                     entry['author'] = ''
@@ -274,13 +273,18 @@ def cleanse(entry, bib_details):
                         # is very effective (maybe not perfect)
                         parsed_name = HumanName(name)
                         parsed_name.capitalize(force=True)
-                        parsed_name.string_format = "{last} {suffix}, {first} ({nickname}) {middle}"
-                        entry['author'] = entry['author'] + ' and ' + str(parsed_name).replace(' , ', ', ')
+                        parsed_name.string_format = \
+                            '{last} {suffix}, {first} ({nickname}) {middle}'
+                        entry['author'] = entry['author'] + ' and ' + \
+                            str(parsed_name).replace(' , ', ', ')
                     if entry['author'].startswith(' and '):
-                        entry['author'] = entry['author'][5:].rstrip().replace('  ', ' ')
+                        entry['author'] = entry['author'][5:]\
+                            .rstrip()\
+                            .replace('  ', ' ')
                 else:
-                    entry['author'] = str(author_string).rstrip().replace('  ', ' ')
- 
+                    entry['author'] = str(
+                        author_string).rstrip().replace('  ', ' ')
+
             retrieved_title = retrieved_record.get('title', '')
             if not retrieved_title == '':
                 entry['title'] = \
@@ -297,8 +301,9 @@ def cleanse(entry, bib_details):
             if retrieved_pages != '':
                 # DOI data often has only the first page.
                 if not entry.get('pages', 'no_pages') in retrieved_pages \
-                    and '-' in retrieved_pages:
-                    entry['pages'] = utils.unify_pages_field(str(retrieved_pages))
+                        and '-' in retrieved_pages:
+                    entry['pages'] = utils.unify_pages_field(
+                        str(retrieved_pages))
             retrieved_volume = retrieved_record.get('volume', '')
             if not retrieved_volume == '':
                 entry['volume'] = str(retrieved_volume)
@@ -358,7 +363,7 @@ def cleanse(entry, bib_details):
             print('WARNING: cleansing entry with propagated citation_key:',
                   entry['ID'])
             pass
-    
+
         # Note: as soon as a single hash_id
         # (in an entry containing multiple hash_ids) has been cleansed,
         # all other hash_ids are considered as cleansed
@@ -374,6 +379,7 @@ def cleanse(entry, bib_details):
 
     return entry, cleansed, bib_details
 
+
 def entry_cleansed(entry, bib_details):
     # If there is no entry in the bib_details, it needs to be cleansed.
     entry_is_cleansed = False
@@ -388,11 +394,11 @@ def entry_cleansed(entry, bib_details):
                 entry_is_cleansed = True
     return entry_is_cleansed
 
+
 def quality_improvements(bib_database):
 
-    bib_details_path = 'data/search/bib_details.csv'
-    if os.path.exists(bib_details_path):
-        bib_details = pd.read_csv(bib_details_path)
+    if os.path.exists(BIB_DETAILS):
+        bib_details = pd.read_csv(BIB_DETAILS)
     else:
         bib_details = pd.DataFrame(columns=['hash_id', 'cleansed'])
 
@@ -402,13 +408,13 @@ def quality_improvements(bib_database):
 #    skipped_all = False
 
     for entry in tqdm(bib_database.entries):
-        
-#        if not 'Doolin' in entry['ID']:
-#            continue
-#        if 'Piel2017' == entry['ID']:
-#            skipped_all = True
-#        if not skipped_all:
-#            continue
+
+        # if not 'Doolin' in entry['ID']:
+        #   continue
+        # if 'Piel2017' == entry['ID']:
+        #   skipped_all = True
+        # if not skipped_all:
+        #    continue
 
         if entry_cleansed(entry, bib_details):
             continue
@@ -418,11 +424,11 @@ def quality_improvements(bib_database):
         if not cleansed:
             continue
 
-        utils.save_bib_file(bib_database, 'data/references.bib')
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
         bib_details.sort_values(by=['hash_id'], inplace=True)
         bib_details.to_csv(
-            bib_details_path, index=False,
+            BIB_DETAILS, index=False,
             quoting=csv.QUOTE_ALL,
         )
 
@@ -430,7 +436,7 @@ def quality_improvements(bib_database):
 
 
 if __name__ == '__main__':
-    
+
     # To test:
     # bibtex_str = "@article{...\n ...}"
     # bib_database = bibtexparser.loads(bibtex_str)
@@ -445,30 +451,26 @@ if __name__ == '__main__':
         modification_check=True, initialize=False,
     )
 
-    r = git.Repo('data')
+    r = git.Repo('')
 
     if r.is_dirty():
         print('Commit files before cleansing.')
         sys.exit()
 
-    # idea: include all submodules (starting with crowd_resource_*) by default
-    # (automatically?) set up a corresponding submodule if necessary (discover_resources())
-    JOURNAL_ABBREVIATIONS = pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/JOURNAL_ABBREVIATIONS.csv')
-    JOURNAL_VARIATIONS = pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/JOURNAL_VARIATIONS.csv')
-    CONFERENCE_ABBREVIATIONS = \
-        pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/CONFERENCE_ABBREVIATIONS.csv')
+    JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
+        utils.retrieve_crowd_resources()
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
     bib_database = quality_improvements(bib_database)
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
-    r.index.add(['references.bib'])
+    r.index.add([MAIN_REFERENCES])
     # Note: we may want to remove this at some point.
-    r.index.add(['search/bib_details.csv'])
+    r.index.add([BIB_DETAILS])
 
     r.index.commit(
-        'Cleanse references.bib',
+        'Cleanse ' + MAIN_REFERENCES,
         author=git.Actor('script:cleanse_records.py', ''),
     )
 
-    print('Created commit: Cleanse references.bib')
+    print('Created commit: Cleanse ' + MAIN_REFERENCES)

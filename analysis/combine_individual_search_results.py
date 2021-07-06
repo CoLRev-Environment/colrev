@@ -1,22 +1,25 @@
 #! /usr/bin/env python
 import logging
 import os
-import sys
 import re
+import sys
 
 import bibtexparser
+import config
+import entry_hash_function
 import git
 import pandas as pd
 import utils
 from bibtexparser.customization import convert_to_unicode
-
-from nameparser import HumanName
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
 details_commit = []
+
+SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
+MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
 
 
 def gather(bibfilename, bib_database):
@@ -38,11 +41,12 @@ def gather(bibfilename, bib_database):
         )
 
         for entry in individual_bib_database.entries:
-            # IMPORTANT NOTE: any modifications completed before this step need to be
-            # considered when backward-tracing!
-            # Tradeoff: preprocessing can help to reduce the number of representations (hash_ids) for each record
+            # IMPORTANT NOTE: any modifications completed before this step
+            # need to be considered when backward-tracing!
+            # Tradeoff: preprocessing can help to reduce the number of
+            # representations (hash_ids) for each record
             # but it also introduces complexity (e.g., in the backward tacing)
-            entry['hash_id'] = utils.create_hash(entry)
+            entry['hash_id'] = entry_hash_function.create_hash(entry)
 
             fields_to_process = [
                 'author', 'year', 'title',
@@ -51,22 +55,21 @@ def gather(bibfilename, bib_database):
                 'abstract'
             ]
             for field in fields_to_process:
-#                value = value.replace('\n' ,'')\
-#                    .rstrip()\
-#                    .lstrip()
                 if field in entry:
-                    entry[field] = entry[field].replace('\n' ,' ')\
-                                    .rstrip()\
-                                    .lstrip()
+                    entry[field] = entry[field].replace('\n', ' ')\
+                        .rstrip()\
+                        .lstrip()
 
             if 'title' in entry:
                 entry['title'] = entry['title'].rstrip('.')
 
             if 'author' in entry:
-                entry['author'] = entry['author'].replace('{','').replace('}','')
+                entry['author'] = entry['author'].replace(
+                    '{', '').replace('}', '')
                 # fix name format
                 if (', ' not in entry['author']):
-                    entry['author'] = utils.format_author_field(entry['author'])
+                    entry['author'] = utils.format_author_field(
+                        entry['author'])
 
             if 'doi' in entry:
                 entry['doi'] = entry['doi'].replace('http://dx.doi.org/', '')
@@ -75,7 +78,8 @@ def gather(bibfilename, bib_database):
                 entry['pages'] = utils.unify_pages_field(entry['pages'])
 
             if 'journal' in entry:
-                entry['journal'] = utils.title_if_mostly_upper_case(entry['journal'])
+                entry['journal'] = utils.title_if_mostly_upper_case(
+                    entry['journal'])
 
             if 'journal' in entry:
 
@@ -89,7 +93,7 @@ def gather(bibfilename, bib_database):
                     # to use the same capitalization
                     if entry['journal'].lower() == row['journal'].lower():
                         entry['journal'] = row['journal']
-            
+
             if 'issue' in entry:
                 entry['number'] = entry['issue']
                 del entry['issue']
@@ -122,7 +126,6 @@ def gather(bibfilename, bib_database):
                     if row['abbreviation'].lower() == \
                             stripped_booktitle.lower():
                         entry['booktitle'] = row['conference']
-                        
 
             fields_to_keep = [
                 'ID', 'hash_id', 'ENTRYTYPE',
@@ -151,7 +154,7 @@ def gather(bibfilename, bib_database):
 
         # pre-calculate for efficiency
         existing_hash_ids = utils.get_hash_ids(bib_database)
-        
+
         for entry in individual_bib_database.entries:
 
             if 0 == len(bib_database.entries):
@@ -160,13 +163,13 @@ def gather(bibfilename, bib_database):
                 nr_entries_added += 1
 
                 continue
-            
+
             # don't append the entry if the hash_id is already in bib_database
             if not entry['hash_id'] in existing_hash_ids:
 
                 # We set the citation_key here (even though it may be updated
                 # after cleansing/updating author/year fields) to achieve a
-                # better sort order in references.bib
+                # better sort order in MAIN_REFERENCES
                 # (and a cleaner git history)
                 # try:
                 entry['ID'] = utils.generate_citation_key(entry, bib_database)
@@ -205,11 +208,14 @@ if __name__ == '__main__':
 
     print('Combine search results')
     print('')
+
+    assert utils.hash_function_up_to_date()
+
     utils.validate_search_details()
 
-    r = git.Repo('data')
+    r = git.Repo()
 
-    input('TODO: it should be possible to have a new bib file and the modified search_details!')
+    input('TODO: new bib file/modified search_details should be allowed!')
     if r.is_dirty():
         print('Commit files before importing new search results.')
         sys.exit()
@@ -218,25 +224,21 @@ if __name__ == '__main__':
         modification_check=True, initialize=True,
     )
 
-    # idea: include all submodules (starting with crowd_resource_*) by default
-    # (automatically?) set up a corresponding submodule if necessary (discover_resources())
-    JOURNAL_ABBREVIATIONS = pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/JOURNAL_ABBREVIATIONS.csv')
-    JOURNAL_VARIATIONS = pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/JOURNAL_VARIATIONS.csv')
-    CONFERENCE_ABBREVIATIONS = \
-        pd.read_csv('data/crowd_resource_information_systems/lexicon/journals/CONFERENCE_ABBREVIATIONS.csv')
+    JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
+        utils.retrieve_crowd_resources()
 
     nr_current_entries = len(bib_database.entries)
 
     if 0 == nr_current_entries:
         print(
-            'Created references.bib'.ljust(60),
+            str('Created ' + MAIN_REFERENCES).ljust(60),
             '(',
             '0'.rjust(5),
             ' records).',
         )
     else:
         print(
-            'Opening existing references.bib '.ljust(60),
+            str('Opening existing  ' + 'Created ' + MAIN_REFERENCES).ljust(60),
             '(',
             str(nr_current_entries).rjust(5),
             ' records)',
@@ -246,12 +248,12 @@ if __name__ == '__main__':
     print('------------------------------------------------------------------')
     # TODO: define preferences (start by processing e.g., WoS, then GS) or
     # use heuristics to start with the highest quality entries first.
-    search_details = pd.read_csv('data/search/search_details.csv')
+    search_details = pd.read_csv(SEARCH_DETAILS)
 
     for bib_file in utils.get_bib_files():
         bib_database = gather(bib_file, bib_database)
 
-    utils.save_bib_file(bib_database, 'data/references.bib')
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     print('')
     print('------------------------------------------------------------------')
@@ -260,13 +262,13 @@ if __name__ == '__main__':
         str(total_nr_entries_added).rjust(5),
         ' records added, ',
         str(len(bib_database.entries)).rjust(5),
-        ' records in references.bib',
+        ' records in ' + MAIN_REFERENCES,
     )
     print('')
 
     print('Creating commit ...')
 
-    r.index.add(['references.bib'])
+    r.index.add([MAIN_REFERENCES])
     print('Import search results \n - ' + '\n - '.join(details_commit))
     r.index.commit(
         'Import search results \n - ' + '\n - '.join(details_commit),

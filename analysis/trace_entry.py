@@ -1,15 +1,20 @@
 #! /usr/bin/env python
 import logging
-import os
 import time
 
 import bibtexparser
+import config
 import dictdiffer
+import entry_hash_function
 import git
 import utils
 from bibtexparser.customization import convert_to_unicode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
+
+MAIN_REFERENCES = config.paths['SCREEN']
+SCREEN = config.paths['SCREEN']
+DATA = config.paths['SCREEN']
 
 
 def trace_hash(bibfilename, hash_id_needed):
@@ -21,7 +26,7 @@ def trace_hash(bibfilename, hash_id_needed):
         ).parse_file(bibtex_file, partial=True)
 
         for entry in bib_database.entries:
-            if utils.create_hash(entry) == hash_id_needed:
+            if entry_hash_function.create_hash(entry) == hash_id_needed:
                 print(
                     '\n\n Found hash ',
                     hash_id_needed,
@@ -41,16 +46,16 @@ if __name__ == '__main__':
 
     print('Trace entry by citation_key')
 
+    assert utils.hash_function_up_to_date()
+
     citation_key = input('provide citation_key')
 #    citation_key = 'Blijleven2019'
-
-    os.chdir('data')
 
     repo = git.Repo()
 
     # TODO: trace_hash and list individual search results
 
-    path = 'references.bib'
+    path = MAIN_REFERENCES
 
     revlist = (
         (commit, (commit.tree / path).data_stream.read())
@@ -82,7 +87,7 @@ if __name__ == '__main__':
                 print(diff)
             prev_entry = entry
 
-    path = 'screen.csv'
+    path = SCREEN
 
     revlist = (
         (commit, (commit.tree / path).data_stream.read())
@@ -107,7 +112,7 @@ if __name__ == '__main__':
             if citation_key in line:
                 print(line)
 
-    path = 'data.csv'
+    path = DATA
 
     revlist = (
         (commit, (commit.tree / path).data_stream.read())

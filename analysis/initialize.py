@@ -2,7 +2,11 @@
 import os
 import shutil
 
+import config
 import git
+
+SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
+
 
 if __name__ == '__main__':
 
@@ -11,17 +15,13 @@ if __name__ == '__main__':
 
     print('Initialize review repository')
 
-    if os.path.exists('data'):
-        assert len(os.listdir('data')) == 0
+    assert len(os.listdir()) == 0
     project_title = input('Project title: ')
 
-    if not os.path.exists('data'):
-        os.mkdir('data')
-    r = git.Repo.init('data')
-    os.chdir('data')
+    r = git.Repo.init()
     os.mkdir('search')
 
-    f = open('search/search_details.csv', 'w')
+    f = open(SEARCH_DETAILS, 'w')
     header = '"filename","number_records","iteration","date_start",' + \
         '"date_completion","source_url",' + \
         '"search_parameters","responsible","comment"'
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     r.index.add([
         'readme.md',
-        'search/search_details.csv',
+        SEARCH_DETAILS,
         '.pre-commit-config.yaml',
         '.gitattributes',
         '.gitignore',
@@ -58,6 +58,8 @@ if __name__ == '__main__':
         input('Please provide your name (for the git committer name)')
     committer_email = \
         input('Please provide your e-mail (for the git committer e-mail)')
+
+    input('also save to config.py')
 
     r.index.commit(
         'Initial commit',

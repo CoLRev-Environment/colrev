@@ -1,12 +1,18 @@
 #! /usr/bin/env python
 import os
 
+import config
 import pandas as pd
 import utils
 
 nr_duplicates_hash_ids = 0
 nr_entries_added = 0
 nr_current_entries = 0
+
+MAIN_REFERENCES = config.paths['SCREEN']
+SCREEN = config.paths['SCREEN']
+DATA = config.paths['SCREEN']
+SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
 
 
 def validate_files():
@@ -23,8 +29,7 @@ if __name__ == '__main__':
     validate_files()
     print('')
 
-    if not os.path.exists('data/search/search_details.csv') \
-       and os.path.exists('data/references.bib'):
+    if not os.path.exists(MAIN_REFERENCES):
         print(' ┌ Search')
         print(' |  - Not yet initiated')
     else:
@@ -35,7 +40,7 @@ if __name__ == '__main__':
         )
 
         search_details = pd.read_csv(
-            'data/search/search_details.csv', dtype=str,
+            SEARCH_DETAILS, dtype=str,
         )
         search_details['number_records'] = \
             search_details['number_records'].astype(int)
@@ -49,12 +54,12 @@ if __name__ == '__main__':
         print(' |')
 
         # Screen
-        if not os.path.exists('data/screen.csv'):
+        if not os.path.exists(SCREEN):
             print(' ┌ Screen')
             print(' |  - Not yet initiated')
         else:
 
-            screen = pd.read_csv('data/screen.csv', dtype=str)
+            screen = pd.read_csv(SCREEN, dtype=str)
             print(' ├ Screen 1')
             print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
             print(
@@ -104,11 +109,11 @@ if __name__ == '__main__':
             print(' |')
 
             # Data
-            if not os.path.exists('data/data.csv'):
+            if not os.path.exists(DATA):
                 print(' ├ Data')
                 print(' |  - Not yet initiated')
             else:
-                data = pd.read_csv('data/data.csv', dtype=str)
+                data = pd.read_csv(DATA, dtype=str)
                 print(' ├ Data extraction')
                 print(' |  - total: ' + str(len(data)).rjust(17, ' '))
                 if 0 != len(screen[screen['inclusion_2'] == 'yes'])-len(data):

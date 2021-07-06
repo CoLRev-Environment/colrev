@@ -85,7 +85,7 @@ The search combines automated and manual steps as follows:
 make combine_individual_search_results
 ```
 
-- This procedure creates a hash_id for each entry and adds all entries with a unique hash_id to the [references.bib](data/references.bib).
+- This procedure creates a hash_id for each entry and adds all entries with a unique hash_id to the [references.bib](references.bib).
 This means that duplicate entries with an identical hash_id (based on titles, authors, journal, ...) are merged automatically (which is particularly important when running `make combine_individual_search_results` in incremental mode).
 
 3. Cleanse records (script)
@@ -94,8 +94,8 @@ This means that duplicate entries with an identical hash_id (based on titles, au
 make cleanse_records
 ```
 
-- Improves the quality of entries stored in `data/references.bib`.
-If an entry has been cleansed, its hash_id is stored in the `data/search/bib_details.csv` to avoid re-cleansing (and potentially overriding manual edits).
+- Improves the quality of entries stored in `references.bib`.
+If an entry has been cleansed, its hash_id is stored in the `search/bib_details.csv` to avoid re-cleansing (and potentially overriding manual edits).
 Please note that this can take some time (depending on the number of records) since it calls the [Crossref API](https://www.crossref.org/education/retrieve-metadata/rest-api/) to retrieve DOIs and the [DOI resolution service](https://www.doi.org/) to retrieve corresponding meta-data.
 For 1,000 records, this might take approx. 1:30 hours.
 
@@ -141,14 +141,14 @@ make backward_search
 ```
 make screen_sheet
 ```
-- This procedure asks for exclusion criteria and adds the search records to the [screening sheet](data/screen.csv).
+- This procedure asks for exclusion criteria and adds the search records to the [screening sheet](screen.csv).
 
 2. Complete screen 1 (manual task, supported by a script)
 
 ```
 make screen_1
 ```
-- This procedure iterates over all records and records inclusion decisions for screen 1 in the [inclusion.csv](data/inclusion.csv).
+- This procedure iterates over all records and records inclusion decisions for screen 1 in the [screening sheet](screen.csv).
 
 The following steps apply only to records retained after screen 1 (coded as inclusion_1 == yes).
 
@@ -165,18 +165,18 @@ make acquire_pdfs
 
 - TODO: The script acquires PDFs for the full-text eligibility assessment in screen 2.
 - It queries the unpaywall api.
-- If there are unliked files in the `data/pdfs` directory, it links them
-- It creates a csv file (`data/missing_pdf_files.csv`) listing all PDFs that need to be retrieved manually.
+- If there are unliked files in the `pdfs` directory, it links them
+- It creates a csv file (`missing_pdf_files.csv`) listing all PDFs that need to be retrieved manually.
 
 - Manual PDF acquisition: acquire PDF and rename PDFs as `citation_key.pdf`, move to `dat/pdfs` directory. Rerun the `acquire_pdfs` script to link the pdfs into the `references.bib`.
 
-- Check whether PDFs can be opened from Jabref. This might require you to set the Library > Library properties > General file directory to the `data/pdfs` directory, which is stored in the `references.bib` as follows:
+- Check whether PDFs can be opened from Jabref. This might require you to set the Library > Library properties > General file directory to the `pdfs` directory, which is stored in the `references.bib` as follows:
 
 ```
 @Comment{jabref-meta: fileDirectory-username-username-computer:/home/username/path-to-/review-template;}
 ```
 
-- PDF file links should take the form `file = {:data/pdfs/citation_key.pdf:PDF}`
+- PDF file links should take the form `file = {:pdfs/citation_key.pdf:PDF}`
 
 
 6. PDF validation (manual task)
@@ -189,10 +189,10 @@ TODO: include the script
 ```
 make screen_2
 ```
-- This procedure iterates over all records, prompts the user for each exclusion criterion (if exclusion criteria are available), and records inclusion decisions for screen 2 in the [inclusion.csv](data/inclusion.csv).
+- This procedure iterates over all records, prompts the user for each exclusion criterion (if exclusion criteria are available), and records inclusion decisions for screen 2 in the [screen.csv](screen.csv).
 
 
-When updating the search, follow the same procedures as described above. Note that `make screen_sheet` will add additional search results to the [screening sheet](data/screen.csv). If records in the screening sheet are no longer in the references.bib (possibly because citation_keys have been modified in the references.bib), `make screen_sheet` will print a warning (but still retain the record in the screening sheet).
+When updating the search, follow the same procedures as described above. Note that `make screen_sheet` will add additional search results to the [screening sheet](screen.csv). If records in the screening sheet are no longer in the references.bib (possibly because citation_keys have been modified in the references.bib), `make screen_sheet` will print a warning (but still retain the record in the screening sheet).
 
 ## Data extraction
 
@@ -207,13 +207,13 @@ descriptive statistics of paper meta-data
 ```
 make data
 ```
-- This procedure adds records of included papers to the [data extraction sheet](data/data.csv).
+- This procedure adds records of included papers to the [data extraction sheet](data.csv).
 
 3. Complete data extraction (manual task)
 
 TODO: include description of the step
 
-When updating the data extraction, follow the same procedures as described above. Note that `make data` will add additional included records to the [data sheet](data/data.csv). If records in the data sheet are no longer in the screening sheet, `make data` will print a warning (but still retain the record in the data sheet).
+When updating the data extraction, follow the same procedures as described above. Note that `make data` will add additional included records to the [data sheet](data.csv). If records in the data sheet are no longer in the screening sheet, `make data` will print a warning (but still retain the record in the data sheet).
 
 ## Synthesis, reporting, and dissemination
 

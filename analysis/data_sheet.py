@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 
+import config
 import pandas as pd
 
 
@@ -12,16 +13,19 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 nr_entries_added = 0
 nr_current_entries = 0
 
+SCREEN_FILE = config.paths['SCREEN']
+DATA_FILE = config.paths['DATA']
 
-def generate_data_csv(data_file, coding_dimensions, screen_filename):
+
+def generate_data_csv(coding_dimensions):
     global nr_entries_added
 
-    screen = pd.read_csv(screen_filename, dtype=str)
+    screen = pd.read_csv(SCREEN_FILE, dtype=str)
 
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     if len(screen) == 0:
-        print('no records included yet (screen.csv$inclusion_2 == yes)')
+        print('no records included yet (SCREEN$inclusion_2 == yes)')
         print()
         sys.exit()
 
@@ -37,17 +41,17 @@ def generate_data_csv(data_file, coding_dimensions, screen_filename):
     for dimension in coding_dimensions:
         screen[dimension] = 'TODO'
     screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(data_file, index=False, quoting=csv.QUOTE_ALL)
+    screen.to_csv(DATA_FILE, index=False, quoting=csv.QUOTE_ALL)
 
     return
 
 
-def update_data_csv(data_file, screen_filename):
+def update_data_csv():
 
     global nr_entries_added
 
-    data = pd.read_csv(data_file, dtype=str)
-    screen = pd.read_csv(screen_filename, dtype=str)
+    data = pd.read_csv(DATA_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN_FILE, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     print('TODO: warn when records are no longer included')
@@ -63,7 +67,7 @@ def update_data_csv(data_file, screen_filename):
         nr_entries_added = nr_entries_added + 1
 
     data.sort_values(by=['citation_key'], inplace=True)
-    data.to_csv(data_file, index=False, quoting=csv.QUOTE_ALL)
+    data.to_csv(DATA_FILE, index=False, quoting=csv.QUOTE_ALL)
 
     return
 
@@ -76,11 +80,8 @@ if __name__ == '__main__':
     print('Data')
     print('TODO: validation to be implemented here')
 
-    screen_file = 'data/screen.csv'
-    data_file = 'data/data.csv'
-
-    if not os.path.exists(data_file):
-        print('Creating data.csv')
+    if not os.path.exists(DATA_FILE):
+        print('Creating ' + DATA_FILE)
         coding_dimensions = input(
             'Please provide a list of coding dimensions [dim1,dim2,...]: ',
         )
@@ -92,21 +93,21 @@ if __name__ == '__main__':
         # Coding dimensions should be unique
         assert len(coding_dimensions) == len(set(coding_dimensions))
 
-        generate_data_csv(data_file, coding_dimensions, screen_file)
-        print('Created data.csv')
-        print('0 records in data.csv')
+        generate_data_csv(coding_dimensions)
+        print('Created ' + DATA_FILE)
+        print('0 records in ' + DATA_FILE)
     else:
-        print('Loaded existing data.csv')
-        file = open(data_file)
+        print('Loaded existing ' + DATA_FILE)
+        file = open(DATA_FILE)
         reader = csv.reader(file)
         lines = len(list(reader))-1
-        print(str(lines) + ' records in data.csv')
+        print(str(lines) + ' records in ' + DATA_FILE)
 
-        update_data_csv(data_file, screen_file)
+        update_data_csv()
 
-    print(str(nr_entries_added) + ' records added to data.csv')
-    file = open(data_file)
+    print(str(nr_entries_added) + ' records added to ' + DATA_FILE)
+    file = open(DATA_FILE)
     reader = csv.reader(file)
     lines = len(list(reader))-1
-    print(str(lines) + ' records in data.csv')
+    print(str(lines) + ' records in ' + DATA_FILE)
     print('')
