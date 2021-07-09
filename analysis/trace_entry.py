@@ -3,7 +3,6 @@ import logging
 import time
 
 import bibtexparser
-import config
 import dictdiffer
 import entry_hash_function
 import git
@@ -12,9 +11,9 @@ from bibtexparser.customization import convert_to_unicode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-MAIN_REFERENCES = config.paths['SCREEN']
-SCREEN = config.paths['SCREEN']
-DATA = config.paths['SCREEN']
+MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
+SCREEN = entry_hash_function.paths['SCREEN']
+DATA = entry_hash_function.paths['SCREEN']
 
 
 def trace_hash(bibfilename, hash_id_needed):

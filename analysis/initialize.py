@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 import os
 import shutil
+import sys
 
-import config
+import entry_hash_function
 import git
 
-SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
+SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
 if __name__ == '__main__':
@@ -15,7 +16,9 @@ if __name__ == '__main__':
 
     print('Initialize review repository')
 
-    assert len(os.listdir()) == 0
+    if not len(os.listdir()) == 0:
+        if not 'y' == input('initialize in non-empty directory (y/n)?'):
+            sys.exit(0)
     project_title = input('Project title: ')
 
     r = git.Repo.init()

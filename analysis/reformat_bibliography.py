@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-import config
+import entry_hash_function
 import utils
 
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 
 if __name__ == '__main__':
 

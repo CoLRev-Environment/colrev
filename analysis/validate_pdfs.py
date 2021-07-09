@@ -4,6 +4,7 @@ import os
 import re
 
 import config
+import entry_hash_function
 import utils
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
@@ -14,7 +15,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
 EMAIL = config.paths['EMAIL']
-PDF_DIRECTORY = config.paths['PDF_DIRECTORY']
+PDF_DIRECTORY = entry_hash_function.paths['PDF_DIRECTORY']
 
 
 def extract_text_by_page(pdf_path):

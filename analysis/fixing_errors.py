@@ -2,15 +2,14 @@
 import csv
 from datetime import datetime
 
-import config
 import entry_hash_function
 import pandas as pd
 import utils
 from bibtexparser.bibdatabase import BibDatabase
 
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
-SCREEN_FILE = config.paths['SCREEN']
-DATA_FILE = config.paths['DATA']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+SCREEN_FILE = entry_hash_function.paths['SCREEN']
+DATA_FILE = entry_hash_function.paths['DATA']
 
 
 def fix_missing_hash_ids():

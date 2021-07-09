@@ -1,13 +1,13 @@
 #! /usr/bin/env python
 import os
 
-import config
+import entry_hash_function
 import numpy as np
 import pandas as pd
 import utils
 
-SCREEN = config.paths['SCREEN']
-DATA = config.paths['SCREEN']
+SCREEN = entry_hash_function.paths['SCREEN']
+DATA = entry_hash_function.paths['SCREEN']
 
 if __name__ == '__main__':
 

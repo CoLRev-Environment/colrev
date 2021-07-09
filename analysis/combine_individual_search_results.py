@@ -2,10 +2,8 @@
 import logging
 import os
 import re
-import sys
 
 import bibtexparser
-import config
 import entry_hash_function
 import git
 import pandas as pd
@@ -18,8 +16,8 @@ total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
 details_commit = []
 
-SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 
 
 def gather(bibfilename, bib_database):
@@ -82,7 +80,8 @@ def gather(bibfilename, bib_database):
                     entry['journal'])
 
             if 'journal' in entry:
-
+                entry['journal'] = entry['journal'].replace('{', '')\
+                    .replace('}', '')
                 for i, row in JOURNAL_VARIATIONS.iterrows():
                     if entry['journal'].lower() == row['variation'].lower():
                         entry['journal'] = row['journal']
@@ -143,6 +142,12 @@ def gather(bibfilename, bib_database):
                 'orcid-numbers', 'eissn', 'article-number',
                 'publisher', 'author_keywords', 'source',
                 'affiliation', 'document_type', 'art_number',
+                'address', 'language', 'doc-delivery-number',
+                'da', 'usage-count-last-180-days', 'usage-count-since-2013',
+                'doc-delivery-number', 'research-areas',
+                'web-of-science-categories', 'number-of-cited-references',
+                'times-cited', 'journal-iso', 'oa', 'keywords-plus',
+                'funding-text', 'funding-acknowledgement'
             ]
             for val in list(entry):
                 if(val not in fields_to_keep):
@@ -215,11 +220,7 @@ if __name__ == '__main__':
 
     r = git.Repo()
 
-    input('TODO: new bib file/modified search_details should be allowed!')
-    if r.is_dirty():
-        print('Commit files before importing new search results.')
-        sys.exit()
-
+    # This should be sufficient (checking r.is_dirty() is not necessary)
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=True,
     )

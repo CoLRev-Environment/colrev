@@ -9,7 +9,7 @@ from datetime import datetime
 from time import gmtime
 from time import strftime
 
-import config
+import entry_hash_function
 import pandas as pd
 import requests
 import tqdm
@@ -27,7 +27,7 @@ ns = {
 GROBID_URL = 'http://grobid:8070'
 data_dir = '/usr/data/'
 
-SEARCH_DETAILS_PATH = config.paths['SEARCH_DETAILS_PATH']
+SEARCH_DETAILS_PATH = entry_hash_function.paths['SEARCH_DETAILS_PATH']
 
 
 def get_reference_title(reference):

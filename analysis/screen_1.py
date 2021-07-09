@@ -3,12 +3,12 @@ import csv
 import os
 import sys
 
-import config
+import entry_hash_function
 import pandas as pd
 import utils
 
-MAIN_REFERENCES = config.paths['SCREEN']
-SCREEN = config.paths['SCREEN']
+MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
+SCREEN = entry_hash_function.paths['SCREEN']
 
 
 def run_screen_1():

@@ -15,6 +15,7 @@ from urllib.request import Request
 from urllib.request import urlopen
 
 import config
+import entry_hash_function
 import git
 import pandas as pd
 import requests
@@ -32,8 +33,8 @@ EMPTY_RESULT = {
 }
 MAX_RETRIES_ON_ERROR = 3
 
-BIB_DETAILS = config.paths['BIB_DETAILS']
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+BIB_DETAILS = entry_hash_function.paths['BIB_DETAILS']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 EMAIL = config.details['EMAIL']
 
 

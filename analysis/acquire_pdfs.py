@@ -4,6 +4,7 @@ import json
 import os
 
 import config
+import entry_hash_function
 import pandas as pd
 import requests
 import utils
@@ -11,9 +12,9 @@ from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
 
 EMAIL = config.details['EMAIL']
-PDF_DIRECTORY = config.paths['PDF_DIRECTORY']
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
-SCREEN_FILE = config.paths['SCREEN']
+PDF_DIRECTORY = entry_hash_function.paths['PDF_DIRECTORY']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+SCREEN_FILE = entry_hash_function.paths['SCREEN']
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0

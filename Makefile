@@ -31,6 +31,9 @@ trace_search_result :
 
 # to test:
 
+test :
+	cd $(DATA_PATH) && python3 ../analysis/test.py
+
 trace_entry :
 	cd $(DATA_PATH) && python3 ../analysis/trace_entry.py
 
@@ -74,3 +77,6 @@ validate_pdfs :
 
 sample_profile :
 	cd $(DATA_PATH) && python3 ../analysis/sample_profile.py
+
+renew_hash_id :
+	cd $(DATA_PATH) && python3 ../analysis/renew_hash_id.py

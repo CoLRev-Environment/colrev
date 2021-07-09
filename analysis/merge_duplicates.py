@@ -5,7 +5,6 @@ import re
 import sys
 
 import bibtexparser
-import config
 import dictdiffer
 import entry_hash_function
 import git
@@ -19,7 +18,7 @@ from tqdm import tqdm
 nr_entries_added = 0
 nr_current_entries = 0
 
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 
 
 def store_changes(references, bib_database):

@@ -4,12 +4,13 @@ import hashlib
 import os
 import re
 import sys
+import time
 import unicodedata
 from pathlib import Path
 from string import ascii_lowercase
 
 import bibtexparser
-import config
+import entry_hash_function
 import pandas as pd
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
@@ -18,11 +19,11 @@ from bibtexparser.customization import convert_to_unicode
 from git import Repo
 from nameparser import HumanName
 
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
-SCREEN_FILE = config.paths['SCREEN']
-DATA = config.paths['DATA']
-SCREEN = config.paths['SCREEN']
-SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+SCREEN_FILE = entry_hash_function.paths['SCREEN']
+DATA = entry_hash_function.paths['DATA']
+SCREEN = entry_hash_function.paths['SCREEN']
+SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
 def retrieve_crowd_resources():
@@ -406,13 +407,33 @@ def save_bib_file(bib_database, target_file):
         'hash_id',
     ]
 
+    try:
+        bib_database.comments.remove('% Encoding: UTF-8')
+    except ValueError:
+        pass
+
     writer.order_entries_by = ('ID', 'author', 'year')
     writer.add_trailing_comma = True
     writer.align_values = True
     bibtex_str = bibtexparser.dumps(bib_database, writer)
 
-    with open(target_file, 'w') as out:
+    bibtex_str = bibtexparser.dumps(bib_database, writer)
+
+    with open('temp.bib', 'w') as out:
+        out.write('% Encoding: UTF-8\n\n')
         out.write(bibtex_str + '\n')
+
+    # to
+    time_to_wait = 5
+    time_counter = 0
+    while not os.path.exists('temp.bib'):
+        time.sleep(0.1)
+        time_counter += 0.1
+        if time_counter > time_to_wait:
+            break
+
+    os.remove(MAIN_REFERENCES)
+    os.rename('temp.bib', MAIN_REFERENCES)
 
     return
 

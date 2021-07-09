@@ -3,7 +3,7 @@ import csv
 import logging
 import os
 
-import config
+import entry_hash_function
 import pandas as pd
 import utils
 
@@ -12,8 +12,8 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 nr_entries_added = 0
 nr_current_entries = 0
 
-SCREEN = config.paths['SCREEN']
-MAIN_REFERENCES = config.paths['MAIN_REFERENCES']
+SCREEN = entry_hash_function.paths['SCREEN']
+MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 
 
 def generate_screen_csv(exclusion_criteria):

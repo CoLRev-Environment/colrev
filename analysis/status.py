@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import os
 
-import config
+import entry_hash_function
 import pandas as pd
 import utils
 
@@ -9,10 +9,10 @@ nr_duplicates_hash_ids = 0
 nr_entries_added = 0
 nr_current_entries = 0
 
-MAIN_REFERENCES = config.paths['SCREEN']
-SCREEN = config.paths['SCREEN']
-DATA = config.paths['SCREEN']
-SEARCH_DETAILS = config.paths['SEARCH_DETAILS']
+MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
+SCREEN = entry_hash_function.paths['SCREEN']
+DATA = entry_hash_function.paths['SCREEN']
+SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
 def validate_files():

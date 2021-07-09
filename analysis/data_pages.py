@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 
-import config
+import entry_hash_function
 import pandas as pd
 
 
@@ -12,7 +12,7 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 nr_entries_added = 0
 nr_current_entries = 0
 
-SCREEN_FILE = config.paths['SCREEN']
+SCREEN_FILE = entry_hash_function.paths['SCREEN']
 
 
 def generate_data_pages():
