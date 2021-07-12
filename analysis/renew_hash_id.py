@@ -9,7 +9,6 @@ from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-BIB_DETAILS = entry_hash_function.paths['BIB_DETAILS']
 
 #############################################################################
 
@@ -71,7 +70,9 @@ def get_container_title(entry):
     if 'journal' in entry:
         container_title += entry['journal']
 
-    if 'url' in entry and not any(x in entry for x in ['journal', 'series', 'booktitle']):
+    if 'url' in entry and not any(x in entry for x in ['journal',
+                                                        'series',
+                                                        'booktitle']):
         container_title += entry['url']
 
     return container_title
@@ -139,16 +140,6 @@ def replace_hash_ids(bib_file):
         with open(MAIN_REFERENCES, 'w') as file:
             file.write(filedata)
 
-        # replace in BIB_DETAILS
-        with open(BIB_DETAILS) as file:
-            filedata = file.read()
-
-        for old_hash_prefixed, new_hash in pairs:
-            filedata = filedata.replace(old_hash_prefixed, new_hash)
-
-        with open(BIB_DETAILS, 'w') as file:
-            file.write(filedata)
-
     return
 
 
@@ -177,18 +168,6 @@ def prefix_old_hash_ids(bib_file):
         with open(MAIN_REFERENCES, 'w') as file:
             file.write(filedata)
 
-        # replace in BIB_DETAILS
-        with open(BIB_DETAILS) as file:
-            filedata = file.read()
-
-        for old_hash, old_hash_prefixed in pairs:
-
-            filedata = filedata.replace(old_hash, old_hash_prefixed)\
-                .replace('old_hash_old_hash_', 'old_hash_')
-
-        with open(BIB_DETAILS, 'w') as file:
-            file.write(filedata)
-
     return
 
 
@@ -211,12 +190,6 @@ if __name__ == '__main__':
     if 'old_hash_' in filedata:
         print('ERROR: "old_hash_" in MAIN_REFERENCES')
 
-    with open(BIB_DETAILS) as file:
-        filedata = file.read()
-
-    if 'old_hash_' in filedata:
-        print('ERROR: "old_hash_" in BIB_DETAILS')
-
     input('Check: git clean state?')
     input('CHECK: will hash_ids be replaced in al relevant files? ')
     # (perhaps replace in all files, not just selected ones?)
@@ -235,9 +208,3 @@ if __name__ == '__main__':
 
     if 'old_hash_' in filedata:
         print('ERROR: "old_hash_" in MAIN_REFERENCES')
-
-    with open(BIB_DETAILS) as file:
-        filedata = file.read()
-
-    if 'old_hash_' in filedata:
-        print('ERROR: "old_hash_" in BIB_DETAILS')

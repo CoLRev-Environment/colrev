@@ -181,6 +181,8 @@ def gather(bibfilename, bib_database):
                 # except StopIteration:
                 #   pass
 
+                entry['status'] = 'not_cleansed'
+
                 bib_database.entries.append(entry)
                 total_nr_entries_added += 1
                 nr_entries_added += 1

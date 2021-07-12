@@ -14,6 +14,8 @@ if __name__ == '__main__':
     print('Renew hash_id function')
     print('')
 
+    input('IMPORTANT: remove BIB_DETAILS from entry_hash_function.py in the next version!')
+
     input('TODO: dont add duplicates to hash_function_pipeline_commit_id.csv')
     with open('analysis/entry_hash_function.py') as file:
         hash_of_hash_function = hashlib.sha256(

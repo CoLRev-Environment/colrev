@@ -1,8 +1,6 @@
 #! /usr/bin/env python
-import csv
 import json
 import logging
-import os
 import re
 import sys
 import time
@@ -33,7 +31,6 @@ EMPTY_RESULT = {
 }
 MAX_RETRIES_ON_ERROR = 3
 
-BIB_DETAILS = entry_hash_function.paths['BIB_DETAILS']
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 EMAIL = config.details['EMAIL']
 
@@ -99,7 +96,7 @@ def doi2json(doi):
 
 
 def cleanse(entry, bib_details):
-    cleansed = True
+    entry['status'] = entry['status'].replace('not_cleansed', '')
 
     if 'author' in entry:
         entry['author'] = entry['author'].rstrip().lstrip()
@@ -343,18 +340,18 @@ def cleanse(entry, bib_details):
                         .lstrip().rstrip()
         except IndexError:
             print('Index error (authors?) for ' + entry['ID'])
-            cleansed = False
+            entry['status'] = 'not_cleansed'
             pass
         except json.decoder.JSONDecodeError:
             print('Doi retrieval error: ' + entry['ID'])
-            cleansed = False
+            entry['status'] = 'not_cleansed'
             pass
         except TypeError:
             print('Type error: ' + entry['ID'])
-            cleansed = False
+            entry['status'] = 'not_cleansed'
             pass
 
-    if cleansed:
+    if 'not_cleansed' not in entry.get('status', 'no status'):
 
         # Recreate citation_keys
         # (mainly if it differs, i.e., if there are changes in authors/years)
@@ -365,48 +362,15 @@ def cleanse(entry, bib_details):
                   entry['ID'])
             pass
 
-        # Note: as soon as a single hash_id
-        # (in an entry containing multiple hash_ids) has been cleansed,
-        # all other hash_ids are considered as cleansed
-        # (since the have been merged with/reviewed a cleansed record)
-        if 'hash_id' in entry:
-            for individual_hash_id in entry['hash_id'].split(','):
-                new_record = pd.DataFrame(
-                    [[individual_hash_id, 'yes']], columns=[
-                        'hash_id', 'cleansed',
-                    ],
-                )
-                bib_details = pd.concat([bib_details, new_record])
-
-    return entry, cleansed, bib_details
-
-
-def entry_cleansed(entry, bib_details):
-    # If there is no entry in the bib_details, it needs to be cleansed.
-    entry_is_cleansed = False
-    # This means all entries without a hash_id are cleansed
-    if 'hash_id' in entry:
-        for individual_hash_id in entry['hash_id'].split(','):
-            if 0 < len(
-                bib_details[
-                    bib_details['hash_id'] == individual_hash_id
-                ],
-            ):
-                entry_is_cleansed = True
-    return entry_is_cleansed
+    return entry
 
 
 def quality_improvements(bib_database):
 
-    if os.path.exists(BIB_DETAILS):
-        bib_details = pd.read_csv(BIB_DETAILS)
-    else:
-        bib_details = pd.DataFrame(columns=['hash_id', 'cleansed'])
-
     # If a more detailed (step-wise) cleansing process is needed,
-    # the bib_details would need more field (cleansing_1, cleansing_2, ...)
+    # the status would need more field (cleansing_1, cleansing_2, ...)
 
-#    skipped_all = False
+    # skipped_all = False
 
     for entry in tqdm(bib_database.entries):
 
@@ -417,21 +381,15 @@ def quality_improvements(bib_database):
         # if not skipped_all:
         #    continue
 
-        if entry_cleansed(entry, bib_details):
+        if 'not_cleansed' not in entry.get('status', 'no status'):
             continue
 
-        entry, cleansed, bib_details = cleanse(entry, bib_details)
+        entry = cleanse(entry)
 
-        if not cleansed:
+        if 'not_cleansed' in entry.get('status', 'no status'):
             continue
 
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-        bib_details.sort_values(by=['hash_id'], inplace=True)
-        bib_details.to_csv(
-            BIB_DETAILS, index=False,
-            quoting=csv.QUOTE_ALL,
-        )
 
     return bib_database
 
@@ -466,8 +424,6 @@ if __name__ == '__main__':
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
     r.index.add([MAIN_REFERENCES])
-    # Note: we may want to remove this at some point.
-    r.index.add([BIB_DETAILS])
 
     r.index.commit(
         'Cleanse ' + MAIN_REFERENCES,
