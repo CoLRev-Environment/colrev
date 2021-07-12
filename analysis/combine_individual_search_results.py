@@ -1,12 +1,11 @@
 #! /usr/bin/env python
 import logging
 import os
-import re
 
 import bibtexparser
+import cleanse_records
 import entry_hash_function
 import git
-import pandas as pd
 import utils
 from bibtexparser.customization import convert_to_unicode
 
@@ -16,8 +15,42 @@ total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
 details_commit = []
 
-SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+
+fields_to_keep = [
+    'ID', 'hash_id', 'ENTRYTYPE',
+    'author', 'year', 'title',
+    'journal', 'booktitle', 'series',
+    'volume', 'number', 'pages', 'doi',
+    'abstract',
+    'editor', 'book-group-author',
+    'book-author', 'keywords', 'file'
+]
+fields_to_drop = [
+    'type', 'url', 'organization',
+    'issn', 'isbn', 'note', 'issue',
+    'unique-id', 'month', 'researcherid-numbers',
+    'orcid-numbers', 'eissn', 'article-number',
+    'publisher', 'author_keywords', 'source',
+    'affiliation', 'document_type', 'art_number',
+    'address', 'language', 'doc-delivery-number',
+    'da', 'usage-count-last-180-days', 'usage-count-since-2013',
+    'doc-delivery-number', 'research-areas',
+    'web-of-science-categories', 'number-of-cited-references',
+    'times-cited', 'journal-iso', 'oa', 'keywords-plus',
+    'funding-text', 'funding-acknowledgement'
+]
+
+
+def drop_fields(entry):
+    for val in list(entry):
+        if(val not in fields_to_keep):
+            # drop all fields not in fields_to_keep
+            entry.pop(val)
+            # warn if fields are dropped that are not in fields_to_drop
+            if val not in fields_to_drop:
+                print('  dropped ' + val + ' field')
+    return entry
 
 
 def gather(bibfilename, bib_database):
@@ -46,116 +79,14 @@ def gather(bibfilename, bib_database):
             # but it also introduces complexity (e.g., in the backward tacing)
             entry['hash_id'] = entry_hash_function.create_hash(entry)
 
-            fields_to_process = [
-                'author', 'year', 'title',
-                'journal', 'booktitle', 'series',
-                'volume', 'number', 'pages', 'doi',
-                'abstract'
-            ]
-            for field in fields_to_process:
-                if field in entry:
-                    entry[field] = entry[field].replace('\n', ' ')\
-                        .rstrip()\
-                        .lstrip()
+            entry = cleanse_records.homogenize_entry(entry)
 
-            if 'title' in entry:
-                entry['title'] = entry['title'].rstrip('.')
+            # Note: the cleanse_records.py will homogenize more cases because
+            # it runs speculative_changes(entry) before
+            entry = cleanse_records.apply_local_rules(entry)
+            entry = cleanse_records.apply_crowd_rules(entry)
 
-            if 'author' in entry:
-                entry['author'] = entry['author'].replace(
-                    '{', '').replace('}', '')
-                # fix name format
-                if (', ' not in entry['author']):
-                    entry['author'] = utils.format_author_field(
-                        entry['author'])
-
-            if 'doi' in entry:
-                entry['doi'] = entry['doi'].replace('http://dx.doi.org/', '')
-
-            if 'pages' in entry:
-                entry['pages'] = utils.unify_pages_field(entry['pages'])
-
-            if 'journal' in entry:
-                entry['journal'] = utils.title_if_mostly_upper_case(
-                    entry['journal'])
-
-            if 'journal' in entry:
-                entry['journal'] = entry['journal'].replace('{', '')\
-                    .replace('}', '')
-                for i, row in JOURNAL_VARIATIONS.iterrows():
-                    if entry['journal'].lower() == row['variation'].lower():
-                        entry['journal'] = row['journal']
-                for i, row in JOURNAL_ABBREVIATIONS.iterrows():
-                    # to un-abbreviate
-                    if entry['journal'].lower() == row['abbreviation'].lower():
-                        entry['journal'] = row['journal']
-                    # to use the same capitalization
-                    if entry['journal'].lower() == row['journal'].lower():
-                        entry['journal'] = row['journal']
-
-            if 'issue' in entry:
-                entry['number'] = entry['issue']
-                del entry['issue']
-
-            if 'booktitle' in entry:
-                words = entry['booktitle'].split()
-                if sum(word.isupper() for word in words)/len(words) > 0.8:
-                    entry['booktitle'] = ' '.join(
-                        word.capitalize() for word in words
-                    )
-
-                for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
-                    stripped_booktitle = re.sub(
-                        r'\d{4}', '', entry['booktitle'])
-                    stripped_booktitle = re.sub(
-                        r'\d{1,2}th', '', stripped_booktitle)
-                    stripped_booktitle = re.sub(
-                        r'\d{1,2}nd', '', stripped_booktitle)
-                    stripped_booktitle = re.sub(
-                        r'\d{1,2}rd', '', stripped_booktitle)
-                    stripped_booktitle = re.sub(
-                        r'\d{1,2}st', '', stripped_booktitle)
-                    stripped_booktitle = re.sub(
-                        r'\([A-Z]{3,6}\)', '', stripped_booktitle)
-                    stripped_booktitle = stripped_booktitle\
-                        .replace('Proceedings of the', '')\
-                        .replace('Proceedings', '')\
-                        .rstrip()\
-                        .lstrip()
-                    if row['abbreviation'].lower() == \
-                            stripped_booktitle.lower():
-                        entry['booktitle'] = row['conference']
-
-            fields_to_keep = [
-                'ID', 'hash_id', 'ENTRYTYPE',
-                'author', 'year', 'title',
-                'journal', 'booktitle', 'series',
-                'volume', 'number', 'pages', 'doi',
-                'abstract',
-                'editor', 'book-group-author',
-                'book-author', 'keywords', 'file'
-            ]
-            fields_to_drop = [
-                'type', 'url', 'organization',
-                'issn', 'isbn', 'note', 'issue',
-                'unique-id', 'month', 'researcherid-numbers',
-                'orcid-numbers', 'eissn', 'article-number',
-                'publisher', 'author_keywords', 'source',
-                'affiliation', 'document_type', 'art_number',
-                'address', 'language', 'doc-delivery-number',
-                'da', 'usage-count-last-180-days', 'usage-count-since-2013',
-                'doc-delivery-number', 'research-areas',
-                'web-of-science-categories', 'number-of-cited-references',
-                'times-cited', 'journal-iso', 'oa', 'keywords-plus',
-                'funding-text', 'funding-acknowledgement'
-            ]
-            for val in list(entry):
-                if(val not in fields_to_keep):
-                    # drop all fields not in fields_to_keep
-                    entry.pop(val)
-                    # warn if fields are dropped that are not in fields_to_drop
-                    if val not in fields_to_drop:
-                        print('  dropped ' + val + ' field')
+            entry = drop_fields(entry)
 
         # pre-calculate for efficiency
         existing_hash_ids = utils.get_hash_ids(bib_database)
@@ -218,8 +149,6 @@ if __name__ == '__main__':
 
     assert utils.hash_function_up_to_date()
 
-    utils.validate_search_details()
-
     r = git.Repo()
 
     # This should be sufficient (checking r.is_dirty() is not necessary)
@@ -251,7 +180,6 @@ if __name__ == '__main__':
     print('------------------------------------------------------------------')
     # TODO: define preferences (start by processing e.g., WoS, then GS) or
     # use heuristics to start with the highest quality entries first.
-    search_details = pd.read_csv(SEARCH_DETAILS)
 
     for bib_file in utils.get_bib_files():
         bib_database = gather(bib_file, bib_database)

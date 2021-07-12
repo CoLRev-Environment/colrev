@@ -15,12 +15,14 @@ from urllib.request import urlopen
 import config
 import entry_hash_function
 import git
-import pandas as pd
 import requests
 import utils
 from Levenshtein import ratio
 from nameparser import HumanName
+from nameparser.config import CONSTANTS
 from tqdm import tqdm
+
+CONSTANTS.string_format = '{last} {suffix}, {first} ({nickname}) {middle}'
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -95,22 +97,212 @@ def doi2json(doi):
     return r.text
 
 
-def cleanse(entry, bib_details):
-    entry['status'] = entry['status'].replace('not_cleansed', '')
+def homogenize_entry(entry):
+
+    fields_to_process = [
+        'author', 'year', 'title',
+        'journal', 'booktitle', 'series',
+        'volume', 'number', 'pages', 'doi',
+        'abstract'
+    ]
+    for field in fields_to_process:
+        if field in entry:
+            entry[field] = entry[field].replace('\n', ' ')\
+                .rstrip()\
+                .lstrip()\
+                .replace('{', '')\
+                .replace('}', '')
 
     if 'author' in entry:
-        entry['author'] = entry['author'].rstrip().lstrip()
         # fix name format
         if (1 == len(entry['author'].split(' ')[0])) or \
-            (
-                ', ' not in entry['author']
-        ):
+                (', ' not in entry['author']):
             entry['author'] = utils.format_author_field(entry['author'])
 
     if 'title' in entry:
-        entry['title'] = re.sub(r'\s+', ' ', entry['title'])\
-            .rstrip('.')
+        entry['title'] = re.sub(r'\s+', ' ', entry['title']).rstrip('.')
         entry['title'] = utils.title_if_mostly_upper_case(entry['title'])
+
+    if 'booktitle' in entry:
+        entry['booktitle'] = \
+            utils.title_if_mostly_upper_case(entry['booktitle'])
+
+    if 'journal' in entry:
+        entry['journal'] = \
+            utils.title_if_mostly_upper_case(entry['journal'])
+
+    if 'pages' in entry:
+        entry['pages'] = utils.unify_pages_field(entry['pages'])
+
+    if 'doi' in entry:
+        entry['doi'] = entry['doi'].replace('http://dx.doi.org/', '')
+
+    if 'issue' in entry and 'number' not in entry:
+        entry['number'] = entry['issue']
+        del entry['issue']
+
+    return entry
+
+
+def get_doi_from_crossref(entry):
+    # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
+    if len(entry['title']) > 60 and 'doi' not in entry:
+        try:
+            ret = crossref_query(entry)
+            retries = 0
+            while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
+                retries += 1
+                ret = crossref_query(entry)
+            if ret['result']['similarity'] > 0.95:
+                entry['doi'] = ret['result']['doi']
+        except KeyboardInterrupt:
+            sys.exit()
+    return entry
+
+
+def retrieve_doi_metadata(entry):
+
+    if 'doi' not in entry:
+        return entry
+
+    try:
+        full_data = doi2json(entry['doi'])
+        retrieved_record = json.loads(full_data)
+        author_string = ''
+        for author in retrieved_record.get('author', ''):
+            if 'family' not in author:
+                continue
+            if '' != author_string:
+                author_string = author_string + ' and '
+            author_given = author.get('given', '')
+            # Use local given name when no given name is provided by doi
+            if '' == author_given:
+                authors = entry['author'].split(' and ')
+                local_author_string = [x for x in authors
+                                       if author.get('family', '').lower()
+                                       in x.lower()]
+                local_author = HumanName(local_author_string.pop())
+
+                author_string = author_string + \
+                    author.get('family', '') + ', ' + \
+                    local_author.first + ' ' + local_author.middle
+                # Note: if there is an exception, use:
+                # author_string = author_string + \
+                # author.get('family', '')
+            else:
+                author_string = author_string + \
+                    author.get('family', '') + ', ' + \
+                    author.get('given', '')
+
+        if not author_string == '':
+            if utils.mostly_upper_case(author_string
+                                       .replace(' and ', '')
+                                       .replace('Jr', '')):
+
+                names = author_string.split(' and ')
+                entry['author'] = ''
+                for name in names:
+                    # Note: https://github.com/derek73/python-nameparser
+                    # is very effective (maybe not perfect)
+                    parsed_name = HumanName(name)
+                    parsed_name.capitalize(force=True)
+                    entry['author'] = entry['author'] + ' and ' + \
+                        str(parsed_name).replace(' , ', ', ')
+                if entry['author'].startswith(' and '):
+                    entry['author'] = entry['author'][5:]\
+                        .rstrip()\
+                        .replace('  ', ' ')
+            else:
+                entry['author'] = str(
+                    author_string).rstrip().replace('  ', ' ')
+
+        retrieved_title = retrieved_record.get('title', '')
+        if not retrieved_title == '':
+            entry['title'] = \
+                str(re.sub(r'\s+', ' ', retrieved_title))\
+                .replace('\n', ' ')
+        try:
+            date_parts = \
+                retrieved_record['published-print']['date-parts']
+            entry['year'] = str(date_parts[0][0])
+        except KeyError:
+            pass
+
+        retrieved_pages = retrieved_record.get('page', '')
+        if retrieved_pages != '':
+            # DOI data often has only the first page.
+            if not entry.get('pages', 'no_pages') in retrieved_pages \
+                    and '-' in retrieved_pages:
+                entry['pages'] = utils.unify_pages_field(
+                    str(retrieved_pages))
+        retrieved_volume = retrieved_record.get('volume', '')
+        if not retrieved_volume == '':
+            entry['volume'] = str(retrieved_volume)
+
+        retrieved_issue = retrieved_record.get('issue', '')
+        if not retrieved_issue == '':
+            entry['number'] = str(retrieved_issue)
+        retrieved_container_title = \
+            str(retrieved_record.get('container-title', ''))
+        if not retrieved_container_title == '':
+            if 'series' in entry:
+                if entry['series'] != retrieved_container_title:
+
+                    if 'journal' in retrieved_container_title:
+                        entry['journal'] = \
+                            retrieved_container_title
+                    else:
+                        entry['booktitle'] = \
+                            retrieved_container_title
+
+        if 'abstract' not in entry:
+            retrieved_abstract = retrieved_record.get('abstract', '')
+            if not retrieved_abstract == '':
+
+                retrieved_abstract = \
+                    re.sub(
+                        r'<\/?jats\:[^>]*>',
+                        ' ',
+                        retrieved_abstract,
+                    )
+                retrieved_abstract = \
+                    re.sub(r'\s+', ' ', retrieved_abstract)
+                entry['abstract'] = \
+                    str(retrieved_abstract).replace('\n', '')\
+                    .lstrip().rstrip()
+    except IndexError:
+        print('Index error (authors?) for ' + entry['ID'])
+        entry['status'] = 'not_cleansed'
+        pass
+    except json.decoder.JSONDecodeError:
+        print('Doi retrieval error: ' + entry['ID'])
+        entry['status'] = 'not_cleansed'
+        pass
+    except TypeError:
+        print('Type error: ' + entry['ID'])
+        entry['status'] = 'not_cleansed'
+        pass
+
+    return entry
+
+
+def regenerate_citation_key(entry):
+
+    if 'not_cleansed' not in entry.get('status', 'no status'):
+
+        # Recreate citation_keys
+        # (mainly if it differs, i.e., if there are changes in authors/years)
+        try:
+            entry['ID'] = utils.generate_citation_key(entry, bib_database)
+        except utils.CitationKeyPropagationError:
+            # print('WARNING: cleansing entry with propagated citation_key:',
+            #   entry['ID'])
+            pass
+
+    return entry
+
+
+def speculative_changes(entry):
 
     conf_strings = [
         'proceedings',
@@ -160,207 +352,87 @@ def cleanse(entry, bib_details):
                 entry['booktitle'] = conf_name
                 entry['ENTRYTYPE'] = 'inproceedings'
 
-    # Moved journal processing to combine_individual_search_results
-
-    if 'booktitle' in entry:
-        entry['booktitle'] = utils.title_if_mostly_upper_case(
-            entry['booktitle'])
-
-        # For ECIS/ICIS proceedings:
-        entry['booktitle'] = \
-            entry['booktitle'] \
-            .replace(' Completed Research Papers', '')\
-            .replace(' Completed Research', '')\
-            .replace(' Research-in-Progress Papers', '')\
-            .replace(' Research Papers', '')\
-            .replace('- All Submissions', '')
-
-        for i, row in CONFERENCE_ABBREVIATIONS.iterrows():
-            stripped_booktitle = re.sub(
-                r'\d{4}', '', entry['booktitle'])
-            stripped_booktitle = re.sub(
-                r'\d{1,2}th', '', stripped_booktitle)
-            stripped_booktitle = re.sub(
-                r'\d{1,2}nd', '', stripped_booktitle)
-            stripped_booktitle = re.sub(
-                r'\d{1,2}rd', '', stripped_booktitle)
-            stripped_booktitle = re.sub(
-                r'\d{1,2}st', '', stripped_booktitle)
-            stripped_booktitle = re.sub(
-                r'\([A-Z]{3,6}\)', '', stripped_booktitle)
-            stripped_booktitle = stripped_booktitle\
-                .replace('Proceedings of the', '')\
-                .replace('Proceedings', '')\
-                .rstrip()\
-                .lstrip()
-
-            if row['abbreviation'].lower() == \
-                    stripped_booktitle.lower():
-                entry['booktitle'] = row['conference']
-
     if 'article' == entry['ENTRYTYPE']:
         if 'journal' not in entry:
             if 'series' in entry:
                 journal_string = entry['series']
                 entry['journal'] = journal_string
                 del entry['series']
-    if 'abstract' in entry:
-        entry['abstract'] = entry['abstract'].replace('\n', ' ')
 
-    if 'pages' in entry:
-        entry = utils.unify_pages_field(entry)
+    # Moved journal processing to combine_individual_search_results
+    # TODO: reinclude (as a function?)
 
-    # Check whether doi can be retrieved from CrossRef API
-    # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-    if len(entry['title']) > 60 and 'doi' not in entry:
-        try:
-            ret = crossref_query(entry)
-            retries = 0
-            while not ret['success'] and \
-                    retries < MAX_RETRIES_ON_ERROR:
-                retries += 1
-                ret = crossref_query(entry)
-            if ret['result']['similarity'] > 0.95:
-                entry['doi'] = ret['result']['doi']
-        except KeyboardInterrupt:
-            sys.exit()
+    if 'booktitle' in entry:
 
-    # Retrieve metadata from DOI repository
-    if 'doi' in entry:
-        try:
-            full_data = doi2json(entry['doi'])
-            retrieved_record = json.loads(full_data)
-            # json_string = json.dumps(retrieved_record)
-            # if 'crossmark' in json_string:
-            #       print(retrieved_record)
-            author_string = ''
-            for author in retrieved_record.get('author', ''):
-                if 'family' not in author:
-                    continue
-                if '' != author_string:
-                    author_string = author_string + ' and '
-                author_given = author.get('given', '')
-                # Use local given name when no given name is provided by doi
-                if '' == author_given:
-                    authors = entry['author'].split(' and ')
-                    local_author_string = [x for x in authors
-                                           if author.get('family', '').lower()
-                                           in x.lower()]
-                    local_author = HumanName(local_author_string.pop())
+        stripped_btitle = re.sub(r'\d{4}', '', entry['booktitle'])
+        stripped_btitle = re.sub(r'\d{1,2}th', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}nd', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}rd', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}st', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\([A-Z]{3,6}\)', '', stripped_btitle)
+        stripped_btitle = stripped_btitle\
+            .replace('Proceedings of the', '')\
+            .replace('Proceedings', '')
 
-                    author_string = author_string + \
-                        author.get('family', '') + ', ' + \
-                        local_author.first + ' ' + local_author.middle
-                    # Note: if there is an exception, use:
-                    # author_string = author_string + \
-                    # author.get('family', '')
-                else:
-                    author_string = author_string + \
-                        author.get('family', '') + ', ' + \
-                        author.get('given', '')
+    return entry
 
-            if not author_string == '':
-                if utils.mostly_upper_case(author_string
-                                           .replace(' and ', '')
-                                           .replace('Jr', '')):
 
-                    names = author_string.split(' and ')
-                    entry['author'] = ''
-                    for name in names:
-                        # Note: https://github.com/derek73/python-nameparser
-                        # is very effective (maybe not perfect)
-                        parsed_name = HumanName(name)
-                        parsed_name.capitalize(force=True)
-                        parsed_name.string_format = \
-                            '{last} {suffix}, {first} ({nickname}) {middle}'
-                        entry['author'] = entry['author'] + ' and ' + \
-                            str(parsed_name).replace(' , ', ', ')
-                    if entry['author'].startswith(' and '):
-                        entry['author'] = entry['author'][5:]\
-                            .rstrip()\
-                            .replace('  ', ' ')
-                else:
-                    entry['author'] = str(
-                        author_string).rstrip().replace('  ', ' ')
+def apply_local_rules(entry):
 
-            retrieved_title = retrieved_record.get('title', '')
-            if not retrieved_title == '':
-                entry['title'] = \
-                    str(re.sub(r'\s+', ' ', retrieved_title))\
-                    .replace('\n', ' ')
-            try:
-                date_parts = \
-                    retrieved_record['published-print']['date-parts']
-                entry['year'] = str(date_parts[0][0])
-            except KeyError:
-                pass
+    if 'journal' in entry:
+        for i, row in LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['journal'].lower():
+                entry['journal'] = row['journal']
 
-            retrieved_pages = retrieved_record.get('page', '')
-            if retrieved_pages != '':
-                # DOI data often has only the first page.
-                if not entry.get('pages', 'no_pages') in retrieved_pages \
-                        and '-' in retrieved_pages:
-                    entry['pages'] = utils.unify_pages_field(
-                        str(retrieved_pages))
-            retrieved_volume = retrieved_record.get('volume', '')
-            if not retrieved_volume == '':
-                entry['volume'] = str(retrieved_volume)
+        for i, row in LOCAL_JOURNAL_VARIATIONS.iterrows():
+            if row['variation'].lower() == entry['journal'].lower():
+                entry['journal'] = row['journal']
 
-            retrieved_issue = retrieved_record.get('issue', '')
-            if not retrieved_issue == '':
-                entry['number'] = str(retrieved_issue)
-            retrieved_container_title = \
-                str(retrieved_record.get('container-title', ''))
-            if not retrieved_container_title == '':
-                if 'series' in entry:
-                    if entry['series'] != retrieved_container_title:
+    if 'booktitle' in entry:
+        for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['booktitle'].lower():
+                entry['booktitle'] = row['conference']
 
-                        if 'journal' in retrieved_container_title:
-                            entry['journal'] = \
-                                retrieved_container_title
-                        else:
-                            entry['booktitle'] = \
-                                retrieved_container_title
+    return entry
 
-            if 'abstract' not in entry:
-                retrieved_abstract = retrieved_record\
-                    .get('abstract', '')
-                if not retrieved_abstract == '':
 
-                    retrieved_abstract = \
-                        re.sub(
-                            r'<\/?jats\:[^>]*>',
-                            ' ',
-                            retrieved_abstract,
-                        )
-                    retrieved_abstract = \
-                        re.sub(r'\s+', ' ', retrieved_abstract)
-                    entry['abstract'] = \
-                        str(retrieved_abstract).replace('\n', '')\
-                        .lstrip().rstrip()
-        except IndexError:
-            print('Index error (authors?) for ' + entry['ID'])
-            entry['status'] = 'not_cleansed'
-            pass
-        except json.decoder.JSONDecodeError:
-            print('Doi retrieval error: ' + entry['ID'])
-            entry['status'] = 'not_cleansed'
-            pass
-        except TypeError:
-            print('Type error: ' + entry['ID'])
-            entry['status'] = 'not_cleansed'
-            pass
+def apply_crowd_rules(entry):
 
-    if 'not_cleansed' not in entry.get('status', 'no status'):
+    if 'journal' in entry:
+        for i, row in CR_JOURNAL_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['journal'].lower():
+                entry['journal'] = row['journal']
 
-        # Recreate citation_keys
-        # (mainly if it differs, i.e., if there are changes in authors/years)
-        try:
-            entry['ID'] = utils.generate_citation_key(entry, bib_database)
-        except utils.CitationKeyPropagationError:
-            print('WARNING: cleansing entry with propagated citation_key:',
-                  entry['ID'])
-            pass
+        for i, row in CR_JOURNAL_VARIATIONS.iterrows():
+            if row['variation'].lower() == entry['journal'].lower():
+                entry['journal'] = row['journal']
+
+    if 'booktitle' in entry:
+        for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['booktitle'].lower():
+                entry['booktitle'] = row['conference']
+
+    return entry
+
+
+def cleanse(entry):
+
+    if 'status' in entry:
+        entry['status'] = entry['status'].replace('not_cleansed', '')
+
+    entry = homogenize_entry(entry)
+
+    entry = apply_local_rules(entry)
+
+    entry = apply_crowd_rules(entry)
+
+    entry = speculative_changes(entry)
+
+    entry = get_doi_from_crossref(entry)
+
+    entry = retrieve_doi_metadata(entry)
+
+    entry = regenerate_citation_key(entry)
 
     return entry
 
@@ -386,9 +458,6 @@ def quality_improvements(bib_database):
 
         entry = cleanse(entry)
 
-        if 'not_cleansed' in entry.get('status', 'no status'):
-            continue
-
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     return bib_database
@@ -400,6 +469,8 @@ if __name__ == '__main__':
     # bibtex_str = "@article{...\n ...}"
     # bib_database = bibtexparser.loads(bibtex_str)
     # entry = bib_database.entries[0]
+
+    # https://github.com/nschloe/betterbib
 
     print('')
     print('')
@@ -416,7 +487,14 @@ if __name__ == '__main__':
         print('Commit files before cleansing.')
         sys.exit()
 
-    JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
+    LOCAL_JOURNAL_ABBREVIATIONS, \
+        LOCAL_JOURNAL_VARIATIONS, \
+        LOCAL_CONFERENCE_ABBREVIATIONS = \
+        utils.retrieve_local_resources()
+
+    CR_JOURNAL_ABBREVIATIONS, \
+        CR_JOURNAL_VARIATIONS, \
+        CR_CONFERENCE_ABBREVIATIONS = \
         utils.retrieve_crowd_resources()
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))

@@ -26,6 +26,18 @@ SCREEN = entry_hash_function.paths['SCREEN']
 SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
+def retrieve_local_resources():
+
+    JOURNAL_ABBREVIATIONS = pd.read_csv('/lexicon/JOURNAL_ABBREVIATIONS.csv')
+
+    JOURNAL_VARIATIONS = pd.read_csv('/lexicon/JOURNAL_VARIATIONS.csv')
+
+    CONFERENCE_ABBREVIATIONS = \
+        pd.read_csv('/lexicon/CONFERENCE_ABBREVIATIONS.csv')
+
+    return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
+
+
 def retrieve_crowd_resources():
 
     JOURNAL_ABBREVIATIONS = pd.DataFrame(
@@ -415,8 +427,6 @@ def save_bib_file(bib_database, target_file):
     writer.order_entries_by = ('ID', 'author', 'year')
     writer.add_trailing_comma = True
     writer.align_values = True
-    bibtex_str = bibtexparser.dumps(bib_database, writer)
-
     bibtex_str = bibtexparser.dumps(bib_database, writer)
 
     with open('temp.bib', 'w') as out:
