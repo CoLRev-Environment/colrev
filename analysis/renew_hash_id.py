@@ -71,8 +71,8 @@ def get_container_title(entry):
         container_title += entry['journal']
 
     if 'url' in entry and not any(x in entry for x in ['journal',
-                                                        'series',
-                                                        'booktitle']):
+                                                       'series',
+                                                       'booktitle']):
         container_title += entry['url']
 
     return container_title

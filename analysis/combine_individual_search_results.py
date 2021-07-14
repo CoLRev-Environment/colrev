@@ -38,7 +38,7 @@ fields_to_drop = [
     'doc-delivery-number', 'research-areas',
     'web-of-science-categories', 'number-of-cited-references',
     'times-cited', 'journal-iso', 'oa', 'keywords-plus',
-    'funding-text', 'funding-acknowledgement'
+    'funding-text', 'funding-acknowledgement', 'day'
 ]
 
 
@@ -95,9 +95,9 @@ def gather(bibfilename, bib_database):
 
             if 0 == len(bib_database.entries):
                 bib_database.entries.append(entry)
+                existing_hash_ids.append(entry['hash_id'])
                 total_nr_entries_added += 1
                 nr_entries_added += 1
-
                 continue
 
             # don't append the entry if the hash_id is already in bib_database
@@ -107,14 +107,12 @@ def gather(bibfilename, bib_database):
                 # after cleansing/updating author/year fields) to achieve a
                 # better sort order in MAIN_REFERENCES
                 # (and a cleaner git history)
-                # try:
                 entry['ID'] = utils.generate_citation_key(entry, bib_database)
-                # except StopIteration:
-                #   pass
 
                 entry['status'] = 'not_cleansed'
 
                 bib_database.entries.append(entry)
+                existing_hash_ids.append(entry['hash_id'])
                 total_nr_entries_added += 1
                 nr_entries_added += 1
 

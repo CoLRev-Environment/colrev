@@ -28,12 +28,24 @@ SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 def retrieve_local_resources():
 
-    JOURNAL_ABBREVIATIONS = pd.read_csv('/lexicon/JOURNAL_ABBREVIATIONS.csv')
+    if os.path.exists('/lexicon/JOURNAL_ABBREVIATIONS.csv'):
+        JOURNAL_ABBREVIATIONS = pd.read_csv(
+            '/lexicon/JOURNAL_ABBREVIATIONS.csv')
+    else:
+        JOURNAL_ABBREVIATIONS = pd.DataFrame(
+            [], columns=['journal', 'abbreviation'])
 
-    JOURNAL_VARIATIONS = pd.read_csv('/lexicon/JOURNAL_VARIATIONS.csv')
+    if os.path.exists('/lexicon/JOURNAL_VARIATIONS.csv'):
+        JOURNAL_VARIATIONS = pd.read_csv('/lexicon/JOURNAL_VARIATIONS.csv')
+    else:
+        JOURNAL_VARIATIONS = pd.DataFrame([], columns=['journal', 'variation'])
 
-    CONFERENCE_ABBREVIATIONS = \
-        pd.read_csv('/lexicon/CONFERENCE_ABBREVIATIONS.csv')
+    if os.path.exists('/lexicon/CONFERENCE_ABBREVIATIONS.csv'):
+        CONFERENCE_ABBREVIATIONS = \
+            pd.read_csv('/lexicon/CONFERENCE_ABBREVIATIONS.csv')
+    else:
+        CONFERENCE_ABBREVIATIONS = pd.DataFrame(
+            [], columns=['conference', 'abbreviation'])
 
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
@@ -76,8 +88,9 @@ def hash_function_up_to_date():
     with open('.pre-commit-config.yaml') as f:
         data_loaded = yaml.safe_load(f)
         for repo in data_loaded['repos']:
-            if repo.get('repo') == \
-                    'https://github.com/geritwagner/pipeline-validation-hooks':
+            # note: don't check for the full url because the pre-commit
+            # hooks could also be linked locally (for development)
+            if 'pipeline-validation-hooks' in repo.get('repo'):
                 pipeline_commit_id = repo.get('rev')
 
     with open('../analysis/hash_function_pipeline_commit_id.csv') as read_obj:
@@ -87,6 +100,11 @@ def hash_function_up_to_date():
     up_to_date = False
     if [hash_of_hash_function, pipeline_commit_id] in list_of_rows:
         up_to_date = True
+
+    if not up_to_date:
+        print(hash_of_hash_function + ',' + pipeline_commit_id +
+              ' not in analysis/hash_function_pipeline_commit_id.csv')
+        raise HashFunctionError
 
     return up_to_date
 
@@ -108,16 +126,24 @@ def rmdiacritics(char):
 
 
 def remove_accents(input_str):
-    nfkd_form = unicodedata.normalize('NFKD', input_str)
-    wo_ac = [
-        rmdiacritics(c)
-        for c in nfkd_form if not unicodedata.combining(c)
-    ]
-    wo_ac = ''.join(wo_ac)
+    try:
+        nfkd_form = unicodedata.normalize('NFKD', input_str)
+        wo_ac = [
+            rmdiacritics(c)
+            for c in nfkd_form if not unicodedata.combining(c)
+        ]
+        wo_ac = ''.join(wo_ac)
+    except ValueError:
+        wo_ac = input_str
+        pass
     return wo_ac
 
 
 class CitationKeyPropagationError(Exception):
+    pass
+
+
+class HashFunctionError(Exception):
     pass
 
 
@@ -154,7 +180,7 @@ def propagated_citation_key(citation_key):
     return propagated
 
 
-def generate_citation_key(entry, bib_database, raise_error=True):
+def generate_citation_key(entry, bib_database=None, raise_error=True):
 
     # Make sure that citation_keys that have been propagated to the
     # screen or data will not be replaced
@@ -169,11 +195,11 @@ def generate_citation_key(entry, bib_database, raise_error=True):
     if ',' in entry.get('author', ''):
         temp_citation_key = entry.get('author', '')\
             .split(',')[0].replace(' ', '') +\
-            entry.get('year', '')
+            str(entry.get('year', ''))
     else:
         temp_citation_key = entry.get('author', '')\
             .split(' ')[0] +\
-            entry.get('year', '')
+            str(entry.get('year', ''))
 
     if temp_citation_key.isupper():
         temp_citation_key = temp_citation_key.capitalize()
@@ -182,32 +208,39 @@ def generate_citation_key(entry, bib_database, raise_error=True):
     temp_citation_key = remove_accents(temp_citation_key)
     temp_citation_key = re.sub(r'\(.*\)', '', temp_citation_key)
     temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
-    letters = iter(ascii_lowercase)
 
-    # make sure that there are no other entries with the same ID
-    # TODO: we might have to split the x[hash_id] and the entry.get(hash_id, )
-    other_ids = [
-        x['ID'] for x in bib_database.entries
-        if x['ID'] != entry['ID']
-    ]
-    while temp_citation_key in other_ids:
-        next_letter = next(letters)
-        if next_letter == 'a':
-            temp_citation_key = temp_citation_key + next_letter
-        else:
-            temp_citation_key = temp_citation_key[:-1] + next_letter
+    if bib_database is not None:
+        other_ids = [
+            x['ID'] for x in bib_database.entries
+        ]
+        letters = iter(ascii_lowercase)
+        while temp_citation_key in other_ids:
+            try:
+
+                next_letter = next(letters)
+                if next_letter == 'a':
+                    temp_citation_key = temp_citation_key + next_letter
+                else:
+                    temp_citation_key = temp_citation_key[:-1] + next_letter
+            except StopIteration:
+                letters = iter(ascii_lowercase)
+                pass
 
     return temp_citation_key
 
 
 def mostly_upper_case(input_string):
     # also in entry_hash_function.py - consider updating it separately
+    if not re.match(r'[a-zA-Z]+', input_string):
+        return input_string
     input_string = input_string.replace('.', '').replace(',', '')
     words = input_string.split()
     return sum(word.isupper() for word in words)/len(words) > 0.8
 
 
 def title_if_mostly_upper_case(input_string):
+    if not re.match(r'[a-zA-Z]+', input_string):
+        return input_string
     words = input_string.split()
     if sum(word.isupper() for word in words)/len(words) > 0.8:
         return input_string.capitalize()
@@ -307,33 +340,35 @@ def validate_bib_file(filename):
             return False
 
     # check number_records matching search_details.csv
-    search_details = pd.read_csv(SEARCH_DETAILS)
-    try:
-        records_expected = search_details.loc[
-            search_details['filename'] == Path(
-                filename,
-            ).name
-        ].number_records.item()
-        with open(filename) as bibtex_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
+    if os.path.exists(SEARCH_DETAILS):
+        search_details = pd.read_csv(SEARCH_DETAILS)
+        try:
+            records_expected = search_details.loc[
+                search_details['filename'] == Path(
+                    filename,
+                ).name
+            ].number_records.item()
+            with open(filename) as bibtex_file:
+                bib_database = bibtexparser.bparser.BibTexParser(
+                    customization=convert_to_unicode, common_strings=True,
+                ).parse_file(bibtex_file, partial=True)
 
-        if len(bib_database.entries) != records_expected:
+            if len(bib_database.entries) != records_expected:
+                print(
+                    'Error while loading the file: number of records ',
+                    'imported not identical to ',
+                    'search/search_details.csv$number_records',
+                )
+                print('Loaded: ' + str(len(bib_database.entries)))
+                print('Expected: ' + str(records_expected))
+                return False
+        except ValueError:
             print(
-                'Error while loading the file: number of records imported ',
-                'not identical to search/search_details.csv$number_records',
+                'WARNING: no details on ',
+                filename,
+                ' provided in ' + SEARCH_DETAILS,
             )
-            print('Loaded: ' + str(len(bib_database.entries)))
-            print('Expected: ' + str(records_expected))
-            return False
-    except ValueError:
-        print(
-            'WARNING: no details on ',
-            filename,
-            ' provided in ' + SEARCH_DETAILS,
-        )
-        pass
+            pass
     return True
 
 
@@ -434,7 +469,7 @@ def save_bib_file(bib_database, target_file):
         out.write(bibtex_str + '\n')
 
     # to
-    time_to_wait = 5
+    time_to_wait = 10
     time_counter = 0
     while not os.path.exists('temp.bib'):
         time.sleep(0.1)
@@ -442,7 +477,8 @@ def save_bib_file(bib_database, target_file):
         if time_counter > time_to_wait:
             break
 
-    os.remove(MAIN_REFERENCES)
+    if os.path.exists(MAIN_REFERENCES):
+        os.remove(MAIN_REFERENCES)
     os.rename('temp.bib', MAIN_REFERENCES)
 
     return

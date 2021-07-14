@@ -14,8 +14,7 @@ if __name__ == '__main__':
     print('Renew hash_id function')
     print('')
 
-    input('IMPORTANT: remove BIB_DETAILS from entry_hash_function.py in the next version!')
-
+    input('TODO: add the semantic version v_0.2... to the hash_function_pipeline_commit_id.csv to enable better error messages!')
     input('TODO: dont add duplicates to hash_function_pipeline_commit_id.csv')
     with open('analysis/entry_hash_function.py') as file:
         hash_of_hash_function = hashlib.sha256(
@@ -25,6 +24,8 @@ if __name__ == '__main__':
         # is not yet publicly available.
 #        r = requests.get('https://raw.githubusercontent.com/geritwagner/pipeline-validation-hooks/main/pipeline_validation_hooks/entry_hash_function.py')
 #        print(hashlib.sha256(r.text.encode('utf-8')).hexdigest())
+        # once the pipeline_validation_hooks repo is publicly available: directly compare hashes of hash function (review_template/analysis) and hash of hash function (retrieve from pipeline_validation_hook repository)
+        # - instead of storing the commit-id in the local csv file
     print('Replace temporary fix once pipeline-validation-hooks is public:')
     with open('/home/gerit/ownCloud/projects/WAITING_LRTemplate/pipeline-validation-hooks/pipeline_validation_hooks/entry_hash_function.py') as file2:
         hash_of_hash_function_pipeline = hashlib.sha256(

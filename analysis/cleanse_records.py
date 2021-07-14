@@ -19,10 +19,7 @@ import requests
 import utils
 from Levenshtein import ratio
 from nameparser import HumanName
-from nameparser.config import CONSTANTS
 from tqdm import tqdm
-
-CONSTANTS.string_format = '{last} {suffix}, {first} ({nickname}) {middle}'
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -32,6 +29,16 @@ EMPTY_RESULT = {
     'doi': '',
 }
 MAX_RETRIES_ON_ERROR = 3
+
+LOCAL_JOURNAL_ABBREVIATIONS, \
+    LOCAL_JOURNAL_VARIATIONS, \
+    LOCAL_CONFERENCE_ABBREVIATIONS = \
+    utils.retrieve_local_resources()
+
+CR_JOURNAL_ABBREVIATIONS, \
+    CR_JOURNAL_VARIATIONS, \
+    CR_CONFERENCE_ABBREVIATIONS = \
+    utils.retrieve_crowd_resources()
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 EMAIL = config.details['EMAIL']
@@ -205,6 +212,8 @@ def retrieve_doi_metadata(entry):
                     # Note: https://github.com/derek73/python-nameparser
                     # is very effective (maybe not perfect)
                     parsed_name = HumanName(name)
+                    parsed_name.string_format = \
+                        '{last} {suffix}, {first} ({nickname}) {middle}'
                     parsed_name.capitalize(force=True)
                     entry['author'] = entry['author'] + ' and ' + \
                         str(parsed_name).replace(' , ', ', ')
@@ -219,12 +228,17 @@ def retrieve_doi_metadata(entry):
         retrieved_title = retrieved_record.get('title', '')
         if not retrieved_title == '':
             entry['title'] = \
-                str(re.sub(r'\s+', ' ', retrieved_title))\
+                re.sub(r'\s+', ' ', str(retrieved_title))\
                 .replace('\n', ' ')
         try:
-            date_parts = \
-                retrieved_record['published-print']['date-parts']
-            entry['year'] = str(date_parts[0][0])
+            if 'published-print' in retrieved_record:
+                date_parts = \
+                    retrieved_record['published-print']['date-parts']
+                entry['year'] = date_parts[0][0]
+            elif 'published-online' in retrieved_record:
+                date_parts = \
+                    retrieved_record['published-online']['date-parts']
+                entry['year'] = date_parts[0][0]
         except KeyError:
             pass
 
@@ -486,16 +500,6 @@ if __name__ == '__main__':
     if r.is_dirty():
         print('Commit files before cleansing.')
         sys.exit()
-
-    LOCAL_JOURNAL_ABBREVIATIONS, \
-        LOCAL_JOURNAL_VARIATIONS, \
-        LOCAL_CONFERENCE_ABBREVIATIONS = \
-        utils.retrieve_local_resources()
-
-    CR_JOURNAL_ABBREVIATIONS, \
-        CR_JOURNAL_VARIATIONS, \
-        CR_CONFERENCE_ABBREVIATIONS = \
-        utils.retrieve_crowd_resources()
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
     bib_database = quality_improvements(bib_database)

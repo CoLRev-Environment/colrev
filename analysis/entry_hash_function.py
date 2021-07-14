@@ -4,11 +4,8 @@ import re
 import unicodedata
 
 from nameparser import HumanName
-from nameparser.config import CONSTANTS
 
-CONSTANTS.string_format = '{last}, {first} {middle}'
-
-HASH_FUNCTION_VERSION = 'v_0.2'
+HASH_FUNCTION_VERSION = 'v_0.3'
 
 # Note: including the paths here is useful to ensure that a passing pre-commit
 # means that the files are in the specified places. This is particularly
@@ -18,7 +15,6 @@ paths = dict(
     SCREEN='screen.csv',
     DATA='data.csv',
     PDF_DIRECTORY='pdfs/',
-    BIB_DETAILS='search/bib_details.csv',
     SEARCH_DETAILS='search/search_details.csv'
 )
 
@@ -66,6 +62,10 @@ def format_author_field(input_string):
         if ',' not in str(parsed_name):
             author_string += str(parsed_name)
             continue
+        # Note: do not set this as a global constant to preserve consistent
+        # creation of hash_ids
+        parsed_name.string_format = \
+            '{last}, {first} {middle}'
         parsed_name = str(parsed_name).split(', ')
         initials = \
             ''.join(x[0] for x in parsed_name[1].split(' '))

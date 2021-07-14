@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Catch exceptions and check bad responses in `analysis/acquire_pdfs.py`
 - Bug in git modification check for `references.bib` in `analysis/utils.py`
 - Exception in `anaylsis/screen_2.py` (IndexError)
+- Global constant conflict with `analysis/entry_hash_function.py` (nameparser.config/CONSTANTS)
 
 ### [0.1.0] -2021-05-08
 
