@@ -121,6 +121,9 @@ def homogenize_entry(entry):
                 .replace('}', '')
 
     if 'author' in entry:
+        # DBLP appends identifiers to non-unique authors
+        entry['author'] = str(re.sub(r'[0-9]{4}', '', entry['author']))
+
         # fix name format
         if (1 == len(entry['author'].split(' ')[0])) or \
                 (', ' not in entry['author']):
@@ -234,11 +237,11 @@ def retrieve_doi_metadata(entry):
             if 'published-print' in retrieved_record:
                 date_parts = \
                     retrieved_record['published-print']['date-parts']
-                entry['year'] = date_parts[0][0]
+                entry['year'] = str(date_parts[0][0])
             elif 'published-online' in retrieved_record:
                 date_parts = \
                     retrieved_record['published-online']['date-parts']
-                entry['year'] = date_parts[0][0]
+                entry['year'] = str(date_parts[0][0])
         except KeyError:
             pass
 
@@ -307,7 +310,8 @@ def regenerate_citation_key(entry):
         # Recreate citation_keys
         # (mainly if it differs, i.e., if there are changes in authors/years)
         try:
-            entry['ID'] = utils.generate_citation_key(entry, bib_database)
+            entry['ID'] = utils.generate_citation_key(
+                entry, bib_database, entry_in_bib_database=True)
         except utils.CitationKeyPropagationError:
             # print('WARNING: cleansing entry with propagated citation_key:',
             #   entry['ID'])
@@ -432,7 +436,10 @@ def apply_crowd_rules(entry):
 def cleanse(entry):
 
     if 'status' in entry:
-        entry['status'] = entry['status'].replace('not_cleansed', '')
+        if 'not_cleansed' == entry['status']:
+            del entry['status']
+        else:
+            entry['status'] = entry['status'].replace('not_cleansed', '')
 
     entry = homogenize_entry(entry)
 
@@ -505,11 +512,13 @@ if __name__ == '__main__':
     bib_database = quality_improvements(bib_database)
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
-    r.index.add([MAIN_REFERENCES])
+    if 'y' == input('Create commit (y/n)?'):
 
-    r.index.commit(
-        'Cleanse ' + MAIN_REFERENCES,
-        author=git.Actor('script:cleanse_records.py', ''),
-    )
+        r.index.add([MAIN_REFERENCES])
 
-    print('Created commit: Cleanse ' + MAIN_REFERENCES)
+        r.index.commit(
+            'Cleanse ' + MAIN_REFERENCES,
+            author=git.Actor('script:cleanse_records.py', ''),
+        )
+
+        print('Created commit: Cleanse ' + MAIN_REFERENCES)

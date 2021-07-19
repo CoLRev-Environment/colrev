@@ -28,21 +28,21 @@ SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 def retrieve_local_resources():
 
-    if os.path.exists('/lexicon/JOURNAL_ABBREVIATIONS.csv'):
+    if os.path.exists('lexicon/JOURNAL_ABBREVIATIONS.csv'):
         JOURNAL_ABBREVIATIONS = pd.read_csv(
-            '/lexicon/JOURNAL_ABBREVIATIONS.csv')
+            'lexicon/JOURNAL_ABBREVIATIONS.csv')
     else:
         JOURNAL_ABBREVIATIONS = pd.DataFrame(
             [], columns=['journal', 'abbreviation'])
 
-    if os.path.exists('/lexicon/JOURNAL_VARIATIONS.csv'):
-        JOURNAL_VARIATIONS = pd.read_csv('/lexicon/JOURNAL_VARIATIONS.csv')
+    if os.path.exists('lexicon/JOURNAL_VARIATIONS.csv'):
+        JOURNAL_VARIATIONS = pd.read_csv('lexicon/JOURNAL_VARIATIONS.csv')
     else:
         JOURNAL_VARIATIONS = pd.DataFrame([], columns=['journal', 'variation'])
 
-    if os.path.exists('/lexicon/CONFERENCE_ABBREVIATIONS.csv'):
+    if os.path.exists('lexicon/CONFERENCE_ABBREVIATIONS.csv'):
         CONFERENCE_ABBREVIATIONS = \
-            pd.read_csv('/lexicon/CONFERENCE_ABBREVIATIONS.csv')
+            pd.read_csv('lexicon/CONFERENCE_ABBREVIATIONS.csv')
     else:
         CONFERENCE_ABBREVIATIONS = pd.DataFrame(
             [], columns=['conference', 'abbreviation'])
@@ -180,7 +180,9 @@ def propagated_citation_key(citation_key):
     return propagated
 
 
-def generate_citation_key(entry, bib_database=None, raise_error=True):
+def generate_citation_key(entry, bib_database=None,
+                          entry_in_bib_db=False,
+                          raise_error=True):
 
     # Make sure that citation_keys that have been propagated to the
     # screen or data will not be replaced
@@ -210,9 +212,19 @@ def generate_citation_key(entry, bib_database=None, raise_error=True):
     temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
 
     if bib_database is not None:
-        other_ids = [
-            x['ID'] for x in bib_database.entries
-        ]
+        if entry_in_bib_db:
+            # allow IDs to remain the same.
+            other_ids = [
+                x['ID'] for x in bib_database.entries
+                if not x['ID'] == entry['ID']
+            ]
+        else:
+            # ID can remain the same, but it has to change
+            # if it is already in bib_database
+            other_ids = [
+                x['ID'] for x in bib_database.entries
+            ]
+
         letters = iter(ascii_lowercase)
         while temp_citation_key in other_ids:
             try:

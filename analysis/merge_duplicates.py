@@ -5,7 +5,6 @@ import re
 import sys
 
 import bibtexparser
-import dictdiffer
 import entry_hash_function
 import git
 import numpy as np
@@ -14,6 +13,7 @@ import utils
 from bibtexparser.customization import convert_to_unicode
 from fuzzywuzzy import fuzz
 from tqdm import tqdm
+# import dictdiffer
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -341,7 +341,7 @@ if __name__ == '__main__':
 
     r = git.Repo()
 
-    if r.is_dirty():
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
         print('Commit files before merging duplicates.')
         sys.exit()
 

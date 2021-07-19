@@ -82,7 +82,8 @@ def rename_propagated_citation_keys():
     for entry in bib_database.entries:
         if entry['ID'] in citation_keys:
             replacement = utils.generate_citation_key(
-                entry, bib_database, raise_error=False)
+                entry, bib_database, entry_in_bib_db=True,
+                raise_error=False)
             citation_key_pairs.append([entry['ID'], replacement])
             entry['ID'] = replacement
 
@@ -107,8 +108,10 @@ def rename_propagated_citation_keys():
 
     data.sort_values(by=['citation_key'], inplace=True)
     data.to_csv(
-        DATA_FILE, index=False,
-        quoting=csv.QUOTE_ALL, na_rep='NA',
+        DATA_FILE,
+        index=False,
+        quoting=csv.QUOTE_ALL,
+        na_rep='NA',
     )
 
 

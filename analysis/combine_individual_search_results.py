@@ -107,7 +107,9 @@ def gather(bibfilename, bib_database):
                 # after cleansing/updating author/year fields) to achieve a
                 # better sort order in MAIN_REFERENCES
                 # (and a cleaner git history)
-                entry['ID'] = utils.generate_citation_key(entry, bib_database)
+                entry['ID'] = utils.generate_citation_key(entry,
+                                                          bib_database,
+                                                          entry_in_bib_db=False)
 
                 entry['status'] = 'not_cleansed'
 
@@ -195,11 +197,13 @@ if __name__ == '__main__':
     )
     print('')
 
-    print('Creating commit ...')
+    if 'y' == input('Create commit (y/n)?'):
+        print('Creating commit ...')
 
-    r.index.add([MAIN_REFERENCES])
-    print('Import search results \n - ' + '\n - '.join(details_commit))
-    r.index.commit(
-        'Import search results \n - ' + '\n - '.join(details_commit),
-        author=git.Actor('script:combine_individual_search_results.py', ''),
-    )
+        r.index.add([MAIN_REFERENCES])
+        print('Import search results \n - ' + '\n - '.join(details_commit))
+        r.index.commit(
+            'Import search results \n - ' + '\n - '.join(details_commit),
+            author=git.Actor(
+                'script:combine_individual_search_results.py', ''),
+        )

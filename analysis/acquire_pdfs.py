@@ -22,6 +22,8 @@ missing_pdfs = 0
 total_to_retrieve = 0
 pdfs_available = 0
 
+# https://github.com/ContentMine/getpapers
+
 
 def unpaywall(doi, retry=0, pdfonly=True):
 
