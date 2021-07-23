@@ -2,7 +2,6 @@
 import csv
 import os
 import re
-import sys
 
 import bibtexparser
 import entry_hash_function
@@ -20,6 +19,8 @@ nr_current_entries = 0
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 
+pd.options.mode.chained_assignment = None  # default='warn'
+
 
 def store_changes(references, bib_database):
     # convert the dataframe back to a list of dicts, assign to bib_database
@@ -29,9 +30,8 @@ def store_changes(references, bib_database):
         ref_list[idx] = {k: str(v)
                          for k, v in my_dict.items() if str(v) != 'nan'}
     bib_database.entries = ref_list
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    return
+    return bib_database
 
 
 def remove_entry(references, citation_key):
@@ -71,7 +71,7 @@ def get_similarity(df_a, df_b):
 
     authors_a = format_authors_string(df_a['author'])
     authors_b = format_authors_string(df_b['author'])
-    author_similarity = fuzz.ratio(authors_a, authors_b)/100
+    author_similarity = fuzz.partial_ratio(authors_a, authors_b)/100
 
     title_a = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_a['title']).lower())
     title_b = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_b['title']).lower())
@@ -130,7 +130,7 @@ def get_similarity(df_a, df_b):
                         number_similarity,
                         pages_similarity]
 
-    else:
+    elif 'booktitle' in df_a and 'booktitle' in df_b:
         booktitle_a = re.sub(r'[^A-Za-z0-9 ]+', '',
                              str(df_a['booktitle']).lower())
         booktitle_b = re.sub(r'[^A-Za-z0-9 ]+', '',
@@ -142,11 +142,44 @@ def get_similarity(df_a, df_b):
                         title_similarity,
                         year_similarity,
                         outlet_similarity]
+    else:
+        weights = [0.15, 0.75, 0.05, 0.05]
+        similarities = [0, 0, 0, 0]
+        print('PROBLEM: no journal or booktitle in entry...')
 
     weighted_average = sum(similarities[g] * weights[g]
                            for g in range(len(similarities)))
 
     return weighted_average
+
+
+def calculate_similarities_entry(references, entry):
+    if 'author' not in entry:
+        entry['author'] = ''
+    if 'year' not in entry:
+        entry['year'] = ''
+    if 'journal' in entry:
+        if 'volume' not in entry:
+            entry['volume'] = ''
+        if 'number' not in entry:
+            entry['number'] = ''
+        if 'pages' not in entry:
+            entry['pages'] = ''
+    else:
+        if 'booktitle' not in entry:
+            entry['booktitle'] = ''
+
+    entry_df = pd.DataFrame.from_dict([entry])
+
+    references['similarity'] = 0
+
+    for base_entry_i in range(0, references.shape[0]):
+        references.iloc[base_entry_i,
+                        references.columns.get_loc('similarity')] = \
+            get_similarity(references.iloc[base_entry_i],
+                           entry_df.iloc[0])
+
+    return references
 
 
 def calculate_similarities(SimilarityArray, references, min_similarity):
@@ -330,27 +363,7 @@ def update_known_non_duplicates(SimilarityArray, references):
     return SimilarityArray
 
 
-if __name__ == '__main__':
-
-    print('')
-    print('')
-
-    print('Merge duplicates')
-
-    assert utils.hash_function_up_to_date()
-
-    r = git.Repo()
-
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-        print('Commit files before merging duplicates.')
-        sys.exit()
-
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    # print('Remove the following restriction:')
-    # bib_database.entries = bib_database.entries[:100]
+def merge_bib(bib_database):
 
     references = pd.DataFrame.from_dict(bib_database.entries)
 
@@ -398,16 +411,83 @@ if __name__ == '__main__':
     tuples_df.to_csv('tuples_for_merging.csv',
                      index=False, quoting=csv.QUOTE_ALL)
 
-    store_changes(references, bib_database)
+    bib_database = store_changes(references, bib_database)
+
+    return bib_database
 
 
-#    # create a commit if there are changes (removed duplicates)
-#    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-#        r.index.add([MAIN_REFERENCES])
-#        r.index.commit(
-#            'Merge duplicates (script)',
-#            author=git.Actor('script:merge_duplicates.py (automated)', ''),
-#        )
+def create_commit():
+    r = git.Repo('')
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
+        r.index.add([MAIN_REFERENCES])
+        r.index.add(['potential_duplicate_tuples.csv'])
+        r.index.commit(
+            'Merge duplicates (script)',
+            author=git.Actor('script:merge_duplicates.py (automated)', ''),
+        )
+    return
+
+
+def manual_merge_commit():
+    r = git.Repo('')
+    r.index.add([MAIN_REFERENCES])
+    r.index.commit(
+        'Cleanse manual ' + MAIN_REFERENCES,
+        author=git.Actor('manual:merge duplicates', ''),
+    )
+    print('Created commit: Merge manual ' + MAIN_REFERENCES)
+
+    return
+
+
+def test_merge():
+
+    bibtex_str = """@article{Appan2012,
+                    author    = {Appan, and Browne,},
+                    journal   = {MIS Quarterly},
+                    title     = {The Impact of Analyst-Induced Misinformation},
+                    year      = {2012},
+                    number    = {1},
+                    pages     = {85},
+                    volume    = {36},
+                    doi       = {10.2307/41410407},
+                    hash_id   = {300a3700f5440cb37f39b05c866dc0a33cefb78de93c},
+                    }
+
+                    @article{Appan2012a,
+                    author    = {Appan, Radha and Browne, Glenn J.},
+                    journal   = {MIS Quarterly},
+                    title     = {The Impact of Analyst-Induced Misinformation},
+                    year      = {2012},
+                    number    = {1},
+                    pages     = {22},
+                    volume    = {36},
+                    doi       = {10.2307/41410407},
+                    hash_id   = {427967442a90d7f27187e66fd5b66fa94ab2d5da1bf9},
+                    }"""
+
+    bib_database = bibtexparser.loads(bibtex_str)
+    entry_a = bib_database.entries[0]
+    entry_b = bib_database.entries[1]
+    df_a = pd.DataFrame.from_dict([entry_a])
+    df_b = pd.DataFrame.from_dict([entry_b])
+
+    print(get_similarity(df_a.iloc[0], df_b.iloc[0]))
+
+    return
+
+
+if __name__ == '__main__':
+    test_merge()
+    input('continue')
+
+    print('')
+    print('')
+
+    # print('Remove the following restriction:')
+    # bib_database.entries = bib_database.entries[:100]
+
+
 #
 #    references, tuples_to_process = \
 #        interactively_merge_entries(references,

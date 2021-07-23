@@ -1,12 +1,15 @@
 .PHONY : status search backward_search cleanse_records screen data
 
 # Note: this should not be necessary for the pip-version (when the scripts can simply access the current path as the working directory)
-DATA_PATH=data
+DATA_PATH=data_test
 
 help :
 	@echo "Usage: make [command]"
 	@echo "    help"
 	@echo "        Show this help description"
+
+main:
+	cd $(DATA_PATH) && python3 ../analysis/main.py
 
 cli :
 	docker-compose up & gnome-terminal -e "bash -c \"docker-compose run --rm review_template_python3 /bin/bash\""
@@ -37,8 +40,8 @@ test :
 trace_entry :
 	cd $(DATA_PATH) && python3 ../analysis/trace_entry.py
 
-combine_individual_search_results :
-	cd $(DATA_PATH) && python3 ../analysis/combine_individual_search_results.py
+importer :
+	cd $(DATA_PATH) && python3 ../analysis/importer.py
 
 cleanse_records :
 	cd $(DATA_PATH) && python3 ../analysis/cleanse_records.py
