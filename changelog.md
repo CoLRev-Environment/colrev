@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 - Updated `analysis/combine_individual_search_results.py`, `analysis/merge_duplicates.py`
 - Update hash_id function
 - Updated path handling (`analysis/config.py`)
+- Renaed `analysis/combine_individual_search_results.py` to `analysis/importer.py`
 
 ### Removed
 

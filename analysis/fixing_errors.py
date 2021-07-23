@@ -53,7 +53,7 @@ def fix_missing_hash_ids():
 #    r.index.add([MAIN_REFERENCES, missing_entry_file])
 #    r.index.commit(
 #        'Fix missing hash_ids',
-#        author=git.Actor('script:combine_individual_search_results.py', ''),
+#        author=git.Actor('script:fixing_errors.py', ''),
 #    )
 
     return

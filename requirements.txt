@@ -1,0 +1,17 @@
+bibtexparser==1.2.0
+dictdiffer==0.8.1
+fuzzywuzzy==0.18.0
+GitPython==3.1.19
+langdetect==1.0.9
+lxml==4.5.0
+nameparser==1.0.6
+numpy==1.21.0
+pandas==1.2.5
+pdfminer==20191125
+pdfminer.six==20201018
+pytest==6.2.4
+python_Levenshtein==0.12.2
+PyYAML==5.4.1
+requests==2.22.0
+tqdm==4.61.1
+ujson==4.0.2

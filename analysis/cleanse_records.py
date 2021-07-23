@@ -4,14 +4,13 @@ import logging
 import re
 import sys
 import time
-from time import gmtime
-from time import strftime
 from urllib.error import HTTPError
 from urllib.parse import quote_plus
 from urllib.parse import urlencode
 from urllib.request import Request
 from urllib.request import urlopen
 
+import bibtexparser
 import config
 import entry_hash_function
 import git
@@ -19,7 +18,6 @@ import requests
 import utils
 from Levenshtein import ratio
 from nameparser import HumanName
-from tqdm import tqdm
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -303,7 +301,7 @@ def retrieve_doi_metadata(entry):
     return entry
 
 
-def regenerate_citation_key(entry):
+def regenerate_citation_key(entry, bib_database):
 
     if 'not_cleansed' not in entry.get('status', 'no status'):
 
@@ -311,7 +309,7 @@ def regenerate_citation_key(entry):
         # (mainly if it differs, i.e., if there are changes in authors/years)
         try:
             entry['ID'] = utils.generate_citation_key(
-                entry, bib_database, entry_in_bib_database=True)
+                entry, bib_database, entry_in_bib_db=True)
         except utils.CitationKeyPropagationError:
             # print('WARNING: cleansing entry with propagated citation_key:',
             #   entry['ID'])
@@ -377,7 +375,7 @@ def speculative_changes(entry):
                 entry['journal'] = journal_string
                 del entry['series']
 
-    # Moved journal processing to combine_individual_search_results
+    # Moved journal processing to importer
     # TODO: reinclude (as a function?)
 
     if 'booktitle' in entry:
@@ -435,11 +433,10 @@ def apply_crowd_rules(entry):
 
 def cleanse(entry):
 
-    if 'status' in entry:
-        if 'not_cleansed' == entry['status']:
-            del entry['status']
-        else:
-            entry['status'] = entry['status'].replace('not_cleansed', '')
+    if 'not_cleansed' != entry.get('status', ''):
+        return entry
+
+    entry['status'] = 'not_merged'
 
     entry = homogenize_entry(entry)
 
@@ -453,72 +450,68 @@ def cleanse(entry):
 
     entry = retrieve_doi_metadata(entry)
 
-    entry = regenerate_citation_key(entry)
+    # Note: tbd. whether we regenerate the citation_key here...
+    # we have to make sure that there are no conflicts.
+    # entry = regenerate_citation_key(entry)
+
+    if 'doi' in entry and 'title' in entry and \
+            'journal' in entry and 'year' in entry:
+        # in this case, it would be ok to have no author
+        entry['status'] = 'not_merged'
+    if 'title' not in entry or \
+        'author' not in entry or \
+            'year' not in entry or \
+            not any(x in entry for x in
+                    ['journal', 'booktitle', 'school', 'book', 'series']):
+        entry['status'] = 'needs_manual_cleansing'
 
     return entry
 
 
-def quality_improvements(bib_database):
+def create_commit():
+    r = git.Repo('')
+    r.index.add([MAIN_REFERENCES])
 
-    # If a more detailed (step-wise) cleansing process is needed,
-    # the status would need more field (cleansing_1, cleansing_2, ...)
+    r.index.commit(
+        'Cleanse ' + MAIN_REFERENCES,
+        author=git.Actor('script:cleanse_records.py', ''),
+    )
 
-    # skipped_all = False
+    print('Created commit: Cleanse ' + MAIN_REFERENCES)
 
-    for entry in tqdm(bib_database.entries):
+    return
 
-        # if not 'Doolin' in entry['ID']:
-        #   continue
-        # if 'Piel2017' == entry['ID']:
-        #   skipped_all = True
-        # if not skipped_all:
-        #    continue
 
-        if 'not_cleansed' not in entry.get('status', 'no status'):
-            continue
+def manual_cleanse_commit():
+    r = git.Repo('')
+    r.index.add([MAIN_REFERENCES])
+    r.index.commit(
+        'Cleanse manual ' + MAIN_REFERENCES,
+        author=git.Actor('manual:cleanse', ''),
+    )
+    print('Created commit: Cleanse manual ' + MAIN_REFERENCES)
 
-        entry = cleanse(entry)
+    return
 
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    return bib_database
+def test_cleanse():
+    bibtex_str = """@article{Andersen2019,
+                    author    = {Andersen, Jonas},
+                    journal   = {Journal of Information Systems},
+                    title     = {Self-Organizing in Blockchain},
+                    year      = {2019},
+                    pages     = {1242--1273},
+                    doi       = {10.17705/1jais.00566},
+                    hash_id   = {6ed4d341525ce2ac999a7cfe3102caa98f521821973},
+                    }"""
+
+    bib_database = bibtexparser.loads(bibtex_str)
+    entry = bib_database.entries[0]
+    print(cleanse(entry))
+
+    return
 
 
 if __name__ == '__main__':
-
-    # To test:
-    # bibtex_str = "@article{...\n ...}"
-    # bib_database = bibtexparser.loads(bibtex_str)
-    # entry = bib_database.entries[0]
-
+    test_cleanse()
     # https://github.com/nschloe/betterbib
-
-    print('')
-    print('')
-
-    print('Cleanse records')
-
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    r = git.Repo('')
-
-    if r.is_dirty():
-        print('Commit files before cleansing.')
-        sys.exit()
-
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-    bib_database = quality_improvements(bib_database)
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-
-    if 'y' == input('Create commit (y/n)?'):
-
-        r.index.add([MAIN_REFERENCES])
-
-        r.index.commit(
-            'Cleanse ' + MAIN_REFERENCES,
-            author=git.Actor('script:cleanse_records.py', ''),
-        )
-
-        print('Created commit: Cleanse ' + MAIN_REFERENCES)

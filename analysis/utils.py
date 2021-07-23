@@ -183,6 +183,19 @@ def propagated_citation_key(citation_key):
 def generate_citation_key(entry, bib_database=None,
                           entry_in_bib_db=False,
                           raise_error=True):
+    if bib_database is not None:
+        citation_key_blacklist = [entry['ID']
+                                  for entry in bib_database.entries]
+    else:
+        citation_key_blacklist = None
+    return (generate_citation_key_blacklist(entry, citation_key_blacklist,
+                                            entry_in_bib_db,
+                                            raise_error))
+
+
+def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
+                                    entry_in_bib_db=False,
+                                    raise_error=True):
 
     # Make sure that citation_keys that have been propagated to the
     # screen or data will not be replaced
@@ -194,14 +207,24 @@ def generate_citation_key(entry, bib_database=None,
             entry['ID'] + ')',
         )
 
-    if ',' in entry.get('author', ''):
-        temp_citation_key = entry.get('author', '')\
-            .split(',')[0].replace(' ', '') +\
-            str(entry.get('year', ''))
+    if 'author' in entry:
+        author = format_author_field(entry['author'])
     else:
-        temp_citation_key = entry.get('author', '')\
+        author = ''
+
+    temp_flag = ''
+    # if 'needs_manual_cleansing' in entry.get('status',''):
+    #     temp_flag = '_temp_'
+    if ',' in author:
+        temp_citation_key = author\
+            .split(',')[0].replace(' ', '') +\
+            str(entry.get('year', '')) +\
+            temp_flag
+    else:
+        temp_citation_key = author\
             .split(' ')[0] +\
-            str(entry.get('year', ''))
+            str(entry.get('year', '')) +\
+            temp_flag
 
     if temp_citation_key.isupper():
         temp_citation_key = temp_citation_key.capitalize()
@@ -211,19 +234,18 @@ def generate_citation_key(entry, bib_database=None,
     temp_citation_key = re.sub(r'\(.*\)', '', temp_citation_key)
     temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
 
-    if bib_database is not None:
+    if citation_key_blacklist is not None:
         if entry_in_bib_db:
             # allow IDs to remain the same.
-            other_ids = [
-                x['ID'] for x in bib_database.entries
-                if not x['ID'] == entry['ID']
-            ]
+            other_ids = citation_key_blacklist
+            # Note: only remove it once. It needs to change when there are
+            # other entries with the same ID
+            if entry['ID'] in other_ids:
+                other_ids.remove(entry['ID'])
         else:
             # ID can remain the same, but it has to change
             # if it is already in bib_database
-            other_ids = [
-                x['ID'] for x in bib_database.entries
-            ]
+            other_ids = citation_key_blacklist
 
         letters = iter(ascii_lowercase)
         while temp_citation_key in other_ids:
@@ -375,11 +397,11 @@ def validate_bib_file(filename):
                 print('Expected: ' + str(records_expected))
                 return False
         except ValueError:
-            print(
-                'WARNING: no details on ',
-                filename,
-                ' provided in ' + SEARCH_DETAILS,
-            )
+            # print(
+            #     'WARNING: no details on ',
+            #     os.path.basename(filename),
+            #     ' provided in ' + SEARCH_DETAILS,
+            # )
             pass
     return True
 
