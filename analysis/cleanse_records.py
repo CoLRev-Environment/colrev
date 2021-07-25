@@ -303,7 +303,7 @@ def retrieve_doi_metadata(entry):
 
 def regenerate_citation_key(entry, bib_database):
 
-    if 'not_cleansed' not in entry.get('status', 'no status'):
+    if 'not_cleansed' != entry['status']:
 
         # Recreate citation_keys
         # (mainly if it differs, i.e., if there are changes in authors/years)
@@ -433,7 +433,7 @@ def apply_crowd_rules(entry):
 
 def cleanse(entry):
 
-    if 'not_cleansed' != entry.get('status', ''):
+    if 'not_cleansed' != entry['status']:
         return entry
 
     entry['status'] = 'not_merged'

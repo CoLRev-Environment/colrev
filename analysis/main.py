@@ -3,7 +3,6 @@ import csv
 import itertools
 import multiprocessing as mp
 import os
-import shutil
 import sys
 import time
 from time import gmtime
@@ -136,7 +135,7 @@ def append_to_MAIN_REFERENCES_CLEANSED(entry):
 
 def append_merge_MAIN_REFERENCES_MERGED(entry):
 
-    if 'needs_manual_cleansing' in entry.get('status', 'NA'):
+    if 'needs_manual_cleansing' == entry['status']:
         # Note: The needs_manual_cleansing entries should be appended
         # (and ignored in the cleansing!)
         return entry
@@ -179,15 +178,13 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     # if the entry is the first one inserted into the cleansed bib_database
     # (in a preceding processing step), it can be propagated
     if len(bib_database.entries) < 2:
-        entry['status'] = ''
+        entry['status'] = 'processed'
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
         return entry
 
     # get_similarities for each other entry
     references = pd.DataFrame.from_dict(bib_database.entries)
-    if 'status' not in references:  # this happens for the first entries...
-        references['status'] = ''
 
     # TODO: drop rows from references for which
     # no hash_id is in required_prior_hash_ids
@@ -203,7 +200,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
                                                       na=False)]
     # means that all prior entries are tagged as needs_manual_cleansing
     if references.shape[0] == 0:
-        entry['status'] = ''
+        entry['status'] = 'processed'
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
         return entry
@@ -213,7 +210,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
     if max_similarity <= 0.7:
-        entry['status'] = ''
+        entry['status'] = 'processed'
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
         with open('non_duplicates.csv', 'a') as fd:
@@ -235,28 +232,6 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
             fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
 
     return entry
-
-
-def process_entry(entry):
-
-    # Note: add all entries (even to_clease/to_merge) to the following
-    # bib-files because they will override the prior bib files!
-
-    entry = importer.preprocess(entry)
-    append_to_MAIN_REFERENCES(entry)
-
-    entry = cleanse_records.cleanse(entry)
-    append_to_MAIN_REFERENCES_CLEANSED(entry)
-
-    entry = append_merge_MAIN_REFERENCES_MERGED(entry)
-
-    # only add entries to screen once they have been processed completely
-    if '' == entry.get('status', ''):
-        with open(SCREEN, 'a') as fd:
-            fd.write('"' + entry['ID'] + '","TODO","TODO",""\n')
-        # Note: pandas read/write takes too long/may create conflicts!
-
-    return
 
 
 def apply_merges():
@@ -289,9 +264,9 @@ def apply_merges():
                 if entry['ID'] == row[0]:
                     hash_ids = list(set(hash_ids_to_merge +
                                     entry['hash_id'].split(',')))
-                    entry['hash_id'] = str(','.join(hash_ids))
-                    if 'not_merged' == entry.get('status', ''):
-                        del entry['status']
+                    entry['hash_id'] = str(','.join(sorted(hash_ids)))
+                    if 'not_merged' == entry['status']:
+                        entry['status'] = 'processed'
                     break
     os.remove('duplicate_tuples.csv')
 
@@ -301,8 +276,8 @@ def apply_merges():
         for row in csv_reader:
             for entry in bib_database.entries:
                 if entry['ID'] == row[0]:
-                    if 'not_merged' == entry.get('status', ''):
-                        del entry['status']
+                    if 'not_merged' == entry['status']:
+                        entry['status'] = 'processed'
     os.remove('non_duplicates.csv')
 
     # note: potential_duplicate_tuples need to be processed manually but we
@@ -333,6 +308,31 @@ def apply_merges():
     return
 
 
+def process_entry(entry):
+
+    if 'not_imported' == entry['status']:
+        entry = importer.preprocess(entry)
+        append_to_MAIN_REFERENCES(entry)
+
+    if 'not_cleansed' == entry['status']:
+        entry = cleanse_records.cleanse(entry)
+
+    # note: always append entry to REFERENCES_CLEANSED (regardless of the result/status)
+    append_to_MAIN_REFERENCES_CLEANSED(entry)
+
+    if 'not_merged' == entry['status']:
+        entry = append_merge_MAIN_REFERENCES_MERGED(entry)
+        # only add entries to screen once they have been processed completely
+        # note: the record is added to the screening sheet when the not_merged
+        # status changes to '' (this should only happen once)
+        if 'processed' == entry['status']:
+            with open(SCREEN, 'a') as fd:
+                fd.write('"' + entry['ID'] + '","TODO","TODO",""\n')
+            # Note: pandas read/write takes too long/may create conflicts!
+
+    return
+
+
 def living_review_pipeline():
 
     # Explanation: each record should have status information
@@ -340,6 +340,8 @@ def living_review_pipeline():
     #  have been completed)each record is propagated as far as possible
     # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
     #
+    # not_imported
+    #     🡻
     # not_cleansed
     #     🡻   🢆
     #     🡻    needs_manual_cleansing
@@ -348,7 +350,7 @@ def living_review_pipeline():
     #     🡻   🢆
     #     🡻    needs_manual_merging
     #     🡻   🢇
-    #     -  (no status)
+    # processed
     #
 
     # Currently, citation_keys are generated
@@ -366,11 +368,6 @@ def living_review_pipeline():
 
     print('TODO: crowd-based merging')
 
-    # note: original entries should be kept. even if they are excluded from
-    # the search_records and not re-processed)
-    if os.path.exists(MAIN_REFERENCES):
-        shutil.copy(MAIN_REFERENCES, MAIN_REFERENCES_CLEANSED)
-
     create_commits = True
 
     # save changes to references.bib, references_cleansed.bib,
@@ -378,28 +375,34 @@ def living_review_pipeline():
     # once the run is completed: commit, override changes and commit,
     # override changes and commit
     # afterwards: manual cleansing/merging
-    try:
+    # try:
 
-        print('\n\n Import records')
-        search_records = importer.load()
+    print('\n\n Import records')
+    search_records = importer.load()
 
-        pool = mp.Pool(mp.cpu_count()-2)
-        print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-        for _ in tqdm(pool.imap_unordered(process_entry, search_records),
-                      total=len(search_records)):
-            pass
-        print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-
-        # for entry in search_records:
-        #     print('Processing entry: ' + entry['ID'])
-        #     process_entry(entry)
-
-    except KeyboardInterrupt:
-        if 'y' != input('Create commits despite interruption? (y/n)'):
-            create_commits = False
+    pool = mp.Pool(mp.cpu_count()-2)
+    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+    for _ in tqdm(pool.imap_unordered(process_entry, search_records),
+                  total=len(search_records)):
         pass
+    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
-    os.remove('queue_order.csv')
+    # for entry in search_records:
+    #     print('Processing entry: ' + entry['ID'])
+    #     process_entry(entry)
+
+    # except KeyboardInterrupt:
+    #   https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
+    #     if 'y' != input('Create commits despite interruption? (y/n)'):
+    #         print('Waiting for remaining workers to finish')
+    #         time.sleep(20)
+    #         create_commits = False
+    #     pass
+
+    try:
+        os.remove('queue_order.csv')
+    except FileNotFoundError:
+        pass
 
     if create_commits:
         # to avoid failing pre-commit hooks
@@ -435,13 +438,13 @@ def living_review_pipeline():
     # )
     # to_cleanse_manually = [entry['ID']
     #           for entry in bib_database.entries
-    #           if 'needs_manual_cleansing' in entry.get('status', '')]
+    #           if 'needs_manual_cleansing' == entry['status']]
     # if len(to_cleanse_manually) > 0:
     #     print('\n Entries to cleanse manually: ' + \
     #   ','.join(to_cleanse_manually))
     #     print('Note: remove the needs_manual_cleansing status')
     # to_merge_manually = [entry['ID'] for entry in bib_database.entries
-    #                   if 'needs_manual_merging' in entry.get('status', '')]
+    #                   if 'needs_manual_merging' == entry['status']]
     # if len(to_merge_manually) > 0:
     #     print('\n Entries to merge manually: ' + ','.join(to_merge_manually))
     #     print('Note: remove the needs_manual_merging status')

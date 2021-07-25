@@ -17,6 +17,7 @@ total_nr_duplicates_hash_ids = 0
 details_commit = []
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
@@ -30,7 +31,7 @@ fields_to_keep = [
     'abstract',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
-    'source_file_path'
+    'source_file_path', 'status'
 ]
 fields_to_drop = [
     'type', 'url', 'organization',
@@ -68,13 +69,15 @@ def load():
         modification_check=True, initialize=True,
     )
     processed_hash_ids = [entry['hash_id'].split(',') for
-                          entry in bib_database.entries
-                          if 'status' not in entry]
+                          entry in bib_database.entries]
     processed_hash_ids = list(itertools.chain(*processed_hash_ids))
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
 
-    search_records = []
+    # always include the current bib (including the statuus of entries)
+    search_records = bib_database.entries
+    # Note: only add search_results if their hash_id is not already
+    # in bib_database.entries
     bib_files = utils.get_bib_files()
     for bib_file in bib_files:
         with open(bib_file) as bibtex_file:
@@ -99,21 +102,8 @@ def load():
                             entry_in_bib_db=False,
                             raise_error=False)
                     citation_key_list.append(entry['ID'])
+                    entry['status'] = 'not_imported'
                     search_records.append(entry)
-
-    # move entries that are not_cleansed or not_merged from MAIN_REFERENCES
-    # to search_records (that will be processed)
-    if 0 < len(bib_database.entries):
-        for entry in [x for x in bib_database.entries
-                      if x.get('status', '') in
-                      ['not_cleansed', 'not_merged']]:
-            search_records.append(entry)
-
-        bib_database.entries = [x for x in bib_database.entries
-                                if x.get('status', '') not in
-                                ['not_cleansed', 'not_merged']]
-
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     # Note: if we process papers in order (often alphabetically),
     # the merging may be more likely to produce conflicts (in parallel mode)
