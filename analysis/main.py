@@ -112,6 +112,8 @@ def traditional_delay_manual():
 
 def append_to_MAIN_REFERENCES(entry):
 
+    entry = importer.preprocess(entry)
+
     del entry['source_file_path']
     db = BibDatabase()
     db.entries = [entry]
@@ -119,18 +121,23 @@ def append_to_MAIN_REFERENCES(entry):
     with open(MAIN_REFERENCES, 'a') as myfile:
         myfile.write(bibtex_str)
 
-    return
+    return entry
 
 
 def append_to_MAIN_REFERENCES_CLEANSED(entry):
 
-    db = BibDatabase()
-    db.entries = [entry]
-    bibtex_str = bibtexparser.dumps(db, writer)
-    with open(MAIN_REFERENCES_CLEANSED, 'a') as myfile:
-        myfile.write(bibtex_str)
+    if 'not_cleansed' == entry['status']:
+        entry = cleanse_records.cleanse(entry)
 
-    return
+    # note: always append entry to REFERENCES_CLEANSED (regardless of the result/status)
+
+    # db = BibDatabase()
+    # db.entries = [entry]
+    # bibtex_str = bibtexparser.dumps(db, writer)
+    # with open(MAIN_REFERENCES_CLEANSED, 'a') as myfile:
+    #     myfile.write(bibtex_str)
+
+    return entry
 
 
 def append_merge_MAIN_REFERENCES_MERGED(entry):
@@ -138,7 +145,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     if 'needs_manual_cleansing' == entry['status']:
         # Note: The needs_manual_cleansing entries should be appended
         # (and ignored in the cleansing!)
-        return entry
+        return
 
     # the order matters for the incremental merging (make sure that each
     # additional record is compared to/merged with all prior records in
@@ -153,35 +160,41 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     required_prior_hash_ids = get_prev_queue(queue_order, entry['hash_id'])
     hash_ids_in_cleansed_file = []
     # Ensure that all prior entries are available (for parallel processing)
-    max_iterations = 0
-    with open(MAIN_REFERENCES_CLEANSED) as target_db:
+    # max_iterations = 0
+    with open(MAIN_REFERENCES) as target_db:
         bib_database = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True,
         ).parse_file(target_db, partial=True)
-    while not all(hash_id in required_prior_hash_ids
-                  for hash_id in hash_ids_in_cleansed_file):
-        max_iterations += 1
-        time.sleep(1)
-        # load prior entries (according to the queue) that are cleansed
-        with open(MAIN_REFERENCES_CLEANSED) as target_db:
-            bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
-            ).parse_file(target_db, partial=True)
+    # while not all(hash_id in required_prior_hash_ids
+    #               for hash_id in hash_ids_in_cleansed_file):
+    #     max_iterations += 1
+    #     time.sleep(1)
+    #     # load prior entries (according to the queue) that are cleansed
+    #     with open(MAIN_REFERENCES) as target_db:
+    #         bib_database = bibtexparser.bparser.BibTexParser(
+    #             customization=convert_to_unicode, common_strings=True,
+    #         ).parse_file(target_db, partial=True)
 
-        hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
-                                     for entry in bib_database]
-        hash_ids_in_cleansed_file = \
-            list(itertools.chain(*hash_ids_in_cleansed_file))
-        if max_iterations > 20:
-            return entry
+    #     hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
+    #                                  for entry in bib_database]
+    #     hash_ids_in_cleansed_file = \
+    #         list(itertools.chain(*hash_ids_in_cleansed_file))
+    #     if max_iterations > 20:
+    #         return entry
 
-    # if the entry is the first one inserted into the cleansed bib_database
+    # note: no need to wait for completion of cleansing
+    hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
+                                    for entry in bib_database.entries]
+    hash_ids_in_cleansed_file = \
+        list(itertools.chain(*hash_ids_in_cleansed_file))
+
+    # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
     if len(bib_database.entries) < 2:
-        entry['status'] = 'processed'
+        # entry['status'] = 'processed'
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
-        return entry
+        return
 
     # get_similarities for each other entry
     references = pd.DataFrame.from_dict(bib_database.entries)
@@ -200,17 +213,17 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
                                                       na=False)]
     # means that all prior entries are tagged as needs_manual_cleansing
     if references.shape[0] == 0:
-        entry['status'] = 'processed'
+        # entry['status'] = 'processed'
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
-        return entry
+        return
     references = \
         merge_duplicates.calculate_similarities_entry(references, entry)
 
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
     if max_similarity <= 0.7:
-        entry['status'] = 'processed'
+        # entry['status'] = 'processed'
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
         with open('non_duplicates.csv', 'a') as fd:
@@ -219,7 +232,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
             max_similarity < 0.95:
         # The needs_manual_merging status is only set
         # for one element of the tuple!
-        entry['status'] = 'needs_manual_merging'
+        # entry['status'] = 'needs_manual_merging'
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' +
                      entry['ID'] + '","' + str(max_similarity) + '"\n')
@@ -227,18 +240,24 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
-        entry['status'] = 'merged'
+        # entry['status'] = 'merged'
         with open('duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
 
-    return entry
+    return
 
 
 def apply_merges():
 
+    #TBD: load the MAIN_REFERENCES_CLEANSED instead?
     bib_database = utils.load_references_bib(
         modification_check=False, initialize=False,
     )
+    # with open(MAIN_REFERENCES) as bibtex_file:
+    #     bib_database = bibtexparser.bparser.BibTexParser(
+    #         customization=convert_to_unicode, common_strings=True,
+    #     ).parse_file(bibtex_file, partial=True)
+
 
     # The merging also needs to consider whether citation_keys are propagated
     # Completeness of comparisons should be ensured by the
@@ -247,90 +266,140 @@ def apply_merges():
     # the comparison/adding entries ot the csvs)
 
     # Always merge clear duplicates: row[0] <- row[1]
-    with open('duplicate_tuples.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        print('duplicate_tuples')
-        for row in csv_reader:
-            hash_ids_to_merge = []
-            for entry in bib_database.entries:
-                if entry['ID'] == row[1]:
-                    print('drop ' + entry['ID'])
-                    hash_ids_to_merge = entry['hash_id'].split(',')
-                    # Drop the duplicated entry
-                    bib_database.entries = [i for i in bib_database.entries
-                                            if not (i['ID'] == entry['ID'])]
-                    break
-            for entry in bib_database.entries:
-                if entry['ID'] == row[0]:
-                    hash_ids = list(set(hash_ids_to_merge +
-                                    entry['hash_id'].split(',')))
-                    entry['hash_id'] = str(','.join(sorted(hash_ids)))
-                    if 'not_merged' == entry['status']:
-                        entry['status'] = 'processed'
-                    break
-    os.remove('duplicate_tuples.csv')
+    if os.path.exists('duplicate_tuples.csv'):
+        with open('duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            print('duplicate_tuples')
+            for row in csv_reader:
+                hash_ids_to_merge = []
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[1]:
+                        print('drop ' + entry['ID'])
+                        hash_ids_to_merge = entry['hash_id'].split(',')
+                        # Drop the duplicated entry
+                        bib_database.entries = [i for i in bib_database.entries
+                                                if not (i['ID'] == entry['ID'])]
+                        break
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[0]:
+                        hash_ids = list(set(hash_ids_to_merge +
+                                        entry['hash_id'].split(',')))
+                        entry['hash_id'] = str(','.join(sorted(hash_ids)))
+                        if 'not_merged' == entry['status']:
+                            entry['status'] = 'processed'
+                        break
+        os.remove('duplicate_tuples.csv')
 
     # Set clear non-duplicates to completely processed (remove the status tag)
-    with open('non_duplicates.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        for row in csv_reader:
-            for entry in bib_database.entries:
-                if entry['ID'] == row[0]:
-                    if 'not_merged' == entry['status']:
-                        entry['status'] = 'processed'
-    os.remove('non_duplicates.csv')
+    if os.path.exists('non_duplicates.csv'):
+        with open('non_duplicates.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[0]:
+                        if 'not_merged' == entry['status']:
+                            entry['status'] = 'processed'
+        os.remove('non_duplicates.csv')
 
     # note: potential_duplicate_tuples need to be processed manually but we
     # tag the second entry (row[1]) as "needs_manual_merging"
-    with open('potential_duplicate_tuples.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        entries_in_file = False
-        for row in csv_reader:
-            if row[0] != 'ID1':
-                entries_in_file = True
-            for entry in bib_database.entries:
-                if entry['ID'] == row[1]:
-                    entry['status'] = 'needs_manual_merging'
-    if not entries_in_file:
-        os.remove('potential_duplicate_tuples.csv')
-    else:
+    if os.path.exists('potential_duplicate_tuples.csv'):
+        with open('potential_duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            # entries_in_file = False
+            for row in csv_reader:
+                # if row[0] != 'ID1':
+                    # entries_in_file = True
+                    # continue
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[1]:
+                        entry['status'] = 'needs_manual_merging'
+        # if not entries_in_file:
+        #     os.remove('potential_duplicate_tuples.csv')
+        # else:
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
         potential_duplicates.sort_values(by=['max_similarity'],
-                                         ascending=False, inplace=True)
+                                        ascending=False, inplace=True)
         potential_duplicates.to_csv(
             'potential_duplicate_tuples.csv', index=False,
             quoting=csv.QUOTE_ALL, na_rep='NA',
         )
 
+    # utils.save_bib_file(bib_database, MAIN_REFERENCES_CLEANSED)
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     return
 
+def append_to_screen(entry):
+    with open(SCREEN, 'a') as fd:
+        fd.write('"' + entry['ID'] + '","TODO","TODO",""\n')
+        # Note: pandas read/write takes too long/may create conflicts!
+    return
 
-def process_entry(entry):
+def process_entries(search_records):
 
-    if 'not_imported' == entry['status']:
-        entry = importer.preprocess(entry)
-        append_to_MAIN_REFERENCES(entry)
+    pool = mp.Pool(mp.cpu_count()-2)
 
-    if 'not_cleansed' == entry['status']:
-        entry = cleanse_records.cleanse(entry)
+    # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
-    # note: always append entry to REFERENCES_CLEANSED (regardless of the result/status)
-    append_to_MAIN_REFERENCES_CLEANSED(entry)
+    # NOTE: Problem: parallel processing does not store the status of records (need to read files each time!)
+    
+    # parallel import
+    print('Import')
+    results = []
+    to_import = [entry for entry in search_records if 'not_imported' == entry['status']]
+    for entry in to_import:
+        # append_to_MAIN_REFERENCES(entry)
+        result = pool.apply_async(append_to_MAIN_REFERENCES, (entry,))
+        results.append(result)
+    [result.wait() for result in results]
+       
+    # import-commit
+    # Note: details (e.g., commit details) should not be stored in memory
+    # (they are lost when users interrupt the process)
+    # TODO: add details to the commit message
+    importer.create_commit(r, ['living_review mode'])
 
-    if 'not_merged' == entry['status']:
-        entry = append_merge_MAIN_REFERENCES_MERGED(entry)
-        # only add entries to screen once they have been processed completely
-        # note: the record is added to the screening sheet when the not_merged
-        # status changes to '' (this should only happen once)
-        if 'processed' == entry['status']:
-            with open(SCREEN, 'a') as fd:
-                fd.write('"' + entry['ID'] + '","TODO","TODO",""\n')
-            # Note: pandas read/write takes too long/may create conflicts!
+    # parallel cleansing
+    print('Cleanse')
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+    for entry in bib_database.entries:
+        entry = append_to_MAIN_REFERENCES_CLEANSED(entry)
+
+
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    # cleanse-commit
+    cleanse_records.create_commit()
+
+    # parallel merging
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+    # with open(MAIN_REFERENCES) as bibtex_file:
+    #     bib_database = bibtexparser.bparser.BibTexParser(
+    #         customization=convert_to_unicode, common_strings=True,
+    #     ).parse_file(bibtex_file, partial=True)
+    to_merge = [entry for entry in bib_database.entries if 'not_merged' == entry['status']]
+    for entry in to_merge:
+        # print(entry['ID'])
+        append_merge_MAIN_REFERENCES_MERGED(entry)
+        # pool.apply_async(append_merge_MAIN_REFERENCES_MERGED, (entry,))
+    # for _ in tqdm(pool.imap_unordered(append_merge_MAIN_REFERENCES_MERGED, [entry for entry in bib_database.entries if 'not_merged' == entry['status']])):
+    #     pass
+
+    apply_merges()
+
+    # merge commit
+    merge_duplicates.create_commit()
+
+    # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
     return
+
 
 
 def living_review_pipeline():
@@ -368,8 +437,6 @@ def living_review_pipeline():
 
     print('TODO: crowd-based merging')
 
-    create_commits = True
-
     # save changes to references.bib, references_cleansed.bib,
     # references_merged.bib
     # once the run is completed: commit, override changes and commit,
@@ -377,15 +444,30 @@ def living_review_pipeline():
     # afterwards: manual cleansing/merging
     # try:
 
-    print('\n\n Import records')
-    search_records = importer.load()
+    batch_size = 50
 
-    pool = mp.Pool(mp.cpu_count()-2)
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-    for _ in tqdm(pool.imap_unordered(process_entry, search_records),
-                  total=len(search_records)):
-        pass
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+    print('\n\n Import records')
+    search_records = []
+    all_search_records = importer.load()
+    # for entry in all_search_records:
+    #     print('Processing entry: ' + entry['ID'])
+    #     process_entry(entry)
+
+    for entry in all_search_records:
+        search_records.append(entry)
+        if len(search_records) == batch_size:
+            process_entries(search_records)
+            search_records = []
+
+    # last batch
+    if len(all_search_records) > 0:
+        process_entries(search_records)
+        # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+        # for _ in tqdm(pool.imap_unordered(process_entry, search_records),
+        #             total=len(search_records)):
+        #     pass
+        # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+        # create_commits(r)
 
     # for entry in search_records:
     #     print('Processing entry: ' + entry['ID'])
@@ -396,38 +478,36 @@ def living_review_pipeline():
     #     if 'y' != input('Create commits despite interruption? (y/n)'):
     #         print('Waiting for remaining workers to finish')
     #         time.sleep(20)
-    #         create_commits = False
     #     pass
+
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+    pool = mp.Pool(mp.cpu_count()-2)
+    for _ in tqdm(pool.imap_unordered(append_to_screen, [entry for entry in bib_database.entries if 'processed' == entry['status']]),
+            total=len(search_records)):
+        pass
+    # To reformat/sort the screen:
+    screen = pd.read_csv(SCREEN, dtype=str)
+    screen.sort_values(by=['citation_key'], inplace=True)
+    screen.to_csv(
+        SCREEN, index=False,
+        quoting=csv.QUOTE_ALL, na_rep='NA',
+    )
 
     try:
         os.remove('queue_order.csv')
     except FileNotFoundError:
         pass
+    try:
+        os.remove('references_cleansed.bib')
+    except FileNotFoundError:
+        pass
 
-    if create_commits:
-        # to avoid failing pre-commit hooks
-        reformat_bibliography.reformat_bib()
-        # Note: details (e.g., commit details) should not be stored in memory
-        # (they are lost when users interrupt the process)
-        # TODO: add details to the commit message
-        importer.create_commit(r, ['living_review mode'])
-        os.remove(MAIN_REFERENCES)
-        os.rename(MAIN_REFERENCES_CLEANSED, MAIN_REFERENCES)
-        # to avoid failing pre-commit hooks
-        reformat_bibliography.reformat_bib()
-        cleanse_records.create_commit()
-        apply_merges()
-        # to avoid failing pre-commit hooks
-        reformat_bibliography.reformat_bib()
-        merge_duplicates.create_commit()
-
-        # To reformat/sort the screen:
-        screen = pd.read_csv(SCREEN, dtype=str)
-        screen.sort_values(by=['citation_key'], inplace=True)
-        screen.to_csv(
-            SCREEN, index=False,
-            quoting=csv.QUOTE_ALL, na_rep='NA',
-        )
+    # try:
+    #     os.remove(MAIN_REFERENCES_CLEANSED)
+    # except FileNotFoundError:
+    #     pass
 
     # input('NOTE: it could be better to start with the merging and then ' +\
     #    'to the cleanse and merge again? (the tuples-csvs are based on ' +\

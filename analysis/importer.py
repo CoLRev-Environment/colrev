@@ -10,6 +10,8 @@ import git
 import utils
 from bibtexparser.customization import convert_to_unicode
 
+import reformat_bibliography
+
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 total_nr_entries_added = 0
@@ -179,6 +181,8 @@ def save(bib_database):
 def create_commit(r, details_commit):
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
+        # to avoid failing pre-commit hooks
+        reformat_bibliography.reformat_bib()
 
         print('Creating commit ...')
 
