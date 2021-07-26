@@ -14,10 +14,13 @@ from fuzzywuzzy import fuzz
 from tqdm import tqdm
 # import dictdiffer
 
+import reformat_bibliography
+
 nr_entries_added = 0
 nr_current_entries = 0
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -417,10 +420,15 @@ def merge_bib(bib_database):
 
 
 def create_commit():
+
+    # to avoid failing pre-commit hooks
+    reformat_bibliography.reformat_bib()
+
     r = git.Repo('')
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
         r.index.add([MAIN_REFERENCES])
-        r.index.add(['potential_duplicate_tuples.csv'])
+        if os.path.exists('potential_duplicate_tuples.csv'):
+            r.index.add(['potential_duplicate_tuples.csv'])
         r.index.commit(
             'Merge duplicates (script)',
             author=git.Actor('script:merge_duplicates.py (automated)', ''),

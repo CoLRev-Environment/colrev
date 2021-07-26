@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import sys
+import os
 import time
 from urllib.error import HTTPError
 from urllib.parse import quote_plus
@@ -18,6 +19,8 @@ import requests
 import utils
 from Levenshtein import ratio
 from nameparser import HumanName
+
+import reformat_bibliography
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -39,6 +42,7 @@ CR_JOURNAL_ABBREVIATIONS, \
     utils.retrieve_crowd_resources()
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 EMAIL = config.details['EMAIL']
 
 
@@ -469,6 +473,10 @@ def cleanse(entry):
 
 
 def create_commit():
+
+    # to avoid failing pre-commit hooks
+    reformat_bibliography.reformat_bib()
+
     r = git.Repo('')
     r.index.add([MAIN_REFERENCES])
 
