@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 import json
 import logging
+import os
 import re
 import sys
-import os
 import time
 from urllib.error import HTTPError
 from urllib.parse import quote_plus
@@ -15,12 +15,11 @@ import bibtexparser
 import config
 import entry_hash_function
 import git
+import reformat_bibliography
 import requests
 import utils
 from Levenshtein import ratio
 from nameparser import HumanName
-
-import reformat_bibliography
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -474,19 +473,28 @@ def cleanse(entry):
 
 def create_commit():
 
-    # to avoid failing pre-commit hooks
-    reformat_bibliography.reformat_bib()
+    if os.path.exists(MAIN_REFERENCES_CLEANSED):
+        f1 = open(MAIN_REFERENCES, 'a+')
+        f2 = open(MAIN_REFERENCES_CLEANSED)
+        f1.write(f2.read())
+        f1.close()
+        f2.close()
+        os.remove(MAIN_REFERENCES_CLEANSED)
 
-    r = git.Repo('')
-    r.index.add([MAIN_REFERENCES])
+        # to avoid failing pre-commit hooks
+        reformat_bibliography.reformat_bib()
 
-    r.index.commit(
-        'Cleanse ' + MAIN_REFERENCES,
-        author=git.Actor('script:cleanse_records.py', ''),
-    )
+        r = git.Repo('')
+        r.index.add([MAIN_REFERENCES])
 
-    print('Created commit: Cleanse ' + MAIN_REFERENCES)
+        r.index.commit(
+            'Cleanse ' + MAIN_REFERENCES,
+            author=git.Actor('script:cleanse_records.py', ''),
+        )
 
+        # print('Created commit: Cleanse ' + MAIN_REFERENCES)
+    else:
+        print('No additional cleansed entries available')
     return
 
 

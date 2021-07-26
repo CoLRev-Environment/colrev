@@ -7,10 +7,9 @@ import bibtexparser
 import cleanse_records
 import entry_hash_function
 import git
+import reformat_bibliography
 import utils
 from bibtexparser.customization import convert_to_unicode
-
-import reformat_bibliography
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -184,11 +183,11 @@ def create_commit(r, details_commit):
         # to avoid failing pre-commit hooks
         reformat_bibliography.reformat_bib()
 
-        print('Creating commit ...')
+        # print('Creating commit ...')
 
         r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
-        print('Import search results \n - ' + '\n - '.join(details_commit))
+        # print('Import search results \n - ' + '\n - '.join(details_commit))
         r.index.commit(
             'Import search results \n - ' + '\n - '.join(details_commit),
             author=git.Actor(
