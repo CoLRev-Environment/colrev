@@ -8,13 +8,12 @@ import entry_hash_function
 import git
 import numpy as np
 import pandas as pd
+import reformat_bibliography
 import utils
 from bibtexparser.customization import convert_to_unicode
 from fuzzywuzzy import fuzz
 from tqdm import tqdm
 # import dictdiffer
-
-import reformat_bibliography
 
 nr_entries_added = 0
 nr_current_entries = 0

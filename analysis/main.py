@@ -4,9 +4,6 @@ import itertools
 import multiprocessing as mp
 import os
 import sys
-import time
-from time import gmtime
-from time import strftime
 
 import bibtexparser
 import cleanse_records
@@ -16,7 +13,6 @@ import git
 import importer
 import merge_duplicates
 import pandas as pd
-import reformat_bibliography
 import screen_sheet
 import utils
 from bibtexparser.bibdatabase import BibDatabase
@@ -129,15 +125,16 @@ def append_to_MAIN_REFERENCES_CLEANSED(entry):
     if 'not_cleansed' == entry['status']:
         entry = cleanse_records.cleanse(entry)
 
-    # note: always append entry to REFERENCES_CLEANSED (regardless of the result/status)
+    # note: always append entry to REFERENCES_CLEANSED
+    # (regardless of the result/status)
 
-    # db = BibDatabase()
-    # db.entries = [entry]
-    # bibtex_str = bibtexparser.dumps(db, writer)
-    # with open(MAIN_REFERENCES_CLEANSED, 'a') as myfile:
-    #     myfile.write(bibtex_str)
+    db = BibDatabase()
+    db.entries = [entry]
+    bibtex_str = bibtexparser.dumps(db, writer)
+    with open(MAIN_REFERENCES_CLEANSED, 'a') as myfile:
+        myfile.write(bibtex_str)
 
-    return entry
+    return
 
 
 def append_merge_MAIN_REFERENCES_MERGED(entry):
@@ -184,7 +181,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
 
     # note: no need to wait for completion of cleansing
     hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
-                                    for entry in bib_database.entries]
+                                 for entry in bib_database.entries]
     hash_ids_in_cleansed_file = \
         list(itertools.chain(*hash_ids_in_cleansed_file))
 
@@ -223,7 +220,6 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
     if max_similarity <= 0.7:
-        # entry['status'] = 'processed'
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
         with open('non_duplicates.csv', 'a') as fd:
@@ -232,7 +228,6 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
             max_similarity < 0.95:
         # The needs_manual_merging status is only set
         # for one element of the tuple!
-        # entry['status'] = 'needs_manual_merging'
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' +
                      entry['ID'] + '","' + str(max_similarity) + '"\n')
@@ -240,7 +235,6 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
-        # entry['status'] = 'merged'
         with open('duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
 
@@ -249,15 +243,9 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
 
 def apply_merges():
 
-    #TBD: load the MAIN_REFERENCES_CLEANSED instead?
     bib_database = utils.load_references_bib(
         modification_check=False, initialize=False,
     )
-    # with open(MAIN_REFERENCES) as bibtex_file:
-    #     bib_database = bibtexparser.bparser.BibTexParser(
-    #         customization=convert_to_unicode, common_strings=True,
-    #     ).parse_file(bibtex_file, partial=True)
-
 
     # The merging also needs to consider whether citation_keys are propagated
     # Completeness of comparisons should be ensured by the
@@ -269,7 +257,6 @@ def apply_merges():
     if os.path.exists('duplicate_tuples.csv'):
         with open('duplicate_tuples.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
-            print('duplicate_tuples')
             for row in csv_reader:
                 hash_ids_to_merge = []
                 for entry in bib_database.entries:
@@ -277,8 +264,9 @@ def apply_merges():
                         print('drop ' + entry['ID'])
                         hash_ids_to_merge = entry['hash_id'].split(',')
                         # Drop the duplicated entry
-                        bib_database.entries = [i for i in bib_database.entries
-                                                if not (i['ID'] == entry['ID'])]
+                        bib_database.entries = \
+                            [i for i in bib_database.entries
+                             if not (i['ID'] == entry['ID'])]
                         break
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
@@ -306,30 +294,23 @@ def apply_merges():
     if os.path.exists('potential_duplicate_tuples.csv'):
         with open('potential_duplicate_tuples.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
-            # entries_in_file = False
             for row in csv_reader:
-                # if row[0] != 'ID1':
-                    # entries_in_file = True
-                    # continue
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
                         entry['status'] = 'needs_manual_merging'
-        # if not entries_in_file:
-        #     os.remove('potential_duplicate_tuples.csv')
-        # else:
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
         potential_duplicates.sort_values(by=['max_similarity'],
-                                        ascending=False, inplace=True)
+                                         ascending=False, inplace=True)
         potential_duplicates.to_csv(
             'potential_duplicate_tuples.csv', index=False,
             quoting=csv.QUOTE_ALL, na_rep='NA',
         )
 
-    # utils.save_bib_file(bib_database, MAIN_REFERENCES_CLEANSED)
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     return
+
 
 def append_to_screen(entry):
     with open(SCREEN, 'a') as fd:
@@ -337,24 +318,25 @@ def append_to_screen(entry):
         # Note: pandas read/write takes too long/may create conflicts!
     return
 
+
 def process_entries(search_records):
 
     pool = mp.Pool(mp.cpu_count()-2)
 
-    # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+    # NOTE: Problem: parallel processing does not store the status of records
+    # (need to read files each time!)
 
-    # NOTE: Problem: parallel processing does not store the status of records (need to read files each time!)
-    
     # parallel import
     print('Import')
     results = []
-    to_import = [entry for entry in search_records if 'not_imported' == entry['status']]
+    to_import = [entry for entry in search_records
+                 if 'not_imported' == entry['status']]
     for entry in to_import:
         # append_to_MAIN_REFERENCES(entry)
         result = pool.apply_async(append_to_MAIN_REFERENCES, (entry,))
         results.append(result)
     [result.wait() for result in results]
-       
+
     # import-commit
     # Note: details (e.g., commit details) should not be stored in memory
     # (they are lost when users interrupt the process)
@@ -362,15 +344,27 @@ def process_entries(search_records):
     importer.create_commit(r, ['living_review mode'])
 
     # parallel cleansing
+    # strategy: remove records from MAIN_REFERENCES,
+    # write them to MAIN_REFERENCES_CLEANSED
+    # after cleansing and append the file in the end.
     print('Cleanse')
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
-    for entry in bib_database.entries:
-        entry = append_to_MAIN_REFERENCES_CLEANSED(entry)
-
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    to_cleanse = [entry for entry in bib_database.entries
+                  if 'not_cleansed' == entry['status']]
+    bib_database.entries = [entry for entry in bib_database.entries
+                            if 'not_cleansed' != entry['status']]
+    if len(bib_database.entries) == 0:
+        if os.path.exists(MAIN_REFERENCES):
+            os.remove(MAIN_REFERENCES)
+    else:
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    # for entry in to_cleanse:
+    #     append_to_MAIN_REFERENCES_CLEANSED(entry)
+    for _ in tqdm(pool.imap_unordered(append_to_MAIN_REFERENCES_CLEANSED,
+                                      to_cleanse)):
+        pass
 
     # cleanse-commit
     cleanse_records.create_commit()
@@ -379,27 +373,21 @@ def process_entries(search_records):
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
-    # with open(MAIN_REFERENCES) as bibtex_file:
-    #     bib_database = bibtexparser.bparser.BibTexParser(
-    #         customization=convert_to_unicode, common_strings=True,
-    #     ).parse_file(bibtex_file, partial=True)
-    to_merge = [entry for entry in bib_database.entries if 'not_merged' == entry['status']]
-    for entry in to_merge:
-        # print(entry['ID'])
-        append_merge_MAIN_REFERENCES_MERGED(entry)
-        # pool.apply_async(append_merge_MAIN_REFERENCES_MERGED, (entry,))
-    # for _ in tqdm(pool.imap_unordered(append_merge_MAIN_REFERENCES_MERGED, [entry for entry in bib_database.entries if 'not_merged' == entry['status']])):
-    #     pass
+    to_merge = [entry for entry in bib_database.entries
+                if 'not_merged' == entry['status']]
+    # for entry in to_merge:
+    #     print(entry['ID'])
+    #     append_merge_MAIN_REFERENCES_MERGED(entry)
+    #     # pool.apply_async(append_merge_MAIN_REFERENCES_MERGED, (entry,))
+    for _ in tqdm(pool.map(append_merge_MAIN_REFERENCES_MERGED, to_merge)):
+        pass
 
     apply_merges()
 
     # merge commit
     merge_duplicates.create_commit()
 
-    # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-
     return
-
 
 
 def living_review_pipeline():
@@ -427,24 +415,17 @@ def living_review_pipeline():
     # We may discuss whether/how to generate new citation_keys
     # AND prevent conflicting citation_keys in parallel operation
 
-    print('TODO: test repeated call of main.py ' +
-          '(especially when stopping the process)' +
-          'systematically check how to resume the process by ' +
-          'leveraging status information!')
+    print('TODO: test repeated call of main.py')
 
     print('TODO: merge_duplicates.py/get_similarity should consider ' +
           'container titles more generally (not just journals!)')
 
     print('TODO: crowd-based merging')
 
-    # save changes to references.bib, references_cleansed.bib,
-    # references_merged.bib
-    # once the run is completed: commit, override changes and commit,
-    # override changes and commit
-    # afterwards: manual cleansing/merging
-    # try:
-
-    batch_size = 50
+    # Note: batch_size can be as small as 1.
+    # Records should not be propagated/screened when the batch
+    # has not yet been committed
+    batch_size = 500
 
     print('\n\n Import records')
     search_records = []
@@ -453,42 +434,45 @@ def living_review_pipeline():
     #     print('Processing entry: ' + entry['ID'])
     #     process_entry(entry)
 
+    last_record_i = 0
     for entry in all_search_records:
         search_records.append(entry)
+        last_record_i += 1
         if len(search_records) == batch_size:
+            print('\n\nProcessing batch ' +
+                  str(last_record_i - batch_size + 1) +
+                  ' to ' + str(last_record_i))
             process_entries(search_records)
             search_records = []
 
     # last batch
-    if len(all_search_records) > 0:
+    if len(search_records) > 0:
+        print('\n\nProcessing batch ' +
+              str(last_record_i - len(search_records) + 1) +
+              ' to ' + str(last_record_i))
         process_entries(search_records)
-        # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-        # for _ in tqdm(pool.imap_unordered(process_entry, search_records),
-        #             total=len(search_records)):
-        #     pass
-        # print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
-        # create_commits(r)
-
-    # for entry in search_records:
-    #     print('Processing entry: ' + entry['ID'])
-    #     process_entry(entry)
-
-    # except KeyboardInterrupt:
-    #   https://stackoverflow.com/questions/11312525/catch-ctrlc-sigint-and-exit-multiprocesses-gracefully-in-python
-    #     if 'y' != input('Create commits despite interruption? (y/n)'):
-    #         print('Waiting for remaining workers to finish')
-    #         time.sleep(20)
-    #     pass
 
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
-    pool = mp.Pool(mp.cpu_count()-2)
-    for _ in tqdm(pool.imap_unordered(append_to_screen, [entry for entry in bib_database.entries if 'processed' == entry['status']]),
-            total=len(search_records)):
-        pass
-    # To reformat/sort the screen:
     screen = pd.read_csv(SCREEN, dtype=str)
+    screened_records = screen['citation_key'].tolist()
+    to_add = [entry['ID'] for entry in bib_database.entries
+              if 'processed' == entry['status'] and
+              entry['ID'] not in screened_records]
+    for paper_to_screen in to_add:
+        add_entry = pd.DataFrame({
+            'citation_key': [paper_to_screen],
+            'inclusion_1': ['TODO'],
+            'inclusion_2': ['TODO'],
+        })
+        add_entry = add_entry.reindex(
+            columns=screen.columns, fill_value='TODO',
+        )
+        add_entry['comment'] = '-'
+
+        screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
+    # To reformat/sort the screen:
     screen.sort_values(by=['citation_key'], inplace=True)
     screen.to_csv(
         SCREEN, index=False,
@@ -500,18 +484,13 @@ def living_review_pipeline():
     except FileNotFoundError:
         pass
     try:
-        os.remove('references_cleansed.bib')
+        os.remove(MAIN_REFERENCES_CLEANSED)
     except FileNotFoundError:
         pass
 
-    # try:
-    #     os.remove(MAIN_REFERENCES_CLEANSED)
-    # except FileNotFoundError:
-    #     pass
-
     # input('NOTE: it could be better to start with the merging and then ' +\
     #    'to the cleanse and merge again? (the tuples-csvs are based on ' +\
-        # 'citation_keys that should not change!)')
+    #    'citation_keys that should not change!)')
 
     # bib_database = utils.load_references_bib(
     #         modification_check=False, initialize=False,
