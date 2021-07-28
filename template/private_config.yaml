@@ -1,0 +1,5 @@
+params:
+    EMAIL: name@institution.email
+    WOS_API_KEY: XYLSEJYISJX
+    CPUS: 4
+    PDFPATH: "/home/user/data/pdfs"

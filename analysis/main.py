@@ -7,7 +7,6 @@ import sys
 
 import bibtexparser
 import cleanse_records
-import config
 import entry_hash_function
 import git
 import importer
@@ -15,19 +14,28 @@ import merge_duplicates
 import pandas as pd
 import screen_sheet
 import utils
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from tqdm import tqdm
 
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-EMAIL = config.details['EMAIL']
+MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 SCREEN = entry_hash_function.paths['SCREEN']
 
-MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
+EMAIL = private_config['params']['EMAIL']
+CPUS = private_config['params']['CPUS']
 
-MERGING_NON_DUP_THRESHOLD = 0.7
-MERGING_DUP_THRESHOLD = 0.95
+MERGING_NON_DUP_THRESHOLD = \
+    shared_config['params']['MERGING_NON_DUP_THRESHOLD']
+MERGING_DUP_THRESHOLD = shared_config['params']['MERGING_DUP_THRESHOLD']
+REVIEW_STRATEGY = shared_config['params']['REVIEW_STRATEGY']
 
 
 def load_bib_writer():
@@ -535,11 +543,9 @@ if __name__ == '__main__':
         screen_sheet.generate_screen_csv([])
         # Note: Users can include exclusion criteria afterwards
 
-    # get propagation_strategy from data directory (config parameter)
-    strategy = 'living'
-
     process = {'traditional': traditional_pipeline,
                'traditional_delay_manual': traditional_delay_manual,
-               'living': living_review_pipeline}
+               'living_review': living_review_pipeline}
 
-    process[strategy]()
+    # the REVIEW_STRATEGY is set in the shared config
+    process[REVIEW_STRATEGY]()

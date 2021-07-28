@@ -12,14 +12,17 @@ from urllib.request import Request
 from urllib.request import urlopen
 
 import bibtexparser
-import config
 import entry_hash_function
 import git
 import reformat_bibliography
 import requests
 import utils
+import yaml
 from Levenshtein import ratio
 from nameparser import HumanName
+
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -42,7 +45,8 @@ CR_JOURNAL_ABBREVIATIONS, \
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
-EMAIL = config.details['EMAIL']
+
+EMAIL = private_config['params']['EMAIL']
 
 
 def crossref_query(entry):

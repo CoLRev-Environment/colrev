@@ -45,7 +45,14 @@ if __name__ == '__main__':
     )
     shutil.copyfile('../docker-compose.yml', 'docker-compose.yml')
     shutil.copyfile('../template/.gitattributes', '.gitattributes')
-    shutil.copyfile('../template/.gitignore', '.gitignore')
+    shutil.copyfile('../template/private_config.yaml', 'private_config.yaml')
+    shutil.copyfile('../template/shared_config.yaml', 'shared_config.yaml')
+
+    # Note: need to write the .gitignore because file would otherwise be
+    # ignored in the template directory.
+    f = open('.gitignore', 'w')
+    f.write('*.bib.sav\nprivate_config.yaml')
+    f.close()
 
     os.system('pre-commit install')
 
@@ -55,6 +62,7 @@ if __name__ == '__main__':
         '.pre-commit-config.yaml',
         '.gitattributes',
         '.gitignore',
+        'shared_config.yaml',
     ])
 
     committer_name = \

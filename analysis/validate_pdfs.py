@@ -3,9 +3,9 @@ import io
 import os
 import re
 
-import config
 import entry_hash_function
 import utils
+import yaml
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
@@ -14,7 +14,11 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
-EMAIL = config.paths['EMAIL']
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+EMAIL = private_config['params']['EMAIL']
+
 PDF_DIRECTORY = entry_hash_function.paths['PDF_DIRECTORY']
 
 
