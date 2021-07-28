@@ -285,6 +285,9 @@ def title_if_mostly_upper_case(input_string):
 def format_author_field(input_string):
     # also in entry_hash_function.py - consider updating it separately
 
+    # DBLP appends identifiers to non-unique authors
+    input_string = str(re.sub(r'[0-9]{4}', '', input_string))
+
     names = input_string.split(' and ')
     author_string = ''
     for name in names:

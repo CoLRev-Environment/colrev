@@ -418,7 +418,7 @@ def merge_bib(bib_database):
     return bib_database
 
 
-def create_commit():
+def create_commit(merge_details):
 
     # to avoid failing pre-commit hooks
     reformat_bibliography.reformat_bib()
@@ -429,7 +429,8 @@ def create_commit():
         if os.path.exists('potential_duplicate_tuples.csv'):
             r.index.add(['potential_duplicate_tuples.csv'])
         r.index.commit(
-            'Merge duplicates (script)',
+            'Merge duplicates (script)' + '\nDuplicates removed: \n' +
+            merge_details,
             author=git.Actor('script:merge_duplicates.py (automated)', ''),
         )
     return

@@ -26,6 +26,9 @@ SCREEN = entry_hash_function.paths['SCREEN']
 
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
+MERGING_NON_DUP_THRESHOLD = 0.7
+MERGING_DUP_THRESHOLD = 0.95
+
 
 def load_bib_writer():
 
@@ -193,11 +196,16 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
             fd.write('"' + entry['ID'] + '"\n')
         return
 
-    # get_similarities for each other entry
-    references = pd.DataFrame.from_dict(bib_database.entries)
+    # Drop rows from references for which no hash_id is in
+    # required_prior_hash_ids
+    prior_entries = [x for x in bib_database.entries
+                     if any(hash_id in x['hash_id'].split(',')
+                            for hash_id in required_prior_hash_ids)]
+    if len(prior_entries) < 1:
+        return
 
-    # TODO: drop rows from references for which
-    # no hash_id is in required_prior_hash_ids
+    # get_similarities for each other entry
+    references = pd.DataFrame.from_dict(prior_entries)
 
     # drop the same ID entry
     references = references[~(references['ID'] == entry['ID'])]
@@ -219,19 +227,19 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
 
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
-    if max_similarity <= 0.7:
+    if max_similarity <= MERGING_NON_DUP_THRESHOLD:
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
-    if max_similarity > 0.7 and \
-            max_similarity < 0.95:
+    if max_similarity > MERGING_NON_DUP_THRESHOLD and \
+            max_similarity < MERGING_DUP_THRESHOLD:
         # The needs_manual_merging status is only set
         # for one element of the tuple!
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' +
                      entry['ID'] + '","' + str(max_similarity) + '"\n')
-    if max_similarity >= 0.95:
+    if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
@@ -253,6 +261,7 @@ def apply_merges():
     # prior entries in global queue_order are considered before completing
     # the comparison/adding entries ot the csvs)
 
+    merge_details = ''
     # Always merge clear duplicates: row[0] <- row[1]
     if os.path.exists('duplicate_tuples.csv'):
         with open('duplicate_tuples.csv') as read_obj:
@@ -275,6 +284,7 @@ def apply_merges():
                         entry['hash_id'] = str(','.join(sorted(hash_ids)))
                         if 'not_merged' == entry['status']:
                             entry['status'] = 'processed'
+                        merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
         os.remove('duplicate_tuples.csv')
 
@@ -309,7 +319,7 @@ def apply_merges():
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    return
+    return merge_details
 
 
 def append_to_screen(entry):
@@ -382,10 +392,10 @@ def process_entries(search_records):
     for _ in tqdm(pool.map(append_merge_MAIN_REFERENCES_MERGED, to_merge)):
         pass
 
-    apply_merges()
+    merge_details = apply_merges()
 
     # merge commit
-    merge_duplicates.create_commit()
+    merge_duplicates.create_commit(merge_details)
 
     return
 
