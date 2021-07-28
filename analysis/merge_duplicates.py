@@ -69,6 +69,42 @@ def format_authors_string(authors):
     return authors_string
 
 
+def get_entry_similarity(entry_a, entry_b):
+    if 'author' not in entry_a:
+        entry_a['author'] = ''
+    if 'year' not in entry_a:
+        entry_a['year'] = ''
+    if 'journal' in entry_a:
+        if 'volume' not in entry_a:
+            entry_a['volume'] = ''
+        if 'number' not in entry_a:
+            entry_a['number'] = ''
+        if 'pages' not in entry_a:
+            entry_a['pages'] = ''
+    else:
+        if 'booktitle' not in entry_a:
+            entry_a['booktitle'] = ''
+    if 'author' not in entry_b:
+        entry_b['author'] = ''
+    if 'year' not in entry_b:
+        entry_b['year'] = ''
+    if 'journal' in entry_b:
+        if 'volume' not in entry_b:
+            entry_b['volume'] = ''
+        if 'number' not in entry_b:
+            entry_b['number'] = ''
+        if 'pages' not in entry_b:
+            entry_b['pages'] = ''
+    else:
+        if 'booktitle' not in entry_b:
+            entry_b['booktitle'] = ''
+
+    df_a = pd.DataFrame.from_dict([entry_a])
+    df_b = pd.DataFrame.from_dict([entry_b])
+
+    return get_similarity(df_a.iloc[0], df_b.iloc[0])
+
+
 def get_similarity(df_a, df_b):
 
     authors_a = format_authors_string(df_a['author'])

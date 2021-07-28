@@ -32,6 +32,10 @@ trace_hash_id :
 trace_search_result :
 	cd $(DATA_PATH) && python3 ../analysis/trace_search_result.py
 
+validate_major_changes :
+	cd $(DATA_PATH) && python3 ../analysis/validate_major_changes.py
+
+
 # to test:
 
 test :
