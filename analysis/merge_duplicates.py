@@ -113,23 +113,18 @@ def get_entry_similarity(entry_a, entry_b):
 
 def get_similarity(df_a, df_b):
 
-    authors_a = format_authors_string(df_a['author'])
-    authors_b = format_authors_string(df_b['author'])
-    author_similarity = fuzz.partial_ratio(authors_a, authors_b)/100
+    author_similarity = fuzz.partial_ratio(df_a['author'], df_b['author'])/100
 
-    title_a = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_a['title']).lower())
-    title_b = re.sub(r'[^A-Za-z0-9, ]+', '', str(df_b['title']).lower())
-    title_similarity = fuzz.ratio(title_a, title_b)/100
+    title_similarity = fuzz.ratio(df_a['title'], df_b['title'])/100
 
     # partial ratio (catching 2010-10 or 2001-2002)
-    year_similarity = \
-        fuzz.partial_ratio(str(df_a['year']), str(df_b['year']))/100
+    year_similarity = fuzz.partial_ratio(df_a['year'], df_b['year'])/100
+
+    outlet_similarity = \
+        fuzz.ratio(df_a['container_title'], df_b['container_title'])/100
 
     if (str(df_a['journal']) != 'nan'):
-        journal_a = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_a['journal']).lower())
-        journal_b = re.sub(r'[^A-Za-z0-9 ]+', '', str(df_b['journal']).lower())
-        outlet_similarity = fuzz.ratio(journal_a, journal_b)/100
-
+        # Note: for journals papers, we expect more details
         if df_a['volume'] == df_b['volume']:
             volume_similarity = 1
         else:
@@ -154,7 +149,7 @@ def get_similarity(df_a, df_b):
         # ie., non-distinctive
         # The list is based on a large export of distinct papers, tabulated
         # according to titles and sorted by frequency
-        if [df_a['title'].lower(), df_b['title'].lower()] in \
+        if [df_a['title'], df_b['title']] in \
             [['editorial', 'editorial'],
              ['editorial introduction', 'editorial introduction'],
              ['editorial notes', 'editorial notes'],
@@ -174,56 +169,93 @@ def get_similarity(df_a, df_b):
                         number_similarity,
                         pages_similarity]
 
-    elif 'booktitle' in df_a and 'booktitle' in df_b:
-        booktitle_a = re.sub(r'[^A-Za-z0-9 ]+', '',
-                             str(df_a['booktitle']).lower())
-        booktitle_b = re.sub(r'[^A-Za-z0-9 ]+', '',
-                             str(df_b['booktitle']).lower())
-        outlet_similarity = fuzz.ratio(booktitle_a, booktitle_b)/100
+    else:
 
         weights = [0.15, 0.75, 0.05, 0.05]
         similarities = [author_similarity,
                         title_similarity,
                         year_similarity,
                         outlet_similarity]
-    else:
-        weights = [0.15, 0.75, 0.05, 0.05]
-        similarities = [0, 0, 0, 0]
-        print('PROBLEM: no journal or booktitle in entry...')
 
     weighted_average = sum(similarities[g] * weights[g]
                            for g in range(len(similarities)))
 
-    return weighted_average
+    return round(weighted_average, 4)
 
 
-def calculate_similarities_entry(references, entry):
-    if 'author' not in entry:
-        entry['author'] = ''
-    if 'year' not in entry:
-        entry['year'] = ''
-    if 'journal' in entry:
-        if 'volume' not in entry:
-            entry['volume'] = ''
-        if 'number' not in entry:
-            entry['number'] = ''
-        if 'pages' not in entry:
-            entry['pages'] = ''
+def prep_references(references):
+    if 'volume' not in references:
+        references['volume'] = 'nan'
+    if 'number' not in references:
+        references['number'] = 'nan'
+    if 'pages' not in references:
+        references['pages'] = 'nan'
+    if 'year' not in references:
+        references['year'] = 'nan'
     else:
-        if 'booktitle' not in entry:
-            entry['booktitle'] = ''
+        references['year'] = references['year'].astype(str)
+    if 'author' not in references:
+        references['author'] = 'nan'
+    else:
+        references['author'] = references['author']\
+            .apply(lambda x: format_authors_string(x))
+    if 'title' not in references:
+        references['title'] = 'nan'
+    else:
+        references['title'] = references['title']\
+            .str.replace(r'[^A-Za-z0-9, ]+', '', regex=True)\
+            .str.lower()
+    if 'journal' not in references:
+        references['journal'] = ''
+    else:
+        references['journal'] = references['journal']\
+            .str.replace(r'[^A-Za-z0-9, ]+', '', regex=True)\
+            .str.lower()
+    if 'booktitle' not in references:
+        references['booktitle'] = ''
+    else:
+        references['booktitle'] = references['booktitle']\
+            .str.replace(r'[^A-Za-z0-9, ]+', '', regex=True)\
+            .str.lower()
+    if 'series' not in references:
+        references['series'] = ''
+    else:
+        references['series'] = references['series']\
+            .str.replace(r'[^A-Za-z0-9, ]+', '', regex=True)\
+            .str.lower()
 
-    entry_df = pd.DataFrame.from_dict([entry])
+    references['container_title'] = references['journal'] + \
+        references['booktitle'] + \
+        references['series']
 
-    references['similarity'] = 0
-
-    for base_entry_i in range(0, references.shape[0]):
-        references.iloc[base_entry_i,
-                        references.columns.get_loc('similarity')] = \
-            get_similarity(references.iloc[base_entry_i],
-                           entry_df.iloc[0])
+    references.drop(references.columns.difference(['ID',
+                                                   'author',
+                                                   'title',
+                                                   'year',
+                                                   'journal',
+                                                   'container_title',
+                                                   'volume',
+                                                   'number',
+                                                   'pages']), 1, inplace=True)
 
     return references
+
+
+def calculate_similarities_entry(references):
+    # Note: per definition, similarities are needed relative to the first row.
+    references = prep_references(references)
+    # references.to_csv('preped_references.csv')
+    references['similarity'] = 0
+    sim_col = references.columns.get_loc('similarity')
+    for base_entry_i in range(1, references.shape[0]):
+        references.iloc[base_entry_i, sim_col] = \
+            get_similarity(references.iloc[base_entry_i],
+                           references.iloc[0])
+    # Note: return all other entries (not the comparison entry/first row)
+    # and restrict it to the ID and similarity
+    ck_col = references.columns.get_loc('ID')
+    sim_col = references.columns.get_loc('similarity')
+    return references.iloc[1:, [ck_col, sim_col]]
 
 
 def calculate_similarities(SimilarityArray, references, min_similarity):

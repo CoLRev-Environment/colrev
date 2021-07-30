@@ -226,10 +226,11 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
         return
 
     # get_similarities for each other entry
-    references = pd.DataFrame.from_dict(prior_entries)
+    references = pd.DataFrame.from_dict([entry] + prior_entries)
 
     # drop the same ID entry
-    references = references[~(references['ID'] == entry['ID'])]
+    # Note: the entry is simply added as the first row.
+    # references = references[~(references['ID'] == entry['ID'])]
     # dropping them before calculating similarities prevents errors
     # caused by unavailable fields!
     # Note: ignore entries that need manual cleansing in the merging
@@ -244,7 +245,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
             fd.write('"' + entry['ID'] + '"\n')
         return
     references = \
-        merge_duplicates.calculate_similarities_entry(references, entry)
+        merge_duplicates.calculate_similarities_entry(references)
 
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
