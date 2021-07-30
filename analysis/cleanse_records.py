@@ -473,6 +473,15 @@ def cleanse(entry):
             not any(x in entry for x in
                     ['journal', 'booktitle', 'school', 'book', 'series']):
         entry['status'] = 'needs_manual_cleansing'
+    if entry.get('title', '').endswith('...') or \
+            entry.get('title', '').endswith('…') or \
+            entry.get('journal', '').endswith('...') or \
+            entry.get('journal', '').endswith('…') or \
+            entry.get('booktitle', '').endswith('...') or \
+            entry.get('booktitle', '').endswith('…') or \
+            entry.get('author', '').endswith('...') or \
+            entry.get('author', '').endswith('…'):
+        entry['status'] = 'needs_manual_cleansing'
 
     return entry
 

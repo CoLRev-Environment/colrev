@@ -46,7 +46,8 @@ fields_to_keep = [
     'abstract',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
-    'source_file_path', 'status'
+    'source_file_path', 'status',
+    'fulltext'
 ]
 fields_to_drop = [
     'type', 'url', 'organization',
@@ -60,7 +61,8 @@ fields_to_drop = [
     'doc-delivery-number', 'research-areas',
     'web-of-science-categories', 'number-of-cited-references',
     'times-cited', 'journal-iso', 'oa', 'keywords-plus',
-    'funding-text', 'funding-acknowledgement', 'day'
+    'funding-text', 'funding-acknowledgement', 'day',
+    'related'
 ]
 
 
