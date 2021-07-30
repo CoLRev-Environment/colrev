@@ -84,6 +84,11 @@ def hash_function_up_to_date():
         hash_of_hash_function = hashlib.sha256(
             file.read().encode('utf-8')).hexdigest()
 
+    shared_config_path = 'shared_config.yaml'
+    with open(shared_config_path) as shared_config_yaml:
+        shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+    HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
     pipeline_commit_id = ''
     with open('.pre-commit-config.yaml') as f:
         data_loaded = yaml.safe_load(f)
@@ -98,7 +103,8 @@ def hash_function_up_to_date():
         list_of_rows = list(csv_reader)
 
     up_to_date = False
-    if [hash_of_hash_function, pipeline_commit_id] in list_of_rows:
+    if [hash_of_hash_function, pipeline_commit_id, HASH_ID_FUNCTION]\
+            in list_of_rows:
         up_to_date = True
 
     if not up_to_date:
