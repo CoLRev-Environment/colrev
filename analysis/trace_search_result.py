@@ -21,12 +21,14 @@ if __name__ == '__main__':
     entry_database = bibtexparser.loads(entry_string)
 
     bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False)
+        modification_check=False, initialize=False)
 
     nr_found = 0
 
     for entry in entry_database.entries:
         hash_id = entry_hash_function.create_hash(entry)
+
+        print(hash_id)
 
         found = False
         for entry in bib_database.entries:
