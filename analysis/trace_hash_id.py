@@ -43,6 +43,7 @@ if __name__ == '__main__':
     assert utils.hash_function_up_to_date()
 
     hash_id_needed = input('provide hash_id')
+    assert len(hash_id_needed) == 64
 
     nr_found = 0
 

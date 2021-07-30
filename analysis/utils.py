@@ -200,12 +200,13 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
     # Make sure that citation_keys that have been propagated to the
     # screen or data will not be replaced
     # (this would break the chain of evidence)
-    if propagated_citation_key(entry['ID']) and raise_error:
-        raise CitationKeyPropagationError(
-            'WARNING: do not change citation_keys that have been ',
-            'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
-            entry['ID'] + ')',
-        )
+    if raise_error:
+        if propagated_citation_key(entry['ID']):
+            raise CitationKeyPropagationError(
+                'WARNING: do not change citation_keys that have been ',
+                'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
+                entry['ID'] + ')',
+            )
 
     if 'author' in entry:
         author = format_author_field(entry['author'])
@@ -453,16 +454,9 @@ def git_modification_check(filename):
 
 def get_bib_files():
     bib_files = []
-
-    for (dirpath, dirnames, filenames) in \
-            os.walk(os.path.join(os.getcwd(), 'search/')):
-        for filename in filenames:
-            file_path = os.path.join(dirpath, filename)\
-                .replace('/opt/workdir/', '')
-            if file_path.endswith('.bib'):
-                if not validate_bib_file(file_path):
-                    continue
-                bib_files = bib_files + [file_path]
+    search_dir = os.path.join(os.getcwd(), 'search/')
+    bib_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir) if x.endswith('.bib')]
     return bib_files
 
 
