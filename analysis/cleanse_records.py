@@ -26,6 +26,8 @@ with open('private_config.yaml') as private_config_yaml:
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+
 EMPTY_RESULT = {
     'crossref_title': '',
     'similarity': 0,
@@ -505,9 +507,14 @@ def create_commit():
 def manual_cleanse_commit():
     r = git.Repo('')
     r.index.add([MAIN_REFERENCES])
+
+    hook_skipping = 'false'
+    if not DEBUG_MODE:
+        hook_skipping = 'true'
     r.index.commit(
         'Cleanse manual ' + MAIN_REFERENCES,
         author=git.Actor('manual:cleanse', ''),
+        skip_hooks=hook_skipping
     )
     print('Created commit: Cleanse manual ' + MAIN_REFERENCES)
 

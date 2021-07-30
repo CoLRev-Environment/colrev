@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+import csv
 import itertools
 import logging
+import multiprocessing as mp
 import os
+from itertools import chain
 
 import bibtexparser
 import cleanse_records
@@ -9,6 +12,7 @@ import entry_hash_function
 import git
 import reformat_bibliography
 import utils
+import yaml
 from bibtexparser.customization import convert_to_unicode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -16,6 +20,16 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
 details_commit = []
+
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+if 'CPUS' not in private_config['params']:
+    CPUS = mp.cpu_count()-1
+else:
+    CPUS = private_config['params']['CPUS']
+
+DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
@@ -61,6 +75,36 @@ def drop_fields(entry):
     return entry
 
 
+def get_entries(bib_file):
+    entry_list = []
+    processed_hash_ids = []
+    with open('processed_hash_ids.csv') as read_obj:
+        csv_reader = csv.reader(read_obj)
+        for row in csv_reader:
+            processed_hash_ids.append(row[0])
+
+    with open(bib_file) as bibtex_file:
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
+            customization=convert_to_unicode, common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+        for entry in individual_bib_database.entries:
+            entry['source_file_path'] = os.path.basename(bib_file)
+            # IMPORTANT NOTE: any modifications completed before this step
+            # need to be considered when backward-tracing!
+            # Tradeoff: preprocessing can help to reduce the number of
+            # representations (hash_ids) for each record
+            # but it also introduces complexity (backward tacing)
+            entry['hash_id'] = entry_hash_function.create_hash(entry)
+            if entry['hash_id'] not in processed_hash_ids:
+                # create IDs here to prevent conflicts
+                # when entries are added to the MAIN_REFERENCES
+                # (in parallel)
+
+                entry['status'] = 'not_imported'
+                entry_list.append(entry)
+    return entry_list
+
+
 def load():
 
     # Not sure we need to track the "imported" status here...
@@ -73,38 +117,55 @@ def load():
                           entry in bib_database.entries]
     processed_hash_ids = list(itertools.chain(*processed_hash_ids))
 
+    with open('processed_hash_ids.csv', 'a') as fd:
+        for p_hid in processed_hash_ids:
+            fd.write(p_hid + '\n')
+
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
 
     # always include the current bib (including the statuus of entries)
-    search_records = bib_database.entries
+    imported_records = bib_database.entries
     # Note: only add search_results if their hash_id is not already
     # in bib_database.entries
-    bib_files = utils.get_bib_files()
-    for bib_file in bib_files:
-        with open(bib_file) as bibtex_file:
-            individual_bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
-            for entry in individual_bib_database.entries:
-                entry['source_file_path'] = os.path.basename(bib_file)
-                # IMPORTANT NOTE: any modifications completed before this step
-                # need to be considered when backward-tracing!
-                # Tradeoff: preprocessing can help to reduce the number of
-                # representations (hash_ids) for each record
-                # but it also introduces complexity (backward tacing)
-                entry['hash_id'] = entry_hash_function.create_hash(entry)
-                if entry['hash_id'] not in processed_hash_ids:
-                    # create IDs here to prevent conflicts
-                    # when entries are added to the MAIN_REFERENCES
-                    # (in parallel)
-                    entry['ID'] = \
-                        utils.generate_citation_key_blacklist(
-                            entry, citation_key_list,
-                            entry_in_bib_db=False,
-                            raise_error=False)
-                    citation_key_list.append(entry['ID'])
-                    entry['status'] = 'not_imported'
-                    search_records.append(entry)
+
+    with mp.Pool(processes=CPUS) as pool:
+        loaded_records = pool.map(get_entries, utils.get_bib_files())
+
+    loaded_records = list(chain(*loaded_records))
+
+    # for bib_file in bib_files:
+    #     with open(bib_file) as bibtex_file:
+    #         individual_bib_database = bibtexparser.bparser.BibTexParser(
+    #             customization=convert_to_unicode, common_strings=True,
+    #         ).parse_file(bibtex_file, partial=True)
+    #         for entry in individual_bib_database.entries:
+    #             entry['source_file_path'] = os.path.basename(bib_file)
+    #             # IMPORTANT NOTE: any modifications completed before this
+    #             # step need to be considered when backward-tracing!
+    #             # Tradeoff: preprocessing can help to reduce the number of
+    #             # representations (hash_ids) for each record
+    #             # but it also introduces complexity (backward tacing)
+    #             entry['hash_id'] = entry_hash_function.create_hash(entry)
+    #             if entry['hash_id'] not in processed_hash_ids:
+    #                 # create IDs here to prevent conflicts
+    #                 # when entries are added to the MAIN_REFERENCES
+    #                 # (in parallel)
+    #                 entry['status'] = 'not_imported'
+    #                 search_records.append(entry)
+
+    for entry in loaded_records:
+        if 'not_imported' == entry['status']:
+            entry['ID'] = \
+                utils.generate_citation_key_blacklist(
+                    entry, citation_key_list,
+                    entry_in_bib_db=False,
+                    raise_error=False)
+            citation_key_list.append(entry['ID'])
+
+    if os.path.exists('processed_hash_ids.csv'):
+        os.remove('processed_hash_ids.csv')
+
+    all_records = imported_records + loaded_records
 
     # Note: if we process papers in order (often alphabetically),
     # the merging may be more likely to produce conflicts (in parallel mode)
@@ -112,7 +173,7 @@ def load():
     # IMPORTANT: this is deprecated! we should know exactly in which
     # (deterministic) order the records were started
 
-    return search_records
+    return all_records
 
 
 def preprocess(entry):
@@ -188,10 +249,14 @@ def create_commit(r, details_commit):
         r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
         # print('Import search results \n - ' + '\n - '.join(details_commit))
+        hook_skipping = 'false'
+        if not DEBUG_MODE:
+            hook_skipping = 'true'
         r.index.commit(
             'Import search results \n - ' + '\n - '.join(details_commit),
             author=git.Actor(
                 'script:importer.py', ''),
+            skip_hooks=hook_skipping
         )
     else:
         print('No new records added to MAIN_REFERENCES')

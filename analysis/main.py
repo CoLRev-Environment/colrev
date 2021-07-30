@@ -30,7 +30,20 @@ MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 SCREEN = entry_hash_function.paths['SCREEN']
 
 EMAIL = private_config['params']['EMAIL']
-CPUS = private_config['params']['CPUS']
+if 'CPUS' not in private_config['params']:
+    CPUS = mp.cpu_count()-1
+else:
+    CPUS = private_config['params']['CPUS']
+
+DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+
+# Note: BATCH_SIZE can be as small as 1.
+# Records should not be propagated/screened when the batch
+# has not yet been committed
+if 'BATCH_SIZE' not in shared_config['params']:
+    BATCH_SIZE = 500
+else:
+    BATCH_SIZE = shared_config['params']['BATCH_SIZE']
 
 MERGING_NON_DUP_THRESHOLD = \
     shared_config['params']['MERGING_NON_DUP_THRESHOLD']
@@ -339,7 +352,7 @@ def append_to_screen(entry):
 
 def process_entries(search_records):
 
-    pool = mp.Pool(mp.cpu_count()-2)
+    pool = mp.Pool(CPUS)
 
     # NOTE: Problem: parallel processing does not store the status of records
     # (need to read files each time!)
@@ -378,6 +391,7 @@ def process_entries(search_records):
             os.remove(MAIN_REFERENCES)
     else:
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    # For non-parallel processing/debugging:
     # for entry in to_cleanse:
     #     append_to_MAIN_REFERENCES_CLEANSED(entry)
     for _ in tqdm(pool.imap_unordered(append_to_MAIN_REFERENCES_CLEANSED,
@@ -393,10 +407,10 @@ def process_entries(search_records):
     )
     to_merge = [entry for entry in bib_database.entries
                 if 'not_merged' == entry['status']]
+    # For non-parallel processing/debugging:
     # for entry in to_merge:
     #     print(entry['ID'])
     #     append_merge_MAIN_REFERENCES_MERGED(entry)
-    #     # pool.apply_async(append_merge_MAIN_REFERENCES_MERGED, (entry,))
     for _ in tqdm(pool.map(append_merge_MAIN_REFERENCES_MERGED, to_merge)):
         pass
 
@@ -429,7 +443,7 @@ def living_review_pipeline():
     #
 
     # Currently, citation_keys are generated
-    # search_records = in importer.load()
+    # in importer.load()
     # We may discuss whether/how to generate new citation_keys
     # AND prevent conflicting citation_keys in parallel operation
 
@@ -439,11 +453,6 @@ def living_review_pipeline():
           'container titles more generally (not just journals!)')
 
     print('TODO: crowd-based merging')
-
-    # Note: batch_size can be as small as 1.
-    # Records should not be propagated/screened when the batch
-    # has not yet been committed
-    batch_size = 500
 
     print('\n\n Import records')
     search_records = []
@@ -456,9 +465,9 @@ def living_review_pipeline():
     for entry in all_search_records:
         search_records.append(entry)
         last_record_i += 1
-        if len(search_records) == batch_size:
+        if len(search_records) == BATCH_SIZE:
             print('\n\nProcessing batch ' +
-                  str(last_record_i - batch_size + 1) +
+                  str(last_record_i - BATCH_SIZE + 1) +
                   ' to ' + str(last_record_i))
             process_entries(search_records)
             search_records = []

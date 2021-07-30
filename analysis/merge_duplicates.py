@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import reformat_bibliography
 import utils
+import yaml
 from bibtexparser.customization import convert_to_unicode
 from fuzzywuzzy import fuzz
 from tqdm import tqdm
@@ -17,6 +18,11 @@ from tqdm import tqdm
 
 nr_entries_added = 0
 nr_current_entries = 0
+
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
@@ -475,9 +481,14 @@ def create_commit(merge_details):
 def manual_merge_commit():
     r = git.Repo('')
     r.index.add([MAIN_REFERENCES])
+    hook_skipping = 'false'
+    if not DEBUG_MODE:
+        hook_skipping = 'true'
+
     r.index.commit(
         'Cleanse manual ' + MAIN_REFERENCES,
         author=git.Actor('manual:merge duplicates', ''),
+        skip_hooks=hook_skipping
     )
     print('Created commit: Merge manual ' + MAIN_REFERENCES)
 
