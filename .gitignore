@@ -2,4 +2,4 @@ analysis/__pycache__/*
 .local/*
 .rstudio/*
 data/*
-data
+data*
