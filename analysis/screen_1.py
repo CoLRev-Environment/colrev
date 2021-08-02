@@ -6,9 +6,14 @@ import sys
 import entry_hash_function
 import pandas as pd
 import utils
+import yaml
 
-MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
-SCREEN = entry_hash_function.paths['SCREEN']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 
 def run_screen_1():

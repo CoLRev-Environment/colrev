@@ -2,6 +2,11 @@
 import bibtexparser
 import entry_hash_function
 import utils
+import yaml
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
 if __name__ == '__main__':
 
@@ -26,7 +31,7 @@ if __name__ == '__main__':
     nr_found = 0
 
     for entry in entry_database.entries:
-        hash_id = entry_hash_function.create_hash(entry)
+        hash_id = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
 
         print(hash_id)
 

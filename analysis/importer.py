@@ -21,6 +21,10 @@ total_nr_entries_added = 0
 total_nr_duplicates_hash_ids = 0
 details_commit = []
 
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
@@ -31,7 +35,8 @@ else:
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
@@ -96,7 +101,8 @@ def get_entries(bib_file):
             # Tradeoff: preprocessing can help to reduce the number of
             # representations (hash_ids) for each record
             # but it also introduces complexity (backward tacing)
-            entry['hash_id'] = entry_hash_function.create_hash(entry)
+            entry['hash_id'] = \
+                entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
             if entry['hash_id'] not in processed_hash_ids:
                 # create IDs here to prevent conflicts
                 # when entries are added to the MAIN_REFERENCES
@@ -147,7 +153,8 @@ def load():
     #             # Tradeoff: preprocessing can help to reduce the number of
     #             # representations (hash_ids) for each record
     #             # but it also introduces complexity (backward tacing)
-    #             entry['hash_id'] = entry_hash_function.create_hash(entry)
+    #             entry['hash_id'] = \
+    #               entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
     #             if entry['hash_id'] not in processed_hash_ids:
     #                 # create IDs here to prevent conflicts
     #                 # when entries are added to the MAIN_REFERENCES

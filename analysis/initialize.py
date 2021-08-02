@@ -5,8 +5,13 @@ import sys
 
 import entry_hash_function
 import git
+import yaml
 
-SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 
 if __name__ == '__main__':
@@ -69,7 +74,7 @@ if __name__ == '__main__':
         input('Please provide your name (for the git committer name)')
     committer_email = \
         input('Please provide your e-mail (for the git committer e-mail)')
-
+    input('run "pre-commit autoupdate"')
     input('also save to config.py')
 
     r.index.commit(

@@ -14,9 +14,15 @@ from pdfminer.high_level import extract_text
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
-PDF_DIRECTORY = entry_hash_function.paths['PDF_DIRECTORY']
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-SCREEN_FILE = entry_hash_function.paths['SCREEN']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+PDF_DIRECTORY = entry_hash_function.paths[HASH_ID_FUNCTION]['PDF_DIRECTORY']
+SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 EMAIL = private_config['params']['EMAIL']
 

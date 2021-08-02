@@ -1,6 +1,4 @@
 #!/usr/bin/env python3
-import csv
-import hashlib
 import os
 import re
 import sys
@@ -19,11 +17,16 @@ from bibtexparser.customization import convert_to_unicode
 from git import Repo
 from nameparser import HumanName
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-SCREEN_FILE = entry_hash_function.paths['SCREEN']
-DATA = entry_hash_function.paths['DATA']
-SCREEN = entry_hash_function.paths['SCREEN']
-SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
+SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 
 def retrieve_local_resources():
@@ -76,43 +79,6 @@ def retrieve_crowd_resources():
                                               CONFERENCE_ABBREVIATIONS_ADD])
 
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
-
-
-def hash_function_up_to_date():
-
-    with open('../analysis/entry_hash_function.py') as file:
-        hash_of_hash_function = hashlib.sha256(
-            file.read().encode('utf-8')).hexdigest()
-
-    shared_config_path = 'shared_config.yaml'
-    with open(shared_config_path) as shared_config_yaml:
-        shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-    HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
-    pipeline_commit_id = ''
-    with open('.pre-commit-config.yaml') as f:
-        data_loaded = yaml.safe_load(f)
-        for repo in data_loaded['repos']:
-            # note: don't check for the full url because the pre-commit
-            # hooks could also be linked locally (for development)
-            if 'pipeline-validation-hooks' in repo.get('repo'):
-                pipeline_commit_id = repo.get('rev')
-
-    with open('../analysis/hash_function_pipeline_commit_id.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        list_of_rows = list(csv_reader)
-
-    up_to_date = False
-    if [hash_of_hash_function, pipeline_commit_id, HASH_ID_FUNCTION]\
-            in list_of_rows:
-        up_to_date = True
-
-    if not up_to_date:
-        print(hash_of_hash_function + ',' + pipeline_commit_id +
-              ' not in analysis/hash_function_pipeline_commit_id.csv')
-        raise HashFunctionError
-
-    return up_to_date
 
 
 def rmdiacritics(char):
@@ -210,7 +176,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         if propagated_citation_key(entry['ID']):
             raise CitationKeyPropagationError(
                 'WARNING: do not change citation_keys that have been ',
-                'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
+                'propagated to ' + SCREEN_FILE + ' and/or ' + DATA + ' (' +
                 entry['ID'] + ')',
             )
 

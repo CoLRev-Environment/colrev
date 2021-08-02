@@ -22,12 +22,14 @@ from tqdm import tqdm
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
-SCREEN = entry_hash_function.paths['SCREEN']
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 EMAIL = private_config['params']['EMAIL']
 if 'CPUS' not in private_config['params']:
@@ -544,7 +546,6 @@ def living_review_pipeline():
 if __name__ == '__main__':
 
     # initialize?
-    assert utils.hash_function_up_to_date()
     r = git.Repo()
     writer = load_bib_writer()
 

@@ -14,10 +14,19 @@ import pandas as pd
 import requests
 import tqdm
 import utils
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from lxml import etree
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
+
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+SEARCH_DETAILS_PATH = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS_PATH']
 
 ns = {
     'tei': '{http://www.tei-c.org/ns/1.0}',
@@ -26,8 +35,6 @@ ns = {
 
 GROBID_URL = 'http://grobid:8070'
 data_dir = '/usr/data/'
-
-SEARCH_DETAILS_PATH = entry_hash_function.paths['SEARCH_DETAILS_PATH']
 
 
 def get_reference_title(reference):

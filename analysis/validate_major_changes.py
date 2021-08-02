@@ -6,9 +6,15 @@ import dictdiffer
 import entry_hash_function
 import git
 import merge_duplicates
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 if __name__ == '__main__':
 

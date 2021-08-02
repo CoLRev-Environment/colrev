@@ -19,12 +19,17 @@ from tqdm import tqdm
 nr_entries_added = 0
 nr_current_entries = 0
 
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -336,7 +341,7 @@ def auto_merge_entries(references, tuples, threshold):
                     # Set first_propagated=True if entry['ID']
                     # should be kept for the first entry
                     if tuples[i][0][-1:].isnumeric() and \
-                       not tuples[i][0][-1:].isnumeric():
+                       not tuples[i][1][-1:].isnumeric():
                         first_propagated = True
                     else:
                         second_propagated = True
@@ -392,7 +397,9 @@ def update_entries_considered_non_duplicates(SimilarityArray, references):
                 customization=convert_to_unicode, common_strings=True,
             ).parse_file(bibtex_file, partial=True)
             for entry in non_duplicated_bib_database.entries:
-                hash_id_list.append(entry_hash_function.create_hash(entry))
+                hash_id = \
+                    entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+                hash_id_list.append(hash_id)
 
 # All permutations within the bib file are considered non-duplicates
 # NOTE: creating the list of permutations may require too much memory

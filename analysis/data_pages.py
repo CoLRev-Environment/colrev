@@ -5,14 +5,20 @@ import sys
 
 import entry_hash_function
 import pandas as pd
+import yaml
 
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+
 nr_entries_added = 0
 nr_current_entries = 0
-
-SCREEN_FILE = entry_hash_function.paths['SCREEN']
 
 
 def generate_data_pages():

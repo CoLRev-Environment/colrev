@@ -14,12 +14,16 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
 
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 EMAIL = private_config['params']['EMAIL']
 
-PDF_DIRECTORY = entry_hash_function.paths['PDF_DIRECTORY']
+PDF_DIRECTORY = entry_hash_function.paths[HASH_ID_FUNCTION]['PDF_DIRECTORY']
 
 
 def extract_text_by_page(pdf_path):

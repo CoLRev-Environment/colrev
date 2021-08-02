@@ -5,11 +5,17 @@ from datetime import datetime
 import entry_hash_function
 import pandas as pd
 import utils
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-SCREEN_FILE = entry_hash_function.paths['SCREEN']
-DATA_FILE = entry_hash_function.paths['DATA']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+DATA_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
 
 
 def fix_missing_hash_ids():
@@ -19,8 +25,6 @@ def fix_missing_hash_ids():
 
     print('Fix missing hash_ids')
     print('')
-
-    assert utils.hash_function_up_to_date()
 
 #    r = git.Repo()
 #
@@ -38,7 +42,8 @@ def fix_missing_hash_ids():
         if 'hash_id' not in entry:
             entry_wo_hash = entry.copy()
             missing_entry_db.entries.append(entry_wo_hash)
-            entry['hash_id'] = entry_hash_function.create_hash(entry)
+            entry['hash_id'] = \
+                entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
