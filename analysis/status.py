@@ -11,7 +11,7 @@ nr_current_entries = 0
 
 MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
 SCREEN = entry_hash_function.paths['SCREEN']
-DATA = entry_hash_function.paths['SCREEN']
+DATA = entry_hash_function.paths['DATA']
 SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
@@ -61,24 +61,23 @@ if __name__ == '__main__':
 
             screen = pd.read_csv(SCREEN, dtype=str)
             print(' ├ Screen 1')
-            print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
+            print(' |  - total: ' + str(screen.shape[0]).rjust(17, ' '))
             print(
                 ' |  - excluded: ' +
-                str(len(screen[screen['inclusion_1'] == 'no'])).rjust(14, ' '),
+                str(screen[screen['inclusion_1'] == 'no'].shape[0])
+                .rjust(14, ' '),
             )
             print(
                 ' |  - included: ' +
-                str(len(screen[screen['inclusion_1'] == 'yes']))
+                str(screen[screen['inclusion_1'] == 'yes'].shape[0])
                 .rjust(14, ' '),
             )
-            if 0 != len(screen[screen['inclusion_1'] == 'TODO']):
+            if 0 != screen[screen['inclusion_1'] == 'TODO'].shape[0]:
                 print(
                     ' |  - TODO: ' + str(
-                        len(
-                            screen.drop(
-                                screen[screen['inclusion_1'] != 'TODO'].index,
-                            ),
-                        ),
+                        screen.drop(
+                            screen[screen['inclusion_1'] != 'TODO'].index,
+                        ).shape[0],
                     ).rjust(18, ' '),
                 )
             print(' |')
@@ -90,20 +89,21 @@ if __name__ == '__main__':
                 ].index, inplace=True,
             )
             print(' ├ Screen 2')
-            print(' |  - total: ' + str(len(screen)).rjust(17, ' '))
+            print(' |  - total: ' + str(screen.shape[0]).rjust(17, ' '))
             print(
                 ' |  - excluded: ' +
-                str(len(screen[screen['inclusion_2'] == 'no'])).rjust(14, ' '),
+                str(screen[screen['inclusion_2'] == 'no'].shape[0])
+                .rjust(14, ' '),
             )
             print(
                 ' |  - included: ' +
-                str(len(screen[screen['inclusion_2'] == 'yes']))
+                str(screen[screen['inclusion_2'] == 'yes'].shape[0])
                 .rjust(14, ' '),
             )
-            if 0 != len(screen[screen['inclusion_2'] == 'TODO']):
+            if 0 != screen[screen['inclusion_2'] == 'TODO'].shape[0]:
                 print(
                     ' |  - TODO: ' +
-                    str(len(screen[screen['inclusion_2'] == 'TODO']))
+                    str(screen[screen['inclusion_2'] == 'TODO'].shape[0])
                     .rjust(18, ' '),
                 )
             print(' |')
@@ -115,12 +115,13 @@ if __name__ == '__main__':
             else:
                 data = pd.read_csv(DATA, dtype=str)
                 print(' ├ Data extraction')
-                print(' |  - total: ' + str(len(data)).rjust(17, ' '))
-                if 0 != len(screen[screen['inclusion_2'] == 'yes'])-len(data):
+                print(' |  - total: ' + str(data.shape[0]).rjust(17, ' '))
+                if 0 != screen[screen['inclusion_2'] == 'yes'].shape[0] - \
+                        data.shape[0]:
                     print(
                         ' |  - IMPORT FROM SCREEN: ' +
-                        str(len(
-                            screen[screen['inclusion_2'] == 'yes'])-len(data))
+                        str(screen[screen['inclusion_2'] == 'yes'].shape[0] -
+                            data.shape[0])
                         .rjust(4, ' '),
                     )
 

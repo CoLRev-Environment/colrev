@@ -3,3 +3,4 @@ params:
     WOS_API_KEY: XYLSEJYISJX
     CPUS: 4
     PDFPATH: "/home/user/data/pdfs"
+    DEBUG_MODE: 0
