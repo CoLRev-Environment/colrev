@@ -4,15 +4,20 @@ import os
 import entry_hash_function
 import pandas as pd
 import utils
+import yaml
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
+SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 nr_duplicates_hash_ids = 0
 nr_entries_added = 0
 nr_current_entries = 0
-
-MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
-SCREEN = entry_hash_function.paths['SCREEN']
-DATA = entry_hash_function.paths['DATA']
-SEARCH_DETAILS = entry_hash_function.paths['SEARCH_DETAILS']
 
 
 def validate_files():

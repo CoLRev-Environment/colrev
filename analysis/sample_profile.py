@@ -5,9 +5,14 @@ import entry_hash_function
 import numpy as np
 import pandas as pd
 import utils
+import yaml
 
-SCREEN = entry_hash_function.paths['SCREEN']
-DATA = entry_hash_function.paths['SCREEN']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 if __name__ == '__main__':
 

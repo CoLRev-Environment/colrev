@@ -5,14 +5,21 @@ import logging
 import entry_hash_function
 import pandas as pd
 import utils
+import yaml
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 nr_entries_added = 0
 nr_current_entries = 0
 
-SCREEN = entry_hash_function.paths['SCREEN']
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
 def generate_screen_csv(exclusion_criteria):

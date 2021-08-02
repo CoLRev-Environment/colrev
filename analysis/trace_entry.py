@@ -6,14 +6,18 @@ import bibtexparser
 import dictdiffer
 import entry_hash_function
 import git
-import utils
+import yaml
 from bibtexparser.customization import convert_to_unicode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-MAIN_REFERENCES = entry_hash_function.paths['SCREEN']
-SCREEN = entry_hash_function.paths['SCREEN']
-DATA = entry_hash_function.paths['SCREEN']
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 
 def trace_hash(bibfilename, hash_id_needed):
@@ -25,7 +29,8 @@ def trace_hash(bibfilename, hash_id_needed):
         ).parse_file(bibtex_file, partial=True)
 
         for entry in bib_database.entries:
-            if entry_hash_function.create_hash(entry) == hash_id_needed:
+            if entry_hash_function.create_hash[HASH_ID_FUNCTION](entry) == \
+                    hash_id_needed:
                 print(
                     '\n\n Found hash ',
                     hash_id_needed,
@@ -44,8 +49,6 @@ if __name__ == '__main__':
     print('')
 
     print('Trace entry by citation_key')
-
-    assert utils.hash_function_up_to_date()
 
     citation_key = input('provide citation_key')
 #    citation_key = 'Blijleven2019'

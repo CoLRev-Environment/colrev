@@ -21,11 +21,20 @@ import yaml
 from Levenshtein import ratio
 from nameparser import HumanName
 
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
+
+EMAIL = private_config['params']['EMAIL']
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 EMPTY_RESULT = {
@@ -44,11 +53,6 @@ CR_JOURNAL_ABBREVIATIONS, \
     CR_JOURNAL_VARIATIONS, \
     CR_CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
-
-MAIN_REFERENCES = entry_hash_function.paths['MAIN_REFERENCES']
-MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
-
-EMAIL = private_config['params']['EMAIL']
 
 
 def crossref_query(entry):

@@ -4,9 +4,14 @@ import logging
 import bibtexparser
 import entry_hash_function
 import utils
+import yaml
 from bibtexparser.customization import convert_to_unicode
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
 
 def trace_hash(bibfilename, hash_id_needed):
@@ -20,7 +25,8 @@ def trace_hash(bibfilename, hash_id_needed):
         for entry in bib_database.entries:
             # If there are transformations before the hash is created,
             # they need to be executed before the following.
-            if entry_hash_function.create_hash(entry) == hash_id_needed:
+            if entry_hash_function.create_hash[HASH_ID_FUNCTION](entry) == \
+                    hash_id_needed:
                 print(
                     '\n\n Found hash ',
                     hash_id_needed,
@@ -39,8 +45,6 @@ if __name__ == '__main__':
     print('')
 
     print('Trace hash_id')
-
-    assert utils.hash_function_up_to_date()
 
     hash_id_needed = input('provide hash_id')
     assert len(hash_id_needed) == 64
