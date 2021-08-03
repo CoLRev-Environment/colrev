@@ -145,14 +145,13 @@ To reset the analyses, each of these files can be deleted.
       This is particularly critical since there is no inherent order in BibTeX or CSV files storing the data of the literature review.
       Applications may easily introduce changes that make it hard to identify the content that has changed in a commit.
       - In the pipeline, this challenge is addressed by enforcing reasonable formatting and ordering defaults in the BibTex and CSV files.
-      - When editing files with external applications or manually, a general recommendation is to save the file after a few changes and check the changes via `git status`.
-      If it shows few changes, continue editing the files and check the `git status` before creating a commit.
-      If git identifies changes in the whole file, check whether the formatting can be adjusted in the application (e.g., setting quoting defaults in LibreOffice or sort order in Jabref).
-      It is always possible to run `make reformat_bibliography`, or to `git restore ...` the file and start over.
 
     </details>
 
 # Components
+
+The scripts work together with the [pipeline-validation-hooks](https://github.com/geritwagner/pipeline-validation-hooks).
+It is recommended to run `pre-commit run -a` regularly to analyze the status of the pipeline and to ensure consistency.
 
 Modes:
 
@@ -164,8 +163,6 @@ Modes:
 | :------------------------------- | :---------------------------------------------------------------------------------------- | :---------- |
 | Management: starter 🤓∞💻        | Sets up the repository.                                                                   | CLI only    |
 |                                  | make initialize                                                                           |             |
-| Management: monitor 💻           | Displays the status of the pipeline in a PRISMA diagram.                                  | CLI only    |
-|                                  | make status                                                                               |             |
 | Management: formatter 💻         | Formats the bibliography to ensure a clean git history.                                   | CLI only    |
 |                                  | make format_bibliography                                                                  |             |
 | Management: validator 💻         | Validates the state of the pipeline, ensuring traceability and consistency.               | CLI only    |
@@ -215,7 +212,6 @@ docker-compose up
 ```
 docker-compose up
 docker-compose run --rm review_template_python3 /bin/bash
-make status
 ```
 
 To install crowd-sourced resources, include them as submodules as follows:
