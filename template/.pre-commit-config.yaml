@@ -4,6 +4,12 @@ repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
     rev: 12a31e8
     hooks:
+    -   id: status
+        name: status
+        entry: pipeline_validation_hooks/status.py
+        language: script
+        files: references.bib
+        verbose: true
     -   id: notifier
         name: notifier
         entry: pipeline_validation_hooks/notifier.py

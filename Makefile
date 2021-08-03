@@ -1,4 +1,4 @@
-.PHONY : status search backward_search cleanse_records screen data
+.PHONY : search backward_search cleanse_records screen data
 
 # Note: this should not be necessary for the pip-version (when the scripts can simply access the current path as the working directory)
 DATA_PATH=data_test
@@ -19,9 +19,6 @@ initialize :
 
 validate :
 	cd $(DATA_PATH) && pre-commit run -a
-
-status :
-	cd $(DATA_PATH) && python3 ../analysis/status.py
 
 reformat_bibliography :
 	cd $(DATA_PATH) && python3 ../analysis/reformat_bibliography.py
