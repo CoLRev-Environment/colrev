@@ -267,16 +267,16 @@ def process_backward_search(tei):
                                           .replace(',', '')
         except:
             pass
-        entry['ID'] = author_string + row['year']
-        entry['ENTRYTYPE'] = 'article'
-        entry['author'] = row['authors']
-        entry['journal'] = row['journal']
-        entry['title'] = row['title']
-        entry['year'] = row['year']
-        entry['volume'] = row['volume']
-        entry['issue'] = row['issue']
-        entry['pages'] = row['pages']
-        entry['doi'] = row['doi']
+        entry.update(ID=author_string + row['year'])
+        entry.update(ENTRYTYPE='article')
+        entry.update(author=row['authors'])
+        entry.update(journal=row['journal'])
+        entry.update(title=row['title'])
+        entry.update(year=row['year'])
+        entry.update(volume=row['volume'])
+        entry.update(issue=row['issue'])
+        entry.update(pages=row['pages'])
+        entry.update(doi=row['doi'])
         if index == 0:
             db.entries = [entry]
         else:

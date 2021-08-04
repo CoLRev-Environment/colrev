@@ -95,20 +95,20 @@ def get_entries(bib_file):
             customization=convert_to_unicode, common_strings=True,
         ).parse_file(bibtex_file, partial=True)
         for entry in individual_bib_database.entries:
-            entry['source_file_path'] = os.path.basename(bib_file)
+            entry.update(source_file_path=os.path.basename(bib_file))
             # IMPORTANT NOTE: any modifications completed before this step
             # need to be considered when backward-tracing!
             # Tradeoff: preprocessing can help to reduce the number of
             # representations (hash_ids) for each record
             # but it also introduces complexity (backward tacing)
-            entry['hash_id'] = \
-                entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            entry.update(hash_id=hid)
             if entry['hash_id'] not in processed_hash_ids:
                 # create IDs here to prevent conflicts
                 # when entries are added to the MAIN_REFERENCES
                 # (in parallel)
 
-                entry['status'] = 'not_imported'
+                entry.update(status='not_imported')
                 entry_list.append(entry)
     return entry_list
 
@@ -159,16 +159,15 @@ def load():
     #                 # create IDs here to prevent conflicts
     #                 # when entries are added to the MAIN_REFERENCES
     #                 # (in parallel)
-    #                 entry['status'] = 'not_imported'
+    #                 entry.update(status = 'not_imported')
     #                 search_records.append(entry)
 
     for entry in loaded_records:
         if 'not_imported' == entry['status']:
-            entry['ID'] = \
-                utils.generate_citation_key_blacklist(
-                    entry, citation_key_list,
-                    entry_in_bib_db=False,
-                    raise_error=False)
+            entry.update(ID=utils.generate_citation_key_blacklist(
+                entry, citation_key_list,
+                entry_in_bib_db=False,
+                raise_error=False))
             citation_key_list.append(entry['ID'])
 
     if os.path.exists('processed_hash_ids.csv'):
@@ -196,7 +195,7 @@ def preprocess(entry):
 
     entry = drop_fields(entry)
 
-    entry['status'] = 'not_cleansed'
+    entry.update(status='not_cleansed')
 
     return entry
 
@@ -228,9 +227,9 @@ def import_entries(search_records, bib_database):
         # to prevent duplicate IDs in MAIN_REFERENCES,
         # to achieve a better sort order in MAIN_REFERENCES,
         # and to achieve a cleaner git history
-        entry['ID'] = utils.generate_citation_key(entry,
-                                                  bib_database,
-                                                  entry_in_bib_db=True)
+        entry.update(ID=utils.generate_citation_key(entry,
+                                                    bib_database,
+                                                    entry_in_bib_db=True))
 
     details_commit = [source_file_path +
                       ' (' + str(overall) + ' overall, ' +
