@@ -214,7 +214,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
     # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
     if len(bib_database.entries) < 2:
-        # entry['status'] = 'processed'
+        # entry.update(status = 'processed')
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
         return
@@ -242,7 +242,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry):
                                                       na=False)]
     # means that all prior entries are tagged as needs_manual_cleansing
     if references.shape[0] == 0:
-        # entry['status'] = 'processed'
+        # entry.update(status = 'processed')
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
         return
@@ -305,9 +305,9 @@ def apply_merges():
                     if entry['ID'] == row[0]:
                         hash_ids = list(set(hash_ids_to_merge +
                                         entry['hash_id'].split(',')))
-                        entry['hash_id'] = str(','.join(sorted(hash_ids)))
+                        entry.update(hash_id=str(','.join(sorted(hash_ids))))
                         if 'not_merged' == entry['status']:
-                            entry['status'] = 'processed'
+                            entry.update(status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
         os.remove('duplicate_tuples.csv')
@@ -320,7 +320,7 @@ def apply_merges():
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
                         if 'not_merged' == entry['status']:
-                            entry['status'] = 'processed'
+                            entry.update(status='processed')
         os.remove('non_duplicates.csv')
 
     # note: potential_duplicate_tuples need to be processed manually but we
@@ -331,7 +331,7 @@ def apply_merges():
             for row in csv_reader:
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
-                        entry['status'] = 'needs_manual_merging'
+                        entry.update(status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
         potential_duplicates.sort_values(by=['max_similarity'],

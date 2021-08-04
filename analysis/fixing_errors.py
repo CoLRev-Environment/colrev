@@ -42,8 +42,8 @@ def fix_missing_hash_ids():
         if 'hash_id' not in entry:
             entry_wo_hash = entry.copy()
             missing_entry_db.entries.append(entry_wo_hash)
-            entry['hash_id'] = \
-                entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            entry.update(hash_id=hid)
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
@@ -90,7 +90,7 @@ def rename_propagated_citation_keys():
                 entry, bib_database, entry_in_bib_db=True,
                 raise_error=False)
             citation_key_pairs.append([entry['ID'], replacement])
-            entry['ID'] = replacement
+            entry.update(ID=replacement)
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 

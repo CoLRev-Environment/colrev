@@ -133,33 +133,33 @@ def homogenize_entry(entry):
 
     if 'author' in entry:
         # DBLP appends identifiers to non-unique authors
-        entry['author'] = str(re.sub(r'[0-9]{4}', '', entry['author']))
+        entry.update(author=str(re.sub(r'[0-9]{4}', '', entry['author'])))
 
         # fix name format
         if (1 == len(entry['author'].split(' ')[0])) or \
                 (', ' not in entry['author']):
-            entry['author'] = utils.format_author_field(entry['author'])
+            entry.update(author=utils.format_author_field(entry['author']))
 
     if 'title' in entry:
-        entry['title'] = re.sub(r'\s+', ' ', entry['title']).rstrip('.')
-        entry['title'] = utils.title_if_mostly_upper_case(entry['title'])
+        entry.update(title=re.sub(r'\s+', ' ', entry['title']).rstrip('.'))
+        entry.update(title=utils.title_if_mostly_upper_case(entry['title']))
 
     if 'booktitle' in entry:
-        entry['booktitle'] = \
-            utils.title_if_mostly_upper_case(entry['booktitle'])
+        entry.update(booktitle=utils.title_if_mostly_upper_case(
+            entry['booktitle']))
 
     if 'journal' in entry:
-        entry['journal'] = \
-            utils.title_if_mostly_upper_case(entry['journal'])
+        entry.update(
+            journal=utils.title_if_mostly_upper_case(entry['journal']))
 
     if 'pages' in entry:
-        entry['pages'] = utils.unify_pages_field(entry['pages'])
+        entry.update(pages=utils.unify_pages_field(entry['pages']))
 
     if 'doi' in entry:
-        entry['doi'] = entry['doi'].replace('http://dx.doi.org/', '')
+        entry.update(doi=entry['doi'].replace('http://dx.doi.org/', ''))
 
     if 'issue' in entry and 'number' not in entry:
-        entry['number'] = entry['issue']
+        entry.update(number=entry['issue'])
         del entry['issue']
 
     return entry
@@ -175,7 +175,7 @@ def get_doi_from_crossref(entry):
                 retries += 1
                 ret = crossref_query(entry)
             if ret['result']['similarity'] > 0.95:
-                entry['doi'] = ret['result']['doi']
+                entry.update(doi=ret['result']['doi'])
         except KeyboardInterrupt:
             sys.exit()
     return entry
@@ -221,7 +221,7 @@ def retrieve_doi_metadata(entry):
                                        .replace('Jr', '')):
 
                 names = author_string.split(' and ')
-                entry['author'] = ''
+                entry.update(author='')
                 for name in names:
                     # Note: https://github.com/derek73/python-nameparser
                     # is very effective (maybe not perfect)
@@ -229,30 +229,29 @@ def retrieve_doi_metadata(entry):
                     parsed_name.string_format = \
                         '{last} {suffix}, {first} ({nickname}) {middle}'
                     parsed_name.capitalize(force=True)
-                    entry['author'] = entry['author'] + ' and ' + \
-                        str(parsed_name).replace(' , ', ', ')
+                    entry.update(author=entry['author'] + ' and ' +
+                                 str(parsed_name).replace(' , ', ', '))
                 if entry['author'].startswith(' and '):
-                    entry['author'] = entry['author'][5:]\
-                        .rstrip()\
-                        .replace('  ', ' ')
+                    entry.update(author=entry['author'][5:]
+                                 .rstrip()
+                                 .replace('  ', ' '))
             else:
-                entry['author'] = str(
-                    author_string).rstrip().replace('  ', ' ')
+                entry.update(author=str(
+                    author_string).rstrip().replace('  ', ' '))
 
         retrieved_title = retrieved_record.get('title', '')
         if not retrieved_title == '':
-            entry['title'] = \
-                re.sub(r'\s+', ' ', str(retrieved_title))\
-                .replace('\n', ' ')
+            entry.update(title=re.sub(r'\s+', ' ', str(retrieved_title))
+                         .replace('\n', ' '))
         try:
             if 'published-print' in retrieved_record:
                 date_parts = \
                     retrieved_record['published-print']['date-parts']
-                entry['year'] = str(date_parts[0][0])
+                entry.update(year=str(date_parts[0][0]))
             elif 'published-online' in retrieved_record:
                 date_parts = \
                     retrieved_record['published-online']['date-parts']
-                entry['year'] = str(date_parts[0][0])
+                entry.update(year=str(date_parts[0][0]))
         except KeyError:
             pass
 
@@ -261,15 +260,15 @@ def retrieve_doi_metadata(entry):
             # DOI data often has only the first page.
             if not entry.get('pages', 'no_pages') in retrieved_pages \
                     and '-' in retrieved_pages:
-                entry['pages'] = utils.unify_pages_field(
-                    str(retrieved_pages))
+                entry.update(pages=utils.unify_pages_field(
+                    str(retrieved_pages)))
         retrieved_volume = retrieved_record.get('volume', '')
         if not retrieved_volume == '':
-            entry['volume'] = str(retrieved_volume)
+            entry.update(volume=str(retrieved_volume))
 
         retrieved_issue = retrieved_record.get('issue', '')
         if not retrieved_issue == '':
-            entry['number'] = str(retrieved_issue)
+            entry.update(number=str(retrieved_issue))
         retrieved_container_title = \
             str(retrieved_record.get('container-title', ''))
         if not retrieved_container_title == '':
@@ -277,11 +276,9 @@ def retrieve_doi_metadata(entry):
                 if entry['series'] != retrieved_container_title:
 
                     if 'journal' in retrieved_container_title:
-                        entry['journal'] = \
-                            retrieved_container_title
+                        entry.update(journal=retrieved_container_title)
                     else:
-                        entry['booktitle'] = \
-                            retrieved_container_title
+                        entry.update(booktitle=retrieved_container_title)
 
         if 'abstract' not in entry:
             retrieved_abstract = retrieved_record.get('abstract', '')
@@ -295,20 +292,19 @@ def retrieve_doi_metadata(entry):
                     )
                 retrieved_abstract = \
                     re.sub(r'\s+', ' ', retrieved_abstract)
-                entry['abstract'] = \
-                    str(retrieved_abstract).replace('\n', '')\
-                    .lstrip().rstrip()
+                entry.update(abstract=str(retrieved_abstract).replace('\n', '')
+                             .lstrip().rstrip())
     except IndexError:
         print('Index error (authors?) for ' + entry['ID'])
-        entry['status'] = 'not_cleansed'
+        entry.update(status='not_cleansed')
         pass
     except json.decoder.JSONDecodeError:
         print('Doi retrieval error: ' + entry['ID'])
-        entry['status'] = 'not_cleansed'
+        entry.update(status='not_cleansed')
         pass
     except TypeError:
         print('Type error: ' + entry['ID'])
-        entry['status'] = 'not_cleansed'
+        entry.update(status='not_cleansed')
         pass
 
     return entry
@@ -321,8 +317,8 @@ def regenerate_citation_key(entry, bib_database):
         # Recreate citation_keys
         # (mainly if it differs, i.e., if there are changes in authors/years)
         try:
-            entry['ID'] = utils.generate_citation_key(
-                entry, bib_database, entry_in_bib_db=True)
+            entry.update(ID=utils.generate_citation_key(
+                entry, bib_database, entry_in_bib_db=True))
         except utils.CitationKeyPropagationError:
             # print('WARNING: cleansing entry with propagated citation_key:',
             #   entry['ID'])
@@ -346,15 +342,15 @@ def speculative_changes(entry):
             print('WARNING: conference string in journal field: ',
                   entry['ID'],
                   entry['journal'])
-            # entry['booktitle'] = entry['journal']
-            # entry['ENTRYTYPE'] = 'inproceedings'
+            # entry.update(booktitle = entry['journal'])
+            # entry(ENTRYTYPE = 'inproceedings')
             # del entry['journal']
     if 'booktitle' in entry:
         if any(
             conf_string in entry['booktitle'].lower()
             for conf_string in conf_strings
         ):
-            entry['ENTRYTYPE'] = 'inproceedings'
+            entry.update(ENTRYTYPE='inproceedings')
 
     # TODO: create a warning if any conference strings (ecis, icis, ..)
     # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
@@ -363,11 +359,11 @@ def speculative_changes(entry):
     if 'article' == entry['ENTRYTYPE']:
         if 'booktitle' in entry:
             if 'journal' not in entry:
-                entry['journal'] = entry['booktitle']
+                entry.update(journal=entry['booktitle'])
                 del entry['booktitle']
         if 'series' in entry:
             if 'journal' not in entry:
-                entry['journal'] = entry['series']
+                entry.update(journal=entry['series'])
                 del entry['series']
 
     if 'book' == entry['ENTRYTYPE']:
@@ -378,14 +374,14 @@ def speculative_changes(entry):
             ):
                 conf_name = entry['series']
                 del entry['series']
-                entry['booktitle'] = conf_name
-                entry['ENTRYTYPE'] = 'inproceedings'
+                entry.update(booktitle=conf_name)
+                entry.update(ENTRYTYPE='inproceedings')
 
     if 'article' == entry['ENTRYTYPE']:
         if 'journal' not in entry:
             if 'series' in entry:
                 journal_string = entry['series']
-                entry['journal'] = journal_string
+                entry.update(journal=journal_string)
                 del entry['series']
 
     # Moved journal processing to importer
@@ -411,16 +407,16 @@ def apply_local_rules(entry):
     if 'journal' in entry:
         for i, row in LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['journal'].lower():
-                entry['journal'] = row['journal']
+                entry.update(journal=row['journal'])
 
         for i, row in LOCAL_JOURNAL_VARIATIONS.iterrows():
             if row['variation'].lower() == entry['journal'].lower():
-                entry['journal'] = row['journal']
+                entry.update(journal=row['journal'])
 
     if 'booktitle' in entry:
         for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['booktitle'].lower():
-                entry['booktitle'] = row['conference']
+                entry.update(booktitle=row['conference'])
 
     return entry
 
@@ -430,16 +426,16 @@ def apply_crowd_rules(entry):
     if 'journal' in entry:
         for i, row in CR_JOURNAL_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['journal'].lower():
-                entry['journal'] = row['journal']
+                entry.update(journal=row['journal'])
 
         for i, row in CR_JOURNAL_VARIATIONS.iterrows():
             if row['variation'].lower() == entry['journal'].lower():
-                entry['journal'] = row['journal']
+                entry.update(journal=row['journal'])
 
     if 'booktitle' in entry:
         for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['booktitle'].lower():
-                entry['booktitle'] = row['conference']
+                entry.update(booktitle=row['conference'])
 
     return entry
 
@@ -449,7 +445,7 @@ def cleanse(entry):
     if 'not_cleansed' != entry['status']:
         return entry
 
-    entry['status'] = 'not_merged'
+    entry.update(status='not_merged')
 
     entry = homogenize_entry(entry)
 
@@ -470,13 +466,13 @@ def cleanse(entry):
     if 'doi' in entry and 'title' in entry and \
             'journal' in entry and 'year' in entry:
         # in this case, it would be ok to have no author
-        entry['status'] = 'not_merged'
+        entry.update(status='not_merged')
     if 'title' not in entry or \
         'author' not in entry or \
             'year' not in entry or \
             not any(x in entry for x in
                     ['journal', 'booktitle', 'school', 'book', 'series']):
-        entry['status'] = 'needs_manual_cleansing'
+        entry.update(status='needs_manual_cleansing')
     if entry.get('title', '').endswith('...') or \
             entry.get('title', '').endswith('…') or \
             entry.get('journal', '').endswith('...') or \
@@ -485,7 +481,7 @@ def cleanse(entry):
             entry.get('booktitle', '').endswith('…') or \
             entry.get('author', '').endswith('...') or \
             entry.get('author', '').endswith('…'):
-        entry['status'] = 'needs_manual_cleansing'
+        entry.update(status='needs_manual_cleansing')
 
     return entry
 

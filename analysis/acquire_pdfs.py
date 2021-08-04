@@ -120,7 +120,7 @@ def acquire_pdfs(bib_database, screen):
             if os.path.exists(pdf_filepath):
                 pdfs_available += 1
                 if 'file' not in entry:
-                    entry['file'] = ':' + pdf_filepath + ':PDF'
+                    entry.update(file=':' + pdf_filepath + ':PDF')
                     existing_pdfs_linked += 1
                 continue
             if 'doi' in entry:
@@ -139,7 +139,7 @@ def acquire_pdfs(bib_database, screen):
                             if is_pdf(pdf_filepath):
                                 print('Retrieved pdf via unpaywall api: ' +
                                       pdf_filepath)
-                                entry['file'] = ':' + pdf_filepath + ':PDF'
+                                entry.update(file=':' + pdf_filepath + ':PDF')
                                 pdfs_retrieved += 1
                             else:
                                 os.remove(pdf_filepath)
