@@ -8,7 +8,6 @@ import entry_hash_function
 import git
 import numpy as np
 import pandas as pd
-import reformat_bibliography
 import utils
 import yaml
 from bibtexparser.customization import convert_to_unicode
@@ -30,7 +29,6 @@ DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -502,7 +500,10 @@ def merge_bib(bib_database):
 def create_commit(merge_details):
 
     # to avoid failing pre-commit hooks
-    reformat_bibliography.reformat_bib()
+    bib_database = utils.load_references_bib(
+        modification_check=False, initialize=False,
+    )
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     r = git.Repo('')
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:

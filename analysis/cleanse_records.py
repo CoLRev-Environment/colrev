@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import json
 import logging
-import os
 import re
 import sys
 import time
@@ -14,7 +13,6 @@ from urllib.request import urlopen
 import bibtexparser
 import entry_hash_function
 import git
-import reformat_bibliography
 import requests
 import utils
 import yaml
@@ -32,7 +30,6 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 EMAIL = private_config['params']['EMAIL']
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
@@ -488,16 +485,15 @@ def cleanse(entry):
 
 def create_commit():
 
-    if os.path.exists(MAIN_REFERENCES_CLEANSED):
-        f1 = open(MAIN_REFERENCES, 'a+')
-        f2 = open(MAIN_REFERENCES_CLEANSED)
-        f1.write(f2.read())
-        f1.close()
-        f2.close()
-        os.remove(MAIN_REFERENCES_CLEANSED)
+    repo = git.Repo()
+    hcommit = repo.head.commit
+    if MAIN_REFERENCES in [item.a_path for item in hcommit.diff()]:
 
         # to avoid failing pre-commit hooks
-        reformat_bibliography.reformat_bib()
+        bib_database = utils.load_references_bib(
+            modification_check=False, initialize=False,
+        )
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
         r = git.Repo('')
         r.index.add([MAIN_REFERENCES])

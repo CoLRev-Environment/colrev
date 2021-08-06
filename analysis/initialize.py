@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import os
 import shutil
-import sys
 
 import entry_hash_function
 import git
@@ -14,19 +13,26 @@ HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 
-if __name__ == '__main__':
+def initialize_repo():
+
+    try:
+        # Alternatively: ask for remote url of git repo to clone?
+        r = git.Repo()
+        # TODO: further checks?
+        return r
+    except git.exc.InvalidGitRepositoryError:
+        pass
+
+    r = git.Repo.init()
 
     print('')
     print('')
 
     print('Initialize review repository')
-
-    if not len(os.listdir()) == 0:
-        if not 'y' == input('initialize in non-empty directory (y/n)?'):
-            sys.exit(0)
     project_title = input('Project title: ')
 
-    r = git.Repo.init()
+    # TODO: check: initialize in non-empty directory (y/n)?
+
     os.mkdir('search')
 
     f = open(SEARCH_DETAILS, 'w')
@@ -38,9 +44,7 @@ if __name__ == '__main__':
 
     with open('../template/readme.md') as file:
         filedata = file.read()
-
     filedata = filedata.replace('{{project_title}}', project_title)
-
     with open('readme.md', 'w') as file:
         file.write(filedata)
 
@@ -84,3 +88,10 @@ if __name__ == '__main__':
     )
 
     # TODO: connection to remote repo
+
+    return r
+
+
+if __name__ == '__main__':
+
+    initialize_repo()
