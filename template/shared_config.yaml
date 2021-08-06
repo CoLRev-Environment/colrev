@@ -1,6 +1,6 @@
 params:
     MERGING_NON_DUP_THRESHOLD: 0.7
     MERGING_DUP_THRESHOLD: 0.95
-    REVIEW_STRATEGY: living_review
+    REVIEW_STRATEGY: full_review
     BATCH_SIZE: 500
     HASH_ID_FUNCTION: 'v_0.3'

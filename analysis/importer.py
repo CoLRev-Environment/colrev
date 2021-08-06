@@ -10,7 +10,6 @@ import bibtexparser
 import cleanse_records
 import entry_hash_function
 import git
-import reformat_bibliography
 import utils
 import yaml
 from bibtexparser.customization import convert_to_unicode
@@ -37,7 +36,6 @@ DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-MAIN_REFERENCES_CLEANSED = MAIN_REFERENCES.replace('.bib', '_cleansed.bib')
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
@@ -114,6 +112,8 @@ def get_entries(bib_file):
 
 
 def load():
+
+    print('\n\n Import records')
 
     # Not sure we need to track the "imported" status here...
     # entries will not be added to bib_database
@@ -250,7 +250,10 @@ def create_commit(r, details_commit):
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
         # to avoid failing pre-commit hooks
-        reformat_bibliography.reformat_bib()
+        bib_database = utils.load_references_bib(
+            modification_check=False, initialize=False,
+        )
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
         # print('Creating commit ...')
 
