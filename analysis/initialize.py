@@ -6,7 +6,7 @@ import entry_hash_function
 import git
 import yaml
 
-with open('shared_config.yaml') as shared_config_yaml:
+with open('../template/shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
