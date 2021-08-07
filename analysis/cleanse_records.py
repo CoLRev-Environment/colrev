@@ -483,11 +483,12 @@ def cleanse(entry):
     return entry
 
 
-def create_commit():
+def create_commit(r, bib_database):
 
-    repo = git.Repo()
-    hcommit = repo.head.commit
-    if MAIN_REFERENCES in [item.a_path for item in hcommit.diff()]:
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
+            MAIN_REFERENCES in r.untracked_files:
 
         # to avoid failing pre-commit hooks
         bib_database = utils.load_references_bib(
@@ -495,11 +496,10 @@ def create_commit():
         )
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-        r = git.Repo('')
         r.index.add([MAIN_REFERENCES])
 
         r.index.commit(
-            'Cleanse ' + MAIN_REFERENCES,
+            '⚙️ Cleanse ' + MAIN_REFERENCES,
             author=git.Actor('script:cleanse_records.py', ''),
         )
 

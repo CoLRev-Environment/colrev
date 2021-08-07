@@ -2,5 +2,6 @@ params:
     EMAIL: name@institution.email
     WOS_API_KEY: XYLSEJYISJX
     CPUS: 4
-    PDFPATH: "/home/user/data/pdfs"
     DEBUG_MODE: 0
+PDFPATH:
+    path_1: "/test"

@@ -111,16 +111,12 @@ def get_entries(bib_file):
     return entry_list
 
 
-def load():
-
-    print('\n\n Import records')
+def load(bib_database):
 
     # Not sure we need to track the "imported" status here...
     # entries will not be added to bib_database
     # if their hash_id is already there
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=True,
-    )
+
     processed_hash_ids = [entry['hash_id'].split(',') for
                           entry in bib_database.entries]
     processed_hash_ids = list(itertools.chain(*processed_hash_ids))
@@ -132,14 +128,16 @@ def load():
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
 
     # always include the current bib (including the statuus of entries)
-    imported_records = bib_database.entries
+    # imported_records = bib_database.entries
     # Note: only add search_results if their hash_id is not already
     # in bib_database.entries
 
-    with mp.Pool(processes=CPUS) as pool:
-        loaded_records = pool.map(get_entries, utils.get_bib_files())
+    pool = mp.Pool(processes=CPUS)
+    additional_records = pool.map(get_entries,
+                                  [bib_file
+                                   for bib_file in utils.get_bib_files()])
 
-    loaded_records = list(chain(*loaded_records))
+    additional_records = list(chain(*additional_records))
 
     # for bib_file in bib_files:
     #     with open(bib_file) as bibtex_file:
@@ -162,7 +160,7 @@ def load():
     #                 entry.update(status = 'not_imported')
     #                 search_records.append(entry)
 
-    for entry in loaded_records:
+    for entry in additional_records:
         if 'not_imported' == entry['status']:
             entry.update(ID=utils.generate_citation_key_blacklist(
                 entry, citation_key_list,
@@ -173,15 +171,13 @@ def load():
     if os.path.exists('processed_hash_ids.csv'):
         os.remove('processed_hash_ids.csv')
 
-    all_records = imported_records + loaded_records
-
     # Note: if we process papers in order (often alphabetically),
     # the merging may be more likely to produce conflicts (in parallel mode)
     # search_records = random.sample(search_records, len(search_records))
     # IMPORTANT: this is deprecated! we should know exactly in which
     # (deterministic) order the records were started
 
-    return all_records
+    return additional_records
 
 
 def preprocess(entry):
@@ -194,6 +190,8 @@ def preprocess(entry):
     entry = cleanse_records.apply_crowd_rules(entry)
 
     entry = drop_fields(entry)
+
+    del entry['source_file_path']
 
     entry.update(status='not_cleansed')
 
@@ -246,7 +244,10 @@ def save(bib_database):
     return
 
 
-def create_commit(r, details_commit):
+def create_commit(r, bib_database, details_commit):
+
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
         # to avoid failing pre-commit hooks
@@ -264,7 +265,7 @@ def create_commit(r, details_commit):
         if not DEBUG_MODE:
             hook_skipping = 'true'
         r.index.commit(
-            'Import search results \n - ' + '\n - '.join(details_commit),
+            '⚙️ Import search results \n - ' + '\n - '.join(details_commit),
             author=git.Actor(
                 'script:importer.py', ''),
             skip_hooks=hook_skipping

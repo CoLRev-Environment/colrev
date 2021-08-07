@@ -227,9 +227,9 @@ def prep_references(references):
             .str.replace(r'[^A-Za-z0-9, ]+', '', regex=True)\
             .str.lower()
 
-    references['container_title'] = references['journal'] + \
-        references['booktitle'] + \
-        references['series']
+    references['container_title'] = references['journal'].fillna('') + \
+        references['booktitle'].fillna('') + \
+        references['series'].fillna('')
 
     references.drop(references.columns.difference(['ID',
                                                    'author',
@@ -497,24 +497,28 @@ def merge_bib(bib_database):
     return bib_database
 
 
-def create_commit(merge_details):
+def create_commit(r, bib_database, merge_details):
 
-    # to avoid failing pre-commit hooks
-    bib_database = utils.load_references_bib(
-        modification_check=False, initialize=False,
-    )
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    r = git.Repo('')
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-        r.index.add([MAIN_REFERENCES])
-        if os.path.exists('potential_duplicate_tuples.csv'):
-            r.index.add(['potential_duplicate_tuples.csv'])
-        r.index.commit(
-            'Merge duplicates (script)' + '\nDuplicates removed: \n' +
-            merge_details,
-            author=git.Actor('script:merge_duplicates.py (automated)', ''),
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
+            MAIN_REFERENCES in r.untracked_files:
+
+        # to avoid failing pre-commit hooks
+        bib_database = utils.load_references_bib(
+            modification_check=False, initialize=False,
         )
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+        if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
+            r.index.add([MAIN_REFERENCES])
+            if os.path.exists('potential_duplicate_tuples.csv'):
+                r.index.add(['potential_duplicate_tuples.csv'])
+            r.index.commit(
+                '⚙️ Merge duplicates' + '\nDuplicates removed: \n' +
+                merge_details,
+                author=git.Actor('script:merge_duplicates.py', ''),
+            )
     return
 
 
@@ -526,7 +530,7 @@ def manual_merge_commit():
         hook_skipping = 'true'
 
     r.index.commit(
-        'Cleanse manual ' + MAIN_REFERENCES,
+        'Merge manual ' + MAIN_REFERENCES,
         author=git.Actor('manual:merge duplicates', ''),
         skip_hooks=hook_skipping
     )

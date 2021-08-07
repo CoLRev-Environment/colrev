@@ -89,10 +89,14 @@ def cleanse(entry):
     return entry
 
 
-def append_merge_MAIN_REFERENCES_MERGED(entry, bib_database):
+def append_merge_MAIN_REFERENCES_MERGED(entry):
 
     if 'not_merged' != entry['status']:
         return
+
+    bib_database = utils.load_references_bib(
+        modification_check=False, initialize=False,
+    )
 
     # the order matters for the incremental merging (make sure that each
     # additional record is compared to/merged with all prior records in
@@ -163,8 +167,10 @@ def append_merge_MAIN_REFERENCES_MERGED(entry, bib_database):
         # The needs_manual_merging status is only set
         # for one element of the tuple!
         with open('potential_duplicate_tuples.csv', 'a') as fd:
-            fd.write('"' + citation_key + '","' +
-                     entry['ID'] + '","' + str(max_similarity) + '"\n')
+            # to ensure a consistent order
+            entry_a, entry_b = sorted([citation_key, entry['ID']])
+            fd.write('"' + entry_a + '","' +
+                     entry_b + '","' + str(max_similarity) + '"\n')
     if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
@@ -175,11 +181,7 @@ def append_merge_MAIN_REFERENCES_MERGED(entry, bib_database):
     return
 
 
-def apply_merges():
-
-    bib_database = utils.load_references_bib(
-        modification_check=False, initialize=False,
-    )
+def apply_merges(bib_database):
 
     # The merging also needs to consider whether citation_keys are propagated
     # Completeness of comparisons should be ensured by the
@@ -236,16 +238,14 @@ def apply_merges():
                         entry.update(status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
-        potential_duplicates.sort_values(by=['max_similarity'],
+        potential_duplicates.sort_values(by=['max_similarity', 'ID1', 'ID2'],
                                          ascending=False, inplace=True)
         potential_duplicates.to_csv(
             'potential_duplicate_tuples.csv', index=False,
             quoting=csv.QUOTE_ALL, na_rep='NA',
         )
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    return merge_details
+    return bib_database
 
 
 def append_to_screen(entry):
@@ -264,18 +264,17 @@ def process_entries(search_records, bib_database):
 
     # parallel import
     print('Import')
-    for entry in [entry for entry in search_records
-                  if 'not_imported' == entry['status']]:
-        entry = importer.preprocess(entry)
-        del entry['source_file_path']
-        bib_database.entries.append(entry)
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    pool = mp.Pool(CPUS)
+    search_records = pool.map(importer.preprocess, search_records)
+    # for entry in search_records:
+    #     entry = importer.preprocess(entry)
+    [bib_database.entries.append(entry) for entry in search_records]
 
     # import-commit
     # Note: details (e.g., commit details) should not be stored in memory
     # (they are lost when users interrupt the process)
     # TODO: add details to the commit message
-    importer.create_commit(r, ['full_review mode'])
+    importer.create_commit(r, bib_database, ['full_review mode'])
 
     # parallel cleansing
     print('Cleanse')
@@ -283,24 +282,22 @@ def process_entries(search_records, bib_database):
     # For non-parallel processing/debugging:
     # for entry in to_cleanse:
     #     cleanse(entry)
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     # cleanse-commit
-    cleanse_records.create_commit()
+    cleanse_records.create_commit(r, bib_database)
 
     # parallel merging
     print('Merge')
-    pool.starmap(append_merge_MAIN_REFERENCES_MERGED,  [
-                 [x, bib_database] for x in bib_database.entries])
+    pool.map(append_merge_MAIN_REFERENCES_MERGED, bib_database.entries)
     # For non-parallel processing/debugging:
     # for entry in bib_database.entries:
     #     print(entry['ID'])
     #     append_merge_MAIN_REFERENCES_MERGED(entry)
-    merge_details = apply_merges()
+    bib_database = apply_merges(bib_database)
 
+    merge_details = 'TODO'
     # merge commit
-    merge_duplicates.create_commit(merge_details)
-
+    merge_duplicates.create_commit(r, bib_database, merge_details)
     return bib_database
 
 
@@ -382,23 +379,33 @@ def full_review_pipeline():
 
     initialize_duplicate_csvs()
 
-    all_search_records = importer.load()
-
     bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
+        modification_check=True, initialize=True,
     )
 
+    # Complete the prior processing steps first
+    bib_database = process_entries([], bib_database)
+
+    additional_search_records = importer.load(bib_database)
+
     last_record_i = 0
+    prev_iteration_i = 0
     search_record_batch = []
-    last_entry_id = all_search_records[-1]['ID']
-    for entry in all_search_records:
+    if len(additional_search_records) > 0:
+        last_entry_id = additional_search_records[-1]['ID']
+    else:
+        last_entry_id = 0
+    for entry in additional_search_records:
         search_record_batch.append(entry)
         last_record_i += 1
         if len(search_record_batch) == BATCH_SIZE or \
                 last_entry_id == entry['ID']:
             print('\n\nProcessing batch ' +
-                  str(last_record_i - BATCH_SIZE + 1) +
-                  ' to ' + str(last_record_i))
+                  str(max((last_record_i - BATCH_SIZE + 1),
+                          prev_iteration_i+1)) +
+                  ' to ' + str(last_record_i) + ' of ' +
+                  str(len(additional_search_records)))
+            prev_iteration_i = last_record_i
             bib_database = process_entries(search_record_batch, bib_database)
             search_record_batch = []
 
