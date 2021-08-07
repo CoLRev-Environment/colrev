@@ -303,6 +303,10 @@ def retrieve_doi_metadata(entry):
         print('Type error: ' + entry['ID'])
         entry.update(status='not_cleansed')
         pass
+    except requests.exceptions.ConnectionError:
+        print('ConnectionError: ' + entry['ID'])
+        entry.update(status='not_cleansed')
+        pass
 
     return entry
 

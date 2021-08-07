@@ -73,14 +73,9 @@ acquire_pdfs :
 
 # development:
 
-fix_errors :
-	cd $(DATA_PATH) && python3 ../analysis/fixing_errors.py
-
 validate_pdfs :
 	cd $(DATA_PATH) && python3 ../analysis/validate_pdfs.py
 
 sample_profile :
 	cd $(DATA_PATH) && python3 ../analysis/sample_profile.py
 
-renew_hash_id :
-	cd $(DATA_PATH) && python3 ../analysis/renew_hash_id.py
