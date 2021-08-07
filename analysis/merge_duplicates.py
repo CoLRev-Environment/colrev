@@ -6,14 +6,10 @@ import re
 import bibtexparser
 import entry_hash_function
 import git
-import numpy as np
 import pandas as pd
 import utils
 import yaml
-from bibtexparser.customization import convert_to_unicode
 from fuzzywuzzy import fuzz
-from tqdm import tqdm
-# import dictdiffer
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -31,31 +27,6 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 pd.options.mode.chained_assignment = None  # default='warn'
-
-
-def store_changes(references, bib_database):
-    # convert the dataframe back to a list of dicts, assign to bib_database
-    # .drop(columns='similarity')
-    ref_list = references.to_dict('records')
-    for idx, my_dict in enumerate(ref_list):
-        ref_list[idx] = {k: str(v)
-                         for k, v in my_dict.items() if str(v) != 'nan'}
-    bib_database.entries = ref_list
-
-    return bib_database
-
-
-def remove_entry(references, citation_key):
-
-    references = \
-        references.drop(references[references['ID'] == citation_key].index)
-
-#    # Note: not needed when operating with pandas dataframes!
-#    for i in range(len(bib_database.entries)):
-#        if bib_database.entries[i]['ID'] == citation_key:
-#            bib_database.entries.remove(bib_database.entries[i])
-#            break
-    return references
 
 
 def format_authors_string(authors):
@@ -261,37 +232,6 @@ def calculate_similarities_entry(references):
     return references.iloc[1:, [ck_col, sim_col]]
 
 
-def calculate_similarities(SimilarityArray, references, min_similarity):
-
-    # Fill out the similarity matrix first
-    for base_entry_i in tqdm(range(1, references.shape[0])):
-        for comparison_entry_i in range(1, references.shape[0]):
-            if base_entry_i > comparison_entry_i:
-                if -1 != SimilarityArray[base_entry_i, comparison_entry_i]:
-                    SimilarityArray[base_entry_i, comparison_entry_i] = \
-                        get_similarity(
-                            references.iloc[base_entry_i],
-                            references.iloc[comparison_entry_i])
-
-    tuples_to_process = []
-    maximum_similarity = 1
-    while True:
-
-        maximum_similarity = np.amax(SimilarityArray)
-        if maximum_similarity < min_similarity:
-            break
-        result = np.where(SimilarityArray == np.amax(SimilarityArray))
-        listOfCordinates = list(zip(result[0], result[1]))
-        for cord in listOfCordinates:
-            SimilarityArray[cord] = 0  # ie., has been processed
-            tuples_to_process.append([references.iloc[cord[0]]['ID'],
-                                      references.iloc[cord[1]]['ID'],
-                                      maximum_similarity,
-                                      'not_processed'])
-
-    return SimilarityArray, tuples_to_process
-
-
 def get_combined_hash_id_list(references, ref_id_tuple):
 
     hash_ids_entry_1 = \
@@ -315,191 +255,21 @@ def get_combined_hash_id_list(references, ref_id_tuple):
     return ','.join(combined_hash_list)
 
 
-def auto_merge_entries(references, tuples, threshold):
-
-    for i in range(len(tuples)):
-        if tuples[i][2] < threshold:
-            continue
-        first_propagated = utils.propagated_citation_key(tuples[i][0])
-        second_propagated = utils.propagated_citation_key(tuples[i][1])
-
-        if first_propagated and second_propagated:
-            print('WARNING: both citation_keys propagated: ',
-                  tuples[i][0],
-                  ', ',
-                  tuples[i][1])
-            tuples[i][3] = 'propagation_problem'
-            continue
-        else:
-            try:
-
-                if not first_propagated and not second_propagated:
-
-                    # Use the entry['ID'] without appended letters if possible
-                    # Set first_propagated=True if entry['ID']
-                    # should be kept for the first entry
-                    if tuples[i][0][-1:].isnumeric() and \
-                       not tuples[i][1][-1:].isnumeric():
-                        first_propagated = True
-                    else:
-                        second_propagated = True
-                        # This arbitrarily uses the second entry['ID']
-                        # if none of the IDs has a letter appended.
-
-                if first_propagated:  # remove the second one
-                    combined_hash_list = get_combined_hash_id_list(references,
-                                                                   tuples[i])
-                    references.at[references['ID'] == tuples[i][0],
-                                  'hash_id'] = combined_hash_list
-
-                    references = remove_entry(references, tuples[i][1])
-                    tuples[i][3] = 'merged'
-
-                if second_propagated:  # remove the first one
-                    combined_hash_list = get_combined_hash_id_list(references,
-                                                                   tuples[i])
-
-                    references.at[references['ID'] == tuples[i][1],
-                                  'hash_id'] = combined_hash_list
-
-                    references = remove_entry(references, tuples[i][0])
-                    tuples[i][3] = 'merged'
-            except IndexError:
-                # cases in which multiple entries have a high similarity
-                # and the first ones have already been removed from references
-                # creating an IndexError in the references[....].values[0]
-                tuples[i][3] = 'skipped'
-                pass
-        # print(tuples[i])
-
-    return references, tuples
-
-
-def update_entries_considered_non_duplicates(SimilarityArray, references):
-
-    # If a case-by-case decisions is preferred
-    # consider_non_duplicated = []
-    # for bib_file in utils.get_bib_files():
-    #     print(bib_file)
-    #     non_duplicated = input('consider non-duplicates? (y/n)')
-    #     if 'y' == non_duplicated:
-    #         consider_non_duplicated.append(bib_file)
-    consider_non_duplicated = [os.path.basename(x)
-                               for x in utils.get_bib_files()]
-
-    for non_duplicated_bib in consider_non_duplicated:
-        print('Skipping within-file duplices for ' + non_duplicated_bib)
-        hash_id_list = []
-        with open(os.path.join('search', non_duplicated_bib)) as bibtex_file:
-            non_duplicated_bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
-            for entry in non_duplicated_bib_database.entries:
-                hash_id = \
-                    entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-                hash_id_list.append(hash_id)
-
-# All permutations within the bib file are considered non-duplicates
-# NOTE: creating the list of permutations may require too much memory
-# non_duplicated_hash_id_pairs = list(itertools.permutations(hash_id_list, 2))
-# print(non_duplicated_hash_id_pairs)
-# for hash_id, non_equivalent_hash_id in non_duplicated_hash_id_pairs:
-
-            non_duplicated_indices = []
-            for i, entry in references.iterrows():
-                if any(x in str(entry.get('hash_id', 'NA')).split(',')
-                       for x in hash_id_list):
-                    non_duplicated_indices.append(i)
-
-            for non_dup_ind1 in non_duplicated_indices:
-                for non_dup_ind2 in non_duplicated_indices:
-                    SimilarityArray[non_dup_ind1, non_dup_ind2] = -1
-
-    return SimilarityArray
-
-
-def update_known_non_duplicates(SimilarityArray, references):
-
-    known_non_duplicates_df = pd.read_csv('merging.csv')
-    known_non_duplicates = known_non_duplicates_df[
-        known_non_duplicates_df['duplicate'] == 'no']['hash_id']
-
-    for hash_id_pair in known_non_duplicates:
-        hash_id_pair = hash_id_pair.split(',')
-        for hash_id in hash_id_pair:
-            # get indices of the other hash_ids and
-            # set the corresponding similarity_array to 0
-            for non_equivalent_hash_id in hash_id_pair:
-                id1 = references.index[
-                    references['hash_id'] == hash_id
-                ].tolist()[0]
-
-                id2 = references.index[
-                    references['hash_id'] == non_equivalent_hash_id
-                ].tolist()[0]
-
-                SimilarityArray[id1, id2] = -1
-                SimilarityArray[id2, id1] = -1
-
-    return SimilarityArray
-
-
-def merge_bib(bib_database):
-
-    references = pd.DataFrame.from_dict(bib_database.entries)
-
-    nr_entries = references.shape[0]
-    SimilarityArray = np.zeros([nr_entries, nr_entries])
-
-    SimilarityArray = update_entries_considered_non_duplicates(
-        SimilarityArray, references)
-
-    min_similarity = 0.7
-    SimilarityArray, tuples_to_process = \
-        calculate_similarities(SimilarityArray, references,
-                               min_similarity)
-
-    # set cells to -1 if the papers have been coded as non-duplicates
-    input('TODO: reinclude the following')
-    # SimilarityArray = update_known_non_duplicates(SimilarityArray,references)
-
-    # nr_current_entries = len(bib_database.entries)
-    # print(str(nr_current_entries) + ' records in ' + MAIN_REFERENCES)
-
-    print('TODO: check whether hash-id mappings were classified as ',
-          'non-duplicates before (and update tuples_to_process accordingly)')
-
-    # auto_threshold = 1.0
-    # merge identical entries (ie., similarity = 1)
-    # references, tuples_to_process = auto_merge_entries(references,
-    #                                                    tuples_to_process,
-    #                                                    auto_threshold)
-    #
-    # store_changes(references, bib_database)
-    # r.index.add([MAIN_REFERENCES])
-
-    print('TODO: we could implement a loop here - iteratively lowering ')
-    print('the threshold, checking/adding to index and repeating')
-
-    # no errors with a 0.95 threshold.
-    auto_threshold = 0.95
-    references, tuples_to_process = auto_merge_entries(references,
-                                                       tuples_to_process,
-                                                       auto_threshold)
-
-    tuples_df = pd.DataFrame.from_dict(tuples_to_process)
-
-    tuples_df.to_csv('tuples_for_merging.csv',
-                     index=False, quoting=csv.QUOTE_ALL)
-
-    bib_database = store_changes(references, bib_database)
-
-    return bib_database
-
-
-def create_commit(r, bib_database, merge_details):
+def create_commit(r, bib_database):
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    merge_details = ''
+    if os.path.exists('duplicate_tuples.csv'):
+        with open('duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                if row[0] != 'ID1':
+                    merge_details += row[0] + ' < ' + row[1] + '\n'
+        os.remove('duplicate_tuples.csv')
+
+    if merge_details != '':
+        merge_details = '\n\nDuplicates removed:\n' + merge_details
 
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
@@ -515,27 +285,9 @@ def create_commit(r, bib_database, merge_details):
             if os.path.exists('potential_duplicate_tuples.csv'):
                 r.index.add(['potential_duplicate_tuples.csv'])
             r.index.commit(
-                '⚙️ Merge duplicates' + '\nDuplicates removed: \n' +
-                merge_details,
+                '⚙️ Merge duplicates' + merge_details,
                 author=git.Actor('script:merge_duplicates.py', ''),
             )
-    return
-
-
-def manual_merge_commit():
-    r = git.Repo('')
-    r.index.add([MAIN_REFERENCES])
-    hook_skipping = 'false'
-    if not DEBUG_MODE:
-        hook_skipping = 'true'
-
-    r.index.commit(
-        'Merge manual ' + MAIN_REFERENCES,
-        author=git.Actor('manual:merge duplicates', ''),
-        skip_hooks=hook_skipping
-    )
-    print('Created commit: Merge manual ' + MAIN_REFERENCES)
-
     return
 
 

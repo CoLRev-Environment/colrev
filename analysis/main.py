@@ -82,13 +82,6 @@ def get_prev_queue(queue_order, hash_id):
     return prev_entries
 
 
-def cleanse(entry):
-
-    if 'not_cleansed' == entry['status']:
-        entry = cleanse_records.cleanse(entry)
-    return entry
-
-
 def append_merge_MAIN_REFERENCES_MERGED(entry):
 
     if 'not_merged' != entry['status']:
@@ -189,6 +182,11 @@ def apply_merges(bib_database):
     # prior entries in global queue_order are considered before completing
     # the comparison/adding entries ot the csvs)
 
+    try:
+        os.remove('queue_order.csv')
+    except FileNotFoundError:
+        pass
+
     merge_details = ''
     # Always merge clear duplicates: row[0] <- row[1]
     if os.path.exists('duplicate_tuples.csv'):
@@ -214,7 +212,6 @@ def apply_merges(bib_database):
                             entry.update(status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
-        os.remove('duplicate_tuples.csv')
 
     # Set clear non-duplicates to completely processed (remove the status tag)
     if os.path.exists('non_duplicates.csv'):
@@ -278,7 +275,8 @@ def process_entries(search_records, bib_database):
 
     # parallel cleansing
     print('Cleanse')
-    bib_database.entries = pool.map(cleanse, bib_database.entries)
+    bib_database.entries = \
+        pool.map(cleanse_records.cleanse, bib_database.entries)
     # For non-parallel processing/debugging:
     # for entry in to_cleanse:
     #     cleanse(entry)
@@ -295,9 +293,8 @@ def process_entries(search_records, bib_database):
     #     append_merge_MAIN_REFERENCES_MERGED(entry)
     bib_database = apply_merges(bib_database)
 
-    merge_details = 'TODO'
     # merge commit
-    merge_duplicates.create_commit(r, bib_database, merge_details)
+    merge_duplicates.create_commit(r, bib_database)
     return bib_database
 
 
@@ -338,25 +335,17 @@ def print_tooltips(bib_database):
                            for entry in bib_database.entries
                            if 'needs_manual_cleansing' == entry['status']]
     if len(to_cleanse_manually) > 0:
-        print('\n\nEntries to cleanse manually (' +
+        print('\n\nInfo: There are entries to cleanse manually (' +
               str(len(to_cleanse_manually)) +
-              '), use\n\n   make cleanse_manual')
-        print(' Note: remove the needs_manual_cleansing status')
+              '). To cleanse them, use\n\n   make cleanse_manual')
+        # print(' Note: remove the needs_manual_cleansing status')
 
     to_merge_manually = [entry['ID'] for entry in bib_database.entries
                          if 'needs_manual_merging' == entry['status']]
     if len(to_merge_manually) > 0:
-        print('\nEntries to merge manually (' +
+        print('\nInfo: There are entries to merge manually (' +
               str(len(to_merge_manually)) +
-              '), use\n\n   make merge_manual\n')
-    return
-
-
-def remove_temporary_files():
-    try:
-        os.remove('queue_order.csv')
-    except FileNotFoundError:
-        pass
+              '). To merge them, use\n\n   make merge_manual\n')
     return
 
 
@@ -443,7 +432,20 @@ if __name__ == '__main__':
     #     🡻    needs_manual_merging
     #     🡻   🢇
     # processed
-    #
+    #     🡻   🢆  pre_screen_excluded
+    #     🡻
+    # pre_screened
+    #     🡻
+    # pdf_acquired
+    #     🡻   🢆  excluded
+    #     🡻
+    # included
+    #     🡻
+    # coded
+
+    # TBD: screening/coding status: also in the bib-files?
+    # exclusion-criteria in a separate table. (inclusion=no entry in the exlusion-criteria table; no screen = all included, i.e., no entries in the exclusion-criteria table)
+    # pre_screen_excluded/pre_screened, excluded/included: optional
 
     process = {'minimal_review': minimal_review_pipeline,
                'full_review': full_review_pipeline}
@@ -452,5 +454,3 @@ if __name__ == '__main__':
 
     # the REVIEW_STRATEGY is set in the shared config
     process[REVIEW_STRATEGY]()
-
-    remove_temporary_files()
