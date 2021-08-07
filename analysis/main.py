@@ -384,7 +384,8 @@ def full_review_pipeline():
     )
 
     # Complete the prior processing steps first
-    bib_database = process_entries([], bib_database)
+    if len(bib_database.entries) > 0:
+        bib_database = process_entries([], bib_database)
 
     additional_search_records = importer.load(bib_database)
 
