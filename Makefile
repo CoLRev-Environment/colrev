@@ -14,14 +14,11 @@ main:
 cli :
 	docker-compose up & gnome-terminal -e "bash -c \"docker-compose run --rm review_template_python3 /bin/bash\""
 
-initialize :
-	cd $(DATA_PATH) && python3 ../analysis/initialize.py
-
-validate :
+status :
 	cd $(DATA_PATH) && pre-commit run -a
 
-reformat_bibliography :
-	cd $(DATA_PATH) && python3 ../analysis/reformat_bibliography.py
+initialize :
+	cd $(DATA_PATH) && python3 ../analysis/initialize.py
 
 trace_hash_id :
 	cd $(DATA_PATH) && python3 ../analysis/trace_hash_id.py
@@ -56,11 +53,8 @@ screen_1 :
 screen_2 :
 	cd $(DATA_PATH) && python3 ../analysis/screen_2.py
 
-data_sheet :
-	cd $(DATA_PATH) && python3 ../analysis/data_sheet.py
-
-data_pages :
-	cd $(DATA_PATH) && python3 ../analysis/data_pages.py
+data :
+	cd $(DATA_PATH) && python3 ../analysis/data.py
 
 backward_search :
 	cd $(DATA_PATH) && python3 ../analysis/backward_search.py
@@ -78,4 +72,3 @@ validate_pdfs :
 
 sample_profile :
 	cd $(DATA_PATH) && python3 ../analysis/sample_profile.py
-
