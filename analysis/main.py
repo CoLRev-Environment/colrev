@@ -444,7 +444,9 @@ if __name__ == '__main__':
     # coded
 
     # TBD: screening/coding status: also in the bib-files?
-    # exclusion-criteria in a separate table. (inclusion=no entry in the exlusion-criteria table; no screen = all included, i.e., no entries in the exclusion-criteria table)
+    # exclusion-criteria in a separate table. (inclusion=no entry in the
+    # exlusion-criteria table; no screen = all included,
+    # i.e., no entries in the exclusion-criteria table)
     # pre_screen_excluded/pre_screened, excluded/included: optional
 
     process = {'minimal_review': minimal_review_pipeline,
