@@ -292,19 +292,19 @@ def retrieve_doi_metadata(entry):
                 entry.update(abstract=str(retrieved_abstract).replace('\n', '')
                              .lstrip().rstrip())
     except IndexError:
-        print('Index error (authors?) for ' + entry['ID'])
+        print('WARNING: Index error (authors?) for ' + entry['ID'])
         entry.update(status='not_cleansed')
         pass
     except json.decoder.JSONDecodeError:
-        print('Doi retrieval error: ' + entry['ID'])
+        print('WARNING: Doi retrieval error: ' + entry['ID'])
         entry.update(status='not_cleansed')
         pass
     except TypeError:
-        print('Type error: ' + entry['ID'])
+        print('WARNING: Type error: ' + entry['ID'])
         entry.update(status='not_cleansed')
         pass
     except requests.exceptions.ConnectionError:
-        print('ConnectionError: ' + entry['ID'])
+        print('WARNING: ConnectionError: ' + entry['ID'])
         entry.update(status='not_cleansed')
         pass
 
