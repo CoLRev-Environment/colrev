@@ -421,6 +421,9 @@ if __name__ == '__main__':
     # have been completed)each record is propagated as far as possible
     # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
     #
+    #     🡻    🡻
+    #     🡻    needs_manual_completion
+    #     🡻   🢇
     # not_imported
     #     🡻
     # not_cleansed
