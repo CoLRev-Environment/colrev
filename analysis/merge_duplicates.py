@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import csv
+import itertools
 import os
 import re
 
@@ -22,6 +23,11 @@ with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+
+MERGING_NON_DUP_THRESHOLD = \
+    shared_config['params']['MERGING_NON_DUP_THRESHOLD']
+MERGING_DUP_THRESHOLD = shared_config['params']['MERGING_DUP_THRESHOLD']
+REVIEW_STRATEGY = shared_config['params']['REVIEW_STRATEGY']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
@@ -289,6 +295,206 @@ def create_commit(r, bib_database):
                 author=git.Actor('script:merge_duplicates.py', ''),
             )
     return
+
+
+def get_prev_queue(queue_order, hash_id):
+    # Note: Because we only introduce individual (non-merged entries),
+    # there should be no commas in hash_id!
+    prev_entries = []
+    for idx, el in enumerate(queue_order):
+        if hash_id == el:
+            prev_entries = queue_order[:idx]
+            break
+    return prev_entries
+
+
+def append_merges(entry):
+
+    if 'not_merged' != entry['status']:
+        return
+
+    bib_database = utils.load_references_bib(
+        modification_check=False, initialize=False,
+    )
+
+    # the order matters for the incremental merging (make sure that each
+    # additional record is compared to/merged with all prior records in
+    # the queue)
+    with open('queue_order.csv', 'a') as fd:
+        fd.write(entry['hash_id'] + '\n')
+    queue_order = []
+    with open('queue_order.csv') as read_obj:
+        csv_reader = csv.reader(read_obj)
+        for row in csv_reader:
+            queue_order.append(row[0])
+    required_prior_hash_ids = get_prev_queue(queue_order, entry['hash_id'])
+    hash_ids_in_cleansed_file = []
+
+    # note: no need to wait for completion of cleansing
+    hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
+                                 for entry in bib_database.entries
+                                 if 'hash_id' in entry]
+    hash_ids_in_cleansed_file = \
+        list(itertools.chain(*hash_ids_in_cleansed_file))
+
+    # if the entry is the first one added to the bib_database
+    # (in a preceding processing step), it can be propagated
+    if len(bib_database.entries) < 2:
+        # entry.update(status = 'processed')
+        if not os.path.exists('non_duplicates.csv'):
+            with open('non_duplicates.csv', 'a') as fd:
+                fd.write('"ID"\n')
+        with open('non_duplicates.csv', 'a') as fd:
+            fd.write('"' + entry['ID'] + '"\n')
+        return
+
+    # Drop rows from references for which no hash_id is in
+    # required_prior_hash_ids
+
+    # prior_entries = [x for x in bib_database.entries
+    #                  if any(hash_id in x['hash_id'].split(',')
+    #                         for hash_id in required_prior_hash_ids)]
+
+    merge_ignore_status = ['needs_manual_cleansing', 'needs_manual_completion']
+
+    prior_entries = [x for x in bib_database.entries
+                     if x.get('status', 'NA') not in merge_ignore_status]
+
+    prior_entries = [x for x in prior_entries
+                     if any(hash_id in x['hash_id'].split(',')
+                            for hash_id in required_prior_hash_ids)]
+
+    if len(prior_entries) < 1:
+        return
+
+    # df to get_similarities for each other entry
+    references = pd.DataFrame.from_dict([entry] + prior_entries)
+
+    # drop the same ID entry
+    # Note: the entry is simply added as the first row.
+    # references = references[~(references['ID'] == entry['ID'])]
+    # dropping them before calculating similarities prevents errors
+    # caused by unavailable fields!
+    # Note: ignore entries that need manual cleansing in the merging
+    # (until they have been cleansed!)
+    references = references[~references['status'].str
+                            .contains('|'.join(merge_ignore_status), na=False)]
+
+    # means that all prior entries are tagged as needs_manual_cleansing
+    if references.shape[0] == 0:
+        # entry.update(status = 'processed')
+        if not os.path.exists('non_duplicates.csv'):
+            with open('non_duplicates.csv', 'a') as fd:
+                fd.write('"ID"\n')
+        with open('non_duplicates.csv', 'a') as fd:
+            fd.write('"' + entry['ID'] + '"\n')
+        return
+    references = calculate_similarities_entry(references)
+
+    max_similarity = references.similarity.max()
+    citation_key = references.loc[references['similarity'].idxmax()]['ID']
+    if max_similarity <= MERGING_NON_DUP_THRESHOLD:
+        # Note: if no other entry has a similarity exceeding the threshold,
+        # it is considered a non-duplicate (in relation to all other entries)
+        if not os.path.exists('non_duplicates.csv'):
+            with open('non_duplicates.csv', 'a') as fd:
+                fd.write('"ID"\n')
+        with open('non_duplicates.csv', 'a') as fd:
+            fd.write('"' + entry['ID'] + '"\n')
+    if max_similarity > MERGING_NON_DUP_THRESHOLD and \
+            max_similarity < MERGING_DUP_THRESHOLD:
+        # The needs_manual_merging status is only set
+        # for one element of the tuple!
+        if not os.path.exists('potential_duplicate_tuples.csv'):
+            with open('potential_duplicate_tuples.csv', 'a') as fd:
+                fd.write('"ID1","ID2","max_similarity"\n')
+        with open('potential_duplicate_tuples.csv', 'a') as fd:
+            # to ensure a consistent order
+            entry_a, entry_b = sorted([citation_key, entry['ID']])
+            fd.write('"' + entry_a + '","' +
+                     entry_b + '","' + str(max_similarity) + '"\n')
+    if max_similarity >= MERGING_DUP_THRESHOLD:
+        # note: the following status will not be saved in the bib file but
+        # in the duplicate_tuples.csv (which will be applied to the bib file
+        # in the end)
+        if not os.path.exists('duplicate_tuples.csv'):
+            with open('duplicate_tuples.csv', 'a') as fd:
+                fd.write('"ID1","ID2"\n')
+        with open('duplicate_tuples.csv', 'a') as fd:
+            fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
+
+    return
+
+
+def apply_merges(bib_database):
+
+    # The merging also needs to consider whether citation_keys are propagated
+    # Completeness of comparisons should be ensured by the
+    # append_merges procedure (which ensures that all prior entries
+    # in global queue_order are considered before completing
+    # the comparison/adding entries ot the csvs)
+
+    try:
+        os.remove('queue_order.csv')
+    except FileNotFoundError:
+        pass
+
+    merge_details = ''
+    # Always merge clear duplicates: row[0] <- row[1]
+    if os.path.exists('duplicate_tuples.csv'):
+        with open('duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                hash_ids_to_merge = []
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[1]:
+                        print('drop ' + entry['ID'])
+                        hash_ids_to_merge = entry['hash_id'].split(',')
+                        # Drop the duplicated entry
+                        bib_database.entries = \
+                            [i for i in bib_database.entries
+                             if not (i['ID'] == entry['ID'])]
+                        break
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[0]:
+                        hash_ids = list(set(hash_ids_to_merge +
+                                        entry['hash_id'].split(',')))
+                        entry.update(hash_id=str(','.join(sorted(hash_ids))))
+                        if 'not_merged' == entry['status']:
+                            entry.update(status='processed')
+                        merge_details += row[0] + ' < ' + row[1] + '\n'
+                        break
+
+    # Set clear non-duplicates to completely processed (remove the status tag)
+    if os.path.exists('non_duplicates.csv'):
+        with open('non_duplicates.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[0]:
+                        if 'not_merged' == entry['status']:
+                            entry.update(status='processed')
+        os.remove('non_duplicates.csv')
+
+    # note: potential_duplicate_tuples need to be processed manually but we
+    # tag the second entry (row[1]) as "needs_manual_merging"
+    if os.path.exists('potential_duplicate_tuples.csv'):
+        with open('potential_duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                for entry in bib_database.entries:
+                    if entry['ID'] == row[1]:
+                        entry.update(status='needs_manual_merging')
+        potential_duplicates = \
+            pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
+        potential_duplicates.sort_values(by=['max_similarity', 'ID1', 'ID2'],
+                                         ascending=False, inplace=True)
+        potential_duplicates.to_csv(
+            'potential_duplicate_tuples.csv', index=False,
+            quoting=csv.QUOTE_ALL, na_rep='NA',
+        )
+
+    return bib_database
 
 
 def test_merge():
