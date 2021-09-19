@@ -14,15 +14,6 @@ SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 
 def initialize_repo():
-
-    try:
-        # Alternatively: ask for remote url of git repo to clone?
-        r = git.Repo()
-        # TODO: further checks?
-        return r
-    except git.exc.InvalidGitRepositoryError:
-        pass
-
     r = git.Repo.init()
 
     print('')
@@ -78,8 +69,6 @@ def initialize_repo():
         input('Please provide your name (for the git committer name)')
     committer_email = \
         input('Please provide your e-mail (for the git committer e-mail)')
-    input('run "pre-commit autoupdate"')
-    input('also save to config.py')
 
     r.index.commit(
         'Initial commit',
@@ -92,6 +81,16 @@ def initialize_repo():
     return r
 
 
-if __name__ == '__main__':
+def get_repo():
 
-    initialize_repo()
+    try:
+        # Alternatively: ask for remote url of git repo to clone?
+        r = git.Repo()
+        # TODO: further checks?
+        return r
+    except git.exc.InvalidGitRepositoryError:
+        pass
+
+    r = initialize_repo()
+
+    return r
