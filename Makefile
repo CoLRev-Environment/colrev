@@ -29,8 +29,9 @@ trace_search_result :
 validate_major_changes :
 	cd $(DATA_PATH) && python3 ../analysis/validate_major_changes.py
 
-complete_manual :
-	cd $(DATA_PATH) && python3 ../analysis/complete_manual.py
+merge_duplicates_manual :
+	cd $(DATA_PATH) && python3 ../analysis/merge_duplicates_manual.py
+
 
 # to test:
 
