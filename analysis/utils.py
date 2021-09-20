@@ -438,7 +438,10 @@ def save_bib_file(bib_database, target_file):
 
     writer.contents = ['entries', 'comments']
     writer.indent = '  '
+    # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
+        'hash_id',
+        'doi',
         'author',
         'booktitle',
         'journal',
@@ -452,9 +455,7 @@ def save_bib_file(bib_database, target_file):
         'abstract',
         'book-author',
         'book-group-author',
-        'doi',
         'file',
-        'hash_id',
     ]
 
     try:
