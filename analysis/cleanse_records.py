@@ -328,24 +328,29 @@ def regenerate_citation_key(entry, bib_database):
     return entry
 
 
-def speculative_changes(entry):
+def correct_entrytypes(entry):
 
     conf_strings = [
         'proceedings',
         'conference',
     ]
+
+    for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
+        conf_strings.append(row['abbreviation'].lower())
+        conf_strings.append(row['conference'].lower())
+
     # Consistency checks
     if 'journal' in entry:
         if any(
             conf_string in entry['journal'].lower()
             for conf_string in conf_strings
         ):
-            print('WARNING: conference string in journal field: ',
-                  entry['ID'],
-                  entry['journal'])
-            # entry.update(booktitle = entry['journal'])
-            # entry(ENTRYTYPE = 'inproceedings')
-            # del entry['journal']
+            # print('WARNING: conference string in journal field: ',
+            #       entry['ID'],
+            #       entry['journal'])
+            entry.update(booktitle=entry['journal'])
+            entry.update(ENTRYTYPE='inproceedings')
+            del entry['journal']
     if 'booktitle' in entry:
         if any(
             conf_string in entry['booktitle'].lower()
@@ -384,6 +389,13 @@ def speculative_changes(entry):
                 journal_string = entry['series']
                 entry.update(journal=journal_string)
                 del entry['series']
+
+    return entry
+
+
+def speculative_changes(entry):
+
+    entry = correct_entrytypes(entry)
 
     # Moved journal processing to importer
     # TODO: reinclude (as a function?)
