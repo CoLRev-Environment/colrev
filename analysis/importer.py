@@ -147,12 +147,23 @@ def get_entries(bib_file):
                 doi_metadata = \
                     cleanse_records.retrieve_doi_metadata(entry.copy())
                 for key, value in doi_metadata.items():
-                    if key not in entry.keys():
+                    if key not in entry.keys() and key in ['author',
+                                                           'year',
+                                                           'title',
+                                                           'journal',
+                                                           'booktitle',
+                                                           'number',
+                                                           'volume',
+                                                           'issue',
+                                                           'pages']:
                         entry[key] = value
                         new_completion_edits.append([entry['source_file_path'],
                                                      entry['ID'],
                                                      key,
                                                      value])
+                # fix type-mismatches
+                # e.g., conference paper with ENTRYTYPE=article
+                entry = cleanse_records.correct_entrytypes(entry)
 
             if is_sufficiently_complete(entry):
                 hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
