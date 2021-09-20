@@ -105,7 +105,7 @@ if __name__ == '__main__':
                     del entry[key]
 
             entry = importer.drop_fields(entry)
-            entry.update(status='not_cleansed')
+            entry.update(status='imported')
             hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
             entry.update(hash_id=hid)
             del entry['source_file_path']

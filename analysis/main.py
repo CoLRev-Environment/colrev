@@ -42,7 +42,6 @@ def process_entries(search_records, bib_database):
     pool = mp.Pool(CPUS)
 
     print('Import')
-    search_records = pool.map(importer.preprocess, search_records)
     [bib_database.entries.append(entry) for entry in search_records]
     # for entry in search_records:
     #     entry = importer.preprocess(entry)
@@ -105,14 +104,13 @@ def process():
                                                bib_database)
                 search_record_batch = []
 
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
     # TODO, depending on REVIEW_STRATEGY:
     # minimal_review_pipeline: no screening/data extraction.
     # simply include all records, cleanse, merge, acquire pdfs
 
+    # bib_database = utils.load_references_bib(
+    #     modification_check=True, initialize=False,
+    # )
     # screen_sheet.update_screen(bib_database)
     # acquire PDFs
     # update_data()
@@ -130,29 +128,27 @@ if __name__ == '__main__':
     # have been completed)each record is propagated as far as possible
     # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
     #
-    #     🡻    🡻
+    #     🡻    🡻 (load)
     #     🡻    needs_manual_completion
-    #     🡻   🢇
-    # not_imported
-    #     🡻
-    # not_cleansed
-    #     🡻   🢆
+    #     🡻   🢇 (complete_manual)
+    # imported
+    #     🡻   🢆 (cleanse)
     #     🡻    needs_manual_cleansing
-    #     🡻   🢇
-    # not_merged
-    #     🡻   🢆
+    #     🡻   🢇 (cleanse_manual)
+    # cleansed
+    #     🡻   🢆 (merge)
     #     🡻    needs_manual_merging
-    #     🡻   🢇
+    #     🡻   🢇 (merge_duplicates_manual)
     # processed
-    #     🡻   🢆  pre_screen_excluded
-    #     🡻
+    #     🡻   🢆 (screen_1)
+    #     🡻     pre_screen_excluded
     # pre_screened
-    #     🡻
+    #     🡻  (acquire_pdfs)
     # pdf_acquired
-    #     🡻   🢆  excluded
-    #     🡻
+    #     🡻   🢆 (screen_2)
+    #     🡻     excluded
     # included
-    #     🡻
+    #     🡻  (data)
     # coded
 
     # TBD: screening/coding status: also in the bib-files?

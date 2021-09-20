@@ -310,7 +310,7 @@ def get_prev_queue(queue_order, hash_id):
 
 def append_merges(entry):
 
-    if 'not_merged' != entry['status']:
+    if 'cleansed' != entry['status']:
         return
 
     bib_database = utils.load_references_bib(
@@ -460,7 +460,7 @@ def apply_merges(bib_database):
                         hash_ids = list(set(hash_ids_to_merge +
                                         entry['hash_id'].split(',')))
                         entry.update(hash_id=str(','.join(sorted(hash_ids))))
-                        if 'not_merged' == entry['status']:
+                        if 'cleansed' == entry['status']:
                             entry.update(status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
@@ -472,7 +472,7 @@ def apply_merges(bib_database):
             for row in csv_reader:
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        if 'not_merged' == entry['status']:
+                        if 'cleansed' == entry['status']:
                             entry.update(status='processed')
         os.remove('non_duplicates.csv')
 

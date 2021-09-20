@@ -253,6 +253,21 @@ def load(bib_database):
                 raise_error=False))
             citation_key_list.append(entry['ID'])
 
+        if not 'needs_manual_completion' == entry['status']:
+
+            entry = cleanse_records.homogenize_entry(entry)
+
+            # Note: the cleanse_records.py will homogenize more cases because
+            # it runs speculative_changes(entry)
+            entry = cleanse_records.apply_local_rules(entry)
+            entry = cleanse_records.apply_crowd_rules(entry)
+
+            entry = drop_fields(entry)
+
+            del entry['source_file_path']
+
+            entry.update(status='imported')
+
     if os.path.exists('processed_hash_ids.csv'):
         os.remove('processed_hash_ids.csv')
 
@@ -263,26 +278,6 @@ def load(bib_database):
     # (deterministic) order the records were started
 
     return additional_records
-
-
-def preprocess(entry):
-
-    if not 'needs_manual_completion' == entry['status']:
-
-        entry = cleanse_records.homogenize_entry(entry)
-
-        # Note: the cleanse_records.py will homogenize more cases because
-        # it runs speculative_changes(entry)
-        entry = cleanse_records.apply_local_rules(entry)
-        entry = cleanse_records.apply_crowd_rules(entry)
-
-        entry = drop_fields(entry)
-
-        del entry['source_file_path']
-
-        entry.update(status='not_cleansed')
-
-    return entry
 
 
 def import_entries(search_records, bib_database):
