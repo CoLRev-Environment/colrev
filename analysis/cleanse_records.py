@@ -293,19 +293,19 @@ def retrieve_doi_metadata(entry):
                              .lstrip().rstrip())
     except IndexError:
         print('WARNING: Index error (authors?) for ' + entry['ID'])
-        entry.update(status='not_cleansed')
+        entry.update(status='imported')
         pass
     except json.decoder.JSONDecodeError:
         print('WARNING: Doi retrieval error: ' + entry['ID'])
-        entry.update(status='not_cleansed')
+        entry.update(status='imported')
         pass
     except TypeError:
         print('WARNING: Type error: ' + entry['ID'])
-        entry.update(status='not_cleansed')
+        entry.update(status='imported')
         pass
     except requests.exceptions.ConnectionError:
         print('WARNING: ConnectionError: ' + entry['ID'])
-        entry.update(status='not_cleansed')
+        entry.update(status='imported')
         pass
 
     return entry
@@ -313,7 +313,7 @@ def retrieve_doi_metadata(entry):
 
 def regenerate_citation_key(entry, bib_database):
 
-    if 'not_cleansed' != entry['status']:
+    if 'imported' != entry['status']:
 
         # Recreate citation_keys
         # (mainly if it differs, i.e., if there are changes in authors/years)
@@ -443,10 +443,10 @@ def apply_crowd_rules(entry):
 
 def cleanse(entry):
 
-    if 'not_cleansed' != entry['status']:
+    if 'imported' != entry['status']:
         return entry
 
-    entry.update(status='not_merged')
+    entry.update(status='cleansed')
 
     entry = homogenize_entry(entry)
 
@@ -467,7 +467,9 @@ def cleanse(entry):
     if 'doi' in entry and 'title' in entry and \
             'journal' in entry and 'year' in entry:
         # in this case, it would be ok to have no author
-        entry.update(status='not_merged')
+        entry.update(status='cleansed')
+    # TODO: the following if-statement is redundant (check!) because these
+    # missing fields should be provided before hash-ids are created!
     if 'title' not in entry or \
         'author' not in entry or \
             'year' not in entry or \
