@@ -8,7 +8,6 @@ from pathlib import Path
 from string import ascii_lowercase
 
 import bibtexparser
-import entry_hash_function
 import pandas as pd
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
@@ -16,7 +15,9 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from git import Repo
 from nameparser import HumanName
+from importlib.metadata import version
 
+from review_template import entry_hash_function
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -524,3 +525,6 @@ def get_included_papers():
                             )
 
     return pdfs
+
+def get_package_details():
+    return 'review_template (version ' + version('review_template') + ')'

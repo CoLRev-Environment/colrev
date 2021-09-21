@@ -2,10 +2,11 @@
 import csv
 import os
 
-import entry_hash_function
 import pandas as pd
-import utils
 import yaml
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -16,7 +17,14 @@ MAIN_REFERENCES = \
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 
-def run_screen_2():
+def main():
+    print('')
+    print('')
+
+    print('Run screen 2')
+
+    assert os.path.exists(SCREEN)
+    utils.git_modification_check(SCREEN)
 
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
@@ -127,13 +135,4 @@ def run_screen_2():
 
 
 if __name__ == '__main__':
-
-    print('')
-    print('')
-
-    print('Run screen 2')
-
-    assert os.path.exists(SCREEN)
-    utils.git_modification_check(SCREEN)
-
-    run_screen_2()
+    main()

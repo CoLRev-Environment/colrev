@@ -1,15 +1,16 @@
 #! /usr/bin/env python
 import bibtexparser
-import entry_hash_function
-import utils
 import yaml
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
-if __name__ == '__main__':
 
+def main():
     print('')
     print('')
 
@@ -28,8 +29,6 @@ if __name__ == '__main__':
     bib_database = utils.load_references_bib(
         modification_check=False, initialize=False)
 
-    nr_found = 0
-
     for entry in entry_database.entries:
         hash_id = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
 
@@ -47,3 +46,7 @@ if __name__ == '__main__':
                 found = True
         if not found:
             print('Did not find entry')
+
+
+if __name__ == '__main__':
+    main()

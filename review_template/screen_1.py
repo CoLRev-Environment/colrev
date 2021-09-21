@@ -3,10 +3,11 @@ import csv
 import os
 import sys
 
-import entry_hash_function
 import pandas as pd
-import utils
 import yaml
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -16,7 +17,11 @@ MAIN_REFERENCES = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 
-def run_screen_1():
+def main():
+    print('')
+    print('')
+
+    print('Run screen 1')
 
     # TODO: check prior commits whether duplicates have been removed
     if 'y' != input(
@@ -111,10 +116,4 @@ def run_screen_1():
 
 
 if __name__ == '__main__':
-
-    print('')
-    print('')
-
-    print('Run screen 1')
-
-    run_screen_1()
+    main()

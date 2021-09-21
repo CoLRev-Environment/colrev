@@ -4,10 +4,10 @@ import logging
 import os
 import sys
 
-import entry_hash_function
 import pandas as pd
 import yaml
 
+from review_template import entry_hash_function
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -158,8 +158,7 @@ def generate_data_sheet():
     return
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -168,3 +167,7 @@ if __name__ == '__main__':
     generate_data_pages()
 
     generate_data_sheet()
+
+
+if __name__ == '__main__':
+    main()

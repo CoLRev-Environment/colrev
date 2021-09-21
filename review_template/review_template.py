@@ -1,14 +1,16 @@
 #! /usr/bin/env python
 import multiprocessing as mp
 import os
+import click
 
-import cleanse_records
-import entry_hash_function
-import importer
-import initialize
-import merge_duplicates
-import utils
 import yaml
+
+from review_template import cleanse_records
+from review_template import entry_hash_function
+from review_template import importer
+from review_template import initialize
+from review_template import process_duplicates
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -38,6 +40,7 @@ else:
 
 
 def process_entries(search_records, bib_database):
+    global r
 
     pool = mp.Pool(CPUS)
 
@@ -54,17 +57,53 @@ def process_entries(search_records, bib_database):
     #     entry = (cleanse_records.cleanse(entry)
     cleanse_records.create_commit(r, bib_database)
 
-    print('Merge')
-    pool.map(merge_duplicates.append_merges, bib_database.entries)
+    print('Process duplicates')
+    pool.map(process_duplicates.append_merges, bib_database.entries)
     # for entry in bib_database.entries:
     #     append_merges(entry)
-    bib_database = merge_duplicates.apply_merges(bib_database)
-    merge_duplicates.create_commit(r, bib_database)
+    bib_database = process_duplicates.apply_merges(bib_database)
+    process_duplicates.create_commit(r, bib_database)
 
     return bib_database
 
 
-def process():
+def main():
+    # Explanation: each record should have status information
+    # (at the end, no status information indicates that all processing steps
+    # have been completed)each record is propagated as far as possible
+    # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
+    #
+    #     🡻    🡻 (load)
+    #     🡻    needs_manual_completion
+    #     🡻   🢇 (complete_manual)
+    # imported
+    #     🡻   🢆 (cleanse)
+    #     🡻    needs_manual_cleansing
+    #     🡻   🢇 (cleanse_manual)
+    # cleansed
+    #     🡻   🢆 (merge)
+    #     🡻    needs_manual_merging
+    #     🡻   🢇 (process_duplicates_manual)
+    # processed
+    #     🡻   🢆 (screen_1)
+    #     🡻     pre_screen_excluded
+    # pre_screened
+    #     🡻  (acquire_pdfs)
+    # pdf_acquired
+    #     🡻   🢆 (screen_2)
+    #     🡻     excluded
+    # included
+    #     🡻  (data)
+    # coded
+
+    # TBD: screening/coding status: also in the bib-files?
+    # exclusion-criteria in a separate table. (inclusion=no entry in the
+    # exlusion-criteria table; no screen = all included,
+    # i.e., no entries in the exclusion-criteria table)
+    # pre_screen_excluded/pre_screened, excluded/included: optional
+
+    global r
+    r = initialize.get_repo()
 
     print('TODO: test repeated call of main.py')
     print('TODO: crowd-based merging')
@@ -120,42 +159,10 @@ def process():
 
     return
 
+@click.command()
+def cli():
+    process()
+    return 0
 
 if __name__ == '__main__':
-
-    # Explanation: each record should have status information
-    # (at the end, no status information indicates that all processing steps
-    # have been completed)each record is propagated as far as possible
-    # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
-    #
-    #     🡻    🡻 (load)
-    #     🡻    needs_manual_completion
-    #     🡻   🢇 (complete_manual)
-    # imported
-    #     🡻   🢆 (cleanse)
-    #     🡻    needs_manual_cleansing
-    #     🡻   🢇 (cleanse_manual)
-    # cleansed
-    #     🡻   🢆 (merge)
-    #     🡻    needs_manual_merging
-    #     🡻   🢇 (merge_duplicates_manual)
-    # processed
-    #     🡻   🢆 (screen_1)
-    #     🡻     pre_screen_excluded
-    # pre_screened
-    #     🡻  (acquire_pdfs)
-    # pdf_acquired
-    #     🡻   🢆 (screen_2)
-    #     🡻     excluded
-    # included
-    #     🡻  (data)
-    # coded
-
-    # TBD: screening/coding status: also in the bib-files?
-    # exclusion-criteria in a separate table. (inclusion=no entry in the
-    # exlusion-criteria table; no screen = all included,
-    # i.e., no entries in the exclusion-criteria table)
-    # pre_screen_excluded/pre_screened, excluded/included: optional
-
-    r = initialize.get_repo()
-    process()
+    main()

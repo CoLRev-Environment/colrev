@@ -2,9 +2,10 @@
 import os
 import shutil
 
-import entry_hash_function
 import git
 import yaml
+
+from review_template import entry_hash_function
 
 with open('../template/shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -94,3 +95,7 @@ def get_repo():
     r = initialize_repo()
 
     return r
+
+
+if __name__ == '__main__':
+    initialize_repo()

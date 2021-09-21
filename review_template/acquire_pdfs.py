@@ -3,13 +3,14 @@ import csv
 import json
 import os
 
-import entry_hash_function
 import pandas as pd
 import requests
-import utils
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
@@ -172,8 +173,7 @@ def acquire_pdfs(bib_database, screen):
     return bib_database
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -206,3 +206,7 @@ if __name__ == '__main__':
         )
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+
+if __name__ == '__main__':
+    main()

@@ -100,17 +100,17 @@ Please note that this can take some time (depending on the number of records) si
 For 1,000 records, this might take approx. 1:30 hours.
 
 
-4. Identify and merge duplicates (partly automated, partly manual task)
+4. Identify and process duplicates (partly automated, partly manual task)
 
 ```
-make merge_duplicates
+make process_duplicates
 ```
 
 - Creates a similarity matrix for all entries
-- Merges entries based on a threshold first (e.g., similarity = 0.99)
+- Process potential duplicate entries based on a threshold first (e.g., similarity = 0.99)
 - Iterates over the remaining candidates (e.g., 0.8 < similarity < 0.99) and asks the user to classify as duplicate/non-duplicate
 - When merging entries, it checks whether either of the *citation_keys* has been propagated. If the *citation_keys* of both entries have been propagated, it prints a warning and does not merge the entry. Otherwise, non-propagated *citation_keys* are removed when entries are merged.
-- Creates commits after the automated and manual merging procedures
+- Creates commits after the automated and manual processing of duplicates
 - It is recommended to check both commits for potential errors.
 
 
@@ -173,7 +173,7 @@ make acquire_pdfs
 - Check whether PDFs can be opened from Jabref. This might require you to set the Library > Library properties > General file directory to the `pdfs` directory, which is stored in the `references.bib` as follows:
 
 ```
-@Comment{jabref-meta: fileDirectory-username-username-computer:/home/username/path-to-/review-template;}
+@Comment{jabref-meta: fileDirectory-username-username-computer:/home/username/path-to-/review_template;}
 ```
 
 - PDF file links should take the form `file = {:pdfs/citation_key.pdf:PDF}`

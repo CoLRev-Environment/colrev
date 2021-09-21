@@ -4,12 +4,13 @@ import difflib
 import os
 
 import ansiwrap
-import entry_hash_function
 import git
 import pandas as pd
-import utils
 import yaml
 from dictdiffer import diff
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -158,12 +159,12 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
         main_entry.update(status='processed')
         bib_database.entries = [x for x in bib_database.entries
                                 if x['ID'] != duplicate_entry['ID']]
-        removed_tuples.append([entry_a_ID, entry_b_ID])
+        removed_tuples.append([main_ID, duplicate_ID])
 
     if 'n' == response:
         # do not merge entries/modify the bib_database
         duplicate_entry.update(status='processed')
-        removed_tuples.append([entry_a_ID, entry_b_ID])
+        removed_tuples.append([main_ID, duplicate_ID])
     # 'd' == response: TODO
         # Modification examples:
         # main_entry.update(title='TEST')
@@ -237,8 +238,7 @@ def manual_merge_commit():
     return
 
 
-if __name__ == '__main__':
-
+def main():
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
@@ -281,3 +281,7 @@ if __name__ == '__main__':
     else:
         if 'y' == input('Create commit (y/n)?'):
             manual_merge_commit()
+
+
+if __name__ == '__main__':
+    main()

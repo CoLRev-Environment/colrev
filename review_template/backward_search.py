@@ -9,14 +9,15 @@ from datetime import datetime
 from time import gmtime
 from time import strftime
 
-import entry_hash_function
 import pandas as pd
 import requests
 import tqdm
-import utils
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from lxml import etree
+
+from review_template import entry_hash_function
+from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -25,8 +26,8 @@ with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
-SEARCH_DETAILS_PATH = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS_PATH']
+SEARCH_DETAILS = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
 ns = {
     'tei': '{http://www.tei-c.org/ns/1.0}',
@@ -247,7 +248,7 @@ def extract_bibliography(root):
 
 def process_backward_search(tei):
 
-    search_details = pd.read_csv(SEARCH_DETAILS_PATH)
+    search_details = pd.read_csv(SEARCH_DETAILS)
 
     if tei in search_details['source_url']:
         return
@@ -322,7 +323,7 @@ def process_backward_search(tei):
     )
     search_details = pd.concat([search_details, new_record])
     search_details.to_csv(
-        SEARCH_DETAILS_PATH,
+        SEARCH_DETAILS,
         index=False, quoting=csv.QUOTE_ALL,
     )
 
@@ -364,8 +365,7 @@ def transform(pdf_filename, tei_filename):
     return
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -384,3 +384,7 @@ if __name__ == '__main__':
         transform(pdf_filename, tei_filename)
         process_backward_search(tei_filename)
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+
+
+if __name__ == '__main__':
+    main()

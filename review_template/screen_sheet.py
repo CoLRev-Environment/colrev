@@ -3,9 +3,10 @@ import csv
 import logging
 import os
 
-import entry_hash_function
 import pandas as pd
 import yaml
+
+from review_template import entry_hash_function
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 

@@ -4,10 +4,11 @@ import time
 
 import bibtexparser
 import dictdiffer
-import entry_hash_function
 import git
 import yaml
 from bibtexparser.customization import convert_to_unicode
+
+from review_template import entry_hash_function
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -43,8 +44,7 @@ def trace_hash(bibfilename, hash_id_needed):
     return
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -138,3 +138,7 @@ if __name__ == '__main__':
         for line in str(filecontents).split('\\n'):
             if citation_key in line:
                 print(line)
+
+
+if __name__ == '__main__':
+    main()
