@@ -7,12 +7,13 @@ import os
 from itertools import chain
 
 import bibtexparser
-import cleanse_records
-import entry_hash_function
 import git
-import utils
 import yaml
 from bibtexparser.customization import convert_to_unicode
+
+from review_template import cleanse_records
+from review_template import entry_hash_function
+from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -330,14 +331,18 @@ def create_commit(r, bib_database, details_commit):
 
         # print('Creating commit ...')
 
-        r.index.add([MAIN_REFERENCES, 'search/completion_edits.csv'])
+        if os.path.exists('search/completion_edits.csv'):
+            r.index.add(['search/completion_edits.csv'])
+
+        r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
         # print('Import search results \n - ' + '\n - '.join(details_commit))
         hook_skipping = 'false'
         if not DEBUG_MODE:
             hook_skipping = 'true'
         r.index.commit(
-            '⚙️ Import search results \n - ' + '\n - '.join(details_commit),
+            '⚙️ Import search results \n - ' + '\n - '.join(details_commit) +
+            '\n - ' + utils.get_package_details(),
             author=git.Actor(
                 'script:importer.py', ''),
             skip_hooks=hook_skipping

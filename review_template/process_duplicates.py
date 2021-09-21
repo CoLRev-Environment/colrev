@@ -5,12 +5,13 @@ import os
 import re
 
 import bibtexparser
-import entry_hash_function
 import git
 import pandas as pd
-import utils
 import yaml
 from fuzzywuzzy import fuzz
+
+from review_template import entry_hash_function
+from review_template import utils
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -261,42 +262,6 @@ def get_combined_hash_id_list(references, ref_id_tuple):
     return ','.join(combined_hash_list)
 
 
-def create_commit(r, bib_database):
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    merge_details = ''
-    if os.path.exists('duplicate_tuples.csv'):
-        with open('duplicate_tuples.csv') as read_obj:
-            csv_reader = csv.reader(read_obj)
-            for row in csv_reader:
-                if row[0] != 'ID1':
-                    merge_details += row[0] + ' < ' + row[1] + '\n'
-        os.remove('duplicate_tuples.csv')
-
-    if merge_details != '':
-        merge_details = '\n\nDuplicates removed:\n' + merge_details
-
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
-
-        # to avoid failing pre-commit hooks
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
-        )
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-        if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-            r.index.add([MAIN_REFERENCES])
-            if os.path.exists('potential_duplicate_tuples.csv'):
-                r.index.add(['potential_duplicate_tuples.csv'])
-            r.index.commit(
-                '⚙️ Merge duplicates' + merge_details,
-                author=git.Actor('script:merge_duplicates.py', ''),
-            )
-    return
-
-
 def get_prev_queue(queue_order, hash_id):
     # Note: Because we only introduce individual (non-merged entries),
     # there should be no commas in hash_id!
@@ -497,6 +462,43 @@ def apply_merges(bib_database):
     return bib_database
 
 
+def create_commit(r, bib_database):
+
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    merge_details = ''
+    if os.path.exists('duplicate_tuples.csv'):
+        with open('duplicate_tuples.csv') as read_obj:
+            csv_reader = csv.reader(read_obj)
+            for row in csv_reader:
+                if row[0] != 'ID1':
+                    merge_details += row[0] + ' < ' + row[1] + '\n'
+        os.remove('duplicate_tuples.csv')
+
+    if merge_details != '':
+        merge_details = '\n\nDuplicates removed:\n' + merge_details
+
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
+            MAIN_REFERENCES in r.untracked_files:
+
+        # to avoid failing pre-commit hooks
+        bib_database = utils.load_references_bib(
+            modification_check=False, initialize=False,
+        )
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+        if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
+            r.index.add([MAIN_REFERENCES])
+            if os.path.exists('potential_duplicate_tuples.csv'):
+                r.index.add(['potential_duplicate_tuples.csv'])
+            r.index.commit(
+                '⚙️ Merge duplicates' + merge_details +
+                '\n - ' + utils.get_package_details(),
+                author=git.Actor('script:process_duplicates.py', ''),
+            )
+    return
+
+
 def test_merge():
 
     bibtex_str = """@article{Appan2012,
@@ -556,7 +558,7 @@ if __name__ == '__main__':
 #    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
 #        r.index.add([MAIN_REFERENCES])
 #        r.index.commit(
-#            'Merge duplicates (manual) \n\n - using merge_duplicates.py')
+#            'Process duplicates (manual) \n\n - using process_duplicates.py')
 #
 #    duplicates_removed = nr_current_entries - len(bib_database.entries)
 #    print('Duplicates removed: ' + str(duplicates_removed))

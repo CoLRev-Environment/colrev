@@ -11,13 +11,14 @@ from urllib.request import Request
 from urllib.request import urlopen
 
 import bibtexparser
-import entry_hash_function
 import git
 import requests
-import utils
 import yaml
 from Levenshtein import ratio
 from nameparser import HumanName
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -517,7 +518,8 @@ def create_commit(r, bib_database):
         r.index.add([MAIN_REFERENCES])
 
         r.index.commit(
-            '⚙️ Cleanse ' + MAIN_REFERENCES,
+            '⚙️ Cleanse ' + MAIN_REFERENCES +
+            '\n - ' + utils.get_package_details(),
             author=git.Actor('script:cleanse_records.py', ''),
         )
 
@@ -535,7 +537,8 @@ def manual_cleanse_commit():
     if not DEBUG_MODE:
         hook_skipping = 'true'
     r.index.commit(
-        'Cleanse manual ' + MAIN_REFERENCES,
+        'Cleanse manual ' + MAIN_REFERENCES +
+            '\n - ' + utils.get_package_details(),
         author=git.Actor('manual:cleanse', ''),
         skip_hooks=hook_skipping
     )

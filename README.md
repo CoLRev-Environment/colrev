@@ -12,7 +12,30 @@ More broadly, our aspiration is to automate repetitive and laborious tasks in wh
 For this purpose, this project is designed as a strategic platform to validate and integrate further extensions.
 
 
-Features
+# Installation and usage
+
+```
+# Installation:
+git clone https://github.com/geritwagner/review_template
+cd review_template
+pip install -e .
+
+# Usage (navigate to project directory)
+review_template process
+review_template status
+
+```
+
+To install crowd-sourced resources, include them as submodules as follows:
+
+```
+git submodule add https://github.com/geritwagner/crowd_resource_information_systems
+```
+
+Further instructions are available in the [analysis/readme.md](analysis/readme.md).
+
+
+# Features
 
 - Collaborative, robust, and tool-supported end-to-end `search > screen > data` pipeline designed for reproducibility, iterativeness, and quality.
 Designed for local and distributed use.
@@ -194,34 +217,6 @@ Modes:
 | Data extraction: statistician 💻 | Creates summary statistics (e.g., PRISMA diagrams, cross-tabulating of journals/years).   | Planned     |
 |                                  | make generate_statistics                                                                  |             |
 
-# Installation
-
-The pipeline operates inside a Docker container which connects to services offered by other Docker containers (e.g., Grobid).
-Instructions for  [installing](https://docs.docker.com/install/linux/docker-ce/ubuntu/)  and [configuring](https://docs.docker.com/install/linux/linux-postinstall/) [Docker](https://www.docker.com/) and [Docker-compose](https://docs.docker.com/compose/install/) are available online.
-
-
-- **Default mode (web interface)/Not yet available**: to start the default mode, execute the following:
-
-```
-docker-compose up
-# Note: when the default mode is implemented, the app should be available through the browser (information should be provided here).
-```
-
-- **CLI mode**: to start the command-line mode, execute the following:
-
-```
-docker-compose up
-docker-compose run --rm review_template_python3 /bin/bash
-```
-
-To install crowd-sourced resources, include them as submodules as follows:
-
-```
-git submodule add https://github.com/geritwagner/crowd_resource_information_systems
-```
-
-Further instructions are available in the [analysis/readme.md](analysis/readme.md).
-
 
 # Development status, release, and changes
 
@@ -231,10 +226,10 @@ See the [changelog](changelog.md).
 
 # Contributing
 
-- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/review-template/issues) and let us know.
+- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/review_template/issues) and let us know.
 
 - You are welcome to contribute code and features. To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
 # License
 
-TBD. MIT/Apache2.0?
+MIT License.

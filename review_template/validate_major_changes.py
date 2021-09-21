@@ -3,11 +3,12 @@ import datetime
 
 import bibtexparser
 import dictdiffer
-import entry_hash_function
 import git
-import merge_duplicates
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
+
+from review_template import entry_hash_function
+from review_template import process_duplicates
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -16,8 +17,8 @@ HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
-if __name__ == '__main__':
 
+def main():
     repo = git.Repo()
 
     revlist = (
@@ -62,8 +63,8 @@ if __name__ == '__main__':
                              if current_hash_id in x['hash_id'].split(',')]
             for prior_entry in prior_entries:
                 similarity = \
-                    merge_duplicates.get_entry_similarity(current_entry,
-                                                          prior_entry)
+                    process_duplicates.get_entry_similarity(current_entry,
+                                                            prior_entry)
                 change_significance.append([current_hash_id, similarity])
 
     change_significance = [[x, y] for [x, y] in change_significance if y < 1]
@@ -91,3 +92,7 @@ if __name__ == '__main__':
             print(diff)
         print(' ------------------------ ')
         input('TODO: correct? if not, replace current entry with the old one')
+
+
+if __name__ == '__main__':
+    main()

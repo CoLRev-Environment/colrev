@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 import os
 
-import entry_hash_function
 import numpy as np
 import pandas as pd
-import utils
 import yaml
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -14,8 +15,8 @@ HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
-if __name__ == '__main__':
 
+def main():
     print('')
     print('')
     print('Sample profile')
@@ -70,3 +71,7 @@ if __name__ == '__main__':
                                fill_value=0,
                                margins=True)
     tabulated.to_csv('output/journals_years.csv')
+
+
+if __name__ == '__main__':
+    main()

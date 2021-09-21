@@ -3,8 +3,6 @@ import io
 import os
 import re
 
-import entry_hash_function
-import utils
 import yaml
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
@@ -13,6 +11,9 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFSyntaxError
+
+from review_template import entry_hash_function
+from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -135,8 +136,7 @@ def validate_pdf_metadata(bib_database):
     return
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -151,3 +151,7 @@ if __name__ == '__main__':
         'TODO: if no OCR detected, ',
         'create a backup and send to ocrmypdf container',
     )
+
+
+if __name__ == '__main__':
+    main()

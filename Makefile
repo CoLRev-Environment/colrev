@@ -1,77 +1,89 @@
-.PHONY : search backward_search cleanse_records screen data
+.PHONY: clean clean-test clean-pyc clean-build docs help
+.DEFAULT_GOAL := help
 
-# Note: this should not be necessary for the pip-version (when the scripts can simply access the current path as the working directory)
-DATA_PATH=data_test
+define BROWSER_PYSCRIPT
+import os, webbrowser, sys
 
-help :
-	@echo "Usage: make [command]"
-	@echo "    help"
-	@echo "        Show this help description"
+from urllib.request import pathname2url
 
-main:
-	cd $(DATA_PATH) && python3 ../analysis/main.py
+webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
+endef
+export BROWSER_PYSCRIPT
 
-cli :
-	docker-compose up & gnome-terminal -e "bash -c \"docker-compose run --rm review_template_python3 /bin/bash\""
+define PRINT_HELP_PYSCRIPT
+import re, sys
 
-status :
-	cd $(DATA_PATH) && pre-commit run -a
+for line in sys.stdin:
+	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
+	if match:
+		target, help = match.groups()
+		print("%-20s %s" % (target, help))
+endef
+export PRINT_HELP_PYSCRIPT
 
-initialize :
-	cd $(DATA_PATH) && python3 ../analysis/initialize.py
+BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
-trace_hash_id :
-	cd $(DATA_PATH) && python3 ../analysis/trace_hash_id.py
+help:
+	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-trace_search_result :
-	cd $(DATA_PATH) && python3 ../analysis/trace_search_result.py
+clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
 
-validate_major_changes :
-	cd $(DATA_PATH) && python3 ../analysis/validate_major_changes.py
+clean-build: ## remove build artifacts
+	rm -fr build/
+	rm -fr dist/
+	rm -fr .eggs/
+	find . -name '*.egg-info' -exec rm -fr {} +
+	find . -name '*.egg' -exec rm -f {} +
 
-merge_duplicates_manual :
-	cd $(DATA_PATH) && python3 ../analysis/merge_duplicates_manual.py
+clean-pyc: ## remove Python file artifacts
+	find . -name '*.pyc' -exec rm -f {} +
+	find . -name '*.pyo' -exec rm -f {} +
+	find . -name '*~' -exec rm -f {} +
+	find . -name '__pycache__' -exec rm -fr {} +
 
+clean-test: ## remove test and coverage artifacts
+	rm -fr .tox/
+	rm -f .coverage
+	rm -fr htmlcov/
+	rm -fr .pytest_cache
 
-# to test:
+lint/flake8: ## check style with flake8
+	flake8 review_template tests
+lint/black: ## check style with black
+	black --check review_template tests
 
-test :
-	cd $(DATA_PATH) && python3 ../analysis/test.py
+lint: lint/flake8 lint/black ## check style
 
-trace_entry :
-	cd $(DATA_PATH) && python3 ../analysis/trace_entry.py
+test: ## run tests quickly with the default Python
+	pytest
 
-importer :
-	cd $(DATA_PATH) && python3 ../analysis/importer.py
+test-all: ## run tests on every Python version with tox
+	tox
 
-cleanse_records :
-	cd $(DATA_PATH) && python3 ../analysis/cleanse_records.py
+coverage: ## check code coverage quickly with the default Python
+	coverage run --source review_template -m pytest
+	coverage report -m
+	coverage html
+	$(BROWSER) htmlcov/index.html
 
-screen_sheet :
-	cd $(DATA_PATH) && python3 ../analysis/screen_sheet.py
+docs: ## generate Sphinx HTML documentation, including API docs
+	rm -f docs/review_template.rst
+	rm -f docs/modules.rst
+	sphinx-apidoc -o docs/ review_template
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs html
+	$(BROWSER) docs/_build/html/index.html
 
-screen_1 :
-	cd $(DATA_PATH) && python3 ../analysis/screen_1.py
+servedocs: docs ## compile the docs watching for changes
+	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
 
-screen_2 :
-	cd $(DATA_PATH) && python3 ../analysis/screen_2.py
+release: dist ## package and upload a release
+	twine upload dist/*
 
-data :
-	cd $(DATA_PATH) && python3 ../analysis/data.py
+dist: clean ## builds source and wheel package
+	python setup.py sdist
+	python setup.py bdist_wheel
+	ls -l dist
 
-backward_search :
-	cd $(DATA_PATH) && python3 ../analysis/backward_search.py
-
-merge_duplicates :
-	cd $(DATA_PATH) && python3 ../analysis/merge_duplicates.py
-
-acquire_pdfs :
-	cd $(DATA_PATH) && python3 ../analysis/acquire_pdfs.py
-
-# development:
-
-validate_pdfs :
-	cd $(DATA_PATH) && python3 ../analysis/validate_pdfs.py
-
-sample_profile :
-	cd $(DATA_PATH) && python3 ../analysis/sample_profile.py
+install: clean ## install the package to the active Python's site-packages
+	python setup.py install

@@ -2,10 +2,11 @@
 import logging
 
 import bibtexparser
-import entry_hash_function
-import utils
 import yaml
 from bibtexparser.customization import convert_to_unicode
+
+from review_template import entry_hash_function
+from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -39,8 +40,7 @@ def trace_hash(bibfilename, hash_id_needed):
     return
 
 
-if __name__ == '__main__':
-
+def main():
     print('')
     print('')
 
@@ -56,3 +56,7 @@ if __name__ == '__main__':
 
     if nr_found == 0:
         print('Did not find hash_id')
+
+
+if __name__ == '__main__':
+    main()
