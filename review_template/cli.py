@@ -218,10 +218,11 @@ def trace_search_result(ctx):
 
 @main.command(help_priority=16)
 @click.pass_context
-def trace_entry(ctx):
+@click.option('--id', help='Entry ID to trace (citation_key).', required=True)
+def trace_entry(ctx, id):
     """Trace an entry"""
     from review_template import trace_entry
-    trace_entry.main()
+    trace_entry.main(id)
 
 
 
