@@ -86,6 +86,16 @@ def get_entry_similarity(entry_a, entry_b):
         if 'booktitle' not in entry_b:
             entry_b['booktitle'] = ''
 
+    if 'container_title' not in entry_a:
+        entry_a['container_title'] = entry_a.get('journal', '') + \
+            entry_a.get('booktitle', '') + \
+            entry_a.get('series', '')
+
+    if 'container_title' not in entry_b:
+        entry_b['container_title'] = entry_b.get('journal', '') + \
+            entry_b.get('booktitle', '') + \
+            entry_b.get('series', '')
+
     df_a = pd.DataFrame.from_dict([entry_a])
     df_b = pd.DataFrame.from_dict([entry_b])
 
