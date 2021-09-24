@@ -162,7 +162,7 @@ def main():
 
 @click.command()
 def cli():
-    process()
+    main()
     return 0
 
 

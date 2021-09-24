@@ -99,17 +99,8 @@ def is_sufficiently_complete(entry):
     return sufficiently_complete
 
 
-def get_entries(bib_file):
-    entry_list = []
-    processed_hash_ids = []
-    with open('processed_hash_ids.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        for row in csv_reader:
-            processed_hash_ids.append(row[0])
-
+def get_db_with_completion_edits(bib_file):
     completion_edits = []
-    new_completion_edits = []
-
     if os.path.exists('search/completion_edits.csv'):
         with open('search/completion_edits.csv') as read_obj:
             csv_reader = csv.DictReader(read_obj)
@@ -123,17 +114,12 @@ def get_entries(bib_file):
                                          row['value']])
 
     with open(bib_file) as bibtex_file:
-        individual_bib_database = bibtexparser.bparser.BibTexParser(
+        db = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True,
         ).parse_file(bibtex_file, partial=True)
-        for entry in individual_bib_database.entries:
-            entry.update(source_file_path=os.path.basename(bib_file))
-            # IMPORTANT NOTE: any modifications completed before this step
-            # need to be considered when backward-tracing!
-            # Tradeoff: preprocessing can help to reduce the number of
-            # representations (hash_ids) for each record
-            # but it also introduces complexity (backward tracing)
 
+        for entry in db.entries:
+            entry.update(source_file_path=os.path.basename(bib_file))
             # if source_file_path and ID = source_id match:
             # replace the field with the values provided in the csv
             # to avoid frequent querying of DOIs
@@ -142,44 +128,66 @@ def get_entries(bib_file):
                         completion_edit[1] == entry['ID']:
                     entry[completion_edit[2]] = completion_edit[3]
 
-            if not is_sufficiently_complete(entry) and 'doi' in entry:
-                # try completion based on doi (store in completion_edits file)
-                entry = cleanse_records.get_doi_from_crossref(entry)
-                doi_metadata = \
-                    cleanse_records.retrieve_doi_metadata(entry.copy())
-                for key, value in doi_metadata.items():
-                    if key not in entry.keys() and key in ['author',
-                                                           'year',
-                                                           'title',
-                                                           'journal',
-                                                           'booktitle',
-                                                           'number',
-                                                           'volume',
-                                                           'issue',
-                                                           'pages']:
-                        entry[key] = value
-                        new_completion_edits.append([entry['source_file_path'],
-                                                     entry['ID'],
-                                                     key,
-                                                     value])
-                # fix type-mismatches
-                # e.g., conference paper with ENTRYTYPE=article
-                entry = cleanse_records.correct_entrytypes(entry)
+    return db
 
-            if is_sufficiently_complete(entry):
-                hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-                entry.update(hash_id=hid)
-                if entry['hash_id'] not in processed_hash_ids:
-                    # create IDs here to prevent conflicts
-                    # when entries are added to the MAIN_REFERENCES
-                    # (in parallel)
 
-                    entry.update(status='not_imported')
-                    entry_list.append(entry)
-            else:
-                entry.update(status='needs_manual_completion')
-                entry.update(source_id=entry['ID'])
+def load_entries(bib_file):
+    entry_list = []
+    processed_hash_ids = []
+    with open('processed_hash_ids.csv') as read_obj:
+        csv_reader = csv.reader(read_obj)
+        for row in csv_reader:
+            processed_hash_ids.append(row[0])
+
+    new_completion_edits = []
+
+    individual_bib_database = get_db_with_completion_edits(bib_file)
+
+    for entry in individual_bib_database.entries:
+        # IMPORTANT NOTE: any modifications completed before this step
+        # need to be considered when backward-tracing!
+        # Tradeoff: preprocessing can help to reduce the number of
+        # representations (hash_ids) for each record
+        # but it also introduces complexity (backward tracing)
+
+        if not is_sufficiently_complete(entry) and 'doi' in entry:
+            # try completion based on doi (store in completion_edits file)
+            entry = cleanse_records.get_doi_from_crossref(entry)
+            doi_metadata = \
+                cleanse_records.retrieve_doi_metadata(entry.copy())
+            for key, value in doi_metadata.items():
+                if key not in entry.keys() and key in ['author',
+                                                       'year',
+                                                       'title',
+                                                       'journal',
+                                                       'booktitle',
+                                                       'number',
+                                                       'volume',
+                                                       'issue',
+                                                       'pages']:
+                    entry[key] = value
+                    new_completion_edits.append([entry['source_file_path'],
+                                                 entry['ID'],
+                                                 key,
+                                                 value])
+            # fix type-mismatches
+            # e.g., conference paper with ENTRYTYPE=article
+            entry = cleanse_records.correct_entrytypes(entry)
+
+        if is_sufficiently_complete(entry):
+            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            entry.update(hash_id=hid)
+            if entry['hash_id'] not in processed_hash_ids:
+                # create IDs here to prevent conflicts
+                # when entries are added to the MAIN_REFERENCES
+                # (in parallel)
+
+                entry.update(status='not_imported')
                 entry_list.append(entry)
+        else:
+            entry.update(status='needs_manual_completion')
+            entry.update(source_id=entry['ID'])
+            entry_list.append(entry)
 
     if not os.path.exists('search/completion_edits.csv'):
         with open('search/completion_edits.csv', 'w') as wr_obj:
@@ -217,9 +225,8 @@ def load(bib_database):
     # in bib_database.entries
 
     pool = mp.Pool(processes=CPUS)
-    additional_records = pool.map(get_entries,
-                                  [bib_file
-                                   for bib_file in utils.get_bib_files()])
+    additional_records = pool.map(load_entries,
+                                  [utils.get_bib_files()])
 
     additional_records = list(chain(*additional_records))
 
