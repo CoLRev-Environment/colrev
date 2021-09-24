@@ -32,7 +32,9 @@ requirements = ['Click>=7.0',
                 'ujson==4.0.2',
                 'wordsegment==1.3.1', ]
 
-test_requirements = ['pytest>=3', ]
+test_requirements = ['pytest>=3',
+                     'attrs>=19.2.0',
+                     'packaging>=21.0']
 
 
 entry_points = \
