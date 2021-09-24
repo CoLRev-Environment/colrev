@@ -15,10 +15,12 @@ For this purpose, this project is designed as a strategic platform to validate a
 # Installation and usage
 
 ```
-# Installation:
+# Installation (currently, while not yet available via pip)
 git clone https://github.com/geritwagner/review_template
 cd review_template
 pip install -e .
+# Goal: 
+# pip install review_template
 
 # Usage (navigate to project directory)
 review_template process
@@ -171,60 +173,15 @@ To reset the analyses, each of these files can be deleted.
 
     </details>
 
-# Components
-
-The scripts work together with the [pipeline-validation-hooks](https://github.com/geritwagner/pipeline-validation-hooks).
-It is recommended to run `pre-commit run -a` regularly to analyze the status of the pipeline and to ensure consistency.
-
-Modes:
-
-- 🤓∞💻 : Interactive human and computational processing
-- 💻→🤓 : Sequential computational processing and human verification
-- 💻    : Purely computational processing
-
-| Step: component (mode)           | Description and scripts                                                                   | Status      |
-| :------------------------------- | :---------------------------------------------------------------------------------------- | :---------- |
-| Management: starter 🤓∞💻        | Sets up the repository.                                                                   | CLI only    |
-|                                  | make initialize                                                                           |             |
-| Management: formatter 💻         | Formats the bibliography to ensure a clean git history.                                   | CLI only    |
-|                                  | make format_bibliography                                                                  |             |
-| Management: validator 💻         | Validates the state of the pipeline, ensuring traceability and consistency.               | CLI only    |
-|                                  | The corresponding scripts are registered as pre-commit hooks for the git repository and   |             |
-|                                  | executed automatically before new git versions are created.                               |             |
-|                                  | make validate                                                                             |             |
-| Management: tracer 💻            | Traces entries (by citation_keys) or hash_ids back to their origin or                     | CLI only    |
-|                                  | search results (BibTeX) to their coding.                                                  |             |
-|                                  | make trace_search_result  \| trace_entry \| trace_hash_id                                 |             |
-| Management: resolver 🤓∞💻       | Resolves disagreements in parallel independent screening/coding (merge conflicts).        | Planned     |
-|                                  | make resolve                                                                              |             |
-| Search: importer 💻              | Imports search results, generates a _hash_id_ for each entry, and                         | CLI only    |
-|                                  | creates a combined `references.bib` file.                                                 |             |
-|                                  | make combine_individual_search_results                                                    |             |
-| Search: cleanser 💻→🤓           | Cleanses the `references.bib` file using meta-data provided by Crossref and Doi.org.      | CLI only    |
-|                                  | make cleanse_records                                                                      |             |
-| Search: backward_searcher 💻→🤓  | Extracts references from PDFs and includes them as search results.                        | CLI only    |
-|                                  | make backward_search                                                                      |             |
-| Search: merger 💻→🤓/🤓∞💻       | Merges duplicates based on identical _hash_ids_ and based on a threshold and manual input.| CLI only    |
-|                                  | make merge_duplicates                                                                     |             |
-| Screen: screener 🤓∞💻           | Creates screening sheets, guides users through the pre-screen and the full-text screen.   | CLI only    |
-|                                  | make screen_sheet \| screen_1 \| screen_2                                                 |             |
-| Screen: pdf_collector 💻→🤓      | Collects PDFs (e.g., using the unpaywall API), renames them (to _citation_key.pdf_),      | Development |
-|                                  | validates their content and completes pre-processing steps (e.g., OCR based on ocrmypdf). |             |
-|                                  | make acquire_pdfs \| validate_pdfs                                                        |             |
-| Data extraction: extractor 🤓∞💻 | Creates the data extraction sheets (structured spreadsheet or weakly structured sheets)   | CLI only    |
-|                                  | and guides users through the data extraction/coding process.                              |             |
-|                                  | make data_sheet \| data_pages                                                             |             |
-| Data extraction: statistician 💻 | Creates summary statistics (e.g., PRISMA diagrams, cross-tabulating of journals/years).   | Planned     |
-|                                  | make generate_statistics                                                                  |             |
-
-
 # Development status, release, and changes
 
 Note: The status of the pipeline is developmental.
 None of the scripts has been tested extensively.
-See the [changelog](changelog.md).
+See the [changelog](CHANGELOG.md).
 
 # Contributing
+
+- See [contributing guidelines](CONTRIBUTING.rst).
 
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/review_template/issues) and let us know.
 
