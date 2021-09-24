@@ -538,7 +538,7 @@ def manual_cleanse_commit():
         hook_skipping = 'true'
     r.index.commit(
         'Cleanse manual ' + MAIN_REFERENCES +
-            '\n - ' + utils.get_package_details(),
+        '\n - ' + utils.get_package_details(),
         author=git.Actor('manual:cleanse', ''),
         skip_hooks=hook_skipping
     )

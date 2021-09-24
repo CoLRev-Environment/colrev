@@ -1,8 +1,8 @@
 #! /usr/bin/env python
 import multiprocessing as mp
 import os
-import click
 
+import click
 import yaml
 
 from review_template import cleanse_records
@@ -159,10 +159,12 @@ def main():
 
     return
 
+
 @click.command()
 def cli():
     process()
     return 0
+
 
 if __name__ == '__main__':
     main()

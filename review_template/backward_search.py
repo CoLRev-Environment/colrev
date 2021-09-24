@@ -3,6 +3,7 @@ import csv
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -34,8 +35,41 @@ ns = {
     'w3': '{http://www.w3.org/XML/1998/namespace}',
 }
 
-GROBID_URL = 'http://grobid:8070'
+# GROBID_URL = 'http://grobid:8070'
+GROBID_URL = 'http://localhost:8070'
 data_dir = '/usr/data/'
+
+
+def start_grobid():
+    try:
+        r = requests.get(GROBID_URL + '/api/isalive')
+        if r.text == 'true':
+            # print('Docker running')
+            return True
+    except:
+        print('Starting grobid service...')
+        subprocess.Popen(['docker run -t --rm -m "4g" -p 8070:8070 ' +
+                          '-p 8071:8071 lfoppiano/grobid:0.7.0'],
+                         shell=True,
+                         stdin=None,
+                         stdout=open(os.devnull, 'wb'),
+                         stderr=None, close_fds=True)
+        pass
+
+    i = 0
+    while True:
+        i += 1
+        time.sleep(1)
+        try:
+            r = requests.get(GROBID_URL + '/api/isalive')
+            if r.text == 'true':
+                print('Grobid service alive.')
+                return True
+        except:
+            pass
+        if i > 30:
+            break
+    return False
 
 
 def get_reference_title(reference):
@@ -246,15 +280,10 @@ def extract_bibliography(root):
     return BIBLIOGRAPHY
 
 
-def process_backward_search(tei):
-
-    search_details = pd.read_csv(SEARCH_DETAILS)
-
-    if tei in search_details['source_url']:
-        return
-
+def get_bib_db_from_tei(tei):
     with open(tei) as xml_file:
         root = etree.parse(xml_file).getroot()
+
     bibliography = extract_bibliography(root)
     db = BibDatabase()
     for index, row in bibliography.iterrows():
@@ -288,6 +317,17 @@ def process_backward_search(tei):
         for key in empty_field_keys:
             if entry[key] == '':
                 del entry[key]
+    return db
+
+
+def process_backward_search(tei):
+
+    search_details = pd.read_csv(SEARCH_DETAILS)
+
+    if tei in search_details['source_url']:
+        return
+
+    db = get_bib_db_from_tei(tei)
 
     bib_filename = tei.replace('.tei.xml', '') + 'bw_search.bib'
     utils.save_bib_file(db, bib_filename)
@@ -352,7 +392,7 @@ def transform(pdf_filename, tei_filename):
     # alternative python-batch:
     # https://github.com/kermitt2/grobid_client_python
     check_grobid_availability()
-#    print('Processing ' + paper)
+    # print('Processing ' + pdf_filename)
     options = {'consolidateHeader': '1', 'consolidateCitations': '1'}
     r = requests.post(
         GROBID_URL + '/api/processFulltextDocument',
@@ -370,6 +410,8 @@ def main():
     print('')
 
     print('Backward search')
+
+    start_grobid()
 
     citation_keys = utils.get_included_papers()
 
