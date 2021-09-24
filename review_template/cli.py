@@ -152,10 +152,10 @@ def sample_profile(ctx):
 
 @main.command(help_priority=14)
 @click.pass_context
-def validate_major_changes(ctx):
-    """Validate major changes (in prior versions)"""
-    from review_template import validate_major_changes
-    validate_major_changes.main()
+def validate_changes(ctx):
+    """Validate changes (in prior versions)"""
+    from review_template import validate_changes
+    validate_changes.main()
 
 
 @main.command(help_priority=15)

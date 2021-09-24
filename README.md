@@ -19,7 +19,7 @@ For this purpose, this project is designed as a strategic platform to validate a
 git clone https://github.com/geritwagner/review_template
 cd review_template
 pip install -e .
-# Goal: 
+# Goal:
 # pip install review_template
 
 # Usage (navigate to project directory)
