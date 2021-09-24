@@ -201,19 +201,23 @@ def validate_changes(ctx, scope, commit):
 
 
 @main.command(help_priority=15)
+@click.option('--hash_id', help='Hash_id to trace.', required=True)
 @click.pass_context
-def trace_hash_id(ctx):
+def trace_hash_id(ctx, hash_id):
     """Trace a hash_id"""
     from review_template import trace_hash_id
-    trace_hash_id.main()
+    trace_hash_id.main(hash_id)
+
 
 
 @main.command(help_priority=16)
+@click.argument('search_file', type=click.Path(exists=True))
+@click.option('--id', help='ID of the record (citation_key).', required=True)
 @click.pass_context
-def trace_search_result(ctx):
+def trace_search_result(ctx, search_file, id):
     """Trace a search result"""
     from review_template import trace_search_result
-    trace_search_result.main()
+    trace_search_result.main(search_file, id)
 
 
 @main.command(help_priority=16)

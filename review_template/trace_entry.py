@@ -7,7 +7,6 @@ import bibtexparser
 import dictdiffer
 import git
 import yaml
-from bibtexparser.customization import convert_to_unicode
 
 from review_template import entry_hash_function
 
@@ -21,29 +20,6 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
-
-
-def trace_hash(bibfilename, hash_id_needed):
-    global nr_found
-
-    with open(bibfilename) as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
-
-        for entry in bib_database.entries:
-            if entry_hash_function.create_hash[HASH_ID_FUNCTION](entry) == \
-                    hash_id_needed:
-                print(
-                    '\n\n Found hash ',
-                    hash_id_needed,
-                    '\n in ',
-                    bibfilename,
-                    '\n\n',
-                )
-                print(entry)
-                nr_found += 1
-    return
 
 
 def main(citation_key):

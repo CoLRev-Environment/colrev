@@ -1,11 +1,12 @@
 #! /usr/bin/env python
 import logging
+import os
+import pprint
 
-import bibtexparser
 import yaml
-from bibtexparser.customization import convert_to_unicode
 
 from review_template import entry_hash_function
+from review_template import importer
 from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -14,45 +15,50 @@ with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
+nr_found = 0
 
-def trace_hash(bibfilename, hash_id_needed):
+
+def trace_hash(bibfilename, bib_database, hash_id_needed):
     global nr_found
 
-    with open(bibfilename) as bibtex_file:
-        bib_database = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
+    pp = pprint.PrettyPrinter(indent=4)
 
-        for entry in bib_database.entries:
-            # If there are transformations before the hash is created,
-            # they need to be executed before the following.
-            if entry_hash_function.create_hash[HASH_ID_FUNCTION](entry) == \
-                    hash_id_needed:
-                print(
-                    '\n\n Found hash ',
-                    hash_id_needed,
-                    '\n in ',
-                    bibfilename,
-                    '\n\n',
-                )
-                print(entry)
-                nr_found += 1
+    for entry in bib_database.entries:
+        # If there are transformations before the hash is created,
+        # they need to be executed before the following.
+        if entry.get('hash_id', 'NA') == hash_id_needed:
+            print(
+                '\n\n Found hash ',
+                hash_id_needed,
+                '\n in ',
+                bibfilename,
+                '\n',
+            )
+            pp.pprint(entry)
+            print('\n')
+            nr_found += 1
     return
 
 
-def main():
-    print('')
-    print('')
+def main(hash_id_needed):
+    global nr_found
+    print('Trace hash_id: ' + hash_id_needed)
 
-    print('Trace hash_id')
-
-    hash_id_needed = input('provide hash_id')
     assert len(hash_id_needed) == 64
 
-    nr_found = 0
+    bib_files = utils.get_bib_files()
+    for bib_file in bib_files:
+        print('Checking ' + os.path.basename(bib_file))
+        search_entries = importer.get_db_with_completion_edits(bib_file)
 
-    for bib_file in utils.get_bib_files():
-        trace_hash(bib_file, hash_id_needed)
+        # No need to check sufficiently_complete metadata:
+        # incomplete records should not be merged.
+        for entry in search_entries.entries:
+            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            entry.update(hash_id=hid)
+
+        # search_entries = validate_changes.get_search_entries()
+        trace_hash(bib_file, search_entries, hash_id_needed)
 
     if nr_found == 0:
         print('Did not find hash_id')
