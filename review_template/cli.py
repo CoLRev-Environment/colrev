@@ -1,7 +1,19 @@
+import datetime
 import os
 import sys
 
 import click
+import git
+import yaml
+
+from review_template import entry_hash_function
+
+with open('shared_config.yaml') as shared_config_yaml:
+    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+MAIN_REFERENCES = \
+    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
 class SpecialHelpOrder(click.Group):
@@ -150,12 +162,42 @@ def sample_profile(ctx):
     sample_profile.main()
 
 
+def validate_commit(ctx, param, value):
+    if 'none' == value:
+        return value
+    repo = git.Repo()
+
+    revlist = [commit for commit in repo.iter_commits()]
+
+    if value in [x.hexsha for x in revlist]:
+        # TODO: allow short commit_ids as values!
+        return value
+    else:
+        print('Error: Invalid value for \'--commit\': not a git commit id\n')
+        print('Select any of the following commit ids:')
+        commits_for_checking = []
+        for c in reversed(list(revlist)):
+            commits_for_checking.append(c)
+        for commit in revlist:
+            print(commit.hexsha,
+                  datetime.datetime.fromtimestamp(commit.committed_date),
+                  ' - ', commit.message.replace('\n', ' '))
+        print('\n')
+        raise click.BadParameter('not a git commit id')
+
+
 @main.command(help_priority=14)
+@click.option('--scope',
+              type=click.Choice(['cleanse', 'merge', 'all'],
+                                case_sensitive=False),
+              default='all', help='cleanse, merge, or all.')
+@click.option('--commit', help='Git commit id to validate.',
+              default='none', callback=validate_commit)
 @click.pass_context
-def validate_changes(ctx):
+def validate_changes(ctx, scope, commit):
     """Validate changes (in prior versions)"""
     from review_template import validate_changes
-    validate_changes.main()
+    validate_changes.main(scope, commit)
 
 
 @main.command(help_priority=15)
