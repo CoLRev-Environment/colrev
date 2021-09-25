@@ -17,10 +17,6 @@ from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-total_nr_entries_added = 0
-total_nr_duplicates_hash_ids = 0
-details_commit = []
-
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
@@ -40,7 +36,6 @@ MAIN_REFERENCES = \
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
-
 
 fields_to_keep = [
     'ID', 'hash_id', 'ENTRYTYPE',
@@ -120,9 +115,6 @@ def get_db_with_completion_edits(bib_file):
 
         for entry in db.entries:
             entry.update(source_file_path=os.path.basename(bib_file))
-            # if source_file_path and ID = source_id match:
-            # replace the field with the values provided in the csv
-            # to avoid frequent querying of DOIs
             for completion_edit in completion_edits:
                 if completion_edit[0] == entry['source_file_path'] and \
                         completion_edit[1] == entry['ID']:
@@ -131,18 +123,36 @@ def get_db_with_completion_edits(bib_file):
     return db
 
 
-def load_entries(bib_file):
-    entry_list = []
+def get_processed_hash_ids():
     processed_hash_ids = []
     with open('processed_hash_ids.csv') as read_obj:
         csv_reader = csv.reader(read_obj)
         for row in csv_reader:
             processed_hash_ids.append(row[0])
+    return processed_hash_ids
 
-    new_completion_edits = []
 
+def save_new_completion_edits(new_completion_edits):
+    if [] == new_completion_edits:
+        return
+
+    if not os.path.exists('search/completion_edits.csv'):
+        with open('search/completion_edits.csv', 'w') as wr_obj:
+            writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
+            writer.writerow(['source_file_path', 'source_id', 'key', 'value'])
+
+    with open('search/completion_edits.csv', 'a') as wr_obj:
+        writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
+        for completion_edit in new_completion_edits:
+            writer.writerow(completion_edit)
+    return
+
+
+def load_entries(bib_file):
+
+    processed_hash_ids = get_processed_hash_ids()
     individual_bib_database = get_db_with_completion_edits(bib_file)
-
+    entry_list, new_completion_edits = [], []
     for entry in individual_bib_database.entries:
         # IMPORTANT NOTE: any modifications completed before this step
         # need to be considered when backward-tracing!
@@ -178,10 +188,6 @@ def load_entries(bib_file):
             hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
             entry.update(hash_id=hid)
             if entry['hash_id'] not in processed_hash_ids:
-                # create IDs here to prevent conflicts
-                # when entries are added to the MAIN_REFERENCES
-                # (in parallel)
-
                 entry.update(status='not_imported')
                 entry_list.append(entry)
         else:
@@ -189,24 +195,12 @@ def load_entries(bib_file):
             entry.update(source_id=entry['ID'])
             entry_list.append(entry)
 
-    if not os.path.exists('search/completion_edits.csv'):
-        with open('search/completion_edits.csv', 'w') as wr_obj:
-            writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-            writer.writerow(['source_file_path', 'source_id', 'key', 'value'])
-
-    with open('search/completion_edits.csv', 'a') as wr_obj:
-        writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-        for completion_edit in new_completion_edits:
-            writer.writerow(completion_edit)
+    save_new_completion_edits(new_completion_edits)
 
     return entry_list
 
 
-def load(bib_database):
-
-    # Not sure we need to track the "imported" status here...
-    # entries will not be added to bib_database
-    # if their hash_id is already there
+def save_processed_hash_ids(bib_database):
 
     processed_hash_ids = [entry['hash_id'].split(',') for
                           entry in bib_database.entries
@@ -217,17 +211,17 @@ def load(bib_database):
         for p_hid in processed_hash_ids:
             fd.write(p_hid + '\n')
 
-    citation_key_list = [entry['ID'] for entry in bib_database.entries]
+    return
 
-    # always include the current bib (including the statuus of entries)
-    # imported_records = bib_database.entries
+
+def load_additional_records(bib_database):
+
     # Note: only add search_results if their hash_id is not already
-    # in bib_database.entries
+    # in bib_database (important for parallel load_entries())
+    save_processed_hash_ids(bib_database)
 
     pool = mp.Pool(processes=CPUS)
-    additional_records = pool.map(load_entries,
-                                  [utils.get_bib_files()])
-
+    additional_records = pool.map(load_entries, [utils.get_bib_files()])
     additional_records = list(chain(*additional_records))
 
     # do not import records with status=needs_manual_completion
@@ -242,6 +236,14 @@ def load(bib_database):
          not any((x['source_file_path'] == key and x['ID'] == value)
                  for [key, value] in non_complete_sources)]
 
+    return additional_records
+
+
+def load(bib_database):
+
+    additional_records = load_additional_records(bib_database)
+
+    citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
         if 'not_imported' == entry['status'] or \
                 'needs_manual_completion' == entry['status']:
@@ -252,76 +254,20 @@ def load(bib_database):
             citation_key_list.append(entry['ID'])
 
         if not 'needs_manual_completion' == entry['status']:
-
             entry = cleanse_records.homogenize_entry(entry)
 
             # Note: the cleanse_records.py will homogenize more cases because
             # it runs speculative_changes(entry)
             entry = cleanse_records.apply_local_rules(entry)
             entry = cleanse_records.apply_crowd_rules(entry)
-
             entry = drop_fields(entry)
-
             del entry['source_file_path']
-
             entry.update(status='imported')
 
     if os.path.exists('processed_hash_ids.csv'):
         os.remove('processed_hash_ids.csv')
 
-    # Note: if we process papers in order (often alphabetically),
-    # the merging may be more likely to produce conflicts (in parallel mode)
-    # search_records = random.sample(search_records, len(search_records))
-    # IMPORTANT: this is deprecated! we should know exactly in which
-    # (deterministic) order the records were started
-
     return additional_records
-
-
-def import_entries(search_records, bib_database):
-    source_file_paths = [entry['source_file_path'] for entry in search_records]
-    bib_file_info = [[source_file_path, 0, 0]
-                     for source_file_path in set(source_file_paths)]
-    existing_hash_ids = utils.get_hash_ids(bib_database)
-
-    for entry in search_records:
-        if entry['hash_id'] not in existing_hash_ids:
-            additional_count = 1
-            existing_hash_ids.append(entry['hash_id'])
-        else:
-            additional_count = 0
-
-        for i in range(len(bib_file_info)):
-            if bib_file_info[i][0] == entry['source_file_path']:
-                bib_file_info[i][1] += 1
-                bib_file_info[i][2] += additional_count
-        del entry['source_file_path']
-        if 1 == additional_count:
-            bib_database.entries.append(entry)
-
-    for entry in bib_database.entries:
-        # We set the citation_key here (even though it may be updated
-        # after cleansing/updating author/year fields)
-        # to prevent duplicate IDs in MAIN_REFERENCES,
-        # to achieve a better sort order in MAIN_REFERENCES,
-        # and to achieve a cleaner git history
-        entry.update(ID=utils.generate_citation_key(entry,
-                                                    bib_database,
-                                                    entry_in_bib_db=True))
-
-    details_commit = [source_file_path +
-                      ' (' + str(overall) + ' overall, ' +
-                      str(added) + ' additional records)'
-                      for [source_file_path, overall, added] in bib_file_info]
-
-    return bib_database, details_commit
-
-
-def save(bib_database):
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    return
 
 
 def create_commit(r, bib_database, details_commit):
@@ -336,19 +282,17 @@ def create_commit(r, bib_database, details_commit):
         )
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-        # print('Creating commit ...')
-
         if os.path.exists('search/completion_edits.csv'):
             r.index.add(['search/completion_edits.csv'])
 
         r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
-        # print('Import search results \n - ' + '\n - '.join(details_commit))
         hook_skipping = 'false'
         if not DEBUG_MODE:
             hook_skipping = 'true'
         r.index.commit(
-            '⚙️ Import search results \n - ' + '\n - '.join(details_commit) +
+            '⚙️ Import search results \n - ' +
+            '\n - '.join(details_commit) +
             '\n - ' + utils.get_package_details(),
             author=git.Actor(
                 'script:importer.py', ''),
@@ -357,6 +301,3 @@ def create_commit(r, bib_database, details_commit):
     else:
         print('No new records added to MAIN_REFERENCES')
     return
-
-# TODO: define preferences (start by processing e.g., WoS, then GS) or
-# use heuristics to start with the highest quality entries first.
