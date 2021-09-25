@@ -121,7 +121,8 @@ A reminder for the maintainers on how to deploy.
 Make sure all your changes are committed (including an entry in HISTORY.rst).
 Then run::
 
-$ bump2version patch # possible: major / minor / patch
+$ git tag 0.0.1 # major / minor / patch
+$ python setup.py register sdist upload # check/test
 $ git push
 $ git push --tags
 
