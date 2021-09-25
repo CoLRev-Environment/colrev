@@ -2,6 +2,8 @@
 from setuptools import find_packages
 from setuptools import setup
 
+import versioneer
+
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
@@ -60,7 +62,8 @@ entry_points = \
 
 setup(
     name='review_template',
-    version='0.0.1',
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     python_requires='>=3.6',
     description='Template for distributed literature reviews',
     long_description=readme + '\n\n' + changelog,
