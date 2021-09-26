@@ -46,7 +46,7 @@ def start_grobid():
         if r.text == 'true':
             # print('Docker running')
             return True
-    except:
+    except requests.exceptions.ConnectionError:
         print('Starting grobid service...')
         subprocess.Popen(['docker run -t --rm -m "4g" -p 8070:8070 ' +
                           '-p 8071:8071 lfoppiano/grobid:0.7.0'],
@@ -65,7 +65,7 @@ def start_grobid():
             if r.text == 'true':
                 print('Grobid service alive.')
                 return True
-        except:
+        except requests.exceptions.ConnectionError:
             pass
         if i > 30:
             break
@@ -92,7 +92,7 @@ def get_reference_title(reference):
         if sum(word.isupper() for word in words)/len(words) > 0.8:
             words = [word.capitalize() for word in words]
             title_string = ' '.join(words)
-    except:
+    except AttributeError:
         pass
     return title_string
 
@@ -113,13 +113,13 @@ def get_reference_author(reference):
         try:
             surname = author.find(ns['tei'] + 'persName')\
                             .find(ns['tei'] + 'surname').text
-        except:
+        except AttributeError:
             surname = ''
             pass
         try:
             forename = author.find(ns['tei'] + 'persName')\
                              .find(ns['tei'] + 'forename').text
-        except:
+        except AttributeError:
             forename = ''
             pass
 
@@ -169,7 +169,7 @@ def get_reference_journal_volume(reference):
             volume = imprint_node.find(
                 './/' + ns['tei'] + "biblScope[@unit='volume']",
             ).text
-    except:
+    except AttributeError:
         pass
     return volume
 
@@ -183,7 +183,7 @@ def get_reference_journal_issue(reference):
             issue = imprint_node.find(
                 './/' + ns['tei'] + "biblScope[@unit='issue']",
             ).text
-    except:
+    except AttributeError:
         pass
     return issue
 
@@ -220,8 +220,12 @@ def get_reference_pages(reference):
             page_node = imprint_node.find(
                 './/' + ns['tei'] + "biblScope[@unit='page']",
             )
-            pages = page_node.get('from') + '--' + page_node.get('to')
-    except:
+            if page_node is not None:
+                if 'from' in page_node:
+                    pages = pages + page_node.get('from')
+                if 'to' in page_node:
+                    pages = pages + '--' + page_node.get('to')
+    except AttributeError:
         pass
     return pages
 
@@ -231,7 +235,7 @@ def get_reference_doi(reference):
     try:
         if reference.find('.//' + ns['tei'] + 'idno') is not None:
             doi = reference.find('.//' + ns['tei'] + 'idno').text
-    except:
+    except AttributeError:
         pass
     return doi
 
@@ -295,7 +299,7 @@ def get_bib_db_from_tei(tei):
             author_string = row['authors'].split(' ')[0]\
                                           .capitalize()\
                                           .replace(',', '')
-        except:
+        except AttributeError:
             pass
         entry.update(ID=author_string + row['year'])
         entry.update(ENTRYTYPE='article')
@@ -379,7 +383,7 @@ def check_grobid_availability():
             r = requests.get(GROBID_URL + '/api/isalive')
             if r.text == 'true':
                 i = -1
-        except:
+        except requests.exceptions.ConnectionError:
             pass
         if i == -1:
             break
@@ -406,15 +410,10 @@ def transform(pdf_filename, tei_filename):
 
 
 def main():
-    print('')
-    print('')
 
     print('Backward search')
-
     start_grobid()
-
     citation_keys = utils.get_included_papers()
-
     if not os.path.exists('search/backward'):
         os.mkdir('search/backward')
 

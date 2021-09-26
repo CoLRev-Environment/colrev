@@ -174,8 +174,6 @@ def acquire_pdfs(bib_database, screen):
 
 
 def main():
-    print('')
-    print('')
 
     print('Acquire PDFs')
 
@@ -206,6 +204,8 @@ def main():
         )
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    # TODO: create commit
 
 
 if __name__ == '__main__':

@@ -24,12 +24,35 @@ DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 entry_type_mapping = {'a': 'article', 'i': 'inproceedings', 'b': 'book'}
 
 
+def create_commit(bib_database):
+
+    r = git.Repo('')
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
+            MAIN_REFERENCES in r.untracked_files:
+
+        r.index.add([MAIN_REFERENCES, 'search/completion_edits.csv'])
+
+        hook_skipping = 'false'
+        if not DEBUG_MODE:
+            hook_skipping = 'true'
+        r.index.commit(
+            'Complete records for import',
+            author=git.Actor(
+                'manual (using complete_manual.py)', ''),
+            skip_hooks=hook_skipping
+        )
+
+    return
+
+
 def main():
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
 
-    # TBD: load completion_edits to avoid inserting redundant data?
+    # TODO: load completion_edits to avoid inserting redundant data?
 
     existing_hash_ids = [entry['hash_id'].split(',') for
                          entry in bib_database.entries
@@ -125,25 +148,7 @@ def main():
         for completion_edit in completion_edits:
             writer.writerow(completion_edit)
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    r = git.Repo('')
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
-
-        r.index.add([MAIN_REFERENCES, 'search/completion_edits.csv'])
-
-        hook_skipping = 'false'
-        if not DEBUG_MODE:
-            hook_skipping = 'true'
-        r.index.commit(
-            'Complete records for import',
-            author=git.Actor(
-                'manual (using complete_manual.py)', ''),
-            skip_hooks=hook_skipping
-        )
-
-    print('Completed task. To continue, use \n\n   make main')
+    create_commit(bib_database)
 
 
 if __name__ == '__main__':

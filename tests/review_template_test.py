@@ -4,7 +4,6 @@ import pytest
 from click.testing import CliRunner
 
 from review_template import cli
-from review_template import review_template
 
 
 @pytest.fixture

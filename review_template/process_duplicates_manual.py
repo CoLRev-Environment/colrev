@@ -116,10 +116,12 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
                 'hash_id']:
         if key == 'hash_id':
             prefix = key + ': '
-            print(ansiwrap.fill(f'{colors.GREEN}{main_entry[key]}{colors.END}',
+            me_key = main_entry[key]
+            print(ansiwrap.fill(f'{colors.GREEN}{me_key}{colors.END}',
                                 initial_indent=prefix.ljust(prefix_len),
                                 subsequent_indent=' '*prefix_len))
-            print(ansiwrap.fill(f'{colors.RED}{duplicate_entry[key]}{colors.END}',
+            de_key = duplicate_entry[key]
+            print(ansiwrap.fill(f'{colors.RED}{de_key}{colors.END}',
                                 initial_indent=prefix.ljust(prefix_len),
                                 subsequent_indent=' '*prefix_len))
         elif key in added_fields:
