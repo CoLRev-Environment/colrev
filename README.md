@@ -41,7 +41,7 @@ To install crowd-sourced resources, include them as submodules as follows:
 git submodule add https://github.com/geritwagner/crowd_resource_information_systems
 ```
 
-Further instructions are available in the [analysis/readme.md](analysis/readme.md).
+Further instructions are available in the documentation (add-link-here).
 
 
 # Features
