@@ -2,17 +2,24 @@
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-
-Conducting high-quality literature reviews is a key challenge for generations.
-Researchers must be prepared to develop high-quality, rigorous, and insightful reviews while coping with staggering growth and diversity of research output.
-This project aims at facilitating review projects based on a robust, scalable, and traceable pipeline.
-The most innovative part of our pipeline pertains to the use of *hash_ids* to trace papers from the moment they are returned from an academic literature database.
-This makes the process reproducible and the iterative search process much more efficient.
-More broadly, our aspiration is to automate repetitive and laborious tasks in which machines perform better than researchers, saving time for the more demanding and creative tasks of a literature review.
-For this purpose, this project is designed as a strategic platform to validate and integrate further extensions.
+- Git-based (collaborative) literature reviews
+- Easy to learn and use: one command (review_template status) shows an overview and contextual instructions (based on the current dataset, collaboration approach, ...)
+- Respects methodological and typological pluralism through configurable templates for
+  - informal literature reviews (e.g., for a related work section) or
+  - standalone review papers requiring extraction and analysis of structured data (e.g., critical reviews, descriptive reviews, meta-analysis, qualitative systematic reviews, realist reviews)
+  - standalone review papers requiring interpretive analyses and syntheses of (semi) structured data (e.g., narrative reviews, scoping reviews, theoretical reviews, umbrella reviews)
+- Right amount of automation (completion of fields, cleansing, merging) supporting you to achieve accurate results while saving time [link: what's automated/what's not]
+- Collaboration protocols
+- Changes of other researchers, scripts, and crowds can be visualized and validated
+- Verifiable traceability (always know where each record is and how it got there)
+- Cross-platform and tested (Windows, Linux, MacOs)
+- Aimed at preventing errors (erroneous merging of records, analysis of wrong PDFs, or non-machine-readable PDFs)
+- Designed with 10+ years of experience conducting and publishing literature reviews, methods and commentary papers, teaching PhD level courses on literature reviews.
 
 
 # Installation and usage
+
+Install [git and a git gui](https://git-scm.com/downloads), such as [GitHub Desktop](https://desktop.github.com/) for Windows/macOS.
 
 ```
 # Installation (currently, while not yet available via pip)
