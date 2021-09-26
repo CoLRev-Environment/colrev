@@ -188,6 +188,8 @@ def load_bib_database(target_commit):
 
 def main(scope, target_commit):
 
+    # TODO: extension: filter for changes of contributor (git author)
+
     bib_database = load_bib_database(target_commit)
 
     # Note: search entries are considered immutable

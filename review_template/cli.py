@@ -4,16 +4,6 @@ import sys
 
 import click
 import git
-import yaml
-
-from review_template import entry_hash_function
-
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
 class SpecialHelpOrder(click.Group):
@@ -209,7 +199,6 @@ def trace_hash_id(ctx, hash_id):
     trace_hash_id.main(hash_id)
 
 
-
 @main.command(help_priority=16)
 @click.argument('search_file', type=click.Path(exists=True))
 @click.option('--id', help='ID of the record (citation_key).', required=True)
@@ -227,7 +216,6 @@ def trace_entry(ctx, id):
     """Trace an entry"""
     from review_template import trace_entry
     trace_entry.main(id)
-
 
 
 if __name__ == '__main__':
