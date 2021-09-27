@@ -123,13 +123,13 @@ def get_db_with_completion_edits(bib_file):
     return db
 
 
-def get_processed_hash_ids():
-    processed_hash_ids = []
-    with open('processed_hash_ids.csv') as read_obj:
+def get_imported_hash_ids():
+    imported_hash_ids = []
+    with open('imported_hash_ids.csv') as read_obj:
         csv_reader = csv.reader(read_obj)
         for row in csv_reader:
-            processed_hash_ids.append(row[0])
-    return processed_hash_ids
+            imported_hash_ids.append(row[0])
+    return imported_hash_ids
 
 
 def save_new_completion_edits(new_completion_edits):
@@ -150,7 +150,7 @@ def save_new_completion_edits(new_completion_edits):
 
 def load_entries(bib_file):
 
-    processed_hash_ids = get_processed_hash_ids()
+    imported_hash_ids = get_imported_hash_ids()
     individual_bib_database = get_db_with_completion_edits(bib_file)
     entry_list, new_completion_edits = [], []
     for entry in individual_bib_database.entries:
@@ -187,7 +187,7 @@ def load_entries(bib_file):
         if is_sufficiently_complete(entry):
             hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
             entry.update(hash_id=hid)
-            if entry['hash_id'] not in processed_hash_ids:
+            if entry['hash_id'] not in imported_hash_ids:
                 entry.update(status='not_imported')
                 entry_list.append(entry)
         else:
@@ -200,15 +200,15 @@ def load_entries(bib_file):
     return entry_list
 
 
-def save_processed_hash_ids(bib_database):
+def save_imported_hash_ids(bib_database):
 
-    processed_hash_ids = [entry['hash_id'].split(',') for
-                          entry in bib_database.entries
-                          if not 'needs_manual_completion' == entry['status']]
-    processed_hash_ids = list(itertools.chain(*processed_hash_ids))
+    imported_hash_ids = [entry['hash_id'].split(',') for
+                         entry in bib_database.entries
+                         if not 'needs_manual_completion' == entry['status']]
+    imported_hash_ids = list(itertools.chain(*imported_hash_ids))
 
-    with open('processed_hash_ids.csv', 'a') as fd:
-        for p_hid in processed_hash_ids:
+    with open('imported_hash_ids.csv', 'a') as fd:
+        for p_hid in imported_hash_ids:
             fd.write(p_hid + '\n')
 
     return
@@ -218,14 +218,14 @@ def load_additional_records(bib_database):
 
     # Note: only add search_results if their hash_id is not already
     # in bib_database (important for parallel load_entries())
-    save_processed_hash_ids(bib_database)
+    save_imported_hash_ids(bib_database)
 
     pool = mp.Pool(processes=CPUS)
     additional_records = pool.map(load_entries, [utils.get_bib_files()])
     additional_records = list(chain(*additional_records))
 
     # do not import records with status=needs_manual_completion
-    # note: this cannot be done based on processed_hash_ids
+    # note: this cannot be done based on imported_hash_ids
     # (because the record is not complete enough for hash_id creation)
     # but we can use the 'source_file_path' and 'source_id' fields instead
     non_complete_sources = [[entry['source_file_path'], entry['source_id']] for
@@ -264,8 +264,8 @@ def load(bib_database):
             del entry['source_file_path']
             entry.update(status='imported')
 
-    if os.path.exists('processed_hash_ids.csv'):
-        os.remove('processed_hash_ids.csv')
+    if os.path.exists('imported_hash_ids.csv'):
+        os.remove('imported_hash_ids.csv')
 
     return additional_records
 
