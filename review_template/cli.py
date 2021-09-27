@@ -98,18 +98,18 @@ def proc_duplicates_manual(ctx):
 
 @main.command(help_priority=7)
 @click.pass_context
-def screen_1(ctx):
-    """Execute screen 1"""
-    from review_template import screen_1
-    screen_1.main()
+def pre_screen(ctx):
+    """Execute pre-screen"""
+    from review_template import pre_screen
+    pre_screen.main()
 
 
 @main.command(help_priority=8)
 @click.pass_context
-def screen_2(ctx):
-    """Execute screen 2"""
-    from review_template import screen_2
-    screen_2.main()
+def screen(ctx):
+    """Execute screen"""
+    from review_template import screen
+    screen.main()
 
 
 @main.command(help_priority=9)

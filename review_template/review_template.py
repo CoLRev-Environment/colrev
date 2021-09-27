@@ -85,12 +85,12 @@ def main():
     #     🡻    needs_manual_merging
     #     🡻   🢇 (process_duplicates_manual)
     # processed
-    #     🡻   🢆 (screen_1)
+    #     🡻   🢆 (pre_screen)
     #     🡻     pre_screen_excluded
     # pre_screened
     #     🡻  (acquire_pdfs)
     # pdf_acquired
-    #     🡻   🢆 (screen_2)
+    #     🡻   🢆 (screen)
     #     🡻     excluded
     # included
     #     🡻  (data)
