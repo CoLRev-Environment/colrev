@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import itertools
+import os
 import pprint
 
 import git
@@ -47,12 +48,39 @@ def create_commit(bib_database):
     return
 
 
+def apply_completion_edits(bib_database):
+
+    completion_edits = []
+    if os.path.exists('search/completion_edits.csv'):
+        with open('search/completion_edits.csv') as read_obj:
+            csv_reader = csv.DictReader(read_obj)
+            line_count = 0
+            for row in csv_reader:
+                if line_count == 0:
+                    line_count += 1
+                completion_edits.append([row['source_file_path'],
+                                         row['source_id'],
+                                         row['key'],
+                                         row['value']])
+
+    for entry in bib_database.entries:
+        for completion_edit in completion_edits:
+            if completion_edit[0] == entry.get('source_file_path', 'NA') and \
+                    completion_edit[1] == entry.get('source_id', 'NA'):
+                entry[completion_edit[2]] = completion_edit[3]
+
+    return bib_database
+
+
 def main():
+
+    print('Loading records for manual completion...')
+
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
-
     # TODO: load completion_edits to avoid inserting redundant data?
+    bib_database = apply_completion_edits(bib_database)
 
     existing_hash_ids = [entry['hash_id'].split(',') for
                          entry in bib_database.entries
@@ -62,12 +90,23 @@ def main():
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
 
     completion_edits = []
+    if not os.path.exists('search/completion_edits.csv'):
+        completion_edits.append(['source_file_path', 'source_id',
+                                 'key', 'value'])
+
     pp = pprint.PrettyPrinter(indent=4)
     for entry in [x for x in bib_database.entries
                   if 'needs_manual_completion' == x['status']]:
+        if importer.is_sufficiently_complete(entry):
+            # this can be the case if completion_edits have been stored/applied
+            continue
+
         # Escape sequence to clear terminal output for each new comparison
         print(chr(27) + '[2J')
         pp.pprint(entry)
+        if 'title' in entry:
+            print('https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q=' +
+                  entry['title'].replace(' ', '+'))
         if 'n' == input('ENTRYTYPE=' + entry['ENTRYTYPE'] + ' correct?'):
             correct_entry_type = input('Correct type: ' +
                                        'a (article), i (inproceedings), ' +
@@ -95,7 +134,7 @@ def main():
                 value = input('Please provide the issue (or NA)')
                 completion_edits.append([entry['source_file_path'],
                                          entry['source_id'],
-                                         field,
+                                         'number',
                                          value])
                 entry['issue'] = value
 
@@ -121,10 +160,21 @@ def main():
 
         # ELSE: title, author, year, any-container-title
 
+        with open('search/completion_edits.csv', 'a') as wr_obj:
+            writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
+            for completion_edit in completion_edits:
+                writer.writerow(completion_edit)
+        completion_edits = []
+
+    # Note: start in new loop because the procedure can be interrupted.gs
+
+    for entry in [x for x in bib_database.entries
+                  if 'needs_manual_completion' == x['status']]:
+
         if importer.is_sufficiently_complete(entry):
             # Note: NA is used to indicate that there is no value for the field
             # (but it is not needed), e.g., some journals have no issue numbers
-            for key in entry.keys():
+            for key in list(entry):
                 if 'NA' == entry[key]:
                     del entry[key]
 
@@ -142,11 +192,6 @@ def main():
                     entry_in_bib_db=True,
                     raise_error=False))
                 citation_key_list.append(entry['ID'])
-
-    with open('search/completion_edits.csv', 'a') as wr_obj:
-        writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-        for completion_edit in completion_edits:
-            writer.writerow(completion_edit)
 
     create_commit(bib_database)
 
