@@ -28,7 +28,6 @@ DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 MERGING_NON_DUP_THRESHOLD = \
     shared_config['params']['MERGING_NON_DUP_THRESHOLD']
 MERGING_DUP_THRESHOLD = shared_config['params']['MERGING_DUP_THRESHOLD']
-REVIEW_STRATEGY = shared_config['params']['REVIEW_STRATEGY']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
