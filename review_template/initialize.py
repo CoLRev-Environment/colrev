@@ -44,7 +44,6 @@ def initialize_repo():
         '../template/.pre-commit-config.yaml',
         '.pre-commit-config.yaml',
     )
-    shutil.copyfile('../docker-compose.yml', 'docker-compose.yml')
     shutil.copyfile('../template/.gitattributes', '.gitattributes')
     shutil.copyfile('../template/private_config.yaml', 'private_config.yaml')
     shutil.copyfile('../template/shared_config.yaml', 'shared_config.yaml')
@@ -52,7 +51,8 @@ def initialize_repo():
     # Note: need to write the .gitignore because file would otherwise be
     # ignored in the template directory.
     f = open('.gitignore', 'w')
-    f.write('*.bib.sav\nprivate_config.yaml')
+    f.write('*.bib.sav\nprivate_config.yaml\n.local_pdf_indices' +
+            '\n.index-*\nmissing_pdf_files.csv')
     f.close()
 
     os.system('pre-commit install')
