@@ -221,7 +221,7 @@ def load_additional_records(bib_database):
     save_imported_hash_ids(bib_database)
 
     pool = mp.Pool(processes=CPUS)
-    additional_records = pool.map(load_entries, [utils.get_bib_files()])
+    additional_records = pool.map(load_entries, utils.get_bib_files())
     additional_records = list(chain(*additional_records))
 
     # do not import records with status=needs_manual_completion
