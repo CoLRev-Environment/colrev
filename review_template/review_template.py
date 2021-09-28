@@ -68,45 +68,10 @@ def process_entries(search_records, bib_database):
 
 
 def main():
-    # Explanation: each record should have status information
-    # (at the end, no status information indicates that all processing steps
-    # have been completed)each record is propagated as far as possible
-    # (stopping as needs_manual_cleansing or needs_manual_merging if necessary)
-    #
-    #     🡻    🡻 (load)
-    #     🡻    needs_manual_completion
-    #     🡻   🢇 (complete_manual)
-    # imported
-    #     🡻   🢆 (cleanse)
-    #     🡻    needs_manual_cleansing
-    #     🡻   🢇 (cleanse_manual)
-    # cleansed
-    #     🡻   🢆 (merge)
-    #     🡻    needs_manual_merging
-    #     🡻   🢇 (process_duplicates_manual)
-    # processed
-    #     🡻   🢆 (pre_screen)
-    #     🡻     pre_screen_excluded
-    # pre_screened
-    #     🡻  (acquire_pdfs)
-    # pdf_acquired
-    #     🡻   🢆 (screen)
-    #     🡻     excluded
-    # included
-    #     🡻  (data)
-    # coded
-
-    # TBD: screening/coding status: also in the bib-files?
-    # exclusion-criteria in a separate table. (inclusion=no entry in the
-    # exlusion-criteria table; no screen = all included,
-    # i.e., no entries in the exclusion-criteria table)
-    # pre_screen_excluded/pre_screened, excluded/included: optional
 
     global r
     r = initialize.get_repo()
 
-    print('TODO: test repeated call of main.py')
-    print('TODO: crowd-based merging')
     # Currently, citation_keys are generated
     # in importer.load()
     # We may discuss whether/how to generate new citation_keys
