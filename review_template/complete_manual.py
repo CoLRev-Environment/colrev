@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import csv
-import itertools
 import os
 import pprint
 
@@ -33,7 +32,7 @@ def create_commit(bib_database):
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
 
-        r.index.add([MAIN_REFERENCES, 'search/completion_edits.csv'])
+        r.index.add([MAIN_REFERENCES])
 
         hook_skipping = 'false'
         if not DEBUG_MODE:
@@ -79,27 +78,12 @@ def main():
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
-    # TODO: load completion_edits to avoid inserting redundant data?
-    bib_database = apply_completion_edits(bib_database)
-
-    existing_hash_ids = [entry['hash_id'].split(',') for
-                         entry in bib_database.entries
-                         if not 'needs_manual_completion' == entry['status']]
-    existing_hash_ids = list(itertools.chain(*existing_hash_ids))
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
 
-    completion_edits = []
-    if not os.path.exists('search/completion_edits.csv'):
-        completion_edits.append(['source_file_path', 'source_id',
-                                 'key', 'value'])
-
-    pp = pprint.PrettyPrinter(indent=4)
+    pp = pprint.PrettyPrinter(indent=4, width=140)
     for entry in [x for x in bib_database.entries
                   if 'needs_manual_completion' == x['status']]:
-        if importer.is_sufficiently_complete(entry):
-            # this can be the case if completion_edits have been stored/applied
-            continue
 
         # Escape sequence to clear terminal output for each new comparison
         print(chr(27) + '[2J')
@@ -115,61 +99,30 @@ def main():
             correct_entry_type = [value for (key, value)
                                   in entry_type_mapping.items()
                                   if key == correct_entry_type]
-            completion_edits.append([entry['source_file_path'],
-                                     entry['source_id'],
-                                     'ENTRYTYPE',
-                                     correct_entry_type[0]])
             entry['ENTRYTYPE'] = correct_entry_type[0]
 
         if 'article' == entry['ENTRYTYPE']:
             for field in ['title', 'author', 'year', 'journal', 'volume']:
                 if field not in entry:
                     value = input('Please provide the ' + field + ' (or NA)')
-                    completion_edits.append([entry['source_file_path'],
-                                             entry['source_id'],
-                                             field,
-                                             value])
                     entry[field] = value
             if 'issue' not in entry and 'number' not in entry:
-                value = input('Please provide the issue (or NA)')
-                completion_edits.append([entry['source_file_path'],
-                                         entry['source_id'],
-                                         'number',
-                                         value])
-                entry['issue'] = value
+                value = input('Please provide the number (or NA)')
+                entry['number'] = value
 
         if 'inproceedings' == entry['ENTRYTYPE']:
             for field in ['title', 'author', 'booktitle', 'year']:
                 if field not in entry:
                     value = input('Please provide the ' + field + ' (or NA)')
-                    completion_edits.append([entry['source_file_path'],
-                                             entry['source_id'],
-                                             field,
-                                             value])
                     entry[field] = value
 
         if 'book' == entry['ENTRYTYPE']:
             for field in ['title', 'author', 'year']:
                 if field not in entry:
                     value = input('Please provide the ' + field + ' (or NA)')
-                    completion_edits.append([entry['source_file_path'],
-                                             entry['source_id'],
-                                             field,
-                                             value])
                     entry[field] = value
 
         # ELSE: title, author, year, any-container-title
-
-        with open('search/completion_edits.csv', 'a') as wr_obj:
-            writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-            for completion_edit in completion_edits:
-                writer.writerow(completion_edit)
-        completion_edits = []
-
-    # Note: start in new loop because the procedure can be interrupted.gs
-
-    for entry in [x for x in bib_database.entries
-                  if 'needs_manual_completion' == x['status']]:
 
         if importer.is_sufficiently_complete(entry):
             # Note: NA is used to indicate that there is no value for the field
@@ -179,19 +132,16 @@ def main():
                     del entry[key]
 
             entry = importer.drop_fields(entry)
-            entry.update(status='imported')
             hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
             entry.update(hash_id=hid)
-            del entry['source_file_path']
-            del entry['source_id']
-            if hid in existing_hash_ids:
-                entry = None
-            else:
-                entry.update(ID=utils.generate_citation_key_blacklist(
-                    entry, citation_key_list,
-                    entry_in_bib_db=True,
-                    raise_error=False))
-                citation_key_list.append(entry['ID'])
+            entry.update(ID=utils.generate_citation_key_blacklist(
+                entry, citation_key_list,
+                entry_in_bib_db=True,
+                raise_error=False))
+            entry.update(status='imported')
+            citation_key_list.append(entry['ID'])
+
+            utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     create_commit(bib_database)
 

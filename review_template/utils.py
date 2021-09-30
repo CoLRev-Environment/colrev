@@ -260,6 +260,7 @@ def format_author_field(input_string):
     # also in entry_hash_function.py - consider updating it separately
 
     # DBLP appends identifiers to non-unique authors
+    input_string = input_string.replace('\n', ' ')
     input_string = str(re.sub(r'[0-9]{4}', '', input_string))
 
     names = input_string.split(' and ')
@@ -442,6 +443,7 @@ def save_bib_file(bib_database, target_file):
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
         'hash_id',
+        'entry_link',
         'doi',
         'author',
         'booktitle',
@@ -529,3 +531,12 @@ def get_included_papers():
 
 def get_package_details():
     return 'review_template (version ' + version('review_template') + ')'
+
+
+def get_version_flags():
+    flag, flag_details = '', ''
+    if 'dirty' in get_package_details():
+        flag = ' ⚠️'
+        flag_details = '\n - ⚠: created with a dirty repository version ' + \
+            '(not reproducible)'
+    return flag, flag_details

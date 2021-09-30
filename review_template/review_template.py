@@ -15,6 +15,8 @@ from review_template import utils
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+DELAY_AUTOMATED_PROCESSING = \
+    shared_config['params']['DELAY_AUTOMATED_PROCESSING']
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
@@ -39,6 +41,22 @@ else:
     BATCH_SIZE = shared_config['params']['BATCH_SIZE']
 
 
+def check_delay(bib_database, min_status):
+    if not DELAY_AUTOMATED_PROCESSING:
+        return False
+
+    cur_status = [x.get('status', 'NA') for x in bib_database.entries]
+    if 'imported' == min_status:
+        if 'needs_manual_completion' in cur_status:
+            return True
+    if 'cleansed' == min_status:
+        if any(x in cur_status
+               for x in ['imported', 'needs_manual_completion']):
+            return True
+
+    return False
+
+
 def process_entries(search_records, bib_database):
     global r
 
@@ -48,7 +66,10 @@ def process_entries(search_records, bib_database):
     [bib_database.entries.append(entry) for entry in search_records]
     # for entry in search_records:
     #     entry = importer.preprocess(entry)
-    importer.create_commit(r, bib_database, ['full_review mode'])
+    importer.create_commit(r, bib_database)
+
+    if check_delay(bib_database, 'imported'):
+        return bib_database
 
     print('Cleanse')
     bib_database.entries = \
@@ -57,12 +78,17 @@ def process_entries(search_records, bib_database):
     #     entry = (cleanse_records.cleanse(entry)
     cleanse_records.create_commit(r, bib_database)
 
+    if check_delay(bib_database, 'cleansed'):
+        return bib_database
+
     print('Process duplicates')
     pool.map(process_duplicates.append_merges, bib_database.entries)
     # for entry in bib_database.entries:
     #     append_merges(entry)
     bib_database = process_duplicates.apply_merges(bib_database)
     process_duplicates.create_commit(r, bib_database)
+
+    # TODO :continue (backward search, ...) considering check_continue(...)
 
     return bib_database
 

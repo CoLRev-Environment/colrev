@@ -4,7 +4,6 @@ import itertools
 import os
 import re
 
-import bibtexparser
 import git
 import pandas as pd
 import yaml
@@ -24,6 +23,9 @@ with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
+EMAIL = private_config['params']['EMAIL']
+
 
 MERGING_NON_DUP_THRESHOLD = \
     shared_config['params']['MERGING_NON_DUP_THRESHOLD']
@@ -60,30 +62,30 @@ def get_entry_similarity(entry_a, entry_b):
         entry_a['author'] = ''
     if 'year' not in entry_a:
         entry_a['year'] = ''
-    if 'journal' in entry_a:
-        if 'volume' not in entry_a:
-            entry_a['volume'] = ''
-        if 'number' not in entry_a:
-            entry_a['number'] = ''
-        if 'pages' not in entry_a:
-            entry_a['pages'] = ''
-    else:
-        if 'booktitle' not in entry_a:
-            entry_a['booktitle'] = ''
+    if 'journal' not in entry_a:
+        entry_a['journal'] = ''
+    if 'volume' not in entry_a:
+        entry_a['volume'] = ''
+    if 'number' not in entry_a:
+        entry_a['number'] = ''
+    if 'pages' not in entry_a:
+        entry_a['pages'] = ''
+    if 'booktitle' not in entry_a:
+        entry_a['booktitle'] = ''
     if 'author' not in entry_b:
         entry_b['author'] = ''
     if 'year' not in entry_b:
         entry_b['year'] = ''
-    if 'journal' in entry_b:
-        if 'volume' not in entry_b:
-            entry_b['volume'] = ''
-        if 'number' not in entry_b:
-            entry_b['number'] = ''
-        if 'pages' not in entry_b:
-            entry_b['pages'] = ''
-    else:
-        if 'booktitle' not in entry_b:
-            entry_b['booktitle'] = ''
+    if 'journal' not in entry_b:
+        entry_b['journal'] = ''
+    if 'volume' not in entry_b:
+        entry_b['volume'] = ''
+    if 'number' not in entry_b:
+        entry_b['number'] = ''
+    if 'pages' not in entry_b:
+        entry_b['pages'] = ''
+    if 'booktitle' not in entry_b:
+        entry_b['booktitle'] = ''
 
     if 'container_title' not in entry_a:
         entry_a['container_title'] = entry_a.get('journal', '') + \
@@ -291,6 +293,13 @@ def append_merges(entry):
         modification_check=False, initialize=False,
     )
 
+    # add all processed entries to the queue order before first (re)run
+    if not os.path.exists('queue_order.csv'):
+        with open('queue_order.csv', 'a') as fd:
+            for x in bib_database.entries:
+                if 'processed' == x.get('status', 'NA'):
+                    fd.write(x['hash_id'] + '\n')
+
     # the order matters for the incremental merging (make sure that each
     # additional record is compared to/merged with all prior records in
     # the queue)
@@ -313,7 +322,7 @@ def append_merges(entry):
 
     # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
-    if len(bib_database.entries) < 2:
+    if len(required_prior_hash_ids) < 2:
         # entry.update(status = 'processed')
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
@@ -329,7 +338,9 @@ def append_merges(entry):
     #                  if any(hash_id in x['hash_id'].split(',')
     #                         for hash_id in required_prior_hash_ids)]
 
-    merge_ignore_status = ['needs_manual_cleansing', 'needs_manual_completion']
+    merge_ignore_status = ['needs_manual_cleansing',
+                           'needs_manual_completion',
+                           'needs_manual_merging']
 
     prior_entries = [x for x in bib_database.entries
                      if x.get('status', 'NA') not in merge_ignore_status]
@@ -339,6 +350,12 @@ def append_merges(entry):
                             for hash_id in required_prior_hash_ids)]
 
     if len(prior_entries) < 1:
+        # Note: the first entry is a non_duplicate (by definition)
+        if not os.path.exists('non_duplicates.csv'):
+            with open('non_duplicates.csv', 'a') as fd:
+                fd.write('"ID"\n')
+        with open('non_duplicates.csv', 'a') as fd:
+            fd.write('"' + entry['ID'] + '"\n')
         return
 
     # df to get_similarities for each other entry
@@ -424,6 +441,7 @@ def apply_merges(bib_database):
                     if entry['ID'] == row[1]:
                         print('drop ' + entry['ID'])
                         hash_ids_to_merge = entry['hash_id'].split(',')
+                        el_to_merge = entry['entry_link'].split(';')
                         # Drop the duplicated entry
                         bib_database.entries = \
                             [i for i in bib_database.entries
@@ -434,6 +452,9 @@ def apply_merges(bib_database):
                         hash_ids = list(set(hash_ids_to_merge +
                                         entry['hash_id'].split(',')))
                         entry.update(hash_id=str(','.join(sorted(hash_ids))))
+                        els = list(set(el_to_merge +
+                                       entry['entry_link'].split(';')))
+                        entry.update(entry_link=str(';'.join(els)))
                         if 'cleansed' == entry['status']:
                             entry.update(status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
@@ -457,7 +478,7 @@ def apply_merges(bib_database):
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 for entry in bib_database.entries:
-                    if entry['ID'] == row[1]:
+                    if (entry['ID'] == row[1]) or (entry['ID'] == row[2]):
                         entry.update(status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
@@ -500,75 +521,19 @@ def create_commit(r, bib_database):
             r.index.add([MAIN_REFERENCES])
             if os.path.exists('potential_duplicate_tuples.csv'):
                 r.index.add(['potential_duplicate_tuples.csv'])
+
+            flag, flag_details = utils.get_version_flags()
+
             r.index.commit(
-                '⚙️ Merge duplicates' + merge_details +
+                '⚙️ Process duplicates' + flag + flag_details +
+                merge_details +
                 '\n - ' + utils.get_package_details(),
                 author=git.Actor('script:process_duplicates.py', ''),
+                committer=git.Actor(GIT_ACTOR, EMAIL),
+
             )
     return
 
 
-def test_merge():
-
-    bibtex_str = """@article{Appan2012,
-                    author    = {Appan, and Browne,},
-                    journal   = {MIS Quarterly},
-                    title     = {The Impact of Analyst-Induced Misinformation},
-                    year      = {2012},
-                    number    = {1},
-                    pages     = {85},
-                    volume    = {36},
-                    doi       = {10.2307/41410407},
-                    hash_id   = {300a3700f5440cb37f39b05c866dc0a33cefb78de93c},
-                    }
-
-                    @article{Appan2012a,
-                    author    = {Appan, Radha and Browne, Glenn J.},
-                    journal   = {MIS Quarterly},
-                    title     = {The Impact of Analyst-Induced Misinformation},
-                    year      = {2012},
-                    number    = {1},
-                    pages     = {22},
-                    volume    = {36},
-                    doi       = {10.2307/41410407},
-                    hash_id   = {427967442a90d7f27187e66fd5b66fa94ab2d5da1bf9},
-                    }"""
-
-    bib_database = bibtexparser.loads(bibtex_str)
-    entry_a = bib_database.entries[0]
-    entry_b = bib_database.entries[1]
-    df_a = pd.DataFrame.from_dict([entry_a])
-    df_b = pd.DataFrame.from_dict([entry_b])
-
-    print(get_similarity(df_a.iloc[0], df_b.iloc[0]))
-
-    return
-
-
 if __name__ == '__main__':
-    test_merge()
-    input('continue')
-
     print('')
-    print('')
-
-    # print('Remove the following restriction:')
-    # bib_database.entries = bib_database.entries[:100]
-
-
-#
-#    references, tuples_to_process = \
-#        interactively_merge_entries(references,
-#                                    tuples_to_process)
-#
-#    store_changes(references, bib_database)
-#
-#    # create a commit if there are changes (removed duplicates)
-#    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-#        r.index.add([MAIN_REFERENCES])
-#        r.index.commit(
-#            'Process duplicates (manual) \n\n - using process_duplicates.py')
-#
-#    duplicates_removed = nr_current_entries - len(bib_database.entries)
-#    print('Duplicates removed: ' + str(duplicates_removed))
-# print('')

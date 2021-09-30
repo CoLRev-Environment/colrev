@@ -10,7 +10,6 @@ with open('README.md') as readme_file:
 with open('CHANGELOG.md') as changelog_file:
     changelog = changelog_file.read()
 
-
 requirements = ['Click>=7.0',
                 'ansiwrap==0.8.4',
                 'bibtexparser==1.2.0',
@@ -76,6 +75,9 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     include_package_data=True,
+    package_data={
+        '': ['template*'],
+    },
     packages=find_packages(include=['review_template', 'review_template.*']),
     keywords='review_template',
     zip_safe=False,

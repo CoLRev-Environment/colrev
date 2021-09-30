@@ -69,6 +69,8 @@ def process(ctx):
 @click.pass_context
 def status(ctx):
     """Show status"""
+    from review_template import status
+    status.main()
     os.system('pre-commit run -a')
 
 

@@ -32,8 +32,9 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
-EMAIL = private_config['params']['EMAIL']
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+EMAIL = private_config['params']['EMAIL']
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
 
 EMPTY_RESULT = {
     'crossref_title': '',
@@ -517,33 +518,18 @@ def create_commit(r, bib_database):
 
         r.index.add([MAIN_REFERENCES])
 
+        flag, flag_details = utils.get_version_flags()
+
         r.index.commit(
-            '⚙️ Cleanse ' + MAIN_REFERENCES +
+            '⚙️ Cleanse ' + MAIN_REFERENCES + flag + flag_details +
             '\n - ' + utils.get_package_details(),
             author=git.Actor('script:cleanse_records.py', ''),
+            committer=git.Actor(GIT_ACTOR, EMAIL),
         )
 
         # print('Created commit: Cleanse ' + MAIN_REFERENCES)
     else:
-        print('No additional cleansed entries available')
-    return
-
-
-def manual_cleanse_commit():
-    r = git.Repo('')
-    r.index.add([MAIN_REFERENCES])
-
-    hook_skipping = 'false'
-    if not DEBUG_MODE:
-        hook_skipping = 'true'
-    r.index.commit(
-        'Cleanse manual ' + MAIN_REFERENCES +
-        '\n - ' + utils.get_package_details(),
-        author=git.Actor('manual:cleanse', ''),
-        skip_hooks=hook_skipping
-    )
-    print('Created commit: Cleanse manual ' + MAIN_REFERENCES)
-
+        print('- No additional cleansed entries available')
     return
 
 
