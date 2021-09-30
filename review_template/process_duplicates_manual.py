@@ -20,9 +20,13 @@ with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+EMAIL = private_config['params']['EMAIL']
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+
+removed_tuples = []
 
 
 def get_combined_hash_id_list(entry_a, entry_b):
@@ -34,6 +38,17 @@ def get_combined_hash_id_list(entry_a, entry_b):
                              + hash_ids_entry_b)
 
     return ','.join(combined_hash_list)
+
+
+def get_combined_entry_link_list(entry_a, entry_b):
+
+    els_entry_a = entry_a['entry_link'].split(';')
+    els_entry_b = entry_b['entry_link'].split(';')
+
+    combined_el_list = set(els_entry_a
+                           + els_entry_b)
+
+    return ';'.join(combined_el_list)
 
 
 class colors:
@@ -78,6 +93,7 @@ def print_diff(change, prefix_len):
 
 def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
     global quit_pressed
+    global removed_tuples
     # Note: all changes must be made to the main_entry (i.e., if we display
     # the main_entry on the left side and if the user selects "1", this
     # means "no changes to the main entry".)
@@ -158,6 +174,11 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
             main_entry, duplicate_entry)
         # Delete the other entry (entry_a_ID or entry_b_ID)
         main_entry.update(hash_id=combined_hash_list)
+        combined_el_list = get_combined_entry_link_list(
+            main_entry, duplicate_entry)
+        # Delete the other entry (entry_a_ID or entry_b_ID)
+        main_entry.update(entry_link=combined_el_list)
+
         main_entry.update(status='processed')
         bib_database.entries = [x for x in bib_database.entries
                                 if x['ID'] != duplicate_entry['ID']]
@@ -165,7 +186,6 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
 
     if 'n' == response:
         # do not merge entries/modify the bib_database
-        duplicate_entry.update(status='processed')
         removed_tuples.append([main_ID, duplicate_ID])
     # 'd' == response: TODO
         # Modification examples:
@@ -226,14 +246,21 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
 
 def manual_merge_commit():
     r = git.Repo('')
-    r.index.add([MAIN_REFERENCES, 'potential_duplicate_tuples.csv'])
+    r.git.add(update=True)
+    # deletion of 'potential_duplicate_tuples.csv' may added to git staging
+
     hook_skipping = 'false'
     if not DEBUG_MODE:
         hook_skipping = 'true'
 
+    flag, flag_details = utils.get_version_flags()
+
     r.index.commit(
-        'Merge manual ' + MAIN_REFERENCES,
-        author=git.Actor('manual:merge duplicates', ''),
+        'Process duplicates manually' + flag + flag_details +
+        '\n - Using process_duplicates_manual.py' +
+        '\n - ' + utils.get_package_details(),
+        author=git.Actor(GIT_ACTOR, EMAIL),
+        committer=git.Actor(GIT_ACTOR, EMAIL),
         skip_hooks=hook_skipping
     )
 
@@ -241,6 +268,7 @@ def manual_merge_commit():
 
 
 def main():
+    global removed_tuples
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
@@ -249,8 +277,6 @@ def main():
 
     first_entry_col = potential_duplicate.columns.get_loc('ID1')
     second_entry_col = potential_duplicate.columns.get_loc('ID2')
-
-    removed_tuples = []
 
     quit_pressed = False
     # Note: the potential_duplicate is ordered according to the last
@@ -269,6 +295,18 @@ def main():
         potential_duplicate.drop(potential_duplicate[
             (potential_duplicate['ID1'] == entry_a_ID) &
             (potential_duplicate['ID2'] == entry_b_ID)].index, inplace=True)
+        potential_duplicate.drop(potential_duplicate[
+            (potential_duplicate['ID1'] == entry_b_ID) &
+            (potential_duplicate['ID2'] == entry_a_ID)].index, inplace=True)
+
+    not_completely_processed = potential_duplicate['ID1'].tolist() + \
+        potential_duplicate['ID2'].tolist()
+
+    for entry in bib_database.entries:
+        if entry['ID'] not in not_completely_processed and \
+                'needs_manual_merging' == entry['status']:
+            entry['status'] = 'processed'
+
     if potential_duplicate.shape[0] == 0:
         os.remove('potential_duplicate_tuples.csv')
     else:
@@ -278,11 +316,12 @@ def main():
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    if stat.split('/')[0] == stat.split('/')[1]:
-        manual_merge_commit()
-    else:
+    # If there are remaining duplicates, ask whether to create a commit
+    if not stat.split('/')[0] == stat.split('/')[1]:
         if 'y' == input('Create commit (y/n)?'):
             manual_merge_commit()
+    else:
+        manual_merge_commit()
 
 
 if __name__ == '__main__':

@@ -29,10 +29,9 @@ pip install -e .
 # Goal:
 # pip install review_template
 
-# Usage (navigate to project directory)
-review_template process
+# Navigate to project directory (cd ...)
 review_template status
-
+# the status command will recommend the next processing steps and commands based on the state of the project
 ```
 
 To install crowd-sourced resources, include them as submodules as follows:

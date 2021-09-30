@@ -1,15 +1,17 @@
 #! /usr/bin/env python
 import itertools
+import multiprocessing as mp
 import os
 import pprint
+from itertools import chain
 
 import bibtexparser
 import dictdiffer
 import git
 import yaml
+from bibtexparser.customization import convert_to_unicode
 
 from review_template import entry_hash_function
-from review_template import importer
 from review_template import process_duplicates
 from review_template import utils
 
@@ -17,25 +19,38 @@ with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+if 'CPUS' not in private_config['params']:
+    CPUS = mp.cpu_count()-1
+else:
+    CPUS = private_config['params']['CPUS']
+
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
+def load_entries(bib_file):
+
+    with open(bib_file) as bibtex_file:
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
+            customization=convert_to_unicode, common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+        search_file = os.path.basename(bib_file)
+        for entry in individual_bib_database.entries:
+            entry['entry_link'] = search_file + '/' + entry['ID']
+
+    return individual_bib_database.entries
+
+
 def get_search_entries():
-    bib_files = utils.get_bib_files()
-    search_entries = importer.get_db_with_completion_edits(bib_files.pop())
-    for bib_file in bib_files:
-        add_search_entries = importer.get_db_with_completion_edits(bib_file)
-        [search_entries.entries.append(x) for x in add_search_entries.entries]
 
-    # No need to check sufficiently_complete metadata:
-    # incomplete records should not be merged.
-    for entry in search_entries.entries:
-        hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-        entry.update(hash_id=hid)
-        del entry['source_file_path']
+    pool = mp.Pool(processes=CPUS)
+    entries = pool.map(load_entries, utils.get_bib_files())
+    entries = list(chain(*entries))
 
-    return search_entries
+    return entries
 
 
 def validate_cleansing_changes(bib_database, search_entries):
@@ -45,35 +60,40 @@ def validate_cleansing_changes(bib_database, search_entries):
     for entry in bib_database.entries:
         if 'changed_in_target_commit' not in entry:
             continue
-        for current_hash_id in entry['hash_id'].split(','):
-            prior_entries = [x for x in search_entries.entries
-                             if current_hash_id in x['hash_id'].split(',')]
+        del entry['changed_in_target_commit']
+        del entry['status']
+        del entry['hash_id']
+        # del entry['entry_link']
+        for cur_entry_link in entry['entry_link'].split(';'):
+            prior_entries = [x for x in search_entries
+                             if cur_entry_link in x['entry_link'].split(',')]
             for prior_entry in prior_entries:
                 similarity = \
                     process_duplicates.get_entry_similarity(entry,
                                                             prior_entry)
-                change_difference.append([current_hash_id, similarity])
+                change_difference.append(
+                    [entry['ID'], cur_entry_link, similarity])
 
-    change_difference = [[x, y] for [x, y] in change_difference if y < 1]
+    change_difference = [[x, y, z] for [x, y, z] in change_difference if z < 1]
     # sort according to similarity
-    change_difference.sort(key=lambda x: x[1])
+    change_difference.sort(key=lambda x: x[2])
 
     if 0 == len(change_difference):
         print('No substantial differences found.')
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    for current_hash_id, similarity in change_difference:
+    for eid, entry_link, similarity in change_difference:
         # Escape sequence to clear terminal output for each new comparison
         print(chr(27) + '[2J')
-        print('Entry hash_id: ' + current_hash_id)
+        print('Entry with ID: ' + eid)
 
         print('Difference: ' + str(round(1-similarity, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries.entries
-                   if current_hash_id == x['hash_id']]
+        entry_1 = [x for x in search_entries
+                   if entry_link == x['entry_link']]
         pp.pprint(entry_1[0])
         entry_2 = [x for x in bib_database.entries
-                   if current_hash_id in x['hash_id']]
+                   if eid == x['ID']]
         pp.pprint(entry_2[0])
 
         print('\n\n')
@@ -97,20 +117,22 @@ def validate_merging_changes(bib_database, search_entries):
     for entry in bib_database.entries:
         if 'changed_in_target_commit' not in entry:
             continue
-        if ',' in entry['hash_id']:
+        del entry['changed_in_target_commit']
+        if ';' in entry['entry_link']:
             merged_entries = True
-            duplicate_hid_pairs = \
-                list(itertools.combinations(entry['hash_id'].split(','), 2))
-            for hash_id_1, hash_id_2 in duplicate_hid_pairs:
-                entry_1 = [x for x in search_entries.entries
-                           if hash_id_1 == x['hash_id']]
-                entry_2 = [x for x in search_entries.entries
-                           if hash_id_2 == x['hash_id']]
+            els = entry['entry_link'].split(';')
+            duplicate_el_pairs = \
+                list(itertools.combinations(els, 2))
+            for el_1, el_2 in duplicate_el_pairs:
+                entry_1 = [x for x in search_entries
+                           if el_1 == x['entry_link']]
+                entry_2 = [x for x in search_entries
+                           if el_2 == x['entry_link']]
 
                 similarity = \
                     process_duplicates.get_entry_similarity(entry_1[0],
                                                             entry_2[0])
-                change_difference.append([hash_id_1, hash_id_2, similarity])
+                change_difference.append([el_1, el_2, similarity])
 
     change_difference = [[x, y, z]
                          for [x, y, z] in change_difference if z < 1]
@@ -126,17 +148,17 @@ def validate_merging_changes(bib_database, search_entries):
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    for hash_id_1, hash_id_2, similarity in change_difference:
+    for el_1, el_2, similarity in change_difference:
         # Escape sequence to clear terminal output for each new comparison
         print(chr(27) + '[2J')
 
         print('Differences between merged entries: ' +
               str(round(1-similarity, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries.entries
-                   if hash_id_1 == x['hash_id']]
+        entry_1 = [x for x in search_entries
+                   if el_1 == x['entry_link']]
         pp.pprint(entry_1[0])
-        entry_2 = [x for x in search_entries.entries
-                   if hash_id_2 == x['hash_id']]
+        entry_2 = [x for x in search_entries
+                   if el_2 == x['entry_link']]
         pp.pprint(entry_2[0])
 
         if 'n' == input('continue (y/n)?'):
@@ -178,10 +200,9 @@ def load_bib_database(target_commit):
         for entry in bib_database.entries:
             prior_entry = [x for x in prior_bib_database.entries
                            if x['ID'] == entry['ID']][0]
+            # Note: the following is an exact comparison of all fields
             if entry != prior_entry:
                 entry.update(changed_in_target_commit='True')
-
-    assert all('hash_id' in x for x in bib_database.entries)
 
     return bib_database
 

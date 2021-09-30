@@ -1,20 +1,41 @@
 #! /usr/bin/env python
 import os
-import shutil
+import pkgutil
 
 import git
 import yaml
 
 from review_template import entry_hash_function
+from review_template import utils
 
-with open('../template/shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
-SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
+def retrieve_template_file(template_file, target):
+
+    filedata = pkgutil.get_data(__name__, template_file)
+    filedata = filedata.decode('utf-8')
+    with open(target, 'w') as file:
+        file.write(filedata)
+
+    return
+
+
+def inplace_change(filename, old_string, new_string):
+    # Safely read the input filename using 'with'
+    with open(filename) as f:
+        s = f.read()
+        if old_string not in s:
+            print('"{old_string}" not found in {filename}.'.format(**locals()))
+            return
+
+    # Safely write the changed content, if found in the file
+    with open(filename, 'w') as f:
+        s = s.replace(old_string, new_string)
+        f.write(s)
+    return
 
 
 def initialize_repo():
+
     r = git.Repo.init()
 
     print('')
@@ -23,9 +44,38 @@ def initialize_repo():
     print('Initialize review repository')
     project_title = input('Project title: ')
 
+    committer_name = \
+        input('Please provide your name (for the git committer name)')
+    committer_email = \
+        input('Please provide your e-mail (for the git committer e-mail)')
+
     # TODO: check: initialize in non-empty directory (y/n)?
 
     os.mkdir('search')
+
+    retrieve_template_file(
+        '../template/readme.md',
+        'readme.md',
+    )
+    retrieve_template_file(
+        '../template/.pre-commit-config.yaml',
+        '.pre-commit-config.yaml',
+    )
+    retrieve_template_file('../template/.gitattributes',
+                           '.gitattributes')
+    retrieve_template_file('../template/private_config.yaml',
+                           'private_config.yaml')
+    retrieve_template_file('../template/shared_config.yaml',
+                           'shared_config.yaml')
+    retrieve_template_file('../template/shared_config.yaml',
+                           'shared_config.yaml')
+
+    with open('shared_config.yaml') as shared_config_yaml:
+        shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+    HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+
+    SEARCH_DETAILS = \
+        entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
     f = open(SEARCH_DETAILS, 'w')
     header = '"filename","number_records","iteration","date_start",' + \
@@ -34,19 +84,9 @@ def initialize_repo():
     f.write(header)
     f.close()
 
-    with open('../template/readme.md') as file:
-        filedata = file.read()
-    filedata = filedata.replace('{{project_title}}', project_title)
-    with open('readme.md', 'w') as file:
-        file.write(filedata)
-
-    shutil.copyfile(
-        '../template/.pre-commit-config.yaml',
-        '.pre-commit-config.yaml',
-    )
-    shutil.copyfile('../template/.gitattributes', '.gitattributes')
-    shutil.copyfile('../template/private_config.yaml', 'private_config.yaml')
-    shutil.copyfile('../template/shared_config.yaml', 'shared_config.yaml')
+    inplace_change('private_config.yaml', 'EMAIL', committer_email)
+    inplace_change('private_config.yaml', 'GIT_ACTOR', committer_name)
+    inplace_change('readme.md', '{{project_title}}', project_title)
 
     # Note: need to write the .gitignore because file would otherwise be
     # ignored in the template directory.
@@ -66,13 +106,10 @@ def initialize_repo():
         'shared_config.yaml',
     ])
 
-    committer_name = \
-        input('Please provide your name (for the git committer name)')
-    committer_email = \
-        input('Please provide your e-mail (for the git committer e-mail)')
+    flag, flag_details = utils.get_version_flags()
 
     r.index.commit(
-        'Initial commit',
+        'Initial commit' + flag + flag_details,
         author=git.Actor('script:initialize.py', ''),
         committer=git.Actor(committer_name, committer_email),
     )
@@ -90,6 +127,7 @@ def get_repo():
         # TODO: further checks?
         return r
     except git.exc.InvalidGitRepositoryError:
+        print('No git repository found.')
         pass
 
     r = initialize_repo()
@@ -98,4 +136,5 @@ def get_repo():
 
 
 if __name__ == '__main__':
+
     initialize_repo()

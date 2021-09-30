@@ -30,6 +30,9 @@ else:
     CPUS = private_config['params']['CPUS']
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
+EMAIL = private_config['params']['EMAIL']
+
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
@@ -46,7 +49,7 @@ fields_to_keep = [
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
     'source_file_path', 'source_id',
-    'status', 'fulltext'
+    'status', 'fulltext', 'entry_link'
 ]
 fields_to_drop = [
     'type', 'url', 'organization',
@@ -61,7 +64,7 @@ fields_to_drop = [
     'web-of-science-categories', 'number-of-cited-references',
     'times-cited', 'journal-iso', 'oa', 'keywords-plus',
     'funding-text', 'funding-acknowledgement', 'day',
-    'related'
+    'related', 'bibsource', 'timestamp', 'biburl'
 ]
 
 
@@ -94,44 +97,6 @@ def is_sufficiently_complete(entry):
     return sufficiently_complete
 
 
-def get_db_with_completion_edits(bib_file):
-    completion_edits = []
-    if os.path.exists('search/completion_edits.csv'):
-        with open('search/completion_edits.csv') as read_obj:
-            csv_reader = csv.DictReader(read_obj)
-            line_count = 0
-            for row in csv_reader:
-                if line_count == 0:
-                    line_count += 1
-                completion_edits.append([row['source_file_path'],
-                                         row['source_id'],
-                                         row['key'],
-                                         row['value']])
-
-    with open(bib_file) as bibtex_file:
-        db = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
-
-        for entry in db.entries:
-            entry.update(source_file_path=os.path.basename(bib_file))
-            for completion_edit in completion_edits:
-                if completion_edit[0] == entry['source_file_path'] and \
-                        completion_edit[1] == entry['ID']:
-                    entry[completion_edit[2]] = completion_edit[3]
-
-    return db
-
-
-def get_imported_hash_ids():
-    imported_hash_ids = []
-    with open('imported_hash_ids.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        for row in csv_reader:
-            imported_hash_ids.append(row[0])
-    return imported_hash_ids
-
-
 def save_new_completion_edits(new_completion_edits):
     if [] == new_completion_edits:
         return
@@ -148,54 +113,64 @@ def save_new_completion_edits(new_completion_edits):
     return
 
 
+def get_imported_entry_links():
+
+    imported_entry_links = []
+    with open('imported_entry_links.csv') as read_obj:
+        csv_reader = csv.reader(read_obj)
+        for row in csv_reader:
+            imported_entry_links.append(row[0])
+    return imported_entry_links
+
+
 def load_entries(bib_file):
 
-    imported_hash_ids = get_imported_hash_ids()
-    individual_bib_database = get_db_with_completion_edits(bib_file)
-    entry_list, new_completion_edits = [], []
-    for entry in individual_bib_database.entries:
-        # IMPORTANT NOTE: any modifications completed before this step
-        # need to be considered when backward-tracing!
-        # Tradeoff: preprocessing can help to reduce the number of
-        # representations (hash_ids) for each record
-        # but it also introduces complexity (backward tracing)
+    imported_entry_links = get_imported_entry_links()
 
-        if not is_sufficiently_complete(entry) and 'doi' in entry:
-            # try completion based on doi (store in completion_edits file)
-            entry = cleanse_records.get_doi_from_crossref(entry)
-            doi_metadata = \
-                cleanse_records.retrieve_doi_metadata(entry.copy())
-            for key, value in doi_metadata.items():
-                if key not in entry.keys() and key in ['author',
-                                                       'year',
-                                                       'title',
-                                                       'journal',
-                                                       'booktitle',
-                                                       'number',
-                                                       'volume',
-                                                       'issue',
-                                                       'pages']:
-                    entry[key] = value
-                    new_completion_edits.append([entry['source_file_path'],
-                                                 entry['ID'],
-                                                 key,
-                                                 value])
-            # fix type-mismatches
-            # e.g., conference paper with ENTRYTYPE=article
-            entry = cleanse_records.correct_entrytypes(entry)
+    with open(bib_file) as bibtex_file:
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
+            customization=convert_to_unicode, common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+        search_file = os.path.basename(bib_file)
+        entry_list = []
+        for entry in individual_bib_database.entries:
+            entry['entry_link'] = search_file + '/' + entry['ID']
+            if entry['entry_link'] in imported_entry_links:
+                continue
 
-        if is_sufficiently_complete(entry):
-            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-            entry.update(hash_id=hid)
-            if entry['hash_id'] not in imported_hash_ids:
+            # Note: we assume that the metadata of doi.org is complete.
+            complete_based_on_doi = False
+            if not is_sufficiently_complete(entry):
+                entry = cleanse_records.get_doi_from_crossref(entry)
+                if 'doi' in entry:
+                    # try completion based on doi
+                    doi_metadata = \
+                        cleanse_records.retrieve_doi_metadata(entry.copy())
+                    for key, value in doi_metadata.items():
+                        if key not in entry.keys() and key in ['author',
+                                                               'year',
+                                                               'title',
+                                                               'journal',
+                                                               'booktitle',
+                                                               'number',
+                                                               'volume',
+                                                               'issue',
+                                                               'pages']:
+                            entry[key] = value
+                    complete_based_on_doi = True
+
+                # fix type-mismatches
+                # e.g., conference paper with ENTRYTYPE=article
+                entry = cleanse_records.correct_entrytypes(entry)
+
+            if is_sufficiently_complete(entry) or complete_based_on_doi:
+                hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+                entry.update(hash_id=hid)
                 entry.update(status='not_imported')
-                entry_list.append(entry)
-        else:
-            entry.update(status='needs_manual_completion')
-            entry.update(source_id=entry['ID'])
-            entry_list.append(entry)
+            else:
+                entry.update(status='needs_manual_completion')
 
-    save_new_completion_edits(new_completion_edits)
+            entry_list.append(entry)
 
     return entry_list
 
@@ -214,34 +189,29 @@ def save_imported_hash_ids(bib_database):
     return
 
 
-def load_additional_records(bib_database):
+def save_imported_entry_links(bib_database):
+    imported_entry_links = [x['entry_link'].split(';')
+                            for x in bib_database.entries
+                            if 'entry_link' in x]
+    imported_entry_links = list(itertools.chain(*imported_entry_links))
 
-    # Note: only add search_results if their hash_id is not already
-    # in bib_database (important for parallel load_entries())
-    save_imported_hash_ids(bib_database)
+    with open('imported_entry_links.csv', 'a') as fd:
+        for el in imported_entry_links:
+            fd.write(el + '\n')
 
-    pool = mp.Pool(processes=CPUS)
-    additional_records = pool.map(load_entries, utils.get_bib_files())
-    additional_records = list(chain(*additional_records))
-
-    # do not import records with status=needs_manual_completion
-    # note: this cannot be done based on imported_hash_ids
-    # (because the record is not complete enough for hash_id creation)
-    # but we can use the 'source_file_path' and 'source_id' fields instead
-    non_complete_sources = [[entry['source_file_path'], entry['source_id']] for
-                            entry in bib_database.entries
-                            if 'needs_manual_completion' == entry['status']]
-    additional_records = \
-        [x for x in additional_records if
-         not any((x['source_file_path'] == key and x['ID'] == value)
-                 for [key, value] in non_complete_sources)]
-
-    return additional_records
+    return
 
 
 def load(bib_database):
 
-    additional_records = load_additional_records(bib_database)
+    print('Load additional records...')
+
+    save_imported_entry_links(bib_database)
+
+    # additional_records = load_entries(utils.get_bib_files()[0])
+    pool = mp.Pool(processes=CPUS)
+    additional_records = pool.map(load_entries, utils.get_bib_files())
+    additional_records = list(chain(*additional_records))
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
@@ -261,16 +231,15 @@ def load(bib_database):
             entry = cleanse_records.apply_local_rules(entry)
             entry = cleanse_records.apply_crowd_rules(entry)
             entry = drop_fields(entry)
-            del entry['source_file_path']
             entry.update(status='imported')
 
-    if os.path.exists('imported_hash_ids.csv'):
-        os.remove('imported_hash_ids.csv')
+    if os.path.exists('imported_entry_links.csv'):
+        os.remove('imported_entry_links.csv')
 
     return additional_records
 
 
-def create_commit(r, bib_database, details_commit):
+def create_commit(r, bib_database):
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
@@ -282,22 +251,21 @@ def create_commit(r, bib_database, details_commit):
         )
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-        if os.path.exists('search/completion_edits.csv'):
-            r.index.add(['search/completion_edits.csv'])
-
         r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
         hook_skipping = 'false'
         if not DEBUG_MODE:
             hook_skipping = 'true'
+
+        flag, flag_details = utils.get_version_flags()
+
         r.index.commit(
-            '⚙️ Import search results \n - ' +
-            '\n - '.join(details_commit) +
+            '⚙️ Import search results ' + flag + flag_details +
             '\n - ' + utils.get_package_details(),
-            author=git.Actor(
-                'script:importer.py', ''),
+            author=git.Actor('script:importer.py', ''),
+            committer=git.Actor(GIT_ACTOR, EMAIL),
             skip_hooks=hook_skipping
         )
     else:
-        print('No new records added to MAIN_REFERENCES')
+        print('- No new records added to MAIN_REFERENCES')
     return

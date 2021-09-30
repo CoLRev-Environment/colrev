@@ -1,6 +1,6 @@
 params:
-    EMAIL: name@institution.email
-    WOS_API_KEY: XYLSEJYISJX
+    EMAIL: EMAIL
+    GIT_ACTOR: GIT_ACTOR
     CPUS: 4
     DEBUG_MODE: 0
 PDFPATH:

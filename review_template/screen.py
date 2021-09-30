@@ -2,6 +2,7 @@
 import csv
 import os
 
+import git
 import pandas as pd
 import yaml
 
@@ -15,6 +16,37 @@ HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+
+
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
+EMAIL = private_config['params']['EMAIL']
+
+
+def screen_commit():
+
+    r = git.Repo('')
+    r.index.add([SCREEN])
+
+    hook_skipping = 'false'
+    if not DEBUG_MODE:
+        hook_skipping = 'true'
+
+    flag, flag_details = utils.get_version_flags()
+
+    r.index.commit(
+        'Screening (manual)' + flag + flag_details +
+        '\n - Using screen.py' +
+        '\n - ' + utils.get_package_details(),
+        author=git.Actor(GIT_ACTOR, EMAIL),
+        committer=git.Actor(GIT_ACTOR, EMAIL),
+        skip_hooks=hook_skipping
+    )
+
+    return
 
 
 def main():
@@ -36,18 +68,22 @@ def main():
 
     references = pd.DataFrame.from_dict(bib_database.entries)
     references.rename(columns={'ID': 'citation_key'}, inplace=True)
-    references = references[[
-        'citation_key',
-        'author',
-        'title',
-        'year',
-        'journal',
-        'volume',
-        'number',
-        'pages',
-        'file',
-        'doi',
-    ]]
+    req_cols = ['citation_key',
+                'author',
+                'title',
+                'year',
+                'journal',
+                'volume',
+                'number',
+                'pages',
+                'file',
+                'doi',
+                ]
+
+    for req_col in req_cols:
+        if req_col not in references:
+            references[req_col] = ''
+    references = references[req_cols]
     references.fillna('', inplace=True)
 
     exclusion_criteria_available = 0 < len(
@@ -130,6 +166,15 @@ def main():
         print('stopping screen 1')
         print()
         pass
+
+    # If records remain for screening, ask whether to create a commit
+    if 0 < screen[screen['inclusion_2'] == 'TODO'].shape[0]:
+        if 'y' == input('Create commit (y/n)?'):
+            screen_commit()
+    else:
+        screen_commit()
+
+    return
 
     return
 

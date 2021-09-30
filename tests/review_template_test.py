@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Tests for `review_template` package."""
+import bibtexparser
+import pandas as pd
 import pytest
 from click.testing import CliRunner
 
@@ -31,3 +33,40 @@ def test_command_line_interface():
     help_result = runner.invoke(cli.main, ['--help'])
     assert help_result.exit_code == 0
     assert '--help  Show this message and exit.' in help_result.output
+
+
+def test_merge():
+    from review_template import process_duplicates
+    bibtex_str = """@article{Appan2012,
+                    author    = {Appan, and Browne,},
+                    journal   = {MIS Quarterly},
+                    title     = {The Impact of Analyst-Induced Misinformation},
+                    year      = {2012},
+                    number    = {1},
+                    pages     = {85},
+                    volume    = {36},
+                    doi       = {10.2307/41410407},
+                    hash_id   = {300a3700f5440cb37f39b05c866dc0a33cefb78de93c},
+                    }
+
+                    @article{Appan2012a,
+                    author    = {Appan, Radha and Browne, Glenn J.},
+                    journal   = {MIS Quarterly},
+                    title     = {The Impact of Analyst-Induced Misinformation},
+                    year      = {2012},
+                    number    = {1},
+                    pages     = {22},
+                    volume    = {36},
+                    doi       = {10.2307/41410407},
+                    hash_id   = {427967442a90d7f27187e66fd5b66fa94ab2d5da1bf9},
+                    }"""
+
+    bib_database = bibtexparser.loads(bibtex_str)
+    entry_a = bib_database.entries[0]
+    entry_b = bib_database.entries[1]
+    df_a = pd.DataFrame.from_dict([entry_a])
+    df_b = pd.DataFrame.from_dict([entry_b])
+
+    print(process_duplicates.get_similarity(df_a.iloc[0], df_b.iloc[0]))
+
+    return

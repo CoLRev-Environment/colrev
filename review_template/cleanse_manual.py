@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import pprint
 
+import git
 import yaml
 
 from review_template import entry_hash_function
@@ -16,6 +17,24 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
+
+
+def manual_cleanse_commit():
+    r = git.Repo('')
+    r.index.add([MAIN_REFERENCES])
+
+    hook_skipping = 'false'
+    if not DEBUG_MODE:
+        hook_skipping = 'true'
+    r.index.commit(
+        'Cleanse manual ' + MAIN_REFERENCES +
+        '\n - ' + utils.get_package_details(),
+        author=git.Actor('manual:cleanse', ''),
+        skip_hooks=hook_skipping
+    )
+    print('Created commit: Cleanse manual ' + MAIN_REFERENCES)
+
+    return
 
 
 def main():
