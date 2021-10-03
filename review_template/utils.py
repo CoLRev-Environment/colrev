@@ -434,7 +434,10 @@ def get_bib_files():
     return bib_files
 
 
-def save_bib_file(bib_database, target_file):
+def save_bib_file(bib_database, target_file=None):
+
+    if target_file is None:
+        target_file = MAIN_REFERENCES
 
     writer = BibTexWriter()
 
@@ -484,9 +487,9 @@ def save_bib_file(bib_database, target_file):
         if time_counter > time_to_wait:
             break
 
-    if os.path.exists(MAIN_REFERENCES):
-        os.remove(MAIN_REFERENCES)
-    os.rename('temp.bib', MAIN_REFERENCES)
+    if os.path.exists(target_file):
+        os.remove(target_file)
+    os.rename('temp.bib', target_file)
 
     return
 

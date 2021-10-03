@@ -7,10 +7,10 @@ import pandas as pd
 import requests
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
-from pdfminer.high_level import extract_text
 
 from review_template import entry_hash_function
 from review_template import utils
+# from pdfminer.high_level import extract_text
 
 with open('private_config.yaml') as private_config_yaml:
     private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
@@ -90,7 +90,7 @@ def is_pdf(path_to_file):
 
     # TODO: add exceptions
     # try:
-    extract_text(path_to_file)
+    # extract_text(path_to_file)
     return True
     # except:
     #    return False

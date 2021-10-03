@@ -10,6 +10,7 @@ from datetime import datetime
 from time import gmtime
 from time import strftime
 
+import git
 import pandas as pd
 import requests
 import tqdm
@@ -30,14 +31,21 @@ HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 SEARCH_DETAILS = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
+with open('private_config.yaml') as private_config_yaml:
+    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+
+EMAIL = private_config['params']['EMAIL']
+GIT_ACTOR = private_config['params']['GIT_ACTOR']
+
 ns = {
     'tei': '{http://www.tei-c.org/ns/1.0}',
     'w3': '{http://www.w3.org/XML/1998/namespace}',
 }
 
 # GROBID_URL = 'http://grobid:8070'
+# data_dir = '/usr/data/'
 GROBID_URL = 'http://localhost:8070'
-data_dir = '/usr/data/'
+data_dir = ''
 
 
 def start_grobid():
@@ -93,6 +101,8 @@ def get_reference_title(reference):
             words = [word.capitalize() for word in words]
             title_string = ' '.join(words)
     except AttributeError:
+        pass
+    except ZeroDivisionError:
         pass
     return title_string
 
@@ -235,14 +245,41 @@ def get_reference_doi(reference):
     try:
         if reference.find('.//' + ns['tei'] + 'idno') is not None:
             doi = reference.find('.//' + ns['tei'] + 'idno').text
+
     except AttributeError:
         pass
     return doi
 
 
+def get_reference_entrytype(reference):
+    ENTRYTYPE = 'article'
+    try:
+        monog = (reference.find('.//' + ns['tei'] + 'monogr') is not None)
+        analytic = (reference.find('.//' + ns['tei'] + 'analytic') is not None)
+        if monog:
+            monog_type = reference.find('.//' + ns['tei'] + 'monogr')\
+                .find(ns['tei'] + 'title').get('level')
+            m_title = reference.find('.//' + ns['tei'] + 'monogr')\
+                .find(ns['tei'] + 'title').text.lower()
+            if 'm' == monog_type:
+                if 'conference' in m_title or \
+                    'proceeding' in m_title or \
+                        'workshop' in m_title:
+                    ENTRYTYPE = 'inproceedings'
+                elif analytic:
+                    ENTRYTYPE = 'inbook'
+                else:
+                    ENTRYTYPE = 'book'
+
+    except AttributeError:
+        pass
+    return ENTRYTYPE
+
+
 def extract_bibliography(root):
     BIBLIOGRAPHY = pd.DataFrame(
         columns=[
+            'ENTRYTYPE',
             'authors',
             'title',
             'year',
@@ -258,6 +295,7 @@ def extract_bibliography(root):
         for reference in bibliography:
             ENTRY = pd.DataFrame.from_records(
                 [[
+                    get_reference_entrytype(reference),
                     get_reference_author(reference),
                     get_reference_title(reference),
                     get_reference_year(reference),
@@ -268,6 +306,7 @@ def extract_bibliography(root):
                     get_reference_doi(reference),
                 ]],
                 columns=[
+                    'ENTRYTYPE',
                     'authors',
                     'title',
                     'year',
@@ -302,13 +341,22 @@ def get_bib_db_from_tei(tei):
         except AttributeError:
             pass
         entry.update(ID=author_string + row['year'])
-        entry.update(ENTRYTYPE='article')
+        entrytype = row['ENTRYTYPE']
+        entry.update(ENTRYTYPE=entrytype)
         entry.update(author=row['authors'])
-        entry.update(journal=row['journal'])
+        if 'article' == entrytype:
+            entry.update(journal=row['journal'])
+            entry.update(volume=row['volume'])
+            entry.update(issue=row['issue'])
+        if 'book' == entrytype:
+            entry.update(title=row['journal'])
+        if 'inproceedings' == entrytype:
+            entry.update(booktitle=row['journal'])
+        if 'inbook' == entrytype:
+            entry.update(booktitle=row['journal'])
+
         entry.update(title=row['title'])
         entry.update(year=row['year'])
-        entry.update(volume=row['volume'])
-        entry.update(issue=row['issue'])
         entry.update(pages=row['pages'])
         entry.update(doi=row['doi'])
         if index == 0:
@@ -343,7 +391,7 @@ def process_backward_search(tei):
 
     new_record = pd.DataFrame(
         [[
-            'backward/' + bib_filename,
+            bib_filename,
             len(db.entries),
             iteration_number,
             datetime.today().strftime('%Y-%m-%d'),
@@ -371,7 +419,7 @@ def process_backward_search(tei):
         index=False, quoting=csv.QUOTE_ALL,
     )
 
-    return
+    return bib_filename
 
 
 def check_grobid_availability():
@@ -409,22 +457,46 @@ def transform(pdf_filename, tei_filename):
     return
 
 
+def create_commit(bibfilenames):
+
+    r = git.Repo()
+
+    r.index.add([SEARCH_DETAILS])
+    for f in bibfilenames:
+        r.index.add([f])
+
+    flag, flag_details = utils.get_version_flags()
+
+    r.index.commit(
+        '⚙️ Backward search ' + flag + flag_details +
+        '\n - Using backward_search.py' +
+        '\n - ' + utils.get_package_details(),
+        author=git.Actor('script:backward_search.py', ''),
+        committer=git.Actor(GIT_ACTOR, EMAIL),
+    )
+
+    return
+
+
 def main():
 
     print('Backward search')
     start_grobid()
     citation_keys = utils.get_included_papers()
-    if not os.path.exists('search/backward'):
-        os.mkdir('search/backward')
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+    bibfilenames = []
     for citation_key in tqdm.tqdm(citation_keys):
-        backward_search_path = data_dir + 'search/backward/'
+        backward_search_path = data_dir + 'search/'
         tei_filename = backward_search_path + citation_key + '.tei.xml'
         pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
         transform(pdf_filename, tei_filename)
-        process_backward_search(tei_filename)
+        bibfilename = process_backward_search(tei_filename)
+        bibfilenames.append(bibfilename)
+        os.remove(tei_filename)
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
+
+    create_commit(bibfilenames)
 
 
 if __name__ == '__main__':

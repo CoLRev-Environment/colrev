@@ -165,6 +165,8 @@ def homogenize_entry(entry):
 
 
 def get_doi_from_crossref(entry):
+    if 'title' not in entry:
+        return entry
     # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
     if len(entry['title']) > 60 and 'doi' not in entry:
         try:
@@ -490,6 +492,10 @@ def cleanse(entry):
             not any(x in entry for x in
                     ['journal', 'booktitle', 'school', 'book', 'series']):
         entry.update(status='needs_manual_cleansing')
+    if 'title' in entry and 'author' in entry and 'year' in entry and \
+            'book' == entry.get('ENTRYTYPE', ''):
+        entry.update(status='cleansed')
+
     if entry.get('title', '').endswith('...') or \
             entry.get('title', '').endswith('…') or \
             entry.get('journal', '').endswith('...') or \
