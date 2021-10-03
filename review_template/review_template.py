@@ -69,6 +69,7 @@ def process_entries(search_records, bib_database):
     importer.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'imported'):
+        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)')
         return bib_database
 
     print('Cleanse')
@@ -79,6 +80,7 @@ def process_entries(search_records, bib_database):
     cleanse_records.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'cleansed'):
+        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)')
         return bib_database
 
     print('Process duplicates')

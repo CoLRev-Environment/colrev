@@ -118,7 +118,7 @@ def screen(ctx):
 @click.pass_context
 def acquire_pdfs(ctx):
     """Acquire PDFs"""
-    # from review_template import acquire_pdfs
+    from review_template import acquire_pdfs
     acquire_pdfs.main()
 
 

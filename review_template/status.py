@@ -259,7 +259,7 @@ def get_status_freq():
 
     retrieved = get_nr_search()
     non_imported = retrieved - entry_links
-    overall_imported = entry_links
+    overall_imported = entry_links - needs_manual_completion_entries
     overall_cleansed = cleansed_entries + manual_merging_entries + \
         processed_entries + merged_entry_links
 
@@ -269,6 +269,7 @@ def get_status_freq():
     nr_to_pre_screen = pre_screen_total - pre_screen_included - \
         pre_screen_excluded
     pdfs_to_retrieve = 0
+    non_bw_searched = 0
     screen_total = 0
     screen_included = 0
     screen_excluded = 0
@@ -278,6 +279,7 @@ def get_status_freq():
 
     if os.path.exists(SCREEN):
         screen = pd.read_csv(SCREEN, dtype=str)
+        pre_screen_total = screen.shape[0]
         pre_screen_included = screen[screen['inclusion_1'] == 'yes'].shape[0]
         pre_screen_excluded = screen[screen['inclusion_1'] == 'no'].shape[0]
         nr_to_pre_screen = pre_screen_total - pre_screen_included - \
@@ -292,6 +294,14 @@ def get_status_freq():
         screen_included = screen[screen['inclusion_2'] == 'yes'].shape[0]
         screen_excluded = screen[screen['inclusion_2'] == 'no'].shape[0]
         nr_to_screen = screen[screen['inclusion_2'] == 'TODO'].shape[0]
+
+        if os.path.exists('pdfs/'):
+            pdf_files = [x for x in os.listdir('pdfs/')]
+            search_files = [x for x in os.listdir('search/')
+                            if '.bib' == x[-4:]]
+            non_bw_searched = len([x for x in pdf_files
+                                   if not x.replace('.pdf', 'bw_search.bib')
+                                   in search_files])
 
         if os.path.exists(DATA):
             data = pd.read_csv(DATA, dtype=str)
@@ -310,12 +320,14 @@ def get_status_freq():
              'overall_imported': overall_imported,
              'overall_cleansed': overall_cleansed,
              'overall_processed': processed_entries,
+             'pre_screen_total': pre_screen_total,
              'nr_to_pre_screen': nr_to_pre_screen,
              'pre_screen_included': pre_screen_included,
              'pre_screen_excluded': pre_screen_excluded,
              'nr_to_screen': nr_to_screen,
              'pdf_available': pdf_available,
              'pdfs_to_retrieve': pdfs_to_retrieve,
+             'non_bw_searched': non_bw_searched,
              'screen_total': screen_total,
              'screen_included': screen_included,
              'screen_excluded': screen_excluded,
@@ -469,7 +481,7 @@ def main():
 
             print(' | Pre-screen')
             print(' |  - Total: ' +
-                  str(status_freq['overall_processed']).rjust(17, ' '))
+                  str(status_freq['pre_screen_total']).rjust(17, ' '))
             print(
                 ' |  - Included: ' +
                 str(status_freq['pre_screen_included'])
@@ -570,6 +582,10 @@ def main():
                       'use\n     review_template pre-screen')
             # TODO: if pre-screening activated in template variables
             if 0 == status_freq['nr_to_pre_screen'] and \
+                    0 != status_freq['non_bw_searched']:
+                print('  To initiate/continue backward-search,'
+                      'use\n     review_template backward-search')
+            elif 0 == status_freq['nr_to_pre_screen'] and \
                     0 != status_freq['nr_to_screen']:
                 print('  To initiate/continue screen,'
                       'use\n     review_template screen')
