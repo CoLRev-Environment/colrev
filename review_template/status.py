@@ -7,6 +7,15 @@ import yaml
 
 from review_template import entry_hash_function
 
+
+class colors:
+    RED = '\033[91m'
+    GREEN = '\033[92m'
+    ORANGE = '\033[93m'
+    BLUE = '\033[94m'
+    END = '\033[0m'
+
+
 default_shared_params = dict(
     params=dict(
         MERGING_NON_DUP_THRESHOLD=0.7,
@@ -37,9 +46,16 @@ try:
         pre_commit_config = \
             yaml.load(pre_commit_config_yaml, Loader=yaml.FullLoader)
 
+    installed_hooks = []
     for repo in pre_commit_config['repos']:
         if repo['repo'] == remote_pv_hooks_repo:
             local_sha = repo['rev']
+            installed_hooks = [hook['id'] for hook in repo['hooks']]
+    if not installed_hooks == ['consistency_checks', 'formatting']:
+        print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
+              '\n See '
+              'https://github.com/geritwagner/pipeline-validation-hooks'
+              '#using-the-pre-commit-hook for details')
 
     if not remote_sha == local_sha:
         print('pipeline-validation-hooks version outdated.\n',
@@ -168,17 +184,6 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
-
-PASS = 0
-FAIL = 1
-
-
-class colors:
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    ORANGE = '\033[93m'
-    BLUE = '\033[94m'
-    END = '\033[0m'
 
 
 def get_bib_files():
@@ -672,8 +677,6 @@ def main():
                           'and non-analyzed records')
 
     print('\n\n')
-
-    return PASS
 
 
 if __name__ == '__main__':
