@@ -51,7 +51,7 @@ try:
         if repo['repo'] == remote_pv_hooks_repo:
             local_sha = repo['rev']
             installed_hooks = [hook['id'] for hook in repo['hooks']]
-    if not installed_hooks == ['consistency_checks', 'formatting']:
+    if not installed_hooks == ['consistency-checks', 'formatting']:
         print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
               '\n See '
               'https://github.com/geritwagner/pipeline-validation-hooks'
