@@ -48,7 +48,6 @@ fields_to_keep = [
     'abstract',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
-    'source_file_path', 'source_id',
     'status', 'fulltext', 'entry_link'
 ]
 fields_to_drop = [
@@ -95,22 +94,6 @@ def is_sufficiently_complete(entry):
             sufficiently_complete = True
 
     return sufficiently_complete
-
-
-def save_new_completion_edits(new_completion_edits):
-    if [] == new_completion_edits:
-        return
-
-    if not os.path.exists('search/completion_edits.csv'):
-        with open('search/completion_edits.csv', 'w') as wr_obj:
-            writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-            writer.writerow(['source_file_path', 'source_id', 'key', 'value'])
-
-    with open('search/completion_edits.csv', 'a') as wr_obj:
-        writer = csv.writer(wr_obj, quotechar='"', quoting=csv.QUOTE_ALL)
-        for completion_edit in new_completion_edits:
-            writer.writerow(completion_edit)
-    return
 
 
 def get_imported_entry_links():

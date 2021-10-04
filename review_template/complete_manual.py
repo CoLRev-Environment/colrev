@@ -1,6 +1,4 @@
 #! /usr/bin/env python
-import csv
-import os
 import pprint
 
 import git
@@ -45,30 +43,6 @@ def create_commit(bib_database):
         )
 
     return
-
-
-def apply_completion_edits(bib_database):
-
-    completion_edits = []
-    if os.path.exists('search/completion_edits.csv'):
-        with open('search/completion_edits.csv') as read_obj:
-            csv_reader = csv.DictReader(read_obj)
-            line_count = 0
-            for row in csv_reader:
-                if line_count == 0:
-                    line_count += 1
-                completion_edits.append([row['source_file_path'],
-                                         row['source_id'],
-                                         row['key'],
-                                         row['value']])
-
-    for entry in bib_database.entries:
-        for completion_edit in completion_edits:
-            if completion_edit[0] == entry.get('source_file_path', 'NA') and \
-                    completion_edit[1] == entry.get('source_id', 'NA'):
-                entry[completion_edit[2]] = completion_edit[3]
-
-    return bib_database
 
 
 def main():

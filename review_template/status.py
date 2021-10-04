@@ -101,6 +101,7 @@ SHARE_STATUS_REQUIREMENT = shared_config['params']['SHARE_STATUS_REQUIREMENT']
 default_private_params = dict(
     params=dict(
         EMAIL='user@name.com',
+        GIT_ACTOR='ADD_USERNAME_IN_PRIVATE_CONFIG_YAML',
         CPUS=2,
         DEBUG_MODE=0,
     ),
