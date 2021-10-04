@@ -1,12 +1,10 @@
 #! /usr/bin/env python
 import os
 import pkgutil
+import sys
 
 import git
 import yaml
-
-from review_template import entry_hash_function
-from review_template import utils
 
 
 def retrieve_template_file(template_file, target):
@@ -34,6 +32,19 @@ def inplace_change(filename, old_string, new_string):
     return
 
 
+def get_value(msg, options):
+
+    valid_response = False
+    user_input = ''
+    while not valid_response:
+        print(' ' + msg + ' (' + '|'.join(options) + ')', file=sys.stderr)
+        user_input = input()
+        if user_input in options:
+            valid_response = True
+
+    return user_input
+
+
 def initialize_repo():
 
     r = git.Repo.init()
@@ -49,7 +60,19 @@ def initialize_repo():
     committer_email = \
         input('Please provide your e-mail (for the git committer e-mail)')
 
-    # TODO: check: initialize in non-empty directory (y/n)?
+    print('\n\nParameters for the review project\n Details avilable at: '
+          'TODO/docs')
+
+    SCREEN_TYPE = get_value('Select screen type',
+                            ['NONE', 'PRE_SCREEN', 'INCLUSION_SCREEN'])
+    DATA_FORMAT = get_value('Select data structure',
+                            ['NONE', 'CSV_TABLE', 'MD_SHEET',
+                             'MD_SHEETS', 'MA_VARIABLES_CSV'])
+    SHARE_STAT_REQ = \
+        get_value('Select share status requirement',
+                  ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
+    PDF_HANDLING = get_value('Select pdf handling', ['EXT', 'GIT'])
+    print()
 
     os.mkdir('search')
 
@@ -74,6 +97,7 @@ def initialize_repo():
         shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
     HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
 
+    from review_template import entry_hash_function
     SEARCH_DETAILS = \
         entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
 
@@ -87,6 +111,10 @@ def initialize_repo():
     inplace_change('private_config.yaml', 'EMAIL', committer_email)
     inplace_change('private_config.yaml', 'GIT_ACTOR', committer_name)
     inplace_change('readme.md', '{{project_title}}', project_title)
+    inplace_change('shared_config.yaml', 'SCREEN_TYPE', SCREEN_TYPE)
+    inplace_change('shared_config.yaml', 'DATA_FORMAT', DATA_FORMAT)
+    inplace_change('shared_config.yaml', 'SHARE_STAT_REQ', SHARE_STAT_REQ)
+    inplace_change('shared_config.yaml', 'PDF_HANDLING', PDF_HANDLING)
 
     # Note: need to write the .gitignore because file would otherwise be
     # ignored in the template directory.
@@ -96,6 +124,8 @@ def initialize_repo():
     f.close()
 
     os.system('pre-commit install')
+
+    from review_template import utils
 
     r.index.add([
         'readme.md',

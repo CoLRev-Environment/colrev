@@ -15,6 +15,7 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
 HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+DATA_FORMAT = shared_config['params']['DATA_FORMAT']
 
 SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 DATA_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
@@ -37,8 +38,6 @@ def generate_data_pages():
     screen = pd.read_csv(SCREEN_FILE, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
-    print('TODO: warn when records are no longer included')
-
     screen = screen['citation_key'].tolist()
     if len(screen) == 0:
         print('no records included yet (SCREEN$inclusion_2 == yes)')
@@ -59,8 +58,50 @@ def generate_data_pages():
     return
 
 
-nr_entries_added = 0
-nr_current_entries = 0
+def get_data_page_missing(DATA_PAGE, records):
+    available = []
+    with open(DATA_PAGE) as f:
+        line = f.read()
+        for record in records:
+            if record in line:
+                available.append(record)
+
+    return list(set(records) - set(available))
+
+
+def generate_data_page():
+
+    global nr_entries_added
+
+    print('Data page')
+
+    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
+
+    screen = screen['citation_key'].tolist()
+    if len(screen) == 0:
+        print('no records included yet (SCREEN$inclusion_2 == yes)')
+        print()
+        sys.exit()
+
+    DATA_PAGE = 'coding.md'
+    if not os.path.exists(DATA_PAGE):
+        f = open(DATA_PAGE, 'w')
+        f.write('# Coding and synthesis\n')
+        f.close()
+
+    missing_records = get_data_page_missing(DATA_PAGE, screen)
+
+    if 0 != len(missing_records):
+        text_file = open(DATA_PAGE, 'a')
+        text_file.write('\n# TODO\n\n- ' + '\n- '.join(missing_records))
+        text_file.close()
+        nr_entries_added = len(missing_records)
+
+    print(str(nr_entries_added) + ' records created (coding/citation_key.md)')
+    print('')
+
+    return
 
 
 def generate_data_csv(coding_dimensions):
@@ -164,9 +205,18 @@ def main():
 
     # depending on the template variable:
 
-    generate_data_pages()
-
-    generate_data_sheet()
+    if 'NONE' == DATA_FORMAT:
+        print('Data extraction format = NONE (change shared_config to start '
+              'data extraction)')
+    if 'CSV_TABLE' == DATA_FORMAT:
+        generate_data_sheet()
+    if 'MD_SHEET' == DATA_FORMAT:
+        generate_data_page()
+    if 'MD_SHEETS' == DATA_FORMAT:
+        generate_data_pages()
+    if 'MA_VARIABLES_CSV' == DATA_FORMAT:
+        print('Not yet implemented: structured data extraction '
+              'for meta-analysis')
 
 
 if __name__ == '__main__':
