@@ -1,8 +1,6 @@
 #! /usr/bin/env python
 import csv
-import logging
 import os
-import re
 import subprocess
 import sys
 import time
@@ -15,14 +13,9 @@ import pandas as pd
 import requests
 import tqdm
 import yaml
-from bibtexparser.bibdatabase import BibDatabase
-from lxml import etree
 
 from review_template import entry_hash_function
 from review_template import utils
-
-logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
-
 
 with open('shared_config.yaml') as shared_config_yaml:
     shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
@@ -80,309 +73,46 @@ def start_grobid():
     return False
 
 
-def get_reference_title(reference):
-    title_string = ''
-    analytic_title_found = False
-    ref_analytic = reference.find(ns['tei'] + 'analytic')
-    if ref_analytic is not None:
-        if ref_analytic.find(ns['tei'] + 'title') is not None:
-            if ref_analytic.find(ns['tei'] + 'title').text is not None:
-                title_string = ref_analytic.find(ns['tei'] + 'title').text
-                analytic_title_found = True
-    if not analytic_title_found:
-        ref_monogr = reference.find(ns['tei'] + 'monogr')
-        if ref_monogr is not None:
-            if ref_monogr.find(ns['tei'] + 'title') is not None:
-                if ref_monogr.find(ns['tei'] + 'title').text is not None:
-                    title_string = ref_monogr.find(ns['tei'] + 'title').text
-    try:
-        words = title_string.split()
-        if sum(word.isupper() for word in words)/len(words) > 0.8:
-            words = [word.capitalize() for word in words]
-            title_string = ' '.join(words)
-    except AttributeError:
-        pass
-    except ZeroDivisionError:
-        pass
-    return title_string
-
-
-def get_reference_author(reference):
-    author_list = []
-    author_node = ''
-    if reference.find(ns['tei'] + 'analytic') is not None:
-        author_node = reference.find(ns['tei'] + 'analytic')
-    elif reference.find(ns['tei'] + 'monogr') is not None:
-        author_node = reference.find(ns['tei'] + 'monogr')
-
-    if author_node == '':
-        return ''
-
-    for author in author_node.iterfind(ns['tei'] + 'author'):
-        authorname = ''
+def check_grobid_availability():
+    i = 0
+    while True:
+        i += 1
+        time.sleep(1)
         try:
-            surname = author.find(ns['tei'] + 'persName')\
-                            .find(ns['tei'] + 'surname').text
-        except AttributeError:
-            surname = ''
+            r = requests.get(GROBID_URL + '/api/isalive')
+            if r.text == 'true':
+                i = -1
+        except requests.exceptions.ConnectionError:
             pass
-        try:
-            forename = author.find(ns['tei'] + 'persName')\
-                             .find(ns['tei'] + 'forename').text
-        except AttributeError:
-            forename = ''
-            pass
-
-        # check surname and prename len. and swap
-        if(len(surname) < len(forename)):
-            authorname = forename + ', ' + surname
-        else:
-            authorname = surname + ', ' + forename
-        author_list.append(authorname)
-
-    # fill author field with editor or organization if null
-    if len(author_list) == 0:
-        if reference.find(ns['tei'] + 'editor') is not None:
-            author_list.append(reference.find(ns['tei'] + 'editor').text)
-        elif reference.find(ns['tei'] + 'orgName') is not None:
-            author_list.append(reference.find(ns['tei'] + 'orgName').text)
-
-    author_string = ''
-    for author in author_list:
-        author_string = ' and '.join(author_list)
-    author_string = author_string.replace('\n', ' ').replace('\r', '')
-
-    if author_string is None:
-        author_string = ''
-
-    return author_string
+        if i == -1:
+            break
+        if i > 20:
+            sys.exit(0)
+    return
 
 
-def get_reference_journal(reference):
-    journal_title = ''
-    ref_monogr = reference.find(ns['tei'] + 'monogr')
-    if ref_monogr is not None:
-        journal_title = reference.find(
-            ns['tei'] + 'monogr',
-        ).find(ns['tei'] + 'title').text
-    if journal_title is None:
-        journal_title = ''
-    return journal_title
-
-
-def get_reference_journal_volume(reference):
-    volume = ''
-    try:
-        if reference.find('.//' + ns['tei'] + 'monogr') is not None:
-            journal_node = reference.find('.//' + ns['tei'] + 'monogr')
-            imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            volume = imprint_node.find(
-                './/' + ns['tei'] + "biblScope[@unit='volume']",
-            ).text
-    except AttributeError:
-        pass
-    return volume
-
-
-def get_reference_journal_issue(reference):
-    issue = ''
-    try:
-        if reference.find('.//' + ns['tei'] + 'monogr') is not None:
-            journal_node = reference.find('.//' + ns['tei'] + 'monogr')
-            imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            issue = imprint_node.find(
-                './/' + ns['tei'] + "biblScope[@unit='issue']",
-            ).text
-    except AttributeError:
-        pass
-    return issue
-
-
-def get_reference_year(reference):
-    year_string = ''
-    ref_monogr = reference.find(ns['tei'] + 'monogr')
-    ref_analytic = reference.find(ns['tei'] + 'analytic')
-    if ref_monogr is not None:
-        year = ref_monogr.find(ns['tei'] + 'imprint')\
-                         .find(ns['tei'] + 'date')
-    elif ref_analytic is not None:
-        year = ref_analytic.find(ns['tei'] + 'imprint')\
-                           .find(ns['tei'] + 'date')
-
-    if year is not None:
-        for name, value in sorted(year.items()):
-            if name == 'when':
-                year_string = value
-            else:
-                year_string = 'NA'
-    else:
-        year_string = 'NA'
-    year_string = re.sub('.*([1-2][0-9]{3}).*', '\\1', year_string)
-    return year_string
-
-
-def get_reference_pages(reference):
-    pages = ''
-    try:
-        if reference.find('.//' + ns['tei'] + 'monogr') is not None:
-            journal_node = reference.find('.//' + ns['tei'] + 'monogr')
-            imprint_node = journal_node.find('.//' + ns['tei'] + 'imprint')
-            page_node = imprint_node.find(
-                './/' + ns['tei'] + "biblScope[@unit='page']",
-            )
-            if page_node is not None:
-                if 'from' in page_node:
-                    pages = pages + page_node.get('from')
-                if 'to' in page_node:
-                    pages = pages + '--' + page_node.get('to')
-    except AttributeError:
-        pass
-    return pages
-
-
-def get_reference_doi(reference):
-    doi = ''
-    try:
-        if reference.find('.//' + ns['tei'] + 'idno') is not None:
-            doi = reference.find('.//' + ns['tei'] + 'idno').text
-
-    except AttributeError:
-        pass
-    return doi
-
-
-def get_reference_entrytype(reference):
-    ENTRYTYPE = 'article'
-    try:
-        monog = (reference.find('.//' + ns['tei'] + 'monogr') is not None)
-        analytic = (reference.find('.//' + ns['tei'] + 'analytic') is not None)
-        if monog:
-            monog_type = reference.find('.//' + ns['tei'] + 'monogr')\
-                .find(ns['tei'] + 'title').get('level')
-            m_title = reference.find('.//' + ns['tei'] + 'monogr')\
-                .find(ns['tei'] + 'title').text.lower()
-            if 'm' == monog_type:
-                if 'conference' in m_title or \
-                    'proceeding' in m_title or \
-                        'workshop' in m_title:
-                    ENTRYTYPE = 'inproceedings'
-                elif analytic:
-                    ENTRYTYPE = 'inbook'
-                else:
-                    ENTRYTYPE = 'book'
-
-    except AttributeError:
-        pass
-    return ENTRYTYPE
-
-
-def extract_bibliography(root):
-    BIBLIOGRAPHY = pd.DataFrame(
-        columns=[
-            'ENTRYTYPE',
-            'authors',
-            'title',
-            'year',
-            'journal',
-            'volume',
-            'issue',
-            'pages',
-            'doi',
-        ],
-    )
-
-    for bibliography in root.iter(ns['tei'] + 'listBibl'):
-        for reference in bibliography:
-            ENTRY = pd.DataFrame.from_records(
-                [[
-                    get_reference_entrytype(reference),
-                    get_reference_author(reference),
-                    get_reference_title(reference),
-                    get_reference_year(reference),
-                    get_reference_journal(reference),
-                    get_reference_journal_volume(reference),
-                    get_reference_journal_issue(reference),
-                    get_reference_pages(reference),
-                    get_reference_doi(reference),
-                ]],
-                columns=[
-                    'ENTRYTYPE',
-                    'authors',
-                    'title',
-                    'year',
-                    'journal',
-                    'volume',
-                    'issue',
-                    'pages',
-                    'doi',
-                ],
-            )
-            BIBLIOGRAPHY = BIBLIOGRAPHY.append(ENTRY)
-
-    BIBLIOGRAPHY = BIBLIOGRAPHY.reset_index(drop=True)
-    return BIBLIOGRAPHY
-
-
-def get_bib_db_from_tei(tei):
-    with open(tei) as xml_file:
-        root = etree.parse(xml_file).getroot()
-
-    bibliography = extract_bibliography(root)
-    db = BibDatabase()
-    for index, row in bibliography.iterrows():
-        entry = {}
-        author_string = row['authors'].capitalize()\
-                                      .replace(',', '')\
-                                      .replace(' ', '')
-        try:
-            author_string = row['authors'].split(' ')[0]\
-                                          .capitalize()\
-                                          .replace(',', '')
-        except AttributeError:
-            pass
-        entry.update(ID=author_string + row['year'])
-        entrytype = row['ENTRYTYPE']
-        entry.update(ENTRYTYPE=entrytype)
-        entry.update(author=row['authors'])
-        if 'article' == entrytype:
-            entry.update(journal=row['journal'])
-            entry.update(volume=row['volume'])
-            entry.update(issue=row['issue'])
-        if 'book' == entrytype:
-            entry.update(title=row['journal'])
-        if 'inproceedings' == entrytype:
-            entry.update(booktitle=row['journal'])
-        if 'inbook' == entrytype:
-            entry.update(booktitle=row['journal'])
-
-        entry.update(title=row['title'])
-        entry.update(year=row['year'])
-        entry.update(pages=row['pages'])
-        entry.update(doi=row['doi'])
-        if index == 0:
-            db.entries = [entry]
-        else:
-            db.entries.append(entry)
-
-    for entry in db.entries:
-        empty_field_keys = [key for key in entry.keys() if entry[key] == '']
-        for key in empty_field_keys:
-            if entry[key] == '':
-                del entry[key]
-    return db
-
-
-def process_backward_search(tei):
+def process_backward_search(pdf_filename, bib_filename):
 
     search_details = pd.read_csv(SEARCH_DETAILS)
 
-    if tei in search_details['source_url']:
+    if bib_filename in search_details['source_url']:
         return
 
-    db = get_bib_db_from_tei(tei)
+    # alternative python-batch:
+    # https://github.com/kermitt2/grobid_client_python
+    check_grobid_availability()
 
-    bib_filename = tei.replace('.tei.xml', '') + 'bw_search.bib'
-    utils.save_bib_file(db, bib_filename)
+    options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
+    r = requests.post(
+        GROBID_URL + '/api/processReferences',
+        files=dict(input=open(pdf_filename, 'rb')),
+        data=options,
+        headers={'Accept': 'application/x-bibtex'}
+    )
+
+    bib_content = r.text.encode('utf-8')
+    with open(bib_filename, 'wb') as f:
+        f.write(bib_content)
 
     if len(search_details.index) == 0:
         iteration_number = 1
@@ -392,13 +122,13 @@ def process_backward_search(tei):
     new_record = pd.DataFrame(
         [[
             bib_filename,
-            len(db.entries),
+            r.text.count('\n@'),
             iteration_number,
             datetime.today().strftime('%Y-%m-%d'),
             datetime.today().strftime('%Y-%m-%d'),
-            tei,
+            bib_filename,
             '',
-            'automated_script',
+            'backward_search.py',
             '',
         ]],
         columns=[
@@ -420,41 +150,6 @@ def process_backward_search(tei):
     )
 
     return bib_filename
-
-
-def check_grobid_availability():
-    i = 0
-    while True:
-        i += 1
-        time.sleep(1)
-        try:
-            r = requests.get(GROBID_URL + '/api/isalive')
-            if r.text == 'true':
-                i = -1
-        except requests.exceptions.ConnectionError:
-            pass
-        if i == -1:
-            break
-        if i > 20:
-            sys.exit(0)
-    return
-
-
-def transform(pdf_filename, tei_filename):
-    # alternative python-batch:
-    # https://github.com/kermitt2/grobid_client_python
-    check_grobid_availability()
-    # print('Processing ' + pdf_filename)
-    options = {'consolidateHeader': '1', 'consolidateCitations': '1'}
-    r = requests.post(
-        GROBID_URL + '/api/processFulltextDocument',
-        files=dict(input=open(pdf_filename, 'rb')),
-        data=options,
-    )
-    tei_content = r.text.encode('utf-8')
-    with open(tei_filename, 'wb') as f:
-        f.write(tei_content)
-    return
 
 
 def create_commit(bibfilenames):
@@ -488,12 +183,10 @@ def main():
     bibfilenames = []
     for citation_key in tqdm.tqdm(citation_keys):
         backward_search_path = data_dir + 'search/'
-        tei_filename = backward_search_path + citation_key + '.tei.xml'
+        bib_filename = backward_search_path + citation_key + '_bw_search.bib'
         pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
-        transform(pdf_filename, tei_filename)
-        bibfilename = process_backward_search(tei_filename)
+        bibfilename = process_backward_search(pdf_filename, bib_filename)
         bibfilenames.append(bibfilename)
-        os.remove(tei_filename)
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
     create_commit(bibfilenames)
