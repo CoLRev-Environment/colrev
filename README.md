@@ -19,13 +19,13 @@
 
 # Installation and usage
 
-Install [git and a git gui](https://git-scm.com/downloads), such as [GitHub Desktop](https://desktop.github.com/) for Windows/macOS.
+Requirements: [git](https://git-scm.com/downloads), [a git gui](https://git-scm.com/downloads), such as [GitHub Desktop](https://desktop.github.com/) for Windows/macOS, [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
 
 ```
 # Installation (currently, while not yet available via pip)
 git clone https://github.com/geritwagner/review_template
 cd review_template
-pip install -e .
+pip3 install --user -e .
 # Goal:
 # pip install review_template
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+import io
 import os
+import pkgutil
 import re
 import sys
 import time
@@ -17,6 +19,7 @@ from bibtexparser.customization import convert_to_unicode
 from git import Repo
 from nameparser import HumanName
 
+import docker
 from review_template import entry_hash_function
 
 with open('shared_config.yaml') as shared_config_yaml:
@@ -543,3 +546,31 @@ def get_version_flags():
         flag_details = '\n - ⚠: created with a dirty repository version ' + \
             '(not reproducible)'
     return flag, flag_details
+
+
+def build_docker_images():
+
+    client = docker.from_env()
+
+    repo_tags = [x.attrs.get('RepoTags', '') for x in client.images.list()]
+    repo_tags = [item[:item.find(':')]
+                 for sublist in repo_tags for item in sublist]
+    print(repo_tags)
+    if 'bibutils' not in repo_tags:
+        # import docker.api.build
+        # docker.api.build.process_dockerfile =
+        #       lambda dockerfile, path: ('Dockerfile', dockerfile)
+        print('Building bibutils Docker image...')
+        filedata = pkgutil.get_data(__name__, '../docker/bibutils/Dockerfile')
+        fileobj = io.BytesIO(filedata)
+        client.images.build(
+            fileobj=fileobj,
+            tag='bibutils:latest',
+        )
+    if 'lfoppiano/grobid' not in repo_tags:
+        print('Pulling grobid Docker image...')
+        client.images.pull('lfoppiano/grobid:0.7.0')
+
+    # jbarlow83/ocrmypdf
+
+    return

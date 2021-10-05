@@ -30,7 +30,11 @@ requirements = ['Click>=7.0',
                 'requests==2.22.0',
                 'tqdm==4.61.1',
                 'ujson==4.0.2',
-                'wordsegment==1.3.1', ]
+                'wordsegment==1.3.1',
+                'docker>=5.0']
+# Note: docker and docker-py seem to be similar/identical?!
+# https://pypi.org/project/docker-py/
+# https://pypi.org/project/docker/
 
 test_requirements = ['pytest>=3',
                      'attrs>=19.2.0',
