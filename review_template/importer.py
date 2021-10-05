@@ -11,6 +11,7 @@ import git
 import yaml
 from bibtexparser.customization import convert_to_unicode
 
+import docker
 from review_template import cleanse_records
 from review_template import entry_hash_function
 from review_template import utils
@@ -220,6 +221,104 @@ def load(bib_database):
         os.remove('imported_entry_links.csv')
 
     return additional_records
+
+
+def bibutils_convert(script, data):
+
+    assert script in ['ris2xml', 'end2xml',
+                      'endx2xml', 'isi2xml', 'med2xml', 'xml2bib']
+
+    if 'xml2bib' == script:
+        script = script + ' -b -w '
+
+    if isinstance(data, str):
+        data = data.encode()
+
+    client = docker.APIClient()
+    try:
+
+        container = client.create_container(
+            'bibutils',
+            script,
+            stdin_open=True,
+        )
+    except docker.errors.ImageNotFound:
+        print('Docker image not found')
+        return ''
+        pass
+
+    sock = client.attach_socket(container,
+                                params={'stdin': 1, 'stdout': 1,
+                                        'stderr': 1, 'stream': 1})
+    client.start(container)
+
+    sock._sock.send(data)
+    sock._sock.close()
+    sock.close()
+
+    # status = client.wait(container)
+    # status_code = status['StatusCode']
+    stdout = client.logs(container, stderr=False).decode()
+    # stderr = client.logs(container, stdout=False).decode()
+
+    client.remove_container(container)
+
+    # print('Exit: {}'.format(status_code))
+    # print('log stdout: {}'.format(stdout))
+    # print('log stderr: {}'.format(stderr))
+
+    # TODO: else: raise error!
+
+    return stdout
+
+
+def ris2bib(file):
+    with open(file) as reader:
+        data = reader.read()
+    data = bibutils_convert('ris2xml', data)
+    data = bibutils_convert('xml2bib', data)
+    return data
+
+
+def end2bib(file):
+    with open(file) as reader:
+        data = reader.read()
+    data = bibutils_convert('end2xml', data)
+    data = bibutils_convert('xml2bib', data)
+    return data
+
+
+def convert_non_bib_files(r):
+
+    search_dir = os.path.join(os.getcwd(), 'search/')
+
+    ris_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir) if x.endswith('.ris')]
+    for ris_file in ris_files:
+        corresponding_bib_file = ris_file.replace('.ris', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting ris file to bib: ' + os.path.basename(ris_file))
+        data = ris2bib(ris_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([ris_file])
+
+    end_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir) if x.endswith('.end')]
+    for end_file in end_files:
+        corresponding_bib_file = end_file.replace('.end', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting end file to bib: ' + os.path.basename(end_file))
+        data = end2bib(end_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([end_file])
+
+    return
 
 
 def create_commit(r, bib_database):

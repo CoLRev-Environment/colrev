@@ -69,7 +69,7 @@ def process_entries(search_records, bib_database):
     importer.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'imported'):
-        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)')
+        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
     print('Cleanse')
@@ -80,7 +80,7 @@ def process_entries(search_records, bib_database):
     cleanse_records.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'cleansed'):
-        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)')
+        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
     print('Process duplicates')
@@ -99,11 +99,14 @@ def main():
 
     global r
     r = initialize.get_repo()
+    utils.build_docker_images()
 
     # Currently, citation_keys are generated
     # in importer.load()
     # We may discuss whether/how to generate new citation_keys
     # AND prevent conflicting citation_keys in parallel operation
+
+    importer.convert_non_bib_files(r)
 
     bib_database = utils.load_references_bib(True, initialize=True)
 
