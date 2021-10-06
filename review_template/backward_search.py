@@ -1,9 +1,5 @@
 #! /usr/bin/env python
 import csv
-import os
-import subprocess
-import sys
-import time
 from datetime import datetime
 from time import gmtime
 from time import strftime
@@ -15,6 +11,7 @@ import tqdm
 import yaml
 
 from review_template import entry_hash_function
+from review_template import grobid_client
 from review_template import utils
 
 with open('shared_config.yaml') as shared_config_yaml:
@@ -30,65 +27,7 @@ with open('private_config.yaml') as private_config_yaml:
 EMAIL = private_config['params']['EMAIL']
 GIT_ACTOR = private_config['params']['GIT_ACTOR']
 
-ns = {
-    'tei': '{http://www.tei-c.org/ns/1.0}',
-    'w3': '{http://www.w3.org/XML/1998/namespace}',
-}
-
-# GROBID_URL = 'http://grobid:8070'
-# data_dir = '/usr/data/'
-GROBID_URL = 'http://localhost:8070'
 data_dir = ''
-
-
-def start_grobid():
-    try:
-        r = requests.get(GROBID_URL + '/api/isalive')
-        if r.text == 'true':
-            # print('Docker running')
-            return True
-    except requests.exceptions.ConnectionError:
-        print('Starting grobid service...')
-        subprocess.Popen(['docker run -t --rm -m "4g" -p 8070:8070 ' +
-                          '-p 8071:8071 lfoppiano/grobid:0.7.0'],
-                         shell=True,
-                         stdin=None,
-                         stdout=open(os.devnull, 'wb'),
-                         stderr=None, close_fds=True)
-        pass
-
-    i = 0
-    while True:
-        i += 1
-        time.sleep(1)
-        try:
-            r = requests.get(GROBID_URL + '/api/isalive')
-            if r.text == 'true':
-                print('Grobid service alive.')
-                return True
-        except requests.exceptions.ConnectionError:
-            pass
-        if i > 30:
-            break
-    return False
-
-
-def check_grobid_availability():
-    i = 0
-    while True:
-        i += 1
-        time.sleep(1)
-        try:
-            r = requests.get(GROBID_URL + '/api/isalive')
-            if r.text == 'true':
-                i = -1
-        except requests.exceptions.ConnectionError:
-            pass
-        if i == -1:
-            break
-        if i > 20:
-            sys.exit(0)
-    return
 
 
 def process_backward_search(pdf_filename, bib_filename):
@@ -100,11 +39,11 @@ def process_backward_search(pdf_filename, bib_filename):
 
     # alternative python-batch:
     # https://github.com/kermitt2/grobid_client_python
-    check_grobid_availability()
+    grobid_client.check_grobid_availability()
 
     options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
     r = requests.post(
-        GROBID_URL + '/api/processReferences',
+        grobid_client.get_grobid_url() + '/api/processReferences',
         files=dict(input=open(pdf_filename, 'rb')),
         data=options,
         headers={'Accept': 'application/x-bibtex'}
@@ -176,7 +115,7 @@ def create_commit(bibfilenames):
 def main():
 
     print('Backward search')
-    start_grobid()
+    grobid_client.start_grobid()
     citation_keys = utils.get_included_papers()
 
     print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))

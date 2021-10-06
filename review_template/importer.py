@@ -8,12 +8,16 @@ from itertools import chain
 
 import bibtexparser
 import git
+import pandas as pd
+import requests
 import yaml
+from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import docker
 from review_template import cleanse_records
 from review_template import entry_hash_function
+from review_template import grobid_client
 from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -288,6 +292,106 @@ def end2bib(file):
     return data
 
 
+def txt2bib(file):
+    grobid_client.check_grobid_availability()
+    with open(file) as f:
+        references = [line.rstrip() for line in f]
+
+    # Note: processCitationList currently not working!??!
+    data = ''
+    ind = 0
+    for ref in references:
+        options = {}
+        options['consolidateCitations'] = '1'
+        options['citations'] = ref
+        r = requests.post(
+            grobid_client.get_grobid_url() + '/api/processCitation',
+            data=options,
+            headers={'Accept': 'application/x-bibtex'}
+        )
+        ind += 1
+        data = data + '\n' + r.text.replace('{-1,', '{' + str(ind) + ',')
+
+    return data
+
+
+def preprocess_entries(data):
+    for x in data:
+        # TODO: more sophisticated setting of ENTRYTYPE, ID is needed.
+        # could also use simple numbers as IDs...
+        x['ENTRYTYPE'] = 'article'
+        if 'citation_key' in x.keys():
+            x['ID'] = x.pop('citation_key')
+        for k, v in x.items():
+            x[k] = str(v)
+            # if ' ' in k:
+            #     x[k.replace(' ', '_')] = x.pop(k)
+
+    return data
+
+
+def csv2bib(csv_file):
+    data = pd.read_csv(csv_file)
+    data.columns = data.columns.str.replace(' ', '_')
+    data.columns = data.columns.str.replace('-', '_')
+    data = data.to_dict('records')
+    data = preprocess_entries(data)
+
+    db = BibDatabase()
+    db.entries = data
+    data = bibtexparser.dumps(db)
+    return data
+
+
+def xlsx2bib(xlsx_file):
+    data = pd.read_excel(xlsx_file)
+    data.columns = data.columns.str.replace(' ', '_')
+    data.columns = data.columns.str.replace('-', '_')
+    data = data.to_dict('records')
+    data = preprocess_entries(data)
+
+    db = BibDatabase()
+    db.entries = data
+    data = bibtexparser.dumps(db)
+    return data
+
+
+def pdf2bib(pdf_file):
+    grobid_client.check_grobid_availability()
+    data = ''
+
+    options = {'consolidateHeader': '1'}
+    r = requests.put(
+        grobid_client.get_grobid_url() + '/api/processHeaderDocument',
+        files=dict(input=open(pdf_file, 'rb')),
+        params=options,
+        headers={'Accept': 'application/x-bibtex'}
+    )
+    print(r.request.url)
+    # print(r.request.body)
+    print(r.request.headers)
+    print(r.status_code)
+    data = r.text
+
+    return data
+
+
+def pdfRefs2bib(pdf_file):
+    grobid_client.check_grobid_availability()
+    data = ''
+
+    options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
+    r = requests.post(
+        grobid_client.get_grobid_url() + '/api/processReferences',
+        files=dict(input=open(pdf_file, 'rb')),
+        data=options,
+        headers={'Accept': 'application/x-bibtex'}
+    )
+
+    data = r.text
+    return data
+
+
 def convert_non_bib_files(r):
 
     search_dir = os.path.join(os.getcwd(), 'search/')
@@ -317,6 +421,63 @@ def convert_non_bib_files(r):
             file.write(data)
             file.close()
         r.index.add([end_file])
+
+    txt_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir) if x.endswith('.txt')]
+    for txt_file in txt_files:
+        grobid_client.start_grobid()
+        corresponding_bib_file = txt_file.replace('.txt', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting txt file to bib: ' + os.path.basename(txt_file))
+        data = txt2bib(txt_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([txt_file])
+
+    csv_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir)
+                 if (x.endswith('.csv') and 'search_details.csv' != x)]
+    for csv_file in csv_files:
+        corresponding_bib_file = csv_file.replace('.csv', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting csv file to bib: ' + os.path.basename(csv_file))
+        data = csv2bib(csv_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([csv_file])
+
+    xlsx_files = [os.path.join(search_dir, x)
+                  for x in os.listdir(search_dir) if x.endswith('.xlsx')]
+    for xlsx_file in xlsx_files:
+        corresponding_bib_file = xlsx_file.replace('.xlsx', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting xlsx file to bib: ' + os.path.basename(xlsx_file))
+        data = xlsx2bib(xlsx_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([xlsx_file])
+
+    pdf_files = [os.path.join(search_dir, x)
+                 for x in os.listdir(search_dir) if x.endswith('.pdf')]
+    for pdf_file in pdf_files:
+        corresponding_bib_file = pdf_file.replace('.pdf', '.bib')
+        if os.path.exists(corresponding_bib_file):
+            continue
+        print('Converting pdf file to bib: ' + os.path.basename(pdf_file))
+        if pdf_file.endswith('_ref_list.pdf'):
+            data = pdfRefs2bib(pdf_file)
+        else:
+            data = pdf2bib(pdf_file)
+        with open(corresponding_bib_file, 'w') as file:
+            file.write(data)
+            file.close()
+        r.index.add([pdf_file])
 
     return
 

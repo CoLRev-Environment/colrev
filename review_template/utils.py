@@ -555,7 +555,7 @@ def build_docker_images():
     repo_tags = [x.attrs.get('RepoTags', '') for x in client.images.list()]
     repo_tags = [item[:item.find(':')]
                  for sublist in repo_tags for item in sublist]
-    print(repo_tags)
+
     if 'bibutils' not in repo_tags:
         # import docker.api.build
         # docker.api.build.process_dockerfile =
