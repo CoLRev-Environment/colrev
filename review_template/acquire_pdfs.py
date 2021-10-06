@@ -1,31 +1,26 @@
 #! /usr/bin/env python
+import configparser
 import csv
 import json
 import os
 
 import pandas as pd
 import requests
-import yaml
 from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import entry_hash_function
 from review_template import utils
 # from pdfminer.high_level import extract_text
 
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 PDF_DIRECTORY = entry_hash_function.paths[HASH_ID_FUNCTION]['PDF_DIRECTORY']
 SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
-EMAIL = private_config['params']['EMAIL']
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
@@ -40,7 +35,7 @@ def unpaywall(doi, retry=0, pdfonly=True):
 
     r = requests.get(
         'https://api.unpaywall.org/v2/{doi}',
-        params={'email': EMAIL},
+        params={'email': config['general']['EMAIL']},
     )
 
     if r.status_code == 404:

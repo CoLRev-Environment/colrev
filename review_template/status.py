@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import configparser
 import os
 
 import git
@@ -14,17 +15,6 @@ class colors:
     ORANGE = '\033[93m'
     BLUE = '\033[94m'
     END = '\033[0m'
-
-
-default_shared_params = dict(
-    params=dict(
-        MERGING_NON_DUP_THRESHOLD=0.7,
-        MERGING_DUP_THRESHOLD=0.95,
-        BATCH_SIZE=500,
-        HASH_ID_FUNCTION='v_0.3',
-        SHARE_STATUS_REQUIREMENT='PROCESSED',
-    )
-)
 
 
 def lsremote(url):
@@ -67,96 +57,65 @@ except git.exc.GitCommandError:
           'pipeline-validation-hooks repository for updates.')
     pass
 
-if not os.path.exists('shared_config.yaml'):
-    with open('shared_config.yaml', 'w') as outfile:
-        yaml.dump(default_shared_params, outfile)
-    print('Initiated shared_config.yaml with default parameters.')
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
+default_shared_general = {'HASH_ID_FUNCTION': 'v_0.3',
+                          'MERGING_NON_DUP_THRESHOLD': '0.7',
+                          'MERGING_DUP_THRESHOLD': '0.95',
+                          'BATCH_SIZE': '500',
+                          'SCREEN_TYPE': 'SCREEN',
+                          'DATA_FORMAT': 'CSV_TABLE',
+                          'PDF_HANDLING': 'GIT',
+                          'DELAY_AUTOMATED_PROCESSING': 'no',
+                          'SHARE_STAT_REQ': 'PROCESSED'}
 
-if shared_config is None:
-    with open('shared_config.yaml', 'w') as outfile:
-        yaml.dump(default_shared_params, outfile)
-    shared_config = default_shared_params
-    print('Initiated shared_config.yaml with default parameters.')
+shared_config = configparser.ConfigParser()
 
-if 'params' not in shared_config:
-    shared_config['params'] = default_shared_params['params']
-    with open('shared_config.yaml', 'w') as outfile:
-        yaml.dump(shared_config, outfile)
-    print('Initiated shared_config.yaml with default parameters.')
+if not os.path.exists('shared_config.ini'):
+    shared_config['general'] = default_shared_general
+    with open('shared_config.ini', 'w') as outfile:
+        shared_config.write(outfile)
+    print('Initiated shared_config.ini with default parameters.')
+shared_config.read('shared_config.ini')
+for key in default_shared_general.keys():
+    if key not in shared_config['general']:
+        shared_config['general'][key] = input('Please provide the ' + key)
+        with open('shared_config.ini', 'w') as outfile:
+            shared_config.write(outfile)
 
-for param, value in default_shared_params['params'].items():
-    if param not in shared_config['params']:
-        shared_config['params'][param] = value
-        print(f'Added default value for {param} to shared_config.yaml')
-        with open('shared_config.yaml', 'w') as outfile:
-            yaml.dump(shared_config, outfile)
-
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-SHARE_STATUS_REQUIREMENT = shared_config['params']['SHARE_STATUS_REQUIREMENT']
+HASH_ID_FUNCTION = shared_config['general']['HASH_ID_FUNCTION']
+SHARE_STATUS_REQUIREMENT = shared_config['general']['SHARE_STATUS_REQUIREMENT']
 
 
-default_private_params = dict(
-    params=dict(
-        EMAIL='user@name.com',
-        GIT_ACTOR='ADD_USERNAME_IN_PRIVATE_CONFIG_YAML',
-        CPUS=2,
-        DEBUG_MODE=0,
-    ),
-    PDFPATH=dict(
-        path_1='/home/user/data/pdfs',
-    )
-)
+default_private_general = {'EMAIL': 'user@name.com',
+                           'GIT_ACTOR': 'ADD_USERNAME',
+                           'CPUS': '2',
+                           'DEBUG_MODE': 'no'}
+default_private_pdfpath = {'path_1': '/home/user/data/pdfs'}
 
-if not os.path.exists('private_config.yaml'):
-    with open('private_config.yaml', 'w') as outfile:
-        yaml.dump(default_private_params, outfile)
-    print('Initiated private_config.yaml with default parameters.')
+private_config = configparser.ConfigParser()
 
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+if not os.path.exists('private_config.ini'):
+    private_config['general'] = default_private_general
+    private_config['PDFPATH'] = default_private_pdfpath
+    with open('private_config.ini', 'w') as outfile:
+        private_config.write(outfile)
+    print('Initiated private_config.ini with default parameters.')
+private_config.read('private_config.ini')
+for key in default_private_general.keys():
+    if key not in private_config['general']:
+        private_config['general'][key] = input('Please provide the ' + key)
+        with open('private_config.ini', 'w') as outfile:
+            private_config.write(outfile)
+for key in default_private_pdfpath.keys():
+    if key not in private_config['PDFPATH']:
+        private_config['PDFPATH'][key] = input('Please provide the ' + key)
+        with open('private_config.ini', 'w') as outfile:
+            private_config.write(outfile)
 
-if private_config is None:
-    with open('private_config.yaml', 'w') as outfile:
-        yaml.dump(default_private_params, outfile)
-    private_config = default_private_params
-    print('Initiated private_config.yaml with default parameters.')
+CPUS = private_config['general']['CPUS']
+DEBUG_MODE = private_config.getboolean('general', 'DEBUG_MODE')
 
-if 'params' not in private_config:
-    private_config['params'] = default_private_params['params']
-    with open('private_config.yaml', 'w') as outfile:
-        yaml.dump(private_config, outfile)
-    print('Initiated private_config.yaml with default parameters.')
-
-for param, value in default_private_params['params'].items():
-    if param not in private_config['params']:
-        private_config['params'][param] = value
-        print(f'Added default value for {param} to private_config.yaml')
-        with open('private_config.yaml', 'w') as outfile:
-            yaml.dump(private_config, outfile)
-
-if 'PDFPATH' not in private_config:
-    private_config['PDFPATH'] = default_private_params['PDFPATH']
-    with open('private_config.yaml', 'w') as outfile:
-        yaml.dump(private_config, outfile)
-    print('Initiated private_config.yaml with default parameters.')
-
-for param, value in default_private_params['PDFPATH'].items():
-    if param not in private_config['PDFPATH']:
-        private_config['PDFPATH'][param] = value
-        print(f'Added default value for {param} to private_config.yaml')
-        with open('private_config.yaml', 'w') as outfile:
-            yaml.dump(private_config, outfile)
-
-CPUS = private_config['params']['CPUS']
-DEBUG_MODE = private_config['params']['DEBUG_MODE']
-
-if private_config['params']['EMAIL'] == 'user@name.com':
-    print('Please set the EMAIL field in private_config.yaml.')
-
-defaul_gitignore = ['private_config.yaml',
+defaul_gitignore = ['private_config.ini',
                     '.local_pdf_indices',
                     '.index-*',
                     'missing_pdf_files.csv',

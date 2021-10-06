@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import configparser
 import csv
 from datetime import datetime
 from time import gmtime
@@ -8,24 +9,17 @@ import git
 import pandas as pd
 import requests
 import tqdm
-import yaml
 
 from review_template import entry_hash_function
 from review_template import grobid_client
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 SEARCH_DETAILS = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
-
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-EMAIL = private_config['params']['EMAIL']
-GIT_ACTOR = private_config['params']['GIT_ACTOR']
 
 data_dir = ''
 
@@ -106,9 +100,9 @@ def create_commit(bibfilenames):
         '\n - Using backward_search.py' +
         '\n - ' + utils.get_package_details(),
         author=git.Actor('script:backward_search.py', ''),
-        committer=git.Actor(GIT_ACTOR, EMAIL),
+        committer=git.Actor(config['general']['GIT_ACTOR'],
+                            config['general']['EMAIL']),
     )
-
     return
 
 

@@ -1,28 +1,21 @@
 #! /usr/bin/env python
+import configparser
 import csv
 import os
 import sys
 
 import git
 import pandas as pd
-import yaml
 
 from review_template import entry_hash_function
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MAIN_REFERENCES = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
-GIT_ACTOR = private_config['params']['GIT_ACTOR']
-EMAIL = private_config['params']['EMAIL']
 
 
 def generate_screen_csv(exclusion_criteria):
@@ -79,7 +72,7 @@ def pre_screen_commit():
     r.index.add([SCREEN])
 
     hook_skipping = 'false'
-    if not DEBUG_MODE:
+    if not config.getboolean('general', 'DEBUG_MODE'):
         hook_skipping = 'true'
 
     flag, flag_details = utils.get_version_flags()
@@ -88,8 +81,10 @@ def pre_screen_commit():
         'Pre-screening (manual)' + flag + flag_details +
         '\n - Using pre_screen.py' +
         '\n - ' + utils.get_package_details(),
-        author=git.Actor(GIT_ACTOR, EMAIL),
-        committer=git.Actor(GIT_ACTOR, EMAIL),
+        author=git.Actor(config['general']['GIT_ACTOR'],
+                         config['general']['EMAIL']),
+        committer=git.Actor(config['general']['GIT_ACTOR'],
+                            config['general']['EMAIL']),
         skip_hooks=hook_skipping
     )
 

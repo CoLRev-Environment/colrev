@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import configparser
 import csv
 import itertools
 import logging
@@ -10,7 +11,6 @@ import bibtexparser
 import git
 import pandas as pd
 import requests
-import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
@@ -22,21 +22,9 @@ from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-if 'CPUS' not in private_config['params']:
-    CPUS = mp.cpu_count()-1
-else:
-    CPUS = private_config['params']['CPUS']
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
-GIT_ACTOR = private_config['params']['GIT_ACTOR']
-EMAIL = private_config['params']['EMAIL']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 
 MAIN_REFERENCES = \
@@ -197,7 +185,8 @@ def load(bib_database):
     save_imported_entry_links(bib_database)
 
     # additional_records = load_entries(utils.get_bib_files()[0])
-    pool = mp.Pool(processes=CPUS)
+    pool = mp.Pool(processes=config.get('general', 'CPUS',
+                                        fallback=mp.cpu_count()-1))
     additional_records = pool.map(load_entries, utils.get_bib_files())
     additional_records = list(chain(*additional_records))
 
@@ -448,7 +437,7 @@ def create_commit(r, bib_database):
         r.index.add([MAIN_REFERENCES])
         r.index.add(utils.get_bib_files())
         hook_skipping = 'false'
-        if not DEBUG_MODE:
+        if not config.getboolean('general', 'DEBUG_MODE'):
             hook_skipping = 'true'
 
         flag, flag_details = utils.get_version_flags()
@@ -457,7 +446,8 @@ def create_commit(r, bib_database):
             '⚙️ Import search results ' + flag + flag_details +
             '\n - ' + utils.get_package_details(),
             author=git.Actor('script:importer.py', ''),
-            committer=git.Actor(GIT_ACTOR, EMAIL),
+            committer=git.Actor(config['general']['GIT_ACTOR'],
+                                config['general']['EMAIL']),
             skip_hooks=hook_skipping
         )
     else:

@@ -1,22 +1,18 @@
 #! /usr/bin/env python
+import configparser
 import pprint
 
 import git
-import yaml
 
 from review_template import entry_hash_function
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 
 def manual_cleanse_commit():
@@ -24,7 +20,7 @@ def manual_cleanse_commit():
     r.index.add([MAIN_REFERENCES])
 
     hook_skipping = 'false'
-    if not DEBUG_MODE:
+    if not config.getboolean('general', 'DEBUG_MODE'):
         hook_skipping = 'true'
     r.index.commit(
         'Cleanse manual ' + MAIN_REFERENCES +

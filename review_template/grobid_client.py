@@ -6,8 +6,6 @@ import time
 
 import requests
 
-# GROBID_URL = 'http://grobid:8070'
-# data_dir = '/usr/data/'
 GROBID_URL = 'http://localhost:8070'
 
 

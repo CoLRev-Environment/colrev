@@ -31,7 +31,9 @@ requirements = ['Click>=7.0',
                 'tqdm==4.61.1',
                 'ujson==4.0.2',
                 'wordsegment==1.3.1',
-                'docker>=5.0']
+                'docker>=5.0',
+                'configparser>=5.0']
+
 # Note: docker and docker-py seem to be similar/identical?!
 # https://pypi.org/project/docker-py/
 # https://pypi.org/project/docker/

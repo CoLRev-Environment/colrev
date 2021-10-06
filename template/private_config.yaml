@@ -1,7 +1,0 @@
-params:
-    EMAIL: EMAIL
-    GIT_ACTOR: GIT_ACTOR
-    CPUS: 4
-    DEBUG_MODE: 0
-PDFPATH:
-    path_1: "/test"

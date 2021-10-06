@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import configparser
 import io
 import os
 import pkgutil
@@ -12,7 +13,6 @@ from string import ascii_lowercase
 
 import bibtexparser
 import pandas as pd
-import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
@@ -22,9 +22,9 @@ from nameparser import HumanName
 import docker
 from review_template import entry_hash_function
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
