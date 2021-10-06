@@ -260,6 +260,7 @@ def bibutils_convert(script, data):
     sock._sock.close()
     sock.close()
 
+    client.wait(container)
     # status = client.wait(container)
     # status_code = status['StatusCode']
     stdout = client.logs(container, stderr=False).decode()
@@ -394,90 +395,40 @@ def pdfRefs2bib(pdf_file):
 
 def convert_non_bib_files(r):
 
+    importer = {'ris': ris2bib,
+                'end': end2bib,
+                'txt': txt2bib,
+                'csv': csv2bib,
+                'xlsx': xlsx2bib,
+                'pdf': pdf2bib,
+                'pdf_refs': pdfRefs2bib}
+
     search_dir = os.path.join(os.getcwd(), 'search/')
+    non_bib_files = [os.path.join(search_dir, x)
+                     for x in os.listdir(search_dir)
+                     if any(x.endswith(ext) for ext in importer.keys())]
 
-    ris_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir) if x.endswith('.ris')]
-    for ris_file in ris_files:
-        corresponding_bib_file = ris_file.replace('.ris', '.bib')
-        if os.path.exists(corresponding_bib_file):
+    for non_bib_file in non_bib_files:
+        corresponding_bib_file = \
+            non_bib_file[:non_bib_file.rfind('.')] + '.bib'
+        if os.path.exists(corresponding_bib_file) or \
+                'search_details.csv' == os.path.basename(non_bib_file):
             continue
-        print('Converting ris file to bib: ' + os.path.basename(ris_file))
-        data = ris2bib(ris_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([ris_file])
 
-    end_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir) if x.endswith('.end')]
-    for end_file in end_files:
-        corresponding_bib_file = end_file.replace('.end', '.bib')
-        if os.path.exists(corresponding_bib_file):
-            continue
-        print('Converting end file to bib: ' + os.path.basename(end_file))
-        data = end2bib(end_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([end_file])
-
-    txt_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir) if x.endswith('.txt')]
-    for txt_file in txt_files:
-        grobid_client.start_grobid()
-        corresponding_bib_file = txt_file.replace('.txt', '.bib')
-        if os.path.exists(corresponding_bib_file):
-            continue
-        print('Converting txt file to bib: ' + os.path.basename(txt_file))
-        data = txt2bib(txt_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([txt_file])
-
-    csv_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir)
-                 if (x.endswith('.csv') and 'search_details.csv' != x)]
-    for csv_file in csv_files:
-        corresponding_bib_file = csv_file.replace('.csv', '.bib')
-        if os.path.exists(corresponding_bib_file):
-            continue
-        print('Converting csv file to bib: ' + os.path.basename(csv_file))
-        data = csv2bib(csv_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([csv_file])
-
-    xlsx_files = [os.path.join(search_dir, x)
-                  for x in os.listdir(search_dir) if x.endswith('.xlsx')]
-    for xlsx_file in xlsx_files:
-        corresponding_bib_file = xlsx_file.replace('.xlsx', '.bib')
-        if os.path.exists(corresponding_bib_file):
-            continue
-        print('Converting xlsx file to bib: ' + os.path.basename(xlsx_file))
-        data = xlsx2bib(xlsx_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([xlsx_file])
-
-    pdf_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir) if x.endswith('.pdf')]
-    for pdf_file in pdf_files:
-        corresponding_bib_file = pdf_file.replace('.pdf', '.bib')
-        if os.path.exists(corresponding_bib_file):
-            continue
-        print('Converting pdf file to bib: ' + os.path.basename(pdf_file))
-        if pdf_file.endswith('_ref_list.pdf'):
-            data = pdfRefs2bib(pdf_file)
+        filetype = non_bib_file[non_bib_file.rfind('.')+1:]
+        if 'pdf' == filetype:
+            if non_bib_file.endswith('_ref_list.pdf'):
+                filetype = 'pdf_refs'
+        if filetype in importer.keys():
+            print('Importing ' + filetype + ': ' +
+                  os.path.basename(non_bib_file))
+            data = importer[filetype](non_bib_file)
+            with open(corresponding_bib_file, 'w') as file:
+                file.write(data)
+                file.close()
+            r.index.add([non_bib_file])
         else:
-            data = pdf2bib(pdf_file)
-        with open(corresponding_bib_file, 'w') as file:
-            file.write(data)
-            file.close()
-        r.index.add([pdf_file])
+            print('Filetype not recognized: ' + os.path.basename(non_bib_file))
 
     return
 
