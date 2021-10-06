@@ -90,13 +90,11 @@ default_private_general = {'EMAIL': 'user@name.com',
                            'GIT_ACTOR': 'ADD_USERNAME',
                            'CPUS': '2',
                            'DEBUG_MODE': 'no'}
-default_private_pdfpath = {'path_1': '/home/user/data/pdfs'}
 
 private_config = configparser.ConfigParser()
 
 if not os.path.exists('private_config.ini'):
     private_config['general'] = default_private_general
-    private_config['PDFPATH'] = default_private_pdfpath
     with open('private_config.ini', 'w') as outfile:
         private_config.write(outfile)
     print('Initiated private_config.ini with default parameters.')
@@ -104,11 +102,6 @@ private_config.read('private_config.ini')
 for key in default_private_general.keys():
     if key not in private_config['general']:
         private_config['general'][key] = input('Please provide the ' + key)
-        with open('private_config.ini', 'w') as outfile:
-            private_config.write(outfile)
-for key in default_private_pdfpath.keys():
-    if key not in private_config['PDFPATH']:
-        private_config['PDFPATH'][key] = input('Please provide the ' + key)
         with open('private_config.ini', 'w') as outfile:
             private_config.write(outfile)
 

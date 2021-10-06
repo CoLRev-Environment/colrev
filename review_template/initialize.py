@@ -95,8 +95,6 @@ def initialize_repo():
     private_config['general']['GIT_ACTOR'] = committer_name
     private_config['general']['CPUS'] = '4'
     private_config['general']['DEBUG_MODE'] = 'no'
-    private_config.add_section('PDFPATH')
-    private_config['PDFPATH']['path_1'] = '/test'
     with open('private_config.ini', 'w') as configfile:
         private_config.write(configfile)
 
