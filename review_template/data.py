@@ -1,21 +1,21 @@
 #! /usr/bin/env python
+import configparser
 import csv
 import logging
 import os
 import sys
 
 import pandas as pd
-import yaml
 
 from review_template import entry_hash_function
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-DATA_FORMAT = shared_config['params']['DATA_FORMAT']
+DATA_FORMAT = config['general']['DATA_FORMAT']
 
 SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 DATA_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']

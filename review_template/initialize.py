@@ -1,10 +1,10 @@
 #! /usr/bin/env python
+import configparser
 import os
 import pkgutil
 import sys
 
 import git
-import yaml
 
 
 def retrieve_template_file(template_file, target):
@@ -86,21 +86,45 @@ def initialize_repo():
     )
     retrieve_template_file('../template/.gitattributes',
                            '.gitattributes')
-    retrieve_template_file('../template/private_config.yaml',
-                           'private_config.yaml')
-    retrieve_template_file('../template/shared_config.yaml',
-                           'shared_config.yaml')
-    retrieve_template_file('../template/shared_config.yaml',
-                           'shared_config.yaml')
 
-    with open('shared_config.yaml') as shared_config_yaml:
-        shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-    HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+    inplace_change('readme.md', '{{project_title}}', project_title)
+
+    private_config = configparser.ConfigParser()
+    private_config.add_section('general')
+    private_config['general']['EMAIL'] = committer_email
+    private_config['general']['GIT_ACTOR'] = committer_name
+    private_config['general']['CPUS'] = '4'
+    private_config['general']['DEBUG_MODE'] = 'no'
+    private_config.add_section('PDFPATH')
+    private_config['PDFPATH']['path_1'] = '/test'
+    with open('private_config.ini', 'w') as configfile:
+        private_config.write(configfile)
+
+    HASH_ID_FUNCTION = 'v_0.3'
+    shared_config = configparser.ConfigParser()
+    shared_config.add_section('general')
+    shared_config['general']['HASH_ID_FUNCTION'] = HASH_ID_FUNCTION
+    shared_config['general']['SCREEN_TYPE'] = SCREEN_TYPE
+    shared_config['general']['DATA_FORMAT'] = DATA_FORMAT
+    shared_config['general']['SHARE_STAT_REQ'] = SHARE_STAT_REQ
+    shared_config['general']['PDF_HANDLING'] = PDF_HANDLING
+    shared_config['general']['BATCH_SIZE'] = '2000'
+    shared_config['general']['MERGING_DUP_THRESHOLD'] = '0.95'
+    shared_config['general']['MERGING_NON_DUP_THRESHOLD'] = '0.7'
+    shared_config['general']['DELAY_AUTOMATED_PROCESSING'] = 'no'
+    with open('shared_config.ini', 'w') as configfile:
+        shared_config.write(configfile)
+
+    # Note: need to write the .gitignore because file would otherwise be
+    # ignored in the template directory.
+    f = open('.gitignore', 'w')
+    f.write('*.bib.sav\nprivate_config.ini\n.local_pdf_indices' +
+            '\n.index-*\nmissing_pdf_files.csv')
+    f.close()
 
     from review_template import entry_hash_function
     SEARCH_DETAILS = \
         entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
-
     f = open(SEARCH_DETAILS, 'w')
     header = '"filename","number_records","iteration","date_start",' + \
         '"date_completion","source_url",' + \
@@ -108,22 +132,8 @@ def initialize_repo():
     f.write(header)
     f.close()
 
-    inplace_change('private_config.yaml', 'EMAIL', committer_email)
-    inplace_change('private_config.yaml', 'GIT_ACTOR', committer_name)
-    inplace_change('readme.md', '{{project_title}}', project_title)
-    inplace_change('shared_config.yaml', 'SCREEN_TYPE', SCREEN_TYPE)
-    inplace_change('shared_config.yaml', 'DATA_FORMAT', DATA_FORMAT)
-    inplace_change('shared_config.yaml', 'SHARE_STAT_REQ', SHARE_STAT_REQ)
-    inplace_change('shared_config.yaml', 'PDF_HANDLING', PDF_HANDLING)
-
-    # Note: need to write the .gitignore because file would otherwise be
-    # ignored in the template directory.
-    f = open('.gitignore', 'w')
-    f.write('*.bib.sav\nprivate_config.yaml\n.local_pdf_indices' +
-            '\n.index-*\nmissing_pdf_files.csv')
-    f.close()
-
     os.system('pre-commit install')
+    os.system('pre-commit autoupdate')
 
     from review_template import utils
 
@@ -133,7 +143,7 @@ def initialize_repo():
         '.pre-commit-config.yaml',
         '.gitattributes',
         '.gitignore',
-        'shared_config.yaml',
+        'shared_config.ini',
     ])
 
     flag, flag_details = utils.get_version_flags()

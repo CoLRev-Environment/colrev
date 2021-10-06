@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import configparser
 import csv
 import itertools
 import os
@@ -6,7 +7,6 @@ import re
 
 import git
 import pandas as pd
-import yaml
 from fuzzywuzzy import fuzz
 
 from review_template import entry_hash_function
@@ -15,21 +15,13 @@ from review_template import utils
 nr_entries_added = 0
 nr_current_entries = 0
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
-GIT_ACTOR = private_config['params']['GIT_ACTOR']
-EMAIL = private_config['params']['EMAIL']
-
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MERGING_NON_DUP_THRESHOLD = \
-    shared_config['params']['MERGING_NON_DUP_THRESHOLD']
-MERGING_DUP_THRESHOLD = shared_config['params']['MERGING_DUP_THRESHOLD']
+    config['general']['MERGING_NON_DUP_THRESHOLD']
+MERGING_DUP_THRESHOLD = config['general']['MERGING_DUP_THRESHOLD']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
@@ -529,7 +521,8 @@ def create_commit(r, bib_database):
                 merge_details +
                 '\n - ' + utils.get_package_details(),
                 author=git.Actor('script:process_duplicates.py', ''),
-                committer=git.Actor(GIT_ACTOR, EMAIL),
+                committer=git.Actor(config['general']['GIT_ACTOR'],
+                                    config['general']['EMAIL']),
 
             )
     return

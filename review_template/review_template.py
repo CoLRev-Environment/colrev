@@ -1,9 +1,9 @@
 #! /usr/bin/env python
+import configparser
 import multiprocessing as mp
 import os
 
 import click
-import yaml
 
 from review_template import cleanse_records
 from review_template import entry_hash_function
@@ -12,33 +12,22 @@ from review_template import initialize
 from review_template import process_duplicates
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
+
 DELAY_AUTOMATED_PROCESSING = \
-    shared_config['params']['DELAY_AUTOMATED_PROCESSING']
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
+    config.getboolean('general', 'DELAY_AUTOMATED_PROCESSING')
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
-EMAIL = private_config['params']['EMAIL']
-if 'CPUS' not in private_config['params']:
-    CPUS = mp.cpu_count()-1
-else:
-    CPUS = private_config['params']['CPUS']
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
 
 # Note: BATCH_SIZE can be as small as 1.
 # Records should not be propagated/screened when the batch
 # has not yet been committed
-if 'BATCH_SIZE' not in shared_config['params']:
-    BATCH_SIZE = 500
-else:
-    BATCH_SIZE = shared_config['params']['BATCH_SIZE']
+BATCH_SIZE = config.get('general', 'BATCH_SIZE', fallback=500)
 
 
 def check_delay(bib_database, min_status):
@@ -60,7 +49,7 @@ def check_delay(bib_database, min_status):
 def process_entries(search_records, bib_database):
     global r
 
-    pool = mp.Pool(CPUS)
+    pool = mp.Pool(config.get('general', 'CPUS', fallback=mp.cpu_count()-1))
 
     print('Import')
     [bib_database.entries.append(entry) for entry in search_records]

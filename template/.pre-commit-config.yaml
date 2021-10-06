@@ -4,8 +4,8 @@ repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
     rev: 978b3be344b6e93ca41293f1fc947cc5f557c2cb
     hooks:
-    -   id: consistency_checks
-        name: consistency_checks
+    -   id: consistency-checks
+        name: consistency-checks
         entry: pipeline_validation_hooks/consistency_checks.py
         language: script
         verbose: true

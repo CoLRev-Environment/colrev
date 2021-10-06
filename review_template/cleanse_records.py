@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import configparser
 import json
 import logging
 import re
@@ -13,28 +14,21 @@ from urllib.request import urlopen
 import bibtexparser
 import git
 import requests
-import yaml
 from Levenshtein import ratio
 from nameparser import HumanName
 
 from review_template import entry_hash_function
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-
-DEBUG_MODE = (1 == private_config['params']['DEBUG_MODE'])
-EMAIL = private_config['params']['EMAIL']
-GIT_ACTOR = private_config['params']['GIT_ACTOR']
 
 EMPTY_RESULT = {
     'crossref_title': '',
@@ -62,7 +56,7 @@ def crossref_query(entry):
     request = Request(url)
     request.add_header(
         'User-Agent', 'RecordCleanser (mailto:' +
-        EMAIL + ')',
+        config['general']['EMAIL'] + ')',
     )
     try:
         ret = urlopen(request)
@@ -530,7 +524,8 @@ def create_commit(r, bib_database):
             '⚙️ Cleanse ' + MAIN_REFERENCES + flag + flag_details +
             '\n - ' + utils.get_package_details(),
             author=git.Actor('script:cleanse_records.py', ''),
-            committer=git.Actor(GIT_ACTOR, EMAIL),
+            committer=git.Actor(config['general']['GIT_ACTOR'],
+                                config['general']['EMAIL']),
         )
 
         # print('Created commit: Cleanse ' + MAIN_REFERENCES)

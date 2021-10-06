@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import configparser
 import itertools
 import multiprocessing as mp
 import os
@@ -8,24 +9,15 @@ from itertools import chain
 import bibtexparser
 import dictdiffer
 import git
-import yaml
 from bibtexparser.customization import convert_to_unicode
 
 from review_template import entry_hash_function
 from review_template import process_duplicates
 from review_template import utils
 
-with open('shared_config.yaml') as shared_config_yaml:
-    shared_config = yaml.load(shared_config_yaml, Loader=yaml.FullLoader)
-HASH_ID_FUNCTION = shared_config['params']['HASH_ID_FUNCTION']
-
-with open('private_config.yaml') as private_config_yaml:
-    private_config = yaml.load(private_config_yaml, Loader=yaml.FullLoader)
-
-if 'CPUS' not in private_config['params']:
-    CPUS = mp.cpu_count()-1
-else:
-    CPUS = private_config['params']['CPUS']
+config = configparser.ConfigParser()
+config.read(['shared_config.ini', 'private_config.ini'])
+HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
@@ -46,7 +38,8 @@ def load_entries(bib_file):
 
 def get_search_entries():
 
-    pool = mp.Pool(processes=CPUS)
+    pool = mp.Pool(processes=config.get('general', 'CPUS',
+                                        fallback=mp.cpu_count()-1))
     entries = pool.map(load_entries, utils.get_bib_files())
     entries = list(chain(*entries))
 
