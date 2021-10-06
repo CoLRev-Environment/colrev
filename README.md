@@ -19,7 +19,7 @@
 
 # Installation and usage
 
-Requirements: [git](https://git-scm.com/downloads), [a git gui](https://git-scm.com/downloads), such as [GitHub Desktop](https://desktop.github.com/) for Windows/macOS, [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
+Requirements: [git](https://git-scm.com/downloads), [a git gui](https://git-scm.com/downloads), [Docker](https://www.docker.com/), [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
 
 ```
 # Installation (currently, while not yet available via pip)
