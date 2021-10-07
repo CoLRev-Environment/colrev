@@ -543,7 +543,6 @@ def test_prepare():
                     year      = {2019},
                     pages     = {1242--1273},
                     doi       = {10.17705/1jais.00566},
-                    hash_id   = {6ed4d341525ce2ac999a7cfe3102caa98f521821973},
                     }"""
 
     bib_database = bibtexparser.loads(bibtex_str)

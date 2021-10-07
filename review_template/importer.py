@@ -34,7 +34,7 @@ JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
 
 fields_to_keep = [
-    'ID', 'hash_id', 'ENTRYTYPE',
+    'ID', 'ENTRYTYPE',
     'author', 'year', 'title',
     'journal', 'booktitle', 'series',
     'volume', 'number', 'pages', 'doi',
@@ -142,8 +142,6 @@ def load_entries(filepath):
             entry = prepare.correct_entrytypes(entry)
 
         if is_sufficiently_complete(entry) or complete_based_on_doi:
-            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-            entry.update(hash_id=hid)
             entry.update(status='not_imported')
         else:
             entry.update(status='needs_manual_completion')
@@ -151,20 +149,6 @@ def load_entries(filepath):
         entry_list.append(entry)
 
     return entry_list
-
-
-def save_imported_hash_ids(bib_database):
-
-    imported_hash_ids = [entry['hash_id'].split(',') for
-                         entry in bib_database.entries
-                         if not 'needs_manual_completion' == entry['status']]
-    imported_hash_ids = list(itertools.chain(*imported_hash_ids))
-
-    with open('imported_hash_ids.csv', 'a') as fd:
-        for p_hid in imported_hash_ids:
-            fd.write(p_hid + '\n')
-
-    return
 
 
 def save_imported_entry_links(bib_database):

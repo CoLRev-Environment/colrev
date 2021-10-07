@@ -42,8 +42,8 @@ Further instructions are available in the documentation (add-link-here).
 - Collaborative, robust, and tool-supported end-to-end `search > screen > data` pipeline designed for reproducibility, iterativeness, and quality.
 Designed for local and distributed use.
 
-- A novel approach, based on *hash_ids*, ensures traceability from the search results extracted from an academic database to the citation in the final paper.
-This also makes iterative updates extremely efficient because duplicates only have to be considered once [more](TODO).
+- Entry-links ensure traceability from the search results extracted from an academic database to the citation in the final paper.
+This also makes iterative updates efficient because duplicates only have to be considered once [more](TODO).
 
 - The pipeline includes powerful Python scripts that can handle quality problems in the bibliographic metadata and the PDFs (based on powerful APIs like crossref and the DOI lookup service and excellent open source projects like grobid, tesseract, pdfminersix).
 
@@ -66,86 +66,9 @@ For meta-analyses, software like RevMan or R-meta-analysis packages are more app
 
 The scripts are based on the following principles:
 
-- **End-to-end traceability (NEW)**. The chain of evidence is maintained by identifying papers by their *citation_key* throughout the pipeline and by mapping it to *hash_ids* representing individual (possibly duplicated) search results.
-Never change the *citation_key* once it has been used in the screen or data extraction and never change the *hash_id* manually.
+- **End-to-end traceability (NEW)**. The chain of evidence is maintained by identifying papers by their *citation_key*  (entry_link) throughout the pipeline.
+Never change the *citation_key* once it has been used in the screen or data extraction.
 
-    <details>
-      <summary>Details</summary>
-
-      When combining individual search results, the original entries receive a *hash_id* (a sha256 hash of the main bibliographical fields):
-
-      ```
-      # data/search/2020-09-23-WebOfScience.bib (individual search results)
-
-      @Article{ISI:01579827937592,
-        	title = {Analyzing the past to prepare for the future},
-        	authors = {Webster, Jane and Watson, Richard T.},
-        	journal = {MIS Quarterly},
-        	year = {2002},
-        	volume = {26},
-        	issue = {2},
-        	pages = {xiii-xxiii}
-      }
-      ```
-
-      ```
-      # Calculating the hash_id
-
-      hash_id = sha256(robust_concatenation(author, year, title, journal, booktitle, volume, issue, pages))
-      # Note: robust_concatenation replaces new lines, double-spaces, leading and trailing spaces, and converts all strings to lower case
-              = sha256("webster, jand and watson, richard t.analyzing the past to pepare for the future...")
-      hash_id = 7a70b0926019ba962519ed63a9aaae890541d2a5acdc22604a213ba48b9f3cd2
-      ```
-
-      ```
-      # data/references.bib (combined search results with hash_ids linking to the individual search results)
-
-      @Article{Webster2002,
-        	title = {Analyzing the past to prepare for the future:
-        		Writing a literature review},
-        	authors = {Webster, Jane and Watson, Richard T.},
-        	journal = {MIS Quarterly},
-        	year = {2002},
-        	volume = {26},
-        	issue = {2},
-        	pages = {xiii-xxiii},
-        	hash_id = {7a70b0926019ba962519ed63a9aaae890541d2a5acdc22604a213ba48b9f3cd2,...}
-      }
-
-      ```
-
-      When all papers (their BibTeX entries, as identified by a *citation_key*) are mapped to their individual search results through *hash_ids*, resolving data quality problems (matching duplicates, updating fields, etc.) in the BibTex entries (`data/references.bib`) does not break the chain of evidence.
-
-
-
-      At the end of the search process, each entry (containing one or many *hash_ids*) is assigned a unique *citation_key*.
-      At this stage, the *citation_key* can be modified.
-      It is recommended to use a semantic *citation_key*, such as "Webster2002" (instead of cryptic strings or random numbers).
-      Once a *citation_key* progresses to the screening and data extraction steps, it should not be changed (this would break the chain of evidence).
-
-      Traceability is ensured through unique `hash_id` (in the search phase and the `references.bib`) and unique `citation_key` fields.
-      Note that one `citation_key`, representing a unique record, can be associated with multiple `hash_ids` the record has been returned multiple times in the search.
-      Once `citation_key` fields are set at the end of the search step (iteration), they should not be changed to ensure traceability through the following steps.
-
-      Forward traceability is ensured through the `trace_entry` procedure
-
-      ```
-      make trace_entry
-
-      Example input:
-      @book{Author2010, author = {Author, Name}, title = {Paper on Tracing},  series = {Proceedings}, year = {2017}, }"
-
-      ```
-
-      Backward traceability is ensured through the `trace_hash_id` procedure
-
-      ```
-      make trace_hash_id
-      ```
-
-      - This procedure traces a hash_id to the original entry in the `data/search/YYYY-MM-DD-search_id.bib` file.
-
-    </details>
 
 - **Consistent structure of files and data** and **incremental propagation of changes**.
 Papers are propagated from the individual search outputs (`data/search/YYYY-MM-DD-search_id.bib`) to the `data/references.bib` to the `data/screen.csv` to the `data/data.csv`.

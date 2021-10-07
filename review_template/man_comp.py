@@ -102,8 +102,6 @@ def main():
                     del entry[key]
 
             entry = importer.drop_fields(entry)
-            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-            entry.update(hash_id=hid)
             entry.update(ID=utils.generate_citation_key_blacklist(
                 entry, citation_key_list,
                 entry_in_bib_db=True,
