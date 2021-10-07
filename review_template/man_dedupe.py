@@ -22,17 +22,6 @@ MAIN_REFERENCES = \
 removed_tuples = []
 
 
-def get_combined_hash_id_list(entry_a, entry_b):
-
-    hash_ids_entry_a = entry_a['hash_id'].split(',')
-    hash_ids_entry_b = entry_b['hash_id'].split(',')
-
-    combined_hash_list = set(hash_ids_entry_a
-                             + hash_ids_entry_b)
-
-    return ','.join(combined_hash_list)
-
-
 def get_combined_entry_link_list(entry_a, entry_b):
 
     els_entry_a = entry_a['entry_link'].split(';')
@@ -56,7 +45,7 @@ def print_diff(change, prefix_len):
     d = difflib.Differ()
 
     if change[0] == 'change':
-        if change[1] not in ['ID', 'status', 'hash_id']:
+        if change[1] not in ['ID', 'status']:
             letters = list(d.compare(change[2][0], change[2][1]))
             for i in range(len(letters)):
                 if letters[i].startswith('  '):
@@ -121,19 +110,8 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
                 'journal', 'booktitle',
                 'year', 'volume',
                 'number', 'pages',
-                'doi', 'ENTRYTYPE',
-                'hash_id']:
-        if key == 'hash_id':
-            prefix = key + ': '
-            me_key = main_entry[key]
-            print(ansiwrap.fill(f'{colors.GREEN}{me_key}{colors.END}',
-                                initial_indent=prefix.ljust(prefix_len),
-                                subsequent_indent=' '*prefix_len))
-            de_key = duplicate_entry[key]
-            print(ansiwrap.fill(f'{colors.RED}{de_key}{colors.END}',
-                                initial_indent=prefix.ljust(prefix_len),
-                                subsequent_indent=' '*prefix_len))
-        elif key in added_fields:
+                'doi', 'ENTRYTYPE']:
+        if key in added_fields:
             change = [y for y in [x[2] for x in differences
                                   if 'add' == x[0]][0] if key == y[0]]
             print_diff(('add', *change[0]), prefix_len)
@@ -162,11 +140,7 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
         response = input(response_string)
 
     if 'y' == response:
-        # Note: update hash_id list, status and remove the other entry
-        combined_hash_list = get_combined_hash_id_list(
-            main_entry, duplicate_entry)
-        # Delete the other entry (entry_a_ID or entry_b_ID)
-        main_entry.update(hash_id=combined_hash_list)
+        # Note: update status and remove the other entry
         combined_el_list = get_combined_entry_link_list(
             main_entry, duplicate_entry)
         # Delete the other entry (entry_a_ID or entry_b_ID)

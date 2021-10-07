@@ -180,7 +180,6 @@ def get_status_freq():
     manual_preparation_entries = 0
     prepared_entries = 0
     manual_merging_entries = 0
-    merged_hash_ids = 0
     processed_entries = 0
     entry_links = 0
     merged_entry_links = 0
@@ -202,10 +201,6 @@ def get_status_freq():
                     manual_merging_entries += 1
                 if '{processed}' in line:
                     processed_entries += 1
-                if 'hash_id' == line.lstrip()[:7]:
-                    # note: do not consider last comma (field separator)
-                    nr_hash_ids = line.count(',') - 1
-                    merged_hash_ids += nr_hash_ids
                 if 'entry_link' in line:
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
@@ -274,7 +269,6 @@ def get_status_freq():
              'needs_manual_preparation': manual_preparation_entries,
              'prepared': prepared_entries,
              'needs_manual_merging': manual_merging_entries,
-             'merged_hash_ids': merged_hash_ids,
              'overall_imported': overall_imported,
              'overall_prepared': overall_prepared,
              'overall_processed': processed_entries,
@@ -413,18 +407,6 @@ def main():
             print(' |                               * ' +
                   f'{str(status_freq["needs_manual_merging"]).rjust(6, " ")}' +
                   ' record(s) need manual merging.')
-
-        # if status_freq['identical_hash_id'] > 0:
-        #     print(' |                               -> ' +
-        #           str(status_freq['identical_hash_id']).rjust(5, ' ') +
-        #           ' record(s) merged (identical hash_ids).')
-        # Some records may not have been processed yet.
-        # counting commas in the hash_id field does not consider
-        # implicit merging (based on identical hash_ids)!
-        if status_freq['merged_hash_ids'] > 0:
-            print(' |                               -> ' +
-                  f'{str(status_freq["merged_hash_ids"]).rjust(5, " ")}' +
-                  ' record(s) merged (non-identical hash_ids).')
 
         print(' |  - Records processed: ' +
               f'{str(status_freq["overall_processed"]).rjust(5, " ")}')

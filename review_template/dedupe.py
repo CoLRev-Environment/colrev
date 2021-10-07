@@ -242,35 +242,12 @@ def calculate_similarities_entry(references):
     return references.iloc[1:, [ck_col, sim_col]]
 
 
-def get_combined_hash_id_list(references, ref_id_tuple):
-
-    hash_ids_entry_1 = \
-        references.loc[references['ID'] ==
-                       ref_id_tuple[0]]['hash_id'].values[0]
-    hash_ids_entry_2 = \
-        references.loc[references['ID'] ==
-                       ref_id_tuple[1]]['hash_id'].values[0]
-    if not isinstance(hash_ids_entry_1, str):
-        hash_ids_entry_1 = []
-    else:
-        hash_ids_entry_1 = hash_ids_entry_1.split(',')
-    if not isinstance(hash_ids_entry_2, str):
-        hash_ids_entry_2 = []
-    else:
-        hash_ids_entry_2 = hash_ids_entry_2.split(',')
-
-    combined_hash_list = set(hash_ids_entry_1
-                             + hash_ids_entry_2)
-
-    return ','.join(combined_hash_list)
-
-
-def get_prev_queue(queue_order, hash_id):
+def get_prev_queue(queue_order, entry_link):
     # Note: Because we only introduce individual (non-merged entries),
-    # there should be no commas in hash_id!
+    # there should be no semicolons in entry_link!
     prev_entries = []
     for idx, el in enumerate(queue_order):
-        if hash_id == el:
+        if entry_link == el:
             prev_entries = queue_order[:idx]
             break
     return prev_entries
@@ -290,28 +267,29 @@ def append_merges(entry):
         with open('queue_order.csv', 'a') as fd:
             for x in bib_database.entries:
                 if 'processed' == x.get('status', 'NA'):
-                    fd.write(x['hash_id'] + '\n')
+                    fd.write(x['entry_link'] + '\n')
 
     # the order matters for the incremental merging (make sure that each
     # additional record is compared to/merged with all prior records in
     # the queue)
     with open('queue_order.csv', 'a') as fd:
-        fd.write(entry['hash_id'] + '\n')
+        fd.write(entry['entry_link'] + '\n')
     queue_order = pd.read_csv('queue_order.csv', header=None)
     queue_order = queue_order[queue_order.columns[0]].tolist()
-    required_prior_hash_ids = get_prev_queue(queue_order, entry['hash_id'])
-    hash_ids_in_prepared_file = []
+    required_prior_entry_links = get_prev_queue(
+        queue_order, entry['entry_link'])
 
+    entry_links_in_prepared_file = []
     # note: no need to wait for completion of preparation
-    hash_ids_in_prepared_file = [entry['hash_id'].split(',')
-                                 for entry in bib_database.entries
-                                 if 'hash_id' in entry]
-    hash_ids_in_prepared_file = \
-        list(itertools.chain(*hash_ids_in_prepared_file))
+    entry_links_in_prepared_file = [entry['entry_link'].split(';')
+                                    for entry in bib_database.entries
+                                    if 'entry_link' in entry]
+    entry_links_in_prepared_file = \
+        list(itertools.chain(*entry_links_in_prepared_file))
 
     # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
-    if len(required_prior_hash_ids) < 2:
+    if len(required_prior_entry_links) < 2:
         # entry.update(status = 'processed')
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
@@ -319,13 +297,6 @@ def append_merges(entry):
         with open('non_duplicates.csv', 'a') as fd:
             fd.write('"' + entry['ID'] + '"\n')
         return
-
-    # Drop rows from references for which no hash_id is in
-    # required_prior_hash_ids
-
-    # prior_entries = [x for x in bib_database.entries
-    #                  if any(hash_id in x['hash_id'].split(',')
-    #                         for hash_id in required_prior_hash_ids)]
 
     merge_ignore_status = ['needs_manual_preparation',
                            'needs_manual_completion',
@@ -335,8 +306,8 @@ def append_merges(entry):
                      if x.get('status', 'NA') not in merge_ignore_status]
 
     prior_entries = [x for x in prior_entries
-                     if any(hash_id in x['hash_id'].split(',')
-                            for hash_id in required_prior_hash_ids)]
+                     if any(entry_link in x['entry_link'].split(',')
+                            for entry_link in required_prior_entry_links)]
 
     if len(prior_entries) < 1:
         # Note: the first entry is a non_duplicate (by definition)
@@ -425,11 +396,10 @@ def apply_merges(bib_database):
         with open('duplicate_tuples.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
-                hash_ids_to_merge = []
+                el_to_merge = []
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
                         print(f'drop {entry["ID"]}')
-                        hash_ids_to_merge = entry['hash_id'].split(',')
                         el_to_merge = entry['entry_link'].split(';')
                         # Drop the duplicated entry
                         bib_database.entries = \
@@ -438,9 +408,6 @@ def apply_merges(bib_database):
                         break
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        hash_ids = list(set(hash_ids_to_merge +
-                                        entry['hash_id'].split(',')))
-                        entry.update(hash_id=str(','.join(sorted(hash_ids))))
                         els = list(set(el_to_merge +
                                        entry['entry_link'].split(';')))
                         entry.update(entry_link=str(';'.join(els)))

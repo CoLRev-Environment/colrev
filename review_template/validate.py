@@ -54,7 +54,6 @@ def validate_preparation_changes(bib_database, search_entries):
             continue
         del entry['changed_in_target_commit']
         del entry['status']
-        del entry['hash_id']
         # del entry['entry_link']
         for cur_entry_link in entry['entry_link'].split(';'):
             prior_entries = [x for x in search_entries

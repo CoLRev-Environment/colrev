@@ -123,19 +123,6 @@ class HashFunctionError(Exception):
     pass
 
 
-def get_hash_ids(bib_database):
-
-    hash_id_list = []
-    for entry in bib_database.entries:
-        if 'hash_id' in entry:
-            if ',' in entry['hash_id']:
-                hash_id_list = hash_id_list + entry['hash_id'].split(',')
-            else:
-                hash_id_list = hash_id_list + [entry['hash_id']]
-
-    return hash_id_list
-
-
 def propagated_citation_key(citation_key):
 
     propagated = False
@@ -459,7 +446,6 @@ def save_bib_file(bib_database, target_file=None):
     writer.indent = '  '
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
-        'hash_id',
         'entry_link',
         'doi',
         'author',
