@@ -5,11 +5,11 @@ import os
 
 import click
 
-from review_template import cleanse_records
+from review_template import dedupe
 from review_template import entry_hash_function
 from review_template import importer
 from review_template import init
-from review_template import process_duplicates
+from review_template import prepare
 from review_template import utils
 
 config = configparser.ConfigParser()
@@ -38,7 +38,7 @@ def check_delay(bib_database, min_status):
     if 'imported' == min_status:
         if 'needs_manual_completion' in cur_status:
             return True
-    if 'cleansed' == min_status:
+    if 'prepared' == min_status:
         if any(x in cur_status
                for x in ['imported', 'needs_manual_completion']):
             return True
@@ -58,28 +58,27 @@ def process_entries(search_records, bib_database):
         print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
-    print('Cleanse')
+    print('Prepare')
     bib_database.entries = \
-        pool.map(cleanse_records.cleanse, bib_database.entries)
-    cleanse_records.create_commit(r, bib_database)
+        pool.map(prepare.prepare, bib_database.entries)
+    prepare.create_commit(r, bib_database)
 
-    if check_delay(bib_database, 'cleansed'):
+    if check_delay(bib_database, 'prepared'):
         print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
     print('Process duplicates')
-    pool.map(process_duplicates.append_merges, bib_database.entries)
-    bib_database = process_duplicates.apply_merges(bib_database)
-    process_duplicates.create_commit(r, bib_database)
+    pool.map(dedupe.append_merges, bib_database.entries)
+    bib_database = dedupe.apply_merges(bib_database)
+    dedupe.create_commit(r, bib_database)
 
     # TODO, depending on REVIEW_STRATEGY:
     # minimal_review_pipeline: no screening/data extraction.
-    # simply include all records, cleanse, merge, acquire pdfs
+    # simply include all records, prepare, merge, acquire pdfs
 
     # bib_database = utils.load_references_bib(
     #     modification_check=True, initialize=False,
     # )
-    # screen_sheet.update_screen(bib_database)
     # acquire PDFs
     # backward search, ... (considering check_continue)
     # update_data()

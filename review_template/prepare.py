@@ -55,7 +55,7 @@ def crossref_query(entry):
     url = api_url + urlencode(params, quote_via=quote_plus)
     request = Request(url)
     request.add_header(
-        'User-Agent', 'RecordCleanser (mailto:' +
+        'User-Agent', 'RecordPreparer (mailto:' +
         config['general']['EMAIL'] + ')',
     )
     try:
@@ -319,7 +319,7 @@ def regenerate_citation_key(entry, bib_database):
             entry.update(ID=utils.generate_citation_key(
                 entry, bib_database, entry_in_bib_db=True))
         except utils.CitationKeyPropagationError:
-            # print('WARNING: cleansing entry with propagated citation_key:',
+            # print('WARNING: preparing entry with propagated citation_key:',
             #   entry['ID'])
             pass
 
@@ -451,12 +451,12 @@ def apply_crowd_rules(entry):
     return entry
 
 
-def cleanse(entry):
+def prepare(entry):
 
     if 'imported' != entry['status']:
         return entry
 
-    entry.update(status='cleansed')
+    entry.update(status='prepared')
 
     entry = homogenize_entry(entry)
 
@@ -477,7 +477,7 @@ def cleanse(entry):
     if 'doi' in entry and 'title' in entry and \
             'journal' in entry and 'year' in entry:
         # in this case, it would be ok to have no author
-        entry.update(status='cleansed')
+        entry.update(status='prepared')
     # TODO: the following if-statement is redundant (check!) because these
     # missing fields should be provided before hash-ids are created!
     if 'title' not in entry or \
@@ -485,10 +485,10 @@ def cleanse(entry):
             'year' not in entry or \
             not any(x in entry for x in
                     ['journal', 'booktitle', 'school', 'book', 'series']):
-        entry.update(status='needs_manual_cleansing')
+        entry.update(status='needs_manual_preparation')
     if 'title' in entry and 'author' in entry and 'year' in entry and \
             'book' == entry.get('ENTRYTYPE', ''):
-        entry.update(status='cleansed')
+        entry.update(status='prepared')
 
     if entry.get('title', '').endswith('...') or \
             entry.get('title', '').endswith('…') or \
@@ -498,7 +498,7 @@ def cleanse(entry):
             entry.get('booktitle', '').endswith('…') or \
             entry.get('author', '').endswith('...') or \
             entry.get('author', '').endswith('…'):
-        entry.update(status='needs_manual_cleansing')
+        entry.update(status='needs_manual_preparation')
 
     return entry
 
@@ -521,21 +521,21 @@ def create_commit(r, bib_database):
         flag, flag_details = utils.get_version_flags()
 
         r.index.commit(
-            '⚙️ Cleanse ' + MAIN_REFERENCES + flag + flag_details +
+            '⚙️ Prepare ' + MAIN_REFERENCES + flag + flag_details +
             '\n - ' + utils.get_package_details(),
-            author=git.Actor('script:cleanse_records.py', ''),
+            author=git.Actor('script:prepare.py', ''),
             committer=git.Actor(config['general']['GIT_ACTOR'],
                                 config['general']['EMAIL']),
         )
 
-        # print('Created commit: Cleanse ' + MAIN_REFERENCES)
+        # print('Created commit: Prepare ' + MAIN_REFERENCES)
         return True
     else:
-        print('- No additional cleansed entries available')
+        print('- No additional prepared entries available')
         return False
 
 
-def test_cleanse():
+def test_prepare():
     bibtex_str = """@article{Andersen2019,
                     author    = {Andersen, Jonas},
                     journal   = {Journal of Information Systems},
@@ -548,11 +548,11 @@ def test_cleanse():
 
     bib_database = bibtexparser.loads(bibtex_str)
     entry = bib_database.entries[0]
-    print(cleanse(entry))
+    print(prepare(entry))
 
     return
 
 
 if __name__ == '__main__':
-    test_cleanse()
+    test_prepare()
     # https://github.com/nschloe/betterbib

@@ -34,7 +34,7 @@ def create_commit(bib_database):
         r.index.commit(
             'Complete records for import',
             author=git.Actor(
-                'manual (using complete_manual.py)', ''),
+                'manual (using man_comp.py)', ''),
             skip_hooks=hook_skipping
         )
 

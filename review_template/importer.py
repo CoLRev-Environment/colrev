@@ -15,9 +15,9 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 import docker
-from review_template import cleanse_records
 from review_template import entry_hash_function
 from review_template import grobid_client
+from review_template import prepare
 from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
@@ -119,11 +119,11 @@ def load_entries(filepath):
         # Note: we assume that the metadata of doi.org is complete.
         complete_based_on_doi = False
         if not is_sufficiently_complete(entry):
-            entry = cleanse_records.get_doi_from_crossref(entry)
+            entry = prepare.get_doi_from_crossref(entry)
             if 'doi' in entry:
                 # try completion based on doi
                 doi_metadata = \
-                    cleanse_records.retrieve_doi_metadata(entry.copy())
+                    prepare.retrieve_doi_metadata(entry.copy())
                 for key, value in doi_metadata.items():
                     if key not in entry.keys() and key in ['author',
                                                            'year',
@@ -139,7 +139,7 @@ def load_entries(filepath):
 
             # fix type-mismatches
             # e.g., conference paper with ENTRYTYPE=article
-            entry = cleanse_records.correct_entrytypes(entry)
+            entry = prepare.correct_entrytypes(entry)
 
         if is_sufficiently_complete(entry) or complete_based_on_doi:
             hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
@@ -197,7 +197,7 @@ def load(bib_database):
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
-        if 'cleansed' == entry['status'] or \
+        if 'prepared' == entry['status'] or \
                 'needs_manual_merging' == entry['status']:
             continue
         if 'not_imported' == entry['status'] or \
@@ -209,12 +209,12 @@ def load(bib_database):
             citation_key_list.append(entry['ID'])
 
         if not 'needs_manual_completion' == entry['status']:
-            entry = cleanse_records.homogenize_entry(entry)
+            entry = prepare.homogenize_entry(entry)
 
-            # Note: the cleanse_records.py will homogenize more cases because
+            # Note: the prepare.py will homogenize more cases because
             # it runs speculative_changes(entry)
-            entry = cleanse_records.apply_local_rules(entry)
-            entry = cleanse_records.apply_crowd_rules(entry)
+            entry = prepare.apply_local_rules(entry)
+            entry = prepare.apply_crowd_rules(entry)
             entry = drop_fields(entry)
             entry.update(status='imported')
 

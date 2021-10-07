@@ -11,8 +11,8 @@ import dictdiffer
 import git
 from bibtexparser.customization import convert_to_unicode
 
+from review_template import dedupe
 from review_template import entry_hash_function
-from review_template import process_duplicates
 from review_template import utils
 
 config = configparser.ConfigParser()
@@ -45,9 +45,9 @@ def get_search_entries():
     return entries
 
 
-def validate_cleansing_changes(bib_database, search_entries):
+def validate_preparation_changes(bib_database, search_entries):
 
-    print('Calculating cleansing differences...')
+    print('Calculating preparation differences...')
     change_difference = []
     for entry in bib_database.entries:
         if 'changed_in_target_commit' not in entry:
@@ -61,8 +61,7 @@ def validate_cleansing_changes(bib_database, search_entries):
                              if cur_entry_link in x['entry_link'].split(',')]
             for prior_entry in prior_entries:
                 similarity = \
-                    process_duplicates.get_entry_similarity(entry,
-                                                            prior_entry)
+                    dedupe.get_entry_similarity(entry, prior_entry)
                 change_difference.append(
                     [entry['ID'], cur_entry_link, similarity])
 
@@ -122,8 +121,7 @@ def validate_merging_changes(bib_database, search_entries):
                            if el_2 == x['entry_link']]
 
                 similarity = \
-                    process_duplicates.get_entry_similarity(entry_1[0],
-                                                            entry_2[0])
+                    dedupe.get_entry_similarity(entry_1[0], entry_2[0])
                 change_difference.append([el_1, el_2, similarity])
 
     change_difference = [[x, y, z]
@@ -187,7 +185,7 @@ def load_bib_database(target_commit):
                 bib_database = bibtexparser.loads(filecontents)
                 found = True
 
-        # determine which entries have been changed (cleansed or merged)
+        # determine which entries have been changed (prepared or merged)
         # in the target_commit
         for entry in bib_database.entries:
             prior_entry = [x for x in prior_bib_database.entries
@@ -209,8 +207,8 @@ def main(scope, target_commit):
     # we therefore load the latest files
     search_entries = get_search_entries()
 
-    if 'cleanse' == scope or 'all' == scope:
-        validate_cleansing_changes(bib_database, search_entries)
+    if 'prepare' == scope or 'all' == scope:
+        validate_preparation_changes(bib_database, search_entries)
 
     if 'merge' == scope or 'all' == scope:
         validate_merging_changes(bib_database, search_entries)
