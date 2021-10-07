@@ -61,8 +61,8 @@ def init(ctx):
 @click.pass_context
 def process(ctx):
     """Process pipeline"""
-    from review_template import review_template
-    review_template.main()
+    from review_template import process
+    process.main()
 
 
 @main.command(help_priority=3)
@@ -76,34 +76,34 @@ def status(ctx):
 
 @main.command(help_priority=4)
 @click.pass_context
-def complete_manual(ctx):
+def man_comp(ctx):
     """Complete records manually"""
-    from review_template import complete_manual
-    complete_manual.main()
+    from review_template import man_comp
+    man_comp.main()
 
 
 @main.command(help_priority=5)
 @click.pass_context
-def cleanse_manual(ctx):
-    """Cleanse records manually"""
-    from review_template import cleanse_manual
-    cleanse_manual.main()
+def man_prep(ctx):
+    """Prepare records manually"""
+    from review_template import prepare_manual
+    prepare_manual.main()
 
 
 @main.command(help_priority=6)
 @click.pass_context
-def proc_duplicates_manual(ctx):
+def man_dedupe(ctx):
     """Process duplicates manually"""
-    from review_template import process_duplicates_manual
-    process_duplicates_manual.main()
+    from review_template import man_dedupe
+    man_dedupe.main()
 
 
 @main.command(help_priority=7)
 @click.pass_context
-def pre_screen(ctx):
+def prescreen(ctx):
     """Execute pre-screen"""
-    from review_template import pre_screen
-    pre_screen.main()
+    from review_template import screen
+    screen.prescreen()
 
 
 @main.command(help_priority=8)
@@ -116,7 +116,7 @@ def screen(ctx):
 
 @main.command(help_priority=9)
 @click.pass_context
-def acquire_pdfs(ctx):
+def pdfs(ctx):
     """Acquire PDFs"""
     from review_template import acquire_pdfs
     acquire_pdfs.main()
@@ -124,18 +124,18 @@ def acquire_pdfs(ctx):
 
 @main.command(help_priority=10)
 @click.pass_context
-def validate_pdfs(ctx):
-    """Validate PDFs"""
-    from review_template import validate_pdfs
-    validate_pdfs.main()
+def pdf_check(ctx):
+    """Check PDFs"""
+    from review_template import pdf_check
+    pdf_check.main()
 
 
 @main.command(help_priority=11)
 @click.pass_context
-def backward_search(ctx):
+def back_search(ctx):
     """Execute backward search based on PDFs"""
-    from review_template import backward_search
-    backward_search.main()
+    from review_template import back_search
+    back_search.main()
 
 
 @main.command(help_priority=12)
@@ -148,10 +148,10 @@ def data(ctx):
 
 @main.command(help_priority=13)
 @click.pass_context
-def sample_profile(ctx):
+def profile(ctx):
     """Generate a sample profile"""
-    from review_template import sample_profile
-    sample_profile.main()
+    from review_template import profile
+    profile.main()
 
 
 def validate_commit(ctx, param, value):
@@ -180,44 +180,25 @@ def validate_commit(ctx, param, value):
 
 @main.command(help_priority=14)
 @click.option('--scope',
-              type=click.Choice(['cleanse', 'merge', 'all'],
+              type=click.Choice(['prepare', 'merge', 'all'],
                                 case_sensitive=False),
-              default='all', help='cleanse, merge, or all.')
+              default='all', help='prepare, merge, or all.')
 @click.option('--commit', help='Git commit id to validate.',
               default='none', callback=validate_commit)
 @click.pass_context
-def validate_changes(ctx, scope, commit):
-    """Validate changes (in prior versions)"""
-    from review_template import validate_changes
-    validate_changes.main(scope, commit)
-
-
-@main.command(help_priority=15)
-@click.option('--hash_id', help='Hash_id to trace.', required=True)
-@click.pass_context
-def trace_hash_id(ctx, hash_id):
-    """Trace a hash_id"""
-    from review_template import trace_hash_id
-    trace_hash_id.main(hash_id)
-
-
-@main.command(help_priority=16)
-@click.argument('search_file', type=click.Path(exists=True))
-@click.option('--id', help='ID of the record (citation_key).', required=True)
-@click.pass_context
-def trace_search_result(ctx, search_file, id):
-    """Trace a search result"""
-    from review_template import trace_search_result
-    trace_search_result.main(search_file, id)
+def validate(ctx, scope, commit):
+    """Validate changes"""
+    from review_template import validate
+    validate.main(scope, commit)
 
 
 @main.command(help_priority=16)
 @click.pass_context
 @click.option('--id', help='Entry ID to trace (citation_key).', required=True)
-def trace_entry(ctx, id):
+def trace(ctx, id):
     """Trace an entry"""
-    from review_template import trace_entry
-    trace_entry.main(id)
+    from review_template import trace
+    trace.main(id)
 
 
 if __name__ == '__main__':

@@ -177,8 +177,8 @@ def get_nr_search():
 def get_status_freq():
     needs_manual_completion_entries = 0
     imported_entries = 0
-    manual_cleansing_entries = 0
-    cleansed_entries = 0
+    manual_preparation_entries = 0
+    prepared_entries = 0
     manual_merging_entries = 0
     merged_hash_ids = 0
     processed_entries = 0
@@ -194,10 +194,10 @@ def get_status_freq():
                     needs_manual_completion_entries += 1
                 if '{imported}' in line:
                     imported_entries += 1
-                if '{needs_manual_cleansing}' in line:
-                    manual_cleansing_entries += 1
-                if '{cleansed}' in line:
-                    cleansed_entries += 1
+                if '{needs_manual_preparation}' in line:
+                    manual_preparation_entries += 1
+                if '{prepared}' in line:
+                    prepared_entries += 1
                 if '{needs_manual_merging}' in line:
                     manual_merging_entries += 1
                 if '{processed}' in line:
@@ -218,7 +218,7 @@ def get_status_freq():
     retrieved = get_nr_search()
     non_imported = retrieved - entry_links
     overall_imported = entry_links - needs_manual_completion_entries
-    overall_cleansed = cleansed_entries + manual_merging_entries + \
+    overall_prepared = prepared_entries + manual_merging_entries + \
         processed_entries + merged_entry_links
 
     pre_screen_total = processed_entries
@@ -271,12 +271,12 @@ def get_status_freq():
              'non_imported': non_imported,
              'needs_manual_completion': needs_manual_completion_entries,
              'imported': imported_entries,
-             'needs_manual_cleansing': manual_cleansing_entries,
-             'cleansed': cleansed_entries,
+             'needs_manual_preparation': manual_preparation_entries,
+             'prepared': prepared_entries,
              'needs_manual_merging': manual_merging_entries,
              'merged_hash_ids': merged_hash_ids,
              'overall_imported': overall_imported,
-             'overall_cleansed': overall_cleansed,
+             'overall_prepared': overall_prepared,
              'overall_processed': processed_entries,
              'pre_screen_total': pre_screen_total,
              'nr_to_pre_screen': nr_to_pre_screen,
@@ -371,7 +371,7 @@ def main():
         # Search
 
         # Note:
-        # retrieved, imported, cleansed, processed are overall/cumulative,
+        # retrieved, imported, prepared, processed are overall/cumulative,
         # the others (non_imported, ...) are the absolute nr. of records
         # currently having this status.
 
@@ -395,18 +395,18 @@ def main():
         print(' |  - Records imported: ' +
               f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
 
-        if status_freq['needs_manual_cleansing'] > 0:
-            nr_nmcl = status_freq['needs_manual_cleansing']
+        if status_freq['needs_manual_preparation'] > 0:
+            nr_nmcl = status_freq['needs_manual_preparation']
             print(' |                               * ' +
                   f'{str(nr_nmcl).rjust(6, " ")}' +
-                  ' record(s) need manual cleansing.')
+                  ' record(s) need manual preparation.')
 
-        print(' |  - Records cleansed: ' +
-              f'{str(status_freq["overall_cleansed"]).rjust(6, " ")}')
+        print(' |  - Records prepared: ' +
+              f'{str(status_freq["overall_prepared"]).rjust(6, " ")}')
 
-        if status_freq['cleansed'] > 0:
+        if status_freq['prepared'] > 0:
             print(' |                               * ' +
-                  f'{str(status_freq["cleansed"]).rjust(6, " ")}' +
+                  f'{str(status_freq["prepared"]).rjust(6, " ")}' +
                   ' record(s) need merging.')
 
         if status_freq['needs_manual_merging'] > 0:
@@ -507,7 +507,7 @@ def main():
                   'use\n     review_template complete-manual')
             automated_processing_completed = False
 
-        if any(cs in ['imported', 'cleansed', 'pre-screened',
+        if any(cs in ['imported', 'prepared', 'pre-screened',
                       'pdf_acquired', 'included']
                for cs in cur_stati):
             print(
@@ -515,9 +515,9 @@ def main():
                 'use\n     review_template process')
             automated_processing_completed = False
         manual_processing_completed = True
-        if status_freq['needs_manual_cleansing'] > 0:
-            print('  To continue manual cleansing, '
-                  'use\n     review_template cleanse-manual')
+        if status_freq['needs_manual_preparation'] > 0:
+            print('  To continue manual preparation, '
+                  'use\n     review_template prepare-manual')
             manual_processing_completed = False
         if status_freq['needs_manual_merging'] > 0:
             print('  To continue manual processing of duplicates, '
@@ -582,7 +582,7 @@ def main():
             # TODO all the following: should all search results be imported?!
             if SHARE_STATUS_REQUIREMENT == 'PROCESSED':
                 if not any(cs in ['needs_manual_completion', 'imported',
-                                  'needs_manual_cleansing', 'cleansed',
+                                  'needs_manual_preparation', 'prepared',
                                   'needs_manual_merging']
                            for cs in cur_stati):
                     print(f' Currently: '

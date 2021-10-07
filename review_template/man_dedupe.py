@@ -250,7 +250,7 @@ def manual_merge_commit():
 
     r.index.commit(
         'Process duplicates manually' + flag + flag_details +
-        '\n - Using process_duplicates_manual.py' +
+        '\n - Using man_dedupe.py' +
         '\n - ' + utils.get_package_details(),
         author=git.Actor(config['general']['GIT_ACTOR'],
                          config['general']['EMAIL']),

@@ -278,7 +278,7 @@ def get_prev_queue(queue_order, hash_id):
 
 def append_merges(entry):
 
-    if 'cleansed' != entry['status']:
+    if 'processed' != entry['status']:
         return
 
     bib_database = utils.load_references_bib(
@@ -300,14 +300,14 @@ def append_merges(entry):
     queue_order = pd.read_csv('queue_order.csv', header=None)
     queue_order = queue_order[queue_order.columns[0]].tolist()
     required_prior_hash_ids = get_prev_queue(queue_order, entry['hash_id'])
-    hash_ids_in_cleansed_file = []
+    hash_ids_in_prepared_file = []
 
-    # note: no need to wait for completion of cleansing
-    hash_ids_in_cleansed_file = [entry['hash_id'].split(',')
+    # note: no need to wait for completion of preparation
+    hash_ids_in_prepared_file = [entry['hash_id'].split(',')
                                  for entry in bib_database.entries
                                  if 'hash_id' in entry]
-    hash_ids_in_cleansed_file = \
-        list(itertools.chain(*hash_ids_in_cleansed_file))
+    hash_ids_in_prepared_file = \
+        list(itertools.chain(*hash_ids_in_prepared_file))
 
     # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
@@ -327,7 +327,7 @@ def append_merges(entry):
     #                  if any(hash_id in x['hash_id'].split(',')
     #                         for hash_id in required_prior_hash_ids)]
 
-    merge_ignore_status = ['needs_manual_cleansing',
+    merge_ignore_status = ['needs_manual_preparation',
                            'needs_manual_completion',
                            'needs_manual_merging']
 
@@ -355,12 +355,12 @@ def append_merges(entry):
     # references = references[~(references['ID'] == entry['ID'])]
     # dropping them before calculating similarities prevents errors
     # caused by unavailable fields!
-    # Note: ignore entries that need manual cleansing in the merging
-    # (until they have been cleansed!)
+    # Note: ignore entries that need manual preparation in the merging
+    # (until they have been prepared!)
     references = references[~references['status'].str
                             .contains('|'.join(merge_ignore_status), na=False)]
 
-    # means that all prior entries are tagged as needs_manual_cleansing
+    # means that all prior entries are tagged as needs_manual_preparation
     if references.shape[0] == 0:
         # entry.update(status = 'processed')
         if not os.path.exists('non_duplicates.csv'):
@@ -444,7 +444,7 @@ def apply_merges(bib_database):
                         els = list(set(el_to_merge +
                                        entry['entry_link'].split(';')))
                         entry.update(entry_link=str(';'.join(els)))
-                        if 'cleansed' == entry['status']:
+                        if 'prepared' == entry['status']:
                             entry.update(status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
@@ -456,7 +456,7 @@ def apply_merges(bib_database):
             for row in csv_reader:
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        if 'cleansed' == entry['status']:
+                        if 'prepared' == entry['status']:
                             entry.update(status='processed')
         os.remove('non_duplicates.csv')
 

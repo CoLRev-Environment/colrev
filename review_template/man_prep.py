@@ -15,7 +15,7 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
-def manual_cleanse_commit():
+def manual_preparation_commit():
     r = git.Repo('')
     r.index.add([MAIN_REFERENCES])
 
@@ -23,12 +23,13 @@ def manual_cleanse_commit():
     if not config.getboolean('general', 'DEBUG_MODE'):
         hook_skipping = 'true'
     r.index.commit(
-        'Cleanse manual ' + MAIN_REFERENCES +
+        'Prepare manual ' + MAIN_REFERENCES +
+        '\n - Using man_prep.py' +
         '\n - ' + utils.get_package_details(),
-        author=git.Actor('manual:cleanse', ''),
+        author=git.Actor('manual:prepare', ''),
         skip_hooks=hook_skipping
     )
-    print(f'Created commit: Cleanse manual {MAIN_REFERENCES}')
+    print(f'Created commit: Prepare manual {MAIN_REFERENCES}')
 
     return
 
@@ -38,7 +39,7 @@ def main():
         modification_check=True, initialize=False,
     )
 
-    print('To implement: cleanse manual')
+    print('To implement: prepare manual')
     pp = pprint.PrettyPrinter(indent=4)
     for entry in [x for x in bib_database.entries
                   if 'needs_manual_completion' == x['status']]:

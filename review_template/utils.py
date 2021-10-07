@@ -190,7 +190,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         author = ''
 
     temp_flag = ''
-    # if 'needs_manual_cleansing' in entry['status']:
+    # if 'needs_manual_preparation' in entry['status']:
     #     temp_flag = '_temp_'
     if ',' in author:
         temp_citation_key = author\
