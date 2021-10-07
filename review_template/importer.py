@@ -401,14 +401,20 @@ def pdf2bib(file):
         params=options,
         headers={'Accept': 'application/x-bibtex'}
     )
-    print(r.request.url)
+    if 200 == r.status_code:
+        db = bibtexparser.loads(r.text)
+        return db
+    if 500 == r.status_code:
+        print('Error: Not a readable pdf file? ' + os.path.basename(file))
+        print(f'Grobid: {r.text}')
+        return None
+
+    # print(r.request.url)
     # print(r.request.body)
-    print(r.request.headers)
-    print(r.status_code)
-
-    db = bibtexparser.loads(r.text)
-
-    return db
+    # print(r.request.headers)
+    print(f'Status: {r.status_code}')
+    print(f'Response: {r.text}')
+    return None
 
 
 def pdfRefs2bib(file):
@@ -421,14 +427,17 @@ def pdfRefs2bib(file):
         data=options,
         headers={'Accept': 'application/x-bibtex'}
     )
+    if 200 == r.status_code:
+        db = bibtexparser.loads(r.text)
+        return db
     if 500 == r.status_code:
         print('Error: Not a readable pdf file? ' + os.path.basename(file))
         print(f'Grobid: {r.text}')
         return None
 
-    db = bibtexparser.loads(r.text)
-
-    return db
+    print(f'Status: {r.status_code}')
+    print(f'Response: {r.text}')
+    return None
 
 
 def load_search_results_file(search_file):
@@ -444,6 +453,15 @@ def load_search_results_file(search_file):
 
     assert any(search_file.endswith(ext) for ext in importer_scripts.keys())
 
+    # Note: after the search_result_file (non-bib formats) has been loaded
+    # for the first time, a corresponding bib_file is saved, which allows
+    # for more efficient status checking, tracing, validation
+    # This also applies to the pipeline_validation_hooks and is particularly
+    # relevant for pdf sources that require long processing times
+    corresponding_bib_file = search_file[search_file.rfind('.'):] + '.bib'
+    if os.path.exists(corresponding_bib_file):
+        return None
+
     filetype = search_file[search_file.rfind('.')+1:]
     if 'pdf' == filetype:
         if search_file.endswith('_ref_list.pdf'):
@@ -453,7 +471,7 @@ def load_search_results_file(search_file):
         db = importer_scripts[filetype](search_file)
         if db is None:
             return None
-        if config.getboolean('general', 'DEBUG_MODE'):
+        if corresponding_bib_file != search_file:
             with open(search_file.replace(filetype, '.bib'), 'w') as file:
                 file.write(bibtexparser.dumps(db))
                 file.close()
