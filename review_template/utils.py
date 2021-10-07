@@ -437,6 +437,19 @@ def get_bib_files():
     return bib_files
 
 
+def get_search_files():
+
+    supported_extensions = ['ris', 'bib', 'end',
+                            'txt', 'csv', 'txt', 'xlsx', 'pdf']
+    files = []
+    search_dir = os.path.join(os.getcwd(), 'search/')
+    files = [os.path.join(search_dir, x)
+             for x in os.listdir(search_dir)
+             if any(x.endswith(ext) for ext in supported_extensions)
+             and not 'search_details.csv' == os.path.basename(x)]
+    return files
+
+
 def save_bib_file(bib_database, target_file=None):
 
     if target_file is None:

@@ -38,8 +38,7 @@ def load_entries(bib_file):
 
 def get_search_entries():
 
-    pool = mp.Pool(processes=config.get('general', 'CPUS',
-                                        fallback=mp.cpu_count()-1))
+    pool = mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
     entries = pool.map(load_entries, utils.get_bib_files())
     entries = list(chain(*entries))
 

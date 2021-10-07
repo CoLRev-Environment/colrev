@@ -27,7 +27,7 @@ SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 # Note: BATCH_SIZE can be as small as 1.
 # Records should not be propagated/screened when the batch
 # has not yet been committed
-BATCH_SIZE = config.get('general', 'BATCH_SIZE', fallback=500)
+BATCH_SIZE = config.getint('general', 'BATCH_SIZE', fallback=500)
 
 
 def check_delay(bib_database, min_status):
@@ -48,8 +48,7 @@ def check_delay(bib_database, min_status):
 
 def process_entries(search_records, bib_database):
     global r
-
-    pool = mp.Pool(config.get('general', 'CPUS', fallback=mp.cpu_count()-1))
+    pool = mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
 
     print('Import')
     [bib_database.entries.append(entry) for entry in search_records]
@@ -95,15 +94,10 @@ def main():
     # We may discuss whether/how to generate new citation_keys
     # AND prevent conflicting citation_keys in parallel operation
 
-    importer.convert_non_bib_files(r)
-
     bib_database = utils.load_references_bib(True, initialize=True)
-
-    # Complete the prior processing steps first
-    if len(bib_database.entries) > 0:
-        bib_database = process_entries([], bib_database)
-
     additional_search_records = importer.load(bib_database)
+    bib_database.entries = [x for x in bib_database.entries
+                            if x.get('status', 'NA') == 'processed']
 
     if len(additional_search_records) < BATCH_SIZE:
         print('\n\nProcessing all records in one batch')
@@ -124,8 +118,8 @@ def main():
                       ' to ' + str(last_record_i) + ' of ' +
                       str(len(additional_search_records)))
                 prev_iteration_i = last_record_i
-                bib_database = process_entries(search_record_batch,
-                                               bib_database)
+                bib_database = \
+                    process_entries(search_record_batch, bib_database)
                 search_record_batch = []
 
     # TODO, depending on REVIEW_STRATEGY:
