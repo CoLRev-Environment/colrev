@@ -70,8 +70,8 @@ def process(ctx):
 def status(ctx):
     """Show status"""
     from review_template import status
-    status.main()
     os.system('pre-commit run -a')
+    status.main()
 
 
 @main.command(help_priority=4)

@@ -68,7 +68,9 @@ For meta-analyses, software like RevMan or R-meta-analysis packages are more app
 
 - The pipeline is tested in the management disciplines (information systems) in which iterative searches are pertinent.
 
-# Principles of the `search > screen > data` pipeline
+# How review_template works
+
+The scripts are based on the following principles:
 
 - **End-to-end traceability (NEW)**. The chain of evidence is maintained by identifying papers by their *citation_key* throughout the pipeline and by mapping it to *hash_ids* representing individual (possibly duplicated) search results.
 Never change the *citation_key* once it has been used in the screen or data extraction and never change the *hash_id* manually.
