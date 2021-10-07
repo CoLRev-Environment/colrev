@@ -20,8 +20,8 @@ config.read(['shared_config.ini', 'private_config.ini'])
 HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 MERGING_NON_DUP_THRESHOLD = \
-    config['general']['MERGING_NON_DUP_THRESHOLD']
-MERGING_DUP_THRESHOLD = config['general']['MERGING_DUP_THRESHOLD']
+    config.getfloat('general', 'MERGING_NON_DUP_THRESHOLD')
+MERGING_DUP_THRESHOLD = config.getfloat('general', 'MERGING_DUP_THRESHOLD')
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']

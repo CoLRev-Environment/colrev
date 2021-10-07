@@ -109,7 +109,7 @@ def initialize_repo():
     shared_config['general']['BATCH_SIZE'] = '2000'
     shared_config['general']['MERGING_DUP_THRESHOLD'] = '0.95'
     shared_config['general']['MERGING_NON_DUP_THRESHOLD'] = '0.7'
-    shared_config['general']['DELAY_AUTOMATED_PROCESSING'] = 'no'
+    shared_config['general']['DELAY_AUTOMATED_PROCESSING'] = 'yes'
     with open('shared_config.ini', 'w') as configfile:
         shared_config.write(configfile)
 

@@ -103,50 +103,48 @@ def load_entries(bib_file):
 
     imported_entry_links = get_imported_entry_links()
 
-    with open(bib_file) as bibtex_file:
-        individual_bib_database = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
-        search_file = os.path.basename(bib_file)
-        entry_list = []
-        for entry in individual_bib_database.entries:
-            entry['entry_link'] = search_file + '/' + entry['ID']
-            if entry['entry_link'] in imported_entry_links:
-                continue
+    individual_bib_database = load_search_results_file(bib_file)
 
-            # Note: we assume that the metadata of doi.org is complete.
-            complete_based_on_doi = False
-            if not is_sufficiently_complete(entry):
-                entry = cleanse_records.get_doi_from_crossref(entry)
-                if 'doi' in entry:
-                    # try completion based on doi
-                    doi_metadata = \
-                        cleanse_records.retrieve_doi_metadata(entry.copy())
-                    for key, value in doi_metadata.items():
-                        if key not in entry.keys() and key in ['author',
-                                                               'year',
-                                                               'title',
-                                                               'journal',
-                                                               'booktitle',
-                                                               'number',
-                                                               'volume',
-                                                               'issue',
-                                                               'pages']:
-                            entry[key] = value
-                    complete_based_on_doi = True
+    search_file = os.path.basename(bib_file)
+    entry_list = []
+    for entry in individual_bib_database.entries:
+        entry['entry_link'] = search_file + '/' + entry['ID']
+        if entry['entry_link'] in imported_entry_links:
+            continue
 
-                # fix type-mismatches
-                # e.g., conference paper with ENTRYTYPE=article
-                entry = cleanse_records.correct_entrytypes(entry)
+        # Note: we assume that the metadata of doi.org is complete.
+        complete_based_on_doi = False
+        if not is_sufficiently_complete(entry):
+            entry = cleanse_records.get_doi_from_crossref(entry)
+            if 'doi' in entry:
+                # try completion based on doi
+                doi_metadata = \
+                    cleanse_records.retrieve_doi_metadata(entry.copy())
+                for key, value in doi_metadata.items():
+                    if key not in entry.keys() and key in ['author',
+                                                           'year',
+                                                           'title',
+                                                           'journal',
+                                                           'booktitle',
+                                                           'number',
+                                                           'volume',
+                                                           'issue',
+                                                           'pages']:
+                        entry[key] = value
+                complete_based_on_doi = True
 
-            if is_sufficiently_complete(entry) or complete_based_on_doi:
-                hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
-                entry.update(hash_id=hid)
-                entry.update(status='not_imported')
-            else:
-                entry.update(status='needs_manual_completion')
+            # fix type-mismatches
+            # e.g., conference paper with ENTRYTYPE=article
+            entry = cleanse_records.correct_entrytypes(entry)
 
-            entry_list.append(entry)
+        if is_sufficiently_complete(entry) or complete_based_on_doi:
+            hid = entry_hash_function.create_hash[HASH_ID_FUNCTION](entry)
+            entry.update(hash_id=hid)
+            entry.update(status='not_imported')
+        else:
+            entry.update(status='needs_manual_completion')
+
+        entry_list.append(entry)
 
     return entry_list
 
@@ -185,10 +183,13 @@ def load(bib_database):
     save_imported_entry_links(bib_database)
 
     # additional_records = load_entries(utils.get_bib_files()[0])
-    pool = mp.Pool(processes=config.get('general', 'CPUS',
-                                        fallback=mp.cpu_count()-1))
-    additional_records = pool.map(load_entries, utils.get_bib_files())
-    additional_records = list(chain(*additional_records))
+    pool = mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
+
+    bib_non_processed = [x for x in bib_database.entries
+                         if x.get('status', 'NA') != 'processed']
+
+    additional_records = pool.map(load_entries, utils.get_search_files())
+    additional_records = list(chain(bib_non_processed, *additional_records))
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
@@ -266,12 +267,21 @@ def bibutils_convert(script, data):
     return stdout
 
 
+def getbib(file):
+    with open(file) as bibtex_file:
+        individual_bib_database = bibtexparser.bparser.BibTexParser(
+            customization=convert_to_unicode, common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+    return individual_bib_database
+
+
 def ris2bib(file):
     with open(file) as reader:
         data = reader.read()
     data = bibutils_convert('ris2xml', data)
     data = bibutils_convert('xml2bib', data)
-    return data
+    db = bibtexparser.loads(data)
+    return db
 
 
 def end2bib(file):
@@ -279,7 +289,8 @@ def end2bib(file):
         data = reader.read()
     data = bibutils_convert('end2xml', data)
     data = bibutils_convert('xml2bib', data)
-    return data
+    db = bibtexparser.loads(data)
+    return db
 
 
 def txt2bib(file):
@@ -302,7 +313,8 @@ def txt2bib(file):
         ind += 1
         data = data + '\n' + r.text.replace('{-1,', '{' + str(ind) + ',')
 
-    return data
+    db = bibtexparser.loads(data)
+    return db
 
 
 def preprocess_entries(data):
@@ -329,8 +341,7 @@ def csv2bib(csv_file):
 
     db = BibDatabase()
     db.entries = data
-    data = bibtexparser.dumps(db)
-    return data
+    return db
 
 
 def xlsx2bib(xlsx_file):
@@ -342,13 +353,11 @@ def xlsx2bib(xlsx_file):
 
     db = BibDatabase()
     db.entries = data
-    data = bibtexparser.dumps(db)
-    return data
+    return db
 
 
 def pdf2bib(pdf_file):
     grobid_client.check_grobid_availability()
-    data = ''
 
     options = {'consolidateHeader': '1'}
     r = requests.put(
@@ -361,14 +370,14 @@ def pdf2bib(pdf_file):
     # print(r.request.body)
     print(r.request.headers)
     print(r.status_code)
-    data = r.text
 
-    return data
+    db = bibtexparser.loads(r.text)
+
+    return db
 
 
 def pdfRefs2bib(pdf_file):
     grobid_client.check_grobid_availability()
-    data = ''
 
     options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
     r = requests.post(
@@ -378,48 +387,42 @@ def pdfRefs2bib(pdf_file):
         headers={'Accept': 'application/x-bibtex'}
     )
 
-    data = r.text
-    return data
+    db = bibtexparser.loads(r.text)
+
+    return db
 
 
-def convert_non_bib_files(r):
+def load_search_results_file(search_file):
 
-    importer = {'ris': ris2bib,
-                'end': end2bib,
-                'txt': txt2bib,
-                'csv': csv2bib,
-                'xlsx': xlsx2bib,
-                'pdf': pdf2bib,
-                'pdf_refs': pdfRefs2bib}
+    importer_scripts = {'bib': getbib,
+                        'ris': ris2bib,
+                        'end': end2bib,
+                        'txt': txt2bib,
+                        'csv': csv2bib,
+                        'xlsx': xlsx2bib,
+                        'pdf': pdf2bib,
+                        'pdf_refs': pdfRefs2bib}
 
-    search_dir = os.path.join(os.getcwd(), 'search/')
-    non_bib_files = [os.path.join(search_dir, x)
-                     for x in os.listdir(search_dir)
-                     if any(x.endswith(ext) for ext in importer.keys())]
+    assert any(search_file.endswith(ext) for ext in importer_scripts.keys())
 
-    for non_bib_file in non_bib_files:
-        corresponding_bib_file = \
-            non_bib_file[:non_bib_file.rfind('.')] + '.bib'
-        if os.path.exists(corresponding_bib_file) or \
-                'search_details.csv' == os.path.basename(non_bib_file):
-            continue
-
-        filetype = non_bib_file[non_bib_file.rfind('.')+1:]
-        if 'pdf' == filetype:
-            if non_bib_file.endswith('_ref_list.pdf'):
-                filetype = 'pdf_refs'
-        if filetype in importer.keys():
-            print('Importing ' + filetype + ': ' +
-                  os.path.basename(non_bib_file))
-            data = importer[filetype](non_bib_file)
-            with open(corresponding_bib_file, 'w') as file:
-                file.write(data)
+    filetype = search_file[search_file.rfind('.')+1:]
+    if 'pdf' == filetype:
+        if search_file.endswith('_ref_list.pdf'):
+            filetype = 'pdf_refs'
+    if filetype in importer_scripts.keys():
+        print('Importing ' + filetype + ': ' +
+              os.path.basename(search_file))
+        db = importer_scripts[filetype](search_file)
+        if config.getboolean('general', 'DEBUG_MODE'):
+            with open(search_file.replace(filetype, '.bib'), 'w') as file:
+                file.write(bibtexparser.dumps(db))
                 file.close()
-            r.index.add([non_bib_file])
-        else:
-            print('Filetype not recognized: ' + os.path.basename(non_bib_file))
+        r = git.Repo()
+        r.index.add([search_file])
+    else:
+        print('Filetype not recognized: ' + os.path.basename(search_file))
 
-    return
+    return db
 
 
 def create_commit(r, bib_database):
