@@ -290,19 +290,19 @@ def retrieve_doi_metadata(entry):
                 entry.update(abstract=str(retrieved_abstract).replace('\n', '')
                              .lstrip().rstrip())
     except IndexError:
-        print('WARNING: Index error (authors?) for ' + entry['ID'])
+        print(f'WARNING: Index error (authors?) for {entry["ID"]}')
         entry.update(status='imported')
         pass
     except json.decoder.JSONDecodeError:
-        print('WARNING: Doi retrieval error: ' + entry['ID'])
+        print(f'WARNING: Doi retrieval error: {entry["ID"]}')
         entry.update(status='imported')
         pass
     except TypeError:
-        print('WARNING: Type error: ' + entry['ID'])
+        print(f'WARNING: Type error: : {entry["ID"]}')
         entry.update(status='imported')
         pass
     except requests.exceptions.ConnectionError:
-        print('WARNING: ConnectionError: ' + entry['ID'])
+        print(f'WARNING: ConnectionError: : {entry["ID"]}')
         entry.update(status='imported')
         pass
 
@@ -529,9 +529,10 @@ def create_commit(r, bib_database):
         )
 
         # print('Created commit: Cleanse ' + MAIN_REFERENCES)
+        return True
     else:
         print('- No additional cleansed entries available')
-    return
+        return False
 
 
 def test_cleanse():

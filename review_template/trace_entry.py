@@ -24,7 +24,7 @@ DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
 
 def main(citation_key):
 
-    print('Trace entry by citation_key: ' + citation_key)
+    print(f'Trace entry by citation_key: {citation_key}')
 
     repo = git.Repo()
 
@@ -38,18 +38,14 @@ def main(citation_key):
     prev_screen = ''
     prev_data = ''
     for commit in reversed(list(revlist)):
-
+        commit_message_first_line = commit.message.partition('\n')[0]
         print('\n\nCommit: ' +
-              str(commit),
-              ' - ',
-              commit.message.partition('\n')[0],
-              ' ',
-              commit.author.name,
-              ' ',
+              f'{commit} - {commit_message_first_line}' +
+              f' {commit.author.name} ' +
               time.strftime(
                   '%a, %d %b %Y %H:%M',
                   time.gmtime(commit.committed_date),
-              ),
+              )
               )
 
         if (MAIN_REFERENCES in commit.tree):
@@ -61,7 +57,7 @@ def main(citation_key):
             ]
 
             if len(entry) == 0:
-                print('Entry ' + citation_key + ' not in commit.')
+                print(f'Entry {citation_key} not in commit.')
             else:
                 diffs = list(dictdiffer.diff(prev_entry, entry))
                 if len(diffs) > 0:
@@ -74,7 +70,7 @@ def main(citation_key):
             for line in str(filecontents).split('\\n'):
                 if citation_key in line:
                     if line != prev_screen:
-                        print('Screen: ' + line)
+                        print(f'Screen: {line}')
                         prev_screen = line
 
         if (DATA in commit.tree):
@@ -82,7 +78,7 @@ def main(citation_key):
             for line in str(filecontents).split('\\n'):
                 if citation_key in line:
                     if line != prev_data:
-                        print('Data: ' + line)
+                        print(f'Data: {line}')
                         prev_data = line
 
 

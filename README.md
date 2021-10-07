@@ -34,12 +34,6 @@ review_template status
 # the status command will recommend the next processing steps and commands based on the state of the project
 ```
 
-To install crowd-sourced resources, include them as submodules as follows:
-
-```
-git submodule add https://github.com/geritwagner/crowd_resource_information_systems
-```
-
 Further instructions are available in the documentation (add-link-here).
 
 

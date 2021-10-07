@@ -28,7 +28,7 @@ def manual_cleanse_commit():
         author=git.Actor('manual:cleanse', ''),
         skip_hooks=hook_skipping
     )
-    print('Created commit: Cleanse manual ' + MAIN_REFERENCES)
+    print(f'Created commit: Cleanse manual {MAIN_REFERENCES}')
 
     return
 

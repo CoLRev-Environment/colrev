@@ -297,11 +297,8 @@ def append_merges(entry):
     # the queue)
     with open('queue_order.csv', 'a') as fd:
         fd.write(entry['hash_id'] + '\n')
-    queue_order = []
-    with open('queue_order.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        for row in csv_reader:
-            queue_order.append(row[0])
+    queue_order = pd.read_csv('queue_order.csv', header=None)
+    queue_order = queue_order[queue_order.columns[0]].tolist()
     required_prior_hash_ids = get_prev_queue(queue_order, entry['hash_id'])
     hash_ids_in_cleansed_file = []
 
@@ -431,7 +428,7 @@ def apply_merges(bib_database):
                 hash_ids_to_merge = []
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
-                        print('drop ' + entry['ID'])
+                        print(f'drop {entry["ID"]}')
                         hash_ids_to_merge = entry['hash_id'].split(',')
                         el_to_merge = entry['entry_link'].split(';')
                         # Drop the duplicated entry
@@ -525,7 +522,10 @@ def create_commit(r, bib_database):
                                     config['general']['EMAIL']),
 
             )
-    return
+        return True
+    else:
+        print('- No duplicates merged')
+        return False
 
 
 if __name__ == '__main__':

@@ -52,7 +52,7 @@ def generate_data_pages():
             text_file.close()
             nr_entries_added += 1
 
-    print(str(nr_entries_added) + ' records created (coding/citation_key.md)')
+    print(f'{nr_entries_added} records created (coding/citation_key.md)')
     print('')
 
     return
@@ -98,7 +98,7 @@ def generate_data_page():
         text_file.close()
         nr_entries_added = len(missing_records)
 
-    print(str(nr_entries_added) + ' records created (coding/citation_key.md)')
+    print(f'{nr_entries_added} records created (coding/citation_key.md)')
     print('')
 
     return
@@ -165,7 +165,7 @@ def generate_data_sheet():
     print('TODO: validation to be implemented here')
 
     if not os.path.exists(DATA_FILE):
-        print('Creating ' + DATA_FILE)
+        print(f'Creating {DATA_FILE}')
         coding_dimensions = input(
             'Please provide a list of coding dimensions [dim1,dim2,...]: ',
         )
@@ -178,22 +178,22 @@ def generate_data_sheet():
         assert len(coding_dimensions) == len(set(coding_dimensions))
 
         generate_data_csv(coding_dimensions)
-        print('Created ' + DATA_FILE)
-        print('0 records in ' + DATA_FILE)
+        print(f'Created {DATA_FILE}')
+        print(f'0 records in {DATA_FILE}')
     else:
-        print('Loaded existing ' + DATA_FILE)
+        print(f'Loaded existing {DATA_FILE}')
         file = open(DATA_FILE)
         reader = csv.reader(file)
         lines = len(list(reader))-1
-        print(str(lines) + ' records in ' + DATA_FILE)
+        print(f'{lines} records in {DATA_FILE}')
 
         update_data_csv()
 
-    print(str(nr_entries_added) + ' records added to ' + DATA_FILE)
+    print(f'{nr_entries_added} records added to {DATA_FILE}')
     file = open(DATA_FILE)
     reader = csv.reader(file)
     lines = len(list(reader))-1
-    print(str(lines) + ' records in ' + DATA_FILE)
+    print(f'{lines} records in {DATA_FILE}')
     print('')
 
     return

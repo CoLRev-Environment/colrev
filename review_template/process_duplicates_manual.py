@@ -216,8 +216,8 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
             # if none of the IDs has a letter appended.
 
     if a_propagated and b_propagated:
-        print('WARNING: both citation_keys propagated: ',
-              entry_a_ID, ', ', entry_b_ID)
+        print('WARNING: both citation_keys propagated:' +
+              f' {entry_a_ID}, {entry_b_ID}')
         return bib_database
 
     if a_propagated:

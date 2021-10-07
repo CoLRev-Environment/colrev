@@ -22,7 +22,7 @@ def inplace_change(filename, old_string, new_string):
     with open(filename) as f:
         s = f.read()
         if old_string not in s:
-            print('"{old_string}" not found in {filename}.'.format(**locals()))
+            print(f'"{old_string}" not found in {filename}.')
             return
 
     # Safely write the changed content, if found in the file
@@ -37,7 +37,7 @@ def get_value(msg, options):
     valid_response = False
     user_input = ''
     while not valid_response:
-        print(' ' + msg + ' (' + '|'.join(options) + ')', file=sys.stderr)
+        print(f' {msg} (' + '|'.join(options) + ')', file=sys.stderr)
         user_input = input()
         if user_input in options:
             valid_response = True
@@ -55,19 +55,22 @@ def initialize_repo():
     print('Initialize review repository')
     project_title = input('Project title: ')
 
-    committer_name = \
-        input('Please provide your name (for the git committer name)')
-    committer_email = \
-        input('Please provide your e-mail (for the git committer e-mail)')
+    glob_git_conf = git.GitConfigParser(
+        [os.path.normpath(os.path.expanduser('~/.gitconfig'))], read_only=True)
+    committer_name = glob_git_conf.get('user', 'name')
+    # input('Please provide your name (for the git committer name)')
+    committer_email = glob_git_conf.get('user', 'email')
+    # input('Please provide your e-mail (for the git committer e-mail)')
+    # TODO: test whether user and email are set in the global config
 
     print('\n\nParameters for the review project\n Details avilable at: '
           'TODO/docs')
 
     SCREEN_TYPE = get_value('Select screen type',
-                            ['NONE', 'PRE_SCREEN', 'INCLUSION_SCREEN'])
+                            ['NONE', 'PRE_SCREEN', 'SCREEN'])
     DATA_FORMAT = get_value('Select data structure',
-                            ['NONE', 'CSV_TABLE', 'MD_SHEET',
-                             'MD_SHEETS', 'MA_VARIABLES_CSV'])
+                            ['NONE', 'TABLE', 'PAGE',
+                             'SHEETs', 'MACODING'])
     SHARE_STAT_REQ = \
         get_value('Select share status requirement',
                   ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
@@ -148,7 +151,7 @@ def initialize_repo():
 
     r.index.commit(
         'Initial commit' + flag + flag_details,
-        author=git.Actor('script:initialize.py', ''),
+        author=git.Actor('script:init.py', ''),
         committer=git.Actor(committer_name, committer_email),
     )
 

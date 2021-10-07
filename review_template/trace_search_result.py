@@ -13,7 +13,7 @@ HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
 def main(search_file, id):
 
-    print('Trace search result: ' + search_file + ' - ' + id)
+    print(f'Trace search result: {search_file} - {id}')
 
     # TODO: option: trace it through all the history
 
@@ -32,8 +32,8 @@ def main(search_file, id):
     found = False
     for entry in bib_database.entries:
         if entry.get('hash_id', 'NA') == target_entry['hash_id']:
-            print('citation_key: ' +
-                  entry['ID'] + ' for hash_id ' + entry['hash_id'])
+            print(f'citation_key: {entry["ID"]} for ' +
+                  f'hash_id {entry["hash_id"]}')
             print()
             # if cleansed (hash_id in data/search/bib_details):
             # add note: quality cleansed entry:

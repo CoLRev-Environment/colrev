@@ -1,10 +1,10 @@
 #! /usr/bin/env python
 import configparser
-import csv
 import itertools
 import logging
 import multiprocessing as mp
 import os
+import re
 from itertools import chain
 
 import bibtexparser
@@ -67,7 +67,7 @@ def drop_fields(entry):
             entry.pop(val)
             # warn if fields are dropped that are not in fields_to_drop
             if val not in fields_to_drop:
-                print('  dropped ' + val + ' field')
+                print(f'  dropped {val} field')
     return entry
 
 
@@ -92,20 +92,24 @@ def is_sufficiently_complete(entry):
 def get_imported_entry_links():
 
     imported_entry_links = []
-    with open('imported_entry_links.csv') as read_obj:
-        csv_reader = csv.reader(read_obj)
-        for row in csv_reader:
-            imported_entry_links.append(row[0])
+
+    imported_entry_links = pd.read_csv('imported_entry_links.csv', header=None)
+    imported_entry_links = \
+        imported_entry_links[imported_entry_links.columns[0]].tolist()
+
     return imported_entry_links
 
 
-def load_entries(bib_file):
+def load_entries(filepath):
 
     imported_entry_links = get_imported_entry_links()
 
-    individual_bib_database = load_search_results_file(bib_file)
+    individual_bib_database = load_search_results_file(filepath)
 
-    search_file = os.path.basename(bib_file)
+    if individual_bib_database is None:
+        return []
+
+    search_file = os.path.basename(filepath)
     entry_list = []
     for entry in individual_bib_database.entries:
         entry['entry_link'] = search_file + '/' + entry['ID']
@@ -178,7 +182,7 @@ def save_imported_entry_links(bib_database):
 
 def load(bib_database):
 
-    print('Load additional records...')
+    print('Loading search results')
 
     save_imported_entry_links(bib_database)
 
@@ -193,6 +197,9 @@ def load(bib_database):
 
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
+        if 'cleansed' == entry['status'] or \
+                'needs_manual_merging' == entry['status']:
+            continue
         if 'not_imported' == entry['status'] or \
                 'needs_manual_completion' == entry['status']:
             entry.update(ID=utils.generate_citation_key_blacklist(
@@ -213,6 +220,9 @@ def load(bib_database):
 
     if os.path.exists('imported_entry_links.csv'):
         os.remove('imported_entry_links.csv')
+
+    r = git.Repo()
+    r.index.add(utils.get_search_files())
 
     return additional_records
 
@@ -269,15 +279,26 @@ def bibutils_convert(script, data):
 
 def getbib(file):
     with open(file) as bibtex_file:
-        individual_bib_database = bibtexparser.bparser.BibTexParser(
-            customization=convert_to_unicode, common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
+        contents = bibtex_file.read()
+        bib_r = re.compile(r'^@.*{.*,', re.M)
+        if len(re.findall(bib_r, contents)) == 0:
+            print('Error: Not a bib file? ' + os.path.basename(file))
+            individual_bib_database = None
+        else:
+            with open(file) as bibtex_file:
+                individual_bib_database = bibtexparser.bparser.BibTexParser(
+                    customization=convert_to_unicode, common_strings=True,
+                ).parse_file(bibtex_file, partial=True)
     return individual_bib_database
 
 
 def ris2bib(file):
     with open(file) as reader:
         data = reader.read()
+    if 'TY  - ' not in data:
+        print('Error: Not a ris file? ' + os.path.basename(file))
+        return None
+
     data = bibutils_convert('ris2xml', data)
     data = bibutils_convert('xml2bib', data)
     db = bibtexparser.loads(data)
@@ -287,6 +308,10 @@ def ris2bib(file):
 def end2bib(file):
     with open(file) as reader:
         data = reader.read()
+    if '%%T ' not in data:
+        print('Error: Not an end file? ' + os.path.basename(file))
+        return None
+
     data = bibutils_convert('end2xml', data)
     data = bibutils_convert('xml2bib', data)
     db = bibtexparser.loads(data)
@@ -332,8 +357,13 @@ def preprocess_entries(data):
     return data
 
 
-def csv2bib(csv_file):
-    data = pd.read_csv(csv_file)
+def csv2bib(file):
+    try:
+        data = pd.read_csv(file)
+    except pd.errors.ParserError:
+        print('Error: Not a csv file? ' + os.path.basename(file))
+        pass
+        return None
     data.columns = data.columns.str.replace(' ', '_')
     data.columns = data.columns.str.replace('-', '_')
     data = data.to_dict('records')
@@ -344,8 +374,13 @@ def csv2bib(csv_file):
     return db
 
 
-def xlsx2bib(xlsx_file):
-    data = pd.read_excel(xlsx_file)
+def xlsx2bib(file):
+    try:
+        data = pd.read_excel(file)
+    except pd.errors.ParserError:
+        print('Error: Not an xlsx file? ' + os.path.basename(file))
+        pass
+        return None
     data.columns = data.columns.str.replace(' ', '_')
     data.columns = data.columns.str.replace('-', '_')
     data = data.to_dict('records')
@@ -356,13 +391,13 @@ def xlsx2bib(xlsx_file):
     return db
 
 
-def pdf2bib(pdf_file):
+def pdf2bib(file):
     grobid_client.check_grobid_availability()
 
     options = {'consolidateHeader': '1'}
     r = requests.put(
         grobid_client.get_grobid_url() + '/api/processHeaderDocument',
-        files=dict(input=open(pdf_file, 'rb')),
+        files=dict(input=open(file, 'rb')),
         params=options,
         headers={'Accept': 'application/x-bibtex'}
     )
@@ -376,16 +411,20 @@ def pdf2bib(pdf_file):
     return db
 
 
-def pdfRefs2bib(pdf_file):
+def pdfRefs2bib(file):
     grobid_client.check_grobid_availability()
 
     options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
     r = requests.post(
         grobid_client.get_grobid_url() + '/api/processReferences',
-        files=dict(input=open(pdf_file, 'rb')),
+        files=dict(input=open(file, 'rb')),
         data=options,
         headers={'Accept': 'application/x-bibtex'}
     )
+    if 500 == r.status_code:
+        print('Error: Not a readable pdf file? ' + os.path.basename(file))
+        print(f'Grobid: {r.text}')
+        return None
 
     db = bibtexparser.loads(r.text)
 
@@ -410,27 +449,36 @@ def load_search_results_file(search_file):
         if search_file.endswith('_ref_list.pdf'):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
-        print('Importing ' + filetype + ': ' +
-              os.path.basename(search_file))
+        print(f'- Loading {filetype}: {os.path.basename(search_file)}')
         db = importer_scripts[filetype](search_file)
+        if db is None:
+            return None
         if config.getboolean('general', 'DEBUG_MODE'):
             with open(search_file.replace(filetype, '.bib'), 'w') as file:
                 file.write(bibtexparser.dumps(db))
                 file.close()
-        r = git.Repo()
-        r.index.add([search_file])
+        return db
     else:
         print('Filetype not recognized: ' + os.path.basename(search_file))
-
-    return db
+        return None
 
 
 def create_commit(r, bib_database):
+    if bib_database is None:
+        print('- No entries imported')
+        return False
+
+    if 0 == len(bib_database.entries):
+        print('- No entries imported')
+        return False
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
+    if MAIN_REFERENCES not in [i.a_path for i in r.index.diff(None)] and \
+            MAIN_REFERENCES not in r.untracked_files:
+        print('- No new records added to MAIN_REFERENCES')
+        return False
+    else:
         # to avoid failing pre-commit hooks
         bib_database = utils.load_references_bib(
             modification_check=False, initialize=False,
@@ -438,7 +486,6 @@ def create_commit(r, bib_database):
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
         r.index.add([MAIN_REFERENCES])
-        r.index.add(utils.get_bib_files())
         hook_skipping = 'false'
         if not config.getboolean('general', 'DEBUG_MODE'):
             hook_skipping = 'true'
@@ -453,6 +500,4 @@ def create_commit(r, bib_database):
                                 config['general']['EMAIL']),
             skip_hooks=hook_skipping
         )
-    else:
-        print('- No new records added to MAIN_REFERENCES')
-    return
+        return True

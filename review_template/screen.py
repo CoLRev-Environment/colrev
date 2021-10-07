@@ -95,22 +95,14 @@ def main():
                     print()
                     print()
                     print(
-                        reference['title'],
-                        '  -  ',
-                        reference['author'],
-                        '  ',
-                        reference['journal'],
-                        '  ',
-                        str(reference['year']),
-                        '  (',
-                        str(reference['volume']),
-                        ':',
-                        str(reference['number']),
-                        ') ',
-                        reference['file'],
-                        ' *',
-                        reference['citation_key'],
-                        '*',
+                        f'{reference["title"]}  -  ',
+                        f'{reference["author"]}  ',
+                        f'{reference["journal"]}  ',
+                        f'{reference["year"]}  (',
+                        f'{reference["volume"]}:',
+                        f'{reference["number"]}) ',
+                        f'{reference["file"]} *',
+                        f'{reference["citation_key"]}*',
                     )
                     if exclusion_criteria_available:
                         for column in [
@@ -151,8 +143,7 @@ def main():
                     )
             except IndexError:
                 print('Index error/citation_key not found in ' +
-                      MAIN_REFERENCES + ': ',
-                      row['citation_key'])
+                      f'{MAIN_REFERENCES}: {row["citation_key"]}')
                 pass
     except KeyboardInterrupt:
         print()

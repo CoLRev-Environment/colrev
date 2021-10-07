@@ -304,7 +304,7 @@ def unify_pages_field(input_string):
     if not re.match(r'^\d*$', input_string) and \
        not re.match(r'^\d*--\d*$', input_string) and\
        not re.match(r'^[xivXIV]*--[xivXIV]*$', input_string):
-        print('Unusual pages: ' + input_string)
+        print(f'Unusual pages: {input_string}')
     return input_string
 
 
@@ -374,8 +374,8 @@ def validate_bib_file(filename):
                     'imported not identical to ',
                     'search/search_details.csv$number_records',
                 )
-                print('Loaded: ' + str(len(bib_database.entries)))
-                print('Expected: ' + str(records_expected))
+                print(f'Loaded: {len(bib_database.entries)}')
+                print(f'Expected: {records_expected}')
                 return False
         except ValueError:
             # print(
@@ -400,7 +400,7 @@ def load_references_bib(modification_check=True, initialize=False):
         if initialize:
             references_bib = BibDatabase()
         else:
-            print(MAIN_REFERENCES + ' does not exist')
+            print(f'{MAIN_REFERENCES} does not exist')
             sys.exit()
 
     return references_bib
@@ -415,12 +415,10 @@ def git_modification_check(filename):
     index = repo.index
     if filename in [entry.a_path for entry in index.diff(None)]:
         print(
-            'WARNING: There are changes in ',
-            filename,
+            f'WARNING: There are changes in {filename}',
             ' that are not yet added to the git index. ',
             'They may be overwritten by this script. ',
-            'Please consider to MANUALLY add the ' +
-            filename,
+            f'Please consider to MANUALLY add the {filename}',
             ' to the index before executing script.',
         )
         if 'y' != input('override changes (y/n)?'):
@@ -539,10 +537,7 @@ def get_included_papers():
                         else:
                             print(
                                 '- Error: file not available ',
-                                entry['file'],
-                                ' (',
-                                entry['ID'],
-                                ')',
+                                f'{entry["file"]} ({entry["ID"]})',
                             )
 
     return pdfs
