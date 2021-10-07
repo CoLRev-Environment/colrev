@@ -140,8 +140,8 @@ def acquire_pdfs(bib_database, screen):
                             else:
                                 os.remove(pdf_filepath)
                         else:
-                            print('Problem retrieving PDF/unpaywall link (' +
-                                  str(response.status_code) + '): ' + url)
+                            print('Problem retrieving PDF/unpaywall link ' +
+                                  f'({response.status_code}) : {url}')
 
             if not os.path.exists(pdf_filepath):
                 missing_entries.entries.append(entry)
@@ -184,19 +184,13 @@ def main():
 
     bib_database = acquire_pdfs(bib_database, screen)
 
-    print(' - ' + str(total_to_retrieve) + ' pdfs required')
-    print(' - ' + str(pdfs_available) + ' pdfs available')
+    print(f' - {total_to_retrieve} pdfs required')
+    print(f' - {pdfs_available} pdfs available')
     if existing_pdfs_linked > 0:
-        print(
-            ' - ' + str(existing_pdfs_linked) +
-            ' existing pdfs linked in bib file',
-        )
+        print(f' - {existing_pdfs_linked} existing pdfs linked in bib file')
     print(' - ' + str(pdfs_retrieved) + ' pdfs retrieved')
     if missing_pdfs > 0:
-        print(
-            ' - ' + str(missing_pdfs) +
-            ' pdfs missing (see missing_pdf_files.csv)',
-        )
+        print(f' - {missing_pdfs} pdfs missing (see missing_pdf_files.csv)')
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 

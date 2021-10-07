@@ -27,11 +27,7 @@ def trace_hash(bibfilename, bib_database, hash_id_needed):
         # they need to be executed before the following.
         if entry.get('hash_id', 'NA') == hash_id_needed:
             print(
-                '\n\n Found hash ',
-                hash_id_needed,
-                '\n in ',
-                bibfilename,
-                '\n',
+                f'\n\n Found hash {hash_id_needed}\n in {bibfilename}\n',
             )
             pp.pprint(entry)
             print('\n')
@@ -41,13 +37,13 @@ def trace_hash(bibfilename, bib_database, hash_id_needed):
 
 def main(hash_id_needed):
     global nr_found
-    print('Trace hash_id: ' + hash_id_needed)
+    print(f'Trace hash_id: {hash_id_needed}')
 
     assert len(hash_id_needed) == 64
 
     bib_files = utils.get_bib_files()
     for bib_file in bib_files:
-        print('Checking ' + os.path.basename(bib_file))
+        print(f'Checking {os.path.basename(bib_file)}')
         search_entries = importer.get_db_with_completion_edits(bib_file)
 
         # No need to check sufficiently_complete metadata:

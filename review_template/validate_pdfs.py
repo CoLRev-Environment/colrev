@@ -72,8 +72,8 @@ def validate_pdf_metadata(bib_database):
 
             if probability_english(text) < 0.98:
                 print(
-                    ' - validation error: possible OCR problems: ',
-                    entry['file'],
+                    ' - validation error: ' +
+                    f'OCR problems: {entry["file"]}'
                 )
                 continue
 
@@ -89,8 +89,8 @@ def validate_pdf_metadata(bib_database):
 
             if match_count/len(title_words) < 0.9:
                 print(
-                    ' - validation error (title not found in first pages): ',
-                    entry['file'],
+                    ' - validation error ' +
+                    f'(title not found in first pages): {entry["file"]}',
                 )
 
             match_count = 0
@@ -103,14 +103,14 @@ def validate_pdf_metadata(bib_database):
 
             if match_count/len(entry['author'].split(' and ')) < 0.8:
                 print(
-                    ' - validation error (author not found in first pages): ',
-                    entry['file'],
+                    ' - validation error ' +
+                    f'(author not found in first pages): {entry["file"]}',
                 )
 
         except PDFSyntaxError:
             print(
                 ' - PDF reader error: check whether ',
-                entry['file'] + 'is really a pdf',
+                f'{entry["file"]} is really a pdf',
             )
             pass
         except PDFTextExtractionNotAllowed:

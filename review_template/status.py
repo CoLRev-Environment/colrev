@@ -83,7 +83,7 @@ for key in default_shared_general.keys():
             shared_config.write(outfile)
 
 HASH_ID_FUNCTION = shared_config['general']['HASH_ID_FUNCTION']
-SHARE_STATUS_REQUIREMENT = shared_config['general']['SHARE_STATUS_REQUIREMENT']
+SHARE_STATUS_REQUIREMENT = shared_config['general']['share_stat_req']
 
 
 default_private_general = {'EMAIL': 'user@name.com',
@@ -321,7 +321,7 @@ def get_remote_commit_differences(repo):
 
         branch_name = str(repo.active_branch)
         tracking_branch_name = str(repo.active_branch.tracking_branch())
-        print(branch_name + ' - ' + tracking_branch_name)
+        print(f'{branch_name} - {tracking_branch_name}')
         behind_operation = branch_name + '..' + tracking_branch_name
         commits_behind = repo.iter_commits(behind_operation)
         ahead_operation = tracking_branch_name + '..' + branch_name
@@ -345,9 +345,8 @@ def main():
     if DEBUG_MODE:
         print('\nConfiguration\n')
 
-        print(' - Hash function:                 ' + HASH_ID_FUNCTION)
-        print(' - Local:                         ' +
-              str(CPUS) + ' CPUS available')
+        print(f' - Hash function:                 {HASH_ID_FUNCTION}')
+        print(f' - Local:                         {CPUS} CPUS available')
         print('   DEBUG mode enabled')
 
     repo = git.Repo('')
@@ -379,38 +378,40 @@ def main():
         print(' | Search')
         print(
             ' |  - Records retrieved: ' +
-            str(status_freq['retrieved']).rjust(5, ' '),
+            f'{str(status_freq["retrieved"]).rjust(5, " ")}',
         )
 
         if status_freq['non_imported'] > 0:
             print(' |                               * ' +
-                  str(status_freq['non_imported']).rjust(6, ' ') +
+                  f'{str(status_freq["non_imported"]).rjust(6, " ")}' +
                   ' record(s) not yet imported.')
 
         if status_freq['needs_manual_completion'] > 0:
+            nr_nmco = status_freq['needs_manual_completion']
             print(' |                               * ' +
-                  str(status_freq['needs_manual_completion']).rjust(6, ' ') +
+                  f'{str(nr_nmco).rjust(6, " ")}' +
                   ' record(s) need manual completion before import.')
 
         print(' |  - Records imported: ' +
-              str(status_freq['overall_imported']).rjust(6, ' '))
+              f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
 
         if status_freq['needs_manual_cleansing'] > 0:
+            nr_nmcl = status_freq['needs_manual_cleansing']
             print(' |                               * ' +
-                  str(status_freq['needs_manual_cleansing']).rjust(6, ' ') +
+                  f'{str(nr_nmcl).rjust(6, " ")}' +
                   ' record(s) need manual cleansing.')
 
         print(' |  - Records cleansed: ' +
-              str(status_freq['overall_cleansed']).rjust(6, ' '))
+              f'{str(status_freq["overall_cleansed"]).rjust(6, " ")}')
 
         if status_freq['cleansed'] > 0:
             print(' |                               * ' +
-                  str(status_freq['cleansed']).rjust(6, ' ') +
+                  f'{str(status_freq["cleansed"]).rjust(6, " ")}' +
                   ' record(s) need merging.')
 
         if status_freq['needs_manual_merging'] > 0:
             print(' |                               * ' +
-                  str(status_freq['needs_manual_merging']).rjust(6, ' ') +
+                  f'{str(status_freq["needs_manual_merging"]).rjust(6, " ")}' +
                   ' record(s) need manual merging.')
 
         # if status_freq['identical_hash_id'] > 0:
@@ -422,11 +423,11 @@ def main():
         # implicit merging (based on identical hash_ids)!
         if status_freq['merged_hash_ids'] > 0:
             print(' |                               -> ' +
-                  str(status_freq['merged_hash_ids']).rjust(5, ' ') +
+                  f'{str(status_freq["merged_hash_ids"]).rjust(5, " ")}' +
                   ' record(s) merged (non-identical hash_ids).')
 
         print(' |  - Records processed: ' +
-              str(status_freq['overall_processed']).rjust(5, ' '))
+              f'{str(status_freq["overall_processed"]).rjust(5, " ")}')
 
         print(' |')
 
@@ -442,10 +443,9 @@ def main():
                   str(status_freq['pre_screen_total']).rjust(17, ' '))
             print(
                 ' |  - Included: ' +
-                str(status_freq['pre_screen_included'])
-                .rjust(14, ' ') +
+                f'{str(status_freq["pre_screen_included"]).rjust(14, " ")}' +
                 '   ->' +
-                str(status_freq['pre_screen_excluded']).rjust(6, ' ') +
+                f'{str(status_freq["pre_screen_excluded"]).rjust(6, " ")}' +
                 ' records excluded'
             )
 
@@ -461,26 +461,23 @@ def main():
                   str(status_freq['pdf_available']).rjust(13, ' '))
             if 0 != status_freq['pdfs_to_retrieve']:
                 print(' |  - TODO: ' +
-                      str(status_freq['pdfs_to_retrieve']).rjust(18, ' '))
+                      f'{str(status_freq["pdfs_to_retrieve"]).rjust(18, " ")}')
             print(' |')
 
             print(' | Screen')
             print(' |  - Total: ' +
-                  str(status_freq['screen_total']).rjust(17, ' '))
+                  f'{str(status_freq["screen_total"]).rjust(17, " ")}')
 
             print(
                 ' |  - Included: ' +
-                str(status_freq['screen_included'])
-                .rjust(14, ' ') +
-                '   ->' +
-                str(status_freq['screen_excluded'])
-                .rjust(6, ' ') + ' records excluded'
+                f'{str(status_freq["screen_included"]).rjust(14, " ")}   ->' +
+                f'{str(status_freq["screen_excluded"]).rjust(6, " ")} ' +
+                'records excluded'
             )
             if 0 != status_freq['nr_to_screen']:
                 print(
                     ' |  - TODO: ' +
-                    str(status_freq['nr_to_screen'])
-                    .rjust(18, ' '),
+                    f'{str(status_freq["nr_to_screen"]).rjust(18, " ")}',
                 )
             print(' |')
 
@@ -491,11 +488,11 @@ def main():
         else:
             print(' | Data extraction')
             print(' |  - Total: ' +
-                  str(status_freq['data_total']).rjust(17, ' '))
+                  f'{str(status_freq["data_total"]).rjust(17, " ")}')
             if 0 != status_freq['nr_to_data']:
                 print(
                     ' |  - TODO: ' +
-                    str(status_freq['nr_to_data']).rjust(18, ' '),
+                    f'{str(status_freq["nr_to_data"]).rjust(18, " ")}',
                 )
 
         # Sharing conditions
@@ -561,7 +558,7 @@ def main():
                   '  Not tracking a remote branch. '
                   'Create remote repository and use\n'
                   '     git remote add origin https://github.com/user/repo\n'
-                  '     git push origin ' + repo.active_branch.name)
+                  f'     git push origin {repo.active_branch.name}')
         else:
             print(f'\n\nCollaboration and sharing hints (git)\n\n'
                   f' Requirement: {SHARE_STATUS_REQUIREMENT}')

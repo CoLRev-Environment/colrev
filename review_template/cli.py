@@ -51,10 +51,10 @@ def main(ctx):
 
 @main.command(help_priority=1)
 @click.pass_context
-def initialize(ctx):
+def init(ctx):
     """Initialize repository"""
-    from review_template import initialize
-    initialize.initialize_repo()
+    from review_template import init
+    init.initialize_repo()
 
 
 @main.command(help_priority=2)

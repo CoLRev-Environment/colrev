@@ -156,20 +156,13 @@ def main():
                     print()
                     print()
                     print(
-                        reference['title'],
-                        '  -  ',
-                        reference['author'],
-                        '  ',
-                        reference['journal'],
-                        '  ',
-                        str(reference['year']),
-                        '  (',
-                        str(reference['volume']),
-                        ':',
-                        str(reference['number']),
-                        ') *',
-                        reference['citation_key'],
-                        '*',
+                        f'{reference["title"]}  -  ',
+                        f'{reference["author"]}  ',
+                        f'{reference["journal"]}  ',
+                        f'{reference["year"]}  (',
+                        f'{reference["volume"]}:',
+                        f'{reference["number"]}) *',
+                        f'{reference["citation_key"]}*',
                     )
                     print()
                     inclusion_decision = input('include (y) or exclude (n)?')

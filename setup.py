@@ -47,7 +47,7 @@ entry_points = \
     [
         'process=review_template.cli:process',
         'status=review_template.cli:status',
-        'initialize=review_template.cli:initialize',
+        'init=review_template.cli:init',
         'complete_manual=review_template.cli:complete_manual',
         'cleanse_manual=review_template.cli:cleanse_manual',
         'process_duplicates_manual=review_template.cli:proc_duplicates_manual',

@@ -8,7 +8,7 @@ import click
 from review_template import cleanse_records
 from review_template import entry_hash_function
 from review_template import importer
-from review_template import initialize
+from review_template import init
 from review_template import process_duplicates
 from review_template import utils
 
@@ -52,8 +52,6 @@ def process_entries(search_records, bib_database):
 
     print('Import')
     [bib_database.entries.append(entry) for entry in search_records]
-    # for entry in search_records:
-    #     entry = importer.preprocess(entry)
     importer.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'imported'):
@@ -63,8 +61,6 @@ def process_entries(search_records, bib_database):
     print('Cleanse')
     bib_database.entries = \
         pool.map(cleanse_records.cleanse, bib_database.entries)
-    # for entry in to_cleanse:
-    #     entry = (cleanse_records.cleanse(entry)
     cleanse_records.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'cleansed'):
@@ -73,12 +69,21 @@ def process_entries(search_records, bib_database):
 
     print('Process duplicates')
     pool.map(process_duplicates.append_merges, bib_database.entries)
-    # for entry in bib_database.entries:
-    #     append_merges(entry)
     bib_database = process_duplicates.apply_merges(bib_database)
     process_duplicates.create_commit(r, bib_database)
 
-    # TODO :continue (backward search, ...) considering check_continue(...)
+    # TODO, depending on REVIEW_STRATEGY:
+    # minimal_review_pipeline: no screening/data extraction.
+    # simply include all records, cleanse, merge, acquire pdfs
+
+    # bib_database = utils.load_references_bib(
+    #     modification_check=True, initialize=False,
+    # )
+    # screen_sheet.update_screen(bib_database)
+    # acquire PDFs
+    # backward search, ... (considering check_continue)
+    # update_data()
+    print()
 
     return bib_database
 
@@ -86,7 +91,7 @@ def process_entries(search_records, bib_database):
 def main():
 
     global r
-    r = initialize.get_repo()
+    r = init.get_repo()
     utils.build_docker_images()
 
     # Currently, citation_keys are generated
@@ -100,7 +105,7 @@ def main():
                             if x.get('status', 'NA') == 'processed']
 
     if len(additional_search_records) < BATCH_SIZE:
-        print('\n\nProcessing all records in one batch')
+        print('\nProcessing all records in one batch')
         bib_database = process_entries(additional_search_records, bib_database)
     else:
         last_record_i, prev_iteration_i, last_entry_id = 0, 0, 0
@@ -115,23 +120,12 @@ def main():
                 print('\n\nProcessing batch ' +
                       str(max((last_record_i - BATCH_SIZE + 1),
                               prev_iteration_i+1)) +
-                      ' to ' + str(last_record_i) + ' of ' +
-                      str(len(additional_search_records)))
+                      f' to {last_record_i} of ' +
+                      f'{len(additional_search_records)}')
                 prev_iteration_i = last_record_i
                 bib_database = \
                     process_entries(search_record_batch, bib_database)
                 search_record_batch = []
-
-    # TODO, depending on REVIEW_STRATEGY:
-    # minimal_review_pipeline: no screening/data extraction.
-    # simply include all records, cleanse, merge, acquire pdfs
-
-    # bib_database = utils.load_references_bib(
-    #     modification_check=True, initialize=False,
-    # )
-    # screen_sheet.update_screen(bib_database)
-    # acquire PDFs
-    # update_data()
 
     # to print tooltips (without replicating code from the pipeline repo)
     os.system('pre-commit run -a')
