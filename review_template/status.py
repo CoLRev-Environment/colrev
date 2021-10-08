@@ -480,7 +480,7 @@ def main():
         # Sharing conditions
         cur_stati = get_status()
 
-        print('\n\nInstructions\n')
+        print('\n\nInstructions (review_template)\n')
         # TODO: include 'processed' once status information beyond 'processed'
         # is joined/available
         automated_processing_completed = True
@@ -536,13 +536,13 @@ def main():
             get_remote_commit_differences(repo)
 
         if nr_commits_behind == -1 and nr_commits_ahead == -1:
-            print('Collaboration and sharing hints (git)\n\n'
+            print('Collaboration and sharing (git)\n\n'
                   '  Not tracking a remote branch. '
                   'Create remote repository and use\n'
                   '     git remote add origin https://github.com/user/repo\n'
                   f'     git push origin {repo.active_branch.name}')
         else:
-            print(f'\n\nCollaboration and sharing hints (git)\n\n'
+            print(f'\n\nCollaboration and sharing (git)\n\n'
                   f' Requirement: {SHARE_STATUS_REQUIREMENT}')
 
             if nr_commits_behind > 0:

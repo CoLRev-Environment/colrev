@@ -2,22 +2,26 @@
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
+_Currently an alpha-version focused on the command-line._
+
+
 - Git-based (collaborative) literature reviews
-- Easy to learn and use: one command (review_template status) shows an overview and contextual instructions (based on the current dataset, collaboration approach, ...)
-- Respects methodological and typological pluralism through configurable templates for
-  - informal literature reviews (e.g., for a related work section) or
-  - standalone review papers requiring extraction and analysis of structured data (e.g., critical reviews, descriptive reviews, meta-analysis, qualitative systematic reviews, realist reviews)
-  - standalone review papers requiring interpretive analyses and syntheses of (semi) structured data (e.g., narrative reviews, scoping reviews, theoretical reviews, umbrella reviews)
-- Right amount of automation (completion of fields, cleansing, merging) supporting you to achieve accurate results while saving time [link: what's automated/what's not]
-- Collaboration protocols
-- Changes of other researchers, scripts, and crowds can be visualized and validated
-- Verifiable traceability (always know where each record is and how it got there)
-- Cross-platform and tested (Windows, Linux, MacOs)
-- Aimed at preventing errors (erroneous merging of records, analysis of wrong PDFs, or non-machine-readable PDFs)
-- Designed with 10+ years of experience conducting and publishing literature reviews, methods and commentary papers, teaching PhD level courses on literature reviews.
+- Easy to learn: one command, `review_template status`, provides an overview and contextual instructions
+- Collaboration protocols and consistency checks (pre-commit hooks) aimed at preventing git conflicts
+- Traceability of records and changesets
+- Designed with methodological and typological pluralism in mind: configurable templates for
+  - Informal literature reviews (e.g., for a related work section) or
+  - Standalone review papers requiring extraction and analysis of structured data (e.g., critical reviews, descriptive reviews, meta-analysis, qualitative systematic reviews, realist reviews)
+  - Standalone review papers requiring interpretive analyses and syntheses of (semi) structured data (e.g., narrative reviews, scoping reviews, theoretical reviews, umbrella reviews)
+- Builds on state-of-the-art algorithms
+  - Import of structured reference data (BibTeX, RSI, END, CSV, XLSX, based on bibutils) and unstructured reference data (TXT, PDF, based on GROBID)
+  - Metadata consolidation based on crossref
+  - Identification of duplicates based on active learning (python dedupe)
+  - Algorithms for machine-readability of PDFs (ocrmypdf) and annotation (GROBID)
+- Cross-platform, open-source, tested, and extensible
 
 
-# Installation and usage
+# Installation
 
 Requirements: [git](https://git-scm.com/downloads), [a git gui](https://git-scm.com/downloads), [Docker](https://www.docker.com/), [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
 
@@ -26,77 +30,70 @@ Requirements: [git](https://git-scm.com/downloads), [a git gui](https://git-scm.
 git clone https://github.com/geritwagner/review_template
 cd review_template
 pip3 install --user -e .
-# Goal:
+# Once the project is available on PyPI:
 # pip install review_template
 
-# Navigate to project directory (cd ...)
-review_template status
-# the status command will recommend the next processing steps and commands based on the state of the project
 ```
 
-Further instructions are available in the documentation (add-link-here).
+# Usage (CLI)
+
+On the command line iteratively use the following commands:
+
+- `review_template status`: provides an overview of the state of the pipeline and suggests the next steps related to processing (`review_template ...`) and collaboration (`git ...`)
+- `review_template COMMAND`: task that processes or analyzes records (e.g., `review_template init`, `review_template process`)
+- `git COMMAND`: manage and analyze file versions and collaboration (e.g., `git status`, `git push`, `git pull`)
+
+The goal is that `review_template status` provides contextual instructions for all `review_template ...` and `git ...` commands (simple copy and paste).
+Further information is provided in the documentation (add-link).
+
+Example:
+
+### `review_template status`
 
 
-# Features
-
-- Collaborative, robust, and tool-supported end-to-end `search > screen > data` pipeline designed for reproducibility, iterativeness, and quality.
-Designed for local and distributed use.
-
-- Entry-links ensure traceability from the search results extracted from an academic database to the citation in the final paper.
-This also makes iterative updates efficient because duplicates only have to be considered once [more](TODO).
-
-- The pipeline includes powerful Python scripts that can handle quality problems in the bibliographic metadata and the PDFs (based on powerful APIs like crossref and the DOI lookup service and excellent open source projects like grobid, tesseract, pdfminersix).
-
-- **Planned**: There are two modes of operation: the default mode, which offers a user interface, and a command-line interface (CLI), which offers access to the Python scripts.
-Making the same pipeline accessible through both modes is aimed at enabling collaboration between experts in the research domain and experts in research technology.
-Extensions will be developed and tested in the CLI mode before implementation for the default mode.
-
-- Applicability to different types of reviews, including systematic reviews, theory development reviews, scoping reviews and many more.
-For meta-analyses, software like RevMan or R-meta-analysis packages are more appropriate.
-
-- Zero-configuration, low installation effort, and cross-platform compatibility ensured by Docker environment.
-
-- Extensibility (explain how it can be accomplished, how it is facilitated (e.g., stable but extensible data structures, robust workflow with checks, python in Docker))
-
-- Tested workflow (10 literature reviews and analyses (systematic, theory development, scoping) individual or collaborative)
-
-- The pipeline is tested in the management disciplines (information systems) in which iterative searches are pertinent.
-
-# How review_template works
-
-The scripts are based on the following principles:
-
-- **End-to-end traceability (NEW)**. The chain of evidence is maintained by identifying papers by their *citation_key*  (entry_link) throughout the pipeline.
-Never change the *citation_key* once it has been used in the screen or data extraction.
+![Status command and explanation](docs/figures/status_explanation.PNG?raw=true)
 
 
-- **Consistent structure of files and data** and **incremental propagation of changes**.
-Papers are propagated from the individual search outputs (`data/search/YYYY-MM-DD-search_id.bib`) to the `data/references.bib` to the `data/screen.csv` to the `data/data.csv`.
-Do not change directories, filenames, or file structures unless suggested in the following.
-To reset the analyses, each of these files can be deleted.
+### `review_template COMMANDs`
 
-    <details>
-      <summary>Details</summary>
+```bash
+$review_template
+Usage: review_template [OPTIONS] COMMAND [ARGS]...
 
-      When updating data at any stage in the pipeline and rerunning the scripts,
-       - existing records in the subsequent files will not be changed
-       - additional records will be processed and added to the subsequent file
-       - if records have been removed, scripts will create a warning but not remove them from the subsequent file (to avoid accidental losses of data)
+  Review template pipeline
 
-    </details>
+  Main commands: init | status | process, screen, ...
 
-- The pipeline relies on the **principle of transparent and minimal history changes** in git.
+Options:
+  --help  Show this message and exit.
 
-    <details>
-      <summary>Details</summary>
+Commands:
+  init         Initialize repository
+  status       Show status
+  process      Process pipeline
+  man-comp     Complete records manually
+  man-prep     Prepare records manually
+  man-dedupe   Process duplicates manually
+  prescreen    Execute pre-screen
+  screen       Execute screen
+  pdfs         Acquire PDFs
+  pdf-check    Check PDFs
+  back-search  Execute backward search based on PDFs
+  data         Execute data extraction
+  profile      Generate a sample profile
+  validate     Validate changes
+  trace        Trace an entry
+```
 
-      - Transparent means that plain text files must be used (i.e., BibTeX and CSV); proprietary file formats (in particular Excel files) should be avoided.
-      - Minimal means that the version history should reflect changes in content and should not be obscured by meaningless changes in format (e.g., ordering of records, fields, or changes in handling of fields).
-      This is particularly critical since there is no inherent order in BibTeX or CSV files storing the data of the literature review.
-      Applications may easily introduce changes that make it hard to identify the content that has changed in a commit.
-      - In the pipeline, this challenge is addressed by enforcing reasonable formatting and ordering defaults in the BibTex and CSV files.
+### `git COMMANDs`
 
-    </details>
+For non-expert users of git, the following commands will be suggested depending on the state of the repository:
+
+- `git status` to inspect the state of the local repository
+- `gitk` to visualize changes
+- `git push` to upload changes to a shared repository
+- `git pull` to retrieve changes from a shared repository
+
 
 # Development status, release, and changes
 
