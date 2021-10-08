@@ -46,7 +46,7 @@ class SpecialHelpOrder(click.Group):
 def main(ctx):
     """Review template pipeline
 
-    Main commands: process | status"""
+    Main commands: init | status | process, screen, ..."""
 
 
 @main.command(help_priority=1)
@@ -59,19 +59,20 @@ def init(ctx):
 
 @main.command(help_priority=2)
 @click.pass_context
-def process(ctx):
-    """Process pipeline"""
-    from review_template import process
-    process.main()
+def status(ctx):
+    """Show status"""
+    from review_template import status
+    print('\nChecks\n')
+    os.system('pre-commit run -a')
+    status.main()
 
 
 @main.command(help_priority=3)
 @click.pass_context
-def status(ctx):
-    """Show status"""
-    from review_template import status
-    os.system('pre-commit run -a')
-    status.main()
+def process(ctx):
+    """Process pipeline"""
+    from review_template import process
+    process.main()
 
 
 @main.command(help_priority=4)
