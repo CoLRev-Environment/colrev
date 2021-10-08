@@ -5,6 +5,7 @@ import pkgutil
 import sys
 
 import git
+import requests
 
 
 def retrieve_template_file(template_file, target):
@@ -45,7 +46,7 @@ def get_value(msg, options):
     return user_input
 
 
-def initialize_repo():
+def init_new_repo():
 
     r = git.Repo.init()
 
@@ -55,19 +56,23 @@ def initialize_repo():
     print('Initialize review repository')
     project_title = input('Project title: ')
 
-    glob_git_conf = git.GitConfigParser(
-        [os.path.normpath(os.path.expanduser('~/.gitconfig'))], read_only=True)
-    committer_name = glob_git_conf.get('user', 'name')
-    # input('Please provide your name (for the git committer name)')
-    committer_email = glob_git_conf.get('user', 'email')
-    # input('Please provide your e-mail (for the git committer e-mail)')
-    # TODO: test whether user and email are set in the global config
+    ggit_conf_path = os.path.normpath(os.path.expanduser('~/.gitconfig'))
+    if os.path.exists(ggit_conf_path):
+        glob_git_conf = \
+            git.GitConfigParser([ggit_conf_path], read_only=True)
+        committer_name = glob_git_conf.get('user', 'name')
+        committer_email = glob_git_conf.get('user', 'email')
+        # TODO: test whether user and email are set in the global config
+    else:
+        committer_name = input('Please provide your name')
+        committer_email = input('Please provide your e-mail')
 
     print('\n\nParameters for the review project\n Details avilable at: '
           'TODO/docs')
 
     SCREEN_TYPE = get_value('Select screen type',
                             ['NONE', 'PRE_SCREEN', 'SCREEN'])
+    # TODO: allow multiple?
     DATA_FORMAT = get_value('Select data structure',
                             ['NONE', 'TABLE', 'PAGE',
                              'SHEETs', 'MACODING'])
@@ -155,15 +160,64 @@ def initialize_repo():
         committer=git.Actor(committer_name, committer_email),
     )
 
-    # TODO: connection to remote repo
+    if 'y' == input('Connect to shared (remote) repository (y)?'):
+        remote_url = input('URL:')
+        try:
+            requests.get(remote_url)
+            origin = r.create_remote('origin', remote_url)
+            r.heads.main.set_tracking_branch(origin.refs.main)
+            origin.push()
+        except requests.ConnectionError:
+            print('URL of shared repository cannot be reached. Use '
+                  'git remote add origin https://github.com/user/repo\n'
+                  'git push origin main')
+            pass
 
+    # git remote add origin https://github.com/geritwagner/octo-fiesta.git
+    # git branch -M main
+    # git push -u origin main
+
+    return r
+
+
+def clone_shared_repo():
+
+    print('Connecting to a shared repository ...')
+    print('To initiate a new project, cancel (ctrl+c) and use '
+          'review_template init in an empty directory')
+
+    remote_url = input('URL of shared repository:')
+    try:
+        requests.get(remote_url)
+        repo_name = os.path.splitext(os.path.basename(remote_url))[0]
+        print('Clone shared repository...')
+        r = git.Repo.clone_from(remote_url, repo_name)
+        print(f'Use cd {repo_name}')
+    except requests.ConnectionError:
+        print('URL of shared repository cannot be reached. Use '
+              'git remote add origin https://github.com/user/repo\n'
+              'git push origin main')
+        pass
+
+    return r
+
+
+def initialize_repo():
+
+    if 0 != len(os.listdir(os.getcwd())):
+        r = clone_shared_repo()
+    else:
+        if 'y' == input('Retrieve shared repository?'):
+            r = clone_shared_repo()
+        else:
+            r = init_new_repo()
     return r
 
 
 def get_repo():
 
+    print('TODO: authentication for private remote repositories!?')
     try:
-        # Alternatively: ask for remote url of git repo to clone?
         r = git.Repo()
         # TODO: further checks?
         return r

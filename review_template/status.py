@@ -1,12 +1,16 @@
 #! /usr/bin/env python3
 import configparser
 import os
+import sys
 
 import git
 import pandas as pd
 import yaml
 
 from review_template import entry_hash_function
+
+local_hooks_version, repo, status_freq, cur_stati = None, None, None, None
+SHARE_STAT_REQ, MAIN_REFERENCES, SCREEN, DATA = None, None, None, None
 
 
 class colors:
@@ -26,119 +30,6 @@ def lsremote(url):
     return remote_refs
 
 
-try:
-    remote_pv_hooks_repo = \
-        'https://github.com/geritwagner/pipeline-validation-hooks'
-    refs = lsremote(remote_pv_hooks_repo)
-    remote_sha = refs['HEAD']
-
-    with open('.pre-commit-config.yaml') as pre_commit_config_yaml:
-        pre_commit_config = \
-            yaml.load(pre_commit_config_yaml, Loader=yaml.FullLoader)
-
-    installed_hooks = []
-    for repo in pre_commit_config['repos']:
-        if repo['repo'] == remote_pv_hooks_repo:
-            local_sha = repo['rev']
-            installed_hooks = [hook['id'] for hook in repo['hooks']]
-    if not installed_hooks == ['consistency-checks', 'formatting']:
-        print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
-              '\n See '
-              'https://github.com/geritwagner/pipeline-validation-hooks'
-              '#using-the-pre-commit-hook for details')
-
-    if not remote_sha == local_sha:
-        print('pipeline-validation-hooks version outdated.\n',
-              '  use pre-commit autoupdate')
-        # once we use tags, we may consider recommending
-        # pre-commit autoupdate --bleeding-edge
-except git.exc.GitCommandError:
-    print('Warning: No Internet connection, cannot check remote '
-          'pipeline-validation-hooks repository for updates.')
-    pass
-
-
-default_shared_general = {'HASH_ID_FUNCTION': 'v_0.3',
-                          'MERGING_NON_DUP_THRESHOLD': '0.7',
-                          'MERGING_DUP_THRESHOLD': '0.95',
-                          'BATCH_SIZE': '500',
-                          'SCREEN_TYPE': 'SCREEN',
-                          'DATA_FORMAT': 'CSV_TABLE',
-                          'PDF_HANDLING': 'GIT',
-                          'DELAY_AUTOMATED_PROCESSING': 'no',
-                          'SHARE_STAT_REQ': 'PROCESSED'}
-
-shared_config = configparser.ConfigParser()
-
-if not os.path.exists('shared_config.ini'):
-    shared_config['general'] = default_shared_general
-    with open('shared_config.ini', 'w') as outfile:
-        shared_config.write(outfile)
-    print('Initiated shared_config.ini with default parameters.')
-shared_config.read('shared_config.ini')
-for key in default_shared_general.keys():
-    if key not in shared_config['general']:
-        shared_config['general'][key] = input('Please provide the ' + key)
-        with open('shared_config.ini', 'w') as outfile:
-            shared_config.write(outfile)
-
-HASH_ID_FUNCTION = shared_config['general']['HASH_ID_FUNCTION']
-SHARE_STATUS_REQUIREMENT = shared_config['general']['share_stat_req']
-
-
-default_private_general = {'EMAIL': 'user@name.com',
-                           'GIT_ACTOR': 'ADD_USERNAME',
-                           'CPUS': '2',
-                           'DEBUG_MODE': 'no'}
-
-private_config = configparser.ConfigParser()
-
-if not os.path.exists('private_config.ini'):
-    private_config['general'] = default_private_general
-    with open('private_config.ini', 'w') as outfile:
-        private_config.write(outfile)
-    print('Initiated private_config.ini with default parameters.')
-private_config.read('private_config.ini')
-for key in default_private_general.keys():
-    if key not in private_config['general']:
-        private_config['general'][key] = input('Please provide the ' + key)
-        with open('private_config.ini', 'w') as outfile:
-            private_config.write(outfile)
-
-CPUS = private_config['general']['CPUS']
-DEBUG_MODE = private_config.getboolean('general', 'DEBUG_MODE')
-
-defaul_gitignore = ['private_config.ini',
-                    '.local_pdf_indices',
-                    '.index-*',
-                    'missing_pdf_files.csv',
-                    '*.bib.sav']
-
-if not os.path.exists('.gitignore'):
-    first_line = True
-    with open('.gitignore', 'a') as gigitnore:
-        for def_item in defaul_gitignore:
-            if first_line:
-                gigitnore.write(def_item)
-                first_line = False
-            else:
-                gigitnore.write('\n' + def_item)
-    print('Created default .gitignore file.')
-
-
-for def_item in defaul_gitignore:
-    with open('.gitignore') as gigitnore:
-        if def_item not in gigitnore.read():
-            with open('.gitignore', 'a') as gigitnore:
-                gigitnore.write('\n' + def_item)
-            print('Updated .gitignore file with defaults.')
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
-
-
 def get_bib_files():
     bib_files = []
     search_dir = os.path.join(os.getcwd(), 'search/')
@@ -150,7 +41,6 @@ def get_bib_files():
 def get_nr_in_bib(file_path):
 
     number_in_bib = 0
-
     with open(file_path) as f:
         line = f.readline()
         while line:
@@ -167,10 +57,8 @@ def get_nr_in_bib(file_path):
 
 def get_nr_search():
     number_search = 0
-
     for search_file in get_bib_files():
         number_search += get_nr_in_bib(search_file)
-
     return number_search
 
 
@@ -328,31 +216,68 @@ def get_remote_commit_differences(repo):
     return nr_commits_behind, nr_commits_ahead
 
 
-def main():
+def repository_validation():
+    global local_hooks_version
+    global SHARE_STAT_REQ
+    global MAIN_REFERENCES
+    global SCREEN
+    global DATA
+    global repo
 
-    # TBD: copy all of the initialize.py to this position?
+    required_paths = ['search', 'private_config.ini',
+                      'shared_config.ini', '.pre-commit-config.yaml',
+                      '.gitignore']
+    if not all(os.path.exists(x) for x in required_paths):
+        print('No review_template repository.' +
+              ','.join([x for x in required_paths if not os.path.exists(x)]) +
+              '\nExiting.')
+        sys.exit()
+
+    with open('.pre-commit-config.yaml') as pre_commit_config_yaml:
+        pre_commit_config = \
+            yaml.load(pre_commit_config_yaml, Loader=yaml.FullLoader)
+    installed_hooks = []
+    remote_pv_hooks_repo = \
+        'https://github.com/geritwagner/pipeline-validation-hooks'
+    for repo in pre_commit_config['repos']:
+        if repo['repo'] == remote_pv_hooks_repo:
+            local_hooks_version = repo['rev']
+            installed_hooks = [hook['id'] for hook in repo['hooks']]
+    if not installed_hooks == ['consistency-checks', 'formatting']:
+        print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
+              '\n See '
+              'https://github.com/geritwagner/pipeline-validation-hooks'
+              '#using-the-pre-commit-hook for details')
+
+    shared_config = configparser.ConfigParser()
+    shared_config.read('shared_config.ini')
+    HASH_ID_FUNCTION = shared_config['general']['HASH_ID_FUNCTION']
+    private_config = configparser.ConfigParser()
+    private_config.read('private_config.ini')
+
+    SHARE_STAT_REQ = shared_config['general']['share_stat_req']
+    MAIN_REFERENCES = \
+        entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+    SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+    DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
+
+    repo = git.Repo('')
+    # TODO: check whether it is a valid git repo
 
     # Notify users when changes in bib files are not staged
     # (this may raise unexpected errors)
-    status_freq = get_status_freq()
-
-    if DEBUG_MODE:
-        print('\nConfiguration\n')
-
-        print(f' - Hash function:                 {HASH_ID_FUNCTION}')
-        print(f' - Local:                         {CPUS} CPUS available')
-        print('   DEBUG mode enabled')
-
-    repo = git.Repo('')
-
     non_tracked = [item.a_path for item in repo.index.diff(None)
                    if '.bib' == item.a_path[-4:]]
-
     if len(non_tracked) > 0:
         print('Warning: Non-tracked files that may cause failing checks: '
               + ','.join(non_tracked))
+    return
 
+
+def review_status():
+    global status_freq
     print('\nStatus\n')
+    status_freq = get_status_freq()
     if not os.path.exists(MAIN_REFERENCES):
         print(' | Search')
         print(' |  - Not yet initiated')
@@ -477,138 +402,174 @@ def main():
                     f'{str(status_freq["nr_to_data"]).rjust(18, " ")}',
                 )
 
-        # Sharing conditions
-        cur_stati = get_status()
+    return
 
-        print('\n\nInstructions (review_template)\n')
-        # TODO: include 'processed' once status information beyond 'processed'
-        # is joined/available
-        automated_processing_completed = True
-        if status_freq['needs_manual_completion'] > 0:
-            print('  To complete records manually for import, '
-                  'use\n     review_template complete-manual')
-            automated_processing_completed = False
 
-        if any(cs in ['imported', 'prepared', 'pre-screened',
-                      'pdf_acquired', 'included']
-               for cs in cur_stati):
-            print(
-                '  To continue (automated) processing, ',
-                'use\n     review_template process')
-            automated_processing_completed = False
-        manual_processing_completed = True
-        if status_freq['needs_manual_preparation'] > 0:
-            print('  To continue manual preparation, '
-                  'use\n     review_template prepare-manual')
-            manual_processing_completed = False
-        if status_freq['needs_manual_merging'] > 0:
-            print('  To continue manual processing of duplicates, '
-                  'use\n     review_template proc-duplicates-manual')
-            manual_processing_completed = False
-        if not (automated_processing_completed and
-                manual_processing_completed):
-            print(f'\n  {colors.RED}Info{colors.END}:'
-                  ' to avoid (git) merge conflicts, it is recommended to '
-                  'complete the processing \n  before starting '
-                  'the pre-screen/screen.')
-        else:
-            print('  Processing completed for all records.\n\n')
-            # TODO: if pre-screening activated in template variables
-            if 0 != status_freq['nr_to_pre_screen']:
-                print('  To initiate/continue pre-screen,'
-                      'use\n     review_template pre-screen')
-            # TODO: if pre-screening activated in template variables
-            if 0 == status_freq['nr_to_pre_screen'] and \
-                    0 != status_freq['non_bw_searched']:
-                print('  To initiate/continue backward-search,'
-                      'use\n     review_template backward-search')
-            elif 0 == status_freq['nr_to_pre_screen'] and \
-                    0 != status_freq['nr_to_screen']:
-                print('  To initiate/continue screen,'
-                      'use\n     review_template screen')
-                # TODO: if data activated in template variables
-            if 0 == status_freq['nr_to_screen']:
-                print('  To initiate/continue data extraction/analysis, '
-                      'use\n     review_template data')
+def review_instructions():
+    global status_freq
+    global cur_stati
 
-        print('\n')
-        nr_commits_behind, nr_commits_ahead = \
-            get_remote_commit_differences(repo)
+    print('\n\nInstructions (review_template)\n')
 
-        if nr_commits_behind == -1 and nr_commits_ahead == -1:
-            print('Collaboration and sharing (git)\n\n'
-                  '  Not tracking a remote branch. '
-                  'Create remote repository and use\n'
-                  '     git remote add origin https://github.com/user/repo\n'
-                  f'     git push origin {repo.active_branch.name}')
-        else:
-            print(f'\n\nCollaboration and sharing (git)\n\n'
-                  f' Requirement: {SHARE_STATUS_REQUIREMENT}')
+    # Sharing conditions
+    cur_stati = get_status()
 
-            if nr_commits_behind > 0:
-                print('Remote changes available on the server.\n'
-                      'Once you have committed your changes, get the latest '
-                      'remote changes. Use '
-                      '\n   git pull')
-            if nr_commits_ahead > 0:
-                print('Local changes not yet on the server.\n'
-                      'Once you have committed your changes, upload them '
-                      'to the remote server. Use '
-                      '\n   git push')
+    # TODO: include 'processed' once status information beyond 'processed'
+    # is joined/available
+    automated_processing_completed = True
+    if status_freq['needs_manual_completion'] > 0:
+        print('  To complete records manually for import, '
+              'use\n     review_template complete-manual')
+        automated_processing_completed = False
 
-            if SHARE_STATUS_REQUIREMENT == 'NONE':
+    if any(cs in ['imported', 'prepared', 'pre-screened',
+                  'pdf_acquired', 'included']
+            for cs in cur_stati):
+        print(
+            '  To continue (automated) processing, ',
+            'use\n     review_template process')
+        automated_processing_completed = False
+    manual_processing_completed = True
+    if status_freq['needs_manual_preparation'] > 0:
+        print('  To continue manual preparation, '
+              'use\n     review_template prepare-manual')
+        manual_processing_completed = False
+    if status_freq['needs_manual_merging'] > 0:
+        print('  To continue manual processing of duplicates, '
+              'use\n     review_template proc-duplicates-manual')
+        manual_processing_completed = False
+    if not (automated_processing_completed and
+            manual_processing_completed):
+        print(f'\n  {colors.RED}Info{colors.END}:'
+              ' to avoid (git) merge conflicts, it is recommended to '
+              'complete the processing \n  before starting '
+              'the pre-screen/screen.')
+    else:
+        # print('  Processing completed for all records.\n\n')
+        # TODO: if pre-screening activated in template variables
+        if 0 != status_freq['nr_to_pre_screen']:
+            print('  To initiate/continue pre-screen,'
+                  'use\n     review_template pre-screen')
+        # TODO: if pre-screening activated in template variables
+        if 0 == status_freq['nr_to_pre_screen'] and \
+                0 != status_freq['non_bw_searched']:
+            print('  To initiate/continue backward-search,'
+                  'use\n     review_template backward-search')
+        elif 0 == status_freq['nr_to_pre_screen'] and \
+                0 != status_freq['nr_to_screen']:
+            print('  To initiate/continue screen,'
+                  'use\n     review_template screen')
+            # TODO: if data activated in template variables
+        if 0 == status_freq['nr_to_screen']:
+            print('  To initiate/continue data extraction/analysis, '
+                  'use\n     review_template data')
+
+    return
+
+
+def collaboration_instructions():
+    global cur_stati
+
+    print('\n\nCollaboration and sharing (git)\n')
+    try:
+        remote_pv_hooks_repo = \
+            'https://github.com/geritwagner/pipeline-validation-hooks'
+        refs = lsremote(remote_pv_hooks_repo)
+        remote_sha = refs['HEAD']
+
+        if not remote_sha == local_hooks_version:
+            print('pipeline-validation-hooks version outdated.\n',
+                  '  use pre-commit autoupdate')
+            # once we use tags, we may consider recommending
+            # pre-commit autoupdate --bleeding-edge
+    except git.exc.GitCommandError:
+        print('  Warning: No Internet connection, cannot check remote '
+              'pipeline-validation-hooks repository for updates.')
+        pass
+
+    nr_commits_behind, nr_commits_ahead = \
+        get_remote_commit_differences(repo)
+
+    if nr_commits_behind == -1 and nr_commits_ahead == -1:
+        print('  Not tracking a remote branch. '
+              'Create remote repository and use\n'
+              '     git remote add origin https://github.com/user/repo\n'
+              f'     git push origin {repo.active_branch.name}')
+    else:
+        print(f' Requirement: {SHARE_STAT_REQ}')
+
+        if nr_commits_behind > 0:
+            print('Remote changes available on the server.\n'
+                  'Once you have committed your changes, get the latest '
+                  'remote changes. Use \n   git pull')
+        if nr_commits_ahead > 0:
+            print('Local changes not yet on the server.\n'
+                  'Once you have committed your changes, upload them '
+                  'to the remote server. Use \n   git push')
+
+        if SHARE_STAT_REQ == 'NONE':
+            print(f' Currently: '
+                  f'{colors.GREEN}ready for sharing{colors.END}'
+                  f' (if consistency checks pass)')
+
+        # TODO all the following: should all search results be imported?!
+        if SHARE_STAT_REQ == 'PROCESSED':
+            if not any(cs in ['needs_manual_completion', 'imported',
+                              'needs_manual_preparation', 'prepared',
+                              'needs_manual_merging']
+                       for cs in cur_stati):
                 print(f' Currently: '
                       f'{colors.GREEN}ready for sharing{colors.END}'
                       f' (if consistency checks pass)')
+            else:
+                print(f' Currently: '
+                      f'{colors.RED}not ready for sharing{colors.END}\n'
+                      f'  All records should be processed before sharing '
+                      '(see instructions above).')
 
-            # TODO all the following: should all search results be imported?!
-            if SHARE_STATUS_REQUIREMENT == 'PROCESSED':
-                if not any(cs in ['needs_manual_completion', 'imported',
-                                  'needs_manual_preparation', 'prepared',
-                                  'needs_manual_merging']
-                           for cs in cur_stati):
-                    print(f' Currently: '
-                          f'{colors.GREEN}ready for sharing{colors.END}'
-                          f' (if consistency checks pass)')
-                else:
-                    print(f' Currently: '
-                          f'{colors.RED}not ready for sharing{colors.END}\n'
-                          f'  All records should be processed before sharing '
-                          '(see instructions above).')
+        # Note: if we use all(...) in the following,
+        # we do not need to distinguish whether
+        # a PRE_SCREEN or INCLUSION_SCREEN is needed
+        if SHARE_STAT_REQ == 'SCREENED':
+            if all(cs in ['pre_screen_excluded', 'excluded',
+                          'included', 'coded']
+                    for cs in cur_stati):
+                print(f' Currently:'
+                      f' {colors.GREEN}ready for sharing{colors.END}'
+                      f' (if consistency checks pass)')
+            else:
+                print(f' Currently: '
+                      f'{colors.RED}not ready for sharing{colors.END}\n'
+                      f'  All records should be processed before sharing '
+                      '(see instructions above).')
+                print('TODO: update instructions/'
+                      'check non-screened records')
 
-            # Note: if we use all(...) in the following,
-            # we do not need to distinguish whether
-            # a PRE_SCREEN or INCLUSION_SCREEN is needed
-            if SHARE_STATUS_REQUIREMENT == 'SCREENED':
-                if all(cs in ['pre_screen_excluded', 'excluded',
-                              'included', 'coded']
-                        for cs in cur_stati):
-                    print(f' Currently:'
-                          f' {colors.GREEN}ready for sharing{colors.END}'
-                          f' (if consistency checks pass)')
-                else:
-                    print(f' Currently: '
-                          f'{colors.RED}not ready for sharing{colors.END}\n'
-                          f'  All records should be processed before sharing '
-                          '(see instructions above).')
-                    print('TODO: update instructions/'
-                          'check non-screened records')
-
-            if SHARE_STATUS_REQUIREMENT == 'COMPLETED':
-                if all(cs in ['coded', 'excluded', 'pre_screen_excluded']
-                        for cs in cur_stati):
-                    print(f' Currently: '
-                          f'{colors.GREEN}ready for sharing{colors.END}'
-                          f' (if consistency checks pass)')
-                else:
-                    print(f' Currently: '
-                          f'{colors.RED}not ready for sharing{colors.END}\n'
-                          f'  All records should be processed before sharing '
-                          '(see instructions above).')
-                    print('TODO: update instructions /check non-screened '
-                          'and non-analyzed records')
+        if SHARE_STAT_REQ == 'COMPLETED':
+            if all(cs in ['coded', 'excluded', 'pre_screen_excluded']
+                    for cs in cur_stati):
+                print(f' Currently: '
+                      f'{colors.GREEN}ready for sharing{colors.END}'
+                      f' (if consistency checks pass)')
+            else:
+                print(f' Currently: '
+                      f'{colors.RED}not ready for sharing{colors.END}\n'
+                      f'  All records should be processed before sharing '
+                      '(see instructions above).')
+                print('TODO: update instructions /check non-screened '
+                      'and non-analyzed records')
 
     print('\n\n')
+    return
+
+
+def main():
+    global repo
+
+    repository_validation()
+    review_status()
+    review_instructions()
+    collaboration_instructions()
 
 
 if __name__ == '__main__':
