@@ -218,19 +218,18 @@ def get_remote_commit_differences(repo):
 
 def repository_validation():
     global local_hooks_version
-    global SHARE_STAT_REQ
-    global MAIN_REFERENCES
-    global SCREEN
-    global DATA
     global repo
 
     required_paths = ['search', 'private_config.ini',
                       'shared_config.ini', '.pre-commit-config.yaml',
                       '.gitignore']
     if not all(os.path.exists(x) for x in required_paths):
-        print('No review_template repository.' +
-              ','.join([x for x in required_paths if not os.path.exists(x)]) +
-              '\nExiting.')
+        print('No review_template repository\n  Missing: ' +
+              ', '.join([x for x in required_paths if not os.path.exists(x)]) +
+              '\n  To retrieve a shared repository, use ' +   
+              f'{colors.GREEN}review_template init{colors.END}.' +
+              '\n  To initalize a new repository, execute the command ' +
+              'in an empty directory.\nExit.')
         sys.exit()
 
     with open('.pre-commit-config.yaml') as pre_commit_config_yaml:
@@ -248,6 +247,15 @@ def repository_validation():
               '\n See '
               'https://github.com/geritwagner/pipeline-validation-hooks'
               '#using-the-pre-commit-hook for details')
+    return
+
+
+def repository_load():
+    global repo
+    global SHARE_STAT_REQ
+    global MAIN_REFERENCES
+    global SCREEN
+    global DATA
 
     shared_config = configparser.ConfigParser()
     shared_config.read('shared_config.ini')
@@ -567,6 +575,7 @@ def main():
     global repo
 
     repository_validation()
+    repository_load()
     review_status()
     review_instructions()
     collaboration_instructions()

@@ -62,6 +62,7 @@ def init(ctx):
 def status(ctx):
     """Show status"""
     from review_template import status
+    status.repository_validation()
     print('\nChecks\n')
     os.system('pre-commit run -a')
     status.main()
