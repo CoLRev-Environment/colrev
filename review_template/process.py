@@ -55,7 +55,9 @@ def process_entries(search_records, bib_database):
     importer.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'imported'):
-        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
+        print('\nCompleted processing step. To continue, use \n'
+              ' review_template man-complete '
+              '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
     print('Prepare')
@@ -64,7 +66,9 @@ def process_entries(search_records, bib_database):
     prepare.create_commit(r, bib_database)
 
     if check_delay(bib_database, 'prepared'):
-        print('Stop processing (DELAY_AUTOMATED_PROCESSING flag)\n\n')
+        print('\nCompleted processing step. To continue, use \n'
+              ' review_template man-prep '
+              '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
         return bib_database
 
     print('Process duplicates')

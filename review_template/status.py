@@ -226,7 +226,7 @@ def repository_validation():
     if not all(os.path.exists(x) for x in required_paths):
         print('No review_template repository\n  Missing: ' +
               ', '.join([x for x in required_paths if not os.path.exists(x)]) +
-              '\n  To retrieve a shared repository, use ' +   
+              '\n  To retrieve a shared repository, use ' +
               f'{colors.GREEN}review_template init{colors.END}.' +
               '\n  To initalize a new repository, execute the command ' +
               'in an empty directory.\nExit.')
@@ -285,16 +285,11 @@ def repository_load():
 def review_status():
     global status_freq
     print('\nStatus\n')
-    status_freq = get_status_freq()
     if not os.path.exists(MAIN_REFERENCES):
         print(' | Search')
         print(' |  - Not yet initiated')
-
-        print('\n\nInstructions\n')
-        # TBD: print(' To start, use \n\n     review_template initalize\n\n')
-        print('  To import, copy search results to the search directory.' +
-              '  Then use\n     review_template process')
     else:
+        status_freq = get_status_freq()
         # Search
 
         # Note:
@@ -418,59 +413,64 @@ def review_instructions():
     global cur_stati
 
     print('\n\nInstructions (review_template)\n')
+    if not os.path.exists(MAIN_REFERENCES):
 
-    # Sharing conditions
-    cur_stati = get_status()
-
-    # TODO: include 'processed' once status information beyond 'processed'
-    # is joined/available
-    automated_processing_completed = True
-    if status_freq['needs_manual_completion'] > 0:
-        print('  To complete records manually for import, '
-              'use\n     review_template complete-manual')
-        automated_processing_completed = False
-
-    if any(cs in ['imported', 'prepared', 'pre-screened',
-                  'pdf_acquired', 'included']
-            for cs in cur_stati):
-        print(
-            '  To continue (automated) processing, ',
-            'use\n     review_template process')
-        automated_processing_completed = False
-    manual_processing_completed = True
-    if status_freq['needs_manual_preparation'] > 0:
-        print('  To continue manual preparation, '
-              'use\n     review_template prepare-manual')
-        manual_processing_completed = False
-    if status_freq['needs_manual_merging'] > 0:
-        print('  To continue manual processing of duplicates, '
-              'use\n     review_template proc-duplicates-manual')
-        manual_processing_completed = False
-    if not (automated_processing_completed and
-            manual_processing_completed):
-        print(f'\n  {colors.RED}Info{colors.END}:'
-              ' to avoid (git) merge conflicts, it is recommended to '
-              'complete the processing \n  before starting '
-              'the pre-screen/screen.')
+        # TBD: print(' To start, use \n\n     review_template initalize\n\n')
+        print('  To import, copy search results to the search directory. ' +
+              'Then use\n     review_template process')
     else:
-        # print('  Processing completed for all records.\n\n')
-        # TODO: if pre-screening activated in template variables
-        if 0 != status_freq['nr_to_pre_screen']:
-            print('  To initiate/continue pre-screen,'
-                  'use\n     review_template pre-screen')
-        # TODO: if pre-screening activated in template variables
-        if 0 == status_freq['nr_to_pre_screen'] and \
-                0 != status_freq['non_bw_searched']:
-            print('  To initiate/continue backward-search,'
-                  'use\n     review_template backward-search')
-        elif 0 == status_freq['nr_to_pre_screen'] and \
-                0 != status_freq['nr_to_screen']:
-            print('  To initiate/continue screen,'
-                  'use\n     review_template screen')
-            # TODO: if data activated in template variables
-        if 0 == status_freq['nr_to_screen']:
-            print('  To initiate/continue data extraction/analysis, '
-                  'use\n     review_template data')
+        # Sharing conditions
+        cur_stati = get_status()
+
+        # TODO: include 'processed' once status information beyond 'processed'
+        # is joined/available
+        automated_processing_completed = True
+        if status_freq['needs_manual_completion'] > 0:
+            print('  To complete records manually for import, '
+                  'use\n     review_template man-comp')
+            automated_processing_completed = False
+
+        if any(cs in ['imported', 'prepared', 'pre-screened',
+                      'pdf_acquired', 'included']
+                for cs in cur_stati):
+            print(
+                '  To continue (automated) processing, ',
+                'use\n     review_template process')
+            automated_processing_completed = False
+        manual_processing_completed = True
+        if status_freq['needs_manual_preparation'] > 0:
+            print('  To continue manual preparation, '
+                  'use\n     review_template man-prep')
+            manual_processing_completed = False
+        if status_freq['needs_manual_merging'] > 0:
+            print('  To continue manual processing of duplicates, '
+                  'use\n     review_template man-dedupe')
+            manual_processing_completed = False
+        if not (automated_processing_completed and
+                manual_processing_completed):
+            print(f'\n  {colors.RED}Info{colors.END}:'
+                  ' to avoid (git) merge conflicts, it is recommended to '
+                  'complete the processing \n  before starting '
+                  'the pre-screen/screen.')
+        else:
+            # print('  Processing completed for all records.\n\n')
+            # TODO: if pre-screening activated in template variables
+            if 0 != status_freq['nr_to_pre_screen']:
+                print('  To initiate/continue pre-screen,'
+                      'use\n     review_template prescreen')
+            # TODO: if pre-screening activated in template variables
+            if 0 == status_freq['nr_to_pre_screen'] and \
+                    0 != status_freq['non_bw_searched']:
+                print('  To initiate/continue backward-search,'
+                      'use\n     review_template back-search')
+            elif 0 == status_freq['nr_to_pre_screen'] and \
+                    0 != status_freq['nr_to_screen']:
+                print('  To initiate/continue screen,'
+                      'use\n     review_template screen')
+                # TODO: if data activated in template variables
+            if 0 == status_freq['nr_to_screen']:
+                print('  To initiate/continue data extraction/analysis, '
+                      'use\n     review_template data')
 
     return
 
@@ -499,9 +499,9 @@ def collaboration_instructions():
         get_remote_commit_differences(repo)
 
     if nr_commits_behind == -1 and nr_commits_ahead == -1:
-        print('  Not tracking a remote branch. '
-              'Create remote repository and use\n'
-              '     git remote add origin https://github.com/user/repo\n'
+        print('  Not connected to a shared repository '
+              '(tracking a remote branch).\n  Create remote repository and '
+              'use\n     git remote add origin https://github.com/user/repo\n'
               f'     git push origin {repo.active_branch.name}')
     else:
         print(f' Requirement: {SHARE_STAT_REQ}')

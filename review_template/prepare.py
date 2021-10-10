@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import collections
 import configparser
 import json
 import logging
@@ -158,6 +159,34 @@ def homogenize_entry(entry):
     return entry
 
 
+# https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+doi_regex = re.compile(r'10\.\d{4,9}/[-._;/:A-Za-z0-9]*')
+
+
+def get_doi_from_links(entry):
+    if 'doi' in entry:
+        return entry
+
+    url = ''
+    url = entry.get('url', entry.get('fulltext', ''))
+    if url != '':
+        r = requests.get(url)
+        res = re.findall(doi_regex, r.text)
+        if res:
+            if len(res) == 1:
+                ret_doi = res[0]
+                entry['doi'] = ret_doi
+            else:
+                counter = collections.Counter(res)
+                ret_doi = counter.most_common(1)[0][0]
+                entry['doi'] = ret_doi
+            print('TODO: if multiple dois matche d, '
+                  'retrieve meta-data and valdiate')
+            print('- Added doi from website: ' + entry['doi'])
+
+    return entry
+
+
 def get_doi_from_crossref(entry):
     if 'title' not in entry:
         return entry
@@ -177,6 +206,9 @@ def get_doi_from_crossref(entry):
 
 
 def retrieve_doi_metadata(entry):
+    # for testing:
+    # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
+    # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
 
     if 'doi' not in entry:
         return entry
@@ -264,16 +296,20 @@ def retrieve_doi_metadata(entry):
         retrieved_issue = retrieved_record.get('issue', '')
         if not retrieved_issue == '':
             entry.update(number=str(retrieved_issue))
+
         retrieved_container_title = \
             str(retrieved_record.get('container-title', ''))
         if not retrieved_container_title == '':
-            if 'series' in entry:
-                if entry['series'] != retrieved_container_title:
+            if 'journal' in entry:
+                entry.update(journal=retrieved_container_title)
+            elif 'booktitle' in entry:
+                entry.update(booktitle=retrieved_container_title)
+            elif 'series' in entry:
+                entry.update(series=retrieved_container_title)
 
-                    if 'journal' in retrieved_container_title:
-                        entry.update(journal=retrieved_container_title)
-                    else:
-                        entry.update(booktitle=retrieved_container_title)
+            # if 'series' in entry:
+            #     if entry['series'] != retrieved_container_title:
+            #             entry.update(series=retrieved_container_title)
 
         if 'abstract' not in entry:
             retrieved_abstract = retrieved_record.get('abstract', '')
@@ -290,19 +326,20 @@ def retrieve_doi_metadata(entry):
                 entry.update(abstract=str(retrieved_abstract).replace('\n', '')
                              .lstrip().rstrip())
     except IndexError:
-        print(f'WARNING: Index error (authors?) for {entry["ID"]}')
+        print(f'  - WARNING: Index error (authors?) for {entry["ID"]}')
         entry.update(status='imported')
         pass
     except json.decoder.JSONDecodeError:
-        print(f'WARNING: Doi retrieval error: {entry["ID"]}')
+        print(f'  - WARNING: Doi retrieval error: {entry["ID"]} / '
+              f'{entry["doi"]}')
         entry.update(status='imported')
         pass
     except TypeError:
-        print(f'WARNING: Type error: : {entry["ID"]}')
+        print(f'  - WARNING: Type error: : {entry["ID"]}')
         entry.update(status='imported')
         pass
     except requests.exceptions.ConnectionError:
-        print(f'WARNING: ConnectionError: : {entry["ID"]}')
+        print(f'  - WARNING: ConnectionError: : {entry["ID"]}')
         entry.update(status='imported')
         pass
 
@@ -466,7 +503,10 @@ def prepare(entry):
 
     entry = speculative_changes(entry)
 
-    entry = get_doi_from_crossref(entry)
+    if 'doi' not in entry:
+        entry = get_doi_from_crossref(entry)
+    if 'doi' not in entry:
+        entry = get_doi_from_links(entry)
 
     entry = retrieve_doi_metadata(entry)
 

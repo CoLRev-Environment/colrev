@@ -216,7 +216,6 @@ def initialize_repo():
 
 def get_repo():
 
-    print('TODO: authentication for private remote repositories!?')
     try:
         r = git.Repo()
         # TODO: further checks?

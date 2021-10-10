@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import configparser
+import os
 import pprint
 
 import git
@@ -15,7 +16,10 @@ HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
-entry_type_mapping = {'a': 'article', 'i': 'inproceedings', 'b': 'book'}
+entry_type_mapping = {'a': 'article', 'p': 'inproceedings',
+                      'b': 'book', 'ib': 'inbook', 'pt': 'phdthesis',
+                      'mt': 'masterthesis',
+                      'o': 'other', 'unp': 'unpublished'}
 
 
 def create_commit(bib_database):
@@ -56,41 +60,28 @@ def main():
                   if 'needs_manual_completion' == x['status']]:
 
         # Escape sequence to clear terminal output for each new comparison
-        print(chr(27) + '[2J')
+        os.system('cls' if os.name == 'nt' else 'clear')
         pp.pprint(entry)
         if 'title' in entry:
             print('https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q=' +
                   entry['title'].replace(' ', '+'))
         if 'n' == input('ENTRYTYPE=' + entry['ENTRYTYPE'] + ' correct?'):
-            correct_entry_type = input('Correct type: ' +
-                                       'a (article), i (inproceedings), ' +
-                                       'b (book), o (other)')
-            assert correct_entry_type in ['a', 'i', 'b', 'o']
+            choice = input('Correct type: ' +
+                           'a (article), p (inproceedings), ' +
+                           'b (book), ib (inbook), ' +
+                           'pt (phdthesis), mt (masterthesis), '
+                           'unp (unpublished), o (other), ')
+            assert choice in entry_type_mapping.keys()
             correct_entry_type = [value for (key, value)
                                   in entry_type_mapping.items()
-                                  if key == correct_entry_type]
+                                  if key == choice]
             entry['ENTRYTYPE'] = correct_entry_type[0]
 
-        if 'article' == entry['ENTRYTYPE']:
-            for field in ['title', 'author', 'year', 'journal', 'volume']:
-                if field not in entry:
-                    value = input('Please provide the ' + field + ' (or NA)')
-                    entry[field] = value
-            if 'issue' not in entry and 'number' not in entry:
-                value = input('Please provide the number (or NA)')
-                entry['number'] = value
-
-        if 'inproceedings' == entry['ENTRYTYPE']:
-            for field in ['title', 'author', 'booktitle', 'year']:
-                if field not in entry:
-                    value = input('Please provide the ' + field + ' (or NA)')
-                    entry[field] = value
-
-        if 'book' == entry['ENTRYTYPE']:
-            for field in ['title', 'author', 'year']:
-                if field not in entry:
-                    value = input('Please provide the ' + field + ' (or NA)')
-                    entry[field] = value
+        reqs = importer.entry_field_requirements[entry['ENTRYTYPE']]
+        for field in reqs:
+            if field not in entry:
+                value = input('Please provide the ' + field + ' (or NA)')
+                entry[field] = value
 
         # ELSE: title, author, year, any-container-title
 

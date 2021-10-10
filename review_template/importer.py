@@ -38,7 +38,7 @@ fields_to_keep = [
     'author', 'year', 'title',
     'journal', 'booktitle', 'series',
     'volume', 'number', 'pages', 'doi',
-    'abstract',
+    'abstract', 'school',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
     'status', 'fulltext', 'entry_link'
@@ -71,20 +71,26 @@ def drop_fields(entry):
     return entry
 
 
+entry_field_requirements = \
+    {'article': ['title', 'author', 'year', 'journal', 'volume', 'issue'],
+     'inproceedings': ['title', 'author', 'booktitle', 'year'],
+     'inbook': ['title', 'author', 'year', 'booktitle'],
+     'book': ['title', 'author', 'year'],
+     'phdthesis': ['title', 'author', 'year', 'school'],
+     'masterthesis': ['title', 'author', 'year', 'school'],
+     'unpublished': ['title', 'author', 'year']}
+
+
 def is_sufficiently_complete(entry):
     sufficiently_complete = False
 
-    if 'article' == entry['ENTRYTYPE']:
+    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
+        reqs = entry_field_requirements[entry['ENTRYTYPE']]
         if all(x in entry
-               for x in ['title', 'author', 'year', 'journal', 'volume']):
-            if 'issue' in entry or 'number' in entry:
-                sufficiently_complete = True
-    elif 'inproceedings' == entry['ENTRYTYPE']:
-        if all(x in entry for x in ['title', 'author', 'booktitle', 'year']):
+               for x in reqs):
             sufficiently_complete = True
-    elif 'book' == entry['ENTRYTYPE']:
-        if all(x in entry for x in ['title', 'author', 'year']):
-            sufficiently_complete = True
+    else:
+        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
 
     return sufficiently_complete
 
@@ -92,10 +98,15 @@ def is_sufficiently_complete(entry):
 def get_imported_entry_links():
 
     imported_entry_links = []
-
-    imported_entry_links = pd.read_csv('imported_entry_links.csv', header=None)
-    imported_entry_links = \
-        imported_entry_links[imported_entry_links.columns[0]].tolist()
+    try:
+        imported_entry_links = pd.read_csv('imported_entry_links.csv',
+                                           header=None)
+        imported_entry_links = \
+            imported_entry_links[imported_entry_links.columns[0]].tolist()
+    except pd.errors.EmptyDataError:
+        # ok if no search results have been imported before
+        if not os.path.exists(MAIN_REFERENCES):
+            pass
 
     return imported_entry_links
 
@@ -141,6 +152,10 @@ def load_entries(filepath):
             # e.g., conference paper with ENTRYTYPE=article
             entry = prepare.correct_entrytypes(entry)
 
+            if 'issue' in entry and 'number' not in entry:
+                entry.update(number=entry['issue'])
+                del entry['issue']
+
         if is_sufficiently_complete(entry) or complete_based_on_doi:
             entry.update(status='not_imported')
         else:
@@ -167,7 +182,6 @@ def save_imported_entry_links(bib_database):
 def load(bib_database):
 
     print('Loading search results')
-
     save_imported_entry_links(bib_database)
 
     # additional_records = load_entries(utils.get_bib_files()[0])
@@ -182,6 +196,7 @@ def load(bib_database):
     citation_key_list = [entry['ID'] for entry in bib_database.entries]
     for entry in additional_records:
         if 'prepared' == entry['status'] or \
+                'needs_manual_preparation' == entry['status'] or \
                 'needs_manual_merging' == entry['status']:
             continue
         if 'not_imported' == entry['status'] or \
@@ -271,7 +286,9 @@ def getbib(file):
         else:
             with open(file) as bibtex_file:
                 individual_bib_database = bibtexparser.bparser.BibTexParser(
-                    customization=convert_to_unicode, common_strings=True,
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
                 ).parse_file(bibtex_file, partial=True)
     return individual_bib_database
 
@@ -424,7 +441,9 @@ def pdfRefs2bib(file):
     return None
 
 
-def load_search_results_file(search_file):
+def load_search_results_file(search_file_path):
+
+    search_file = os.path.basename(search_file_path)
 
     importer_scripts = {'bib': getbib,
                         'ris': ris2bib,
@@ -442,8 +461,10 @@ def load_search_results_file(search_file):
     # for more efficient status checking, tracing, validation
     # This also applies to the pipeline_validation_hooks and is particularly
     # relevant for pdf sources that require long processing times
-    corresponding_bib_file = search_file[search_file.rfind('.'):] + '.bib'
-    if os.path.exists(corresponding_bib_file):
+    corresponding_bib_file = search_file[:search_file.rfind('.')] + '.bib'
+
+    if os.path.exists(corresponding_bib_file) and \
+            not '.bib' == search_file[-4]:
         return None
 
     filetype = search_file[search_file.rfind('.')+1:]
@@ -451,17 +472,19 @@ def load_search_results_file(search_file):
         if search_file.endswith('_ref_list.pdf'):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
-        print(f'- Loading {filetype}: {os.path.basename(search_file)}')
-        db = importer_scripts[filetype](search_file)
+        print(f'- Loading {filetype}: {search_file}')
+        db = importer_scripts[filetype](search_file_path)
         if db is None:
             return None
-        if corresponding_bib_file != search_file:
-            with open(search_file.replace(filetype, '.bib'), 'w') as file:
-                file.write(bibtexparser.dumps(db))
-                file.close()
+        if corresponding_bib_file != search_file and \
+                not '.bib' == search_file[-4]:
+            new_file_path = search_file_path.replace('.' + filetype, '.bib')
+            with open(new_file_path, 'w') as fi:
+                fi.write(bibtexparser.dumps(db))
+                fi.close()
         return db
     else:
-        print('Filetype not recognized: ' + os.path.basename(search_file))
+        print('Filetype not recognized: ' + search_file)
         return None
 
 

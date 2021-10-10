@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import configparser
+import os
 import pprint
 
 import git
@@ -44,7 +45,7 @@ def main():
     for entry in [x for x in bib_database.entries
                   if 'needs_manual_completion' == x['status']]:
         # Escape sequence to clear terminal output for each new comparison
-        print(chr(27) + '[2J')
+        os.system('cls' if os.name == 'nt' else 'clear')
         pp.pprint(entry)
 
 
