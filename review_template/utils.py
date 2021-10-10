@@ -352,7 +352,9 @@ def validate_bib_file(filename):
             ].number_records.item()
             with open(filename) as bibtex_file:
                 bib_database = bibtexparser.bparser.BibTexParser(
-                    customization=convert_to_unicode, common_strings=True,
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
                 ).parse_file(bibtex_file, partial=True)
 
             if len(bib_database.entries) != records_expected:
@@ -381,7 +383,9 @@ def load_references_bib(modification_check=True, initialize=False):
             git_modification_check(MAIN_REFERENCES)
         with open(MAIN_REFERENCES) as target_db:
             references_bib = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
+                customization=convert_to_unicode,
+                ignore_nonstandard_types=False,
+                common_strings=True,
             ).parse_file(target_db, partial=True)
     else:
         if initialize:
@@ -509,7 +513,9 @@ def get_included_papers():
 
         with open(MAIN_REFERENCES) as bib_file:
             bib_database = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode, common_strings=True,
+                customization=convert_to_unicode,
+                ignore_nonstandard_types=False,
+                common_strings=True,
             ).parse_file(bib_file, partial=True)
 
             for entry in bib_database.entries:

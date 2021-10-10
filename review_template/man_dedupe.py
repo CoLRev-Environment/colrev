@@ -87,7 +87,7 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
         [x for x in bib_database.entries if duplicate_ID == x['ID']][0]
 
     # Escape sequence to clear terminal output for each new comparison
-    print(chr(27) + '[2J')
+    os.system('cls' if os.name == 'nt' else 'clear')
     print(f"Merge {colors.GREEN}{main_entry['ID']}{colors.END} < " +
           f"{colors.RED}{duplicate_entry['ID']}{colors.END}?\n")
 

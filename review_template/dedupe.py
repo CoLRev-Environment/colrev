@@ -255,7 +255,7 @@ def get_prev_queue(queue_order, entry_link):
 
 def append_merges(entry):
 
-    if 'processed' != entry['status']:
+    if 'prepared' != entry['status']:
         return
 
     bib_database = utils.load_references_bib(

@@ -75,7 +75,7 @@ def validate_preparation_changes(bib_database, search_entries):
 
     for eid, entry_link, similarity in change_difference:
         # Escape sequence to clear terminal output for each new comparison
-        print(chr(27) + '[2J')
+        os.system('cls' if os.name == 'nt' else 'clear')
         print('Entry with ID: ' + eid)
 
         print('Difference: ' + str(round(1-similarity, 4)) + '\n\n')
@@ -139,7 +139,7 @@ def validate_merging_changes(bib_database, search_entries):
 
     for el_1, el_2, similarity in change_difference:
         # Escape sequence to clear terminal output for each new comparison
-        print(chr(27) + '[2J')
+        os.system('cls' if os.name == 'nt' else 'clear')
 
         print('Differences between merged entries: ' +
               str(round(1-similarity, 4)) + '\n\n')
