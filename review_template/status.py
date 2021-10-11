@@ -478,7 +478,7 @@ def review_instructions():
 def collaboration_instructions():
     global cur_stati
 
-    print('\n\nCollaboration and sharing (git)\n')
+    print('\n\nCollaboration and sharing (git)\n\n')
     try:
         remote_pv_hooks_repo = \
             'https://github.com/geritwagner/pipeline-validation-hooks'
@@ -486,8 +486,8 @@ def collaboration_instructions():
         remote_sha = refs['HEAD']
 
         if not remote_sha == local_hooks_version:
-            print('pipeline-validation-hooks version outdated.\n',
-                  '  use pre-commit autoupdate')
+            print('  pipeline-validation-hooks version outdated.\n  use ',
+                  f'{colors.RED}pre-commit autoupdate{colors.END}')
             # once we use tags, we may consider recommending
             # pre-commit autoupdate --bleeding-edge
     except git.exc.GitCommandError:

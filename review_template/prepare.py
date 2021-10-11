@@ -170,7 +170,11 @@ def get_doi_from_links(entry):
     url = ''
     url = entry.get('url', entry.get('fulltext', ''))
     if url != '':
-        r = requests.get(url)
+        try:
+            r = requests.get(url)
+        except requests.exceptions.ConnectionError:
+            return entry
+            pass
         res = re.findall(doi_regex, r.text)
         if res:
             if len(res) == 1:
@@ -180,9 +184,9 @@ def get_doi_from_links(entry):
                 counter = collections.Counter(res)
                 ret_doi = counter.most_common(1)[0][0]
                 entry['doi'] = ret_doi
-            print('TODO: if multiple dois matche d, '
+            print('  - TODO: if multiple dois matche d, '
                   'retrieve meta-data and valdiate')
-            print('- Added doi from website: ' + entry['doi'])
+            print('  - Added doi from website: ' + entry['doi'])
 
     return entry
 

@@ -12,6 +12,7 @@ import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
 import docker
@@ -115,52 +116,19 @@ def load_entries(filepath):
 
     imported_entry_links = get_imported_entry_links()
 
-    individual_bib_database = load_search_results_file(filepath)
+    search_db = load_search_results_file(filepath)
 
-    if individual_bib_database is None:
+    if search_db is None:
         return []
 
     search_file = os.path.basename(filepath)
     entry_list = []
-    for entry in individual_bib_database.entries:
+    for entry in search_db.entries:
         entry['entry_link'] = search_file + '/' + entry['ID']
         if entry['entry_link'] in imported_entry_links:
             continue
 
-        # Note: we assume that the metadata of doi.org is complete.
-        complete_based_on_doi = False
-        if not is_sufficiently_complete(entry):
-            entry = prepare.get_doi_from_crossref(entry)
-            if 'doi' in entry:
-                # try completion based on doi
-                doi_metadata = \
-                    prepare.retrieve_doi_metadata(entry.copy())
-                for key, value in doi_metadata.items():
-                    if key not in entry.keys() and key in ['author',
-                                                           'year',
-                                                           'title',
-                                                           'journal',
-                                                           'booktitle',
-                                                           'number',
-                                                           'volume',
-                                                           'issue',
-                                                           'pages']:
-                        entry[key] = value
-                complete_based_on_doi = True
-
-            # fix type-mismatches
-            # e.g., conference paper with ENTRYTYPE=article
-            entry = prepare.correct_entrytypes(entry)
-
-            if 'issue' in entry and 'number' not in entry:
-                entry.update(number=entry['issue'])
-                del entry['issue']
-
-        if is_sufficiently_complete(entry) or complete_based_on_doi:
-            entry.update(status='not_imported')
-        else:
-            entry.update(status='needs_manual_completion')
-
+        entry.update(status='retrieved')
         entry_list.append(entry)
 
     return entry_list
@@ -179,50 +147,67 @@ def save_imported_entry_links(bib_database):
     return
 
 
-def load(bib_database):
+def import_entry(entry):
+
+    if 'retrieved' != entry['status']:
+        return entry
+
+    # Note: we assume that the metadata of doi.org is complete.
+    complete_based_on_doi = False
+    if not is_sufficiently_complete(entry):
+        entry = prepare.get_doi_from_crossref(entry)
+        if 'doi' in entry:
+            # try completion based on doi
+            doi_metadata = \
+                prepare.retrieve_doi_metadata(entry.copy())
+            for key, value in doi_metadata.items():
+                if key not in entry.keys() and key in ['author',
+                                                       'year',
+                                                       'title',
+                                                       'journal',
+                                                       'booktitle',
+                                                       'number',
+                                                       'volume',
+                                                       'issue',
+                                                       'pages']:
+                    entry[key] = value
+            complete_based_on_doi = True
+
+        # fix type-mismatches
+        # e.g., conference paper with ENTRYTYPE=article
+        entry = prepare.correct_entrytypes(entry)
+
+        if 'issue' in entry and 'number' not in entry:
+            entry.update(number=entry['issue'])
+            del entry['issue']
+
+    if is_sufficiently_complete(entry) or complete_based_on_doi:
+        entry = prepare.homogenize_entry(entry)
+        # Note: the prepare.py will homogenize more cases because
+        # it runs speculative_changes(entry)
+        entry = prepare.apply_local_rules(entry)
+        entry = prepare.apply_crowd_rules(entry)
+        entry = drop_fields(entry)
+        entry.update(status='imported')
+    else:
+        entry.update(status='needs_manual_completion')
+
+    return entry
+
+
+def load_all_entries():
 
     print('Loading search results')
+    bib_database = utils.load_references_bib(True, initialize=True)
     save_imported_entry_links(bib_database)
-
-    # additional_records = load_entries(utils.get_bib_files()[0])
-    pool = mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
-
-    bib_non_processed = [x for x in bib_database.entries
-                         if x.get('status', 'NA') != 'processed']
-
-    additional_records = pool.map(load_entries, utils.get_search_files())
-    additional_records = list(chain(bib_non_processed, *additional_records))
-
-    citation_key_list = [entry['ID'] for entry in bib_database.entries]
-    for entry in additional_records:
-        if 'prepared' == entry['status'] or \
-                'needs_manual_preparation' == entry['status'] or \
-                'needs_manual_merging' == entry['status']:
-            continue
-        if 'not_imported' == entry['status'] or \
-                'needs_manual_completion' == entry['status']:
-            entry.update(ID=utils.generate_citation_key_blacklist(
-                entry, citation_key_list,
-                entry_in_bib_db=False,
-                raise_error=False))
-            citation_key_list.append(entry['ID'])
-
-        if not 'needs_manual_completion' == entry['status']:
-            entry = prepare.homogenize_entry(entry)
-
-            # Note: the prepare.py will homogenize more cases because
-            # it runs speculative_changes(entry)
-            entry = prepare.apply_local_rules(entry)
-            entry = prepare.apply_crowd_rules(entry)
-            entry = drop_fields(entry)
-            entry.update(status='imported')
+    load_pool = \
+        mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
+    additional_records = load_pool.map(load_entries, utils.get_search_files())
+    additional_records = list(chain(bib_database.entries, *additional_records))
 
     if os.path.exists('imported_entry_links.csv'):
         os.remove('imported_entry_links.csv')
-
-    r = git.Repo()
-    r.index.add(utils.get_search_files())
-
+    print()
     return additional_records
 
 
@@ -285,7 +270,7 @@ def getbib(file):
             individual_bib_database = None
         else:
             with open(file) as bibtex_file:
-                individual_bib_database = bibtexparser.bparser.BibTexParser(
+                individual_bib_database = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
                     common_strings=True,
@@ -481,7 +466,6 @@ def load_search_results_file(search_file_path):
             new_file_path = search_file_path.replace('.' + filetype, '.bib')
             with open(new_file_path, 'w') as fi:
                 fi.write(bibtexparser.dumps(db))
-                fi.close()
         return db
     else:
         print('Filetype not recognized: ' + search_file)
@@ -496,6 +480,8 @@ def create_commit(r, bib_database):
     if 0 == len(bib_database.entries):
         print('- No entries imported')
         return False
+
+    r.index.add(utils.get_search_files())
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 

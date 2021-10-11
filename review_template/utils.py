@@ -14,6 +14,7 @@ from string import ascii_lowercase
 import bibtexparser
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from git import Repo
@@ -351,7 +352,7 @@ def validate_bib_file(filename):
                 ).name
             ].number_records.item()
             with open(filename) as bibtex_file:
-                bib_database = bibtexparser.bparser.BibTexParser(
+                bib_database = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
                     common_strings=True,
@@ -382,7 +383,7 @@ def load_references_bib(modification_check=True, initialize=False):
         if modification_check:
             git_modification_check(MAIN_REFERENCES)
         with open(MAIN_REFERENCES) as target_db:
-            references_bib = bibtexparser.bparser.BibTexParser(
+            references_bib = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=False,
                 common_strings=True,
@@ -482,7 +483,6 @@ def save_bib_file(bib_database, target_file=None):
         out.write('% Encoding: UTF-8\n\n')
         out.write(bibtex_str + '\n')
 
-    # to
     time_to_wait = 10
     time_counter = 0
     while not os.path.exists('temp.bib'):
@@ -493,6 +493,7 @@ def save_bib_file(bib_database, target_file=None):
 
     if os.path.exists(target_file):
         os.remove(target_file)
+
     os.rename('temp.bib', target_file)
 
     return
@@ -512,7 +513,7 @@ def get_included_papers():
     for record_id in screen['citation_key'].tolist():
 
         with open(MAIN_REFERENCES) as bib_file:
-            bib_database = bibtexparser.bparser.BibTexParser(
+            bib_database = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=False,
                 common_strings=True,
