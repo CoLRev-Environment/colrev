@@ -2,7 +2,8 @@
 import configparser
 import csv
 import os
-import sys
+import pprint
+from collections import OrderedDict
 
 import git
 import pandas as pd
@@ -92,18 +93,23 @@ def pre_screen_commit():
     return
 
 
+desired_order_list = ['ENTRYTYPE', 'ID', 'year', 'author',
+                      'title', 'journal', 'booktitle',
+                      'volume', 'issue', 'doi',
+                      'link', 'url', 'fulltext']
+
+
+def customsort(dict1, key_order):
+    items = [dict1[k] if k in dict1.keys() else '' for k in key_order]
+    sorted_dict = OrderedDict()
+    for i in range(len(key_order)):
+        sorted_dict[key_order[i]] = items[i]
+    return sorted_dict
+
+
 def prescreen():
-    print('')
-    print('')
 
-    print('Run prescreen')
-
-    # TODO: check prior commits whether duplicates have been removed
-    if 'y' != input(
-        'Note: start screening only after removing duplicates ' +
-        f'from {MAIN_REFERENCES}! Proceed with the screen (y/n)?'
-    ):
-        sys.exit()
+    print('\n\nRun prescreen')
 
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
@@ -123,48 +129,26 @@ def prescreen():
     # pandas saves quotes around the last column
     screen.comment = screen.comment.fillna('-')
 
-    references = pd.DataFrame.from_dict(bib_database.entries)
-    references.rename(columns={'ID': 'citation_key'}, inplace=True)
-    req_cols = ['citation_key',
-                'author',
-                'title',
-                'year',
-                'journal',
-                'volume',
-                'number',
-                'pages',
-                'file',
-                'doi',
-                ]
-
-    for req_col in req_cols:
-        if req_col not in references:
-            references[req_col] = ''
-    references = references[req_cols]
-    references.fillna('', inplace=True)
-
-    # TODO: check if citation_keys in MAIN_REFERENCES and SCREEN are identical?
+    pp = pprint.PrettyPrinter(indent=4, width=140)
 
     print('To stop screening, press ctrl-c')
     try:
         for i, row in screen.iterrows():
             if 'TODO' == row['inclusion_1']:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                entry = [x for x in bib_database.entries
+                         if x['ID'] == row['citation_key']][0]
+                if 'processed' != entry.get('status', 'NA'):
+                    print(f'Skipping {entry["ID"]} - not yet processed')
+                    input('Enter to continue')
+                    continue
+
                 inclusion_decision = 'TODO'
-                reference = references.loc[
-                    references['citation_key'] == row['citation_key']
-                ].iloc[0].to_dict()
+
                 while inclusion_decision not in ['y', 'n']:
-                    print()
-                    print()
-                    print(
-                        f'{reference["title"]}  -  ',
-                        f'{reference["author"]}  ',
-                        f'{reference["journal"]}  ',
-                        f'{reference["year"]}  (',
-                        f'{reference["volume"]}:',
-                        f'{reference["number"]}) *',
-                        f'{reference["citation_key"]}*',
-                    )
+                    reventry = customsort(entry, desired_order_list)
+                    pp.pprint(reventry)
+
                     print()
                     inclusion_decision = input('include (y) or exclude (n)?')
                 inclusion_decision = inclusion_decision\
@@ -225,10 +209,8 @@ def screen_commit():
 
 
 def screen():
-    print('')
-    print('')
 
-    print('Run screen')
+    print('\n\nRun screen')
 
     assert os.path.exists(SCREEN)
     utils.git_modification_check(SCREEN)
@@ -241,25 +223,7 @@ def screen():
 
     print('To stop screening, press ctrl-c')
 
-    references = pd.DataFrame.from_dict(bib_database.entries)
-    references.rename(columns={'ID': 'citation_key'}, inplace=True)
-    req_cols = ['citation_key',
-                'author',
-                'title',
-                'year',
-                'journal',
-                'volume',
-                'number',
-                'pages',
-                'file',
-                'doi',
-                ]
-
-    for req_col in req_cols:
-        if req_col not in references:
-            references[req_col] = ''
-    references = references[req_cols]
-    references.fillna('', inplace=True)
+    pp = pprint.PrettyPrinter(indent=4, width=140)
 
     exclusion_criteria_available = 0 < len(
         [col for col in screen.columns if col.startswith('ec_')],
@@ -269,22 +233,13 @@ def screen():
         for i, row in screen.iterrows():
             try:
                 if 'TODO' == row['inclusion_2']:
-                    reference = references.loc[
-                        references['citation_key'] == row['citation_key']
-                    ].iloc[0].to_dict()
-                    print()
-                    print()
-                    print()
-                    print(
-                        f'{reference["title"]}  -  ',
-                        f'{reference["author"]}  ',
-                        f'{reference["journal"]}  ',
-                        f'{reference["year"]}  (',
-                        f'{reference["volume"]}:',
-                        f'{reference["number"]}) ',
-                        f'{reference["file"]} *',
-                        f'{reference["citation_key"]}*',
-                    )
+                    os.system('cls' if os.name == 'nt' else 'clear')
+                    entry = [x for x in bib_database.entries
+                             if x['ID'] == row['citation_key']][0]
+
+                    reventry = customsort(entry, desired_order_list)
+                    pp.pprint(reventry)
+
                     if exclusion_criteria_available:
                         for column in [
                             col for col in screen.columns

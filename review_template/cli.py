@@ -113,15 +113,15 @@ def prescreen(ctx):
 def screen(ctx):
     """Execute screen"""
     from review_template import screen
-    screen.main()
+    screen.screen()
 
 
 @main.command(help_priority=9)
 @click.pass_context
 def pdfs(ctx):
     """Acquire PDFs"""
-    from review_template import acquire_pdfs
-    acquire_pdfs.main()
+    from review_template import pdfs
+    pdfs.main()
 
 
 @main.command(help_priority=10)

@@ -149,6 +149,8 @@ def get_status_freq():
             data_total = data.shape[0]
             nr_to_data = screen[screen['inclusion_2'] == 'yes'].shape[0] - \
                 data.shape[0]
+        else:
+            nr_to_data = screen[screen['inclusion_2'] == 'yes'].shape[0]
 
     freqs = {'retrieved': retrieved,
              'non_imported': non_imported,
@@ -413,65 +415,69 @@ def review_instructions():
     global cur_stati
 
     print('\n\nInstructions (review_template)\n')
+    # Note: review_template init is suggested in repository_validation()
     if not os.path.exists(MAIN_REFERENCES):
-
-        # TBD: print(' To start, use \n\n     review_template initalize\n\n')
         print('  To import, copy search results to the search directory. ' +
               'Then use\n     review_template process')
-    else:
-        # Sharing conditions
-        cur_stati = get_status()
+        return
 
-        # TODO: include 'processed' once status information beyond 'processed'
-        # is joined/available
-        automated_processing_completed = True
-        if status_freq['needs_manual_completion'] > 0:
-            print('  To complete records manually for import, '
-                  'use\n     review_template man-comp')
-            automated_processing_completed = False
+    cur_stati = get_status()
 
-        if any(cs in ['imported', 'prepared', 'pre-screened',
-                      'pdf_acquired', 'included']
-                for cs in cur_stati):
-            print(
-                '  To continue (automated) processing, ',
-                'use\n     review_template process')
-            automated_processing_completed = False
-        manual_processing_completed = True
-        if status_freq['needs_manual_preparation'] > 0:
-            print('  To continue manual preparation, '
-                  'use\n     review_template man-prep')
-            manual_processing_completed = False
-        if status_freq['needs_manual_merging'] > 0:
-            print('  To continue manual processing of duplicates, '
-                  'use\n     review_template man-dedupe')
-            manual_processing_completed = False
-        if not (automated_processing_completed and
-                manual_processing_completed):
-            print(f'\n  {colors.RED}Info{colors.END}:'
-                  ' to avoid (git) merge conflicts, it is recommended to '
-                  'complete the processing \n  before starting '
-                  'the pre-screen/screen.')
-        else:
-            # print('  Processing completed for all records.\n\n')
-            # TODO: if pre-screening activated in template variables
-            if 0 != status_freq['nr_to_pre_screen']:
-                print('  To initiate/continue pre-screen,'
-                      'use\n     review_template prescreen')
-            # TODO: if pre-screening activated in template variables
-            if 0 == status_freq['nr_to_pre_screen'] and \
-                    0 != status_freq['non_bw_searched']:
-                print('  To initiate/continue backward-search,'
-                      'use\n     review_template back-search')
-            elif 0 == status_freq['nr_to_pre_screen'] and \
-                    0 != status_freq['nr_to_screen']:
-                print('  To initiate/continue screen,'
-                      'use\n     review_template screen')
-                # TODO: if data activated in template variables
-            if 0 == status_freq['nr_to_screen']:
-                print('  To initiate/continue data extraction/analysis, '
-                      'use\n     review_template data')
+    if status_freq['needs_manual_completion'] > 0:
+        print('  To continue with manual completion or records, '
+              'use\n     review_template man-comp')
+        return
 
+    if status_freq['prepared'] > 0:
+        print('  To continue with entry preparation, '
+              'use\n     review_template process')
+        return
+
+    if status_freq['needs_manual_preparation'] > 0:
+        print('  To continue with manual preparation, '
+              'use\n     review_template man-prep')
+        return
+
+    if status_freq['needs_manual_merging'] > 0:
+        print('  To continue manual processing of duplicates, '
+              'use\n     review_template man-dedupe')
+        return
+
+    # TODO: if pre-screening activated in template variables
+    if status_freq['nr_to_pre_screen'] > 0:
+        print('  To continue with prescreen, '
+              'use\n     review_template prescreen')
+        return
+
+    if status_freq['pdfs_to_retrieve'] > 0:
+        print('  To continue with pdf acquisition, '
+              'use\n     review_template pdfs')
+        return
+
+    if status_freq['non_bw_searched'] > 0:
+        print('  To execute backward search, '
+              'use\n     review_template back-search')
+        # no return because backward searches are optional
+
+    if status_freq['nr_to_screen'] > 0:
+        print('  To continue with screen, '
+              'use\n     review_template screen')
+        return
+
+    # TODO: if data activated in template variables
+    if status_freq['nr_to_data'] > 0:
+        print('  To continue with data extraction/analysis, '
+              'use\n     review_template data')
+        return
+
+    # if any(cs in ['imported', 'prepared', 'pre-screened',
+    #                 'pdf_acquired', 'included']
+    #         for cs in cur_stati):
+    #     print(
+    #         '  To continue (automated) processing, ',
+    #         'use\n     review_template process')
+    print('\n  Nothing to do. To start another review cycle, add '
+          'papers to search/ and use\n     review_template process')
     return
 
 
