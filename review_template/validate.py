@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import itertools
 import multiprocessing as mp
 import os
@@ -12,15 +11,11 @@ import git
 from bibtexparser.customization import convert_to_unicode
 
 from review_template import dedupe
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 
 def load_entries(bib_file):
@@ -38,7 +33,7 @@ def load_entries(bib_file):
 
 def get_search_entries():
 
-    pool = mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
+    pool = mp.Pool(repo_setup.config['CPUS'])
     entries = pool.map(load_entries, utils.get_bib_files())
     entries = list(chain(*entries))
 

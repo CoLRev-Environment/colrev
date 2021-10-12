@@ -1,20 +1,14 @@
 #! /usr/bin/env python
-import configparser
 import os
 import pprint
 
 import git
 
-from review_template import entry_hash_function
 from review_template import importer
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 entry_type_mapping = {'a': 'article', 'p': 'inproceedings',
                       'b': 'book', 'ib': 'inbook', 'pt': 'phdthesis',
@@ -35,7 +29,7 @@ def create_commit(r, bib_database):
         r.index.add([MAIN_REFERENCES])
 
         hook_skipping = 'false'
-        if not config.getboolean('general', 'DEBUG_MODE'):
+        if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
         r.index.commit(
             'Complete records for import',

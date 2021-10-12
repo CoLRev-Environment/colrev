@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import collections
-import configparser
 import json
 import re
 import sys
@@ -16,16 +15,10 @@ import requests
 from Levenshtein import ratio
 from nameparser import HumanName
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 EMPTY_RESULT = {
     'crossref_title': '',
@@ -53,7 +46,7 @@ def crossref_query(entry):
     request = Request(url)
     request.add_header(
         'User-Agent', 'RecordPreparer (mailto:' +
-        config['general']['EMAIL'] + ')',
+        repo_setup.config['EMAIL'] + ')',
     )
     try:
         ret = urlopen(request)
@@ -564,8 +557,8 @@ def create_commit(r, bib_database):
             '⚙️ Prepare ' + MAIN_REFERENCES + flag + flag_details +
             '\n - ' + utils.get_package_details(),
             author=git.Actor('script:prepare.py', ''),
-            committer=git.Actor(config['general']['GIT_ACTOR'],
-                                config['general']['EMAIL']),
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
         )
 
         # print('Created commit: Prepare ' + MAIN_REFERENCES)

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import csv
 import itertools
 import os
@@ -9,22 +8,16 @@ import git
 import pandas as pd
 from fuzzywuzzy import fuzz
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
 nr_entries_added = 0
 nr_current_entries = 0
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-MERGING_NON_DUP_THRESHOLD = \
-    config.getfloat('general', 'MERGING_NON_DUP_THRESHOLD')
-MERGING_DUP_THRESHOLD = config.getfloat('general', 'MERGING_DUP_THRESHOLD')
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MERGING_NON_DUP_THRESHOLD = repo_setup.config['MERGING_NON_DUP_THRESHOLD']
+MERGING_DUP_THRESHOLD = repo_setup.config['MERGING_DUP_THRESHOLD']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -485,8 +478,8 @@ def create_commit(r, bib_database):
                 merge_details +
                 '\n - ' + utils.get_package_details(),
                 author=git.Actor('script:process_duplicates.py', ''),
-                committer=git.Actor(config['general']['GIT_ACTOR'],
-                                    config['general']['EMAIL']),
+                committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                    repo_setup.config['EMAIL']),
 
             )
         return True

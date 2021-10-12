@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-import configparser
 import os
 import sys
 
@@ -7,7 +6,7 @@ import git
 import pandas as pd
 import yaml
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 
 local_hooks_version, repo, status_freq, cur_stati = None, None, None, None
 SHARE_STAT_REQ, MAIN_REFERENCES, SCREEN, DATA = None, None, None, None
@@ -259,17 +258,10 @@ def repository_load():
     global SCREEN
     global DATA
 
-    shared_config = configparser.ConfigParser()
-    shared_config.read('shared_config.ini')
-    HASH_ID_FUNCTION = shared_config['general']['HASH_ID_FUNCTION']
-    private_config = configparser.ConfigParser()
-    private_config.read('private_config.ini')
-
-    SHARE_STAT_REQ = shared_config['general']['share_stat_req']
-    MAIN_REFERENCES = \
-        entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-    SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-    DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
+    SHARE_STAT_REQ = repo_setup.config['SHARE_STAT_REQ']
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+    SCREEN = repo_setup.paths['SCREEN']
+    DATA = repo_setup.paths['DATA']
 
     repo = git.Repo('')
 

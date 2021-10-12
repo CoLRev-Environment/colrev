@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import itertools
 import logging
 import multiprocessing as mp
@@ -16,20 +15,14 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
 import docker
-from review_template import entry_hash_function
 from review_template import grobid_client
 from review_template import prepare
+from review_template import repo_setup
 from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
@@ -200,8 +193,7 @@ def load_all_entries():
     print('Loading search results')
     bib_database = utils.load_references_bib(True, initialize=True)
     save_imported_entry_links(bib_database)
-    load_pool = \
-        mp.Pool(config.getint('general', 'CPUS', fallback=mp.cpu_count()-1))
+    load_pool = mp.Pool(repo_setup.config['CPUS'])
     additional_records = load_pool.map(load_entries, utils.get_search_files())
     additional_records = list(chain(bib_database.entries, *additional_records))
 
@@ -498,7 +490,7 @@ def create_commit(r, bib_database):
 
         r.index.add([MAIN_REFERENCES])
         hook_skipping = 'false'
-        if not config.getboolean('general', 'DEBUG_MODE'):
+        if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
 
         flag, flag_details = utils.get_version_flags()
@@ -507,8 +499,8 @@ def create_commit(r, bib_database):
             '⚙️ Import search results ' + flag + flag_details +
             '\n - ' + utils.get_package_details(),
             author=git.Actor('script:importer.py', ''),
-            committer=git.Actor(config['general']['GIT_ACTOR'],
-                                config['general']['EMAIL']),
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
             skip_hooks=hook_skipping
         )
         return True

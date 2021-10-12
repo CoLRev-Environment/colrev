@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import configparser
 import io
 import os
 import pkgutil
@@ -22,17 +21,12 @@ from git import Repo
 from nameparser import HumanName
 
 import docker
-from review_template import entry_hash_function
+from review_template import repo_setup
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
-SEARCH_DETAILS = entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+SCREEN = repo_setup.paths['SCREEN']
+DATA = repo_setup.paths['DATA']
+SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
 
 
 def retrieve_local_resources():
@@ -129,8 +123,8 @@ def propagated_citation_key(citation_key):
 
     propagated = False
 
-    if os.path.exists(SCREEN_FILE):
-        screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    if os.path.exists(SCREEN):
+        screen = pd.read_csv(SCREEN, dtype=str)
         if citation_key in screen['citation_key'].tolist():
             propagated = True
 
@@ -169,7 +163,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         if propagated_citation_key(entry['ID']):
             raise CitationKeyPropagationError(
                 'WARNING: do not change citation_keys that have been ',
-                'propagated to ' + SCREEN_FILE + ' and/or ' + DATA + ' (' +
+                'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
                 entry['ID'] + ')',
             )
 
@@ -230,7 +224,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
 
 
 def mostly_upper_case(input_string):
-    # also in entry_hash_function.py - consider updating it separately
+    # also in repo_setup.py - consider updating it separately
     if not re.match(r'[a-zA-Z]+', input_string):
         return input_string
     input_string = input_string.replace('.', '').replace(',', '')
@@ -249,7 +243,7 @@ def title_if_mostly_upper_case(input_string):
 
 
 def format_author_field(input_string):
-    # also in entry_hash_function.py - consider updating it separately
+    # also in repo_setup.py - consider updating it separately
 
     # DBLP appends identifiers to non-unique authors
     input_string = input_string.replace('\n', ' ')
@@ -279,7 +273,7 @@ def format_author_field(input_string):
 
 
 def unify_pages_field(input_string):
-    # also in entry_hash_function.py - consider updating it separately
+    # also in repo_setup.py - consider updating it separately
     if not isinstance(input_string, str):
         return input_string
     if not re.match(r'^\d*--\d*$', input_string) and '--' not in input_string:
@@ -503,9 +497,9 @@ def save_bib_file(bib_database, target_file=None):
 def get_pdfs_of_included_papers():
 
     assert os.path.exists(MAIN_REFERENCES)
-    assert os.path.exists(SCREEN_FILE)
+    assert os.path.exists(SCREEN)
 
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     pdfs = []

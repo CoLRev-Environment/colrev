@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import csv
 import os
 import pprint
@@ -8,16 +7,12 @@ from collections import OrderedDict
 import git
 import pandas as pd
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+SCREEN = repo_setup.paths['SCREEN']
 
 
 def generate_screen_csv(exclusion_criteria):
@@ -73,7 +68,7 @@ def pre_screen_commit(r):
     r.index.add([SCREEN])
 
     hook_skipping = 'false'
-    if not config.getboolean('general', 'DEBUG_MODE'):
+    if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
     flag, flag_details = utils.get_version_flags()
@@ -82,10 +77,10 @@ def pre_screen_commit(r):
         'Pre-screening (manual)' + flag + flag_details +
         '\n - Using pre_screen.py' +
         '\n - ' + utils.get_package_details(),
-        author=git.Actor(config['general']['GIT_ACTOR'],
-                         config['general']['EMAIL']),
-        committer=git.Actor(config['general']['GIT_ACTOR'],
-                            config['general']['EMAIL']),
+        author=git.Actor(repo_setup.config['GIT_ACTOR'],
+                         repo_setup.config['EMAIL']),
+        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                            repo_setup.config['EMAIL']),
         skip_hooks=hook_skipping
     )
 
@@ -191,7 +186,7 @@ def screen_commit(r):
     r.index.add([SCREEN])
 
     hook_skipping = 'false'
-    if not config.getboolean('general', 'DEBUG_MODE'):
+    if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
     flag, flag_details = utils.get_version_flags()
@@ -200,10 +195,10 @@ def screen_commit(r):
         'Screening (manual)' + flag + flag_details +
         '\n - Using screen.py' +
         '\n - ' + utils.get_package_details(),
-        author=git.Actor(config['general']['GIT_ACTOR'],
-                         config['general']['EMAIL']),
-        committer=git.Actor(config['general']['GIT_ACTOR'],
-                            config['general']['EMAIL']),
+        author=git.Actor(repo_setup.config['GIT_ACTOR'],
+                         repo_setup.config['EMAIL']),
+        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                            repo_setup.config['EMAIL']),
         skip_hooks=hook_skipping
     )
 

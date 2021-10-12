@@ -1,19 +1,14 @@
 #! /usr/bin/env python
-import configparser
 import os
 
 import numpy as np
 import pandas as pd
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+SCREEN = repo_setup.paths['SCREEN']
+DATA = repo_setup.paths['SCREEN']
 
 
 def main():

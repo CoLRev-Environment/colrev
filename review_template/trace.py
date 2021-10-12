@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import logging
 import pprint
 import time
@@ -8,18 +7,13 @@ import bibtexparser
 import dictdiffer
 import git
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+SCREEN = repo_setup.paths['SCREEN']
+DATA = repo_setup.paths['DATA']
 
 
 def main(citation_key):
