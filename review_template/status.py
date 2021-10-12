@@ -272,6 +272,7 @@ def repository_load():
     DATA = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
 
     repo = git.Repo('')
+
     # TODO: check whether it is a valid git repo
 
     # Notify users when changes in bib files are not staged

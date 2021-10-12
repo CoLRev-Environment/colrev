@@ -4,6 +4,7 @@ import csv
 import json
 import os
 
+import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -24,8 +25,6 @@ SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
-missing_pdfs = 0
-total_to_retrieve = 0
 pdfs_available = 0
 
 # https://github.com/ContentMine/getpapers
@@ -91,78 +90,66 @@ def is_pdf(path_to_file):
     #    return False
 
 
-def acquire_pdfs(bib_database, screen):
-    global total_to_retrieve
+def acquire_pdf(entry):
     global pdfs_retrieved
     global existing_pdfs_linked
-    global missing_pdfs
     global pdfs_available
+    global missing_entries
 
-#    global total_to_retrieve
+    print('TODO: check required status (join screening/needs pdf before)')
+    # Note: this should replace the line
+    # entry['ID'] in papers_to_acquire
 
-    papers_to_acquire = screen.loc[
-        screen.inclusion_2.notnull(
-        ), 'citation_key',
-    ].tolist()
+    if not os.path.exists(PDF_DIRECTORY):
+        os.mkdir(PDF_DIRECTORY)
 
-    total_to_retrieve = len(papers_to_acquire)
+    pdf_filepath = os.path.join(PDF_DIRECTORY, entry['ID'] + '.pdf')
 
-    missing_entries = BibDatabase()
+    if os.path.exists(pdf_filepath):
+        pdfs_available += 1
+        if 'file' not in entry:
+            entry.update(file=':' + pdf_filepath + ':PDF')
+            existing_pdfs_linked += 1
+        return entry
 
-    for entry in bib_database.entries:
-        if entry['ID'] in papers_to_acquire:
-            pdf_filepath = os.path.join(PDF_DIRECTORY, entry['ID'] + '.pdf')
+    if 'doi' in entry:
+        url = unpaywall(entry['doi'])
+        if url is not None:
+            if 'Invalid/unknown DOI' not in url:
+                res = requests.get(
+                    url, headers={
+                        'User-Agent': 'Chrome/51.0.2704.103',
+                        'referer': 'https://www.doi.org',
+                    },
+                )
+                if 200 == res.status_code:
+                    with open(pdf_filepath, 'wb') as f:
+                        f.write(res.content)
+                    if is_pdf(pdf_filepath):
+                        print(f'Retrieved pdf (unpaywall): {pdf_filepath}')
+                        entry.update(file=':' + pdf_filepath + ':PDF')
+                        pdfs_retrieved += 1
+                    else:
+                        os.remove(pdf_filepath)
+                else:
+                    print(f'Unpaywall retrieval error {res.status_code}/{url}')
 
-            if os.path.exists(pdf_filepath):
-                pdfs_available += 1
-                if 'file' not in entry:
-                    entry.update(file=':' + pdf_filepath + ':PDF')
-                    existing_pdfs_linked += 1
-                continue
-            if 'doi' in entry:
-                url = unpaywall(entry['doi'])
-                if url is not None:
-                    if 'Invalid/unknown DOI' not in url:
-                        response = requests.get(
-                            url, headers={
-                                'User-Agent': 'Chrome/51.0.2704.103',
-                                'referer': 'https://www.doi.org',
-                            },
-                        )
-                        if 200 == response.status_code:
-                            with open(pdf_filepath, 'wb') as f:
-                                f.write(response.content)
-                            if is_pdf(pdf_filepath):
-                                print('Retrieved pdf via unpaywall api: ' +
-                                      pdf_filepath)
-                                entry.update(file=':' + pdf_filepath + ':PDF')
-                                pdfs_retrieved += 1
-                            else:
-                                os.remove(pdf_filepath)
-                        else:
-                            print('Problem retrieving PDF/unpaywall link ' +
-                                  f'({response.status_code}) : {url}')
+    if not os.path.exists(pdf_filepath):
+        missing_entries.entries.append(entry)
 
-            if not os.path.exists(pdf_filepath):
-                missing_entries.entries.append(entry)
-
-    if len(missing_entries.entries) > 0:
-        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
-        col_order = [
-            'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'number', 'pages', 'doi'
-        ]
-        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
-        missing_entries_df.to_csv(
-            'missing_pdf_files.csv', index=False, quoting=csv.QUOTE_ALL,
-        )
-
-        missing_pdfs = len(missing_entries.entries)
-
-    return bib_database
+    return entry
 
 
 def main():
+
+    r = git.Repo('')
+    utils.require_clean_repo(r)
+
+    global pdfs_retrieved
+    global existing_pdfs_linked
+    global pdfs_available
+    global missing_entries
+    missing_entries = BibDatabase()
 
     print('Acquire PDFs')
 
@@ -173,18 +160,31 @@ def main():
     assert os.path.exists(SCREEN_FILE)
     screen = pd.read_csv(SCREEN_FILE, dtype=str)
 
-    if not os.path.exists(PDF_DIRECTORY):
-        os.mkdir(PDF_DIRECTORY)
+    papers_to_acquire = \
+        screen.loc[screen.inclusion_2.notnull(), 'citation_key', ].tolist()
 
-    bib_database = acquire_pdfs(bib_database, screen)
+    for entry in bib_database.entries:
+        if entry['ID'] in papers_to_acquire:
+            entry = acquire_pdf(entry)
 
-    print(f' - {total_to_retrieve} pdfs required')
+    print(f' - {len(papers_to_acquire)} pdfs required')
     print(f' - {pdfs_available} pdfs available')
     if existing_pdfs_linked > 0:
         print(f' - {existing_pdfs_linked} existing pdfs linked in bib file')
-    print(' - ' + str(pdfs_retrieved) + ' pdfs retrieved')
-    if missing_pdfs > 0:
-        print(f' - {missing_pdfs} pdfs missing (see missing_pdf_files.csv)')
+    print(f' - {pdfs_retrieved} pdfs retrieved')
+
+    if len(missing_entries.entries) > 0:
+        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
+        col_order = [
+            'ID', 'author', 'title', 'journal', 'booktitle',
+            'year', 'volume', 'number', 'pages', 'doi'
+        ]
+        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
+        missing_entries_df.to_csv('missing_pdf_files.csv',
+                                  index=False, quoting=csv.QUOTE_ALL)
+
+        print(f' - {len(missing_entries.entries)} pdfs missing '
+              '(see missing_pdf_files.csv)')
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 

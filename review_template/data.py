@@ -5,9 +5,11 @@ import logging
 import os
 import sys
 
+import git
 import pandas as pd
 
 from review_template import entry_hash_function
+from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -200,14 +202,13 @@ def generate_data_sheet():
 
 
 def main():
-    print('')
-    print('')
 
-    # depending on the template variable:
+    r = git.Repo()
+    utils.require_clean_repo(r)
 
     if 'NONE' == DATA_FORMAT:
-        print('Data extraction format = NONE (change shared_config to start '
-              'data extraction)')
+        print('Data extraction format = NONE '
+              '(change shared_config to start data extraction)')
     if 'CSV_TABLE' == DATA_FORMAT:
         generate_data_sheet()
     if 'MD_SHEET' == DATA_FORMAT:
@@ -215,8 +216,8 @@ def main():
     if 'MD_SHEETS' == DATA_FORMAT:
         generate_data_pages()
     if 'MA_VARIABLES_CSV' == DATA_FORMAT:
-        print('Not yet implemented: structured data extraction '
-              'for meta-analysis')
+        print('Not yet implemented: '
+              'structured data extraction for meta-analysis')
 
 
 if __name__ == '__main__':

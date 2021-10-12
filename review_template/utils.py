@@ -12,6 +12,7 @@ from pathlib import Path
 from string import ascii_lowercase
 
 import bibtexparser
+import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
@@ -499,17 +500,15 @@ def save_bib_file(bib_database, target_file=None):
     return
 
 
-def get_included_papers():
+def get_pdfs_of_included_papers():
 
     assert os.path.exists(MAIN_REFERENCES)
     assert os.path.exists(SCREEN_FILE)
 
-    pdfs = []
-
     screen = pd.read_csv(SCREEN_FILE, dtype=str)
-
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
+    pdfs = []
     for record_id in screen['citation_key'].tolist():
 
         with open(MAIN_REFERENCES) as bib_file:
@@ -534,6 +533,15 @@ def get_included_papers():
                             )
 
     return pdfs
+
+
+def require_clean_repo(repo=None):
+    if repo is None:
+        repo = git.Repo('')
+    if repo.is_dirty():
+        print('Clean repository required (commit, discard or stash changes).')
+        sys.exit()
+    return True
 
 
 def get_package_details():

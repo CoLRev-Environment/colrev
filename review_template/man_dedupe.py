@@ -211,8 +211,8 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
     return bib_database
 
 
-def manual_merge_commit():
-    r = git.Repo('')
+def manual_merge_commit(r):
+
     r.git.add(update=True)
     # deletion of 'potential_duplicate_tuples.csv' may added to git staging
 
@@ -238,6 +238,10 @@ def manual_merge_commit():
 
 def main():
     global removed_tuples
+
+    r = git.Repo('')
+    utils.require_clean_repo(r)
+
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )

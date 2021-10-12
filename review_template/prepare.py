@@ -2,7 +2,6 @@
 import collections
 import configparser
 import json
-import logging
 import re
 import sys
 import time
@@ -12,7 +11,6 @@ from urllib.parse import urlencode
 from urllib.request import Request
 from urllib.request import urlopen
 
-import bibtexparser
 import git
 import requests
 from Levenshtein import ratio
@@ -25,8 +23,6 @@ config = configparser.ConfigParser()
 config.read(['shared_config.ini', 'private_config.ini'])
 HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-
-logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
@@ -579,23 +575,5 @@ def create_commit(r, bib_database):
         return False
 
 
-def test_prepare():
-    bibtex_str = """@article{Andersen2019,
-                    author    = {Andersen, Jonas},
-                    journal   = {Journal of Information Systems},
-                    title     = {Self-Organizing in Blockchain},
-                    year      = {2019},
-                    pages     = {1242--1273},
-                    doi       = {10.17705/1jais.00566},
-                    }"""
-
-    bib_database = bibtexparser.loads(bibtex_str)
-    entry = bib_database.entries[0]
-    print(prepare(entry))
-
-    return
-
-
 if __name__ == '__main__':
-    test_prepare()
-    # https://github.com/nschloe/betterbib
+    print('TODO')

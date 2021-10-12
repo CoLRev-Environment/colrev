@@ -16,8 +16,8 @@ MAIN_REFERENCES = \
     entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
 
 
-def manual_preparation_commit():
-    r = git.Repo('')
+def manual_preparation_commit(r):
+
     r.index.add([MAIN_REFERENCES])
 
     hook_skipping = 'false'
@@ -35,18 +35,36 @@ def manual_preparation_commit():
     return
 
 
+def man_entry_prep(entry):
+
+    if 'needs_manual_completion' != entry['status']:
+        return entry
+
+    pp = pprint.PrettyPrinter(indent=4)
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    pp.pprint(entry)
+
+    return entry
+
+
 def main():
+
+    r = git.Repo('')
+    utils.require_clean_repo(r)
+
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
 
     print('To implement: prepare manual')
-    pp = pprint.PrettyPrinter(indent=4)
-    for entry in [x for x in bib_database.entries
-                  if 'needs_manual_completion' == x['status']]:
-        # Escape sequence to clear terminal output for each new comparison
-        os.system('cls' if os.name == 'nt' else 'clear')
-        pp.pprint(entry)
+
+    for entry in bib_database.entries:
+        entry = man_entry_prep(entry)
+        utils.save_bib_file(bib_database)
+
+    manual_preparation_commit(r)
+    return
 
 
 if __name__ == '__main__':
