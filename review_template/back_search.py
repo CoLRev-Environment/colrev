@@ -2,8 +2,6 @@
 import configparser
 import csv
 from datetime import datetime
-from time import gmtime
-from time import strftime
 
 import git
 import pandas as pd
@@ -24,7 +22,10 @@ SEARCH_DETAILS = \
 data_dir = ''
 
 
-def process_backward_search(pdf_filename, bib_filename):
+def process_backward_search(citation_key):
+
+    bib_filename = data_dir + 'search/' + citation_key + '_bw_search.bib'
+    pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
 
     search_details = pd.read_csv(SEARCH_DETAILS)
 
@@ -85,9 +86,7 @@ def process_backward_search(pdf_filename, bib_filename):
     return bib_filename
 
 
-def create_commit(bibfilenames):
-
-    r = git.Repo()
+def create_commit(r, bibfilenames):
 
     r.index.add([SEARCH_DETAILS])
     for f in bibfilenames:
@@ -107,22 +106,20 @@ def create_commit(bibfilenames):
 
 
 def main():
+    r = git.Repo()
+    utils.require_clean_repo(r)
 
     print('Backward search')
+
     grobid_client.start_grobid()
-    citation_keys = utils.get_included_papers()
 
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
     bibfilenames = []
+    citation_keys = utils.get_pdfs_of_included_papers()
     for citation_key in tqdm.tqdm(citation_keys):
-        backward_search_path = data_dir + 'search/'
-        bib_filename = backward_search_path + citation_key + '_bw_search.bib'
-        pdf_filename = data_dir + 'pdfs/' + citation_key + '.pdf'
-        bibfilename = process_backward_search(pdf_filename, bib_filename)
+        bibfilename = process_backward_search(citation_key)
         bibfilenames.append(bibfilename)
-    print(strftime('%Y-%m-%d %H:%M:%S', gmtime()))
 
-    create_commit(bibfilenames)
+    create_commit(r, bibfilenames)
 
 
 if __name__ == '__main__':

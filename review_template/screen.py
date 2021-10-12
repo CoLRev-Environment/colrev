@@ -68,9 +68,8 @@ def update_screen(bib_database):
     return
 
 
-def pre_screen_commit():
+def pre_screen_commit(r):
 
-    r = git.Repo('')
     r.index.add([SCREEN])
 
     hook_skipping = 'false'
@@ -108,6 +107,9 @@ def customsort(dict1, key_order):
 
 
 def prescreen():
+
+    r = git.Repo('')
+    utils.require_clean_repo(r)
 
     print('\n\nRun prescreen')
 
@@ -183,7 +185,7 @@ def prescreen():
     return
 
 
-def screen_commit():
+def screen_commit(r):
 
     r = git.Repo('')
     r.index.add([SCREEN])
@@ -209,6 +211,9 @@ def screen_commit():
 
 
 def screen():
+
+    r = git.Repo('')
+    utils.require_clean_repo(r)
 
     print('\n\nRun screen')
 
@@ -291,9 +296,9 @@ def screen():
     # If records remain for screening, ask whether to create a commit
     if 0 < screen[screen['inclusion_2'] == 'TODO'].shape[0]:
         if 'y' == input('Create commit (y/n)?'):
-            screen_commit()
+            screen_commit(r)
     else:
-        screen_commit()
+        screen_commit(r)
 
     return
 

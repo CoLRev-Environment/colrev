@@ -120,6 +120,7 @@ def set_citation_keys(db):
 def main():
 
     r = init.get_repo()
+    utils.require_clean_repo(r)
     utils.build_docker_images()
 
     db = BibDatabase()
