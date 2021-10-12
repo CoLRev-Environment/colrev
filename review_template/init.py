@@ -106,10 +106,11 @@ def init_new_repo():
     with open('private_config.ini', 'w') as configfile:
         private_config.write(configfile)
 
-    HASH_ID_FUNCTION = 'v_0.3'
+    # REPO_SETUP_VERSION = repo_setup.paths.keys()[-1]
+    REPO_SETUP_VERSION = 'v_0.1'
     shared_config = configparser.ConfigParser()
     shared_config.add_section('general')
-    shared_config['general']['HASH_ID_FUNCTION'] = HASH_ID_FUNCTION
+    shared_config['general']['REPO_SETUP_VERSION'] = REPO_SETUP_VERSION
     shared_config['general']['SCREEN_TYPE'] = SCREEN_TYPE
     shared_config['general']['DATA_FORMAT'] = DATA_FORMAT
     shared_config['general']['SHARE_STAT_REQ'] = SHARE_STAT_REQ
@@ -128,9 +129,8 @@ def init_new_repo():
             '\n.index-*\nmissing_pdf_files.csv')
     f.close()
 
-    from review_template import entry_hash_function
-    SEARCH_DETAILS = \
-        entry_hash_function.paths[HASH_ID_FUNCTION]['SEARCH_DETAILS']
+    from review_template import repo_setup
+    SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
     f = open(SEARCH_DETAILS, 'w')
     header = '"filename","number_records","iteration","date_start",' + \
         '"date_completion","source_url",' + \

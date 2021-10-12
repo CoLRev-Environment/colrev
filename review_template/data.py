@@ -1,26 +1,19 @@
 #! /usr/bin/env python
-import configparser
 import csv
-import logging
 import os
 import sys
 
 import git
 import pandas as pd
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 
-logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
+SCREEN = repo_setup.paths['SCREEN']
+DATA_FILE = repo_setup.paths['DATA']
+DATA_FORMAT = repo_setup.paths['DATA_FORMAT']
 
-DATA_FORMAT = config['general']['DATA_FORMAT']
-
-SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-DATA_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['DATA']
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -37,7 +30,7 @@ def generate_data_pages():
     if not os.path.exists('coding'):
         os.mkdir('coding')
 
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     screen = screen['citation_key'].tolist()
@@ -77,7 +70,7 @@ def generate_data_page():
 
     print('Data page')
 
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     screen = screen['citation_key'].tolist()
@@ -109,7 +102,7 @@ def generate_data_page():
 def generate_data_csv(coding_dimensions):
     global nr_entries_added
 
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
 
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
@@ -140,7 +133,7 @@ def update_data_csv():
     global nr_entries_added
 
     data = pd.read_csv(DATA_FILE, dtype=str)
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    screen = pd.read_csv(SCREEN, dtype=str)
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
     print('TODO: warn when records are no longer included')

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import csv
 import json
 import os
@@ -9,18 +8,13 @@ import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
-from review_template import entry_hash_function
+from review_template import repo_setup
 from review_template import utils
 # from pdfminer.high_level import extract_text
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-PDF_DIRECTORY = entry_hash_function.paths[HASH_ID_FUNCTION]['PDF_DIRECTORY']
-SCREEN_FILE = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+SCREEN = repo_setup.paths['SCREEN']
 
 
 pdfs_retrieved = 0
@@ -34,7 +28,7 @@ def unpaywall(doi, retry=0, pdfonly=True):
 
     r = requests.get(
         'https://api.unpaywall.org/v2/{doi}',
-        params={'email': config['general']['EMAIL']},
+        params={'email': repo_setup.config['EMAIL']},
     )
 
     if r.status_code == 404:
@@ -157,8 +151,8 @@ def main():
         modification_check=True, initialize=False,
     )
 
-    assert os.path.exists(SCREEN_FILE)
-    screen = pd.read_csv(SCREEN_FILE, dtype=str)
+    assert os.path.exists(SCREEN)
+    screen = pd.read_csv(SCREEN, dtype=str)
 
     papers_to_acquire = \
         screen.loc[screen.inclusion_2.notnull(), 'citation_key', ].tolist()

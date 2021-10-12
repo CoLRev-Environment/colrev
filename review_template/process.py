@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import configparser
 import multiprocessing as mp
 import os
 
@@ -7,28 +6,21 @@ import click
 from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import dedupe
-from review_template import entry_hash_function
 from review_template import importer
 from review_template import init
 from review_template import prepare
+from review_template import repo_setup
 from review_template import utils
 
-config = configparser.ConfigParser()
-config.read(['shared_config.ini', 'private_config.ini'])
-HASH_ID_FUNCTION = config['general']['HASH_ID_FUNCTION']
 
-DELAY_AUTOMATED_PROCESSING = \
-    config.getboolean('general', 'DELAY_AUTOMATED_PROCESSING')
-
-MAIN_REFERENCES = \
-    entry_hash_function.paths[HASH_ID_FUNCTION]['MAIN_REFERENCES']
-SCREEN = entry_hash_function.paths[HASH_ID_FUNCTION]['SCREEN']
-
+DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+SCREEN = repo_setup.paths['SCREEN']
 
 # Note: BATCH_SIZE can be as small as 1.
 # Records should not be propagated/screened when the batch
 # has not yet been committed
-BATCH_SIZE = config.getint('general', 'BATCH_SIZE', fallback=500)
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 
 def check_delay(db, min_status):
@@ -133,8 +125,7 @@ def main():
         else:
             print('Processing entries')
 
-        pool = mp.Pool(config.getint('general', 'CPUS',
-                                     fallback=mp.cpu_count()-1))
+        pool = mp.Pool(repo_setup.config['CPUS'])
 
         print('Import')
         db.entries = pool.map(importer.import_entry, db.entries)
