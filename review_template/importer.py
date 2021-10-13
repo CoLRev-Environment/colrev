@@ -80,8 +80,7 @@ def is_sufficiently_complete(entry):
 
     if entry['ENTRYTYPE'] in entry_field_requirements.keys():
         reqs = entry_field_requirements[entry['ENTRYTYPE']]
-        if all(x in entry
-               for x in reqs):
+        if all(x in entry for x in reqs):
             sufficiently_complete = True
     else:
         print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
@@ -206,7 +205,8 @@ def load_all_entries():
 def bibutils_convert(script, data):
 
     assert script in ['ris2xml', 'end2xml',
-                      'endx2xml', 'isi2xml', 'med2xml', 'xml2bib']
+                      'endx2xml', 'isi2xml',
+                      'med2xml', 'xml2bib']
 
     if 'xml2bib' == script:
         script = script + ' -b -w '
@@ -216,12 +216,8 @@ def bibutils_convert(script, data):
 
     client = docker.APIClient()
     try:
-
-        container = client.create_container(
-            'bibutils',
-            script,
-            stdin_open=True,
-        )
+        container = \
+            client.create_container('bibutils', script, stdin_open=True)
     except docker.errors.ImageNotFound:
         print('Docker image not found')
         return ''
@@ -272,10 +268,13 @@ def getbib(file):
 
 def ris2bib(file):
     with open(file) as reader:
-        data = reader.read()
+        data = reader.read(4096)
     if 'TY  - ' not in data:
         print('Error: Not a ris file? ' + os.path.basename(file))
         return None
+
+    with open(file) as reader:
+        data = reader.read()
 
     data = bibutils_convert('ris2xml', data)
     data = bibutils_convert('xml2bib', data)
@@ -285,10 +284,13 @@ def ris2bib(file):
 
 def end2bib(file):
     with open(file) as reader:
-        data = reader.read()
+        data = reader.read(4096)
     if '%%T ' not in data:
         print('Error: Not an end file? ' + os.path.basename(file))
         return None
+
+    with open(file) as reader:
+        data = reader.read()
 
     data = bibutils_convert('end2xml', data)
     data = bibutils_convert('xml2bib', data)
@@ -329,8 +331,6 @@ def preprocess_entries(data):
             x['ID'] = x.pop('citation_key')
         for k, v in x.items():
             x[k] = str(v)
-            # if ' ' in k:
-            #     x[k.replace(' ', '_')] = x.pop(k)
 
     return data
 
@@ -372,11 +372,10 @@ def xlsx2bib(file):
 def pdf2bib(file):
     grobid_client.check_grobid_availability()
 
-    options = {'consolidateHeader': '1'}
     r = requests.put(
         grobid_client.get_grobid_url() + '/api/processHeaderDocument',
         files=dict(input=open(file, 'rb')),
-        params=options,
+        params={'consolidateHeader': '1'},
         headers={'Accept': 'application/x-bibtex'}
     )
     if 200 == r.status_code:
@@ -398,11 +397,10 @@ def pdf2bib(file):
 def pdfRefs2bib(file):
     grobid_client.check_grobid_availability()
 
-    options = {'consolidateHeader': '0', 'consolidateCitations': '1'}
     r = requests.post(
         grobid_client.get_grobid_url() + '/api/processReferences',
         files=dict(input=open(file, 'rb')),
-        data=options,
+        data={'consolidateHeader': '0', 'consolidateCitations': '1'},
         headers={'Accept': 'application/x-bibtex'}
     )
     if 200 == r.status_code:

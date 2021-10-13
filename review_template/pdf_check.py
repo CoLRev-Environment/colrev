@@ -46,7 +46,6 @@ def extract_text(pdf_path):
 
 
 def probability_english(text):
-
     langs = detect_langs(text)
     probability_english = 0.0
     for lang in langs:
@@ -71,10 +70,7 @@ def validate_pdf_metadata(bib_database):
             text = extract_text_by_page(pdf)
 
             if probability_english(text) < 0.98:
-                print(
-                    ' - validation error: ' +
-                    f'OCR problems: {entry["file"]}'
-                )
+                print(f' - validation error (OCR problems): {entry["file"]}')
                 continue
 
             text = text.replace(' ', '').replace('\n', '').lower()
@@ -95,9 +91,8 @@ def validate_pdf_metadata(bib_database):
 
             match_count = 0
             for author_name in entry['author'].split(' and '):
-                author_name = author_name.split(',')[0]\
-                    .lower()\
-                    .replace(' ', '')
+                author_name = \
+                    author_name.split(',')[0].lower().replace(' ', '')
                 if (re.sub('[^a-zA-Z ]+', '', author_name) in text):
                     match_count += 1
 
@@ -124,10 +119,8 @@ def validate_pdf_metadata(bib_database):
 
 
 def main():
-    print('')
-    print('')
 
-    print('Validate PDFs')
+    print('\n\nValidate PDFs')
 
     bib_database = utils.load_references_bib(
         modification_check=False, initialize=False,

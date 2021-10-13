@@ -10,8 +10,6 @@ import pandas as pd
 from review_template import repo_setup
 from review_template import utils
 
-
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 SCREEN = repo_setup.paths['SCREEN']
 
 
@@ -27,10 +25,8 @@ def generate_screen_csv(exclusion_criteria):
     )
 
     screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(
-        SCREEN, index=False,
-        quoting=csv.QUOTE_ALL, na_rep='NA',
-    )
+    screen.to_csv(SCREEN, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
+
     return screen
 
 
@@ -55,10 +51,7 @@ def update_screen(bib_database):
         screen = pd.concat([screen, add_entry], axis=0, ignore_index=True)
     # To reformat/sort the screen:
     screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(
-        SCREEN, index=False,
-        quoting=csv.QUOTE_ALL, na_rep='NA',
-    )
+    screen.to_csv(SCREEN, index=False, quoting=csv.QUOTE_ALL, na_rep='NA')
 
     return
 
@@ -164,10 +157,7 @@ def prescreen():
                     quoting=csv.QUOTE_ALL, na_rep='NA',
                 )
     except KeyboardInterrupt:
-        print()
-        print()
-        print('stopping screen 1')
-        print()
+        print('\n\nstopping screen 1\n')
         pass
 
     # If records remain for pre-screening, ask whether to create a commit
@@ -278,14 +268,12 @@ def screen():
                         quoting=csv.QUOTE_ALL, na_rep='NA',
                     )
             except IndexError:
+                MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
                 print('Index error/citation_key not found in ' +
                       f'{MAIN_REFERENCES}: {row["citation_key"]}')
                 pass
     except KeyboardInterrupt:
-        print()
-        print()
-        print('stopping screen 1')
-        print()
+        print('\n\nstopping screen 1\n')
         pass
 
     # If records remain for screening, ask whether to create a commit
@@ -294,8 +282,6 @@ def screen():
             screen_commit(r)
     else:
         screen_commit(r)
-
-    return
 
     return
 

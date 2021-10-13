@@ -7,15 +7,10 @@ import pandas as pd
 from review_template import repo_setup
 from review_template import utils
 
-SCREEN = repo_setup.paths['SCREEN']
-DATA = repo_setup.paths['SCREEN']
-
 
 def main():
-    print('')
-    print('')
-    print('Sample profile')
-    print('')
+
+    print('\n\nSample profile\n')
 
     bib_database = utils.load_references_bib(
         modification_check=False,
@@ -45,7 +40,9 @@ def main():
                              'doi',
                              ]]
 
+    SCREEN = repo_setup.paths['SCREEN']
     screen = pd.read_csv(SCREEN, dtype=str)
+    DATA = repo_setup.paths['SCREEN']
     data = pd.read_csv(DATA, dtype=str)
 
     observations = \
@@ -66,6 +63,8 @@ def main():
                                fill_value=0,
                                margins=True)
     tabulated.to_csv('output/journals_years.csv')
+
+    return
 
 
 if __name__ == '__main__':

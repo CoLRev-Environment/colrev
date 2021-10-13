@@ -14,8 +14,6 @@ from review_template import utils
 
 
 DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-SCREEN = repo_setup.paths['SCREEN']
 
 # Note: BATCH_SIZE can be as small as 1.
 # Records should not be propagated/screened when the batch
@@ -96,7 +94,6 @@ def processing_condition(entry):
 
 
 def set_citation_keys(db):
-
     citation_key_list = [entry['ID'] for entry in db.entries]
     for entry in db.entries:
         if 'imported' == entry['status']:
@@ -105,7 +102,6 @@ def set_citation_keys(db):
                 entry_in_bib_db=True,
                 raise_error=False))
             citation_key_list.append(entry['ID'])
-
     return db
 
 

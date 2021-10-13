@@ -7,10 +7,10 @@ import git
 from review_template import repo_setup
 from review_template import utils
 
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
 
 def manual_preparation_commit(r):
+
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
     r.index.add([MAIN_REFERENCES])
 
@@ -22,6 +22,8 @@ def manual_preparation_commit(r):
         '\n - Using man_prep.py' +
         '\n - ' + utils.get_package_details(),
         author=git.Actor('manual:prepare', ''),
+        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                            repo_setup.config['EMAIL']),
         skip_hooks=hook_skipping
     )
     print(f'Created commit: Prepare manual {MAIN_REFERENCES}')

@@ -72,10 +72,7 @@ def process_backward_search(citation_key):
         ],
     )
     search_details = pd.concat([search_details, new_record])
-    search_details.to_csv(
-        SEARCH_DETAILS,
-        index=False, quoting=csv.QUOTE_ALL,
-    )
+    search_details.to_csv(SEARCH_DETAILS, index=False, quoting=csv.QUOTE_ALL)
 
     return bib_filename
 

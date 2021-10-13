@@ -9,12 +9,10 @@ import requests
 
 
 def retrieve_template_file(template_file, target):
-
     filedata = pkgutil.get_data(__name__, template_file)
     filedata = filedata.decode('utf-8')
     with open(target, 'w') as file:
         file.write(filedata)
-
     return
 
 
@@ -34,7 +32,6 @@ def inplace_change(filename, old_string, new_string):
 
 
 def get_value(msg, options):
-
     valid_response = False
     user_input = ''
     while not valid_response:
@@ -42,7 +39,6 @@ def get_value(msg, options):
         user_input = input()
         if user_input in options:
             valid_response = True
-
     return user_input
 
 
@@ -50,16 +46,12 @@ def init_new_repo():
 
     r = git.Repo.init()
 
-    print('')
-    print('')
-
-    print('Initialize review repository')
+    print('\n\nInitialize review repository')
     project_title = input('Project title: ')
 
     ggit_conf_path = os.path.normpath(os.path.expanduser('~/.gitconfig'))
     if os.path.exists(ggit_conf_path):
-        glob_git_conf = \
-            git.GitConfigParser([ggit_conf_path], read_only=True)
+        glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
         committer_name = glob_git_conf.get('user', 'name')
         committer_email = glob_git_conf.get('user', 'email')
         # TODO: test whether user and email are set in the global config
@@ -76,24 +68,19 @@ def init_new_repo():
     DATA_FORMAT = get_value('Select data structure',
                             ['NONE', 'TABLE', 'PAGE',
                              'SHEETs', 'MACODING'])
-    SHARE_STAT_REQ = \
-        get_value('Select share status requirement',
-                  ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
+    SHARE_STAT_REQ = get_value('Select share status requirement',
+                               ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
     PDF_HANDLING = get_value('Select pdf handling', ['EXT', 'GIT'])
     print()
 
     os.mkdir('search')
 
-    retrieve_template_file(
-        '../template/readme.md',
-        'readme.md',
-    )
+    retrieve_template_file('../template/readme.md', 'readme.md')
     retrieve_template_file(
         '../template/.pre-commit-config.yaml',
         '.pre-commit-config.yaml',
     )
-    retrieve_template_file('../template/.gitattributes',
-                           '.gitattributes')
+    retrieve_template_file('../template/.gitattributes', '.gitattributes')
 
     inplace_change('readme.md', '{{project_title}}', project_title)
 
@@ -181,7 +168,6 @@ def init_new_repo():
 
 
 def clone_shared_repo():
-
     print('Connecting to a shared repository ...')
     print('To initiate a new project, cancel (ctrl+c) and use '
           'review_template init in an empty directory')
@@ -198,12 +184,10 @@ def clone_shared_repo():
               'git remote add origin https://github.com/user/repo\n'
               'git push origin main')
         pass
-
     return r
 
 
 def initialize_repo():
-
     if 0 != len(os.listdir(os.getcwd())):
         r = clone_shared_repo()
     else:
@@ -215,7 +199,6 @@ def initialize_repo():
 
 
 def get_repo():
-
     try:
         r = git.Repo()
         # TODO: further checks?
@@ -225,7 +208,6 @@ def get_repo():
         pass
 
     r = initialize_repo()
-
     return r
 
 

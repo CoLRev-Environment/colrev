@@ -15,9 +15,6 @@ from review_template import repo_setup
 from review_template import utils
 
 
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
-
 def load_entries(bib_file):
 
     with open(bib_file) as bibtex_file:
@@ -43,7 +40,7 @@ def get_search_entries():
 def validate_preparation_changes(bib_database, search_entries):
 
     print('Calculating preparation differences...')
-    change_difference = []
+    change_diff = []
     for entry in bib_database.entries:
         if 'changed_in_target_commit' not in entry:
             continue
@@ -54,31 +51,27 @@ def validate_preparation_changes(bib_database, search_entries):
             prior_entries = [x for x in search_entries
                              if cur_entry_link in x['entry_link'].split(',')]
             for prior_entry in prior_entries:
-                similarity = \
-                    dedupe.get_entry_similarity(entry, prior_entry)
-                change_difference.append(
-                    [entry['ID'], cur_entry_link, similarity])
+                similarity = dedupe.get_entry_similarity(entry, prior_entry)
+                change_diff.append([entry['ID'], cur_entry_link, similarity])
 
-    change_difference = [[x, y, z] for [x, y, z] in change_difference if z < 1]
+    change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
     # sort according to similarity
-    change_difference.sort(key=lambda x: x[2])
+    change_diff.sort(key=lambda x: x[2])
 
-    if 0 == len(change_difference):
+    if 0 == len(change_diff):
         print('No substantial differences found.')
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    for eid, entry_link, similarity in change_difference:
+    for eid, entry_link, similarity in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
         print('Entry with ID: ' + eid)
 
         print('Difference: ' + str(round(1-similarity, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries
-                   if entry_link == x['entry_link']]
+        entry_1 = [x for x in search_entries if entry_link == x['entry_link']]
         pp.pprint(entry_1[0])
-        entry_2 = [x for x in bib_database.entries
-                   if eid == x['ID']]
+        entry_2 = [x for x in bib_database.entries if eid == x['ID']]
         pp.pprint(entry_2[0])
 
         print('\n\n')
@@ -97,7 +90,7 @@ def validate_merging_changes(bib_database, search_entries):
 
     os.system('cls' if os.name == 'nt' else 'clear')
     print('Calculating differences between merged records...')
-    change_difference = []
+    change_diff = []
     merged_entries = False
     for entry in bib_database.entries:
         if 'changed_in_target_commit' not in entry:
@@ -106,8 +99,7 @@ def validate_merging_changes(bib_database, search_entries):
         if ';' in entry['entry_link']:
             merged_entries = True
             els = entry['entry_link'].split(';')
-            duplicate_el_pairs = \
-                list(itertools.combinations(els, 2))
+            duplicate_el_pairs = list(itertools.combinations(els, 2))
             for el_1, el_2 in duplicate_el_pairs:
                 entry_1 = [x for x in search_entries
                            if el_1 == x['entry_link']]
@@ -116,15 +108,14 @@ def validate_merging_changes(bib_database, search_entries):
 
                 similarity = \
                     dedupe.get_entry_similarity(entry_1[0], entry_2[0])
-                change_difference.append([el_1, el_2, similarity])
+                change_diff.append([el_1, el_2, similarity])
 
-    change_difference = [[x, y, z]
-                         for [x, y, z] in change_difference if z < 1]
+    change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
 
     # sort according to similarity
-    change_difference.sort(key=lambda x: x[2])
+    change_diff.sort(key=lambda x: x[2])
 
-    if 0 == len(change_difference):
+    if 0 == len(change_diff):
         if merged_entries:
             print('No substantial differences found.')
         else:
@@ -132,17 +123,15 @@ def validate_merging_changes(bib_database, search_entries):
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    for el_1, el_2, similarity in change_difference:
+    for el_1, el_2, similarity in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        print('Differences between merged entries: ' +
-              str(round(1-similarity, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries
-                   if el_1 == x['entry_link']]
+        print('Differences between merged entries:' +
+              f' {round(1-similarity, 4)}\n\n')
+        entry_1 = [x for x in search_entries if el_1 == x['entry_link']]
         pp.pprint(entry_1[0])
-        entry_2 = [x for x in search_entries
-                   if el_2 == x['entry_link']]
+        entry_2 = [x for x in search_entries if el_2 == x['entry_link']]
         pp.pprint(entry_2[0])
 
         if 'n' == input('continue (y/n)?'):
@@ -165,6 +154,8 @@ def load_bib_database(target_commit):
     else:
         print('Loading data from history...')
         repo = git.Repo()
+
+        MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
         revlist = (
             (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
@@ -206,6 +197,8 @@ def main(scope, target_commit):
 
     if 'merge' == scope or 'all' == scope:
         validate_merging_changes(bib_database, search_entries)
+
+    return
 
 
 if __name__ == '__main__':
