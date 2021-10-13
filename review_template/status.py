@@ -8,7 +8,7 @@ import yaml
 
 from review_template import repo_setup
 
-local_hooks_version, repo, status_freq, cur_stati = None, None, None, None
+repo, status_freq, cur_stati = None, None, None
 SHARE_STAT_REQ, MAIN_REFERENCES, SCREEN, DATA = None, None, None, None
 
 
@@ -218,7 +218,6 @@ def get_remote_commit_differences(repo):
 
 
 def repository_validation():
-    global local_hooks_version
     global repo
 
     required_paths = ['search', 'private_config.ini',
@@ -248,6 +247,25 @@ def repository_validation():
               '\n See '
               'https://github.com/geritwagner/pipeline-validation-hooks'
               '#using-the-pre-commit-hook for details')
+        sys.exit()
+
+    try:
+        remote_pv_hooks_repo = \
+            'https://github.com/geritwagner/pipeline-validation-hooks'
+        refs = lsremote(remote_pv_hooks_repo)
+        remote_sha = refs['HEAD']
+
+        if not remote_sha == local_hooks_version:
+            print('  pipeline-validation-hooks version outdated.\n  use ',
+                  f'{colors.RED}pre-commit autoupdate{colors.END}')
+            sys.exit()
+            # once we use tags, we may consider recommending
+            # pre-commit autoupdate --bleeding-edge
+    except git.exc.GitCommandError:
+        print('  Warning: No Internet connection, cannot check remote '
+              'pipeline-validation-hooks repository for updates.')
+        pass
+
     return
 
 
@@ -478,21 +496,6 @@ def collaboration_instructions():
     global cur_stati
 
     print('\n\nCollaboration and sharing (git)\n\n')
-    try:
-        remote_pv_hooks_repo = \
-            'https://github.com/geritwagner/pipeline-validation-hooks'
-        refs = lsremote(remote_pv_hooks_repo)
-        remote_sha = refs['HEAD']
-
-        if not remote_sha == local_hooks_version:
-            print('  pipeline-validation-hooks version outdated.\n  use ',
-                  f'{colors.RED}pre-commit autoupdate{colors.END}')
-            # once we use tags, we may consider recommending
-            # pre-commit autoupdate --bleeding-edge
-    except git.exc.GitCommandError:
-        print('  Warning: No Internet connection, cannot check remote '
-              'pipeline-validation-hooks repository for updates.')
-        pass
 
     nr_commits_behind, nr_commits_ahead = \
         get_remote_commit_differences(repo)
