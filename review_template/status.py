@@ -7,6 +7,7 @@ import pandas as pd
 import yaml
 
 from review_template import repo_setup
+from review_template import utils
 
 repo, status_freq, cur_stati = None, None, None
 SHARE_STAT_REQ, MAIN_REFERENCES, SCREEN, DATA = None, None, None, None
@@ -219,6 +220,8 @@ def get_remote_commit_differences(repo):
 
 def repository_validation():
     global repo
+    # TODO: check: is a git repository?
+    repo = git.Repo('')
 
     required_paths = ['search', 'private_config.ini',
                       'shared_config.ini', '.pre-commit-config.yaml',
@@ -238,10 +241,10 @@ def repository_validation():
     installed_hooks = []
     remote_pv_hooks_repo = \
         'https://github.com/geritwagner/pipeline-validation-hooks'
-    for repo in pre_commit_config['repos']:
-        if repo['repo'] == remote_pv_hooks_repo:
-            local_hooks_version = repo['rev']
-            installed_hooks = [hook['id'] for hook in repo['hooks']]
+    for repository in pre_commit_config['repos']:
+        if repository['repo'] == remote_pv_hooks_repo:
+            local_hooks_version = repository['rev']
+            installed_hooks = [hook['id'] for hook in repository['hooks']]
     if not installed_hooks == ['consistency-checks', 'formatting']:
         print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
               '\n See '
@@ -256,11 +259,26 @@ def repository_validation():
         remote_sha = refs['HEAD']
 
         if not remote_sha == local_hooks_version:
-            print('  pipeline-validation-hooks version outdated.\n  use ',
-                  f'{colors.RED}pre-commit autoupdate{colors.END}')
-            sys.exit()
-            # once we use tags, we may consider recommending
-            # pre-commit autoupdate --bleeding-edge
+            # Default: automatically update hooks
+            print('Updating pre-commit hooks...')
+            os.system('pre-commit autoupdate')
+
+            print('Commit updated pre-commit hooks')
+            repo.index.add(['.pre-commit-config.yaml'])
+            flag, flag_details = utils.get_version_flags()
+            repo.index.commit(
+                'Update pre-commit-config' + flag + flag_details +
+                '\n - ' + utils.get_package_details(),
+                author=git.Actor('script:' + os.path.basename(__file__), ''),
+                committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                    repo_setup.config['EMAIL']),
+            )
+        # we could offer a parameter to disable autoupdates (warn accordingly)
+        #     print('  pipeline-validation-hooks version outdated.\n  use ',
+        #           f'{colors.RED}pre-commit autoupdate{colors.END}')
+        #     sys.exit()
+        #     # once we use tags, we may consider recommending
+        #     # pre-commit autoupdate --bleeding-edge
     except git.exc.GitCommandError:
         print('  Warning: No Internet connection, cannot check remote '
               'pipeline-validation-hooks repository for updates.')
@@ -280,8 +298,6 @@ def repository_load():
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
     SCREEN = repo_setup.paths['SCREEN']
     DATA = repo_setup.paths['DATA']
-
-    repo = git.Repo('')
 
     # TODO: check whether it is a valid git repo
 
@@ -574,7 +590,6 @@ def collaboration_instructions():
 
 
 def main():
-    global repo
 
     repository_validation()
     repository_load()
