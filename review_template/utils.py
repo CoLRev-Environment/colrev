@@ -147,9 +147,11 @@ def generate_citation_key(entry, bib_database=None,
                                   for entry in bib_database.entries]
     else:
         citation_key_blacklist = None
-    return (generate_citation_key_blacklist(entry, citation_key_blacklist,
-                                            entry_in_bib_db,
-                                            raise_error))
+    citation_key = generate_citation_key_blacklist(entry,
+                                                   citation_key_blacklist,
+                                                   entry_in_bib_db,
+                                                   raise_error)
+    return citation_key
 
 
 def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
@@ -210,7 +212,6 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         letters = iter(ascii_lowercase)
         while temp_citation_key in other_ids:
             try:
-
                 next_letter = next(letters)
                 if next_letter == 'a':
                     temp_citation_key = temp_citation_key + next_letter
@@ -394,11 +395,7 @@ def load_references_bib(modification_check=True, initialize=False):
 
 
 def git_modification_check(filename):
-
     repo = Repo()
-    # hcommit = repo.head.commit
-    # if MAIN_REFERENCES in [entry.a_path for entry in hcommit.diff(None)]:
-    # print('commit changes in MAIN_REFERENCES before executing script?')
     index = repo.index
     if filename in [entry.a_path for entry in index.diff(None)]:
         print(
@@ -410,7 +407,6 @@ def git_modification_check(filename):
         )
         if 'y' != input('override changes (y/n)?'):
             sys.exit()
-
     return
 
 
@@ -423,9 +419,9 @@ def get_bib_files():
 
 
 def get_search_files():
-
     supported_extensions = ['ris', 'bib', 'end',
-                            'txt', 'csv', 'txt', 'xlsx', 'pdf']
+                            'txt', 'csv', 'txt',
+                            'xlsx', 'pdf']
     files = []
     search_dir = os.path.join(os.getcwd(), 'search/')
     files = [os.path.join(search_dir, x)
@@ -566,10 +562,7 @@ def build_docker_images():
         print('Building bibutils Docker image...')
         filedata = pkgutil.get_data(__name__, '../docker/bibutils/Dockerfile')
         fileobj = io.BytesIO(filedata)
-        client.images.build(
-            fileobj=fileobj,
-            tag='bibutils:latest',
-        )
+        client.images.build(fileobj=fileobj, tag='bibutils:latest')
     if 'lfoppiano/grobid' not in repo_tags:
         print('Pulling grobid Docker image...')
         client.images.pull('lfoppiano/grobid:0.7.0')

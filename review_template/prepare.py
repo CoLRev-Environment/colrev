@@ -18,7 +18,6 @@ from nameparser import HumanName
 from review_template import repo_setup
 from review_template import utils
 
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 EMPTY_RESULT = {
     'crossref_title': '',
@@ -70,8 +69,7 @@ def crossref_query(entry):
                     entry['journal'].lower(),
                 )
                 weights = [0.6, 0.4]
-                similarities = [title_similarity,
-                                container_similarity]
+                similarities = [title_similarity, container_similarity]
 
                 similarity = sum(similarities[g] * weights[g]
                                  for g in range(len(similarities)))
@@ -538,6 +536,8 @@ def prepare(entry):
 
 def create_commit(r, bib_database):
 
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
@@ -561,7 +561,6 @@ def create_commit(r, bib_database):
                                 repo_setup.config['EMAIL']),
         )
 
-        # print('Created commit: Prepare ' + MAIN_REFERENCES)
         return True
     else:
         print('- No additional prepared entries available')

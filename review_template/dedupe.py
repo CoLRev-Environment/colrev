@@ -32,8 +32,8 @@ def format_authors_string(authors):
     # also remove all special characters and do not include separators (and)
     for author in authors.split(' and '):
         if ',' in author:
-            last_names = [word[0] for word in author.split(
-                ',')[1].split(' ') if len(word) > 0]
+            last_names = [word[0] for word in author.split(',')[1].split(' ')
+                          if len(word) > 0]
             authors_string = authors_string + \
                 author.split(',')[0] + ' ' + ' '.join(last_names) + ' '
         else:
@@ -174,8 +174,8 @@ def prep_references(references):
     if 'author' not in references:
         references['author'] = 'nan'
     else:
-        references['author'] = references['author']\
-            .apply(lambda x: format_authors_string(x))
+        references['author'] = \
+            references['author'].apply(lambda x: format_authors_string(x))
     if 'title' not in references:
         references['title'] = 'nan'
     else:
@@ -226,8 +226,7 @@ def calculate_similarities_entry(references):
     sim_col = references.columns.get_loc('similarity')
     for base_entry_i in range(1, references.shape[0]):
         references.iloc[base_entry_i, sim_col] = \
-            get_similarity(references.iloc[base_entry_i],
-                           references.iloc[0])
+            get_similarity(references.iloc[base_entry_i], references.iloc[0])
     # Note: return all other entries (not the comparison entry/first row)
     # and restrict it to the ID and similarity
     ck_col = references.columns.get_loc('ID')
@@ -269,8 +268,8 @@ def append_merges(entry):
         fd.write(entry['entry_link'] + '\n')
     queue_order = pd.read_csv('queue_order.csv', header=None)
     queue_order = queue_order[queue_order.columns[0]].tolist()
-    required_prior_entry_links = get_prev_queue(
-        queue_order, entry['entry_link'])
+    required_prior_entry_links = \
+        get_prev_queue(queue_order, entry['entry_link'])
 
     entry_links_in_prepared_file = []
     # note: no need to wait for completion of preparation
@@ -355,8 +354,9 @@ def append_merges(entry):
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             # to ensure a consistent order
             entry_a, entry_b = sorted([citation_key, entry['ID']])
-            fd.write('"' + entry_a + '","' +
-                     entry_b + '","' + str(max_similarity) + '"\n')
+            line = '"' + entry_a + '","' + entry_b + '","' + \
+                str(max_similarity) + '"\n'
+            fd.write(line)
     if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
@@ -401,8 +401,8 @@ def apply_merges(bib_database):
                         break
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        els = list(set(el_to_merge +
-                                       entry['entry_link'].split(';')))
+                        els = el_to_merge + entry['entry_link'].split(';')
+                        els = list(set(els))
                         entry.update(entry_link=str(';'.join(els)))
                         if 'prepared' == entry['status']:
                             entry.update(status='processed')

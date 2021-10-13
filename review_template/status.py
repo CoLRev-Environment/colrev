@@ -123,14 +123,12 @@ def get_status_freq():
         pre_screen_total = screen.shape[0]
         pre_screen_included = screen[screen['inclusion_1'] == 'yes'].shape[0]
         pre_screen_excluded = screen[screen['inclusion_1'] == 'no'].shape[0]
-        nr_to_pre_screen = pre_screen_total - pre_screen_included - \
-            pre_screen_excluded
+        nr_to_pre_screen = \
+            pre_screen_total - pre_screen_included - pre_screen_excluded
         # screen[screen['inclusion_1'] == 'TODO'].shape[0]
-        pdfs_to_retrieve = pre_screen_total - pre_screen_excluded - \
-            pdf_available
-        screen.drop(
-            screen[screen['inclusion_1'] == 'no'].index, inplace=True,
-        )
+        pdfs_to_retrieve = \
+            pre_screen_total - pre_screen_excluded - pdf_available
+        screen.drop(screen[screen['inclusion_1'] == 'no'].index, inplace=True)
         screen_total = screen.shape[0]
         screen_included = screen[screen['inclusion_2'] == 'yes'].shape[0]
         screen_excluded = screen[screen['inclusion_2'] == 'no'].shape[0]
@@ -147,8 +145,8 @@ def get_status_freq():
         if os.path.exists(DATA):
             data = pd.read_csv(DATA, dtype=str)
             data_total = data.shape[0]
-            nr_to_data = screen[screen['inclusion_2'] == 'yes'].shape[0] - \
-                data.shape[0]
+            nr_to_data = \
+                screen[screen['inclusion_2'] == 'yes'].shape[0] - data.shape[0]
         else:
             nr_to_data = screen[screen['inclusion_2'] == 'yes'].shape[0]
 
@@ -194,8 +192,9 @@ def get_status():
                                              .replace(',', '')
                                              .lstrip().rstrip())
             line = f.readline()
+        status_of_records = list(set(status_of_records))
 
-    return list(set(status_of_records))
+    return status_of_records
 
 
 def get_remote_commit_differences(repo):
@@ -218,9 +217,21 @@ def get_remote_commit_differences(repo):
     return nr_commits_behind, nr_commits_ahead
 
 
+def is_git_repo(path):
+    try:
+        _ = git.Repo(path).git_dir
+        return True
+    except git.exc.InvalidGitRepositoryError:
+        return False
+
+
 def repository_validation():
     global repo
-    # TODO: check: is a git repository?
+    if not is_git_repo(os.getcwd()):
+        print('No git repository. Use '
+              f'{colors.GREEN}review_template init{colors.END}')
+        sys.exit()
+
     repo = git.Repo('')
 
     required_paths = ['search', 'private_config.ini',
@@ -235,9 +246,8 @@ def repository_validation():
               'in an empty directory.\nExit.')
         sys.exit()
 
-    with open('.pre-commit-config.yaml') as pre_commit_config_yaml:
-        pre_commit_config = \
-            yaml.load(pre_commit_config_yaml, Loader=yaml.FullLoader)
+    with open('.pre-commit-config.yaml') as pre_commit_y:
+        pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
     installed_hooks = []
     remote_pv_hooks_repo = \
         'https://github.com/geritwagner/pipeline-validation-hooks'
@@ -253,8 +263,6 @@ def repository_validation():
         sys.exit()
 
     try:
-        remote_pv_hooks_repo = \
-            'https://github.com/geritwagner/pipeline-validation-hooks'
         refs = lsremote(remote_pv_hooks_repo)
         remote_sha = refs['HEAD']
 
@@ -313,12 +321,16 @@ def repository_load():
 
 def review_status():
     global status_freq
+
     print('\nStatus\n')
+
     if not os.path.exists(MAIN_REFERENCES):
         print(' | Search')
         print(' |  - Not yet initiated')
     else:
         status_freq = get_status_freq()
+        # TODO: set all status_freq to str() to avoid frequent str() calls
+        # for the Instructions, parse all to int
         # Search
 
         # Note:
@@ -513,8 +525,7 @@ def collaboration_instructions():
 
     print('\n\nCollaboration and sharing (git)\n\n')
 
-    nr_commits_behind, nr_commits_ahead = \
-        get_remote_commit_differences(repo)
+    nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
 
     if nr_commits_behind == -1 and nr_commits_ahead == -1:
         print('  Not connected to a shared repository '
@@ -596,6 +607,8 @@ def main():
     review_status()
     review_instructions()
     collaboration_instructions()
+
+    return
 
 
 if __name__ == '__main__':

@@ -12,8 +12,6 @@ from review_template import utils
 
 SCREEN = repo_setup.paths['SCREEN']
 DATA_FILE = repo_setup.paths['DATA']
-DATA_FORMAT = repo_setup.paths['DATA_FORMAT']
-
 
 nr_entries_added = 0
 nr_current_entries = 0
@@ -35,8 +33,7 @@ def generate_data_pages():
 
     screen = screen['citation_key'].tolist()
     if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)')
-        print()
+        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
         sys.exit()
 
     for record_id in screen:
@@ -47,8 +44,7 @@ def generate_data_pages():
             text_file.close()
             nr_entries_added += 1
 
-    print(f'{nr_entries_added} records created (coding/citation_key.md)')
-    print('')
+    print(f'{nr_entries_added} records created (coding/citation_key.md)\n')
 
     return
 
@@ -75,8 +71,7 @@ def generate_data_page():
 
     screen = screen['citation_key'].tolist()
     if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)')
-        print()
+        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
         sys.exit()
 
     DATA_PAGE = 'coding.md'
@@ -86,15 +81,13 @@ def generate_data_page():
         f.close()
 
     missing_records = get_data_page_missing(DATA_PAGE, screen)
-
     if 0 != len(missing_records):
         text_file = open(DATA_PAGE, 'a')
         text_file.write('\n# TODO\n\n- ' + '\n- '.join(missing_records))
         text_file.close()
         nr_entries_added = len(missing_records)
 
-    print(f'{nr_entries_added} records created (coding/citation_key.md)')
-    print('')
+    print(f'{nr_entries_added} records created (coding/citation_key.md)\n')
 
     return
 
@@ -103,12 +96,9 @@ def generate_data_csv(coding_dimensions):
     global nr_entries_added
 
     screen = pd.read_csv(SCREEN, dtype=str)
-
     screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
-
     if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)')
-        print()
+        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
         sys.exit()
 
     del screen['inclusion_1']
@@ -161,9 +151,8 @@ def generate_data_sheet():
 
     if not os.path.exists(DATA_FILE):
         print(f'Creating {DATA_FILE}')
-        coding_dimensions = input(
-            'Please provide a list of coding dimensions [dim1,dim2,...]: ',
-        )
+        coding_dimensions = \
+            input('Provide a list of coding dimensions [dim1,dim2,...]:')
 
         coding_dimensions = coding_dimensions.strip('[]')\
                                              .replace(' ', '_')\
@@ -188,8 +177,7 @@ def generate_data_sheet():
     file = open(DATA_FILE)
     reader = csv.reader(file)
     lines = len(list(reader))-1
-    print(f'{lines} records in {DATA_FILE}')
-    print('')
+    print(f'{lines} records in {DATA_FILE}\n')
 
     return
 
@@ -198,6 +186,7 @@ def main():
 
     r = git.Repo()
     utils.require_clean_repo(r)
+    DATA_FORMAT = repo_setup.paths['DATA_FORMAT']
 
     if 'NONE' == DATA_FORMAT:
         print('Data extraction format = NONE '

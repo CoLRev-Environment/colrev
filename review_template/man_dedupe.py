@@ -11,8 +11,6 @@ from dictdiffer import diff
 from review_template import repo_setup
 from review_template import utils
 
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
 removed_tuples = []
 
 
@@ -21,8 +19,7 @@ def get_combined_entry_link_list(entry_a, entry_b):
     els_entry_a = entry_a['entry_link'].split(';')
     els_entry_b = entry_b['entry_link'].split(';')
 
-    combined_el_list = set(els_entry_a
-                           + els_entry_b)
+    combined_el_list = set(els_entry_a + els_entry_b)
 
     return ';'.join(combined_el_list)
 
@@ -135,8 +132,8 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
 
     if 'y' == response:
         # Note: update status and remove the other entry
-        combined_el_list = get_combined_entry_link_list(
-            main_entry, duplicate_entry)
+        combined_el_list = \
+            get_combined_entry_link_list(main_entry, duplicate_entry)
         # Delete the other entry (entry_a_ID or entry_b_ID)
         main_entry.update(entry_link=combined_el_list)
 
@@ -281,7 +278,7 @@ def main():
                                    index=False,
                                    quoting=csv.QUOTE_ALL)
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
 
     # If there are remaining duplicates, ask whether to create a commit
     if not stat.split('/')[0] == stat.split('/')[1]:

@@ -33,8 +33,9 @@ def create_commit(r, bib_database):
             hook_skipping = 'true'
         r.index.commit(
             'Complete records for import',
-            author=git.Actor(
-                'manual (using man_comp.py)', ''),
+            author=git.Actor('manual (using man_comp.py)', ''),
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
             skip_hooks=hook_skipping
         )
 

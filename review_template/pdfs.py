@@ -12,11 +12,6 @@ from review_template import repo_setup
 from review_template import utils
 # from pdfminer.high_level import extract_text
 
-MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
-SCREEN = repo_setup.paths['SCREEN']
-
-
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
 pdfs_available = 0
@@ -90,6 +85,8 @@ def acquire_pdf(entry):
     global pdfs_available
     global missing_entries
 
+    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+
     print('TODO: check required status (join screening/needs pdf before)')
     # Note: this should replace the line
     # entry['ID'] in papers_to_acquire
@@ -151,6 +148,7 @@ def main():
         modification_check=True, initialize=False,
     )
 
+    SCREEN = repo_setup.paths['SCREEN']
     assert os.path.exists(SCREEN)
     screen = pd.read_csv(SCREEN, dtype=str)
 
@@ -180,7 +178,7 @@ def main():
         print(f' - {len(missing_entries.entries)} pdfs missing '
               '(see missing_pdf_files.csv)')
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
 
     # TODO: create commit
 

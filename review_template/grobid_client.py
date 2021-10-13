@@ -44,7 +44,9 @@ def start_grobid():
                          shell=True,
                          stdin=None,
                          stdout=open(os.devnull, 'wb'),
-                         stderr=None, close_fds=True)
+                         stderr=None,
+                         close_fds=True,
+                         )
         pass
 
     i = 0

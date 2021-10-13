@@ -11,6 +11,7 @@ from review_template import repo_setup
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 SCREEN = repo_setup.paths['SCREEN']
 DATA = repo_setup.paths['DATA']
@@ -22,15 +23,11 @@ def main(citation_key):
 
     repo = git.Repo()
 
-    # TODO: trace_hash and list individual search results
-
     revlist = repo.iter_commits()
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    prev_entry = []
-    prev_screen = ''
-    prev_data = ''
+    prev_entry, prev_screen, prev_data = [], '', ''
     for commit in reversed(list(revlist)):
         commit_message_first_line = commit.message.partition('\n')[0]
         print('\n\nCommit: ' +
@@ -74,6 +71,8 @@ def main(citation_key):
                     if line != prev_data:
                         print(f'Data: {line}')
                         prev_data = line
+
+    return
 
 
 if __name__ == '__main__':
