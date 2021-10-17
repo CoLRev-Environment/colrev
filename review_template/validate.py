@@ -8,6 +8,7 @@ from itertools import chain
 import bibtexparser
 import dictdiffer
 import git
+from bashplotlib.histogram import plot_hist
 from bibtexparser.customization import convert_to_unicode
 
 from review_template import dedupe
@@ -54,21 +55,24 @@ def validate_preparation_changes(bib_database, search_entries):
                 similarity = dedupe.get_entry_similarity(entry, prior_entry)
                 change_diff.append([entry['ID'], cur_entry_link, similarity])
 
-    change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
+    change_diff = [[e1, e2, 1-sim] for [e1, e2, sim] in change_diff if sim < 1]
     # sort according to similarity
-    change_diff.sort(key=lambda x: x[2])
+    change_diff.sort(key=lambda x: x[2], reverse=True)
 
     if 0 == len(change_diff):
         print('No substantial differences found.')
 
-    pp = pprint.PrettyPrinter(indent=4)
+    plot_hist([sim for [e1, e2, sim] in change_diff],
+              bincount=100, xlab=True, showSummary=True)
+    input('continue')
 
-    for eid, entry_link, similarity in change_diff:
+    pp = pprint.PrettyPrinter(indent=4)
+    for eid, entry_link, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
         print('Entry with ID: ' + eid)
 
-        print('Difference: ' + str(round(1-similarity, 4)) + '\n\n')
+        print('Difference: ' + str(round(difference, 4)) + '\n\n')
         entry_1 = [x for x in search_entries if entry_link == x['entry_link']]
         pp.pprint(entry_1[0])
         entry_2 = [x for x in bib_database.entries if eid == x['ID']]
@@ -110,10 +114,10 @@ def validate_merging_changes(bib_database, search_entries):
                     dedupe.get_entry_similarity(entry_1[0], entry_2[0])
                 change_diff.append([el_1, el_2, similarity])
 
-    change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
+    change_diff = [[e1, e2, 1-sim] for [e1, e2, sim] in change_diff if sim < 1]
 
     # sort according to similarity
-    change_diff.sort(key=lambda x: x[2])
+    change_diff.sort(key=lambda x: x[2], reverse=True)
 
     if 0 == len(change_diff):
         if merged_entries:
@@ -123,12 +127,12 @@ def validate_merging_changes(bib_database, search_entries):
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    for el_1, el_2, similarity in change_diff:
+    for el_1, el_2, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
 
         print('Differences between merged entries:' +
-              f' {round(1-similarity, 4)}\n\n')
+              f' {round(difference, 4)}\n\n')
         entry_1 = [x for x in search_entries if el_1 == x['entry_link']]
         pp.pprint(entry_1[0])
         entry_2 = [x for x in search_entries if el_2 == x['entry_link']]
