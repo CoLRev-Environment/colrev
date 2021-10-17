@@ -508,6 +508,101 @@ def apply_crowd_rules(entry):
     return entry
 
 
+def get_dblp_venue(venue_string):
+    venue = venue_string
+    api_url = 'https://dblp.org/search/venue/api?q='
+    url = api_url + venue_string.replace(' ', '+') + '&format=json'
+    request = Request(url)
+    request.add_header(
+        'User-Agent', 'prepare.py (mailto:' +
+        repo_setup.config['EMAIL'] + ')',
+    )
+    try:
+        ret = urlopen(request)
+        content = ret.read()
+        data = json.loads(content)
+        venue = data['result']['hits']['hit'][0]['info']['venue']
+        re.sub(r' \(.*?\)', '', venue)
+
+    except HTTPError as httpe:
+        return {'success': False, 'result': EMPTY_RESULT, 'exception': httpe}
+        pass
+
+    return venue
+
+
+def get_metadata_from_dblp(entry):
+
+    api_url = 'https://dblp.org/search/publ/api?q='
+    url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
+    # print(url)
+    request = Request(url)
+    request.add_header(
+        'User-Agent', 'prepare.py (mailto:' +
+        repo_setup.config['EMAIL'] + ')',
+    )
+    try:
+        ret = urlopen(request)
+        content = ret.read()
+        data = json.loads(content)
+        items = data['result']['hits']['hit']
+        item = items[0]['info']
+
+        author_string = ' and '.join([author['text']
+                                     for author in item['authors']['author']])
+        author_string = utils.format_author_field(author_string)
+
+        author_similarity = ratio(
+            dedupe.format_authors_string(author_string),
+            dedupe.format_authors_string(entry['author']),
+        )
+        title_similarity = ratio(
+            item['title'].lower(),
+            entry['title'].lower(),
+        )
+        # container_similarity = ratio(
+        #     item['venue'].lower(),
+        #     utils.get_container_title(entry).lower(),
+        # )
+        year_similarity = ratio(
+            item['year'],
+            entry['year'],
+        )
+        # print(f'author_similarity: {author_similarity}')
+        # print(f'title_similarity: {title_similarity}')
+        # print(f'container_similarity: {container_similarity}')
+        # print(f'year_similarity: {year_similarity}')
+
+        weights = [0.4, 0.3, 0.3]
+        similarities = [title_similarity, author_similarity, year_similarity]
+
+        similarity = sum(similarities[g] * weights[g]
+                         for g in range(len(similarities)))
+        # print(similarity)
+        if similarity > 0.99:
+            if 'Journal Articles' == item['type']:
+                entry['ENTRYTYPE'] = 'article'
+                entry['journal'] = get_dblp_venue(item['venue'])
+                entry['volume'] = item['volume']
+                entry['number'] = item['number']
+            if 'Conference and Workshop Papers' == item['type']:
+                entry['ENTRYTYPE'] = 'inproceedings'
+                entry['booktitle'] = get_dblp_venue(item['venue'])
+            if 'doi' in item:
+                entry['doi'] = item['doi']
+            entry['dblp_key'] = 'https://dblp.org/rec' + item['key']
+    except HTTPError as httpe:
+        return {'success': False, 'result': EMPTY_RESULT, 'exception': httpe}
+        pass
+    except KeyError:
+        pass
+    except UnicodeEncodeError:
+        print('  - UnicodeEncodeError - this needs to be fixed at some time')
+        pass
+
+    return entry
+
+
 def prepare(entry):
 
     if 'imported' != entry['status']:
@@ -525,6 +620,8 @@ def prepare(entry):
 
     if 'doi' not in entry:
         entry = get_doi_from_crossref(entry)
+    if 'doi' not in entry:
+        entry = get_metadata_from_dblp(entry)
     if 'doi' not in entry:
         entry = get_doi_from_links(entry)
 
