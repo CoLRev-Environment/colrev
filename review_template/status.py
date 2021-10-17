@@ -100,7 +100,7 @@ def get_status_freq():
 
     retrieved = get_nr_search()
     non_imported = retrieved - entry_links
-    overall_imported = entry_links - needs_manual_completion_entries
+    overall_imported = entry_links
     overall_prepared = prepared_entries + manual_merging_entries + \
         processed_entries + merged_entry_links
 
@@ -157,6 +157,7 @@ def get_status_freq():
              'needs_manual_preparation': manual_preparation_entries,
              'prepared': prepared_entries,
              'needs_manual_merging': manual_merging_entries,
+             'duplicates_removed': merged_entry_links,
              'overall_imported': overall_imported,
              'overall_prepared': overall_prepared,
              'overall_processed': processed_entries,
@@ -349,14 +350,14 @@ def review_status():
                   f'{str(status_freq["non_imported"]).rjust(6, " ")}' +
                   ' record(s) not yet imported.')
 
+        print(' |  - Records imported: ' +
+              f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
+
         if status_freq['needs_manual_completion'] > 0:
             nr_nmco = status_freq['needs_manual_completion']
             print(' |                               * ' +
                   f'{str(nr_nmco).rjust(6, " ")}' +
-                  ' record(s) need manual completion before import.')
-
-        print(' |  - Records imported: ' +
-              f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
+                  ' record(s) need manual completion.')
 
         if status_freq['needs_manual_preparation'] > 0:
             nr_nmcl = status_freq['needs_manual_preparation']
@@ -367,7 +368,8 @@ def review_status():
         print(' |  - Records prepared: ' +
               f'{str(status_freq["overall_prepared"]).rjust(6, " ")}')
 
-        if status_freq['prepared'] > 0:
+        if status_freq['prepared'] > 0 and \
+                (status_freq['prepared'] == status_freq['overall_imported']):
             print(' |                               * ' +
                   f'{str(status_freq["prepared"]).rjust(6, " ")}' +
                   ' record(s) need merging.')
@@ -378,8 +380,11 @@ def review_status():
                   ' record(s) need manual merging.')
 
         print(' |  - Records processed: ' +
-              f'{str(status_freq["overall_processed"]).rjust(5, " ")}')
-
+              f'{str(status_freq["overall_processed"]).rjust(5, " ")}' +
+              '   ->' +
+              f'{str(status_freq["duplicates_removed"]).rjust(6, " ")}' +
+              ' duplicates removed'
+              )
         print(' |')
 
         # Screen
@@ -461,6 +466,10 @@ def review_instructions():
         return
 
     cur_stati = get_status()
+
+    if status_freq['non_imported'] > 0:
+        print('  To import, use\n     review_template process')
+        return
 
     if status_freq['needs_manual_completion'] > 0:
         print('  To continue with manual completion or records, '
