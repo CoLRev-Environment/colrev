@@ -203,5 +203,13 @@ def trace(ctx, id):
     trace.main(id)
 
 
+@main.command(help_priority=17)
+@click.pass_context
+def paper(ctx):
+    """Build the paper from markdown"""
+    from review_template import paper
+    paper.main()
+
+
 if __name__ == '__main__':
     sys.exit(main())

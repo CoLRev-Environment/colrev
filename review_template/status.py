@@ -526,6 +526,8 @@ def review_instructions():
     #         'use\n     review_template process')
     print('\n  Nothing to do. To start another review cycle, add '
           'papers to search/ and use\n     review_template process')
+    if 'MANUSCRIPT' == repo_setup.config['DATA_FORMAT']:
+        print('\n  To build the paper use\n     review_template paper')
     return
 
 
