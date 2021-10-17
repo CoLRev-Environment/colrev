@@ -28,6 +28,7 @@ def main():
                                     references['booktitle'])
 
     references = references[['citation_key',
+                             'ENTRYTYPE',
                              'author',
                              'title',
                              'journal',
@@ -50,7 +51,9 @@ def main():
             screen[screen['inclusion_2'] == 'yes']['citation_key'].tolist()
         )]
 
-    print(observations[observations['outlet'].isnull()]['citation_key'])
+    missing_outlet = observations[observations['outlet'].isnull(
+    )]['citation_key'].tolist()
+    print(f'No outlet: {missing_outlet}')
 
     observations = pd.merge(observations, data, how='left', on='citation_key')
 
@@ -63,6 +66,14 @@ def main():
                                fill_value=0,
                                margins=True)
     tabulated.to_csv('output/journals_years.csv')
+
+    tabulated = pd.pivot_table(observations[['ENTRYTYPE', 'year']],
+                               index=['ENTRYTYPE'],
+                               columns=['year'],
+                               aggfunc=len,
+                               fill_value=0,
+                               margins=True)
+    tabulated.to_csv('output/ENTRYTYPES.csv')
 
     return
 
