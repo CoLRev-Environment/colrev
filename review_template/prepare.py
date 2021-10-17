@@ -15,6 +15,7 @@ import requests
 from Levenshtein import ratio
 from nameparser import HumanName
 
+from review_template import dedupe
 from review_template import repo_setup
 from review_template import utils
 
@@ -159,22 +160,32 @@ def get_doi_from_links(entry):
     if url != '':
         try:
             r = requests.get(url)
+            res = re.findall(doi_regex, r.text)
+            if res:
+                if len(res) == 1:
+                    ret_doi = res[0]
+                    entry['doi'] = ret_doi
+                else:
+                    counter = collections.Counter(res)
+                    ret_doi = counter.most_common(1)[0][0]
+                    entry['doi'] = ret_doi
+
+                # print('  - TODO: retrieve meta-data and valdiate, '
+                #       'especially if multiple dois matched')
+                doi_entry = {'doi': entry['doi'], 'ID': entry['ID']}
+                doi_entry = retrieve_doi_metadata(doi_entry)
+                if dedupe.get_entry_similarity(entry, doi_entry) < 0.95:
+                    del entry['doi']
+
+                print('  - Added doi from website: ' + entry['doi'])
+
         except requests.exceptions.ConnectionError:
             return entry
             pass
-        res = re.findall(doi_regex, r.text)
-        if res:
-            if len(res) == 1:
-                ret_doi = res[0]
-                entry['doi'] = ret_doi
-            else:
-                counter = collections.Counter(res)
-                ret_doi = counter.most_common(1)[0][0]
-                entry['doi'] = ret_doi
-            print('  - TODO: if multiple dois matche d, '
-                  'retrieve meta-data and valdiate')
-            print('  - Added doi from website: ' + entry['doi'])
-
+        except Exception as e:
+            print(e)
+            return entry
+            pass
     return entry
 
 
@@ -321,8 +332,8 @@ def retrieve_doi_metadata(entry):
         entry.update(status='imported')
         pass
     except json.decoder.JSONDecodeError:
-        print(f'  - WARNING: Doi retrieval error: {entry["ID"]} / '
-              f'{entry["doi"]}')
+        print(f'  - WARNING: Doi retrieval error: {entry.get("ID", "NO_ID")}'
+              f' / {entry["doi"]}')
         entry.update(status='imported')
         pass
     except TypeError:
@@ -383,6 +394,24 @@ def correct_entrytypes(entry):
             for conf_string in conf_strings
         ):
             entry.update(ENTRYTYPE='inproceedings')
+
+    if 'dissertation' in entry.get('fulltext', 'NA').lower() and \
+            entry['ENTRYTYPE'] != 'phdthesis':
+        prior_e_type = entry['ENTRYTYPE']
+        entry.update(ENTRYTYPE='phdthesis')
+        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
+              'because the fulltext link contains "dissertation"')
+        # TODO: if school is not set: using named entity recognition or
+        # following links: detect the school and set the field
+
+    if 'thesis' in entry.get('fulltext', 'NA').lower() and \
+            entry['ENTRYTYPE'] != 'phdthesis':
+        prior_e_type = entry['ENTRYTYPE']
+        entry.update(ENTRYTYPE='phdthesis')
+        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
+              'because the fulltext link contains "thesis"')
+        # TODO: if school is not set: using named entity recognition or
+        # following links: detect the school and set the field
 
     # TODO: create a warning if any conference strings (ecis, icis, ..)
     # as stored in CONFERENCE_ABBREVIATIONS is in an article/book

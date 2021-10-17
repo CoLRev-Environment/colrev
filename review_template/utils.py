@@ -4,7 +4,6 @@ import os
 import pkgutil
 import re
 import sys
-import time
 import unicodedata
 from importlib.metadata import version
 from pathlib import Path
@@ -17,7 +16,6 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
-from git import Repo
 from nameparser import HumanName
 
 import docker
@@ -273,6 +271,21 @@ def format_author_field(input_string):
     return author_string
 
 
+def get_container_title(entry):
+    container_title = 'NA'
+    if 'article' == entry['ENTRYTYPE']:
+        container_title = entry.get('journal', 'NA')
+    if 'inproceedings' == entry['ENTRYTYPE']:
+        container_title = entry.get('booktitle', 'NA')
+
+    if 'book' == entry['ENTRYTYPE']:
+        container_title = entry.get('title', 'NA')
+
+    if 'inbook' == entry['ENTRYTYPE']:
+        container_title = entry.get('booktitle', 'NA')
+    return container_title
+
+
 def unify_pages_field(input_string):
     # also in repo_setup.py - consider updating it separately
     if not isinstance(input_string, str):
@@ -395,7 +408,7 @@ def load_references_bib(modification_check=True, initialize=False):
 
 
 def git_modification_check(filename):
-    repo = Repo()
+    repo = git.Repo()
     index = repo.index
     if filename in [entry.a_path for entry in index.diff(None)]:
         print(
@@ -470,22 +483,8 @@ def save_bib_file(bib_database, target_file=None):
     writer.align_values = True
     bibtex_str = bibtexparser.dumps(bib_database, writer)
 
-    with open('temp.bib', 'w') as out:
-        out.write('% Encoding: UTF-8\n\n')
-        out.write(bibtex_str + '\n')
-
-    time_to_wait = 10
-    time_counter = 0
-    while not os.path.exists('temp.bib'):
-        time.sleep(0.1)
-        time_counter += 0.1
-        if time_counter > time_to_wait:
-            break
-
-    if os.path.exists(target_file):
-        os.remove(target_file)
-
-    os.rename('temp.bib', target_file)
+    with open(target_file, 'w') as out:
+        out.write(bibtex_str)
 
     return
 
