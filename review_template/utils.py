@@ -556,9 +556,6 @@ def build_docker_images():
                  for sublist in repo_tags for item in sublist]
 
     if 'bibutils' not in repo_tags:
-        # import docker.api.build
-        # docker.api.build.process_dockerfile =
-        #       lambda dockerfile, path: ('Dockerfile', dockerfile)
         print('Building bibutils Docker image...')
         filedata = pkgutil.get_data(__name__, '../docker/bibutils/Dockerfile')
         fileobj = io.BytesIO(filedata)
@@ -566,6 +563,9 @@ def build_docker_images():
     if 'lfoppiano/grobid' not in repo_tags:
         print('Pulling grobid Docker image...')
         client.images.pull('lfoppiano/grobid:0.7.0')
+    if 'pandoc/ubuntu-latex' not in repo_tags:
+        print('Pulling v image...')
+        client.images.pull('pandoc/ubuntu-latex:2.14')
 
     # jbarlow83/ocrmypdf
 

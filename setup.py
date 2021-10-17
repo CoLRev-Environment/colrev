@@ -58,6 +58,7 @@ entry_points = \
         'back_search=review_template.cli:back_search',
         'data=review_template.cli:data',
         'validate=review_template.cli:validate',
+        'paper=review_template.cli:paper',
         'profile=review_template.cli:profile',
         'trace=review_template.cli:trace',
     ]

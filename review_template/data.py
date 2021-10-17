@@ -81,6 +81,7 @@ def generate_data_page():
         f.close()
 
     missing_records = get_data_page_missing(DATA_PAGE, screen)
+    missing_records = sorted(missing_records)
     if 0 != len(missing_records):
         text_file = open(DATA_PAGE, 'a')
         text_file.write('\n# TODO\n\n- ' + '\n- '.join(missing_records))
@@ -182,11 +183,17 @@ def generate_data_sheet():
     return
 
 
+def generate_manuscript():
+    print('TODO: add header and #References')
+    generate_data_page()
+    return
+
+
 def main():
 
     r = git.Repo()
     utils.require_clean_repo(r)
-    DATA_FORMAT = repo_setup.paths['DATA_FORMAT']
+    DATA_FORMAT = repo_setup.config['DATA_FORMAT']
 
     if 'NONE' == DATA_FORMAT:
         print('Data extraction format = NONE '
@@ -200,6 +207,8 @@ def main():
     if 'MA_VARIABLES_CSV' == DATA_FORMAT:
         print('Not yet implemented: '
               'structured data extraction for meta-analysis')
+    if 'MANUSCRIPT' == DATA_FORMAT:
+        generate_manuscript()
 
 
 if __name__ == '__main__':
