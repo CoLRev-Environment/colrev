@@ -43,6 +43,8 @@ def format_authors_string(authors):
 
 
 def get_entry_similarity(entry_a, entry_b):
+    if 'title' not in entry_a:
+        entry_a['title'] = ''
     if 'author' not in entry_a:
         entry_a['author'] = ''
     if 'year' not in entry_a:
@@ -57,6 +59,8 @@ def get_entry_similarity(entry_a, entry_b):
         entry_a['pages'] = ''
     if 'booktitle' not in entry_a:
         entry_a['booktitle'] = ''
+    if 'title' not in entry_b:
+        entry_b['title'] = ''
     if 'author' not in entry_b:
         entry_b['author'] = ''
     if 'year' not in entry_b:
