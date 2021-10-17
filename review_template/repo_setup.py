@@ -7,6 +7,7 @@ import os
 # means that the files are in the specified places. This is particularly
 # important for gathering crowd-sourced data across review repositories.
 
+repo_version_fallback = 'v_0.1'
 
 if os.path.exists('shared_config.ini') and \
         os.path.exists('private_config.ini'):
@@ -14,22 +15,28 @@ if os.path.exists('shared_config.ini') and \
     local_config.read(['shared_config.ini', 'private_config.ini'])
 
     config = dict(
-        REPO_SETUP_VERSION=local_config['general']['REPO_SETUP_VERSION'],
+        REPO_SETUP_VERSION=local_config.get('general',
+                                            'REPO_SETUP_VERSION',
+                                            fallback=repo_version_fallback),
         DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
-            'general', 'DELAY_AUTOMATED_PROCESSING'),
+            'general', 'DELAY_AUTOMATED_PROCESSING', fallback=True),
         BATCH_SIZE=local_config.getint('general', 'BATCH_SIZE', fallback=500),
-        SHARE_STAT_REQ=local_config['general']['SHARE_STAT_REQ'],
+        SHARE_STAT_REQ=local_config.get(
+            'general', 'SHARE_STAT_REQ', fallback='PROCESSED'),
         CPUS=local_config.getint('general', 'CPUS', fallback=mp.cpu_count()-1),
         MERGING_NON_DUP_THRESHOLD=local_config.getfloat(
-            'general', 'MERGING_NON_DUP_THRESHOLD'),
+            'general', 'MERGING_NON_DUP_THRESHOLD', fallback=0.7),
         MERGING_DUP_THRESHOLD=local_config.getfloat(
-            'general', 'MERGING_DUP_THRESHOLD'),
+            'general', 'MERGING_DUP_THRESHOLD', fallback=0.95),
         EMAIL=local_config['general']['EMAIL'],
         GIT_ACTOR=local_config['general']['GIT_ACTOR'],
+        DEBUG_MODE=local_config.get('general', 'DEBUG_MODE', fallback=False),
+        DATA_FORMAT=local_config.get(
+            'general', 'DATA_FORMAT', fallback='CSV_TABLE')
     )
 
 else:
-    config = dict(REPO_SETUP_VERSION='v_0.1')
+    config = dict(REPO_SETUP_VERSION=repo_version_fallback)
 
 #############################################################################
 
