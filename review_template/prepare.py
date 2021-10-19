@@ -4,11 +4,7 @@ import json
 import re
 import sys
 import time
-from urllib.error import HTTPError
-from urllib.parse import quote_plus
-from urllib.parse import urlencode
-from urllib.request import Request
-from urllib.request import urlopen
+import urllib
 
 import git
 import requests
@@ -38,56 +34,145 @@ CR_JOURNAL_ABBREVIATIONS, \
     utils.retrieve_crowd_resources()
 
 
+fields_to_keep = [
+    'ID', 'ENTRYTYPE',
+    'author', 'year', 'title',
+    'journal', 'booktitle', 'series',
+    'volume', 'number', 'pages', 'doi',
+    'abstract', 'school',
+    'editor', 'book-group-author',
+    'book-author', 'keywords', 'file',
+    'status', 'fulltext', 'entry_link',
+    'dblp_key'
+]
+fields_to_drop = [
+    'type', 'url', 'organization',
+    'issn', 'isbn', 'note', 'issue',
+    'unique-id', 'month', 'researcherid-numbers',
+    'orcid-numbers', 'eissn', 'article-number',
+    'publisher', 'author_keywords', 'source',
+    'affiliation', 'document_type', 'art_number',
+    'address', 'language', 'doc-delivery-number',
+    'da', 'usage-count-last-180-days', 'usage-count-since-2013',
+    'doc-delivery-number', 'research-areas',
+    'web-of-science-categories', 'number-of-cited-references',
+    'times-cited', 'journal-iso', 'oa', 'keywords-plus',
+    'funding-text', 'funding-acknowledgement', 'day',
+    'related', 'bibsource', 'timestamp', 'biburl'
+]
+
+# Based on https://en.wikipedia.org/wiki/BibTeX
+entry_field_requirements = \
+    {'article': ['author', 'title', 'journal', 'year', 'volume', 'issue'],
+     'inproceedings': ['author', 'title', 'booktitle', 'year'],
+     'incollection': ['author', 'title', 'booktitle', 'publisher', 'year'],
+     'inbook': ['author', 'title', 'chapter', 'publisher', 'year'],
+     'book': ['author', 'title', 'publisher', 'year'],
+     'phdthesis': ['author', 'title', 'school', 'year'],
+     'masterthesis': ['author', 'title', 'school', 'year'],
+     'techreport': ['author', 'title', 'institution', 'year'],
+     'unpublished': ['title', 'author', 'year']}
+
+# book, inbook: author <- editor
+
+entry_field_inconsistencies = \
+    {'article': ['booktitle'],
+     'inproceedings': ['volume', 'issue', 'number', 'journal'],
+     'incollection': [],
+     'inbook': ['journal'],
+     'book': ['volume', 'issue', 'number', 'journal'],
+     'phdthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'masterthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'techreport': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'unpublished': ['volume', 'issue', 'number', 'journal', 'booktitle']}
+
+
+def drop_fields(entry):
+    for val in list(entry):
+        if(val not in fields_to_keep):
+            # drop all fields not in fields_to_keep
+            entry.pop(val)
+            # warn if fields are dropped that are not in fields_to_drop
+            if val not in fields_to_drop:
+                print(f'  dropped {val} field')
+    return entry
+
+
+def is_sufficiently_complete(entry):
+    sufficiently_complete = False
+
+    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
+        reqs = entry_field_requirements[entry['ENTRYTYPE']]
+        if all(x in entry for x in reqs):
+            sufficiently_complete = True
+    else:
+        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
+
+    return sufficiently_complete
+
+
+def has_inconsistent_fields(entry):
+    found_inconsistencies = False
+
+    if entry['ENTRYTYPE'] in entry_field_inconsistencies.keys():
+        incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
+        inconsistencies = [x for x in incons_fields if x in entry]
+        if inconsistencies:
+            print(f'  - inconsistency in {entry["ID"]}: {entry["ENTRYTYPE"]} '
+                  f'with {inconsistencies} field(s).')
+            found_inconsistencies = True
+    else:
+        print(f'  - No fields inconsistencies set for {entry["ENTRYTYPE"]}')
+
+    return found_inconsistencies
+
+
 def crossref_query(entry):
     # https://github.com/CrossRef/rest-api-doc
     api_url = 'https://api.crossref.org/works?'
     params = {'rows': '5', 'query.bibliographic': entry['title']}
-    url = api_url + urlencode(params, quote_via=quote_plus)
-    request = Request(url)
-    request.add_header(
-        'User-Agent', 'RecordPreparer (mailto:' +
-        repo_setup.config['EMAIL'] + ')',
-    )
-    try:
-        ret = urlopen(request)
-        content = ret.read()
-        data = json.loads(content)
-        items = data['message']['items']
-        most_similar = EMPTY_RESULT
-        for item in items:
-            if 'title' not in item:
-                continue
+    url = api_url + urllib.parse.urlencode(params)
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+    if ret.status_code != 200:
+        return
 
-            # TODO: author
-            try:
-                title_similarity = ratio(
-                    item['title'].pop().lower(),
-                    entry['title'].lower(),
-                )
-                # TODO: could also be a proceedings paper...
-                container_similarity = ratio(
-                    item['container-title'].pop().lower(),
-                    entry['journal'].lower(),
-                )
-                weights = [0.6, 0.4]
-                similarities = [title_similarity, container_similarity]
+    data = json.loads(ret.text)
+    items = data['message']['items']
+    most_similar = EMPTY_RESULT
+    for item in items:
+        if 'title' not in item:
+            continue
 
-                similarity = sum(similarities[g] * weights[g]
-                                 for g in range(len(similarities)))
+        # TODO: author
+        try:
+            title_similarity = ratio(
+                item['title'].pop().lower(),
+                entry['title'].lower(),
+            )
+            # TODO: could also be a proceedings paper...
+            container_similarity = ratio(
+                item['container-title'].pop().lower(),
+                entry['journal'].lower(),
+            )
+            weights = [0.6, 0.4]
+            similarities = [title_similarity, container_similarity]
 
-                result = {
-                    'similarity': similarity,
-                    'doi': item['DOI'],
-                }
-                if most_similar['similarity'] < result['similarity']:
-                    most_similar = result
-            except KeyError:
-                pass
-        return {'success': True, 'result': most_similar}
-    except HTTPError as httpe:
-        return {'success': False, 'result': EMPTY_RESULT, 'exception': httpe}
+            similarity = sum(similarities[g] * weights[g]
+                             for g in range(len(similarities)))
+
+            result = {
+                'similarity': similarity,
+                'doi': item['DOI'],
+            }
+            if most_similar['similarity'] < result['similarity']:
+                most_similar = result
+        except KeyError:
+            pass
+
     time.sleep(1)
-    return
+    return {'success': True, 'result': most_similar}
 
 
 def doi2json(doi):
@@ -174,7 +259,7 @@ def get_doi_from_links(entry):
                 #       'especially if multiple dois matched')
                 doi_entry = {'doi': entry['doi'], 'ID': entry['ID']}
                 doi_entry = retrieve_doi_metadata(doi_entry)
-                if dedupe.get_entry_similarity(entry, doi_entry) < 0.95:
+                if dedupe.get_entry_similarity(entry.copy(), doi_entry) < 0.95:
                     del entry['doi']
 
                 print('  - Added doi from website: ' + entry['doi'])
@@ -450,8 +535,6 @@ def correct_entrytypes(entry):
 
 def speculative_changes(entry):
 
-    entry = correct_entrytypes(entry)
-
     # Moved journal processing to importer
     # TODO: reinclude (as a function?)
 
@@ -512,21 +595,13 @@ def get_dblp_venue(venue_string):
     venue = venue_string
     api_url = 'https://dblp.org/search/venue/api?q='
     url = api_url + venue_string.replace(' ', '+') + '&format=json'
-    request = Request(url)
-    request.add_header(
-        'User-Agent', 'prepare.py (mailto:' +
-        repo_setup.config['EMAIL'] + ')',
-    )
-    try:
-        ret = urlopen(request)
-        content = ret.read()
-        data = json.loads(content)
-        venue = data['result']['hits']['hit'][0]['info']['venue']
-        re.sub(r' \(.*?\)', '', venue)
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
 
-    except HTTPError as httpe:
-        return {'success': False, 'result': EMPTY_RESULT, 'exception': httpe}
-        pass
+    data = json.loads(ret.text)
+    venue = data['result']['hits']['hit'][0]['info']['venue']
+    re.sub(r' \(.*?\)', '', venue)
 
     return venue
 
@@ -536,15 +611,13 @@ def get_metadata_from_dblp(entry):
     api_url = 'https://dblp.org/search/publ/api?q='
     url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
     # print(url)
-    request = Request(url)
-    request.add_header(
-        'User-Agent', 'prepare.py (mailto:' +
-        repo_setup.config['EMAIL'] + ')',
-    )
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+
     try:
-        ret = urlopen(request)
-        content = ret.read()
-        data = json.loads(content)
+
+        data = json.loads(ret.text)
         items = data['result']['hits']['hit']
         item = items[0]['info']
 
@@ -591,9 +664,6 @@ def get_metadata_from_dblp(entry):
             if 'doi' in item:
                 entry['doi'] = item['doi']
             entry['dblp_key'] = 'https://dblp.org/rec' + item['key']
-    except HTTPError as httpe:
-        return {'success': False, 'result': EMPTY_RESULT, 'exception': httpe}
-        pass
     except KeyError:
         pass
     except UnicodeEncodeError:
@@ -603,12 +673,32 @@ def get_metadata_from_dblp(entry):
     return entry
 
 
+def has_incomplete_fields(entry):
+
+    if entry.get('title', '').endswith('...') or \
+            entry.get('title', '').endswith('…') or \
+            entry.get('journal', '').endswith('...') or \
+            entry.get('journal', '').endswith('…') or \
+            entry.get('booktitle', '').endswith('...') or \
+            entry.get('booktitle', '').endswith('…') or \
+            entry.get('author', '').endswith('...') or \
+            entry.get('author', '').endswith('…'):
+        return True
+    return False
+
+
 def prepare(entry):
 
     if 'imported' != entry['status']:
         return entry
 
-    entry.update(status='prepared')
+    # fix type-mismatches
+    # e.g., conference paper with ENTRYTYPE=article
+    entry = correct_entrytypes(entry)
+
+    if 'issue' in entry and 'number' not in entry:
+        entry.update(number=entry['issue'])
+        del entry['issue']
 
     entry = homogenize_entry(entry)
 
@@ -627,34 +717,34 @@ def prepare(entry):
 
     entry = retrieve_doi_metadata(entry)
 
-    # Note: tbd. whether we regenerate the citation_key here...
-    # we have to make sure that there are no conflicts.
-    # entry = regenerate_citation_key(entry)
+    complete_based_on_doi = False
+    if 'doi' in entry:
+        # try completion based on doi
+        doi_metadata = retrieve_doi_metadata(entry.copy())
+        for key, value in doi_metadata.items():
+            if key not in entry.keys() and key in ['author',
+                                                   'year',
+                                                   'title',
+                                                   'journal',
+                                                   'booktitle',
+                                                   'number',
+                                                   'volume',
+                                                   'issue',
+                                                   'pages']:
+                entry[key] = value
+        complete_based_on_doi = True
 
-    if 'doi' in entry and 'title' in entry and \
-            'journal' in entry and 'year' in entry:
-        # in this case, it would be ok to have no author
+    if (is_sufficiently_complete(entry) or complete_based_on_doi) and \
+            not has_inconsistent_fields(entry):
+        # Note: the prepare.py will homogenize more cases because
+        # it runs speculative_changes(entry)
+        entry = drop_fields(entry)
         entry.update(status='prepared')
-    # TODO: the following if-statement is redundant (check!) because these
-    # missing fields should be provided before hash-ids are created!
-    if 'title' not in entry or \
-        'author' not in entry or \
-            'year' not in entry or \
-            not any(x in entry for x in
-                    ['journal', 'booktitle', 'school', 'book', 'series']):
+
+    else:
         entry.update(status='needs_manual_preparation')
-    if 'title' in entry and 'author' in entry and 'year' in entry and \
-            'book' == entry.get('ENTRYTYPE', ''):
-        entry.update(status='prepared')
 
-    if entry.get('title', '').endswith('...') or \
-            entry.get('title', '').endswith('…') or \
-            entry.get('journal', '').endswith('...') or \
-            entry.get('journal', '').endswith('…') or \
-            entry.get('booktitle', '').endswith('...') or \
-            entry.get('booktitle', '').endswith('…') or \
-            entry.get('author', '').endswith('...') or \
-            entry.get('author', '').endswith('…'):
+    if has_incomplete_fields(entry):
         entry.update(status='needs_manual_preparation')
 
     return entry

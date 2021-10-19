@@ -295,7 +295,6 @@ def append_merges(entry):
         return
 
     merge_ignore_status = ['needs_manual_preparation',
-                           'needs_manual_completion',
                            'needs_manual_merging']
 
     prior_entries = [x for x in bib_database.entries

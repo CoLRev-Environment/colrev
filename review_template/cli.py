@@ -76,14 +76,6 @@ def process(ctx):
     process.main()
 
 
-@main.command(help_priority=4)
-@click.pass_context
-def man_comp(ctx):
-    """Complete records manually"""
-    from review_template import man_comp
-    man_comp.main()
-
-
 @main.command(help_priority=5)
 @click.pass_context
 def man_prep(ctx):
