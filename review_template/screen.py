@@ -64,12 +64,9 @@ def pre_screen_commit(r):
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
-    flag, flag_details = utils.get_version_flags()
-
     r.index.commit(
-        'Pre-screening (manual)' + flag + flag_details +
-        '\n - Using pre_screen.py' +
-        '\n - ' + utils.get_package_details(),
+        'Pre-screening (manual)' + utils.get_version_flag() +
+        utils.get_commit_report(),
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
                          repo_setup.config['EMAIL']),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],
@@ -179,12 +176,9 @@ def screen_commit(r):
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
-    flag, flag_details = utils.get_version_flags()
-
     r.index.commit(
-        'Screening (manual)' + flag + flag_details +
-        '\n - Using screen.py' +
-        '\n - ' + utils.get_package_details(),
+        'Screening (manual)' + utils.get_version_flag() +
+        utils.get_commit_report(),
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
                          repo_setup.config['EMAIL']),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],

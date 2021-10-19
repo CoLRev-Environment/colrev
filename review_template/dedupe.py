@@ -477,9 +477,8 @@ def create_commit(r, bib_database):
             flag, flag_details = utils.get_version_flags()
 
             r.index.commit(
-                '⚙️ Process duplicates' + flag + flag_details +
-                merge_details +
-                '\n - ' + utils.get_package_details(),
+                '⚙️ Process duplicates' + utils.get_version_flag() +
+                utils.get_commit_report(),
                 author=git.Actor('script:process_duplicates.py', ''),
                 committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                     repo_setup.config['EMAIL']),

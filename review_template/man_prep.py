@@ -32,7 +32,9 @@ def create_commit(r, bib_database):
         if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
         r.index.commit(
-            'Prepare records for import',
+            'Prepare records for import' +
+            '\n - ' + utils.get_package_details() +
+            '\n' + utils.get_status_report(),
             author=git.Actor('manual (using man_prep.py)', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),

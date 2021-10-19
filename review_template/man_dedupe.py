@@ -211,12 +211,9 @@ def manual_merge_commit(r):
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
-    flag, flag_details = utils.get_version_flags()
-
     r.index.commit(
-        'Process duplicates manually' + flag + flag_details +
-        '\n - Using man_dedupe.py' +
-        '\n - ' + utils.get_package_details(),
+        'Process duplicates manually' + utils.get_version_flag() +
+        utils.get_commit_report(),
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
                          repo_setup.config['EMAIL']),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],

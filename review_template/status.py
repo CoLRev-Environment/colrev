@@ -63,6 +63,10 @@ def get_nr_search():
 
 
 def get_status_freq():
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+    SCREEN = repo_setup.paths['SCREEN']
+    DATA = repo_setup.paths['DATA']
+
     imported_entries = 0
     manual_preparation_entries = 0
     prepared_entries = 0
@@ -178,7 +182,7 @@ def get_status_freq():
 def get_status():
     status_of_records = []
 
-    with open(MAIN_REFERENCES) as f:
+    with open(repo_setup.paths['MAIN_REFERENCES']) as f:
         line = f.readline()
         while line:
             if line.lstrip().startswith('status'):
@@ -270,10 +274,9 @@ def repository_validation():
 
             print('Commit updated pre-commit hooks')
             repo.index.add(['.pre-commit-config.yaml'])
-            flag, flag_details = utils.get_version_flags()
             repo.index.commit(
-                'Update pre-commit-config' + flag + flag_details +
-                '\n - ' + utils.get_package_details(),
+                'Update pre-commit-config' + utils.get_version_flag() +
+                utils.get_commit_report(),
                 author=git.Actor('script:' + os.path.basename(__file__), ''),
                 committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                     repo_setup.config['EMAIL']),
@@ -294,15 +297,6 @@ def repository_validation():
 
 def repository_load():
     global repo
-    global SHARE_STAT_REQ
-    global MAIN_REFERENCES
-    global SCREEN
-    global DATA
-
-    SHARE_STAT_REQ = repo_setup.config['SHARE_STAT_REQ']
-    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-    SCREEN = repo_setup.paths['SCREEN']
-    DATA = repo_setup.paths['DATA']
 
     # TODO: check whether it is a valid git repo
 
@@ -318,12 +312,14 @@ def repository_load():
 
 def review_status():
     global status_freq
+    SCREEN = repo_setup.paths['SCREEN']
+    DATA = repo_setup.paths['DATA']
 
     print('\nStatus\n')
 
-    if not os.path.exists(MAIN_REFERENCES):
+    if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
         print(' | Search')
-        print(' |  - Not yet initiated')
+        print(' |  - Not initiated')
     else:
         status_freq = get_status_freq()
         # TODO: set all status_freq to str() to avoid frequent str() calls
@@ -380,7 +376,7 @@ def review_status():
         # Screen
         if not os.path.exists(SCREEN):
             print(' | Screen')
-            print(' |  - Not yet initiated')
+            print(' |  - Not initiated')
             print(' |')
         else:
 
@@ -430,7 +426,7 @@ def review_status():
         # Data
         if not os.path.exists(DATA):
             print(' | Data')
-            print(' |  - Not yet initiated')
+            print(' |  - Not initiated')
         else:
             print(' | Data extraction')
             print(' |  - Total: ' +
@@ -450,7 +446,7 @@ def review_instructions():
 
     print('\n\nInstructions (review_template)\n')
     # Note: review_template init is suggested in repository_validation()
-    if not os.path.exists(MAIN_REFERENCES):
+    if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
         print('  To import, copy search results to the search directory. ' +
               'Then use\n     review_template process')
         return

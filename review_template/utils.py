@@ -5,6 +5,7 @@ import pkgutil
 import re
 import sys
 import unicodedata
+from contextlib import redirect_stdout
 from importlib.metadata import version
 from pathlib import Path
 from string import ascii_lowercase
@@ -20,6 +21,7 @@ from nameparser import HumanName
 
 import docker
 from review_template import repo_setup
+from review_template import status
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 SCREEN = repo_setup.paths['SCREEN']
@@ -546,13 +548,30 @@ def get_package_details():
     return 'review_template (version ' + version('review_template') + ')'
 
 
-def get_version_flags():
-    flag, flag_details = '', ''
+def get_commit_report():
+    report = '\n\nReport\n\n'
+
+    report = report + 'Software\n - ' + get_package_details()
+
+    if 'dirty' in get_package_details():
+        report = report + '\n - ⚠: created with a modified version ' + \
+            '(not reproducible)'
+
+    report = report + '\n'
+
+    f = io.StringIO()
+    with redirect_stdout(f):
+        status.review_status()
+    report = report + f.getvalue()
+
+    return report
+
+
+def get_version_flag():
+    flag = ''
     if 'dirty' in get_package_details():
         flag = ' ⚠️'
-        flag_details = '\n - ⚠: created with a dirty repository version ' + \
-            '(not reproducible)'
-    return flag, flag_details
+    return flag
 
 
 def build_docker_images():
