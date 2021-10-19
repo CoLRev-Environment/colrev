@@ -515,7 +515,7 @@ def review_instructions():
 def collaboration_instructions():
     global cur_stati
 
-    print('\n\nCollaboration and sharing (git)\n\n')
+    print('\n\nCollaboration and sharing (git)\n')
 
     nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
 

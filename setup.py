@@ -10,29 +10,21 @@ with open('README.md') as readme_file:
 with open('CHANGELOG.md') as changelog_file:
     changelog = changelog_file.read()
 
-requirements = ['Click>=7.0',
+requirements = ['Click==8.0.1',
                 'ansiwrap==0.8.4',
                 'bibtexparser==1.2.0',
                 'dictdiffer==0.8.1',
                 'fuzzywuzzy==0.18.0',
-                'GitPython==3.1.18',
+                'GitPython==3.1.24',
                 'langdetect==1.0.9',
                 'nameparser==1.0.6',
-                'nltk==3.6.2',
-                'numpy==1.21.2',
                 'pandas==1.2.5',
-                'pdfminer==20191125',
-                'pdfminer.six==20201018',
-                'pre-commit==2.15.0',
-                'pytest==6.2.4',
+                'pdfminer.six==20211012',
                 'python_Levenshtein==0.12.2',
-                'PyYAML==5.4.1',
                 'requests==2.22.0',
                 'tqdm==4.61.1',
-                'ujson==4.0.2',
-                'wordsegment==1.3.1',
-                'docker>=5.0',
-                'configparser>=5.0']
+                'docker_py==1.10.6']
+# 'configparser>=5.0'
 
 # Note: docker and docker-py seem to be similar/identical?!
 # https://pypi.org/project/docker-py/
