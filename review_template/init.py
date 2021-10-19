@@ -139,10 +139,8 @@ def init_new_repo():
         'shared_config.ini',
     ])
 
-    flag, flag_details = utils.get_version_flags()
-
     r.index.commit(
-        'Initial commit' + flag + flag_details,
+        'Initial commit' + utils.get_version_flag(),
         author=git.Actor('script:init.py', ''),
         committer=git.Actor(committer_name, committer_email),
     )

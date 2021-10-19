@@ -83,12 +83,9 @@ def create_commit(r, bibfilenames):
     for f in bibfilenames:
         r.index.add([f])
 
-    flag, flag_details = utils.get_version_flags()
-
     r.index.commit(
-        '⚙️ Backward search ' + flag + flag_details +
-        '\n - Using backward_search.py' +
-        '\n - ' + utils.get_package_details(),
+        '⚙️ Backward search ' + utils.get_version_flag() +
+        utils.get_commit_report(),
         author=git.Actor('script:backward_search.py', ''),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                             repo_setup.config['EMAIL']),

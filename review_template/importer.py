@@ -392,11 +392,9 @@ def create_commit(r, bib_database):
         if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
 
-        flag, flag_details = utils.get_version_flags()
-
         r.index.commit(
-            '⚙️ Import search results ' + flag + flag_details +
-            '\n - ' + utils.get_package_details(),
+            '⚙️ Import search results ' + utils.get_version_flag() +
+            utils.get_commit_report(),
             author=git.Actor('script:importer.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
