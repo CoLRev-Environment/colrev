@@ -301,7 +301,7 @@ def unify_pages_field(input_string):
     if not re.match(r'^\d*$', input_string) and \
        not re.match(r'^\d*--\d*$', input_string) and\
        not re.match(r'^[xivXIV]*--[xivXIV]*$', input_string):
-        print(f'Unusual pages: {input_string}')
+        print(f'  - Unusual pages: {input_string}')
     return input_string
 
 
@@ -452,7 +452,6 @@ def save_bib_file(bib_database, target_file=None):
     writer = BibTexWriter()
 
     writer.contents = ['entries', 'comments']
-    writer.indent = '  '
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
         'entry_link',
@@ -481,6 +480,7 @@ def save_bib_file(bib_database, target_file=None):
     writer.order_entries_by = ('ID', 'author', 'year')
     writer.add_trailing_comma = True
     writer.align_values = True
+    writer.indent = '  '
     bibtex_str = bibtexparser.dumps(bib_database, writer)
 
     with open(target_file, 'w') as out:
@@ -524,12 +524,21 @@ def get_pdfs_of_included_papers():
     return pdfs
 
 
-def require_clean_repo(repo=None):
+def require_clean_repo(repo=None, ignore_pattern=None):
     if repo is None:
         repo = git.Repo('')
     if repo.is_dirty():
-        print('Clean repository required (commit, discard or stash changes).')
-        sys.exit()
+        if ignore_pattern is None:
+            print('Clean repository required '
+                  '(commit, discard or stash changes).')
+            sys.exit()
+        else:
+            changedFiles = [item.a_path for item in repo.index.diff(None)
+                            if ignore_pattern not in item.a_path]
+            if changedFiles:
+                print('Clean repository required '
+                      '(commit, discard or stash changes).')
+                sys.exit()
     return True
 
 

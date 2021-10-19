@@ -48,7 +48,6 @@ entry_points = \
         'process=review_template.cli:process',
         'status=review_template.cli:status',
         'init=review_template.cli:init',
-        'man_comp=review_template.cli:man_comp',
         'man_prep=review_template.cli:man_prep',
         'man_dedupe=review_template.cli:man_dedupe',
         'prescreen=review_template.cli:prescreen',

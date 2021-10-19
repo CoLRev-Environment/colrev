@@ -16,7 +16,6 @@ from bibtexparser.customization import convert_to_unicode
 
 import docker
 from review_template import grobid_client
-from review_template import prepare
 from review_template import repo_setup
 from review_template import utils
 
@@ -26,66 +25,6 @@ MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
-
-fields_to_keep = [
-    'ID', 'ENTRYTYPE',
-    'author', 'year', 'title',
-    'journal', 'booktitle', 'series',
-    'volume', 'number', 'pages', 'doi',
-    'abstract', 'school',
-    'editor', 'book-group-author',
-    'book-author', 'keywords', 'file',
-    'status', 'fulltext', 'entry_link'
-]
-fields_to_drop = [
-    'type', 'url', 'organization',
-    'issn', 'isbn', 'note', 'issue',
-    'unique-id', 'month', 'researcherid-numbers',
-    'orcid-numbers', 'eissn', 'article-number',
-    'publisher', 'author_keywords', 'source',
-    'affiliation', 'document_type', 'art_number',
-    'address', 'language', 'doc-delivery-number',
-    'da', 'usage-count-last-180-days', 'usage-count-since-2013',
-    'doc-delivery-number', 'research-areas',
-    'web-of-science-categories', 'number-of-cited-references',
-    'times-cited', 'journal-iso', 'oa', 'keywords-plus',
-    'funding-text', 'funding-acknowledgement', 'day',
-    'related', 'bibsource', 'timestamp', 'biburl'
-]
-
-
-def drop_fields(entry):
-    for val in list(entry):
-        if(val not in fields_to_keep):
-            # drop all fields not in fields_to_keep
-            entry.pop(val)
-            # warn if fields are dropped that are not in fields_to_drop
-            if val not in fields_to_drop:
-                print(f'  dropped {val} field')
-    return entry
-
-
-entry_field_requirements = \
-    {'article': ['title', 'author', 'year', 'journal', 'volume', 'issue'],
-     'inproceedings': ['title', 'author', 'booktitle', 'year'],
-     'inbook': ['title', 'author', 'year', 'booktitle'],
-     'book': ['title', 'author', 'year'],
-     'phdthesis': ['title', 'author', 'year', 'school'],
-     'masterthesis': ['title', 'author', 'year', 'school'],
-     'unpublished': ['title', 'author', 'year']}
-
-
-def is_sufficiently_complete(entry):
-    sufficiently_complete = False
-
-    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
-        reqs = entry_field_requirements[entry['ENTRYTYPE']]
-        if all(x in entry for x in reqs):
-            sufficiently_complete = True
-    else:
-        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
-
-    return sufficiently_complete
 
 
 def get_imported_entry_links():
@@ -144,45 +83,7 @@ def import_entry(entry):
     if 'retrieved' != entry['status']:
         return entry
 
-    # Note: we assume that the metadata of doi.org is complete.
-    complete_based_on_doi = False
-    if not is_sufficiently_complete(entry):
-        entry = prepare.get_doi_from_crossref(entry)
-        if 'doi' in entry:
-            # try completion based on doi
-            doi_metadata = \
-                prepare.retrieve_doi_metadata(entry.copy())
-            for key, value in doi_metadata.items():
-                if key not in entry.keys() and key in ['author',
-                                                       'year',
-                                                       'title',
-                                                       'journal',
-                                                       'booktitle',
-                                                       'number',
-                                                       'volume',
-                                                       'issue',
-                                                       'pages']:
-                    entry[key] = value
-            complete_based_on_doi = True
-
-        # fix type-mismatches
-        # e.g., conference paper with ENTRYTYPE=article
-        entry = prepare.correct_entrytypes(entry)
-
-        if 'issue' in entry and 'number' not in entry:
-            entry.update(number=entry['issue'])
-            del entry['issue']
-
-    if is_sufficiently_complete(entry) or complete_based_on_doi:
-        entry = prepare.homogenize_entry(entry)
-        # Note: the prepare.py will homogenize more cases because
-        # it runs speculative_changes(entry)
-        entry = prepare.apply_local_rules(entry)
-        entry = prepare.apply_crowd_rules(entry)
-        entry = drop_fields(entry)
-        entry.update(status='imported')
-    else:
-        entry.update(status='needs_manual_completion')
+    entry.update(status='imported')
 
     return entry
 

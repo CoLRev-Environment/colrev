@@ -63,7 +63,6 @@ def get_nr_search():
 
 
 def get_status_freq():
-    needs_manual_completion_entries = 0
     imported_entries = 0
     manual_preparation_entries = 0
     prepared_entries = 0
@@ -77,8 +76,6 @@ def get_status_freq():
         with open(MAIN_REFERENCES) as f:
             line = f.readline()
             while line:
-                if '{needs_manual_completion}' in line:
-                    needs_manual_completion_entries += 1
                 if '{imported}' in line:
                     imported_entries += 1
                 if '{needs_manual_preparation}' in line:
@@ -152,7 +149,6 @@ def get_status_freq():
 
     freqs = {'retrieved': retrieved,
              'non_imported': non_imported,
-             'needs_manual_completion': needs_manual_completion_entries,
              'imported': imported_entries,
              'needs_manual_preparation': manual_preparation_entries,
              'prepared': prepared_entries,
@@ -353,12 +349,6 @@ def review_status():
         print(' |  - Records imported: ' +
               f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
 
-        if status_freq['needs_manual_completion'] > 0:
-            nr_nmco = status_freq['needs_manual_completion']
-            print(' |                               * ' +
-                  f'{str(nr_nmco).rjust(6, " ")}' +
-                  ' record(s) need manual completion.')
-
         if status_freq['needs_manual_preparation'] > 0:
             nr_nmcl = status_freq['needs_manual_preparation']
             print(' |                               * ' +
@@ -471,11 +461,6 @@ def review_instructions():
         print('  To import, use\n     review_template process')
         return
 
-    if status_freq['needs_manual_completion'] > 0:
-        print('  To continue with manual completion or records, '
-              'use\n     review_template man-comp')
-        return
-
     if status_freq['prepared'] > 0:
         print('  To continue with entry preparation, '
               'use\n     review_template process')
@@ -562,7 +547,7 @@ def collaboration_instructions():
 
         # TODO all the following: should all search results be imported?!
         if SHARE_STAT_REQ == 'PROCESSED':
-            if not any(cs in ['needs_manual_completion', 'imported',
+            if not any(cs in ['imported',
                               'needs_manual_preparation', 'prepared',
                               'needs_manual_merging']
                        for cs in cur_stati):

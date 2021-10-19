@@ -26,12 +26,10 @@ def check_delay(db, min_status):
         return False
 
     cur_status = [x.get('status', 'NA') for x in db.entries]
-    if 'imported' == min_status:
-        if 'needs_manual_completion' in cur_status:
-            return True
+
     if 'prepared' == min_status:
         if any(x in cur_status
-               for x in ['imported', 'needs_manual_completion']):
+               for x in ['imported', 'needs_manual_preparation']):
             return True
 
     return False
@@ -73,23 +71,6 @@ def processing_condition(entry):
         batch_start = batch_end + 1
         return True
 
-    # keep track of numbers...
-    # last_record_i, prev_iteration_i = 0, 0
-    # True if batch size is met (or if it is the last entry)
-    # print information
-    # if len(entry_batch) == BATCH_SIZE:
-    # print('\n\nProcessing batch ' +
-    #         str(max((last_record_i - BATCH_SIZE + 1),
-    #                 prev_iteration_i+1)) +
-    #         f' to {last_record_i} of ' +
-    #         f'{len(all_entries)}')
-    # prev_iteration_i = last_record_i
-
-    # Note: do not count processed entries for batch size to avoid
-    # removing entries from MAIN_REFERENCES
-    # if entry.get('status', 'NA') != 'processed':
-    #     last_record_i += 1
-
     return False
 
 
@@ -107,8 +88,8 @@ def set_citation_keys(db):
 
 def main():
 
-    r = init.get_repo()
-    utils.require_clean_repo(r)
+    repo = init.get_repo()
+    utils.require_clean_repo(repo, ignore_pattern='search/')
     utils.build_docker_images()
 
     db = BibDatabase()
@@ -126,43 +107,44 @@ def main():
         print('Import')
         db.entries = pool.map(importer.import_entry, db.entries)
         db = set_citation_keys(db)
-        importer.create_commit(r, db)
+        importer.create_commit(repo, db)
 
-        if check_delay(db, 'imported'):
-            print('\nCompleted import step. To continue, use \n'
-                  ' review_template man-complete '
-                  '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
-            break
+    if len(db.entries) == 0:
+        print('No search results available for import.')
+        return
 
-        print('Prepare')
-        db.entries = pool.map(prepare.prepare, db.entries)
-        prepare.create_commit(r, db)
+    # comment on check_delay/DELAY_AUTOMATED_PROCESSING:
+    # we assume that import always succeeds. this means that we only have to
+    # check for delayed processing after preparation (which may not succeed)
+    # if check_delay(db, 'imported'):
+    #     print('\nCompleted import step. To continue, use \n'
+    #           ' review_template man-complete '
+    #           '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
+    #     break
 
-        if check_delay(db, 'prepared'):
-            print('\nCompleted preparation step. To continue, use \n'
-                  ' review_template man-prep '
-                  '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
-            break
+    # TODO: how to ensure BATCH_SIZE in the following processing steps?
 
-        print('Process duplicates')
-        pool.map(dedupe.append_merges, db.entries)
-        db = dedupe.apply_merges(db)
-        dedupe.create_commit(r, db)
+    print('Prepare')
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    db.entries = pool.map(prepare.prepare, db.entries)
+    prepare.create_commit(repo, db)
 
-        # TODO: meta_data_status (imported, prepared ,...) vs. record_status
-        #  (pre-screen-excluded, included, ...) (what about the PDF?)?!?!
+    if check_delay(db, 'prepared'):
+        print('\nCompleted preparation step. To continue, use \n'
+              ' review_template man-prep '
+              '(for experts: disable DELAY_AUTOMATED_PROCESSING flag)\n\n')
+        os.system('pre-commit run -a')
+        return
 
-        # TODO, depending on REVIEW_STRATEGY:
-        # minimal_review_pipeline: no screening/data extraction.
-        # simply include all records, prepare, merge, acquire pdfs
+    print('Process duplicates')
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    pool.map(dedupe.append_merges, db.entries)
+    db = dedupe.apply_merges(db)
+    dedupe.create_commit(repo, db)
 
-        # db = utils.load_references_bib(
-        #     modification_check=True, initialize=False,
-        # )
-        # acquire PDFs
-        # backward search, ... (considering check_continue)
-        # update_data()
-        print()
+    # TBD. screen, acquire_pdfs, ...?
+
+    print()
 
     # to print tooltips (without replicating code from the pipeline repo)
     os.system('pre-commit run -a')
