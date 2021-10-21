@@ -16,170 +16,87 @@ from review_template import repo_setup
 from review_template import utils
 
 
-EMPTY_RESULT = {
-    'crossref_title': '',
-    'similarity': 0,
-    'doi': '',
-}
-MAX_RETRIES_ON_ERROR = 3
+def correct_entrytype(entry):
 
-LOCAL_JOURNAL_ABBREVIATIONS, \
-    LOCAL_JOURNAL_VARIATIONS, \
-    LOCAL_CONFERENCE_ABBREVIATIONS = \
-    utils.retrieve_local_resources()
+    conf_strings = [
+        'proceedings',
+        'conference',
+    ]
 
-CR_JOURNAL_ABBREVIATIONS, \
-    CR_JOURNAL_VARIATIONS, \
-    CR_CONFERENCE_ABBREVIATIONS = \
-    utils.retrieve_crowd_resources()
+    for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
+        conf_strings.append(row['abbreviation'].lower())
+        conf_strings.append(row['conference'].lower())
 
+    # Consistency checks
+    if 'journal' in entry:
+        if any(
+            conf_string in entry['journal'].lower()
+            for conf_string in conf_strings
+        ):
+            # print('WARNING: conference string in journal field: ',
+            #       entry['ID'],
+            #       entry['journal'])
+            entry.update(booktitle=entry['journal'])
+            entry.update(ENTRYTYPE='inproceedings')
+            del entry['journal']
+    if 'booktitle' in entry:
+        if any(
+            conf_string in entry['booktitle'].lower()
+            for conf_string in conf_strings
+        ):
+            entry.update(ENTRYTYPE='inproceedings')
 
-fields_to_keep = [
-    'ID', 'ENTRYTYPE',
-    'author', 'year', 'title',
-    'journal', 'booktitle', 'series',
-    'volume', 'number', 'pages', 'doi',
-    'abstract', 'school',
-    'editor', 'book-group-author',
-    'book-author', 'keywords', 'file',
-    'status', 'fulltext', 'entry_link',
-    'dblp_key'
-]
-fields_to_drop = [
-    'type', 'url', 'organization',
-    'issn', 'isbn', 'note', 'issue',
-    'unique-id', 'month', 'researcherid-numbers',
-    'orcid-numbers', 'eissn', 'article-number',
-    'publisher', 'author_keywords', 'source',
-    'affiliation', 'document_type', 'art_number',
-    'address', 'language', 'doc-delivery-number',
-    'da', 'usage-count-last-180-days', 'usage-count-since-2013',
-    'doc-delivery-number', 'research-areas',
-    'web-of-science-categories', 'number-of-cited-references',
-    'times-cited', 'journal-iso', 'oa', 'keywords-plus',
-    'funding-text', 'funding-acknowledgement', 'day',
-    'related', 'bibsource', 'timestamp', 'biburl'
-]
+    if 'dissertation' in entry.get('fulltext', 'NA').lower() and \
+            entry['ENTRYTYPE'] != 'phdthesis':
+        prior_e_type = entry['ENTRYTYPE']
+        entry.update(ENTRYTYPE='phdthesis')
+        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
+              'because the fulltext link contains "dissertation"')
+        # TODO: if school is not set: using named entity recognition or
+        # following links: detect the school and set the field
 
-# Based on https://en.wikipedia.org/wiki/BibTeX
-entry_field_requirements = \
-    {'article': ['author', 'title', 'journal', 'year', 'volume', 'issue'],
-     'inproceedings': ['author', 'title', 'booktitle', 'year'],
-     'incollection': ['author', 'title', 'booktitle', 'publisher', 'year'],
-     'inbook': ['author', 'title', 'chapter', 'publisher', 'year'],
-     'book': ['author', 'title', 'publisher', 'year'],
-     'phdthesis': ['author', 'title', 'school', 'year'],
-     'masterthesis': ['author', 'title', 'school', 'year'],
-     'techreport': ['author', 'title', 'institution', 'year'],
-     'unpublished': ['title', 'author', 'year']}
+    if 'thesis' in entry.get('fulltext', 'NA').lower() and \
+            entry['ENTRYTYPE'] != 'phdthesis':
+        prior_e_type = entry['ENTRYTYPE']
+        entry.update(ENTRYTYPE='phdthesis')
+        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
+              'because the fulltext link contains "thesis"')
+        # TODO: if school is not set: using named entity recognition or
+        # following links: detect the school and set the field
 
-# book, inbook: author <- editor
+    # TODO: create a warning if any conference strings (ecis, icis, ..)
+    # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
 
-entry_field_inconsistencies = \
-    {'article': ['booktitle'],
-     'inproceedings': ['volume', 'issue', 'number', 'journal'],
-     'incollection': [],
-     'inbook': ['journal'],
-     'book': ['volume', 'issue', 'number', 'journal'],
-     'phdthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
-     'masterthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
-     'techreport': ['volume', 'issue', 'number', 'journal', 'booktitle'],
-     'unpublished': ['volume', 'issue', 'number', 'journal', 'booktitle']}
+    # Journal articles should not have booktitles/series set.
+    if 'article' == entry['ENTRYTYPE']:
+        if 'booktitle' in entry:
+            if 'journal' not in entry:
+                entry.update(journal=entry['booktitle'])
+                del entry['booktitle']
+        if 'series' in entry:
+            if 'journal' not in entry:
+                entry.update(journal=entry['series'])
+                del entry['series']
 
+    if 'book' == entry['ENTRYTYPE']:
+        if 'series' in entry:
+            if any(
+                conf_string in entry['series'].lower()
+                for conf_string in conf_strings
+            ):
+                conf_name = entry['series']
+                del entry['series']
+                entry.update(booktitle=conf_name)
+                entry.update(ENTRYTYPE='inproceedings')
 
-def drop_fields(entry):
-    for val in list(entry):
-        if(val not in fields_to_keep):
-            # drop all fields not in fields_to_keep
-            entry.pop(val)
-            # warn if fields are dropped that are not in fields_to_drop
-            if val not in fields_to_drop:
-                print(f'  dropped {val} field')
+    if 'article' == entry['ENTRYTYPE']:
+        if 'journal' not in entry:
+            if 'series' in entry:
+                journal_string = entry['series']
+                entry.update(journal=journal_string)
+                del entry['series']
+
     return entry
-
-
-def is_sufficiently_complete(entry):
-    sufficiently_complete = False
-
-    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
-        reqs = entry_field_requirements[entry['ENTRYTYPE']]
-        if all(x in entry for x in reqs):
-            sufficiently_complete = True
-    else:
-        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
-
-    return sufficiently_complete
-
-
-def has_inconsistent_fields(entry):
-    found_inconsistencies = False
-
-    if entry['ENTRYTYPE'] in entry_field_inconsistencies.keys():
-        incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
-        inconsistencies = [x for x in incons_fields if x in entry]
-        if inconsistencies:
-            print(f'  - inconsistency in {entry["ID"]}: {entry["ENTRYTYPE"]} '
-                  f'with {inconsistencies} field(s).')
-            found_inconsistencies = True
-    else:
-        print(f'  - No fields inconsistencies set for {entry["ENTRYTYPE"]}')
-
-    return found_inconsistencies
-
-
-def crossref_query(entry):
-    # https://github.com/CrossRef/rest-api-doc
-    api_url = 'https://api.crossref.org/works?'
-    params = {'rows': '5', 'query.bibliographic': entry['title']}
-    url = api_url + urllib.parse.urlencode(params)
-    headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
-    ret = requests.get(url, headers=headers)
-    if ret.status_code != 200:
-        return
-
-    data = json.loads(ret.text)
-    items = data['message']['items']
-    most_similar = EMPTY_RESULT
-    for item in items:
-        if 'title' not in item:
-            continue
-
-        # TODO: author
-        try:
-            title_similarity = ratio(
-                item['title'].pop().lower(),
-                entry['title'].lower(),
-            )
-            # TODO: could also be a proceedings paper...
-            container_similarity = ratio(
-                item['container-title'].pop().lower(),
-                entry['journal'].lower(),
-            )
-            weights = [0.6, 0.4]
-            similarities = [title_similarity, container_similarity]
-
-            similarity = sum(similarities[g] * weights[g]
-                             for g in range(len(similarities)))
-
-            result = {
-                'similarity': similarity,
-                'doi': item['DOI'],
-            }
-            if most_similar['similarity'] < result['similarity']:
-                most_similar = result
-        except KeyError:
-            pass
-
-    time.sleep(1)
-    return {'success': True, 'result': most_similar}
-
-
-def doi2json(doi):
-    url = 'http://dx.doi.org/' + doi
-    headers = {'accept': 'application/vnd.citationstyles.csl+json'}
-    r = requests.get(url, headers=headers)
-    return r.text
 
 
 def homogenize_entry(entry):
@@ -215,6 +132,17 @@ def homogenize_entry(entry):
         entry.update(booktitle=utils.title_if_mostly_upper_case(
             entry['booktitle']))
 
+        stripped_btitle = re.sub(r'\d{4}', '', entry['booktitle'])
+        stripped_btitle = re.sub(r'\d{1,2}th', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}nd', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}rd', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\d{1,2}st', '', stripped_btitle)
+        stripped_btitle = re.sub(r'\([A-Z]{3,6}\)', '', stripped_btitle)
+        stripped_btitle = stripped_btitle\
+            .replace('Proceedings of the', '')\
+            .replace('Proceedings', '')
+        entry.update(booktitle=stripped_btitle)
+
     if 'journal' in entry:
         entry.update(
             journal=utils.title_if_mostly_upper_case(entry['journal']))
@@ -228,6 +156,212 @@ def homogenize_entry(entry):
     if 'issue' in entry and 'number' not in entry:
         entry.update(number=entry['issue'])
         del entry['issue']
+
+    return entry
+
+
+LOCAL_JOURNAL_ABBREVIATIONS, \
+    LOCAL_JOURNAL_VARIATIONS, \
+    LOCAL_CONFERENCE_ABBREVIATIONS = \
+    utils.retrieve_local_resources()
+
+
+def apply_local_rules(entry):
+
+    if 'journal' in entry:
+        for i, row in LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['journal'].lower():
+                entry.update(journal=row['journal'])
+
+        for i, row in LOCAL_JOURNAL_VARIATIONS.iterrows():
+            if row['variation'].lower() == entry['journal'].lower():
+                entry.update(journal=row['journal'])
+
+    if 'booktitle' in entry:
+        for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['booktitle'].lower():
+                entry.update(booktitle=row['conference'])
+
+    return entry
+
+
+CR_JOURNAL_ABBREVIATIONS, \
+    CR_JOURNAL_VARIATIONS, \
+    CR_CONFERENCE_ABBREVIATIONS = \
+    utils.retrieve_crowd_resources()
+
+
+def apply_crowd_rules(entry):
+
+    if 'journal' in entry:
+        for i, row in CR_JOURNAL_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['journal'].lower():
+                entry.update(journal=row['journal'])
+
+        for i, row in CR_JOURNAL_VARIATIONS.iterrows():
+            if row['variation'].lower() == entry['journal'].lower():
+                entry.update(journal=row['journal'])
+
+    if 'booktitle' in entry:
+        for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
+            if row['abbreviation'].lower() == entry['booktitle'].lower():
+                entry.update(booktitle=row['conference'])
+
+    return entry
+
+
+def crossref_query(entry):
+    # https://github.com/CrossRef/rest-api-doc
+    api_url = 'https://api.crossref.org/works?'
+    params = {'rows': '5', 'query.bibliographic': entry['title']}
+    url = api_url + urllib.parse.urlencode(params)
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+    if ret.status_code != 200:
+        return
+
+    data = json.loads(ret.text)
+    items = data['message']['items']
+    most_similar = {
+        'crossref_title': '',
+        'similarity': 0,
+        'doi': '',
+    }
+    for item in items:
+        if 'title' not in item:
+            continue
+
+        # TODO: author
+        try:
+            title_similarity = ratio(
+                item['title'].pop().lower(),
+                entry['title'].lower(),
+            )
+            # TODO: could also be a proceedings paper...
+            container_similarity = ratio(
+                item['container-title'].pop().lower(),
+                entry['journal'].lower(),
+            )
+            weights = [0.6, 0.4]
+            similarities = [title_similarity, container_similarity]
+
+            similarity = sum(similarities[g] * weights[g]
+                             for g in range(len(similarities)))
+
+            result = {
+                'similarity': similarity,
+                'doi': item['DOI'],
+            }
+            if most_similar['similarity'] < result['similarity']:
+                most_similar = result
+        except KeyError:
+            pass
+
+    time.sleep(1)
+    return {'success': True, 'result': most_similar}
+
+
+def get_doi_from_crossref(entry):
+    if ('title' not in entry) or ('doi' in entry):
+        return entry
+
+    MAX_RETRIES_ON_ERROR = 3
+    # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
+    if len(entry['title']) > 60 and 'doi' not in entry:
+        try:
+            ret = crossref_query(entry)
+            retries = 0
+            while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
+                retries += 1
+                ret = crossref_query(entry)
+            if ret['result']['similarity'] > 0.95:
+                entry.update(doi=ret['result']['doi'])
+        except KeyboardInterrupt:
+            sys.exit()
+    return entry
+
+
+def get_dblp_venue(venue_string):
+    venue = venue_string
+    api_url = 'https://dblp.org/search/venue/api?q='
+    url = api_url + venue_string.replace(' ', '+') + '&format=json'
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+
+    data = json.loads(ret.text)
+    venue = data['result']['hits']['hit'][0]['info']['venue']
+    re.sub(r' \(.*?\)', '', venue)
+
+    return venue
+
+
+def get_metadata_from_dblp(entry):
+    if 'doi' in entry:
+        return entry
+
+    api_url = 'https://dblp.org/search/publ/api?q='
+    url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
+    # print(url)
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+
+    try:
+
+        data = json.loads(ret.text)
+        items = data['result']['hits']['hit']
+        item = items[0]['info']
+
+        author_string = ' and '.join([author['text']
+                                     for author in item['authors']['author']])
+        author_string = utils.format_author_field(author_string)
+
+        author_similarity = ratio(
+            dedupe.format_authors_string(author_string),
+            dedupe.format_authors_string(entry['author']),
+        )
+        title_similarity = ratio(
+            item['title'].lower(),
+            entry['title'].lower(),
+        )
+        # container_similarity = ratio(
+        #     item['venue'].lower(),
+        #     utils.get_container_title(entry).lower(),
+        # )
+        year_similarity = ratio(
+            item['year'],
+            entry['year'],
+        )
+        # print(f'author_similarity: {author_similarity}')
+        # print(f'title_similarity: {title_similarity}')
+        # print(f'container_similarity: {container_similarity}')
+        # print(f'year_similarity: {year_similarity}')
+
+        weights = [0.4, 0.3, 0.3]
+        similarities = [title_similarity, author_similarity, year_similarity]
+
+        similarity = sum(similarities[g] * weights[g]
+                         for g in range(len(similarities)))
+        # print(similarity)
+        if similarity > 0.99:
+            if 'Journal Articles' == item['type']:
+                entry['ENTRYTYPE'] = 'article'
+                entry['journal'] = get_dblp_venue(item['venue'])
+                entry['volume'] = item['volume']
+                entry['number'] = item['number']
+            if 'Conference and Workshop Papers' == item['type']:
+                entry['ENTRYTYPE'] = 'inproceedings'
+                entry['booktitle'] = get_dblp_venue(item['venue'])
+            if 'doi' in item:
+                entry['doi'] = item['doi']
+            entry['dblp_key'] = 'https://dblp.org/rec' + item['key']
+    except KeyError:
+        pass
+    except UnicodeEncodeError:
+        print('  - UnicodeEncodeError - this needs to be fixed at some time')
+        pass
 
     return entry
 
@@ -274,22 +408,11 @@ def get_doi_from_links(entry):
     return entry
 
 
-def get_doi_from_crossref(entry):
-    if 'title' not in entry:
-        return entry
-    # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-    if len(entry['title']) > 60 and 'doi' not in entry:
-        try:
-            ret = crossref_query(entry)
-            retries = 0
-            while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
-                retries += 1
-                ret = crossref_query(entry)
-            if ret['result']['similarity'] > 0.95:
-                entry.update(doi=ret['result']['doi'])
-        except KeyboardInterrupt:
-            sys.exit()
-    return entry
+def doi2json(doi):
+    url = 'http://dx.doi.org/' + doi
+    headers = {'accept': 'application/vnd.citationstyles.csl+json'}
+    r = requests.get(url, headers=headers)
+    return r.text
 
 
 def retrieve_doi_metadata(entry):
@@ -299,6 +422,9 @@ def retrieve_doi_metadata(entry):
 
     if 'doi' not in entry:
         return entry
+
+    # For exceptions:
+    orig_entry = entry.copy()
 
     try:
         full_data = doi2json(entry['doi'])
@@ -414,263 +540,86 @@ def retrieve_doi_metadata(entry):
                              .lstrip().rstrip())
     except IndexError:
         print(f'  - WARNING: Index error (authors?) for {entry["ID"]}')
-        entry.update(status='imported')
+        return orig_entry
         pass
     except json.decoder.JSONDecodeError:
         print(f'  - WARNING: Doi retrieval error: {entry.get("ID", "NO_ID")}'
               f' / {entry["doi"]}')
-        entry.update(status='imported')
+        return orig_entry
         pass
     except TypeError:
         print(f'  - WARNING: Type error: : {entry["ID"]}')
-        entry.update(status='imported')
+        return orig_entry
         pass
     except requests.exceptions.ConnectionError:
         print(f'  - WARNING: ConnectionError: : {entry["ID"]}')
-        entry.update(status='imported')
+        return orig_entry
         pass
 
-    return entry
-
-
-def regenerate_citation_key(entry, bib_database):
-
-    if 'imported' != entry['status']:
-
-        # Recreate citation_keys
-        # (mainly if it differs, i.e., if there are changes in authors/years)
-        try:
-            entry.update(ID=utils.generate_citation_key(
-                entry, bib_database, entry_in_bib_db=True))
-        except utils.CitationKeyPropagationError:
-            # print('WARNING: preparing entry with propagated citation_key:',
-            #   entry['ID'])
-            pass
+    entry['complete_based_on_doi'] = 'True'
 
     return entry
 
 
-def correct_entrytypes(entry):
+# Based on https://en.wikipedia.org/wiki/BibTeX
+entry_field_requirements = \
+    {'article': ['author', 'title', 'journal', 'year', 'volume', 'issue'],
+     'inproceedings': ['author', 'title', 'booktitle', 'year'],
+     'incollection': ['author', 'title', 'booktitle', 'publisher', 'year'],
+     'inbook': ['author', 'title', 'chapter', 'publisher', 'year'],
+     'book': ['author', 'title', 'publisher', 'year'],
+     'phdthesis': ['author', 'title', 'school', 'year'],
+     'masterthesis': ['author', 'title', 'school', 'year'],
+     'techreport': ['author', 'title', 'institution', 'year'],
+     'unpublished': ['title', 'author', 'year']}
 
-    conf_strings = [
-        'proceedings',
-        'conference',
-    ]
-
-    for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
-        conf_strings.append(row['abbreviation'].lower())
-        conf_strings.append(row['conference'].lower())
-
-    # Consistency checks
-    if 'journal' in entry:
-        if any(
-            conf_string in entry['journal'].lower()
-            for conf_string in conf_strings
-        ):
-            # print('WARNING: conference string in journal field: ',
-            #       entry['ID'],
-            #       entry['journal'])
-            entry.update(booktitle=entry['journal'])
-            entry.update(ENTRYTYPE='inproceedings')
-            del entry['journal']
-    if 'booktitle' in entry:
-        if any(
-            conf_string in entry['booktitle'].lower()
-            for conf_string in conf_strings
-        ):
-            entry.update(ENTRYTYPE='inproceedings')
-
-    if 'dissertation' in entry.get('fulltext', 'NA').lower() and \
-            entry['ENTRYTYPE'] != 'phdthesis':
-        prior_e_type = entry['ENTRYTYPE']
-        entry.update(ENTRYTYPE='phdthesis')
-        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
-              'because the fulltext link contains "dissertation"')
-        # TODO: if school is not set: using named entity recognition or
-        # following links: detect the school and set the field
-
-    if 'thesis' in entry.get('fulltext', 'NA').lower() and \
-            entry['ENTRYTYPE'] != 'phdthesis':
-        prior_e_type = entry['ENTRYTYPE']
-        entry.update(ENTRYTYPE='phdthesis')
-        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
-              'because the fulltext link contains "thesis"')
-        # TODO: if school is not set: using named entity recognition or
-        # following links: detect the school and set the field
-
-    # TODO: create a warning if any conference strings (ecis, icis, ..)
-    # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
-
-    # Journal articles should not have booktitles/series set.
-    if 'article' == entry['ENTRYTYPE']:
-        if 'booktitle' in entry:
-            if 'journal' not in entry:
-                entry.update(journal=entry['booktitle'])
-                del entry['booktitle']
-        if 'series' in entry:
-            if 'journal' not in entry:
-                entry.update(journal=entry['series'])
-                del entry['series']
-
-    if 'book' == entry['ENTRYTYPE']:
-        if 'series' in entry:
-            if any(
-                conf_string in entry['series'].lower()
-                for conf_string in conf_strings
-            ):
-                conf_name = entry['series']
-                del entry['series']
-                entry.update(booktitle=conf_name)
-                entry.update(ENTRYTYPE='inproceedings')
-
-    if 'article' == entry['ENTRYTYPE']:
-        if 'journal' not in entry:
-            if 'series' in entry:
-                journal_string = entry['series']
-                entry.update(journal=journal_string)
-                del entry['series']
-
-    return entry
+# book, inbook: author <- editor
 
 
-def speculative_changes(entry):
+def is_complete(entry):
+    sufficiently_complete = False
 
-    # Moved journal processing to importer
-    # TODO: reinclude (as a function?)
+    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
+        reqs = entry_field_requirements[entry['ENTRYTYPE']]
+        if all(x in entry for x in reqs):
+            sufficiently_complete = True
+    else:
+        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
 
-    if 'booktitle' in entry:
-
-        stripped_btitle = re.sub(r'\d{4}', '', entry['booktitle'])
-        stripped_btitle = re.sub(r'\d{1,2}th', '', stripped_btitle)
-        stripped_btitle = re.sub(r'\d{1,2}nd', '', stripped_btitle)
-        stripped_btitle = re.sub(r'\d{1,2}rd', '', stripped_btitle)
-        stripped_btitle = re.sub(r'\d{1,2}st', '', stripped_btitle)
-        stripped_btitle = re.sub(r'\([A-Z]{3,6}\)', '', stripped_btitle)
-        stripped_btitle = stripped_btitle\
-            .replace('Proceedings of the', '')\
-            .replace('Proceedings', '')
-
-    return entry
+    return sufficiently_complete
 
 
-def apply_local_rules(entry):
-
-    if 'journal' in entry:
-        for i, row in LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
-            if row['abbreviation'].lower() == entry['journal'].lower():
-                entry.update(journal=row['journal'])
-
-        for i, row in LOCAL_JOURNAL_VARIATIONS.iterrows():
-            if row['variation'].lower() == entry['journal'].lower():
-                entry.update(journal=row['journal'])
-
-    if 'booktitle' in entry:
-        for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
-            if row['abbreviation'].lower() == entry['booktitle'].lower():
-                entry.update(booktitle=row['conference'])
-
-    return entry
+def is_doi_complete(entry):
+    # Note: complete_based_on_doi is set at the end of retrieve_doi_metadata
+    return 'True' == entry.get('complete_based_on_doi', 'NA')
 
 
-def apply_crowd_rules(entry):
-
-    if 'journal' in entry:
-        for i, row in CR_JOURNAL_ABBREVIATIONS.iterrows():
-            if row['abbreviation'].lower() == entry['journal'].lower():
-                entry.update(journal=row['journal'])
-
-        for i, row in CR_JOURNAL_VARIATIONS.iterrows():
-            if row['variation'].lower() == entry['journal'].lower():
-                entry.update(journal=row['journal'])
-
-    if 'booktitle' in entry:
-        for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
-            if row['abbreviation'].lower() == entry['booktitle'].lower():
-                entry.update(booktitle=row['conference'])
-
-    return entry
+entry_field_inconsistencies = \
+    {'article': ['booktitle'],
+     'inproceedings': ['volume', 'issue', 'number', 'journal'],
+     'incollection': [],
+     'inbook': ['journal'],
+     'book': ['volume', 'issue', 'number', 'journal'],
+     'phdthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'masterthesis': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'techreport': ['volume', 'issue', 'number', 'journal', 'booktitle'],
+     'unpublished': ['volume', 'issue', 'number', 'journal', 'booktitle']}
 
 
-def get_dblp_venue(venue_string):
-    venue = venue_string
-    api_url = 'https://dblp.org/search/venue/api?q='
-    url = api_url + venue_string.replace(' ', '+') + '&format=json'
-    headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
-    ret = requests.get(url, headers=headers)
+def has_inconsistent_fields(entry):
+    found_inconsistencies = False
 
-    data = json.loads(ret.text)
-    venue = data['result']['hits']['hit'][0]['info']['venue']
-    re.sub(r' \(.*?\)', '', venue)
+    if entry['ENTRYTYPE'] in entry_field_inconsistencies.keys():
+        incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
+        inconsistencies = [x for x in incons_fields if x in entry]
+        if inconsistencies:
+            print(f'  - inconsistency in {entry["ID"]}: {entry["ENTRYTYPE"]} '
+                  f'with {inconsistencies} field(s).')
+            found_inconsistencies = True
+    else:
+        print(f'  - No fields inconsistencies set for {entry["ENTRYTYPE"]}')
 
-    return venue
-
-
-def get_metadata_from_dblp(entry):
-
-    api_url = 'https://dblp.org/search/publ/api?q='
-    url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
-    # print(url)
-    headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
-    ret = requests.get(url, headers=headers)
-
-    try:
-
-        data = json.loads(ret.text)
-        items = data['result']['hits']['hit']
-        item = items[0]['info']
-
-        author_string = ' and '.join([author['text']
-                                     for author in item['authors']['author']])
-        author_string = utils.format_author_field(author_string)
-
-        author_similarity = ratio(
-            dedupe.format_authors_string(author_string),
-            dedupe.format_authors_string(entry['author']),
-        )
-        title_similarity = ratio(
-            item['title'].lower(),
-            entry['title'].lower(),
-        )
-        # container_similarity = ratio(
-        #     item['venue'].lower(),
-        #     utils.get_container_title(entry).lower(),
-        # )
-        year_similarity = ratio(
-            item['year'],
-            entry['year'],
-        )
-        # print(f'author_similarity: {author_similarity}')
-        # print(f'title_similarity: {title_similarity}')
-        # print(f'container_similarity: {container_similarity}')
-        # print(f'year_similarity: {year_similarity}')
-
-        weights = [0.4, 0.3, 0.3]
-        similarities = [title_similarity, author_similarity, year_similarity]
-
-        similarity = sum(similarities[g] * weights[g]
-                         for g in range(len(similarities)))
-        # print(similarity)
-        if similarity > 0.99:
-            if 'Journal Articles' == item['type']:
-                entry['ENTRYTYPE'] = 'article'
-                entry['journal'] = get_dblp_venue(item['venue'])
-                entry['volume'] = item['volume']
-                entry['number'] = item['number']
-            if 'Conference and Workshop Papers' == item['type']:
-                entry['ENTRYTYPE'] = 'inproceedings'
-                entry['booktitle'] = get_dblp_venue(item['venue'])
-            if 'doi' in item:
-                entry['doi'] = item['doi']
-            entry['dblp_key'] = 'https://dblp.org/rec' + item['key']
-    except KeyError:
-        pass
-    except UnicodeEncodeError:
-        print('  - UnicodeEncodeError - this needs to be fixed at some time')
-        pass
-
-    return entry
+    return found_inconsistencies
 
 
 def has_incomplete_fields(entry):
@@ -682,9 +631,52 @@ def has_incomplete_fields(entry):
             entry.get('booktitle', '').endswith('...') or \
             entry.get('booktitle', '').endswith('…') or \
             entry.get('author', '').endswith('...') or \
-            entry.get('author', '').endswith('…'):
+            entry.get('author', '').endswith('…') or \
+            entry.get('author', '').endswith('and others'):
         return True
     return False
+
+
+fields_to_keep = [
+    'ID', 'ENTRYTYPE',
+    'author', 'year', 'title',
+    'journal', 'booktitle', 'series',
+    'volume', 'number', 'pages', 'doi',
+    'abstract', 'school',
+    'editor', 'book-group-author',
+    'book-author', 'keywords', 'file',
+    'status', 'fulltext', 'entry_link',
+    'dblp_key'
+]
+fields_to_drop = [
+    'type', 'url', 'organization',
+    'issn', 'isbn', 'note', 'issue',
+    'unique-id', 'month', 'researcherid-numbers',
+    'orcid-numbers', 'eissn', 'article-number',
+    'publisher', 'author_keywords', 'source',
+    'affiliation', 'document_type', 'art_number',
+    'address', 'language', 'doc-delivery-number',
+    'da', 'usage-count-last-180-days', 'usage-count-since-2013',
+    'doc-delivery-number', 'research-areas',
+    'web-of-science-categories', 'number-of-cited-references',
+    'times-cited', 'journal-iso', 'oa', 'keywords-plus',
+    'funding-text', 'funding-acknowledgement', 'day',
+    'related', 'bibsource', 'timestamp', 'biburl',
+    'complete_based_on_doi'
+]
+
+
+def drop_fields(entry):
+    for key in list(entry):
+        if 'NA' == entry[key]:
+            del entry[key]
+        if(key not in fields_to_keep):
+            # drop all fields not in fields_to_keep
+            entry.pop(key)
+            # warn if fields are dropped that are not in fields_to_drop
+            if key not in fields_to_drop:
+                print(f'  dropped {key} field')
+    return entry
 
 
 def prepare(entry):
@@ -692,13 +684,7 @@ def prepare(entry):
     if 'imported' != entry['status']:
         return entry
 
-    # fix type-mismatches
-    # e.g., conference paper with ENTRYTYPE=article
-    entry = correct_entrytypes(entry)
-
-    if 'issue' in entry and 'number' not in entry:
-        entry.update(number=entry['issue'])
-        del entry['issue']
+    entry = correct_entrytype(entry)
 
     entry = homogenize_entry(entry)
 
@@ -706,45 +692,20 @@ def prepare(entry):
 
     entry = apply_crowd_rules(entry)
 
-    entry = speculative_changes(entry)
+    entry = get_doi_from_crossref(entry)
 
-    if 'doi' not in entry:
-        entry = get_doi_from_crossref(entry)
-    if 'doi' not in entry:
-        entry = get_metadata_from_dblp(entry)
-    if 'doi' not in entry:
-        entry = get_doi_from_links(entry)
+    entry = get_metadata_from_dblp(entry)
+
+    entry = get_doi_from_links(entry)
 
     entry = retrieve_doi_metadata(entry)
 
-    complete_based_on_doi = False
-    if 'doi' in entry:
-        # try completion based on doi
-        doi_metadata = retrieve_doi_metadata(entry.copy())
-        for key, value in doi_metadata.items():
-            if key not in entry.keys() and key in ['author',
-                                                   'year',
-                                                   'title',
-                                                   'journal',
-                                                   'booktitle',
-                                                   'number',
-                                                   'volume',
-                                                   'issue',
-                                                   'pages']:
-                entry[key] = value
-        complete_based_on_doi = True
-
-    if (is_sufficiently_complete(entry) or complete_based_on_doi) and \
-            not has_inconsistent_fields(entry):
-        # Note: the prepare.py will homogenize more cases because
-        # it runs speculative_changes(entry)
+    if (is_complete(entry) or is_doi_complete(entry)) and \
+            not has_inconsistent_fields(entry) and \
+            not has_incomplete_fields(entry):
         entry = drop_fields(entry)
         entry.update(status='prepared')
-
     else:
-        entry.update(status='needs_manual_preparation')
-
-    if has_incomplete_fields(entry):
         entry.update(status='needs_manual_preparation')
 
     return entry
@@ -758,12 +719,6 @@ def create_commit(r, bib_database):
 
     if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
             MAIN_REFERENCES in r.untracked_files:
-
-        # to avoid failing pre-commit hooks
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
-        )
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
         r.index.add([MAIN_REFERENCES])
 
