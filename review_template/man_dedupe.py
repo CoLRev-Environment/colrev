@@ -13,6 +13,8 @@ from review_template import utils
 
 removed_tuples = []
 
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+
 
 def get_combined_entry_link_list(entry_a, entry_b):
 
@@ -211,9 +213,18 @@ def manual_merge_commit(r):
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
+    processing_report = ''
+    if os.path.exists('report.log'):
+        with open('report.log') as f:
+            processing_report = f.readlines()
+        processing_report = \
+            f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+            ''.join(processing_report)
+
     r.index.commit(
         'Process duplicates manually' + utils.get_version_flag() +
-        utils.get_commit_report(),
+        utils.get_commit_report(os.path.basename(__file__)) +
+        processing_report,
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
                          repo_setup.config['EMAIL']),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import itertools
+import logging
 import multiprocessing as mp
 import os
 import re
@@ -20,6 +21,7 @@ nr_current_entries = 0
 MERGING_NON_DUP_THRESHOLD = repo_setup.config['MERGING_NON_DUP_THRESHOLD']
 MERGING_DUP_THRESHOLD = repo_setup.config['MERGING_DUP_THRESHOLD']
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -397,7 +399,7 @@ def apply_merges(bib_database):
                 el_to_merge = []
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
-                        print(f'drop {entry["ID"]}')
+                        logging.info(f'drop {entry["ID"]}')
                         el_to_merge = entry['entry_link'].split(';')
                         # Drop the duplicated entry
                         bib_database.entries = \
@@ -476,11 +478,18 @@ def create_commit(r, bib_database):
             if os.path.exists('potential_duplicate_tuples.csv'):
                 r.index.add(['potential_duplicate_tuples.csv'])
 
-            flag, flag_details = utils.get_version_flags()
+            processing_report = ''
+            if os.path.exists('report.log'):
+                with open('report.log') as f:
+                    processing_report = f.readlines()
+                processing_report = \
+                    f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                    ''.join(processing_report)
 
             r.index.commit(
                 '⚙️ Process duplicates' + utils.get_version_flag() +
-                utils.get_commit_report(),
+                utils.get_commit_report(os.path.basename(__file__)) +
+                processing_report,
                 author=git.Actor('script:process_duplicates.py', ''),
                 committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                     repo_setup.config['EMAIL']),
@@ -488,16 +497,18 @@ def create_commit(r, bib_database):
             )
         return True
     else:
-        print(' - No duplicates merged')
+        logging.info('No duplicates merged')
         return False
 
 
 def dedupe_entries(db, repo):
 
-    print('Process duplicates')
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
     process.check_delay(db, min_status_requirement='prepared')
 
-    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+    logging.info('Process duplicates')
+
     print('TODO: BATCH_SIZE')
 
     pool = mp.Pool(repo_setup.config['CPUS'])
@@ -506,5 +517,7 @@ def dedupe_entries(db, repo):
     pool.join()
     db = apply_merges(db)
     create_commit(repo, db)
+
+    print()
 
     return db

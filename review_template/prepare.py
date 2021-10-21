@@ -1,8 +1,9 @@
 #! /usr/bin/env python
 import collections
-import os
 import json
+import logging
 import multiprocessing as mp
+import os
 import re
 import sys
 import time
@@ -12,7 +13,6 @@ import git
 import requests
 from Levenshtein import ratio
 from nameparser import HumanName
-import logging
 
 from review_template import dedupe
 from review_template import process
@@ -20,6 +20,7 @@ from review_template import repo_setup
 from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+
 
 def correct_entrytype(entry):
 
@@ -55,8 +56,8 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
-              'because the fulltext link contains "dissertation"')
+        logging.info(f'Set {entry["ID"]} from {prior_e_type} to phdthesis '
+                     'because the fulltext link contains "dissertation"')
         # TODO: if school is not set: using named entity recognition or
         # following links: detect the school and set the field
 
@@ -64,8 +65,8 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        print(f'  - Set {entry["ID"]} from {prior_e_type} to phdthesis '
-              'because the fulltext link contains "thesis"')
+        logging.info(f'Set {entry["ID"]} from {prior_e_type} to phdthesis '
+                     'because the fulltext link contains "thesis"')
         # TODO: if school is not set: using named entity recognition or
         # following links: detect the school and set the field
 
@@ -365,7 +366,8 @@ def get_metadata_from_dblp(entry):
     except KeyError:
         pass
     except UnicodeEncodeError:
-        print('  - UnicodeEncodeError - this needs to be fixed at some time')
+        logging.error(
+            'UnicodeEncodeError - this needs to be fixed at some time')
         pass
 
     return entry
@@ -401,7 +403,7 @@ def get_doi_from_links(entry):
                 if dedupe.get_entry_similarity(entry.copy(), doi_entry) < 0.95:
                     del entry['doi']
 
-                print('  - Added doi from website: ' + entry['doi'])
+                logging.info('Added doi from website: ' + entry['doi'])
 
         except requests.exceptions.ConnectionError:
             return entry
@@ -544,20 +546,20 @@ def retrieve_doi_metadata(entry):
                 entry.update(abstract=str(retrieved_abstract).replace('\n', '')
                              .lstrip().rstrip())
     except IndexError:
-        print(f'  - WARNING: Index error (authors?) for {entry["ID"]}')
+        logging.error(f'Index error (authors?) for {entry["ID"]}')
         return orig_entry
         pass
     except json.decoder.JSONDecodeError:
-        print(f'  - WARNING: Doi retrieval error: {entry.get("ID", "NO_ID")}'
-              f' / {entry["doi"]}')
+        logging.error(f'DOI retrieval error: {entry.get("ID", "NO_ID")}'
+                      f' / {entry["doi"]}')
         return orig_entry
         pass
     except TypeError:
-        print(f'  - WARNING: Type error: : {entry["ID"]}')
+        logging.error(f'Type error: : {entry["ID"]}')
         return orig_entry
         pass
     except requests.exceptions.ConnectionError:
-        print(f'  - WARNING: ConnectionError: : {entry["ID"]}')
+        logging.error(f'ConnectionError: : {entry["ID"]}')
         return orig_entry
         pass
 
@@ -589,7 +591,7 @@ def is_complete(entry):
         if all(x in entry for x in reqs):
             sufficiently_complete = True
     else:
-        print(f'  - No field requirements set for {entry["ENTRYTYPE"]}')
+        logging.info(f'No field requirements set for {entry["ENTRYTYPE"]}')
 
     return sufficiently_complete
 
@@ -618,11 +620,12 @@ def has_inconsistent_fields(entry):
         incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
         inconsistencies = [x for x in incons_fields if x in entry]
         if inconsistencies:
-            print(f'  - inconsistency in {entry["ID"]}: {entry["ENTRYTYPE"]} '
-                  f'with {inconsistencies} field(s).')
+            logging.warning(f'Inconsistency in {entry["ID"]}:'
+                            f' {entry["ENTRYTYPE"]} '
+                            f'with {inconsistencies} field(s).')
             found_inconsistencies = True
     else:
-        print(f'  - No fields inconsistencies set for {entry["ENTRYTYPE"]}')
+        logging.info(f'No fields inconsistencies set for {entry["ENTRYTYPE"]}')
 
     return found_inconsistencies
 
@@ -680,7 +683,7 @@ def drop_fields(entry):
             entry.pop(key)
             # warn if fields are dropped that are not in fields_to_drop
             if key not in fields_to_drop:
-                print(f'  dropped {key} field')
+                logging.info(f'Dropped {key} field')
     return entry
 
 
@@ -709,9 +712,11 @@ def prepare(entry):
             not has_inconsistent_fields(entry) and \
             not has_incomplete_fields(entry):
         entry = drop_fields(entry)
-        logging.info(f'Successfully prepared {entry["ID"]}')
+        # logging.info(f'Successfully prepared {entry["ID"]}')
         entry.update(status='prepared')
     else:
+        if 'complete_based_on_doi' in entry:
+            del entry['complete_based_on_doi']
         logging.info(f'Manual preparation needed for {entry["ID"]}')
         entry.update(status='needs_manual_preparation')
 
@@ -735,11 +740,12 @@ def create_commit(r, bib_database):
                 processing_report = f.readlines()
             processing_report = \
                 f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                    ''.join(processing_report)
+                ''.join(processing_report)
 
         r.index.commit(
             '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
-            utils.get_commit_report() + processing_report,
+            utils.get_commit_report(os.path.basename(__file__)) +
+            processing_report,
             author=git.Actor('script:prepare.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
@@ -753,22 +759,21 @@ def create_commit(r, bib_database):
 
 def prepare_entries(db, repo):
 
-    print('Prepare')
-
     process.check_delay(db, min_status_requirement='imported')
-    if os.path.exists(filePath):
-        os.remove('report.log')
-    
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+
     pool = mp.Pool(repo_setup.config['CPUS'])
     print('TODO: BATCH_SIZE')
     # TODO: mark entries and remove mark afterwards/before creating the commit?
 
-    logging.info(f'Start preparing records')
+    logging.info('Prepare')
     db.entries = pool.map(prepare, db.entries)
     pool.close()
     pool.join()
-        
+
     create_commit(repo, db)
 
+    print()
 
     return db
