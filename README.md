@@ -97,7 +97,7 @@ We build on amazing projects and benefit from their ongoing improvements
 Dynamically loaded
 
 - [GROBID](https://github.com/kermitt2/grobid), which is available under the [Apache 2.0 License](https://github.com/kermitt2/grobid/blob/master/LICENSE). [![GROBID](https://img.shields.io/github/commit-activity/y/kermitt2/grobid?color=green&style=plastic)](https://github.com/kermitt2/grobid)
-- [OCRmyPDF](https://github.com/jbarlow83/OCRmyPDF), which is available under the [Mozilla Public License 2.0 (MPL-2.0) License](https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jbarlow83/OCRmyPDF?color=green&style=plastic)](https://github.com/jbarlow83/OCRmyPDF)
+- [OCRmyPDF](https://github.com/jbarlow83/OCRmyPDF), which is available under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jbarlow83/OCRmyPDF?color=green&style=plastic)](https://github.com/jbarlow83/OCRmyPDF)
 - [pandoc](https://github.com/jgm/pandoc), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
 - [bibutils](http://bibutils.refbase.org/), which is available under the [GNU Public License (GPL)](http://bibutils.refbase.org/).
 
