@@ -8,10 +8,11 @@ from bibtexparser.bibdatabase import BibDatabase
 from review_template import dedupe
 from review_template import importer
 from review_template import init
+from review_template import pdf_check
+from review_template import pdfs
 from review_template import prepare
 from review_template import repo_setup
 from review_template import utils
-
 
 DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
 
@@ -91,7 +92,6 @@ def main():
     repo = init.get_repo()
     utils.require_clean_repo(repo, ignore_pattern='search/')
     utils.build_docker_images()
-
     db = BibDatabase()
     entry_iterator = IteratorEx(importer.load_all_entries())
     for entry in entry_iterator:
@@ -106,6 +106,8 @@ def main():
 
         print('Import')
         db.entries = pool.map(importer.import_entry, db.entries)
+        pool.close()
+        pool.join()
         db = set_citation_keys(db)
         importer.create_commit(repo, db)
 
@@ -127,6 +129,8 @@ def main():
     print('Prepare')
     pool = mp.Pool(repo_setup.config['CPUS'])
     db.entries = pool.map(prepare.prepare, db.entries)
+    pool.close()
+    pool.join()
     prepare.create_commit(repo, db)
 
     if check_delay(db, 'prepared'):
@@ -139,10 +143,21 @@ def main():
     print('Process duplicates')
     pool = mp.Pool(repo_setup.config['CPUS'])
     pool.map(dedupe.append_merges, db.entries)
+    pool.close()
+    pool.join()
     db = dedupe.apply_merges(db)
     dedupe.create_commit(repo, db)
 
     # TBD. screen, acquire_pdfs, ...?
+
+    print('Acquire PDFs')
+    # pool = mp.Pool(repo_setup.config['CPUS'])
+    # db.entries = pool.map(function...., db.entries)
+    db = pdfs.acquire_pdfs(db)
+
+    print('Prepare PDFs')
+    db = pdf_check.prepare_pdfs(db)
+    pdf_check.create_commit(repo, db)
 
     print()
 

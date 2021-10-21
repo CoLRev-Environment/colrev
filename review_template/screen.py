@@ -58,7 +58,7 @@ def update_screen(bib_database):
 
 def pre_screen_commit(r):
 
-    r.index.add([SCREEN])
+    r.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
 
     hook_skipping = 'false'
     if not repo_setup.config['DEBUG_MODE']:
@@ -147,12 +147,17 @@ def prescreen():
                     for column in screen.columns:
                         if 'ec_' in column:
                             screen.at[i, column] = 'NA'
+                if 'yes' == inclusion_decision:
+                    entry.update(pdf_status='needs_retrieval')
 
                 screen.sort_values(by=['citation_key'], inplace=True)
                 screen.to_csv(
                     SCREEN, index=False,
                     quoting=csv.QUOTE_ALL, na_rep='NA',
                 )
+                utils.save_bib_file(
+                    bib_database, repo_setup.paths['MAIN_REFERENCES'])
+
     except KeyboardInterrupt:
         print('\n\nstopping screen 1\n')
         pass
@@ -220,6 +225,11 @@ def screen():
                     os.system('cls' if os.name == 'nt' else 'clear')
                     entry = [x for x in bib_database.entries
                              if x['ID'] == row['citation_key']][0]
+
+                    if 'prepared' != entry.get('pdf_status', 'NA'):
+                        print('  - Warning: pdf_status must be "prepared"'
+                              ' before screen')
+                        continue
 
                     reventry = customsort(entry, desired_order_list)
                     pp.pprint(reventry)

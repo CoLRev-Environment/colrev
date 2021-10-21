@@ -486,7 +486,7 @@ def create_commit(r, bib_database):
             )
         return True
     else:
-        print('- No duplicates merged')
+        print(' - No duplicates merged')
         return False
 
 
