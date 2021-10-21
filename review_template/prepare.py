@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 import collections
+import os
 import json
+import multiprocessing as mp
 import re
 import sys
 import time
@@ -10,11 +12,14 @@ import git
 import requests
 from Levenshtein import ratio
 from nameparser import HumanName
+import logging
 
 from review_template import dedupe
+from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 def correct_entrytype(entry):
 
@@ -704,8 +709,10 @@ def prepare(entry):
             not has_inconsistent_fields(entry) and \
             not has_incomplete_fields(entry):
         entry = drop_fields(entry)
+        logging.info(f'Successfully prepared {entry["ID"]}')
         entry.update(status='prepared')
     else:
+        logging.info(f'Manual preparation needed for {entry["ID"]}')
         entry.update(status='needs_manual_preparation')
 
     return entry
@@ -722,9 +729,17 @@ def create_commit(r, bib_database):
 
         r.index.add([MAIN_REFERENCES])
 
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                    ''.join(processing_report)
+
         r.index.commit(
             '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
-            utils.get_commit_report(),
+            utils.get_commit_report() + processing_report,
             author=git.Actor('script:prepare.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
@@ -732,9 +747,28 @@ def create_commit(r, bib_database):
 
         return True
     else:
-        print(' - No additional prepared entries available')
+        logging.info('No additional prepared entries available')
         return False
 
 
-if __name__ == '__main__':
-    print('TODO')
+def prepare_entries(db, repo):
+
+    print('Prepare')
+
+    process.check_delay(db, min_status_requirement='imported')
+    if os.path.exists(filePath):
+        os.remove('report.log')
+    
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    print('TODO: BATCH_SIZE')
+    # TODO: mark entries and remove mark afterwards/before creating the commit?
+
+    logging.info(f'Start preparing records')
+    db.entries = pool.map(prepare, db.entries)
+    pool.close()
+    pool.join()
+        
+    create_commit(repo, db)
+
+
+    return db

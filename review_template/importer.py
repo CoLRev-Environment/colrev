@@ -23,6 +23,7 @@ from review_template import utils
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
     utils.retrieve_crowd_resources()
@@ -429,3 +430,78 @@ def create_commit(r, bib_database):
             skip_hooks=hook_skipping
         )
         return True
+
+
+class IteratorEx:
+    def __init__(self, it):
+        self.it = iter(it)
+        self.sentinel = object()
+        self.nextItem = next(self.it, self.sentinel)
+        self.hasNext = self.nextItem is not self.sentinel
+
+    def next(self):
+        ret, self.nextItem = self.nextItem, next(self.it, self.sentinel)
+        self.hasNext = self.nextItem is not self.sentinel
+        return ret
+
+    def __iter__(self):
+        while self.hasNext:
+            yield self.next()
+
+
+current_batch = 0
+batch_start = 1
+batch_end = 0
+
+
+def processing_condition(entry):
+    global current_batch
+    global batch_start
+    global batch_end
+
+    current_batch += 1
+    batch_end += 1
+
+    if current_batch >= BATCH_SIZE:
+        current_batch = 0
+        print(f'Processing entries {batch_start} to {batch_end}')
+        batch_start = batch_end + 1
+        return True
+
+    return False
+
+
+def set_citation_keys(db):
+    citation_key_list = [entry['ID'] for entry in db.entries]
+    for entry in db.entries:
+        if 'imported' == entry['status']:
+            entry.update(ID=utils.generate_citation_key_blacklist(
+                entry, citation_key_list,
+                entry_in_bib_db=True,
+                raise_error=False))
+            citation_key_list.append(entry['ID'])
+    return db
+
+
+def import_entries(repo):
+
+    print('Import')
+
+    db = BibDatabase()
+    entry_iterator = IteratorEx(load_all_entries())
+    for entry in entry_iterator:
+        db.entries.append(entry)
+        if entry_iterator.hasNext:
+            if not processing_condition(entry):
+                continue  # keep appending entries
+        else:
+            print('Processing entries')
+
+        pool = mp.Pool(repo_setup.config['CPUS'])
+        db.entries = pool.map(import_entry, db.entries)
+        pool.close()
+        pool.join()
+        db = set_citation_keys(db)
+        create_commit(repo, db)
+
+    return db

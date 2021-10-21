@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import json
+import multiprocessing as mp
 import os
 
 import git
@@ -8,9 +9,9 @@ import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
+from review_template import process
 from review_template import repo_setup
 from review_template import utils
-# from pdfminer.high_level import extract_text
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
@@ -129,18 +130,27 @@ def acquire_pdf(entry):
     return entry
 
 
-def acquire_pdfs(bib_database):
+def acquire_pdfs(db, repo):
 
-    repo = git.Repo('')
+    print('Acquire PDFs')
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
+    process.check_delay(db, min_status_requirement='processed')
 
     global pdfs_retrieved
     global existing_pdfs_linked
     global missing_entries
     missing_entries = BibDatabase()
 
-    for entry in bib_database.entries:
-        entry = acquire_pdf(entry)
+    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+    print('TODO: BATCH_SIZE')
+
+    # for entry in db.entries:
+    #     entry = acquire_pdf(entry)
+
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    db.entries = pool.map(acquire_pdf, db.entries)
+    pool.close()
+    pool.join()
 
     if existing_pdfs_linked > 0:
         print(f' - {existing_pdfs_linked} existing PDFs linked in bib file')
@@ -162,16 +172,16 @@ def acquire_pdfs(bib_database):
         print(f' - {len(missing_entries.entries)} PDFs missing '
               '(see missing_pdf_files.csv)')
 
-    create_commit(repo, bib_database)
+    create_commit(repo, db)
 
-    return bib_database
+    return db
 
 
-def create_commit(repo, bib_database):
+def create_commit(repo, db):
 
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(db, MAIN_REFERENCES)
 
     if 'GIT' == repo_setup.config['PDF_HANDLING']:
         dirname = repo_setup.paths['PDF_DIRECTORY']
@@ -201,8 +211,6 @@ def create_commit(repo, bib_database):
 
 
 def main():
-
-    print('Acquire PDFs')
 
     acquire_pdfs()
 
