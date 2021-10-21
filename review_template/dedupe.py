@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import itertools
+import multiprocessing as mp
 import os
 import re
 
@@ -8,6 +9,7 @@ import git
 import pandas as pd
 from fuzzywuzzy import fuzz
 
+from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
@@ -490,5 +492,19 @@ def create_commit(r, bib_database):
         return False
 
 
-if __name__ == '__main__':
-    print('')
+def dedupe_entries(db, repo):
+
+    print('Process duplicates')
+    process.check_delay(db, min_status_requirement='prepared')
+
+    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+    print('TODO: BATCH_SIZE')
+
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    pool.map(append_merges, db.entries)
+    pool.close()
+    pool.join()
+    db = apply_merges(db)
+    create_commit(repo, db)
+
+    return db

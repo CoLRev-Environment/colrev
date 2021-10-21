@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import io
+import multiprocessing as mp
 import os
 import re
 
@@ -15,6 +16,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 
+from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
@@ -227,21 +229,11 @@ def prepare_pdf(entry):
     return entry
 
 
-def prepare_pdfs(bib_database):
-
-    print('TODO: if no OCR detected, create a copy & ocrmypdf')
-
-    for entry in bib_database.entries:
-        prepare_pdf(entry)
-
-    return bib_database
-
-
-def create_commit(repo, bib_database):
+def create_commit(repo, db):
 
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(db, MAIN_REFERENCES)
 
     if 'GIT' == repo_setup.config['PDF_HANDLING']:
         dirname = repo_setup.paths['PDF_DIRECTORY']
@@ -270,11 +262,33 @@ def create_commit(repo, bib_database):
         return True
 
 
+def prepare_pdfs(db, repo):
+
+    print('Prepare PDFs')
+    process.check_delay(db, min_status_requirement='pdf_needs_retrieval')
+
+    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+    print('TODO: BATCH_SIZE')
+
+    print('TODO: if no OCR detected, create a copy & ocrmypdf')
+
+    # for entry in db.entries:
+    #     prepare_pdf(entry)
+
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    pool.map(prepare_pdf, db.entries)
+    pool.close()
+    pool.join()
+
+    create_commit(repo, db)
+
+    return db
+
+
 def main():
 
-    print('\n\nValidate PDFs')
-    bib_database = utils.load_references_bib(True, initialize=True)
-    prepare_pdfs(bib_database)
+    db = utils.load_references_bib(True, initialize=True)
+    prepare_pdfs(db)
     return
 
 
