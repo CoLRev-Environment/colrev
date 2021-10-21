@@ -32,7 +32,9 @@ if os.path.exists('shared_config.ini') and \
         GIT_ACTOR=local_config['general']['GIT_ACTOR'],
         DEBUG_MODE=local_config.get('general', 'DEBUG_MODE', fallback=False),
         DATA_FORMAT=local_config.get(
-            'general', 'DATA_FORMAT', fallback='CSV_TABLE')
+            'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
+        PDF_HANDLING=local_config.get(
+            'general', 'PDF_HANDLING', fallback='EXT')
     )
 
 else:

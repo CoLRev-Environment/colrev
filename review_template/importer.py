@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 import re
+import shutil
 from itertools import chain
 
 import bibtexparser
@@ -94,7 +95,12 @@ def load_all_entries():
     bib_database = utils.load_references_bib(True, initialize=True)
     save_imported_entry_links(bib_database)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
-    additional_records = load_pool.map(load_entries, utils.get_search_files())
+    search_files = utils.get_search_files()
+    if any('.pdf' in x for x in search_files):
+        grobid_client.start_grobid()
+    additional_records = load_pool.map(load_entries, search_files)
+    load_pool.close()
+    load_pool.join()
     additional_records = list(chain(bib_database.entries, *additional_records))
 
     if os.path.exists('imported_entry_links.csv'):
@@ -270,26 +276,47 @@ def xlsx2bib(file):
     return db
 
 
+def move_to_pdf_dir(filepath):
+    # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
+    if not os.path.exists('/pdfs'):
+        os.mkdir('/pdfs')
+        shutil.move(filepath, '/pdfs/' + filepath)
+    return
+
+
+# curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
+# curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
+# -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
 def pdf2bib(file):
     grobid_client.check_grobid_availability()
 
-    r = requests.put(
+    # TODO: switch consolidateHeader on again once issue is resolved:
+    # https://github.com/kermitt2/grobid/issues/837
+    r = requests.post(
         grobid_client.get_grobid_url() + '/api/processHeaderDocument',
-        files=dict(input=open(file, 'rb')),
-        params={'consolidateHeader': '1'},
-        headers={'Accept': 'application/x-bibtex'}
+        headers={'Accept': 'application/x-bibtex'},
+        params={'consolidateHeader': '0'},
+        files=dict(input=open(file, 'rb'))
     )
+    print(r.status_code)
+    print(r.request.url)
+    print(r.request.headers)
+    # print(r.request.body)
+
     if 200 == r.status_code:
+        print(r.text)
+        print(file)
         db = bibtexparser.loads(r.text)
+        with open(file, 'w') as f:
+            f.write(r.text)
+        move_to_pdf_dir(file.replace('.pdf', '.bib'))
+
         return db
     if 500 == r.status_code:
         print('Error: Not a readable pdf file? ' + os.path.basename(file))
         print(f'Grobid: {r.text}')
         return None
 
-    # print(r.request.url)
-    # print(r.request.body)
-    # print(r.request.headers)
     print(f'Status: {r.status_code}')
     print(f'Response: {r.text}')
     return None
@@ -306,6 +333,7 @@ def pdfRefs2bib(file):
     )
     if 200 == r.status_code:
         db = bibtexparser.loads(r.text)
+        move_to_pdf_dir(file.replace('.pdf', '.bib'))
         return db
     if 500 == r.status_code:
         print('Error: Not a readable pdf file? ' + os.path.basename(file))
@@ -348,7 +376,7 @@ def load_search_results_file(search_file_path):
         if search_file.endswith('_ref_list.pdf'):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
-        print(f'- Loading {filetype}: {search_file}')
+        print(f' - Loading {filetype}: {search_file}')
         db = importer_scripts[filetype](search_file_path)
         if db is None:
             return None
@@ -378,7 +406,7 @@ def create_commit(r, bib_database):
 
     if MAIN_REFERENCES not in [i.a_path for i in r.index.diff(None)] and \
             MAIN_REFERENCES not in r.untracked_files:
-        print('- No new records added to MAIN_REFERENCES')
+        print(' - No new records added to MAIN_REFERENCES')
         return False
     else:
         # to avoid failing pre-commit hooks

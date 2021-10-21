@@ -74,28 +74,40 @@ def get_status_freq():
     processed_entries = 0
     entry_links = 0
     merged_entry_links = 0
-    pdf_available = 0
+
+    pdfs_to_retrieve = 0
+    pdfs_to_prepare = 0
+    pdfs_to_prepare_manually = 0
+    pdf_prepared = 0
 
     if os.path.exists(MAIN_REFERENCES):
         with open(MAIN_REFERENCES) as f:
             line = f.readline()
             while line:
-                if '{imported}' in line:
-                    imported_entries += 1
-                if '{needs_manual_preparation}' in line:
-                    manual_preparation_entries += 1
-                if '{prepared}' in line:
-                    prepared_entries += 1
-                if '{needs_manual_merging}' in line:
-                    manual_merging_entries += 1
-                if '{processed}' in line:
-                    processed_entries += 1
+                if ' status ' in line:
+                    if '{imported}' in line:
+                        imported_entries += 1
+                    if '{needs_manual_preparation}' in line:
+                        manual_preparation_entries += 1
+                    if '{prepared}' in line:
+                        prepared_entries += 1
+                    if '{needs_manual_merging}' in line:
+                        manual_merging_entries += 1
+                    if '{processed}' in line:
+                        processed_entries += 1
+                if ' pdf_status ' in line:
+                    if '{needs_retrieval}' in line:
+                        pdfs_to_retrieve += 1
+                    if '{needs_preparation}' in line:
+                        pdfs_to_prepare += 1
+                    if '{needs_manual_preparation}' in line:
+                        pdfs_to_prepare_manually += 1
+                    if '{prepared}' in line:
+                        pdf_prepared += 1
                 if 'entry_link' in line:
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
                     merged_entry_links += nr_entry_links
-                if 'file=' in line.replace(' ', ''):
-                    pdf_available += 1
 
                 line = f.readline()
 
@@ -105,12 +117,14 @@ def get_status_freq():
     overall_prepared = prepared_entries + manual_merging_entries + \
         processed_entries + merged_entry_links
 
+    pdfs_retrieved = pdfs_to_prepare + pdfs_to_prepare_manually + pdf_prepared
+    pdfs_required = pdfs_to_retrieve + pdfs_retrieved
+
     pre_screen_total = processed_entries
     pre_screen_included = 0
     pre_screen_excluded = 0
     nr_to_pre_screen = pre_screen_total - pre_screen_included - \
         pre_screen_excluded
-    pdfs_to_retrieve = 0
     non_bw_searched = 0
     screen_total = 0
     screen_included = 0
@@ -127,8 +141,6 @@ def get_status_freq():
         nr_to_pre_screen = \
             pre_screen_total - pre_screen_included - pre_screen_excluded
         # screen[screen['inclusion_1'] == 'TODO'].shape[0]
-        pdfs_to_retrieve = \
-            pre_screen_total - pre_screen_excluded - pdf_available
         screen.drop(screen[screen['inclusion_1'] == 'no'].index, inplace=True)
         screen_total = screen.shape[0]
         screen_included = screen[screen['inclusion_2'] == 'yes'].shape[0]
@@ -166,8 +178,12 @@ def get_status_freq():
              'pre_screen_included': pre_screen_included,
              'pre_screen_excluded': pre_screen_excluded,
              'nr_to_screen': nr_to_screen,
-             'pdf_available': pdf_available,
+             'pdfs_required': pdfs_required,
+             'pdfs_retrieved': pdfs_retrieved,
              'pdfs_to_retrieve': pdfs_to_retrieve,
+             'pdfs_to_prepare': pdfs_to_prepare,
+             'pdfs_to_prepare_manually': pdfs_to_prepare_manually,
+             'pdf_prepared': pdf_prepared,
              'non_bw_searched': non_bw_searched,
              'screen_total': screen_total,
              'screen_included': screen_included,
@@ -315,6 +331,11 @@ def review_status():
     SCREEN = repo_setup.paths['SCREEN']
     DATA = repo_setup.paths['DATA']
 
+    # Principle: first column shows total records/PDFs in each stage
+    # the second column shows
+    # (blank call)  * the number of records requiring manual action
+    #               -> the number of records excluded/merged
+
     print('\nStatus\n')
 
     if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
@@ -341,9 +362,6 @@ def review_status():
             print(' |                               * ' +
                   f'{str(status_freq["non_imported"]).rjust(6, " ")}' +
                   ' record(s) not yet imported.')
-
-        print(' |  - Records imported: ' +
-              f'{str(status_freq["overall_imported"]).rjust(6, " ")}')
 
         if status_freq['needs_manual_preparation'] > 0:
             nr_nmcl = status_freq['needs_manual_preparation']
@@ -373,6 +391,31 @@ def review_status():
               )
         print(' |')
 
+        print(' | PDFs')
+        print(' |  - PDFs required: ' +
+              f'{str(status_freq["pdfs_required"]).rjust(9, " ")}')
+        if 0 != status_freq['pdfs_to_retrieve']:
+            print(' |                               * ' +
+                  f'{str(status_freq["pdfs_to_retrieve"]).rjust(6, " ")}' +
+                  ' PDFs to retrieve')
+        print(' |  - PDFs retrieved: ' +
+              str(status_freq['pdfs_retrieved']).rjust(8, ' '))
+
+        if status_freq['pdfs_to_prepare_manually'] > 0:
+            pdfs_to_prep = str(status_freq['pdfs_to_prepare_manually'])
+            print(' |                               * ' +
+                  f'{pdfs_to_prep.rjust(6, " ")}' +
+                  ' PDFs need manual preparation')
+
+        if 0 != status_freq['pdfs_to_prepare']:
+            print(' |                               * ' +
+                  f'{str(status_freq["pdfs_to_prepare"]).rjust(6, " ")}' +
+                  ' PDFs to prepare')
+        print(' |  - PDFs prepared: ' +
+              str(status_freq['pdf_prepared']).rjust(9, ' '))
+
+        print(' |')
+
         # Screen
         if not os.path.exists(SCREEN):
             print(' | Screen')
@@ -381,8 +424,14 @@ def review_status():
         else:
 
             print(' | Pre-screen')
-            print(' |  - Total: ' +
-                  str(status_freq['pre_screen_total']).rjust(17, ' '))
+            print(' |  - Prescreen size: ' +
+                  str(status_freq['pre_screen_total']).rjust(8, ' '))
+
+            if 0 != status_freq['nr_to_pre_screen']:
+                print(' |                               * ' +
+                      str(status_freq['nr_to_pre_screen']).rjust(6, ' ') +
+                      ' records to prescreen'
+                      )
             print(
                 ' |  - Included: ' +
                 f'{str(status_freq["pre_screen_included"]).rjust(14, " ")}' +
@@ -391,36 +440,22 @@ def review_status():
                 ' records excluded'
             )
 
-            if 0 != status_freq['nr_to_pre_screen']:
-                print(
-                    ' |  - TODO: ' +
-                    str(status_freq['nr_to_pre_screen']).rjust(18, ' '),
-                )
-
             print(' |')
-            print(' | PDF acquisition')
-            print(' |  - Retrieved: ' +
-                  str(status_freq['pdf_available']).rjust(13, ' '))
-            if 0 != status_freq['pdfs_to_retrieve']:
-                print(' |  - TODO: ' +
-                      f'{str(status_freq["pdfs_to_retrieve"]).rjust(18, " ")}')
-            print(' |')
-
             print(' | Screen')
-            print(' |  - Total: ' +
-                  f'{str(status_freq["screen_total"]).rjust(17, " ")}')
-
+            print(' |  - Screen size: ' +
+                  f'{str(status_freq["screen_total"]).rjust(11, " ")}')
+            if 0 != status_freq['nr_to_screen']:
+                print(' |                               * ' +
+                      str(status_freq['nr_to_screen']).rjust(6, ' ') +
+                      ' records to screen'
+                      )
             print(
                 ' |  - Included: ' +
                 f'{str(status_freq["screen_included"]).rjust(14, " ")}   ->' +
                 f'{str(status_freq["screen_excluded"]).rjust(6, " ")} ' +
                 'records excluded'
             )
-            if 0 != status_freq['nr_to_screen']:
-                print(
-                    ' |  - TODO: ' +
-                    f'{str(status_freq["nr_to_screen"]).rjust(18, " ")}',
-                )
+
             print(' |')
 
         # Data

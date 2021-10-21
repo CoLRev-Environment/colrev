@@ -14,7 +14,6 @@ from review_template import utils
 
 pdfs_retrieved = 0
 existing_pdfs_linked = 0
-pdfs_available = 0
 
 # https://github.com/ContentMine/getpapers
 
@@ -82,14 +81,12 @@ def is_pdf(path_to_file):
 def acquire_pdf(entry):
     global pdfs_retrieved
     global existing_pdfs_linked
-    global pdfs_available
     global missing_entries
 
-    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+    if 'needs_retrieval' != entry.get('pdf_status', 'NA'):
+        return entry
 
-    print('TODO: check required status (join screening/needs pdf before)')
-    # Note: this should replace the line
-    # entry['ID'] in papers_to_acquire
+    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
@@ -97,7 +94,7 @@ def acquire_pdf(entry):
     pdf_filepath = os.path.join(PDF_DIRECTORY, entry['ID'] + '.pdf')
 
     if os.path.exists(pdf_filepath):
-        pdfs_available += 1
+        entry.update(pdf_status='needs_preparation')
         if 'file' not in entry:
             entry.update(file=':' + pdf_filepath + ':PDF')
             existing_pdfs_linked += 1
@@ -119,6 +116,7 @@ def acquire_pdf(entry):
                     if is_pdf(pdf_filepath):
                         print(f'Retrieved pdf (unpaywall): {pdf_filepath}')
                         entry.update(file=':' + pdf_filepath + ':PDF')
+                        entry.update('pdf_status', 'needs_preparation')
                         pdfs_retrieved += 1
                     else:
                         os.remove(pdf_filepath)
@@ -131,39 +129,25 @@ def acquire_pdf(entry):
     return entry
 
 
-def main():
+def acquire_pdfs(bib_database):
 
-    r = git.Repo('')
-    utils.require_clean_repo(r)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo, ignore_pattern='pdfs/')
 
     global pdfs_retrieved
     global existing_pdfs_linked
-    global pdfs_available
     global missing_entries
     missing_entries = BibDatabase()
 
-    print('Acquire PDFs')
-
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-
-    SCREEN = repo_setup.paths['SCREEN']
-    assert os.path.exists(SCREEN)
-    screen = pd.read_csv(SCREEN, dtype=str)
-
-    papers_to_acquire = \
-        screen.loc[screen.inclusion_2.notnull(), 'citation_key', ].tolist()
-
     for entry in bib_database.entries:
-        if entry['ID'] in papers_to_acquire:
-            entry = acquire_pdf(entry)
+        entry = acquire_pdf(entry)
 
-    print(f' - {len(papers_to_acquire)} pdfs required')
-    print(f' - {pdfs_available} pdfs available')
     if existing_pdfs_linked > 0:
-        print(f' - {existing_pdfs_linked} existing pdfs linked in bib file')
-    print(f' - {pdfs_retrieved} pdfs retrieved')
+        print(f' - {existing_pdfs_linked} existing PDFs linked in bib file')
+    if pdfs_retrieved > 0:
+        print(f' - {pdfs_retrieved} PDFs retrieved')
+    else:
+        print('  - No PDFs retrieved')
 
     if len(missing_entries.entries) > 0:
         missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
@@ -175,12 +159,52 @@ def main():
         missing_entries_df.to_csv('missing_pdf_files.csv',
                                   index=False, quoting=csv.QUOTE_ALL)
 
-        print(f' - {len(missing_entries.entries)} pdfs missing '
+        print(f' - {len(missing_entries.entries)} PDFs missing '
               '(see missing_pdf_files.csv)')
 
-    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
+    create_commit(repo, bib_database)
 
-    # TODO: create commit
+    return bib_database
+
+
+def create_commit(repo, bib_database):
+
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+
+    if 'GIT' == repo_setup.config['PDF_HANDLING']:
+        dirname = repo_setup.paths['PDF_DIRECTORY']
+        for filepath in os.listdir(dirname):
+            if filepath.endswith('.pdf'):
+                repo.index.add([os.path.join(dirname, filepath)])
+
+    hook_skipping = 'false'
+    if not repo_setup.config['DEBUG_MODE']:
+        hook_skipping = 'true'
+
+    if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
+            MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
+        print(' - No new records changed in MAIN_REFERENCES')
+        return False
+    else:
+        repo.index.add([MAIN_REFERENCES])
+        repo.index.commit(
+            '⚙️ Acquire PDFs ' + utils.get_version_flag() +
+            utils.get_commit_report(),
+            author=git.Actor('script:pdfs.py', ''),
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
+            skip_hooks=hook_skipping
+        )
+        return True
+
+
+def main():
+
+    print('Acquire PDFs')
+
+    acquire_pdfs()
 
 
 if __name__ == '__main__':

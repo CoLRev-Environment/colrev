@@ -777,7 +777,7 @@ def create_commit(r, bib_database):
 
         return True
     else:
-        print('- No additional prepared entries available')
+        print(' - No additional prepared entries available')
         return False
 
 
