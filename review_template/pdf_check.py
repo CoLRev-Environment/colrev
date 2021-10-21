@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import io
+import logging
 import multiprocessing as mp
 import os
 import re
@@ -19,6 +20,8 @@ from pdfminer.pdfparser import PDFSyntaxError
 from review_template import process
 from review_template import repo_setup
 from review_template import utils
+
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 
 def extract_text_by_page(entry, pages=None):
@@ -63,11 +66,12 @@ def get_text_from_pdf(entry):
 
         entry['text_from_pdf'] = text
     except PDFSyntaxError:
-        print(f' - PDF reader error: check whether {entry["file"]} is a pdf')
+        logging.error('PDF reader error: check whether '
+                      f'{entry["file"]} is a pdf')
         entry.update(pdf_status='needs_manual_preparation')
         pass
     except PDFTextExtractionNotAllowed:
-        print(f' - PDF reader error: protection {entry["file"]}')
+        logging.error(f'PDF reader error: protection {entry["file"]}')
         entry.update(pdf_status='needs_manual_preparation')
         pass
 
@@ -89,8 +93,8 @@ def pdf_check_ocr(entry):
         return entry
 
     if probability_english(entry['text_from_pdf']) < 0.9:
-        print(
-            f' - Warning: Validation error (OCR or language problems):'
+        logging.error(
+            'Validation error (OCR or language problems):'
             f' {entry["ID"]}')
         entry.update(pdf_status='needs_manual_preparation')
 
@@ -114,10 +118,7 @@ def validate_pdf_metadata(entry):
             match_count += 1
 
     if match_count/len(title_words) < 0.9:
-        print(
-            ' - Warning: ' +
-            f'title not found in first pages: {entry["ID"]}',
-        )
+        logging.error(f'Title not found in first pages: {entry["ID"]}')
         entry.update(pdf_status='needs_manual_preparation')
 
     match_count = 0
@@ -128,10 +129,7 @@ def validate_pdf_metadata(entry):
             match_count += 1
 
     if match_count/len(entry['author'].split(' and ')) < 0.8:
-        print(
-            ' - Warning: ' +
-            f'author not found in first pages: {entry["ID"]}',
-        )
+        logging.error(f'author not found in first pages: {entry["ID"]}')
         entry.update(pdf_status='needs_manual_preparation')
 
     return entry
@@ -145,14 +143,14 @@ def validate_completeness(entry):
         'morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas'
     if full_version_purchase_notice in \
             extract_text_by_page(entry).replace(' ', ''):
-        print(f' - Warning: {entry["ID"]} not the full version of the paper')
+        logging.error(f'{entry["ID"]} not the full version of the paper')
         entry.update(pdf_status='needs_manual_preparation')
         return entry
 
     pages_metadata = entry.get('pages', 'NA')
     if 'NA' == pages_metadata or not re.match(r'^\d*--\d*$', pages_metadata):
-        print(f' - Warning: {entry["ID"]} could not validate completeness '
-              f'- no pages in metadata')
+        logging.error(f'{entry["ID"]} could not validate completeness '
+                      f'- no pages in metadata')
         entry.update(pdf_status='needs_manual_preparation')
         return entry
 
@@ -160,9 +158,9 @@ def validate_completeness(entry):
         int(pages_metadata.split('--')[0]) + 1
 
     if nr_pages_metadata != entry['pages_in_file']:
-        print(f' - Warning: {entry["ID"]} Nr of pages in file '
-              f'({entry["pages_in_file"]}) not '
-              f'identical with record ({nr_pages_metadata} pages)')
+        logging.error(f'{entry["ID"]} Nr of pages in file '
+                      f'({entry["pages_in_file"]}) not '
+                      f'identical with record ({nr_pages_metadata} pages)')
         entry.update(pdf_status='needs_manual_preparation')
     return entry
 
@@ -175,7 +173,7 @@ def prepare_pdf(entry):
 
     pdf = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     if not os.path.exists(pdf):
-        print(f' - Linked file/pdf does not exist for {entry["ID"]}')
+        logging.error(f'Linked file/pdf does not exist for {entry["ID"]}')
         return entry
 
     # TODO
@@ -247,13 +245,23 @@ def create_commit(repo, db):
 
     if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
             MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        print('- No new records changed in MAIN_REFERENCES')
+        logging.info('- No new records changed in MAIN_REFERENCES')
         return False
     else:
         repo.index.add([MAIN_REFERENCES])
+
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                ''.join(processing_report)
+
         repo.index.commit(
             '⚙️ Prepare PDFs ' + utils.get_version_flag() +
-            utils.get_commit_report(),
+            utils.get_commit_report(os.path.basename(__file__)) +
+            processing_report,
             author=git.Actor('script:pdf_check.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
@@ -264,16 +272,14 @@ def create_commit(repo, db):
 
 def prepare_pdfs(db, repo):
 
-    print('Prepare PDFs')
     process.check_delay(db, min_status_requirement='pdf_needs_retrieval')
 
-    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
     print('TODO: BATCH_SIZE')
-
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
-    # for entry in db.entries:
-    #     prepare_pdf(entry)
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+    logging.info('Prepare PDFs')
 
     pool = mp.Pool(repo_setup.config['CPUS'])
     pool.map(prepare_pdf, db.entries)

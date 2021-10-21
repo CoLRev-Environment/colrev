@@ -92,7 +92,6 @@ def import_entry(entry):
 
 def load_all_entries():
 
-    print('Loading search results')
     bib_database = utils.load_references_bib(True, initialize=True)
     save_imported_entry_links(bib_database)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
@@ -106,7 +105,7 @@ def load_all_entries():
 
     if os.path.exists('imported_entry_links.csv'):
         os.remove('imported_entry_links.csv')
-    print()
+
     return additional_records
 
 
@@ -127,7 +126,7 @@ def bibutils_convert(script, data):
         container = \
             client.create_container('bibutils', script, stdin_open=True)
     except docker.errors.ImageNotFound:
-        print('Docker image not found')
+        logging.info('Docker image not found')
         return ''
         pass
 
@@ -162,7 +161,7 @@ def getbib(file):
         contents = bibtex_file.read()
         bib_r = re.compile(r'^@.*{.*,', re.M)
         if len(re.findall(bib_r, contents)) == 0:
-            print('Error: Not a bib file? ' + os.path.basename(file))
+            logging.info('Error: Not a bib file? ' + os.path.basename(file))
             individual_bib_database = None
         else:
             with open(file) as bibtex_file:
@@ -178,7 +177,7 @@ def ris2bib(file):
     with open(file) as reader:
         data = reader.read(4096)
     if 'TY  - ' not in data:
-        print('Error: Not a ris file? ' + os.path.basename(file))
+        logging.error('Error: Not a ris file? ' + os.path.basename(file))
         return None
 
     with open(file) as reader:
@@ -194,7 +193,7 @@ def end2bib(file):
     with open(file) as reader:
         data = reader.read(4096)
     if '%%T ' not in data:
-        print('Error: Not an end file? ' + os.path.basename(file))
+        logging.error('Error: Not an end file? ' + os.path.basename(file))
         return None
 
     with open(file) as reader:
@@ -247,7 +246,7 @@ def csv2bib(file):
     try:
         data = pd.read_csv(file)
     except pd.errors.ParserError:
-        print('Error: Not a csv file? ' + os.path.basename(file))
+        logging.error('Error: Not a csv file? ' + os.path.basename(file))
         pass
         return None
     data.columns = data.columns.str.replace(' ', '_')
@@ -264,7 +263,7 @@ def xlsx2bib(file):
     try:
         data = pd.read_excel(file)
     except pd.errors.ParserError:
-        print('Error: Not an xlsx file? ' + os.path.basename(file))
+        logging.error('Error: Not an xlsx file: ' + os.path.basename(file))
         pass
         return None
     data.columns = data.columns.str.replace(' ', '_')
@@ -314,7 +313,7 @@ def pdf2bib(file):
 
         return db
     if 500 == r.status_code:
-        print('Error: Not a readable pdf file? ' + os.path.basename(file))
+        logging.error(f'Not a readable pdf file: {os.path.basename(file)}')
         print(f'Grobid: {r.text}')
         return None
 
@@ -337,7 +336,7 @@ def pdfRefs2bib(file):
         move_to_pdf_dir(file.replace('.pdf', '.bib'))
         return db
     if 500 == r.status_code:
-        print('Error: Not a readable pdf file? ' + os.path.basename(file))
+        logging.error(f'Not a readable pdf file? {os.path.basename(file)}')
         print(f'Grobid: {r.text}')
         return None
 
@@ -377,10 +376,12 @@ def load_search_results_file(search_file_path):
         if search_file.endswith('_ref_list.pdf'):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
-        print(f' - Loading {filetype}: {search_file}')
+        logging.info(f'Loading {filetype}: {search_file}')
         db = importer_scripts[filetype](search_file_path)
         if db is None:
+            logging.error('No entries loaded')
             return None
+        logging.info(f'Loaded {len(db.entries)} entries from {search_file}')
         if corresponding_bib_file != search_file and \
                 not '.bib' == search_file[-4]:
             new_file_path = search_file_path.replace('.' + filetype, '.bib')
@@ -388,17 +389,17 @@ def load_search_results_file(search_file_path):
                 fi.write(bibtexparser.dumps(db))
         return db
     else:
-        print('Filetype not recognized: ' + search_file)
+        logging.info('Filetype not recognized: ' + search_file)
         return None
 
 
 def create_commit(r, bib_database):
     if bib_database is None:
-        print('- No entries imported')
+        logging.info('No entries imported')
         return False
 
     if 0 == len(bib_database.entries):
-        print('- No entries imported')
+        logging.info('No entries imported')
         return False
 
     r.index.add(utils.get_search_files())
@@ -407,7 +408,7 @@ def create_commit(r, bib_database):
 
     if MAIN_REFERENCES not in [i.a_path for i in r.index.diff(None)] and \
             MAIN_REFERENCES not in r.untracked_files:
-        print(' - No new records added to MAIN_REFERENCES')
+        logging.info('No new records added to MAIN_REFERENCES')
         return False
     else:
         # to avoid failing pre-commit hooks
@@ -421,9 +422,18 @@ def create_commit(r, bib_database):
         if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
 
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                ''.join(processing_report)
+
         r.index.commit(
             '⚙️ Import search results ' + utils.get_version_flag() +
-            utils.get_commit_report(),
+            utils.get_commit_report(os.path.basename(__file__)) +
+            processing_report,
             author=git.Actor('script:importer.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
@@ -464,7 +474,7 @@ def processing_condition(entry):
 
     if current_batch >= BATCH_SIZE:
         current_batch = 0
-        print(f'Processing entries {batch_start} to {batch_end}')
+        logging.info(f'Importing entries {batch_start} to {batch_end}')
         batch_start = batch_end + 1
         return True
 
@@ -472,6 +482,7 @@ def processing_condition(entry):
 
 
 def set_citation_keys(db):
+    logging.info('Set citation_keys')
     citation_key_list = [entry['ID'] for entry in db.entries]
     for entry in db.entries:
         if 'imported' == entry['status']:
@@ -485,7 +496,9 @@ def set_citation_keys(db):
 
 def import_entries(repo):
 
-    print('Import')
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+    logging.info('Import')
 
     db = BibDatabase()
     entry_iterator = IteratorEx(load_all_entries())
@@ -495,7 +508,7 @@ def import_entries(repo):
             if not processing_condition(entry):
                 continue  # keep appending entries
         else:
-            print('Processing entries')
+            logging.info('Importing entries')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
         db.entries = pool.map(import_entry, db.entries)
@@ -503,5 +516,7 @@ def import_entries(repo):
         pool.join()
         db = set_citation_keys(db)
         create_commit(repo, db)
+
+    print()
 
     return db

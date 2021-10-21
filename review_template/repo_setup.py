@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import configparser
+import logging
 import multiprocessing as mp
 import os
 
@@ -39,6 +40,19 @@ if os.path.exists('shared_config.ini') and \
 
 else:
     config = dict(REPO_SETUP_VERSION=repo_version_fallback)
+
+if os.path.exists('report.log'):
+    os.remove('report.log')
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler('report.log'),
+        logging.StreamHandler()
+    ]
+)
 
 #############################################################################
 

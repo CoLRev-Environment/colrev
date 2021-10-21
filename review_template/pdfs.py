@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import json
+import logging
 import multiprocessing as mp
 import os
 
@@ -17,6 +18,8 @@ pdfs_retrieved = 0
 existing_pdfs_linked = 0
 
 # https://github.com/ContentMine/getpapers
+
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 
 def unpaywall(doi, retry=0, pdfonly=True):
@@ -115,66 +118,21 @@ def acquire_pdf(entry):
                     with open(pdf_filepath, 'wb') as f:
                         f.write(res.content)
                     if is_pdf(pdf_filepath):
-                        print(f'Retrieved pdf (unpaywall): {pdf_filepath}')
+                        logging.info('Retrieved pdf (unpaywall):'
+                                     f' {pdf_filepath}')
                         entry.update(file=':' + pdf_filepath + ':PDF')
                         entry.update('pdf_status', 'needs_preparation')
                         pdfs_retrieved += 1
                     else:
                         os.remove(pdf_filepath)
                 else:
-                    print(f'Unpaywall retrieval error {res.status_code}/{url}')
+                    logging.info('Unpaywall retrieval error '
+                                 f'{res.status_code}/{url}')
 
     if not os.path.exists(pdf_filepath):
         missing_entries.entries.append(entry)
 
     return entry
-
-
-def acquire_pdfs(db, repo):
-
-    print('Acquire PDFs')
-    utils.require_clean_repo(repo, ignore_pattern='pdfs/')
-    process.check_delay(db, min_status_requirement='processed')
-
-    global pdfs_retrieved
-    global existing_pdfs_linked
-    global missing_entries
-    missing_entries = BibDatabase()
-
-    BATCH_SIZE = repo_setup.config['BATCH_SIZE']
-    print('TODO: BATCH_SIZE')
-
-    # for entry in db.entries:
-    #     entry = acquire_pdf(entry)
-
-    pool = mp.Pool(repo_setup.config['CPUS'])
-    db.entries = pool.map(acquire_pdf, db.entries)
-    pool.close()
-    pool.join()
-
-    if existing_pdfs_linked > 0:
-        print(f' - {existing_pdfs_linked} existing PDFs linked in bib file')
-    if pdfs_retrieved > 0:
-        print(f' - {pdfs_retrieved} PDFs retrieved')
-    else:
-        print('  - No PDFs retrieved')
-
-    if len(missing_entries.entries) > 0:
-        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
-        col_order = [
-            'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'number', 'pages', 'doi'
-        ]
-        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
-        missing_entries_df.to_csv('missing_pdf_files.csv',
-                                  index=False, quoting=csv.QUOTE_ALL)
-
-        print(f' - {len(missing_entries.entries)} PDFs missing '
-              '(see missing_pdf_files.csv)')
-
-    create_commit(repo, db)
-
-    return db
 
 
 def create_commit(repo, db):
@@ -195,19 +153,77 @@ def create_commit(repo, db):
 
     if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
             MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        print(' - No new records changed in MAIN_REFERENCES')
+        logging.info('No new records changed in MAIN_REFERENCES')
         return False
     else:
         repo.index.add([MAIN_REFERENCES])
+
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                ''.join(processing_report)
+
         repo.index.commit(
             '⚙️ Acquire PDFs ' + utils.get_version_flag() +
-            utils.get_commit_report(),
+            utils.get_commit_report(os.path.basename(__file__)) +
+            processing_report,
             author=git.Actor('script:pdfs.py', ''),
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
             skip_hooks=hook_skipping
         )
         return True
+
+
+def acquire_pdfs(db, repo):
+
+    utils.require_clean_repo(repo, ignore_pattern='pdfs/')
+    process.check_delay(db, min_status_requirement='processed')
+
+    global pdfs_retrieved
+    global existing_pdfs_linked
+    global missing_entries
+    missing_entries = BibDatabase()
+
+    print('TODO: BATCH_SIZE')
+
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+    logging.info('Acquire PDFs')
+
+    pool = mp.Pool(repo_setup.config['CPUS'])
+    db.entries = pool.map(acquire_pdf, db.entries)
+    pool.close()
+    pool.join()
+
+    create_commit(repo, db)
+    # TODO: pass summary (nr of missing_entries) to the create_commit
+    # and put them before the detailed report output
+    if existing_pdfs_linked > 0:
+        logging.info(
+            f'{existing_pdfs_linked} existing PDFs linked in bib file')
+    if pdfs_retrieved > 0:
+        logging.info(f'{pdfs_retrieved} PDFs retrieved')
+    else:
+        logging.info('  - No PDFs retrieved')
+
+    if len(missing_entries.entries) > 0:
+        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
+        col_order = [
+            'ID', 'author', 'title', 'journal', 'booktitle',
+            'year', 'volume', 'number', 'pages', 'doi'
+        ]
+        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
+        missing_entries_df.to_csv('missing_pdf_files.csv',
+                                  index=False, quoting=csv.QUOTE_ALL)
+
+        logging.info(f'{len(missing_entries.entries)} PDFs missing '
+                     '(see missing_pdf_files.csv)')
+
+    return db
 
 
 def main():

@@ -303,7 +303,7 @@ def unify_pages_field(input_string):
     if not re.match(r'^\d*$', input_string) and \
        not re.match(r'^\d*--\d*$', input_string) and\
        not re.match(r'^[xivXIV]*--[xivXIV]*$', input_string):
-        print(f'  - Unusual pages: {input_string}')
+        logging.warning(f'Unusual pages: {input_string}')
     return input_string
 
 
@@ -548,10 +548,13 @@ def get_package_details():
     return 'review_template (version ' + version('review_template') + ')'
 
 
-def get_commit_report():
+def get_commit_report(script_name=None):
     report = '\n\nReport\n\n'
 
-    report = report + 'Software\n - ' + get_package_details()
+    report = report + 'Software\n'
+    if script_name is not None:
+        report = report + ' - Script: ' + script_name
+    report = report + '\n - Package: ' + get_package_details()
 
     if 'dirty' in get_package_details():
         report = report + '\n - ⚠: created with a modified version ' + \

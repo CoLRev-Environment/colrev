@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 import csv
+import logging
+import os
 from datetime import datetime
 
 import git
@@ -12,6 +14,7 @@ from review_template import repo_setup
 from review_template import utils
 
 SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
+BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 data_dir = ''
 
@@ -83,9 +86,18 @@ def create_commit(r, bibfilenames):
     for f in bibfilenames:
         r.index.add([f])
 
+    processing_report = ''
+    if os.path.exists('report.log'):
+        with open('report.log') as f:
+            processing_report = f.readlines()
+        processing_report = \
+            f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+            ''.join(processing_report)
+
     r.index.commit(
         '⚙️ Backward search ' + utils.get_version_flag() +
-        utils.get_commit_report(),
+        utils.get_commit_report(os.path.basename(__file__)) +
+        processing_report,
         author=git.Actor('script:backward_search.py', ''),
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                             repo_setup.config['EMAIL']),
@@ -96,10 +108,11 @@ def create_commit(r, bibfilenames):
 def main():
     r = git.Repo()
     utils.require_clean_repo(r)
-
-    print('Backward search')
-
     grobid_client.start_grobid()
+
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+    logging.info('Backward search')
 
     bibfilenames = []
     citation_keys = utils.get_pdfs_of_included_papers()
@@ -108,6 +121,7 @@ def main():
         bibfilenames.append(bibfilename)
 
     create_commit(r, bibfilenames)
+    return
 
 
 if __name__ == '__main__':
