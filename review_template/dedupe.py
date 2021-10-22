@@ -495,6 +495,8 @@ def create_commit(r, bib_database):
                                     repo_setup.config['EMAIL']),
 
             )
+            with open('report.log', 'r+') as f:
+                f.truncate(0)
         return True
     else:
         logging.info('No duplicates merged')

@@ -439,6 +439,10 @@ def create_commit(r, bib_database):
                                 repo_setup.config['EMAIL']),
             skip_hooks=hook_skipping
         )
+        logging.info('Created commit')
+        print()
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
         return True
 
 
@@ -459,23 +463,28 @@ class IteratorEx:
             yield self.next()
 
 
-current_batch = 0
+current_batch_counter = 0
 batch_start = 1
 batch_end = 0
 
 
 def processing_condition(entry):
-    global current_batch
+    global current_batch_counter
     global batch_start
     global batch_end
 
-    current_batch += 1
+    # Do not count entries that have already been imported
+    if 'retrieved' != entry.get('status', 'NA'):
+        return False
+
+    if 0 == current_batch_counter:
+        batch_start = batch_end + 1
+
+    current_batch_counter += 1
     batch_end += 1
 
-    if current_batch >= BATCH_SIZE:
-        current_batch = 0
-        logging.info(f'Importing entries {batch_start} to {batch_end}')
-        batch_start = batch_end + 1
+    if current_batch_counter >= BATCH_SIZE:
+        current_batch_counter = 0
         return True
 
     return False
@@ -495,6 +504,8 @@ def set_citation_keys(db):
 
 
 def import_entries(repo):
+    global batch_start
+    global batch_end
 
     with open('report.log', 'r+') as f:
         f.truncate(0)
@@ -507,13 +518,22 @@ def import_entries(repo):
         if entry_iterator.hasNext:
             if not processing_condition(entry):
                 continue  # keep appending entries
-        else:
-            logging.info('Importing entries')
+
+        if batch_start > 1:
+            logging.info('Continuing batch import started earlier')
+        if 0 == batch_end:
+            logging.info('No new records loaded')
+            break
+        if 1 == batch_end:
+            logging.info('Importing one entry')
+        if batch_end != 1:
+            logging.info(f'Importing entries {batch_start} to {batch_end}')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
         db.entries = pool.map(import_entry, db.entries)
         pool.close()
         pool.join()
+
         db = set_citation_keys(db)
         create_commit(repo, db)
 

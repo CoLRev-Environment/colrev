@@ -21,6 +21,10 @@ from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
+prepared, need_manual_prep = 0, 0
+
+current_batch_counter = mp.Value('i', 0)
+
 
 def correct_entrytype(entry):
 
@@ -688,9 +692,16 @@ def drop_fields(entry):
 
 
 def prepare(entry):
+    global current_batch_counter
 
     if 'imported' != entry['status']:
         return entry
+
+    with current_batch_counter.get_lock():
+        if current_batch_counter.value >= BATCH_SIZE:
+            return entry
+        else:
+            current_batch_counter.value += 1
 
     entry = correct_entrytype(entry)
 
@@ -724,6 +735,8 @@ def prepare(entry):
 
 
 def create_commit(r, bib_database):
+    global prepared
+    global need_manual_prep
 
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
@@ -739,8 +752,11 @@ def create_commit(r, bib_database):
             with open('report.log') as f:
                 processing_report = f.readlines()
             processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                ''.join(processing_report)
+                f'\nProcessing (batch size: {BATCH_SIZE})\n' + \
+                f'- Prepared {prepared} entries\n' + \
+                f'- Marked {need_manual_prep} entries ' + \
+                'for manual preparation' + \
+                '\n- Details:\n' + ''.join(processing_report)
 
         r.index.commit(
             '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
@@ -750,7 +766,10 @@ def create_commit(r, bib_database):
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                 repo_setup.config['EMAIL']),
         )
-
+        logging.info('Created commit')
+        print()
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
         return True
     else:
         logging.info('No additional prepared entries available')
@@ -758,21 +777,39 @@ def create_commit(r, bib_database):
 
 
 def prepare_entries(db, repo):
+    global prepared
+    global need_manual_prep
 
     process.check_delay(db, min_status_requirement='imported')
     with open('report.log', 'r+') as f:
         f.truncate(0)
 
-    pool = mp.Pool(repo_setup.config['CPUS'])
-    print('TODO: BATCH_SIZE')
-    # TODO: mark entries and remove mark afterwards/before creating the commit?
-
     logging.info('Prepare')
-    db.entries = pool.map(prepare, db.entries)
-    pool.close()
-    pool.join()
 
-    create_commit(repo, db)
+    in_process = True
+    while in_process:
+        with current_batch_counter.get_lock():
+            current_batch_counter.value = 0  # start new batch
+
+        prepared = len([x for x in db.entries
+                        if 'prepared' == x.get('status', 'NA')])
+        need_manual_prep = \
+            len([x for x in db.entries
+                if 'needs_manual_preparation' == x.get('status', 'NA')])
+
+        pool = mp.Pool(repo_setup.config['CPUS'])
+        db.entries = pool.map(prepare, db.entries)
+        pool.close()
+        pool.join()
+
+        prepared = len([x for x in db.entries
+                        if 'prepared' == x.get('status', 'NA')]) - prepared
+        need_manual_prep = \
+            len([x for x in db.entries
+                if 'needs_manual_preparation' == x.get('status', 'NA')]) \
+            - need_manual_prep
+
+        in_process = create_commit(repo, db)
 
     print()
 

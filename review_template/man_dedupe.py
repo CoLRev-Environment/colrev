@@ -231,7 +231,8 @@ def manual_merge_commit(r):
                             repo_setup.config['EMAIL']),
         skip_hooks=hook_skipping
     )
-
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
     return
 
 
