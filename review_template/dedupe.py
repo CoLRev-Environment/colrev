@@ -448,7 +448,7 @@ def apply_merges(bib_database):
     return bib_database
 
 
-def create_commit(r, bib_database):
+def create_commit(repo, bib_database):
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
@@ -464,8 +464,8 @@ def create_commit(r, bib_database):
     if merge_details != '':
         merge_details = '\n\nDuplicates removed:\n' + merge_details
 
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
+    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
+            MAIN_REFERENCES in repo.untracked_files:
 
         # to avoid failing pre-commit hooks
         bib_database = utils.load_references_bib(
@@ -473,10 +473,10 @@ def create_commit(r, bib_database):
         )
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-        if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)]:
-            r.index.add([MAIN_REFERENCES])
+        if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)]:
+            repo.index.add([MAIN_REFERENCES])
             if os.path.exists('potential_duplicate_tuples.csv'):
-                r.index.add(['potential_duplicate_tuples.csv'])
+                repo.index.add(['potential_duplicate_tuples.csv'])
 
             processing_report = ''
             if os.path.exists('report.log'):
@@ -486,7 +486,7 @@ def create_commit(r, bib_database):
                     f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
                     ''.join(processing_report)
 
-            r.index.commit(
+            repo.index.commit(
                 '⚙️ Process duplicates' + utils.get_version_flag() +
                 utils.get_commit_report(os.path.basename(__file__)) +
                 processing_report,

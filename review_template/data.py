@@ -191,8 +191,8 @@ def generate_manuscript():
 
 def main():
 
-    r = git.Repo()
-    utils.require_clean_repo(r)
+    repo = git.Repo()
+    utils.require_clean_repo(repo)
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
 
     if 'NONE' == DATA_FORMAT:

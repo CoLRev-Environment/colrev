@@ -393,7 +393,7 @@ def load_search_results_file(search_file_path):
         return None
 
 
-def create_commit(r, bib_database):
+def create_commit(repo, bib_database):
     if bib_database is None:
         logging.info('No entries imported')
         return False
@@ -402,12 +402,12 @@ def create_commit(r, bib_database):
         logging.info('No entries imported')
         return False
 
-    r.index.add(utils.get_search_files())
+    repo.index.add(utils.get_search_files())
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    if MAIN_REFERENCES not in [i.a_path for i in r.index.diff(None)] and \
-            MAIN_REFERENCES not in r.untracked_files:
+    if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
+            MAIN_REFERENCES not in repo.untracked_files:
         logging.info('No new records added to MAIN_REFERENCES')
         return False
     else:
@@ -417,7 +417,7 @@ def create_commit(r, bib_database):
         )
         utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-        r.index.add([MAIN_REFERENCES])
+        repo.index.add([MAIN_REFERENCES])
         hook_skipping = 'false'
         if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
@@ -430,7 +430,7 @@ def create_commit(r, bib_database):
                 f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
                 ''.join(processing_report)
 
-        r.index.commit(
+        repo.index.commit(
             '⚙️ Import search results ' + utils.get_version_flag() +
             utils.get_commit_report(os.path.basename(__file__)) +
             processing_report,

@@ -56,15 +56,15 @@ def update_screen(bib_database):
     return
 
 
-def pre_screen_commit(r):
+def pre_screen_commit(repo):
 
-    r.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
+    repo.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
 
     hook_skipping = 'false'
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
-    r.index.commit(
+    repo.index.commit(
         'Pre-screening (manual)' + utils.get_version_flag() +
         utils.get_commit_report(),
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
@@ -93,8 +93,8 @@ def customsort(dict1, key_order):
 
 def prescreen():
 
-    r = git.Repo('')
-    utils.require_clean_repo(r)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo)
 
     print('\n\nRun prescreen')
 
@@ -165,23 +165,23 @@ def prescreen():
     # If records remain for pre-screening, ask whether to create a commit
     if 0 < screen[screen['inclusion_1'] == 'TODO'].shape[0]:
         if 'y' == input('Create commit (y/n)?'):
-            pre_screen_commit()
+            pre_screen_commit(repo)
     else:
-        pre_screen_commit()
+        pre_screen_commit(repo)
 
     return
 
 
-def screen_commit(r):
+def screen_commit(repo):
 
-    r = git.Repo('')
-    r.index.add([SCREEN])
+    repo = git.Repo('')
+    repo.index.add([SCREEN])
 
     hook_skipping = 'false'
     if not repo_setup.config['DEBUG_MODE']:
         hook_skipping = 'true'
 
-    r.index.commit(
+    repo.index.commit(
         'Screening (manual)' + utils.get_version_flag() +
         utils.get_commit_report(),
         author=git.Actor(repo_setup.config['GIT_ACTOR'],
@@ -196,8 +196,8 @@ def screen_commit(r):
 
 def screen():
 
-    r = git.Repo('')
-    utils.require_clean_repo(r)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo)
 
     print('\n\nRun screen')
 
@@ -283,9 +283,9 @@ def screen():
     # If records remain for screening, ask whether to create a commit
     if 0 < screen[screen['inclusion_2'] == 'TODO'].shape[0]:
         if 'y' == input('Create commit (y/n)?'):
-            screen_commit(r)
+            screen_commit(repo)
     else:
-        screen_commit(r)
+        screen_commit(repo)
 
     return
 

@@ -112,8 +112,8 @@ def man_prep_entry(entry):
 def man_prep_entries():
     global citation_key_list
 
-    r = git.Repo('')
-    utils.require_clean_repo(r)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo)
 
     print('Loading records for manual preparation...')
     bib_database = utils.load_references_bib(
@@ -126,24 +126,24 @@ def man_prep_entries():
         entry = man_prep_entry(entry)
         utils.save_bib_file(bib_database)
 
-    create_commit(r, bib_database)
+    create_commit(repo, bib_database)
     return
 
 
-def create_commit(r, bib_database):
+def create_commit(repo, bib_database):
 
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
+    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
+            MAIN_REFERENCES in repo.untracked_files:
 
-        r.index.add([MAIN_REFERENCES])
+        repo.index.add([MAIN_REFERENCES])
 
         hook_skipping = 'false'
         if not repo_setup.config['DEBUG_MODE']:
             hook_skipping = 'true'
-        r.index.commit(
+        repo.index.commit(
             'Prepare records for import' +
             '\n - ' + utils.get_package_details() +
             '\n' + utils.get_status_report(),
