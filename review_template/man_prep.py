@@ -28,7 +28,7 @@ def print_entry(entry):
     return
 
 
-def correct_entrytype(entry):
+def man_correct_entrytype(entry):
 
     if 'n' == input('ENTRYTYPE=' + entry['ENTRYTYPE'] + ' correct?'):
         choice = input('Correct type: ' +
@@ -44,7 +44,7 @@ def correct_entrytype(entry):
     return entry
 
 
-def man_completion(entry):
+def man_provide_required_fields(entry):
     if prepare.is_complete(entry):
         return entry
 
@@ -56,7 +56,7 @@ def man_completion(entry):
     return entry
 
 
-def man_fix_inconsistencies(entry):
+def man_fix_field_inconsistencies(entry):
     if not prepare.has_inconsistent_fields(entry):
         return entry
 
@@ -84,11 +84,11 @@ def man_prep_entry(entry):
 
     print_entry(entry)
 
-    correct_entrytype(entry)
+    man_correct_entrytype(entry)
 
-    man_completion(entry)
+    man_provide_required_fields(entry)
 
-    man_fix_inconsistencies(entry)
+    man_fix_field_inconsistencies(entry)
 
     man_fix_incomplete_fields(entry)
 

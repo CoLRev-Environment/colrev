@@ -375,8 +375,7 @@ def review_status():
         print(' |  - Records prepared: ' +
               f'{str(status_freq["overall_prepared"]).rjust(6, " ")}')
 
-        if status_freq['prepared'] > 0 and \
-                (status_freq['prepared'] == status_freq['overall_imported']):
+        if status_freq['prepared'] > 0:
             print(' |                               * ' +
                   f'{str(status_freq["prepared"]).rjust(6, " ")}' +
                   ' record(s) need merging.')

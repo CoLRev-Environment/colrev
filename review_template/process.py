@@ -12,12 +12,9 @@ from review_template import prepare
 from review_template import repo_setup
 from review_template import utils
 
-DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
-
-# Note: BATCH_SIZE can be as small as 1.
 # Records should not be propagated/screened when the batch
 # has not yet been committed
-BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
 
 
 class DelayRequirement(Exception):

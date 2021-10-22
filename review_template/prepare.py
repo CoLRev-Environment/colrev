@@ -711,6 +711,8 @@ def prepare(entry):
 
     entry = apply_crowd_rules(entry)
 
+    # Note: we require (almost) perfect matches for the following.
+    # Cases with higher dissimilarity will be handled in the man_prep.py
     entry = get_doi_from_crossref(entry)
 
     entry = get_metadata_from_dblp(entry)
