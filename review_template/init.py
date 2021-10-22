@@ -44,7 +44,7 @@ def get_value(msg, options):
 
 def init_new_repo():
 
-    r = git.Repo.init()
+    repo = git.Repo.init()
 
     print('\n\nInitialize review repository')
     project_title = input('Project title: ')
@@ -130,7 +130,7 @@ def init_new_repo():
 
     from review_template import utils
 
-    r.index.add([
+    repo.index.add([
         'readme.md',
         SEARCH_DETAILS,
         '.pre-commit-config.yaml',
@@ -139,7 +139,7 @@ def init_new_repo():
         'shared_config.ini',
     ])
 
-    r.index.commit(
+    repo.index.commit(
         'Initial commit' + utils.get_version_flag(),
         author=git.Actor('script:init.py', ''),
         committer=git.Actor(committer_name, committer_email),
@@ -149,8 +149,8 @@ def init_new_repo():
         remote_url = input('URL:')
         try:
             requests.get(remote_url)
-            origin = r.create_remote('origin', remote_url)
-            r.heads.main.set_tracking_branch(origin.refs.main)
+            origin = repo.create_remote('origin', remote_url)
+            repo.heads.main.set_tracking_branch(origin.refs.main)
             origin.push()
         except requests.ConnectionError:
             print('URL of shared repository cannot be reached. Use '
@@ -162,7 +162,7 @@ def init_new_repo():
     # git branch -M main
     # git push -u origin main
 
-    return r
+    return repo
 
 
 def clone_shared_repo():
@@ -175,38 +175,38 @@ def clone_shared_repo():
         requests.get(remote_url)
         repo_name = os.path.splitext(os.path.basename(remote_url))[0]
         print('Clone shared repository...')
-        r = git.Repo.clone_from(remote_url, repo_name)
+        repo = git.Repo.clone_from(remote_url, repo_name)
         print(f'Use cd {repo_name}')
     except requests.ConnectionError:
         print('URL of shared repository cannot be reached. Use '
               'git remote add origin https://github.com/user/repo\n'
               'git push origin main')
         pass
-    return r
+    return repo
 
 
 def initialize_repo():
     if 0 != len(os.listdir(os.getcwd())):
-        r = clone_shared_repo()
+        repo = clone_shared_repo()
     else:
         if 'y' == input('Retrieve shared repository?'):
-            r = clone_shared_repo()
+            repo = clone_shared_repo()
         else:
-            r = init_new_repo()
-    return r
+            repo = init_new_repo()
+    return repo
 
 
 def get_repo():
     try:
-        r = git.Repo()
+        repo = git.Repo()
         # TODO: further checks?
-        return r
+        return repo
     except git.exc.InvalidGitRepositoryError:
         print('No git repository found.')
         pass
 
-    r = initialize_repo()
-    return r
+    repo = initialize_repo()
+    return repo
 
 
 if __name__ == '__main__':

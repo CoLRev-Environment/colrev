@@ -734,7 +734,7 @@ def prepare(entry):
     return entry
 
 
-def create_commit(r, bib_database):
+def create_commit(repo, bib_database):
     global prepared
     global need_manual_prep
 
@@ -742,10 +742,10 @@ def create_commit(r, bib_database):
 
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
 
-    if MAIN_REFERENCES in [item.a_path for item in r.index.diff(None)] or \
-            MAIN_REFERENCES in r.untracked_files:
+    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
+            MAIN_REFERENCES in repo.untracked_files:
 
-        r.index.add([MAIN_REFERENCES])
+        repo.index.add([MAIN_REFERENCES])
 
         processing_report = ''
         if os.path.exists('report.log'):
@@ -758,7 +758,7 @@ def create_commit(r, bib_database):
                 'for manual preparation' + \
                 '\n- Details:\n' + ''.join(processing_report)
 
-        r.index.commit(
+        repo.index.commit(
             '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
             utils.get_commit_report(os.path.basename(__file__)) +
             processing_report,

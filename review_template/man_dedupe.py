@@ -204,9 +204,9 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
     return bib_database
 
 
-def manual_merge_commit(r):
+def manual_merge_commit(repo):
 
-    r.git.add(update=True)
+    repo.git.add(update=True)
     # deletion of 'potential_duplicate_tuples.csv' may added to git staging
 
     hook_skipping = 'false'
@@ -221,7 +221,7 @@ def manual_merge_commit(r):
             f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
             ''.join(processing_report)
 
-    r.index.commit(
+    repo.index.commit(
         'Process duplicates manually' + utils.get_version_flag() +
         utils.get_commit_report(os.path.basename(__file__)) +
         processing_report,
@@ -239,8 +239,8 @@ def manual_merge_commit(r):
 def main():
     global removed_tuples
 
-    r = git.Repo('')
-    utils.require_clean_repo(r)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo)
 
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
@@ -292,9 +292,9 @@ def main():
     # If there are remaining duplicates, ask whether to create a commit
     if not stat.split('/')[0] == stat.split('/')[1]:
         if 'y' == input('Create commit (y/n)?'):
-            manual_merge_commit()
+            manual_merge_commit(repo)
     else:
-        manual_merge_commit()
+        manual_merge_commit(repo)
 
 
 if __name__ == '__main__':
