@@ -157,6 +157,7 @@ def create_commit(r, bib_database):
 
 
 def main():
+    print('TODO: include processing_reports')
     man_prep_entries()
     return
 

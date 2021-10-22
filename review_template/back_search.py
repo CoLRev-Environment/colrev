@@ -102,6 +102,8 @@ def create_commit(r, bibfilenames):
         committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                             repo_setup.config['EMAIL']),
     )
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
     return
 
 

@@ -175,7 +175,42 @@ def create_commit(repo, db):
                                 repo_setup.config['EMAIL']),
             skip_hooks=hook_skipping
         )
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
         return True
+
+
+def print_details():
+    global pdfs_retrieved
+    global existing_pdfs_linked
+    global missing_entries
+
+    if existing_pdfs_linked > 0:
+        logging.info(
+            f'{existing_pdfs_linked} existing PDFs linked in bib file')
+    if pdfs_retrieved > 0:
+        logging.info(f'{pdfs_retrieved} PDFs retrieved')
+    else:
+        logging.info('  - No PDFs retrieved')
+    if len(missing_entries.entries) > 0:
+        logging.info(f'{len(missing_entries.entries)} PDFs missing ')
+    return
+
+
+def export_retrieval_table():
+    global missing_entries
+    if len(missing_entries.entries) > 0:
+        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
+        col_order = [
+            'ID', 'author', 'title', 'journal', 'booktitle',
+            'year', 'volume', 'number', 'pages', 'doi'
+        ]
+        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
+        missing_entries_df.to_csv('missing_pdf_files.csv',
+                                  index=False, quoting=csv.QUOTE_ALL)
+
+        logging.info('See missing_pdf_files.csv for paper details')
+    return
 
 
 def acquire_pdfs(db, repo):
@@ -183,8 +218,6 @@ def acquire_pdfs(db, repo):
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
     process.check_delay(db, min_status_requirement='processed')
 
-    global pdfs_retrieved
-    global existing_pdfs_linked
     global missing_entries
     missing_entries = BibDatabase()
 
@@ -200,28 +233,9 @@ def acquire_pdfs(db, repo):
     pool.join()
 
     create_commit(repo, db)
-    # TODO: pass summary (nr of missing_entries) to the create_commit
-    # and put them before the detailed report output
-    if existing_pdfs_linked > 0:
-        logging.info(
-            f'{existing_pdfs_linked} existing PDFs linked in bib file')
-    if pdfs_retrieved > 0:
-        logging.info(f'{pdfs_retrieved} PDFs retrieved')
-    else:
-        logging.info('  - No PDFs retrieved')
 
-    if len(missing_entries.entries) > 0:
-        missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
-        col_order = [
-            'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'number', 'pages', 'doi'
-        ]
-        missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
-        missing_entries_df.to_csv('missing_pdf_files.csv',
-                                  index=False, quoting=csv.QUOTE_ALL)
-
-        logging.info(f'{len(missing_entries.entries)} PDFs missing '
-                     '(see missing_pdf_files.csv)')
+    print_details()
+    export_retrieval_table()
 
     return db
 

@@ -357,11 +357,14 @@ def review_status():
             ' |  - Records retrieved: ' +
             f'{str(status_freq["retrieved"]).rjust(5, " ")}',
         )
-
         if status_freq['non_imported'] > 0:
             print(' |                               * ' +
                   f'{str(status_freq["non_imported"]).rjust(6, " ")}' +
                   ' record(s) not yet imported.')
+        print(
+            ' |  - Records imported: ' +
+            f'{str(status_freq["overall_imported"]).rjust(6, " ")}',
+        )
 
         if status_freq['needs_manual_preparation'] > 0:
             nr_nmcl = status_freq['needs_manual_preparation']
