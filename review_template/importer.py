@@ -522,7 +522,7 @@ def import_entries(repo):
         if batch_start > 1:
             logging.info('Continuing batch import started earlier')
         if 0 == batch_end:
-            logging.info('No new records loaded')
+            logging.info('No new records')
             break
         if 1 == batch_end:
             logging.info('Importing one entry')
