@@ -22,7 +22,6 @@ requirements = ['Click==8.0.1',
                 'pdfminer.six==20211012',
                 'python_Levenshtein==0.12.2',
                 'requests==2.22.0',
-                'tqdm==4.61.1',
                 'docker_py==1.10.6']
 # 'configparser>=5.0'
 

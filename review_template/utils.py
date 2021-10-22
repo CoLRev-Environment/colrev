@@ -492,39 +492,28 @@ def save_bib_file(bib_database, target_file=None):
     return
 
 
-def get_pdfs_of_included_papers():
-
-    assert os.path.exists(MAIN_REFERENCES)
+def add_pipeline_status_info(bib_database):
     assert os.path.exists(SCREEN)
-
     screen = pd.read_csv(SCREEN, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
 
-    pdfs = []
-    for record_id in screen['citation_key'].tolist():
+    for entry in bib_database.entries:
+        entry['pipeline_status'] = 'NA'
 
-        with open(MAIN_REFERENCES) as bib_file:
-            bib_database = BibTexParser(
-                customization=convert_to_unicode,
-                ignore_nonstandard_types=False,
-                common_strings=True,
-            ).parse_file(bib_file, partial=True)
+        incl_1 = screen.loc[screen.citation_key == entry['ID'], 'inclusion_1']
+        incl_2 = screen.loc[screen.citation_key == entry['ID'], 'inclusion_2']
 
-            for entry in bib_database.entries:
-                if entry.get('ID', '') == record_id:
-                    if 'file' in entry:
-                        filename = entry['file'].replace('.pdf:PDF', '.pdf')\
-                                                .replace(':', '')
-                        pdf_path = os.path.join(os.getcwd(), filename)
-                        if os.path.exists(pdf_path):
-                            pdfs.append(entry['ID'])
-                        else:
-                            print(
-                                '- Error: file not available ',
-                                f'{entry["file"]} ({entry["ID"]})',
-                            )
+        if not pd.isnull(incl_1.values[0]):
+            if 'no' == incl_1.values[0]:
+                entry['pipeline_status'] = 'pre_screen_excluded'
+        if not pd.isnull(incl_2.values[0]):
+            if 'no' == incl_2.values[0]:
+                entry['pipeline_status'] = 'excluded'
+            if 'yes' == incl_2.values[0]:
+                entry['pipeline_status'] = 'included'
 
-    return pdfs
+    # TODO: consider data status
+
+    return bib_database
 
 
 def require_clean_repo(repo=None, ignore_pattern=None):
