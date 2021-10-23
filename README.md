@@ -1,8 +1,9 @@
 # Literature review template
 
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-360/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-- Git-based (collaborative) literature reviews
+
+- Git-based collaborative literature reviews
 - Easy to learn: one command, `review_template status`, provides an overview and instructions
 - Collaboration protocols and consistency checks ([pre-commit hooks](https://github.com/geritwagner/pipeline-validation-hooks)) aimed at preventing git conflicts
 - Traceability of records and changes
@@ -18,7 +19,7 @@
 
 _Currently an alpha-version focused on the command-line. None of the scripts has been tested extensively._
 
-# Installation
+# Installation and usage
 
 Requirements: [git](https://git-scm.com/downloads), [Docker](https://www.docker.com/), [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
 
@@ -29,29 +30,16 @@ cd review_template
 pip3 install --user -e .
 # Once the project is available on PyPI:
 # pip install review_template
-
 ```
 
-# Usage
+On the command line, use the following command:
 
-On the command line iteratively use the following commands:
-
-- `review_template status`: provides an overview of the state of the pipeline and suggests the next processing and collaboration steps
-- `review_template COMMAND`: task that processes or analyzes records (e.g., `review_template init`, `review_template process`)
-- `git COMMAND`: manage and analyze file versions and collaboration (e.g., `git status`, `git push`, `git pull`)
-
-The `review_template status` provides all instructions (simply copy and paste).
-
-### `review_template status`
-
+- `review_template status`: provides an overview of the state of the pipeline and suggests the next processing and versioning/collaboration steps (simply copy and paste).
 
 ![Status command and explanation](docs/figures/status_explanation.PNG?raw=true)
 
-
-### `review_template COMMANDs`
-
-The following commands are available.
-Further information will be provided in the documentation (add-link).
+Further information is available in the documentation (add-link).
+For the processing, the following `review_template commands` are available.
 
 ```bash
 $review_template
