@@ -494,14 +494,14 @@ def review_instructions():
         print('  To import, use\n     review_template process')
         return
 
-    if status_freq['prepared'] > 0:
-        print('  To continue with entry preparation, '
-              'use\n     review_template process')
-        return
-
     if status_freq['needs_manual_preparation'] > 0:
         print('  To continue with manual preparation, '
               'use\n     review_template man-prep')
+        return
+
+    if status_freq['prepared'] > 0:
+        print('  To continue with entry preparation, '
+              'use\n     review_template process')
         return
 
     if status_freq['needs_manual_merging'] > 0:

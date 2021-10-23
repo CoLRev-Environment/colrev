@@ -23,6 +23,8 @@ from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
+current_batch_counter = mp.Value('i', 0)
+
 
 def extract_text_by_page(entry, pages=None):
 
@@ -171,6 +173,12 @@ def prepare_pdf(entry):
             'file' not in entry:
         return entry
 
+    with current_batch_counter.get_lock():
+        if current_batch_counter.value >= BATCH_SIZE:
+            return entry
+        else:
+            current_batch_counter.value += 1
+
     pdf = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     if not os.path.exists(pdf):
         logging.error(f'Linked file/pdf does not exist for {entry["ID"]}')
@@ -235,9 +243,10 @@ def create_commit(repo, db):
 
     if 'GIT' == repo_setup.config['PDF_HANDLING']:
         dirname = repo_setup.paths['PDF_DIRECTORY']
-        for filepath in os.listdir(dirname):
-            if filepath.endswith('.pdf'):
-                repo.index.add([os.path.join(dirname, filepath)])
+        if os.path.exists(dirname):
+            for filepath in os.listdir(dirname):
+                if filepath.endswith('.pdf'):
+                    repo.index.add([os.path.join(dirname, filepath)])
 
     hook_skipping = 'false'
     if not repo_setup.config['DEBUG_MODE']:
@@ -245,7 +254,7 @@ def create_commit(repo, db):
 
     if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
             MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        logging.info('- No new records changed in MAIN_REFERENCES')
+        logging.info('No PDFs prepared')
         return False
     else:
         repo.index.add([MAIN_REFERENCES])
@@ -274,21 +283,43 @@ def create_commit(repo, db):
 
 def prepare_pdfs(db, repo):
 
-    process.check_delay(db, min_status_requirement='pdf_needs_retrieval')
+    process.check_delay(db, min_status_requirement='pdf_needs_preparation')
 
-    print('TODO: BATCH_SIZE')
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
     with open('report.log', 'r+') as f:
         f.truncate(0)
     logging.info('Prepare PDFs')
 
-    pool = mp.Pool(repo_setup.config['CPUS'])
-    pool.map(prepare_pdf, db.entries)
-    pool.close()
-    pool.join()
+    in_process = True
+    batch_start, batch_end = 1, 0
+    while in_process:
+        with current_batch_counter.get_lock():
+            batch_start += current_batch_counter.value
+            current_batch_counter.value = 0  # start new batch
+        if batch_start > 1:
+            logging.info('Continuing batch preparation started earlier')
 
-    create_commit(repo, db)
+        pool = mp.Pool(repo_setup.config['CPUS'])
+        pool.map(prepare_pdf, db.entries)
+        pool.close()
+        pool.join()
+
+        with current_batch_counter.get_lock():
+            batch_end = current_batch_counter.value + batch_start - 1
+
+        if batch_end > 0:
+            logging.info('Completed pdf preparation batch '
+                         f'(entries {batch_start} to {batch_end})')
+
+            in_process = create_commit(repo, db)
+
+        if batch_end < BATCH_SIZE or batch_end == 0:
+            if batch_end == 0:
+                logging.info('No additional pdfs to prepare')
+            break
+
+    print()
 
     return db
 

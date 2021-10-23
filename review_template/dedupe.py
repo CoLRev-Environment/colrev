@@ -25,6 +25,8 @@ BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
+current_batch_counter = mp.Value('i', 0)
+
 
 def format_authors_string(authors):
     authors = str(authors).lower()
@@ -100,7 +102,8 @@ def get_similarity(df_a, df_b):
 
     author_similarity = fuzz.partial_ratio(df_a['author'], df_b['author'])/100
 
-    title_similarity = fuzz.ratio(df_a['title'], df_b['title'])/100
+    title_similarity = \
+        fuzz.ratio(df_a['title'].lower(), df_b['title'].lower())/100
 
     # partial ratio (catching 2010-10 or 2001-2002)
     year_similarity = fuzz.partial_ratio(df_a['year'], df_b['year'])/100
@@ -254,9 +257,16 @@ def get_prev_queue(queue_order, entry_link):
 
 
 def append_merges(entry):
+    global current_batch_counter
 
     if 'prepared' != entry['status']:
         return
+
+    with current_batch_counter.get_lock():
+        if current_batch_counter.value >= BATCH_SIZE:
+            return
+        else:
+            current_batch_counter.value += 1
 
     bib_database = utils.load_references_bib(
         modification_check=False, initialize=False,
@@ -364,6 +374,10 @@ def append_merges(entry):
             line = '"' + entry_a + '","' + entry_b + '","' + \
                 str(max_similarity) + '"\n'
             fd.write(line)
+        logging.info('Potential duplicate to check: '
+                     f'{citation_key} - {entry["ID"]}'
+                     f' (similarity: {max_similarity})')
+
     if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
@@ -373,6 +387,8 @@ def append_merges(entry):
                 fd.write('"ID1","ID2"\n')
         with open('duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
+        logging.info(f'Dropped duplicate: {citation_key} - {entry["ID"]}'
+                     f' (similarity: {max_similarity})')
 
     return
 
@@ -399,7 +415,6 @@ def apply_merges(bib_database):
                 el_to_merge = []
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
-                        logging.info(f'drop {entry["ID"]}')
                         el_to_merge = entry['entry_link'].split(';')
                         # Drop the duplicated entry
                         bib_database.entries = \
@@ -464,42 +479,37 @@ def create_commit(repo, bib_database):
     if merge_details != '':
         merge_details = '\n\nDuplicates removed:\n' + merge_details
 
-    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
-            MAIN_REFERENCES in repo.untracked_files:
+    if os.path.exists('potential_duplicate_tuples.csv'):
+        repo.index.add(['potential_duplicate_tuples.csv'])
 
-        # to avoid failing pre-commit hooks
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
+    if repo.is_dirty():
+
+        repo.index.add([MAIN_REFERENCES])
+
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
+                ''.join(processing_report)
+
+        repo.index.commit(
+            '⚙️ Process duplicates' + utils.get_version_flag() +
+            utils.get_commit_report(os.path.basename(__file__)) +
+            processing_report,
+            author=git.Actor('script:process_duplicates.py', ''),
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
+
         )
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-        if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)]:
-            repo.index.add([MAIN_REFERENCES])
-            if os.path.exists('potential_duplicate_tuples.csv'):
-                repo.index.add(['potential_duplicate_tuples.csv'])
-
-            processing_report = ''
-            if os.path.exists('report.log'):
-                with open('report.log') as f:
-                    processing_report = f.readlines()
-                processing_report = \
-                    f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                    ''.join(processing_report)
-
-            repo.index.commit(
-                '⚙️ Process duplicates' + utils.get_version_flag() +
-                utils.get_commit_report(os.path.basename(__file__)) +
-                processing_report,
-                author=git.Actor('script:process_duplicates.py', ''),
-                committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                    repo_setup.config['EMAIL']),
-
-            )
-            with open('report.log', 'r+') as f:
-                f.truncate(0)
+        logging.info('Created commit')
+        print()
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
         return True
     else:
-        logging.info('No duplicates merged')
+        logging.info('No duplicates merged/potential duplicates identified')
         return False
 
 
@@ -511,14 +521,35 @@ def dedupe_entries(db, repo):
 
     logging.info('Process duplicates')
 
-    print('TODO: BATCH_SIZE')
+    in_process = True
+    batch_start, batch_end = 1, 0
+    while in_process:
+        with current_batch_counter.get_lock():
+            batch_start += current_batch_counter.value
+            current_batch_counter.value = 0  # start new batch
+        if batch_start > 1:
+            logging\
+                .info('Continuing batch duplicate processing started earlier')
 
-    pool = mp.Pool(repo_setup.config['CPUS'])
-    pool.map(append_merges, db.entries)
-    pool.close()
-    pool.join()
-    db = apply_merges(db)
-    create_commit(repo, db)
+        pool = mp.Pool(repo_setup.config['CPUS'])
+        pool.map(append_merges, db.entries)
+        pool.close()
+        pool.join()
+        db = apply_merges(db)
+
+        with current_batch_counter.get_lock():
+            batch_end = current_batch_counter.value + batch_start - 1
+
+        if batch_end > 0:
+            logging.info('Completed duplicate processing batch '
+                         f'(entries {batch_start} to {batch_end})')
+
+            in_process = create_commit(repo, db)
+
+        if batch_end < BATCH_SIZE or batch_end == 0:
+            if batch_end == 0:
+                logging.info('No additional entries to check for duplicates')
+            break
 
     print()
 
