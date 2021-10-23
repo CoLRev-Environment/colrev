@@ -1,7 +1,9 @@
 #! /usr/bin/env python
+import logging
 import os
 
 import click
+import git
 
 from review_template import dedupe
 from review_template import importer
@@ -15,6 +17,42 @@ from review_template import utils
 # Records should not be propagated/screened when the batch
 # has not yet been committed
 DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
+
+
+def reprocess_id(id, repo):
+    if id is None:
+        return
+
+    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+
+    if 'all' == id:
+        logging.info('Removing/reprocessing all entries')
+        com_msg = '⚙️ Reprocess all entries'
+        os.remove(MAIN_REFERENCES)
+        repo.index.remove([MAIN_REFERENCES], working_tree=True)
+
+    else:
+        bib_database = utils.load_references_bib(
+            modification_check=False, initialize=False,
+        )
+        com_msg = '⚙️ Reprocess ' + id
+        bib_database.entries = [
+            x for x in bib_database.entries if id != x['ID']]
+        utils.save_bib_file(bib_database, MAIN_REFERENCES)
+        repo.index.add([MAIN_REFERENCES])
+
+    repo.index.commit(
+        com_msg + utils.get_version_flag() +
+        utils.get_commit_report(os.path.basename(__file__)),
+        author=git.Actor('script:process.py', ''),
+        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                            repo_setup.config['EMAIL']),
+    )
+    logging.info(f'Created commit ({com_msg})')
+    print()
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
+    return
 
 
 class DelayRequirement(Exception):
@@ -68,11 +106,12 @@ def check_delay(db, min_status_requirement):
     return False
 
 
-def main():
+def main(reprocess_ids=None):
 
     repo = init.get_repo()
     utils.require_clean_repo(repo, ignore_pattern='search/')
     utils.build_docker_images()
+    reprocess_id(reprocess_ids, repo)
 
     try:
         db = importer.import_entries(repo)
