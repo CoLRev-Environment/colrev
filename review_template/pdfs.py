@@ -21,6 +21,8 @@ existing_pdfs_linked = 0
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
+current_batch_counter = mp.Value('i', 0)
+
 
 def unpaywall(doi, retry=0, pdfonly=True):
 
@@ -90,6 +92,12 @@ def acquire_pdf(entry):
     if 'needs_retrieval' != entry.get('pdf_status', 'NA'):
         return entry
 
+    with current_batch_counter.get_lock():
+        if current_batch_counter.value >= BATCH_SIZE:
+            return entry
+        else:
+            current_batch_counter.value += 1
+
     PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 
     if not os.path.exists(PDF_DIRECTORY):
@@ -143,9 +151,10 @@ def create_commit(repo, db):
 
     if 'GIT' == repo_setup.config['PDF_HANDLING']:
         dirname = repo_setup.paths['PDF_DIRECTORY']
-        for filepath in os.listdir(dirname):
-            if filepath.endswith('.pdf'):
-                repo.index.add([os.path.join(dirname, filepath)])
+        if os.path.exists(dirname):
+            for filepath in os.listdir(dirname):
+                if filepath.endswith('.pdf'):
+                    repo.index.add([os.path.join(dirname, filepath)])
 
     hook_skipping = 'false'
     if not repo_setup.config['DEBUG_MODE']:
@@ -153,7 +162,6 @@ def create_commit(repo, db):
 
     if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
             MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        logging.info('No new records changed in MAIN_REFERENCES')
         return False
     else:
         repo.index.add([MAIN_REFERENCES])
@@ -191,7 +199,7 @@ def print_details():
     if pdfs_retrieved > 0:
         logging.info(f'{pdfs_retrieved} PDFs retrieved')
     else:
-        logging.info('  - No PDFs retrieved')
+        logging.info('No PDFs retrieved')
     if len(missing_entries.entries) > 0:
         logging.info(f'{len(missing_entries.entries)} PDFs missing ')
     return
@@ -221,22 +229,43 @@ def acquire_pdfs(db, repo):
     global missing_entries
     missing_entries = BibDatabase()
 
-    print('TODO: BATCH_SIZE')
+    print('TODO: download if there is a fulltext link in the entry')
 
     with open('report.log', 'r+') as f:
         f.truncate(0)
-    logging.info('Acquire PDFs')
+    logging.info('Retrieve PDFs')
 
-    pool = mp.Pool(repo_setup.config['CPUS'])
-    db.entries = pool.map(acquire_pdf, db.entries)
-    pool.close()
-    pool.join()
+    in_process = True
+    batch_start, batch_end = 1, 0
+    while in_process:
+        with current_batch_counter.get_lock():
+            batch_start += current_batch_counter.value
+            current_batch_counter.value = 0  # start new batch
+        if batch_start > 1:
+            logging.info('Continuing batch preparation started earlier')
 
-    create_commit(repo, db)
+        pool = mp.Pool(repo_setup.config['CPUS'])
+        db.entries = pool.map(acquire_pdf, db.entries)
+        pool.close()
+        pool.join()
 
-    print_details()
+        with current_batch_counter.get_lock():
+            batch_end = current_batch_counter.value + batch_start - 1
+
+        if batch_end > 0:
+            logging.info('Completed pdf acquisition batch '
+                         f'(entries {batch_start} to {batch_end})')
+
+            print_details()
+            in_process = create_commit(repo, db)
+
+        if batch_end < BATCH_SIZE or batch_end == 0:
+            if batch_end == 0:
+                logging.info('No additional pdfs to retrieve')
+            break
+
     export_retrieval_table()
-
+    print()
     return db
 
 

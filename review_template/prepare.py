@@ -60,8 +60,9 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        logging.info(f'Set {entry["ID"]} from {prior_e_type} to phdthesis '
-                     'because the fulltext link contains "dissertation"')
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                     f'Set from {prior_e_type} to phdthesis '
+                     '("dissertation" in fulltext link)')
         # TODO: if school is not set: using named entity recognition or
         # following links: detect the school and set the field
 
@@ -69,8 +70,9 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        logging.info(f'Set {entry["ID"]} from {prior_e_type} to phdthesis '
-                     'because the fulltext link contains "thesis"')
+        logging.info(f' {entry["ID"]}:'.ljust(18, ' ') +
+                     f'Set from {prior_e_type} to phdthesis '
+                     '("thesis" in fulltext link)')
         # TODO: if school is not set: using named entity recognition or
         # following links: detect the school and set the field
 
@@ -114,7 +116,7 @@ def homogenize_entry(entry):
     fields_to_process = [
         'author', 'year', 'title',
         'journal', 'booktitle', 'series',
-        'volume', 'number', 'pages', 'doi',
+        'volume', 'issue', 'pages', 'doi',
         'abstract'
     ]
     for field in fields_to_process:
@@ -159,13 +161,18 @@ def homogenize_entry(entry):
 
     if 'pages' in entry:
         entry.update(pages=utils.unify_pages_field(entry['pages']))
+        if not re.match(r'^\d*$', entry['pages']) and \
+                not re.match(r'^\d*--\d*$', entry['pages']) and\
+                not re.match(r'^[xivXIV]*--[xivXIV]*$', entry['pages']):
+            logging.info(f' {entry["ID"]}:'.ljust(18, ' ') +
+                         f'Unusual pages: {entry["pages"]}')
 
     if 'doi' in entry:
         entry.update(doi=entry['doi'].replace('http://dx.doi.org/', ''))
 
     if 'issue' in entry and 'number' not in entry:
-        entry.update(number=entry['issue'])
-        del entry['issue']
+        entry.update(issue=entry['number'])
+        del entry['number']
 
     return entry
 
@@ -223,7 +230,14 @@ def apply_crowd_rules(entry):
 def crossref_query(entry):
     # https://github.com/CrossRef/rest-api-doc
     api_url = 'https://api.crossref.org/works?'
-    params = {'rows': '5', 'query.bibliographic': entry['title']}
+    bibliographic = entry['title'] + ' ' + entry.get('year', '')
+    bibliographic = bibliographic.replace('...', '').replace('…', '')
+    container_title = utils.get_container_title(entry)
+    container_title = container_title.replace('...', '').replace('…', '')
+    author_string = entry['author'].replace('...', '').replace('…', '')
+    params = {'rows': '5', 'query.bibliographic': bibliographic,
+              'query.author': author_string,
+              'query.container-title': container_title}
     url = api_url + urllib.parse.urlencode(params)
     headers = {'user-agent':
                f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
@@ -278,17 +292,129 @@ def get_doi_from_crossref(entry):
 
     MAX_RETRIES_ON_ERROR = 3
     # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-    if len(entry['title']) > 60 and 'doi' not in entry:
+    if len(entry['title']) > 35 and 'doi' not in entry:
         try:
             ret = crossref_query(entry)
             retries = 0
             while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
                 retries += 1
                 ret = crossref_query(entry)
-            if ret['result']['similarity'] > 0.95:
+
+            # print(ret)
+            # print('\n\n\n')
+            # dummy = entry.copy()
+            # dummy['doi'] = ret['result']['doi']
+            # dummy = retrieve_doi_metadata(dummy)
+            # print(dummy)
+            # print(dedupe.get_entry_similarity(dummy, entry.copy()))
+            # if dedupe.get_entry_similarity(dummy, entry.copy()) > 0.95:
+
+            if ret['result']['similarity'] > 0.9:
                 entry.update(doi=ret['result']['doi'])
         except KeyboardInterrupt:
             sys.exit()
+    return entry
+
+
+def get_metadata_from_semantic_scholar(entry):
+    if 'doi' in entry:
+        return entry
+
+    search_api_url = \
+        'https://api.semanticscholar.org/graph/v1/paper/search?query='
+    url = search_api_url + entry.get('title', '').replace(' ', '+')
+    headers = {'user-agent':
+               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+    ret = requests.get(url, headers=headers)
+
+    try:
+        data = json.loads(ret.text)
+        items = data['data']
+        if len(items) == 0:
+            return entry
+        if 'paperId' not in items[0]:
+            return entry
+
+        paper_id = items[0]['paperId']
+
+        entry_retrieval_url = \
+            'https://api.semanticscholar.org/v1/paper/' + paper_id
+
+        ret_ent = requests.get(entry_retrieval_url, headers=headers)
+
+        item = json.loads(ret_ent.text)
+        retrieved_entry = {}
+
+        if 'authors' in item:
+            authors_string = ' and '.join([author['name']
+                                           for author in item['authors']])
+            retrieved_entry.update(
+                author=utils.format_author_field(authors_string))
+        if 'abstract' in item:
+            retrieved_entry.update(abstract=item['abstract'])
+        if 'doi' in item:
+            retrieved_entry.update(doi=item['doi'])
+        if 'title' in item:
+            retrieved_entry.update(title=item['title'])
+        if 'year' in item:
+            retrieved_entry.update(year=item['year'])
+        if 'venue' in item:
+            retrieved_entry.update(venue=item['venue'])
+        if 'url' in item:
+            retrieved_entry.update(semantic_scholar_id=item['url'])
+
+        keys_to_drop = []
+        for key, value in retrieved_entry.items():
+            retrieved_entry[key] = str(value).replace(
+                '\n', ' ').lstrip().rstrip()
+            if value in ['', 'None'] or value is None:
+                keys_to_drop.append(key)
+        for key in keys_to_drop:
+            del retrieved_entry[key]
+
+        red_entry_copy = entry.copy()
+        for key in ['volume', 'number', 'issue', 'pages']:
+            if key in red_entry_copy:
+                del red_entry_copy[key]
+
+        # sim = dedupe.get_entry_similarity(red_entry_copy,
+        #                 retrieved_entry.copy())
+        # if sim > 0.7:
+        #     print(entry)
+        #     print(retrieved_entry)
+        #     print(sim)
+        #     print('\n\n\n\n')
+
+        if dedupe.get_entry_similarity(red_entry_copy,
+                                       retrieved_entry.copy()) > 0.9:
+            if 'title' in retrieved_entry:
+                entry.update(title=retrieved_entry['title'])
+            if 'doi' in retrieved_entry:
+                entry.update(doi=retrieved_entry['doi'])
+            if 'abstract' in retrieved_entry:
+                entry.update(abstract=retrieved_entry['abstract'])
+            if 'author' in retrieved_entry:
+                entry.update(author=retrieved_entry['author'])
+            if 'year' in retrieved_entry:
+                entry.update(year=retrieved_entry['year'])
+            if 'abstract' in retrieved_entry:
+                entry.update(abstract=retrieved_entry['abstract'])
+            if 'venue' in retrieved_entry:
+                if 'journal' in entry:
+                    entry.update(journal=retrieved_entry['venue'])
+                if 'booktitle' in entry:
+                    entry.update(booktitle=retrieved_entry['venue'])
+            entry.update(
+                semantic_scholar_id=retrieved_entry['semantic_scholar_id'])
+
+    except KeyError:
+        pass
+
+    except UnicodeEncodeError:
+        logging.error(
+            'UnicodeEncodeError - this needs to be fixed at some time')
+        pass
+
     return entry
 
 
@@ -357,16 +483,20 @@ def get_metadata_from_dblp(entry):
         # print(similarity)
         if similarity > 0.99:
             if 'Journal Articles' == item['type']:
+                if 'booktitle' in entry:
+                    del entry['booktitle']
                 entry['ENTRYTYPE'] = 'article'
                 entry['journal'] = get_dblp_venue(item['venue'])
                 entry['volume'] = item['volume']
-                entry['number'] = item['number']
+                entry['issue'] = item['number']
             if 'Conference and Workshop Papers' == item['type']:
+                if 'journal' in entry:
+                    del entry['journal']
                 entry['ENTRYTYPE'] = 'inproceedings'
                 entry['booktitle'] = get_dblp_venue(item['venue'])
             if 'doi' in item:
                 entry['doi'] = item['doi']
-            entry['dblp_key'] = 'https://dblp.org/rec' + item['key']
+            entry['dblp_key'] = 'https://dblp.org/rec/' + item['key']
     except KeyError:
         pass
     except UnicodeEncodeError:
@@ -405,25 +535,20 @@ def get_doi_from_links(entry):
                 doi_entry = {'doi': entry['doi'], 'ID': entry['ID']}
                 doi_entry = retrieve_doi_metadata(doi_entry)
                 if dedupe.get_entry_similarity(entry.copy(), doi_entry) < 0.95:
-                    del entry['doi']
+                    if 'doi' in entry:
+                        del entry['doi']
 
-                logging.info('Added doi from website: ' + entry['doi'])
+                if 'doi' in entry:
+                    logging.info(f'Added doi from website: {entry["doi"]}')
 
         except requests.exceptions.ConnectionError:
             return entry
             pass
         except Exception as e:
-            print(e)
+            print(f'exception: {e}')
             return entry
             pass
     return entry
-
-
-def doi2json(doi):
-    url = 'http://dx.doi.org/' + doi
-    headers = {'accept': 'application/vnd.citationstyles.csl+json'}
-    r = requests.get(url, headers=headers)
-    return r.text
 
 
 def retrieve_doi_metadata(entry):
@@ -438,8 +563,24 @@ def retrieve_doi_metadata(entry):
     orig_entry = entry.copy()
 
     try:
-        full_data = doi2json(entry['doi'])
+        url = 'http://dx.doi.org/' + entry['doi']
+        headers = {'accept': 'application/vnd.citationstyles.csl+json'}
+        r = requests.get(url, headers=headers)
+        if r.status_code != 200:
+            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                         f'metadata for doi {entry["doi"]} '
+                         'not (yet) available')
+            return entry
+
+        full_data = r.text
         retrieved_record = json.loads(full_data)
+        if 'type' in retrieved_record:
+            if 'journal-article' == retrieved_record.get('type', 'NA'):
+                entry['ENTRYTYPE'] = 'article'
+            if 'proceedings-article' == retrieved_record.get('type', 'NA'):
+                entry['ENTRYTYPE'] = 'inproceedings'
+            if 'book' == retrieved_record.get('type', 'NA'):
+                entry['ENTRYTYPE'] = 'book'
         author_string = ''
         for author in retrieved_record.get('author', ''):
             if 'family' not in author:
@@ -518,8 +659,11 @@ def retrieve_doi_metadata(entry):
             entry.update(volume=str(retrieved_volume))
 
         retrieved_issue = retrieved_record.get('issue', '')
+        if 'journal-issue' in retrieved_record:
+            if 'issue' in retrieved_record['journal-issue']:
+                retrieved_issue = retrieved_record['journal-issue']['issue']
         if not retrieved_issue == '':
-            entry.update(number=str(retrieved_issue))
+            entry.update(issue=str(retrieved_issue))
 
         retrieved_container_title = \
             str(retrieved_record.get('container-title', ''))
@@ -549,21 +693,21 @@ def retrieve_doi_metadata(entry):
                     re.sub(r'\s+', ' ', retrieved_abstract)
                 entry.update(abstract=str(retrieved_abstract).replace('\n', '')
                              .lstrip().rstrip())
-    except IndexError:
-        logging.error(f'Index error (authors?) for {entry["ID"]}')
-        return orig_entry
-        pass
-    except json.decoder.JSONDecodeError:
-        logging.error(f'DOI retrieval error: {entry.get("ID", "NO_ID")}'
-                      f' / {entry["doi"]}')
-        return orig_entry
-        pass
-    except TypeError:
-        logging.error(f'Type error: : {entry["ID"]}')
-        return orig_entry
-        pass
+    # except IndexError:
+    #     logging.error(f'Index error (authors?) for {entry["ID"]}')
+    #     return orig_entry
+    #     pass
+    # except json.decoder.JSONDecodeError:
+    #     logging.error(f'{entry.get("ID", "NO_ID")}'.ljust(17, ' ') +
+    #                   f'DOI retrieval error ({entry["doi"]})')
+    #     return orig_entry
+    #     pass
+    # except TypeError:
+    #     logging.error(f'Type error: {entry["ID"]}')
+    #     return orig_entry
+    #     pass
     except requests.exceptions.ConnectionError:
-        logging.error(f'ConnectionError: : {entry["ID"]}')
+        logging.error(f'ConnectionError: {entry["ID"]}')
         return orig_entry
         pass
 
@@ -587,15 +731,26 @@ entry_field_requirements = \
 # book, inbook: author <- editor
 
 
+def missing_fields(entry):
+    missing_fields = []
+
+    if entry['ENTRYTYPE'] in entry_field_requirements.keys():
+        reqs = entry_field_requirements[entry['ENTRYTYPE']]
+        missing_fields = [x for x in reqs if x not in entry.keys()]
+    else:
+        missing_fields = ['no field requirements defined']
+
+    return missing_fields
+
+
 def is_complete(entry):
     sufficiently_complete = False
 
     if entry['ENTRYTYPE'] in entry_field_requirements.keys():
-        reqs = entry_field_requirements[entry['ENTRYTYPE']]
-        if all(x in entry for x in reqs):
+        if len(missing_fields(entry)) == 0:
             sufficiently_complete = True
-    else:
-        logging.info(f'No field requirements set for {entry["ENTRYTYPE"]}')
+    # else:
+    #     logging.info(f'No field requirements set for {entry["ENTRYTYPE"]}')
 
     return sufficiently_complete
 
@@ -617,34 +772,49 @@ entry_field_inconsistencies = \
      'unpublished': ['volume', 'issue', 'number', 'journal', 'booktitle']}
 
 
+def get_inconsistencies(entry):
+    inconsistent_fields = []
+
+    if entry['ENTRYTYPE'] in entry_field_inconsistencies.keys():
+        incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
+        inconsistent_fields = [x for x in incons_fields if x in entry]
+
+    # Note: a thesis should be single-authored
+    if 'thesis' in entry['ENTRYTYPE'] and ' and ' in entry.get('author', ''):
+        inconsistent_fields.append('author')
+
+    return inconsistent_fields
+
+
 def has_inconsistent_fields(entry):
     found_inconsistencies = False
 
     if entry['ENTRYTYPE'] in entry_field_inconsistencies.keys():
-        incons_fields = entry_field_inconsistencies[entry['ENTRYTYPE']]
-        inconsistencies = [x for x in incons_fields if x in entry]
+        inconsistencies = get_inconsistencies(entry)
         if inconsistencies:
-            logging.warning(f'Inconsistency in {entry["ID"]}:'
-                            f' {entry["ENTRYTYPE"]} '
-                            f'with {inconsistencies} field(s).')
             found_inconsistencies = True
-    else:
-        logging.info(f'No fields inconsistencies set for {entry["ENTRYTYPE"]}')
+    # else:
+    #  logging.info(f'No field inconsistencies set for {entry["ENTRYTYPE"]}')
 
     return found_inconsistencies
 
 
-def has_incomplete_fields(entry):
+def get_incomplete_fields(entry):
+    incomplete_fields = []
 
-    if entry.get('title', '').endswith('...') or \
-            entry.get('title', '').endswith('…') or \
-            entry.get('journal', '').endswith('...') or \
-            entry.get('journal', '').endswith('…') or \
-            entry.get('booktitle', '').endswith('...') or \
-            entry.get('booktitle', '').endswith('…') or \
-            entry.get('author', '').endswith('...') or \
-            entry.get('author', '').endswith('…') or \
-            entry.get('author', '').endswith('and others'):
+    for key in entry.keys():
+        if key in ['title', 'journal', 'booktitle', 'author']:
+            if entry[key].endswith('...') or entry[key].endswith('…'):
+                incomplete_fields.append(key)
+
+    if entry.get('author', '').endswith('and others'):
+        incomplete_fields.append('author')
+
+    return incomplete_fields
+
+
+def has_incomplete_fields(entry):
+    if len(get_incomplete_fields(entry)) > 0:
         return True
     return False
 
@@ -653,16 +823,16 @@ fields_to_keep = [
     'ID', 'ENTRYTYPE',
     'author', 'year', 'title',
     'journal', 'booktitle', 'series',
-    'volume', 'number', 'pages', 'doi',
+    'volume', 'issue', 'pages', 'doi',
     'abstract', 'school',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
     'status', 'fulltext', 'entry_link',
-    'dblp_key'
+    'dblp_key', 'semantic_scholar_id'
 ]
 fields_to_drop = [
     'type', 'url', 'organization',
-    'issn', 'isbn', 'note', 'issue',
+    'issn', 'isbn', 'note', 'number',
     'unique-id', 'month', 'researcherid-numbers',
     'orcid-numbers', 'eissn', 'article-number',
     'publisher', 'author_keywords', 'source',
@@ -691,6 +861,28 @@ def drop_fields(entry):
     return entry
 
 
+def log_notifications(entry, unprepared_entry):
+
+    change = 1 - dedupe.get_entry_similarity(entry.copy(), unprepared_entry)
+    if change > 0.1:
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                     f'Change score: {round(change, 2)}')
+
+    if not (is_complete(entry) or is_doi_complete(entry)):
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                     f'{str(entry["ENTRYTYPE"]).title()} '
+                     f'missing {missing_fields(entry)}')
+    if has_inconsistent_fields(entry):
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                     f'{str(entry["ENTRYTYPE"]).title()} '
+                     f'with {get_inconsistencies(entry)} field(s)'
+                     ' (inconsistent')
+    if has_incomplete_fields(entry):
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                     f'Incomplete fields {get_incomplete_fields(entry)}')
+    return
+
+
 def prepare(entry):
     global current_batch_counter
 
@@ -702,6 +894,8 @@ def prepare(entry):
             return entry
         else:
             current_batch_counter.value += 1
+
+    unprepared_entry = entry.copy()
 
     entry = correct_entrytype(entry)
 
@@ -717,6 +911,8 @@ def prepare(entry):
 
     entry = get_metadata_from_dblp(entry)
 
+    entry = get_metadata_from_semantic_scholar(entry)
+
     entry = get_doi_from_links(entry)
 
     entry = retrieve_doi_metadata(entry)
@@ -730,7 +926,7 @@ def prepare(entry):
     else:
         if 'complete_based_on_doi' in entry:
             del entry['complete_based_on_doi']
-        logging.info(f'Manual preparation needed for {entry["ID"]}')
+        log_notifications(entry, unprepared_entry)
         entry.update(status='needs_manual_preparation')
 
     return entry
@@ -755,10 +951,7 @@ def create_commit(repo, bib_database):
                 processing_report = f.readlines()
             processing_report = \
                 f'\nProcessing (batch size: {BATCH_SIZE})\n' + \
-                f'- Prepared {prepared} entries\n' + \
-                f'- Marked {need_manual_prep} entries ' + \
-                'for manual preparation' + \
-                '\n- Details:\n' + ''.join(processing_report)
+                ''.join(processing_report)
 
         repo.index.commit(
             '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
@@ -774,7 +967,6 @@ def create_commit(repo, bib_database):
             f.truncate(0)
         return True
     else:
-        logging.info('No additional prepared entries available')
         return False
 
 
@@ -789,9 +981,13 @@ def prepare_entries(db, repo):
     logging.info('Prepare')
 
     in_process = True
+    batch_start, batch_end = 1, 0
     while in_process:
         with current_batch_counter.get_lock():
+            batch_start += current_batch_counter.value
             current_batch_counter.value = 0  # start new batch
+        if batch_start > 1:
+            logging.info('Continuing batch preparation started earlier')
 
         prepared = len([x for x in db.entries
                         if 'prepared' == x.get('status', 'NA')])
@@ -804,14 +1000,32 @@ def prepare_entries(db, repo):
         pool.close()
         pool.join()
 
-        prepared = len([x for x in db.entries
-                        if 'prepared' == x.get('status', 'NA')]) - prepared
-        need_manual_prep = \
-            len([x for x in db.entries
-                if 'needs_manual_preparation' == x.get('status', 'NA')]) \
-            - need_manual_prep
+        with current_batch_counter.get_lock():
+            batch_end = current_batch_counter.value + batch_start - 1
 
-        in_process = create_commit(repo, db)
+        if batch_end > 0:
+            logging.info('Completed preparation batch '
+                         f'(entries {batch_start} to {batch_end})')
+
+            prepared = len([x for x in db.entries
+                            if 'prepared' == x.get('status', 'NA')]) - prepared
+            need_manual_prep = \
+                len([x for x in db.entries
+                    if 'needs_manual_preparation' == x.get('status', 'NA')]) \
+                - need_manual_prep
+
+            if prepared > 0:
+                logging.info(f'Summary: Prepared {prepared} entries')
+            if need_manual_prep > 0:
+                logging.info(f'Summary: Marked {need_manual_prep} entries ' +
+                             'for manual preparation')
+
+            in_process = create_commit(repo, db)
+
+        if batch_end < BATCH_SIZE or batch_end == 0:
+            if batch_end == 0:
+                logging.info('No additional entries to prepare')
+            break
 
     print()
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import io
-import logging
 import os
 import pkgutil
 import re
@@ -175,19 +174,13 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
     else:
         author = ''
 
-    temp_flag = ''
-    # if 'needs_manual_preparation' in entry['status']:
-    #     temp_flag = '_temp_'
+    if ' and ' in author:
+        author = author.split(' and ')[0].replace(' ', '')
     if ',' in author:
-        temp_citation_key = author\
-            .split(',')[0].replace(' ', '') +\
-            str(entry.get('year', '')) +\
-            temp_flag
+        author = author.split(',')[0].replace(' ', '')
     else:
-        temp_citation_key = author\
-            .split(' ')[0] +\
-            str(entry.get('year', '')) +\
-            temp_flag
+        author = author.split(' ')[0]
+    temp_citation_key = author + str(entry.get('year', ''))
 
     if temp_citation_key.isupper():
         temp_citation_key = temp_citation_key.capitalize()
@@ -265,11 +258,16 @@ def format_author_field(input_string):
 
         parsed_name.string_format = \
             '{last} {suffix}, {first} ({nickname}) {middle}'
+        author_name_string = str(parsed_name).replace(' , ', ', ')
+        # Note: there are errors for the following author:
+        # JR Cromwell and HK Gardner
+        # The JR is probably recognized as Junior.
+        # Check whether this is fixed in the Grobid name parser
+
         if author_string == '':
-            author_string = str(parsed_name).replace(' , ', ', ')
+            author_string = author_name_string
         else:
-            author_string = author_string + ' and ' + \
-                str(parsed_name).replace(' , ', ', ')
+            author_string = author_string + ' and ' + author_name_string
 
     return author_string
 
@@ -301,10 +299,6 @@ def unify_pages_field(input_string):
             .replace(' -- ', '--')\
             .rstrip('.')
 
-    if not re.match(r'^\d*$', input_string) and \
-       not re.match(r'^\d*--\d*$', input_string) and\
-       not re.match(r'^[xivXIV]*--[xivXIV]*$', input_string):
-        logging.warning(f'Unusual pages: {input_string}')
     return input_string
 
 

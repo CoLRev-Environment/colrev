@@ -101,6 +101,13 @@ Dynamically loaded
 - [pandoc](https://github.com/jgm/pandoc), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
 - [bibutils](http://bibutils.refbase.org/), which is available under the [GNU Public License (GPL)](http://bibutils.refbase.org/).
 
+For meta-data preparation and PDF retrieval, we rely on
+
+- [Crossref](https://www.crossref.org/) with over 125,000,000 curated metadata records across disciplines
+- [Semantic Scholar](https://www.semanticscholar.org/) with over 175,000,000 records across disciplines
+- [dblp](https://dblp.org/) with over 5,750,000 curated metadata records in the IT/IS disciplines
+- [Unpaywall](https://unpaywall.org/) with over 30,000,000 free papers
+
 # Contributing, changes, and releases
 
 

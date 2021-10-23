@@ -518,6 +518,8 @@ def import_entries(repo):
         if entry_iterator.hasNext:
             if not processing_condition(entry):
                 continue  # keep appending entries
+        else:
+            processing_condition(entry)  # updates counters
 
         if batch_start > 1:
             logging.info('Continuing batch import started earlier')
@@ -538,5 +540,6 @@ def import_entries(repo):
         create_commit(repo, db)
 
     print()
+    db.entries = sorted(db.entries, key=lambda d: d['ID'])
 
     return db
