@@ -70,7 +70,7 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        logging.info(f' {entry["ID"]}:'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                      f'Set from {prior_e_type} to phdthesis '
                      '("thesis" in fulltext link)')
         # TODO: if school is not set: using named entity recognition or

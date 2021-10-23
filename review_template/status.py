@@ -113,6 +113,8 @@ def get_status_freq():
 
     retrieved = get_nr_search()
     non_imported = retrieved - entry_links
+    entries_to_prepare = imported_entries - \
+        prepared_entries - manual_preparation_entries
     overall_imported = entry_links
     overall_prepared = prepared_entries + manual_merging_entries + \
         processed_entries + merged_entry_links
@@ -166,6 +168,7 @@ def get_status_freq():
     freqs = {'retrieved': retrieved,
              'non_imported': non_imported,
              'imported': imported_entries,
+             'entries_to_prepare': entries_to_prepare,
              'needs_manual_preparation': manual_preparation_entries,
              'prepared': prepared_entries,
              'needs_manual_merging': manual_merging_entries,
@@ -365,6 +368,12 @@ def review_status():
             ' |  - Records imported: ' +
             f'{str(status_freq["overall_imported"]).rjust(6, " ")}',
         )
+
+        if status_freq['entries_to_prepare'] > 0:
+            nr_nmcl = status_freq['entries_to_prepare']
+            print(' |                               * ' +
+                  f'{str(nr_nmcl).rjust(6, " ")}' +
+                  ' record(s) need preparation.')
 
         if status_freq['needs_manual_preparation'] > 0:
             nr_nmcl = status_freq['needs_manual_preparation']

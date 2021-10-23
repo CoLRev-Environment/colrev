@@ -70,10 +70,12 @@ def status(ctx):
 
 @main.command(help_priority=3)
 @click.pass_context
-def process(ctx):
+@click.option('--reprocess',
+              help='Entry ID to reprocess ("all" to reprocess all).')
+def process(ctx, reprocess):
     """Process pipeline"""
     from review_template import process
-    process.main()
+    process.main(reprocess)
 
 
 @main.command(help_priority=5)
