@@ -8,7 +8,6 @@ import re
 import sys
 import urllib
 
-import git
 import pandas as pd
 import requests
 from Levenshtein import ratio
@@ -1017,44 +1016,6 @@ def prepare(entry):
     return entry
 
 
-def create_commit(repo, bib_database):
-    global prepared
-    global need_manual_prep
-
-    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
-            MAIN_REFERENCES in repo.untracked_files:
-
-        repo.index.add([MAIN_REFERENCES])
-
-        processing_report = ''
-        if os.path.exists('report.log'):
-            with open('report.log') as f:
-                processing_report = f.readlines()
-            processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n' + \
-                ''.join(processing_report)
-
-        repo.index.commit(
-            '⚙️ Prepare ' + MAIN_REFERENCES + utils.get_version_flag() +
-            utils.get_commit_report(os.path.basename(__file__)) +
-            processing_report,
-            author=git.Actor('script:prepare.py', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-        )
-        logging.info('Created commit')
-        print()
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
-        return True
-    else:
-        return False
-
-
 def set_stats_beginning(db):
     global prepared
     global need_manual_prep
@@ -1092,6 +1053,7 @@ def prepare_entries(db, repo):
         f.truncate(0)
 
     logging.info('Prepare')
+    logging.info(f'Batch size: {BATCH_SIZE}')
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -1118,7 +1080,11 @@ def prepare_entries(db, repo):
 
             print_stats_end(db)
 
-            in_process = create_commit(repo, db)
+            MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+            utils.save_bib_file(db, MAIN_REFERENCES)
+            repo.index.add([MAIN_REFERENCES])
+
+            in_process = utils.create_commit(repo, '⚙️ Prepare records')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

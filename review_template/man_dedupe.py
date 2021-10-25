@@ -204,38 +204,6 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
     return bib_database
 
 
-def manual_merge_commit(repo):
-
-    repo.git.add(update=True)
-    # deletion of 'potential_duplicate_tuples.csv' may added to git staging
-
-    hook_skipping = 'false'
-    if not repo_setup.config['DEBUG_MODE']:
-        hook_skipping = 'true'
-
-    processing_report = ''
-    if os.path.exists('report.log'):
-        with open('report.log') as f:
-            processing_report = f.readlines()
-        processing_report = \
-            f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-            ''.join(processing_report)
-
-    repo.index.commit(
-        'Process duplicates manually' + utils.get_version_flag() +
-        utils.get_commit_report(os.path.basename(__file__)) +
-        processing_report,
-        author=git.Actor(repo_setup.config['GIT_ACTOR'],
-                         repo_setup.config['EMAIL']),
-        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                            repo_setup.config['EMAIL']),
-        skip_hooks=hook_skipping
-    )
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
-    return
-
-
 def main():
     global removed_tuples
 
@@ -288,13 +256,17 @@ def main():
                                    quoting=csv.QUOTE_ALL)
 
     utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
+    repo.git.add(update=True)
+    # deletion of 'potential_duplicate_tuples.csv' may added to git staging
 
     # If there are remaining duplicates, ask whether to create a commit
     if not stat.split('/')[0] == stat.split('/')[1]:
         if 'y' == input('Create commit (y/n)?'):
-            manual_merge_commit(repo)
+            utils.create_commit(repo, 'Process duplicates manually',
+                                manual_author=True)
     else:
-        manual_merge_commit(repo)
+        utils.create_commit(repo, 'Process duplicates manually',
+                            manual_author=True)
 
 
 if __name__ == '__main__':

@@ -8,7 +8,6 @@ import shutil
 from itertools import chain
 
 import bibtexparser
-import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -403,59 +402,6 @@ def load_search_results_file(search_file_path):
         return None
 
 
-def create_commit(repo, bib_database):
-    if bib_database is None:
-        logging.info('No entries imported')
-        return False
-
-    if 0 == len(bib_database.entries):
-        logging.info('No entries imported')
-        return False
-
-    repo.index.add(utils.get_search_files())
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
-            MAIN_REFERENCES not in repo.untracked_files:
-        logging.info('No new records added to MAIN_REFERENCES')
-        return False
-    else:
-        # to avoid failing pre-commit hooks
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
-        )
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-        repo.index.add([MAIN_REFERENCES])
-        hook_skipping = 'false'
-        if not repo_setup.config['DEBUG_MODE']:
-            hook_skipping = 'true'
-
-        processing_report = ''
-        if os.path.exists('report.log'):
-            with open('report.log') as f:
-                processing_report = f.readlines()
-            processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                ''.join(processing_report)
-
-        repo.index.commit(
-            '⚙️ Import search results ' + utils.get_version_flag() +
-            utils.get_commit_report(os.path.basename(__file__)) +
-            processing_report,
-            author=git.Actor('script:importer.py', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-            skip_hooks=hook_skipping
-        )
-        logging.info('Created commit')
-        print()
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
-        return True
-
-
 class IteratorEx:
     def __init__(self, it):
         self.it = iter(it)
@@ -513,6 +459,26 @@ def set_citation_keys(db):
     return db
 
 
+def save_imported_files(repo, bib_database):
+    if bib_database is None:
+        logging.info('No entries imported')
+        return False
+
+    if 0 == len(bib_database.entries):
+        logging.info('No entries imported')
+        return False
+
+    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    repo.index.add(get_search_files())
+    repo.index.add([MAIN_REFERENCES])
+
+    if not repo.is_dirty():
+        logging.info('No new records added to MAIN_REFERENCES')
+        return False
+
+    return True
+
+
 def import_entries(repo):
     global batch_start
     global batch_end
@@ -520,6 +486,7 @@ def import_entries(repo):
     with open('report.log', 'r+') as f:
         f.truncate(0)
     logging.info('Import')
+    logging.info(f'Batch size: {BATCH_SIZE}')
 
     db = BibDatabase()
     entry_iterator = IteratorEx(load_all_entries())
@@ -547,7 +514,9 @@ def import_entries(repo):
         pool.join()
 
         db = set_citation_keys(db)
-        create_commit(repo, db)
+
+        if save_imported_files(repo, db):
+            utils.create_commit(repo, '⚙️ Import search results')
 
     print()
     db.entries = sorted(db.entries, key=lambda d: d['ID'])

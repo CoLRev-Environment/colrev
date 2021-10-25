@@ -6,7 +6,6 @@ import multiprocessing as mp
 import os
 import re
 
-import git
 import pandas as pd
 from fuzzywuzzy import fuzz
 
@@ -387,7 +386,7 @@ def append_merges(entry):
                 fd.write('"ID1","ID2"\n')
         with open('duplicate_tuples.csv', 'a') as fd:
             fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
-        logging.info(f'Dropped duplicate: {citation_key} - {entry["ID"]}'
+        logging.info(f'Dropped duplicate: {citation_key} <- {entry["ID"]}'
                      f' (similarity: {max_similarity})')
 
     return
@@ -463,56 +462,6 @@ def apply_merges(bib_database):
     return bib_database
 
 
-def create_commit(repo, bib_database):
-
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
-
-    merge_details = ''
-    if os.path.exists('duplicate_tuples.csv'):
-        with open('duplicate_tuples.csv') as read_obj:
-            csv_reader = csv.reader(read_obj)
-            for row in csv_reader:
-                if row[0] != 'ID1':
-                    merge_details += row[0] + ' < ' + row[1] + '\n'
-        os.remove('duplicate_tuples.csv')
-
-    if merge_details != '':
-        merge_details = '\n\nDuplicates removed:\n' + merge_details
-
-    if os.path.exists('potential_duplicate_tuples.csv'):
-        repo.index.add(['potential_duplicate_tuples.csv'])
-
-    if repo.is_dirty():
-
-        repo.index.add([MAIN_REFERENCES])
-
-        processing_report = ''
-        if os.path.exists('report.log'):
-            with open('report.log') as f:
-                processing_report = f.readlines()
-            processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                ''.join(processing_report)
-
-        repo.index.commit(
-            '⚙️ Process duplicates' + utils.get_version_flag() +
-            utils.get_commit_report(os.path.basename(__file__)) +
-            processing_report,
-            author=git.Actor('script:process_duplicates.py', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-
-        )
-        logging.info('Created commit')
-        print()
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
-        return True
-    else:
-        logging.info('No duplicates merged/potential duplicates identified')
-        return False
-
-
 def dedupe_entries(db, repo):
 
     with open('report.log', 'r+') as f:
@@ -544,7 +493,15 @@ def dedupe_entries(db, repo):
             logging.info('Completed duplicate processing batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            in_process = create_commit(repo, db)
+            utils.save_bib_file(db, MAIN_REFERENCES)
+            if os.path.exists('potential_duplicate_tuples.csv'):
+                repo.index.add(['potential_duplicate_tuples.csv'])
+            repo.index.add([MAIN_REFERENCES])
+
+            in_process = utils.create_commit(repo, '⚙️ Process duplicates')
+            if not in_process:
+                logging.info('No duplicates merged/potential duplicates '
+                             'identified')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

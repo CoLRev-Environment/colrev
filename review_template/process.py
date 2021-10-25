@@ -12,6 +12,7 @@ from review_template import pdf_check
 from review_template import pdfs
 from review_template import prepare
 from review_template import repo_setup
+from review_template import status
 from review_template import utils
 
 # Records should not be propagated/screened when the batch
@@ -108,6 +109,7 @@ def check_delay(db, min_status_requirement):
 
 def main(reprocess_ids=None):
 
+    status.repository_validation()
     repo = init.get_repo()
     utils.require_clean_repo(repo, ignore_pattern='search/')
     utils.build_docker_images()

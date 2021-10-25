@@ -126,33 +126,11 @@ def man_prep_entries():
         entry = man_prep_entry(entry)
         utils.save_bib_file(bib_database)
 
-    create_commit(repo, bib_database)
-    return
-
-
-def create_commit(repo, bib_database):
-
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    repo.index.add([MAIN_REFERENCES])
 
-    if MAIN_REFERENCES in [item.a_path for item in repo.index.diff(None)] or \
-            MAIN_REFERENCES in repo.untracked_files:
-
-        repo.index.add([MAIN_REFERENCES])
-
-        hook_skipping = 'false'
-        if not repo_setup.config['DEBUG_MODE']:
-            hook_skipping = 'true'
-        repo.index.commit(
-            'Prepare records for import' +
-            '\n - ' + utils.get_package_details() +
-            '\n' + utils.get_status_report(),
-            author=git.Actor('manual (using man_prep.py)', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-            skip_hooks=hook_skipping
-        )
-
+    utils.create_commit(repo, 'Prepare records for import', manual_author=True)
     return
 
 
