@@ -93,36 +93,6 @@ def process_backward_search(entry):
     return entry
 
 
-def create_commit(repo, bibfilenames):
-
-    if 0 == len(bibfilenames):
-        return
-
-    repo.index.add([SEARCH_DETAILS])
-    for f in bibfilenames:
-        repo.index.add([f])
-
-    processing_report = ''
-    if os.path.exists('report.log'):
-        with open('report.log') as f:
-            processing_report = f.readlines()
-        processing_report = \
-            f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-            ''.join(processing_report)
-
-    repo.index.commit(
-        '⚙️ Backward search ' + utils.get_version_flag() +
-        utils.get_commit_report(os.path.basename(__file__)) +
-        processing_report,
-        author=git.Actor('script:backward_search.py', ''),
-        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                            repo_setup.config['EMAIL']),
-    )
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
-    return
-
-
 def main():
     repo = git.Repo()
     utils.require_clean_repo(repo)
@@ -138,8 +108,14 @@ def main():
     for entry in bib_database.entries:
         process_backward_search(entry)
 
-    create_commit(repo, [x['bib_filename']
-                  for x in bib_database.entries if 'bib_filename' in x])
+    bibfilenames = [x['bib_filename']
+                    for x in bib_database.entries if 'bib_filename' in x]
+    if len(bibfilenames) > 0:
+        repo.index.add([SEARCH_DETAILS])
+        for f in bibfilenames:
+            repo.index.add([f])
+        utils.create_commit(repo, '⚙️ Backward search')
+
     return
 
 

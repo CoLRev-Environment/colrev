@@ -5,7 +5,6 @@ import logging
 import multiprocessing as mp
 import os
 
-import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -143,51 +142,6 @@ def acquire_pdf(entry):
     return entry
 
 
-def create_commit(repo, db):
-
-    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
-    utils.save_bib_file(db, MAIN_REFERENCES)
-
-    if 'GIT' == repo_setup.config['PDF_HANDLING']:
-        dirname = repo_setup.paths['PDF_DIRECTORY']
-        if os.path.exists(dirname):
-            for filepath in os.listdir(dirname):
-                if filepath.endswith('.pdf'):
-                    repo.index.add([os.path.join(dirname, filepath)])
-
-    hook_skipping = 'false'
-    if not repo_setup.config['DEBUG_MODE']:
-        hook_skipping = 'true'
-
-    if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
-            MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        return False
-    else:
-        repo.index.add([MAIN_REFERENCES])
-
-        processing_report = ''
-        if os.path.exists('report.log'):
-            with open('report.log') as f:
-                processing_report = f.readlines()
-            processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                ''.join(processing_report)
-
-        repo.index.commit(
-            '⚙️ Acquire PDFs ' + utils.get_version_flag() +
-            utils.get_commit_report(os.path.basename(__file__)) +
-            processing_report,
-            author=git.Actor('script:pdfs.py', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-            skip_hooks=hook_skipping
-        )
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
-        return True
-
-
 def print_details():
     global pdfs_retrieved
     global existing_pdfs_linked
@@ -257,7 +211,19 @@ def acquire_pdfs(db, repo):
                          f'(entries {batch_start} to {batch_end})')
 
             print_details()
-            in_process = create_commit(repo, db)
+
+            MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+            utils.save_bib_file(db, MAIN_REFERENCES)
+            repo.index.add([MAIN_REFERENCES])
+
+            if 'GIT' == repo_setup.config['PDF_HANDLING']:
+                dirname = repo_setup.paths['PDF_DIRECTORY']
+                if os.path.exists(dirname):
+                    for filepath in os.listdir(dirname):
+                        if filepath.endswith('.pdf'):
+                            repo.index.add([os.path.join(dirname, filepath)])
+
+            in_process = utils.create_commit(repo, '⚙️ Acquire PDFs')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

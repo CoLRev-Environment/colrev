@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
+import inspect
 import io
+import logging
 import os
 import pkgutil
-import pprint
 import re
 import sys
 import unicodedata
@@ -407,6 +408,47 @@ def get_version_flag():
     if 'dirty' in get_package_details():
         flag = ' ⚠️'
     return flag
+
+
+def create_commit(repo, msg, manual_author=False):
+
+    if repo.is_dirty():
+
+        hook_skipping = 'false'
+        if not repo_setup.config['DEBUG_MODE']:
+            hook_skipping = 'true'
+
+        processing_report = ''
+        if os.path.exists('report.log'):
+            with open('report.log') as f:
+                processing_report = f.readlines()
+            processing_report = \
+                '\nProcessing report\n\n' + ''.join(processing_report)
+
+        script = str(os.path.basename(inspect.stack()[1][1]))
+        if manual_author:
+            git_author = git.Actor(repo_setup.config['GIT_ACTOR'],
+                                   repo_setup.config['EMAIL'])
+        else:
+            git_author = git.Actor(f'script:{script}', '')
+
+        repo.index.commit(
+            msg + get_version_flag() +
+            get_commit_report(f'{script} (committed by '
+                              f'{os.path.basename(__file__)}).') +
+            processing_report,
+            author=git_author,
+            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
+                                repo_setup.config['EMAIL']),
+            skip_hooks=hook_skipping
+        )
+        logging.info('Created commit')
+        print()
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
+        return True
+    else:
+        return False
 
 
 def build_docker_images():

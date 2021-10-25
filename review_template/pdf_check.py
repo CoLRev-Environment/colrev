@@ -5,7 +5,6 @@ import multiprocessing as mp
 import os
 import re
 
-import git
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
@@ -235,52 +234,6 @@ def prepare_pdf(entry):
     return entry
 
 
-def create_commit(repo, db):
-
-    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-
-    utils.save_bib_file(db, MAIN_REFERENCES)
-
-    if 'GIT' == repo_setup.config['PDF_HANDLING']:
-        dirname = repo_setup.paths['PDF_DIRECTORY']
-        if os.path.exists(dirname):
-            for filepath in os.listdir(dirname):
-                if filepath.endswith('.pdf'):
-                    repo.index.add([os.path.join(dirname, filepath)])
-
-    hook_skipping = 'false'
-    if not repo_setup.config['DEBUG_MODE']:
-        hook_skipping = 'true'
-
-    if MAIN_REFERENCES not in [i.a_path for i in repo.index.diff(None)] and \
-            MAIN_REFERENCES not in [i.a_path for i in repo.head.commit.diff()]:
-        logging.info('No PDFs prepared')
-        return False
-    else:
-        repo.index.add([MAIN_REFERENCES])
-
-        processing_report = ''
-        if os.path.exists('report.log'):
-            with open('report.log') as f:
-                processing_report = f.readlines()
-            processing_report = \
-                f'\nProcessing (batch size: {BATCH_SIZE})\n\n' + \
-                ''.join(processing_report)
-
-        repo.index.commit(
-            '⚙️ Prepare PDFs ' + utils.get_version_flag() +
-            utils.get_commit_report(os.path.basename(__file__)) +
-            processing_report,
-            author=git.Actor('script:pdf_check.py', ''),
-            committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                                repo_setup.config['EMAIL']),
-            skip_hooks=hook_skipping
-        )
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
-        return True
-
-
 def prepare_pdfs(db, repo):
 
     process.check_delay(db, min_status_requirement='pdf_needs_preparation')
@@ -312,7 +265,20 @@ def prepare_pdfs(db, repo):
             logging.info('Completed pdf preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            in_process = create_commit(repo, db)
+            MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+            utils.save_bib_file(db, MAIN_REFERENCES)
+            repo.index.add([MAIN_REFERENCES])
+
+            if 'GIT' == repo_setup.config['PDF_HANDLING']:
+                dirname = repo_setup.paths['PDF_DIRECTORY']
+                if os.path.exists(dirname):
+                    for filepath in os.listdir(dirname):
+                        if filepath.endswith('.pdf'):
+                            repo.index.add([os.path.join(dirname, filepath)])
+
+            in_process = utils.create_commit(repo, '⚙️ Prepare PDFs')
+            if not in_process:
+                logging.info('No PDFs prepared')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

@@ -56,27 +56,6 @@ def update_screen(bib_database):
     return
 
 
-def pre_screen_commit(repo):
-
-    repo.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
-
-    hook_skipping = 'false'
-    if not repo_setup.config['DEBUG_MODE']:
-        hook_skipping = 'true'
-
-    repo.index.commit(
-        'Pre-screening (manual)' + utils.get_version_flag() +
-        utils.get_commit_report(),
-        author=git.Actor(repo_setup.config['GIT_ACTOR'],
-                         repo_setup.config['EMAIL']),
-        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                            repo_setup.config['EMAIL']),
-        skip_hooks=hook_skipping
-    )
-
-    return
-
-
 desired_order_list = ['ENTRYTYPE', 'ID', 'year', 'author',
                       'title', 'journal', 'booktitle',
                       'volume', 'issue', 'doi',
@@ -162,34 +141,15 @@ def prescreen():
         print('\n\nstopping screen 1\n')
         pass
 
+    repo.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
     # If records remain for pre-screening, ask whether to create a commit
     if 0 < screen[screen['inclusion_1'] == 'TODO'].shape[0]:
         if 'y' == input('Create commit (y/n)?'):
-            pre_screen_commit(repo)
+            utils.create_commit(repo, 'Pre-screening (manual)',
+                                manual_author=True)
     else:
-        pre_screen_commit(repo)
-
-    return
-
-
-def screen_commit(repo):
-
-    repo = git.Repo('')
-    repo.index.add([SCREEN])
-
-    hook_skipping = 'false'
-    if not repo_setup.config['DEBUG_MODE']:
-        hook_skipping = 'true'
-
-    repo.index.commit(
-        'Screening (manual)' + utils.get_version_flag() +
-        utils.get_commit_report(),
-        author=git.Actor(repo_setup.config['GIT_ACTOR'],
-                         repo_setup.config['EMAIL']),
-        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                            repo_setup.config['EMAIL']),
-        skip_hooks=hook_skipping
-    )
+        utils.create_commit(repo, 'Pre-screening (manual)',
+                            manual_author=True)
 
     return
 
@@ -280,12 +240,13 @@ def screen():
         print('\n\nstopping screen 1\n')
         pass
 
+    repo.index.add([SCREEN])
     # If records remain for screening, ask whether to create a commit
     if 0 < screen[screen['inclusion_2'] == 'TODO'].shape[0]:
         if 'y' == input('Create commit (y/n)?'):
-            screen_commit(repo)
+            utils.create_commit(repo, 'Screening (manual)', manual_author=True)
     else:
-        screen_commit(repo)
+        utils.create_commit(repo, 'Screening (manual)', manual_author=True)
 
     return
 
