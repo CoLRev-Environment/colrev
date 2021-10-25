@@ -25,8 +25,18 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
-JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS = \
-    utils.retrieve_crowd_resources()
+
+def get_search_files():
+    supported_extensions = ['ris', 'bib', 'end',
+                            'txt', 'csv', 'txt',
+                            'xlsx', 'pdf']
+    files = []
+    search_dir = os.path.join(os.getcwd(), 'search/')
+    files = [os.path.join(search_dir, x)
+             for x in os.listdir(search_dir)
+             if any(x.endswith(ext) for ext in supported_extensions)
+             and not 'search_details.csv' == os.path.basename(x)]
+    return files
 
 
 def get_imported_entry_links():
@@ -95,7 +105,7 @@ def load_all_entries():
     bib_database = utils.load_references_bib(True, initialize=True)
     save_imported_entry_links(bib_database)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
-    search_files = utils.get_search_files()
+    search_files = get_search_files()
     if any('.pdf' in x for x in search_files):
         grobid_client.start_grobid()
     additional_records = load_pool.map(load_entries, search_files)

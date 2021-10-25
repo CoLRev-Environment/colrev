@@ -2,6 +2,7 @@
 import io
 import os
 import pkgutil
+import pprint
 import re
 import sys
 import unicodedata
@@ -17,9 +18,9 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
-from nameparser import HumanName
 
 import docker
+from review_template import prepare
 from review_template import repo_setup
 from review_template import status
 
@@ -27,58 +28,6 @@ MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 SCREEN = repo_setup.paths['SCREEN']
 DATA = repo_setup.paths['DATA']
 SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
-
-
-def retrieve_local_resources():
-
-    if os.path.exists('lexicon/JOURNAL_ABBREVIATIONS.csv'):
-        JOURNAL_ABBREVIATIONS = pd.read_csv(
-            'lexicon/JOURNAL_ABBREVIATIONS.csv')
-    else:
-        JOURNAL_ABBREVIATIONS = pd.DataFrame(
-            [], columns=['journal', 'abbreviation'])
-
-    if os.path.exists('lexicon/JOURNAL_VARIATIONS.csv'):
-        JOURNAL_VARIATIONS = pd.read_csv('lexicon/JOURNAL_VARIATIONS.csv')
-    else:
-        JOURNAL_VARIATIONS = pd.DataFrame([], columns=['journal', 'variation'])
-
-    if os.path.exists('lexicon/CONFERENCE_ABBREVIATIONS.csv'):
-        CONFERENCE_ABBREVIATIONS = \
-            pd.read_csv('lexicon/CONFERENCE_ABBREVIATIONS.csv')
-    else:
-        CONFERENCE_ABBREVIATIONS = pd.DataFrame(
-            [], columns=['conference', 'abbreviation'])
-
-    return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
-
-
-def retrieve_crowd_resources():
-
-    JOURNAL_ABBREVIATIONS = pd.DataFrame(
-        [], columns=['journal', 'abbreviation'])
-    JOURNAL_VARIATIONS = pd.DataFrame([], columns=['journal', 'variation'])
-    CONFERENCE_ABBREVIATIONS = pd.DataFrame(
-        [], columns=['conference', 'abbreviation'])
-
-    for resource in [x for x in os.listdir() if 'crowd_resource_' == x[:15]]:
-
-        JOURNAL_ABBREVIATIONS_ADD = pd.read_csv(
-            resource + '/lexicon/JOURNAL_ABBREVIATIONS.csv')
-        JOURNAL_ABBREVIATIONS = pd.concat([JOURNAL_ABBREVIATIONS,
-                                           JOURNAL_ABBREVIATIONS_ADD])
-
-        JOURNAL_VARIATIONS_ADD = pd.read_csv(
-            resource + '/lexicon/JOURNAL_VARIATIONS.csv')
-        JOURNAL_VARIATIONS = pd.concat([JOURNAL_VARIATIONS,
-                                        JOURNAL_VARIATIONS_ADD])
-
-        CONFERENCE_ABBREVIATIONS_ADD = pd.read_csv(
-            resource + '/lexicon/CONFERENCE_ABBREVIATIONS.csv')
-        CONFERENCE_ABBREVIATIONS = pd.concat([CONFERENCE_ABBREVIATIONS,
-                                              CONFERENCE_ABBREVIATIONS_ADD])
-
-    return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
 
 def rmdiacritics(char):
@@ -112,10 +61,6 @@ def remove_accents(input_str):
 
 
 class CitationKeyPropagationError(Exception):
-    pass
-
-
-class HashFunctionError(Exception):
     pass
 
 
@@ -170,7 +115,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
             )
 
     if 'author' in entry:
-        author = format_author_field(entry['author'])
+        author = prepare.format_author_field(entry['author'])
     else:
         author = ''
 
@@ -216,90 +161,6 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
                 pass
 
     return temp_citation_key
-
-
-def mostly_upper_case(input_string):
-    # also in repo_setup.py - consider updating it separately
-    if not re.match(r'[a-zA-Z]+', input_string):
-        return input_string
-    input_string = input_string.replace('.', '').replace(',', '')
-    words = input_string.split()
-    return sum(word.isupper() for word in words)/len(words) > 0.8
-
-
-def title_if_mostly_upper_case(input_string):
-    if not re.match(r'[a-zA-Z]+', input_string):
-        return input_string
-    words = input_string.split()
-    if sum(word.isupper() for word in words)/len(words) > 0.8:
-        return input_string.capitalize()
-    else:
-        return input_string
-
-
-def format_author_field(input_string):
-    # also in repo_setup.py - consider updating it separately
-
-    # DBLP appends identifiers to non-unique authors
-    input_string = input_string.replace('\n', ' ')
-    input_string = str(re.sub(r'[0-9]{4}', '', input_string))
-
-    names = input_string.split(' and ')
-    author_string = ''
-    for name in names:
-        # Note: https://github.com/derek73/python-nameparser
-        # is very effective (maybe not perfect)
-
-        parsed_name = HumanName(name)
-        if mostly_upper_case(input_string
-                             .replace(' and ', '')
-                             .replace('Jr', '')):
-            parsed_name.capitalize(force=True)
-
-        parsed_name.string_format = \
-            '{last} {suffix}, {first} ({nickname}) {middle}'
-        author_name_string = str(parsed_name).replace(' , ', ', ')
-        # Note: there are errors for the following author:
-        # JR Cromwell and HK Gardner
-        # The JR is probably recognized as Junior.
-        # Check whether this is fixed in the Grobid name parser
-
-        if author_string == '':
-            author_string = author_name_string
-        else:
-            author_string = author_string + ' and ' + author_name_string
-
-    return author_string
-
-
-def get_container_title(entry):
-    container_title = 'NA'
-    if 'article' == entry['ENTRYTYPE']:
-        container_title = entry.get('journal', 'NA')
-    if 'inproceedings' == entry['ENTRYTYPE']:
-        container_title = entry.get('booktitle', 'NA')
-
-    if 'book' == entry['ENTRYTYPE']:
-        container_title = entry.get('title', 'NA')
-
-    if 'inbook' == entry['ENTRYTYPE']:
-        container_title = entry.get('booktitle', 'NA')
-    return container_title
-
-
-def unify_pages_field(input_string):
-    # also in repo_setup.py - consider updating it separately
-    if not isinstance(input_string, str):
-        return input_string
-    if not re.match(r'^\d*--\d*$', input_string) and '--' not in input_string:
-        input_string = input_string\
-            .replace('-', '--')\
-            .replace('–', '--')\
-            .replace('----', '--')\
-            .replace(' -- ', '--')\
-            .rstrip('.')
-
-    return input_string
 
 
 def validate_search_details():
@@ -426,19 +287,6 @@ def get_bib_files():
     bib_files = [os.path.join(search_dir, x)
                  for x in os.listdir(search_dir) if x.endswith('.bib')]
     return bib_files
-
-
-def get_search_files():
-    supported_extensions = ['ris', 'bib', 'end',
-                            'txt', 'csv', 'txt',
-                            'xlsx', 'pdf']
-    files = []
-    search_dir = os.path.join(os.getcwd(), 'search/')
-    files = [os.path.join(search_dir, x)
-             for x in os.listdir(search_dir)
-             if any(x.endswith(ext) for ext in supported_extensions)
-             and not 'search_details.csv' == os.path.basename(x)]
-    return files
 
 
 def save_bib_file(bib_database, target_file=None):
