@@ -16,6 +16,7 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 
+from review_template import init
 from review_template import process
 from review_template import repo_setup
 from review_template import utils
@@ -293,7 +294,8 @@ def prepare_pdfs(db, repo):
 def main():
 
     db = utils.load_references_bib(True, initialize=True)
-    prepare_pdfs(db)
+    repo = init.get_repo()
+    prepare_pdfs(db, repo)
     return
 
 
