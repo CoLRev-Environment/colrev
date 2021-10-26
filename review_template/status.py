@@ -125,7 +125,7 @@ def get_status_freq():
                         pdfs_overall_prepared += 1
                     if '{not_available}' in line:
                         pdfs_not_available += 1
-                if 'entry_link' in line:
+                if ' origin ' in line:
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
                     md_duplicates_removed += nr_entry_links
