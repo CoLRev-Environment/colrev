@@ -258,7 +258,7 @@ def get_prev_queue(queue_order, entry_link):
 def append_merges(entry):
     global current_batch_counter
 
-    if 'prepared' != entry['status']:
+    if 'prepared' != entry['md_status']:
         return
 
     with current_batch_counter.get_lock():
@@ -275,7 +275,7 @@ def append_merges(entry):
     if not os.path.exists('queue_order.csv'):
         with open('queue_order.csv', 'a') as fd:
             for x in bib_database.entries:
-                if 'processed' == x.get('status', 'NA'):
+                if 'processed' == x.get('md_status', 'NA'):
                     fd.write(x['entry_link'] + '\n')
 
     # the order matters for the incremental merging (make sure that each
@@ -299,7 +299,6 @@ def append_merges(entry):
     # if the entry is the first one added to the bib_database
     # (in a preceding processing step), it can be propagated
     if len(required_prior_entry_links) < 2:
-        # entry.update(status = 'processed')
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
@@ -311,7 +310,7 @@ def append_merges(entry):
                            'needs_manual_merging']
 
     prior_entries = [x for x in bib_database.entries
-                     if x.get('status', 'NA') not in merge_ignore_status]
+                     if x.get('md_status', 'NA') not in merge_ignore_status]
 
     prior_entries = [x for x in prior_entries
                      if any(entry_link in x['entry_link'].split(',')
@@ -336,12 +335,11 @@ def append_merges(entry):
     # caused by unavailable fields!
     # Note: ignore entries that need manual preparation in the merging
     # (until they have been prepared!)
-    references = references[~references['status'].str
+    references = references[~references['md_status'].str
                             .contains('|'.join(merge_ignore_status), na=False)]
 
     # means that all prior entries are tagged as needs_manual_preparation
     if references.shape[0] == 0:
-        # entry.update(status = 'processed')
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
@@ -425,20 +423,20 @@ def apply_merges(bib_database):
                         els = el_to_merge + entry['entry_link'].split(';')
                         els = list(set(els))
                         entry.update(entry_link=str(';'.join(els)))
-                        if 'prepared' == entry['status']:
-                            entry.update(status='processed')
+                        if 'prepared' == entry['md_status']:
+                            entry.update(md_status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
 
-    # Set clear non-duplicates to completely processed (remove the status tag)
+    # Set clear non-duplicates to completely processed
     if os.path.exists('non_duplicates.csv'):
         with open('non_duplicates.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        if 'prepared' == entry['status']:
-                            entry.update(status='processed')
+                        if 'prepared' == entry['md_status']:
+                            entry.update(md_status='processed')
         os.remove('non_duplicates.csv')
 
     # note: potential_duplicate_tuples need to be processed manually but we
@@ -449,7 +447,7 @@ def apply_merges(bib_database):
             for row in csv_reader:
                 for entry in bib_database.entries:
                     if (entry['ID'] == row[1]) or (entry['ID'] == row[2]):
-                        entry.update(status='needs_manual_merging')
+                        entry.update(md_status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
         potential_duplicates.sort_values(by=['max_similarity', 'ID1', 'ID2'],
@@ -466,7 +464,7 @@ def dedupe_entries(db, repo):
 
     with open('report.log', 'r+') as f:
         f.truncate(0)
-    process.check_delay(db, min_status_requirement='prepared')
+    process.check_delay(db, min_status_requirement='md_prepared')
 
     logging.info('Process duplicates')
 

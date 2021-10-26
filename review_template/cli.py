@@ -120,10 +120,10 @@ def pdfs(ctx):
 
 @main.command(help_priority=10)
 @click.pass_context
-def pdf_check(ctx):
-    """Check PDFs"""
-    from review_template import pdf_check
-    pdf_check.main()
+def pdf_prepare(ctx):
+    """Prepare PDFs"""
+    from review_template import pdf_prepare
+    pdf_prepare.main()
 
 
 @main.command(help_priority=11)

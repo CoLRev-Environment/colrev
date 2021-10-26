@@ -105,7 +105,7 @@ def acquire_pdf(entry):
     pdf_filepath = os.path.join(PDF_DIRECTORY, entry['ID'] + '.pdf')
 
     if os.path.exists(pdf_filepath):
-        entry.update(pdf_status='needs_preparation')
+        entry.update(pdf_status='imported')
         if 'file' not in entry:
             entry.update(file=':' + pdf_filepath + ':PDF')
             existing_pdfs_linked += 1
@@ -128,7 +128,7 @@ def acquire_pdf(entry):
                         logging.info('Retrieved pdf (unpaywall):'
                                      f' {pdf_filepath}')
                         entry.update(file=':' + pdf_filepath + ':PDF')
-                        entry.update('pdf_status', 'needs_preparation')
+                        entry.update(pdf_status='imported')
                         pdfs_retrieved += 1
                     else:
                         os.remove(pdf_filepath)
@@ -178,7 +178,7 @@ def export_retrieval_table():
 def acquire_pdfs(db, repo):
 
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
-    process.check_delay(db, min_status_requirement='processed')
+    process.check_delay(db, min_status_requirement='prescreen_inclusion')
 
     global missing_entries
     missing_entries = BibDatabase()

@@ -79,7 +79,7 @@ def man_prep_entry(entry):
 
     global citation_key_list
 
-    if 'needs_manual_preparation' != entry['status']:
+    if 'needs_manual_preparation' != entry['md_status']:
         return entry
 
     print_entry(entry)
@@ -104,7 +104,7 @@ def man_prep_entry(entry):
             entry_in_bib_db=True,
             raise_error=False))
         citation_key_list.append(entry['ID'])
-        entry.update(status='prepared')
+        entry.update(md_status='prepared')
 
     return entry
 
@@ -126,6 +126,7 @@ def man_prep_entries():
         entry = man_prep_entry(entry)
         utils.save_bib_file(bib_database)
 
+    bib_database = utils.set_citation_keys(bib_database)
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
     repo.index.add([MAIN_REFERENCES])

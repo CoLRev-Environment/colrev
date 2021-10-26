@@ -90,7 +90,7 @@ def probability_english(text):
 
 def pdf_check_ocr(entry):
 
-    if 'needs_preparation' != entry.get('pdf_status', 'NA'):
+    if 'imported' != entry.get('pdf_status', 'NA'):
         return entry
 
     if probability_english(entry['text_from_pdf']) < 0.9:
@@ -104,7 +104,7 @@ def pdf_check_ocr(entry):
 
 def validate_pdf_metadata(entry):
 
-    if 'needs_preparation' != entry.get('pdf_status', 'NA'):
+    if 'imported' != entry.get('pdf_status', 'NA'):
         return entry
 
     text = entry['text_from_pdf']
@@ -137,7 +137,7 @@ def validate_pdf_metadata(entry):
 
 
 def validate_completeness(entry):
-    if 'needs_preparation' != entry.get('pdf_status', 'NA'):
+    if 'imported' != entry.get('pdf_status', 'NA'):
         return entry
 
     full_version_purchase_notice = \
@@ -168,7 +168,7 @@ def validate_completeness(entry):
 
 def prepare_pdf(entry):
 
-    if 'needs_preparation' != entry.get('pdf_status', 'NA') or \
+    if 'imported' != entry.get('pdf_status', 'NA') or \
             'file' not in entry:
         return entry
 
@@ -236,7 +236,7 @@ def prepare_pdf(entry):
 
 def prepare_pdfs(db, repo):
 
-    process.check_delay(db, min_status_requirement='pdf_needs_preparation')
+    process.check_delay(db, min_status_requirement='pdf_imported')
 
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
