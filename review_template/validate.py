@@ -24,7 +24,7 @@ def load_entries(bib_file):
         ).parse_file(bibtex_file, partial=True)
         search_file = os.path.basename(bib_file)
         for entry in individual_bib_database.entries:
-            entry['entry_link'] = search_file + '/' + entry['ID']
+            entry['origin'] = search_file + '/' + entry['ID']
 
     return individual_bib_database.entries
 
@@ -49,10 +49,10 @@ def validate_preparation_changes(bib_database, search_entries):
         del entry['rev_status']
         del entry['md_status']
         del entry['pdf_status']
-        # del entry['entry_link']
-        for cur_entry_link in entry['entry_link'].split(';'):
+        # del entry['origin']
+        for cur_entry_link in entry['origin'].split(';'):
             prior_entries = [x for x in search_entries
-                             if cur_entry_link in x['entry_link'].split(',')]
+                             if cur_entry_link in x['origin'].split(',')]
             for prior_entry in prior_entries:
                 similarity = dedupe.get_entry_similarity(entry, prior_entry)
                 change_diff.append([entry['ID'], cur_entry_link, similarity])
@@ -75,7 +75,7 @@ def validate_preparation_changes(bib_database, search_entries):
         print('Entry with ID: ' + eid)
 
         print('Difference: ' + str(round(difference, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries if entry_link == x['entry_link']]
+        entry_1 = [x for x in search_entries if entry_link == x['origin']]
         pp.pprint(entry_1[0])
         entry_2 = [x for x in bib_database.entries if eid == x['ID']]
         pp.pprint(entry_2[0])
@@ -102,15 +102,15 @@ def validate_merging_changes(bib_database, search_entries):
         if 'changed_in_target_commit' not in entry:
             continue
         del entry['changed_in_target_commit']
-        if ';' in entry['entry_link']:
+        if ';' in entry['origin']:
             merged_entries = True
-            els = entry['entry_link'].split(';')
+            els = entry['origin'].split(';')
             duplicate_el_pairs = list(itertools.combinations(els, 2))
             for el_1, el_2 in duplicate_el_pairs:
                 entry_1 = [x for x in search_entries
-                           if el_1 == x['entry_link']]
+                           if el_1 == x['origin']]
                 entry_2 = [x for x in search_entries
-                           if el_2 == x['entry_link']]
+                           if el_2 == x['origin']]
 
                 similarity = \
                     dedupe.get_entry_similarity(entry_1[0], entry_2[0])
@@ -135,9 +135,9 @@ def validate_merging_changes(bib_database, search_entries):
 
         print('Differences between merged entries:' +
               f' {round(difference, 4)}\n\n')
-        entry_1 = [x for x in search_entries if el_1 == x['entry_link']]
+        entry_1 = [x for x in search_entries if el_1 == x['origin']]
         pp.pprint(entry_1[0])
-        entry_2 = [x for x in search_entries if el_2 == x['entry_link']]
+        entry_2 = [x for x in search_entries if el_2 == x['origin']]
         pp.pprint(entry_2[0])
 
         if 'n' == input('continue (y/n)?'):

@@ -16,14 +16,14 @@ removed_tuples = []
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 
-def get_combined_entry_link_list(entry_a, entry_b):
+def get_combined_origin_list(entry_a, entry_b):
 
-    els_entry_a = entry_a['entry_link'].split(';')
-    els_entry_b = entry_b['entry_link'].split(';')
+    o_entry_a = entry_a['origin'].split(';')
+    o_entry_b = entry_b['origin'].split(';')
 
-    combined_el_list = set(els_entry_a + els_entry_b)
+    combined_origin_list = set(o_entry_a + o_entry_b)
 
-    return ';'.join(combined_el_list)
+    return ';'.join(combined_origin_list)
 
 
 class colors:
@@ -135,9 +135,9 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
     if 'y' == response:
         # Note: update md_status and remove the other entry
         combined_el_list = \
-            get_combined_entry_link_list(main_entry, duplicate_entry)
+            get_combined_origin_list(main_entry, duplicate_entry)
         # Delete the other entry (entry_a_ID or entry_b_ID)
-        main_entry.update(entry_link=combined_el_list)
+        main_entry.update(origin=combined_el_list)
 
         main_entry.update(md_status='processed')
         bib_database.entries = [x for x in bib_database.entries

@@ -244,12 +244,12 @@ def calculate_similarities_entry(references):
     return references.iloc[1:, [ck_col, sim_col]]
 
 
-def get_prev_queue(queue_order, entry_link):
+def get_prev_queue(queue_order, origin):
     # Note: Because we only introduce individual (non-merged entries),
-    # there should be no semicolons in entry_link!
+    # there should be no semicolons in origin!
     prev_entries = []
     for idx, el in enumerate(queue_order):
-        if entry_link == el:
+        if origin == el:
             prev_entries = queue_order[:idx]
             break
     return prev_entries
@@ -276,23 +276,23 @@ def append_merges(entry):
         with open('queue_order.csv', 'a') as fd:
             for x in bib_database.entries:
                 if 'processed' == x.get('md_status', 'NA'):
-                    fd.write(x['entry_link'] + '\n')
+                    fd.write(x['origin'] + '\n')
 
     # the order matters for the incremental merging (make sure that each
     # additional record is compared to/merged with all prior records in
     # the queue)
     with open('queue_order.csv', 'a') as fd:
-        fd.write(entry['entry_link'] + '\n')
+        fd.write(entry['origin'] + '\n')
     queue_order = pd.read_csv('queue_order.csv', header=None)
     queue_order = queue_order[queue_order.columns[0]].tolist()
     required_prior_entry_links = \
-        get_prev_queue(queue_order, entry['entry_link'])
+        get_prev_queue(queue_order, entry['origin'])
 
     entry_links_in_prepared_file = []
     # note: no need to wait for completion of preparation
-    entry_links_in_prepared_file = [entry['entry_link'].split(';')
+    entry_links_in_prepared_file = [entry['origin'].split(';')
                                     for entry in bib_database.entries
-                                    if 'entry_link' in entry]
+                                    if 'origin' in entry]
     entry_links_in_prepared_file = \
         list(itertools.chain(*entry_links_in_prepared_file))
 
@@ -313,7 +313,7 @@ def append_merges(entry):
                      if x.get('md_status', 'NA') not in merge_ignore_status]
 
     prior_entries = [x for x in prior_entries
-                     if any(entry_link in x['entry_link'].split(',')
+                     if any(entry_link in x['origin'].split(',')
                             for entry_link in required_prior_entry_links)]
 
     if len(prior_entries) < 1:
@@ -412,7 +412,7 @@ def apply_merges(bib_database):
                 el_to_merge = []
                 for entry in bib_database.entries:
                     if entry['ID'] == row[1]:
-                        el_to_merge = entry['entry_link'].split(';')
+                        el_to_merge = entry['origin'].split(';')
                         # Drop the duplicated entry
                         bib_database.entries = \
                             [i for i in bib_database.entries
@@ -420,9 +420,9 @@ def apply_merges(bib_database):
                         break
                 for entry in bib_database.entries:
                     if entry['ID'] == row[0]:
-                        els = el_to_merge + entry['entry_link'].split(';')
+                        els = el_to_merge + entry['origin'].split(';')
                         els = list(set(els))
-                        entry.update(entry_link=str(';'.join(els)))
+                        entry.update(origin=str(';'.join(els)))
                         if 'prepared' == entry['md_status']:
                             entry.update(md_status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'

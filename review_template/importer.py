@@ -78,9 +78,9 @@ def load_entries(filepath):
 
 
 def save_imported_entry_links(bib_database):
-    imported_entry_links = [x['entry_link'].split(';')
+    imported_entry_links = [x['origin'].split(';')
                             for x in bib_database.entries
-                            if 'entry_link' in x]
+                            if 'origin' in x]
     imported_entry_links = list(itertools.chain(*imported_entry_links))
 
     with open('imported_entry_links.csv', 'a') as fd:

@@ -313,7 +313,7 @@ def save_bib_file(bib_database, target_file=None):
     writer.contents = ['entries', 'comments']
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
-        'entry_link',
+        'origin',
         'md_status',
         'rev_status',
         'pdf_status',
