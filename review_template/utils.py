@@ -164,6 +164,19 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
     return temp_citation_key
 
 
+def set_citation_keys(db):
+    logging.info('Set citation_keys')
+    citation_key_list = [entry['ID'] for entry in db.entries]
+    for entry in db.entries:
+        if entry['md_status'] in ['imported', 'prepared']:
+            entry.update(ID=generate_citation_key_blacklist(
+                entry, citation_key_list,
+                entry_in_bib_db=True,
+                raise_error=False))
+            citation_key_list.append(entry['ID'])
+    return db
+
+
 def validate_search_details():
 
     search_details = pd.read_csv(SEARCH_DETAILS)
@@ -301,6 +314,9 @@ def save_bib_file(bib_database, target_file=None):
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
         'entry_link',
+        'md_status',
+        'rev_status',
+        'pdf_status',
         'doi',
         'author',
         'booktitle',
@@ -333,30 +349,6 @@ def save_bib_file(bib_database, target_file=None):
         out.write(bibtex_str)
 
     return
-
-
-def add_pipeline_status_info(bib_database):
-    assert os.path.exists(SCREEN)
-    screen = pd.read_csv(SCREEN, dtype=str)
-
-    for entry in bib_database.entries:
-        entry['pipeline_status'] = 'NA'
-
-        incl_1 = screen.loc[screen.citation_key == entry['ID'], 'inclusion_1']
-        incl_2 = screen.loc[screen.citation_key == entry['ID'], 'inclusion_2']
-
-        if not pd.isnull(incl_1.values[0]):
-            if 'no' == incl_1.values[0]:
-                entry['pipeline_status'] = 'pre_screen_excluded'
-        if not pd.isnull(incl_2.values[0]):
-            if 'no' == incl_2.values[0]:
-                entry['pipeline_status'] = 'excluded'
-            if 'yes' == incl_2.values[0]:
-                entry['pipeline_status'] = 'included'
-
-    # TODO: consider data status
-
-    return bib_database
 
 
 def require_clean_repo(repo=None, ignore_pattern=None):

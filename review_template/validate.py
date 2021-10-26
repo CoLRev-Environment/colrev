@@ -46,7 +46,9 @@ def validate_preparation_changes(bib_database, search_entries):
         if 'changed_in_target_commit' not in entry:
             continue
         del entry['changed_in_target_commit']
-        del entry['status']
+        del entry['rev_status']
+        del entry['md_status']
+        del entry['pdf_status']
         # del entry['entry_link']
         for cur_entry_link in entry['entry_link'].split(';'):
             prior_entries = [x for x in search_entries

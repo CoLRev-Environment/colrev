@@ -22,7 +22,7 @@ data_dir = ''
 
 def process_backward_search(entry):
 
-    if entry['pipeline_status'] in ['pre_screen_excluded', 'excluded', 'NA']:
+    if entry['pdf_status'] != 'prepared':
         return entry
 
     bib_filename = data_dir + 'search/' + entry['ID'] + '_bw_search.bib'
@@ -103,7 +103,6 @@ def main():
     logging.info('Backward search')
 
     bib_database = utils.load_references_bib(True, initialize=True)
-    bib_database = utils.add_pipeline_status_info(bib_database)
 
     for entry in bib_database.entries:
         process_backward_search(entry)

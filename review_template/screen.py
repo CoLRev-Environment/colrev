@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import csv
+import logging
 import os
 import pprint
 from collections import OrderedDict
@@ -7,6 +8,7 @@ from collections import OrderedDict
 import git
 import pandas as pd
 
+from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
@@ -35,7 +37,7 @@ def update_screen(bib_database):
     screen = pd.read_csv(SCREEN, dtype=str)
     screened_records = screen['citation_key'].tolist()
     to_add = [entry['ID'] for entry in bib_database.entries
-              if 'processed' == entry['status'] and
+              if 'prepared' == entry['pdf_status'] and
               entry['ID'] not in screened_records]
     for paper_to_screen in to_add:
         add_entry = pd.DataFrame({
@@ -74,12 +76,12 @@ def prescreen():
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
-
-    print('\n\nRun prescreen')
-
     bib_database = utils.load_references_bib(
         modification_check=True, initialize=False,
     )
+    process.check_delay(bib_database, min_status_requirement='md_processed')
+
+    print('\n\nRun prescreen')
 
     if not os.path.exists(SCREEN):
         print('Create screen sheet')
@@ -104,7 +106,7 @@ def prescreen():
                 os.system('cls' if os.name == 'nt' else 'clear')
                 entry = [x for x in bib_database.entries
                          if x['ID'] == row['citation_key']][0]
-                if 'processed' != entry.get('status', 'NA'):
+                if 'processed' != entry.get('md_status', 'NA'):
                     print(f'Skipping {entry["ID"]} - not yet processed')
                     input('Enter to continue')
                     continue
@@ -126,20 +128,27 @@ def prescreen():
                     for column in screen.columns:
                         if 'ec_' in column:
                             screen.at[i, column] = 'NA'
+                    entry.update(rev_status='prescreen_excluded')
+                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                                 'Excluded in prescreen')
                 if 'yes' == inclusion_decision:
+                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                                 'Included in prescreen')
+                    entry.update(rev_status='prescreen_included')
                     entry.update(pdf_status='needs_retrieval')
 
+                utils.save_bib_file(
+                    bib_database, repo_setup.paths['MAIN_REFERENCES'])
                 screen.sort_values(by=['citation_key'], inplace=True)
                 screen.to_csv(
                     SCREEN, index=False,
                     quoting=csv.QUOTE_ALL, na_rep='NA',
                 )
-                utils.save_bib_file(
-                    bib_database, repo_setup.paths['MAIN_REFERENCES'])
 
     except KeyboardInterrupt:
         print('\n\nstopping screen 1\n')
         pass
+    os.system('cls' if os.name == 'nt' else 'clear')
 
     repo.index.add([SCREEN, repo_setup.paths['MAIN_REFERENCES']])
     # If records remain for pre-screening, ask whether to create a commit
@@ -158,15 +167,16 @@ def screen():
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+    process.check_delay(bib_database,
+                        min_status_requirement='prescreened_and_pdf_prepared')
 
     print('\n\nRun screen')
 
     assert os.path.exists(SCREEN)
     utils.git_modification_check(SCREEN)
-
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
 
     screen = pd.read_csv(SCREEN, dtype=str)
 
@@ -214,18 +224,27 @@ def screen():
                             if col.startswith('ec_')
                         ]):
                             screen.at[i, 'inclusion_2'] = 'yes'
-                            print('Inclusion recorded')
+                            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                                         'Included')
+                            entry.update(rev_status='included')
                         else:
                             screen.at[i, 'inclusion_2'] = 'no'
-                            print('Exclusion recorded')
+                            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                                         'Excluded')
+                            entry.update(rev_status='excluded')
                     else:
                         decision = 'TODO'
                         while decision not in ['y', 'n']:
                             decision = input('Include (y/n)?')
-                        decision = decision.replace('y', 'yes')\
-                                           .replace('n', 'no')
-                        screen.at[i, 'inclusion_2'] = 'yes'
+                        if decision == 'y':
+                            screen.at[i, 'inclusion_2'] = 'yes'
+                            entry.update(rev_status='included')
+                        if decision == 'n':
+                            screen.at[i, 'inclusion_2'] = 'no'
+                            entry.update(rev_status='excluded')
 
+                    utils.save_bib_file(
+                        bib_database, repo_setup.paths['MAIN_REFERENCES'])
                     screen.sort_values(by=['citation_key'], inplace=True)
                     screen.to_csv(
                         SCREEN, index=False,

@@ -8,7 +8,7 @@ import git
 from review_template import dedupe
 from review_template import importer
 from review_template import init
-from review_template import pdf_check
+from review_template import pdf_prepare
 from review_template import pdfs
 from review_template import prepare
 from review_template import repo_setup
@@ -62,7 +62,15 @@ class DelayRequirement(Exception):
 
 def check_delay(db, min_status_requirement):
 
-    if 'imported' == min_status_requirement:
+    # all entries need to have at least the min_status_requirement (or latter)
+    # ie. raise DelayRequirement if any entry has a prior status
+    # do not consider terminal states:
+    # prescreen_excluded, not_available, excluded
+
+    # TODO: distingusih rev_status, md_status, pdf_status
+
+    if 'md_imported' == min_status_requirement:
+        # Note: md_status=retrieved should not happen
         if len(db.entries) == 0:
             print('No search results available for import.')
             raise DelayRequirement
@@ -70,39 +78,58 @@ def check_delay(db, min_status_requirement):
     if not DELAY_AUTOMATED_PROCESSING:
         return False
 
-    cur_status = [x.get('status', 'NA') for x in db.entries]
+    cur_rev_status = [x.get('rev_status', 'NA') for x in db.entries]
+    cur_md_status = [x.get('md_status', 'NA') for x in db.entries]
+    cur_pdf_status = [x.get('pdf_status', 'NA') for x in db.entries]
 
-    prior_status = ['imported', 'needs_manual_preparation']
-    if 'prepared' == min_status_requirement:
-        if any(x in cur_status for x in prior_status):
-            print('\nCompleted preparation step. To continue, use \n'
-                  ' review_template man-prep.\n\n')
+    prior_md_status = ['retrieved', 'imported', 'needs_manual_preparation']
+    if 'md_prepared' == min_status_requirement:
+        if any(x in cur_md_status for x in prior_md_status):
+            print('\nTo completed the preparation step, use \n'
+                  ' review_template man-prep\n\n')
             raise DelayRequirement
 
-    prior_status.append('prepared')
-    prior_status.append('needs_manual_merging')
-    if 'processed' == min_status_requirement:
-        if any(x in cur_status for x in prior_status):
-            print('\nCompleted duplicate removal step. To continue, use \n'
-                  ' review_template man-dedupe.\n\n')
+    prior_md_status.append('prepared')
+    prior_md_status.append('needs_manual_merging')
+    if 'md_processed' == min_status_requirement:
+        if any(x in cur_md_status for x in prior_md_status):
+            print('\nTo complete the  removal step, use \n'
+                  ' review_template man-dedupe\n\n')
             raise DelayRequirement
 
-    cur_pdf_status = ['pdf_' + x.get('pdf_status', 'NA') for x in db.entries]
+    prior_md_status.append('processed')
+    if 'prescreen_inclusion' == min_status_requirement:
+        if any(x in cur_md_status for x in prior_md_status):
+            print('\nTo complete the processing, use \n'
+                  ' review_template process\n\n')
+            raise DelayRequirement
 
-    prior_pdf_status = []
+    prior_rev_status = ['retrieved']
     if 'pdf_needs_retrieval' == min_status_requirement:
-        if any(x in cur_pdf_status for x in prior_pdf_status) or \
-                any(x in cur_status for x in prior_status):
-            print('\nCompleted PDF retrieval. To continue, use \n'
-                  ' review_template retrieve-pdf-manually (TODO).\n\n')
+        if any(x in cur_md_status for x in prior_md_status) or \
+                any(x in cur_rev_status for x in prior_rev_status):
+            print('\nTo completed the prescreen, use \n'
+                  ' review_template prescreen\n\n')
             raise DelayRequirement
 
-    # Note: we can proceed if pdf_not_available
-    prior_pdf_status.append('pdf_needs_manual_preparation')
-    if 'pdf_needs_preparation' == min_status_requirement:
+    prior_pdf_status = ['needs_retrieval']
+    prior_pdf_status.append('needs_manual_retrieval')
+    # Note: it's ok if PDFs a re "not_available"
+    if 'pdf_imported' == min_status_requirement:
         if any(x in cur_pdf_status for x in prior_pdf_status) or \
-                any(x in cur_status for x in prior_status):
+                any(x in cur_rev_status for x in prior_rev_status):
+            print('\nTo completed the PDF retrieval step, use \n'
+                  ' review_template prescreen\n\n')
             raise DelayRequirement
+
+    prior_pdf_status.append('imported')
+    prior_pdf_status.append('pdf_needs_manual_preparation')
+    if 'prescreened_and_pdf_prepared' == min_status_requirement:
+        if any(x in cur_pdf_status for x in prior_pdf_status) or \
+                any(x in cur_rev_status for x in prior_rev_status):
+            raise DelayRequirement
+
+    # prior_rev_status.append('prescreen_included')
 
     return False
 
@@ -124,7 +151,7 @@ def main(reprocess_ids=None):
 
         db = pdfs.acquire_pdfs(db, repo)
 
-        db = pdf_check.prepare_pdfs(db, repo)
+        db = pdf_prepare.prepare_pdfs(db, repo)
 
         # Note: the checks for delaying the screen
         # are implemented in the screen.py

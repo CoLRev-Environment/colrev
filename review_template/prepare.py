@@ -914,7 +914,8 @@ fields_to_keep = [
     'abstract', 'school',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
-    'status', 'fulltext', 'entry_link',
+    'rev_status', 'md_status', 'pdf_status',
+    'fulltext', 'entry_link',
     'dblp_key', 'semantic_scholar_id'
 ]
 fields_to_drop = [
@@ -971,7 +972,7 @@ def log_notifications(entry, unprepared_entry):
 def prepare(entry):
     global current_batch_counter
 
-    if 'imported' != entry['status']:
+    if 'imported' != entry['md_status']:
         return entry
 
     with current_batch_counter.get_lock():
@@ -1006,12 +1007,12 @@ def prepare(entry):
             not has_inconsistent_fields(entry) and \
             not has_incomplete_fields(entry):
         entry = drop_fields(entry)
-        entry.update(status='prepared')
+        entry.update(md_status='prepared')
     else:
         if 'complete_based_on_doi' in entry:
             del entry['complete_based_on_doi']
         log_notifications(entry, unprepared_entry)
-        entry.update(status='needs_manual_preparation')
+        entry.update(md_status='needs_manual_preparation')
 
     return entry
 
@@ -1020,10 +1021,10 @@ def set_stats_beginning(db):
     global prepared
     global need_manual_prep
     prepared = len([x for x in db.entries
-                    if 'prepared' == x.get('status', 'NA')])
+                    if 'prepared' == x.get('md_status', 'NA')])
     need_manual_prep = \
         len([x for x in db.entries
-            if 'needs_manual_preparation' == x.get('status', 'NA')])
+            if 'needs_manual_preparation' == x.get('md_status', 'NA')])
     return
 
 
@@ -1031,10 +1032,10 @@ def print_stats_end(db):
     global prepared
     global need_manual_prep
     prepared = len([x for x in db.entries
-                    if 'prepared' == x.get('status', 'NA')]) - prepared
+                    if 'prepared' == x.get('md_status', 'NA')]) - prepared
     need_manual_prep = \
         len([x for x in db.entries
-            if 'needs_manual_preparation' == x.get('status', 'NA')]) \
+            if 'needs_manual_preparation' == x.get('md_status', 'NA')]) \
         - need_manual_prep
     if prepared > 0:
         logging.info(f'Summary: Prepared {prepared} entries')
@@ -1048,7 +1049,7 @@ def prepare_entries(db, repo):
     global prepared
     global need_manual_prep
 
-    process.check_delay(db, min_status_requirement='imported')
+    process.check_delay(db, min_status_requirement='md_imported')
     with open('report.log', 'r+') as f:
         f.truncate(0)
 
@@ -1078,11 +1079,13 @@ def prepare_entries(db, repo):
             logging.info('Completed preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            print_stats_end(db)
+            db = utils.set_citation_keys(db)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
             utils.save_bib_file(db, MAIN_REFERENCES)
             repo.index.add([MAIN_REFERENCES])
+
+            print_stats_end(db)
 
             in_process = utils.create_commit(repo, '⚙️ Prepare records')
 

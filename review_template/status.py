@@ -3,7 +3,6 @@ import os
 import sys
 
 import git
-import pandas as pd
 import yaml
 
 from review_template import repo_setup
@@ -64,135 +63,150 @@ def get_nr_search():
 
 def get_status_freq():
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-    SCREEN = repo_setup.paths['SCREEN']
-    DATA = repo_setup.paths['DATA']
 
-    imported_entries = 0
-    manual_preparation_entries = 0
-    prepared_entries = 0
-    manual_merging_entries = 0
-    processed_entries = 0
-    entry_links = 0
-    merged_entry_links = 0
+    md_imported = 0
+    md_prepared = 0
+    md_need_man_prep = 0
+    md_need_man_dedupe = 0
+    md_processed = 0
 
     pdfs_to_retrieve = 0
-    pdfs_to_prepare = 0
+    pdfs_imported = 0
     pdfs_to_prepare_manually = 0
-    pdf_prepared = 0
+    pdfs_overall_prepared = 0
+    pdfs_not_available = 0
+
+    rev_retrieved = 0
+    rev_prescreen_included = 0
+    rev_prescreen_excluded = 0
+    rev_screen_included = 0
+    rev_screen_excluded = 0
+    rev_coded = 0
+
+    entry_links = 0
+    md_duplicates_removed = 0
 
     if os.path.exists(MAIN_REFERENCES):
         with open(MAIN_REFERENCES) as f:
             line = f.readline()
             while line:
-                if ' status ' in line:
+                if ' rev_status ' in line:
+                    if '{retrieved}' in line:
+                        rev_retrieved += 1
+                    if '{prescreen_included}' in line:
+                        rev_prescreen_included += 1
+                    if '{prescreen_excluded}' in line:
+                        rev_prescreen_excluded += 1
+                    if '{included}' in line:
+                        rev_screen_included += 1
+                    if '{excluded}' in line:
+                        rev_screen_excluded += 1
+                    if '{coded}' in line:
+                        rev_coded += 1
+                if ' md_status ' in line:
                     if '{imported}' in line:
-                        imported_entries += 1
+                        md_imported += 1
                     if '{needs_manual_preparation}' in line:
-                        manual_preparation_entries += 1
+                        md_need_man_prep += 1
                     if '{prepared}' in line:
-                        prepared_entries += 1
+                        md_prepared += 1
                     if '{needs_manual_merging}' in line:
-                        manual_merging_entries += 1
+                        md_need_man_dedupe += 1
                     if '{processed}' in line:
-                        processed_entries += 1
+                        md_processed += 1
                 if ' pdf_status ' in line:
                     if '{needs_retrieval}' in line:
                         pdfs_to_retrieve += 1
-                    if '{needs_preparation}' in line:
-                        pdfs_to_prepare += 1
+                    if '{imported}' in line:
+                        pdfs_imported += 1
                     if '{needs_manual_preparation}' in line:
                         pdfs_to_prepare_manually += 1
                     if '{prepared}' in line:
-                        pdf_prepared += 1
+                        pdfs_overall_prepared += 1
+                    if '{not_available}' in line:
+                        pdfs_not_available += 1
                 if 'entry_link' in line:
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
-                    merged_entry_links += nr_entry_links
+                    md_duplicates_removed += nr_entry_links
 
                 line = f.readline()
 
-    retrieved = get_nr_search()
-    non_imported = retrieved - entry_links
-    entries_to_prepare = imported_entries - \
-        prepared_entries - manual_preparation_entries
-    overall_imported = entry_links
-    overall_prepared = prepared_entries + manual_merging_entries + \
-        processed_entries + merged_entry_links
+    # Reverse order (overall_x means x or later status)
+    md_overall_processed = md_processed
+    md_overall_prepared = md_overall_processed + \
+        md_need_man_dedupe + md_duplicates_removed + md_prepared
+    md_overall_imported = \
+        md_overall_prepared + md_need_man_prep + md_imported
+    md_overall_retrieved = get_nr_search()
 
-    pdfs_retrieved = pdfs_to_prepare + pdfs_to_prepare_manually + pdf_prepared
-    pdfs_required = pdfs_to_retrieve + pdfs_retrieved
+    md_non_imported = md_overall_retrieved - entry_links
 
-    pre_screen_total = processed_entries
-    pre_screen_included = 0
-    pre_screen_excluded = 0
-    nr_to_pre_screen = pre_screen_total - pre_screen_included - \
-        pre_screen_excluded
+    # Reverse order (overall_x means x or later status)
+    pdfs_overall_prepared = pdfs_overall_prepared
+    pdfs_overall_retrieved = \
+        pdfs_overall_prepared + pdfs_to_prepare_manually + pdfs_imported
+    pdfs_overall_required = \
+        pdfs_overall_retrieved + pdfs_to_retrieve + pdfs_not_available
+
+    # Reverse order (overall_x means x or later status)
+    rev_overall_coded = rev_coded
+    rev_overall_included = rev_screen_included + rev_coded
+    rev_overall_excluded = rev_screen_excluded
+    rev_overall_screen = pdfs_overall_prepared
+    rev_overall_prescreen_included = \
+        rev_prescreen_included + rev_overall_excluded + rev_overall_included
+    rev_overall_prescreen = md_processed
+
+    rev_need_prescreen = \
+        rev_overall_prescreen - rev_prescreen_included - rev_prescreen_excluded
+    rev_need_screen = \
+        rev_overall_screen - rev_overall_included - rev_screen_excluded
+    rev_need_coding = rev_screen_included
+
     non_bw_searched = 0
-    screen_total = 0
-    screen_included = 0
-    screen_excluded = 0
-    nr_to_screen = 0
-    data_total = 0
-    nr_to_data = 0
 
-    if os.path.exists(SCREEN):
-        screen = pd.read_csv(SCREEN, dtype=str)
-        pre_screen_total = screen.shape[0]
-        pre_screen_included = screen[screen['inclusion_1'] == 'yes'].shape[0]
-        pre_screen_excluded = screen[screen['inclusion_1'] == 'no'].shape[0]
-        nr_to_pre_screen = \
-            pre_screen_total - pre_screen_included - pre_screen_excluded
-        # screen[screen['inclusion_1'] == 'TODO'].shape[0]
-        screen.drop(screen[screen['inclusion_1'] == 'no'].index, inplace=True)
-        screen_total = screen.shape[0]
-        screen_included = screen[screen['inclusion_2'] == 'yes'].shape[0]
-        screen_excluded = screen[screen['inclusion_2'] == 'no'].shape[0]
-        nr_to_screen = screen[screen['inclusion_2'] == 'TODO'].shape[0]
-
-        if os.path.exists('pdfs/'):
-            pdf_files = [x for x in os.listdir('pdfs/')]
-            search_files = [x for x in os.listdir('search/')
-                            if '.bib' == x[-4:]]
-            non_bw_searched = len([x for x in pdf_files
-                                   if not x.replace('.pdf', 'bw_search.bib')
-                                   in search_files])
-
-        if os.path.exists(DATA):
-            data = pd.read_csv(DATA, dtype=str)
-            data_total = data.shape[0]
-            nr_to_data = \
-                screen[screen['inclusion_2'] == 'yes'].shape[0] - data.shape[0]
-        else:
-            nr_to_data = screen[screen['inclusion_2'] == 'yes'].shape[0]
-
-    freqs = {'retrieved': retrieved,
-             'non_imported': non_imported,
-             'imported': imported_entries,
-             'entries_to_prepare': entries_to_prepare,
-             'needs_manual_preparation': manual_preparation_entries,
-             'prepared': prepared_entries,
-             'needs_manual_merging': manual_merging_entries,
-             'duplicates_removed': merged_entry_links,
-             'overall_imported': overall_imported,
-             'overall_prepared': overall_prepared,
-             'overall_processed': processed_entries,
-             'pre_screen_total': pre_screen_total,
-             'nr_to_pre_screen': nr_to_pre_screen,
-             'pre_screen_included': pre_screen_included,
-             'pre_screen_excluded': pre_screen_excluded,
-             'nr_to_screen': nr_to_screen,
-             'pdfs_required': pdfs_required,
-             'pdfs_retrieved': pdfs_retrieved,
+    if os.path.exists('pdfs/'):
+        pdf_files = [x for x in os.listdir('pdfs/')]
+        search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
+        non_bw_searched = len([x for x in pdf_files
+                               if not x.replace('.pdf', 'bw_search.bib')
+                               in search_files])
+    freqs = {'md_non_imported': md_non_imported,
+             'md_imported': md_imported,
+             'md_prepared': md_prepared,
+             'md_need_man_prep': md_need_man_prep,
+             'md_duplicates_removed': md_duplicates_removed,
+             'md_need_man_dedupe': md_need_man_dedupe,
+             'md_processed': md_processed,
+             'md_overall_retrieved': md_overall_retrieved,
+             'md_overall_imported': md_overall_imported,
+             'md_overall_prepared': md_overall_prepared,
+             'md_overall_processed': md_overall_processed,
+             \
              'pdfs_to_retrieve': pdfs_to_retrieve,
-             'pdfs_to_prepare': pdfs_to_prepare,
+             'pdfs_not_available': pdfs_not_available,
+             'pdfs_imported': pdfs_imported,
              'pdfs_to_prepare_manually': pdfs_to_prepare_manually,
-             'pdf_prepared': pdf_prepared,
+             'pdfs_overall_required': pdfs_overall_required,
+             'pdfs_overall_retrieved': pdfs_overall_retrieved,
+             'pdfs_overall_prepared': pdfs_overall_prepared,
+             \
+             'rev_retrieved': rev_retrieved,
+             'rev_need_prescreen': rev_need_prescreen,
+             'rev_prescreen_excluded': rev_prescreen_excluded,
+             'rev_prescreen_included': rev_prescreen_included,
+             'rev_need_screen': rev_need_screen,
+             'rev_screen_excluded': rev_screen_excluded,
+             'rev_screen_included': rev_screen_included,
+             'rev_need_coding': rev_need_coding,
+             'rev_coded': rev_coded,
+             'rev_overall_prescreen': rev_overall_prescreen,
+             'rev_overall_prescreen_included': rev_overall_prescreen_included,
+             'rev_overall_screen': rev_overall_screen,
+             'rev_overall_coded': rev_overall_coded,
+             \
              'non_bw_searched': non_bw_searched,
-             'screen_total': screen_total,
-             'screen_included': screen_included,
-             'screen_excluded': screen_excluded,
-             'nr_to_data': nr_to_data,
-             'data_total': data_total,
              }
 
     return freqs
@@ -329,6 +343,28 @@ def repository_load():
     return
 
 
+def stat_print(field1, val1, connector=None, field2=None, val2=None):
+    if field2 is None:
+        field2 = ''
+    if val2 is None:
+        val2 = ''
+    if field1 != '':
+        stat = ' |  - ' + field1 + ':'
+    else:
+        stat = ' | '
+    rjust_padd = 35-len(stat)
+    stat = stat + str(val1).rjust(rjust_padd, ' ')
+    if connector is not None:
+        stat = stat + '  ' + connector + '  '
+    if val2 != '':
+        rjust_padd = 45-len(stat)
+        stat = stat + str(val2).rjust(rjust_padd, ' ') + ' '
+    if field2 != '':
+        stat = stat + str(field2) + '.'
+    print(stat)
+    return
+
+
 def review_status():
     global status_freq
     SCREEN = repo_setup.paths['SCREEN']
@@ -350,80 +386,30 @@ def review_status():
         # for the Instructions, parse all to int
         # Search
 
-        # Note:
-        # retrieved, imported, prepared, processed are overall/cumulative,
-        # the others (non_imported, ...) are the absolute nr. of records
-        # currently having this status.
-
         print(' | Search')
-        print(
-            ' |  - Records retrieved: ' +
-            f'{str(status_freq["retrieved"]).rjust(5, " ")}',
-        )
-        if status_freq['non_imported'] > 0:
-            print(' |                               * ' +
-                  f'{str(status_freq["non_imported"]).rjust(6, " ")}' +
-                  ' record(s) not yet imported.')
-        print(
-            ' |  - Records imported: ' +
-            f'{str(status_freq["overall_imported"]).rjust(6, " ")}',
-        )
-
-        if status_freq['entries_to_prepare'] > 0:
-            nr_nmcl = status_freq['entries_to_prepare']
-            print(' |                               * ' +
-                  f'{str(nr_nmcl).rjust(6, " ")}' +
-                  ' record(s) need preparation.')
-
-        if status_freq['needs_manual_preparation'] > 0:
-            nr_nmcl = status_freq['needs_manual_preparation']
-            print(' |                               * ' +
-                  f'{str(nr_nmcl).rjust(6, " ")}' +
-                  ' record(s) need manual preparation.')
-
-        print(' |  - Records prepared: ' +
-              f'{str(status_freq["overall_prepared"]).rjust(6, " ")}')
-
-        if status_freq['prepared'] > 0:
-            print(' |                               * ' +
-                  f'{str(status_freq["prepared"]).rjust(6, " ")}' +
-                  ' record(s) need merging.')
-
-        if status_freq['needs_manual_merging'] > 0:
-            print(' |                               * ' +
-                  f'{str(status_freq["needs_manual_merging"]).rjust(6, " ")}' +
-                  ' record(s) need manual merging.')
-
-        print(' |  - Records processed: ' +
-              f'{str(status_freq["overall_processed"]).rjust(5, " ")}' +
-              '   ->' +
-              f'{str(status_freq["duplicates_removed"]).rjust(6, " ")}' +
-              ' duplicates removed'
-              )
-        print(' |')
-
-        print(' | PDFs')
-        print(' |  - PDFs required: ' +
-              f'{str(status_freq["pdfs_required"]).rjust(9, " ")}')
-        if 0 != status_freq['pdfs_to_retrieve']:
-            print(' |                               * ' +
-                  f'{str(status_freq["pdfs_to_retrieve"]).rjust(6, " ")}' +
-                  ' PDFs to retrieve')
-        print(' |  - PDFs retrieved: ' +
-              str(status_freq['pdfs_retrieved']).rjust(8, ' '))
-
-        if status_freq['pdfs_to_prepare_manually'] > 0:
-            pdfs_to_prep = str(status_freq['pdfs_to_prepare_manually'])
-            print(' |                               * ' +
-                  f'{pdfs_to_prep.rjust(6, " ")}' +
-                  ' PDFs need manual preparation')
-
-        if 0 != status_freq['pdfs_to_prepare']:
-            print(' |                               * ' +
-                  f'{str(status_freq["pdfs_to_prepare"]).rjust(6, " ")}' +
-                  ' PDFs to prepare')
-        print(' |  - PDFs prepared: ' +
-              str(status_freq['pdf_prepared']).rjust(9, ' '))
+        stat_print('Records retrieved',
+                   status_freq['md_overall_retrieved'])
+        if status_freq['md_non_imported'] > 0:
+            stat_print('', '', '*', 'record(s) not yet imported',
+                       status_freq['md_non_imported'])
+        stat_print('Records imported', status_freq['md_overall_imported'])
+        if status_freq['md_imported'] > 0:
+            stat_print('', '', '*', 'record(s) need preparation',
+                       status_freq['md_imported'])
+        if status_freq['md_need_man_prep'] > 0:
+            stat_print('', '', '*', 'record(s) need manual preparation',
+                       status_freq['md_need_man_prep'])
+        stat_print('Records prepared', status_freq['md_overall_prepared'])
+        if status_freq['md_prepared'] > 0:
+            stat_print('', '', '*', 'record(s) need merging',
+                       status_freq['md_prepared'])
+        if status_freq['md_need_man_dedupe'] > 0:
+            stat_print('', '', '*', 'record(s) need manual merging',
+                       status_freq['md_need_man_dedupe'])
+        stat_print('Records processed',
+                   status_freq['md_overall_processed'], '->',
+                   'duplicates removed',
+                   status_freq['md_duplicates_removed'])
 
         print(' |')
 
@@ -435,38 +421,48 @@ def review_status():
         else:
 
             print(' | Pre-screen')
-            print(' |  - Prescreen size: ' +
-                  str(status_freq['pre_screen_total']).rjust(8, ' '))
 
-            if 0 != status_freq['nr_to_pre_screen']:
-                print(' |                               * ' +
-                      str(status_freq['nr_to_pre_screen']).rjust(6, ' ') +
-                      ' records to prescreen'
-                      )
-            print(
-                ' |  - Included: ' +
-                f'{str(status_freq["pre_screen_included"]).rjust(14, " ")}' +
-                '   ->' +
-                f'{str(status_freq["pre_screen_excluded"]).rjust(6, " ")}' +
-                ' records excluded'
-            )
+            stat_print('Prescreen size', status_freq['rev_overall_prescreen'])
+            if 0 != status_freq['rev_need_prescreen']:
+                stat_print('', '', '*', status_freq['rev_need_prescreen'],
+                           'records to prescreen')
+            stat_print('Included',
+                       status_freq['rev_overall_prescreen_included'],
+                       '->', 'records excluded',
+                       status_freq['rev_prescreen_excluded'])
+
+            print(' |')
+            print(' | PDFs')
+
+            stat_print('PDFs required', status_freq['pdfs_overall_required'])
+            if 0 != status_freq['pdfs_to_retrieve']:
+                stat_print('', '', '*', 'PDFs to retrieve',
+                           status_freq['pdfs_to_retrieve'])
+            if status_freq['pdfs_not_available'] > 0:
+                stat_print('PDFs retrieved',
+                           status_freq['pdfs_overall_retrieved'],
+                           '*', 'PDFs not available',
+                           status_freq['pdfs_not_available'])
+            else:
+                stat_print('PDFs retrieved',
+                           status_freq['pdfs_overall_retrieved'])
+            if status_freq['pdfs_to_prepare_manually'] > 0:
+                stat_print('', '', '*', 'PDFs need manual preparation',
+                           status_freq['pdfs_to_prepare_manually'])
+            if 0 != status_freq['pdfs_imported']:
+                stat_print('', '', '*', 'PDFs to prepare',
+                           status_freq['pdfs_imported'])
+            stat_print('PDFs prepared', status_freq['pdfs_overall_prepared'])
 
             print(' |')
             print(' | Screen')
-            print(' |  - Screen size: ' +
-                  f'{str(status_freq["screen_total"]).rjust(11, " ")}')
-            if 0 != status_freq['nr_to_screen']:
-                print(' |                               * ' +
-                      str(status_freq['nr_to_screen']).rjust(6, ' ') +
-                      ' records to screen'
-                      )
-            print(
-                ' |  - Included: ' +
-                f'{str(status_freq["screen_included"]).rjust(14, " ")}   ->' +
-                f'{str(status_freq["screen_excluded"]).rjust(6, " ")} ' +
-                'records excluded'
-            )
 
+            stat_print('Screen size', status_freq['rev_overall_screen'])
+            if 0 != status_freq['rev_need_screen']:
+                stat_print('', '', '*', 'records to screen',
+                           status_freq['rev_need_screen'])
+            stat_print('Included', status_freq['rev_screen_included'], '->',
+                       'records excluded', status_freq['rev_screen_excluded'])
             print(' |')
 
         # Data
@@ -475,20 +471,15 @@ def review_status():
             print(' |  - Not initiated')
         else:
             print(' | Data extraction')
-            print(' |  - Total: ' +
-                  f'{str(status_freq["data_total"]).rjust(17, " ")}')
-            if 0 != status_freq['nr_to_data']:
-                print(
-                    ' |  - TODO: ' +
-                    f'{str(status_freq["nr_to_data"]).rjust(18, " ")}',
-                )
+            stat_print('Total', status_freq['rev_need_coding'])
+            if 0 != status_freq['rev_need_coding']:
+                stat_print('TODO', status_freq['coded'])
 
     return
 
 
 def review_instructions():
     global status_freq
-    global cur_stati
 
     print('\n\nInstructions (review_template)\n')
     # Note: review_template init is suggested in repository_validation()
@@ -497,29 +488,27 @@ def review_instructions():
               'Then use\n     review_template process')
         return
 
-    cur_stati = get_status()
-
-    if status_freq['non_imported'] > 0:
+    if status_freq['md_non_imported'] > 0:
         print('  To import, use\n     review_template process')
         return
 
-    if status_freq['needs_manual_preparation'] > 0:
+    if status_freq['md_need_man_prep'] > 0:
         print('  To continue with manual preparation, '
               'use\n     review_template man-prep')
         return
 
-    if status_freq['prepared'] > 0:
+    if status_freq['md_prepared'] > 0:
         print('  To continue with entry preparation, '
               'use\n     review_template process')
         return
 
-    if status_freq['needs_manual_merging'] > 0:
+    if status_freq['md_need_man_dedupe'] > 0:
         print('  To continue manual processing of duplicates, '
               'use\n     review_template man-dedupe')
         return
 
     # TODO: if pre-screening activated in template variables
-    if status_freq['nr_to_pre_screen'] > 0:
+    if status_freq['rev_need_prescreen'] > 0:
         print('  To continue with prescreen, '
               'use\n     review_template prescreen')
         return
@@ -529,28 +518,27 @@ def review_instructions():
               'use\n     review_template pdfs')
         return
 
+    if status_freq['pdfs_imported'] > 0:
+        print('  To continue with pdf preparation, '
+              'use\n     review_template pdf-prepare')
+        return
+
     if status_freq['non_bw_searched'] > 0:
         print('  To execute backward search, '
               'use\n     review_template back-search')
         # no return because backward searches are optional
 
-    if status_freq['nr_to_screen'] > 0:
+    if status_freq['rev_need_screen'] > 0:
         print('  To continue with screen, '
               'use\n     review_template screen')
         return
 
     # TODO: if data activated in template variables
-    if status_freq['nr_to_data'] > 0:
+    if status_freq['rev_need_coding'] > 0:
         print('  To continue with data extraction/analysis, '
               'use\n     review_template data')
         return
 
-    # if any(cs in ['imported', 'prepared', 'pre-screened',
-    #                 'pdf_acquired', 'included']
-    #         for cs in cur_stati):
-    #     print(
-    #         '  To continue (automated) processing, ',
-    #         'use\n     review_template process')
     print('\n  Nothing to do. To start another review cycle, add '
           'papers to search/ and use\n     review_template process')
     if 'MANUSCRIPT' == repo_setup.config['DATA_FORMAT']:
@@ -559,7 +547,10 @@ def review_instructions():
 
 
 def collaboration_instructions():
+    global status_freq
+
     global cur_stati
+    cur_stati = get_status()
 
     print('\n\nCollaboration and sharing (git)\n')
 
@@ -589,10 +580,13 @@ def collaboration_instructions():
 
         # TODO all the following: should all search results be imported?!
         if SHARE_STAT_REQ == 'PROCESSED':
-            if not any(cs in ['imported',
-                              'needs_manual_preparation', 'prepared',
-                              'needs_manual_merging']
-                       for cs in cur_stati):
+            non_processed = status_freq['md_non_imported'] + \
+                status_freq['md_imported'] + \
+                status_freq['md_prepared'] + \
+                status_freq['md_need_man_prep'] + \
+                status_freq['md_duplicates_removed'] + \
+                status_freq['md_need_man_dedupe']
+            if len(non_processed) == 0:
                 print(f' Currently: '
                       f'{colors.GREEN}ready for sharing{colors.END}'
                       f' (if consistency checks pass)')
@@ -606,35 +600,37 @@ def collaboration_instructions():
         # we do not need to distinguish whether
         # a PRE_SCREEN or INCLUSION_SCREEN is needed
         if SHARE_STAT_REQ == 'SCREENED':
-            if all(cs in ['pre_screen_excluded', 'excluded',
-                          'included', 'coded']
-                    for cs in cur_stati):
+            non_screened = status_freq['rev_retrieved'] + \
+                status_freq['rev_need_prescreen'] + \
+                status_freq['rev_need_screen']
+
+            if len(non_screened) == 0:
                 print(f' Currently:'
                       f' {colors.GREEN}ready for sharing{colors.END}'
                       f' (if consistency checks pass)')
             else:
                 print(f' Currently: '
                       f'{colors.RED}not ready for sharing{colors.END}\n'
-                      f'  All records should be processed before sharing '
+                      f'  All records should be screened before sharing '
                       '(see instructions above).')
-                print('TODO: update instructions/'
-                      'check non-screened records')
 
         if SHARE_STAT_REQ == 'COMPLETED':
-            if all(cs in ['coded', 'excluded', 'pre_screen_excluded']
-                    for cs in cur_stati):
+            non_completed = status_freq['rev_retrieved'] + \
+                status_freq['rev_need_prescreen'] + \
+                status_freq['rev_need_screen'] + \
+                status_freq['rev_overall_included']
+            if len(non_completed) == 0:
                 print(f' Currently: '
                       f'{colors.GREEN}ready for sharing{colors.END}'
                       f' (if consistency checks pass)')
             else:
                 print(f' Currently: '
                       f'{colors.RED}not ready for sharing{colors.END}\n'
-                      f'  All records should be processed before sharing '
+                      f'  All records should be completed before sharing '
                       '(see instructions above).')
-                print('TODO: update instructions /check non-screened '
-                      'and non-analyzed records')
 
-    print('\n\n')
+    print('\n')
+
     return
 
 
@@ -645,6 +641,9 @@ def main():
     review_status()
     review_instructions()
     collaboration_instructions()
+
+    print('Documentation\n\n   '
+          'See https://github.com/geritwagner/review_template/docs\n')
 
     return
 

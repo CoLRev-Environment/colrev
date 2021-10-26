@@ -70,7 +70,8 @@ def load_entries(filepath):
         if entry['entry_link'] in imported_entry_links:
             continue
 
-        entry.update(status='retrieved')
+        entry.update(rev_status='retrieved')
+        entry.update(md_status='retrieved')
         entry_list.append(entry)
 
     return entry_list
@@ -91,10 +92,10 @@ def save_imported_entry_links(bib_database):
 
 def import_entry(entry):
 
-    if 'retrieved' != entry['status']:
+    if 'retrieved' != entry['md_status']:
         return entry
 
-    entry.update(status='imported')
+    entry.update(md_status='imported')
 
     return entry
 
@@ -430,7 +431,7 @@ def processing_condition(entry):
     global batch_end
 
     # Do not count entries that have already been imported
-    if 'retrieved' != entry.get('status', 'NA'):
+    if 'retrieved' != entry.get('md_status', 'NA'):
         return False
 
     if 0 == current_batch_counter:
@@ -444,19 +445,6 @@ def processing_condition(entry):
         return True
 
     return False
-
-
-def set_citation_keys(db):
-    logging.info('Set citation_keys')
-    citation_key_list = [entry['ID'] for entry in db.entries]
-    for entry in db.entries:
-        if 'imported' == entry['status']:
-            entry.update(ID=utils.generate_citation_key_blacklist(
-                entry, citation_key_list,
-                entry_in_bib_db=True,
-                raise_error=False))
-            citation_key_list.append(entry['ID'])
-    return db
 
 
 def save_imported_files(repo, bib_database):
@@ -513,7 +501,7 @@ def import_entries(repo):
         pool.close()
         pool.join()
 
-        db = set_citation_keys(db)
+        db = utils.set_citation_keys(db)
 
         if save_imported_files(repo, db):
             utils.create_commit(repo, '⚙️ Import search results')

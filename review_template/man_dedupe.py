@@ -38,7 +38,7 @@ def print_diff(change, prefix_len):
     d = difflib.Differ()
 
     if change[0] == 'change':
-        if change[1] not in ['ID', 'status']:
+        if change[1] not in ['ID', 'rev_status', 'md_status', 'pdf_status']:
             letters = list(d.compare(change[2][0], change[2][1]))
             for i in range(len(letters)):
                 if letters[i].startswith('  '):
@@ -133,13 +133,13 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
         response = input(response_string)
 
     if 'y' == response:
-        # Note: update status and remove the other entry
+        # Note: update md_status and remove the other entry
         combined_el_list = \
             get_combined_entry_link_list(main_entry, duplicate_entry)
         # Delete the other entry (entry_a_ID or entry_b_ID)
         main_entry.update(entry_link=combined_el_list)
 
-        main_entry.update(status='processed')
+        main_entry.update(md_status='processed')
         bib_database.entries = [x for x in bib_database.entries
                                 if x['ID'] != duplicate_entry['ID']]
         removed_tuples.append([main_ID, duplicate_ID])
@@ -245,8 +245,8 @@ def main():
 
     for entry in bib_database.entries:
         if entry['ID'] not in not_completely_processed and \
-                'needs_manual_merging' == entry['status']:
-            entry['status'] = 'processed'
+                'needs_manual_merging' == entry['md_status']:
+            entry.update(md_status='processed')
 
     if potential_duplicate.shape[0] == 0:
         os.remove('potential_duplicate_tuples.csv')
