@@ -161,12 +161,12 @@ def get_status_freq():
         pdfs_overall_retrieved + pdfs_need_retrieval + pdfs_not_available
 
     # Reverse order (overall_x means x or later status)
-    rev_overall_synthesized = rev_synthesized
+    # rev_overall_synthesized = rev_synthesized
     rev_overall_included = rev_screen_included + rev_synthesized
     rev_overall_excluded = rev_screen_excluded
-    rev_overall_screen = pdfs_overall_prepared
     rev_overall_prescreen_included = \
         rev_prescreen_included + rev_overall_excluded + rev_overall_included
+    rev_overall_screen = rev_overall_prescreen_included
     rev_overall_prescreen = md_processed
 
     rev_need_prescreen = rev_overall_prescreen - \
@@ -225,7 +225,8 @@ def get_status_freq():
     rev_overall_stat['prescreen'] = rev_overall_prescreen
     rev_overall_stat['prescreen_included'] = rev_overall_prescreen_included
     rev_overall_stat['screen'] = rev_overall_screen
-    rev_overall_stat['synthesized'] = rev_overall_synthesized
+    rev_overall_stat['included'] = rev_overall_included
+    rev_overall_stat['synthesized'] = rev_synthesized
     rev_overall_stat['synthesis'] = rev_overall_synthesis
 
     return stat
@@ -470,7 +471,7 @@ def review_status():
             if 0 != review['currently']['need_screen']:
                 stat_print('', '', '*', 'records to screen',
                            review['currently']['need_screen'])
-            stat_print('Included', review['currently']['screen_included'],
+            stat_print('Included', review['overall']['included'],
                        '->', 'records excluded',
                        review['currently']['screen_excluded'])
 
@@ -481,11 +482,11 @@ def review_status():
         else:
             stat_print('Total', review['overall']['synthesis'])
             if 0 != review['currently']['need_synthesis']:
-                stat_print('Synthesized', review['overall']['synthesis'], '*',
-                           'need synthesis',
+                stat_print('Synthesized', review['overall']['synthesized'],
+                           '*', 'need synthesis',
                            review['currently']['need_synthesis'])
             else:
-                stat_print('Synthesized', review['overall']['synthesis'])
+                stat_print('Synthesized', review['overall']['synthesized'])
     return
 
 
@@ -554,7 +555,7 @@ def review_instructions(status_freq=None):
               'use\n     review_template data')
         return
 
-    print('\n  Nothing to do. To start another review cycle, add '
+    print('  Iteration completed. To start another review cycle, add '
           'papers to search/ and use\n     review_template process')
     if 'MANUSCRIPT' == repo_setup.config['DATA_FORMAT']:
         print('\n  To build the paper use\n     review_template paper')
