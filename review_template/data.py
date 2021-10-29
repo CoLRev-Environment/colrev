@@ -24,8 +24,8 @@ def get_data_page_missing(MANUSCRIPT, records):
     return list(set(records) - set(available))
 
 
-def get_to_code_in_manuscript(records_for_coding):
-    in_manuscript_to_code = []
+def get_to_synthesize_in_manuscript(records_for_synthesis):
+    in_manuscript_to_synthesize = []
     print(MANUSCRIPT)
     with open(MANUSCRIPT) as f:
         for line in f:
@@ -34,24 +34,26 @@ def get_to_code_in_manuscript(records_for_coding):
                     line = f.readline()
                     if re.search(r'- @.*', line):
                         citation_key = re.findall(r'- @(.*)$', line)
-                        in_manuscript_to_code.append(citation_key[0])
+                        in_manuscript_to_synthesize.append(citation_key[0])
                         if line == '\n':
                             break
 
-    in_manuscript_to_code = [x for x in in_manuscript_to_code
-                             if x in records_for_coding]
-    return in_manuscript_to_code
+    in_manuscript_to_synthesize = [x for x in in_manuscript_to_synthesize
+                                   if x in records_for_synthesis]
+    return in_manuscript_to_synthesize
 
 
 def get_synthesized_ids(bib_database):
 
-    records_for_coding = [x['ID']for x in bib_database.entries
-                          if x.get('rev_status', 'NA') in
-                          ['included', 'in_manuscript']]
+    records_for_synthesis = [x['ID']for x in bib_database.entries
+                             if x.get('rev_status', 'NA') in
+                             ['included', 'in_manuscript']]
 
-    in_manuscript_to_code = get_to_code_in_manuscript(records_for_coding)
+    in_manuscript_to_synthesize = \
+        get_to_synthesize_in_manuscript(records_for_synthesis)
 
-    synthesized = set(set(records_for_coding) - set(in_manuscript_to_code))
+    synthesized = \
+        set(set(records_for_synthesis) - set(in_manuscript_to_synthesize))
     return list(synthesized)
 
 
@@ -104,8 +106,8 @@ def update_manuscript(repo, bib_database):
         line = reader.readline()
         while line != '':
             if '<!-- NEW_RECORD_SOURCE -->' in line:
-                if '_Records to analyze_' not in line:
-                    line = '_Records to analyze_:' + line + '\n'
+                if '_Records to synthesize' not in line:
+                    line = '_Records to synthesize_:' + line + '\n'
                     writer.write(line)
                 else:
                     writer.write(line)
@@ -141,7 +143,8 @@ def update_manuscript(repo, bib_database):
                             'the document.')
             if line != '\n':
                 writer.write('\n')
-            writer.write('<!-- NEW_RECORD_SOURCE -->_Records to analyze_:\n\n')
+            marker = '<!-- NEW_RECORD_SOURCE -->_Records to synthesize_:\n\n'
+            writer.write(marker)
             for missing_record in missing_records:
                 writer.write('- @' + missing_record + '\n')
                 logging.info(f' {missing_record}'.ljust(18, ' ') + ' added')
@@ -174,9 +177,9 @@ def main():
     for entry in bib_database.entries:
         # TODO: add other forms of data extraction/analysis/synthesis
         if entry['ID'] in synthesized_in_manuscript:
-            entry.update(rev_status='coded')
+            entry.update(rev_status='synthesized')
             logging.info(f'{entry["ID"]}'.ljust(18, ' ') +
-                         'set status "coded"')
+                         'set status "synthesized"')
 
     utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
     repo.index.add([MANUSCRIPT])

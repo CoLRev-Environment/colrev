@@ -15,6 +15,7 @@ from string import ascii_lowercase
 import bibtexparser
 import git
 import pandas as pd
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
@@ -300,7 +301,7 @@ def get_bib_files():
 def get_included_IDs(db):
     included = []
     for entry in db.entries:
-        if entry.get('rev_status', 'NA') in ['included', 'coded']:
+        if entry.get('rev_status', 'NA') in ['included', 'synthesized']:
             included.append(entry['ID'])
     return included
 
@@ -404,9 +405,22 @@ def get_version_flag():
     return flag
 
 
+def update_status_yaml():
+
+    status_freq = status.get_status_freq()
+
+    with open('status.yaml', 'w') as f:
+        yaml.dump(status_freq, f, allow_unicode=True)
+
+    return
+
+
 def create_commit(repo, msg, manual_author=False):
 
     if repo.is_dirty():
+
+        update_status_yaml()
+        repo.index.add(['status.yaml'])
 
         hook_skipping = 'false'
         if not repo_setup.config['DEBUG_MODE']:
