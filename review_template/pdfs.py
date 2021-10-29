@@ -9,8 +9,10 @@ import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
+from review_template import init
 from review_template import process
 from review_template import repo_setup
+from review_template import status
 from review_template import utils
 
 pdfs_retrieved = 0
@@ -86,7 +88,6 @@ def is_pdf(path_to_file):
 def acquire_pdf(entry):
     global pdfs_retrieved
     global existing_pdfs_linked
-    global missing_entries
 
     if 'needs_retrieval' != entry.get('pdf_status', 'NA'):
         return entry
@@ -108,6 +109,8 @@ def acquire_pdf(entry):
         entry.update(pdf_status='imported')
         if 'file' not in entry:
             entry.update(file=':' + pdf_filepath + ':PDF')
+            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                         'linked pdf')
             existing_pdfs_linked += 1
         return entry
 
@@ -135,17 +138,20 @@ def acquire_pdf(entry):
                 else:
                     logging.info('Unpaywall retrieval error '
                                  f'{res.status_code}/{url}')
-
-    if not os.path.exists(pdf_filepath):
-        missing_entries.entries.append(entry)
-
     return entry
 
 
-def print_details():
+def get_missing_entries(db):
+    missing_entries = BibDatabase()
+    for entry in db.entries:
+        if 'needs_retrieval' == entry.get('pdf_status', 'NA'):
+            missing_entries.entries.append(entry)
+    return missing_entries
+
+
+def print_details(missing_entries):
     global pdfs_retrieved
     global existing_pdfs_linked
-    global missing_entries
 
     if existing_pdfs_linked > 0:
         logging.info(
@@ -159,8 +165,8 @@ def print_details():
     return
 
 
-def export_retrieval_table():
-    global missing_entries
+def export_retrieval_table(missing_entries):
+
     if len(missing_entries.entries) > 0:
         missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
         col_order = [
@@ -178,10 +184,7 @@ def export_retrieval_table():
 def acquire_pdfs(db, repo):
 
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
-    process.check_delay(db, min_status_requirement='prescreen_inclusion')
-
-    global missing_entries
-    missing_entries = BibDatabase()
+    process.check_delay(db, min_status_requirement='pdf_needs_retrieval')
 
     print('TODO: download if there is a fulltext link in the entry')
 
@@ -206,11 +209,13 @@ def acquire_pdfs(db, repo):
         with current_batch_counter.get_lock():
             batch_end = current_batch_counter.value + batch_start - 1
 
+        missing_entries = get_missing_entries(db)
+
         if batch_end > 0:
             logging.info('Completed pdf acquisition batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            print_details()
+            print_details(missing_entries)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
             utils.save_bib_file(db, MAIN_REFERENCES)
@@ -230,14 +235,19 @@ def acquire_pdfs(db, repo):
                 logging.info('No additional pdfs to retrieve')
             break
 
-    export_retrieval_table()
+    export_retrieval_table(missing_entries)
     print()
     return db
 
 
 def main():
 
-    acquire_pdfs()
+    db = utils.load_references_bib(True, initialize=True)
+    repo = init.get_repo()
+    acquire_pdfs(db, repo)
+
+    status.review_instructions()
+    return
 
 
 if __name__ == '__main__':

@@ -66,8 +66,8 @@ def load_entries(filepath):
     search_file = os.path.basename(filepath)
     entry_list = []
     for entry in search_db.entries:
-        entry['entry_link'] = search_file + '/' + entry['ID']
-        if entry['entry_link'] in imported_entry_links:
+        entry['origin'] = search_file + '/' + entry['ID']
+        if entry['origin'] in imported_entry_links:
             continue
 
         entry.update(rev_status='retrieved')

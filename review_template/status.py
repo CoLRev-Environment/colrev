@@ -8,8 +8,8 @@ import yaml
 from review_template import repo_setup
 from review_template import utils
 
-repo, status_freq, cur_stati = None, None, None
-SHARE_STAT_REQ, MAIN_REFERENCES, SCREEN, DATA = None, None, None, None
+repo = None
+SHARE_STAT_REQ, MAIN_REFERENCES = None, None
 
 
 class colors:
@@ -70,9 +70,9 @@ def get_status_freq():
     md_need_man_dedupe = 0
     md_processed = 0
 
-    pdfs_to_retrieve = 0
+    pdfs_need_retrieval = 0
     pdfs_imported = 0
-    pdfs_to_prepare_manually = 0
+    pdfs_need_man_prep = 0
     pdfs_overall_prepared = 0
     pdfs_not_available = 0
 
@@ -116,11 +116,11 @@ def get_status_freq():
                         md_processed += 1
                 if ' pdf_status ' in line:
                     if '{needs_retrieval}' in line:
-                        pdfs_to_retrieve += 1
+                        pdfs_need_retrieval += 1
                     if '{imported}' in line:
                         pdfs_imported += 1
                     if '{needs_manual_preparation}' in line:
-                        pdfs_to_prepare_manually += 1
+                        pdfs_need_man_prep += 1
                     if '{prepared}' in line:
                         pdfs_overall_prepared += 1
                     if '{not_available}' in line:
@@ -145,9 +145,9 @@ def get_status_freq():
     # Reverse order (overall_x means x or later status)
     pdfs_overall_prepared = pdfs_overall_prepared
     pdfs_overall_retrieved = \
-        pdfs_overall_prepared + pdfs_to_prepare_manually + pdfs_imported
+        pdfs_overall_prepared + pdfs_need_man_prep + pdfs_imported
     pdfs_overall_required = \
-        pdfs_overall_retrieved + pdfs_to_retrieve + pdfs_not_available
+        pdfs_overall_retrieved + pdfs_need_retrieval + pdfs_not_available
 
     # Reverse order (overall_x means x or later status)
     rev_overall_coded = rev_coded
@@ -158,11 +158,12 @@ def get_status_freq():
         rev_prescreen_included + rev_overall_excluded + rev_overall_included
     rev_overall_prescreen = md_processed
 
-    rev_need_prescreen = \
-        rev_overall_prescreen - rev_prescreen_included - rev_prescreen_excluded
+    rev_need_prescreen = rev_overall_prescreen - \
+        rev_overall_prescreen_included - rev_prescreen_excluded
     rev_need_screen = \
         rev_overall_screen - rev_overall_included - rev_screen_excluded
-    rev_need_coding = rev_screen_included
+    rev_overall_coding = rev_screen_included
+    rev_need_coding = rev_screen_included - rev_coded
 
     non_bw_searched = 0
 
@@ -184,10 +185,10 @@ def get_status_freq():
              'md_overall_prepared': md_overall_prepared,
              'md_overall_processed': md_overall_processed,
              \
-             'pdfs_to_retrieve': pdfs_to_retrieve,
+             'pdfs_need_retrieval': pdfs_need_retrieval,
              'pdfs_not_available': pdfs_not_available,
              'pdfs_imported': pdfs_imported,
-             'pdfs_to_prepare_manually': pdfs_to_prepare_manually,
+             'pdfs_need_man_prep': pdfs_need_man_prep,
              'pdfs_overall_required': pdfs_overall_required,
              'pdfs_overall_retrieved': pdfs_overall_retrieved,
              'pdfs_overall_prepared': pdfs_overall_prepared,
@@ -205,6 +206,7 @@ def get_status_freq():
              'rev_overall_prescreen_included': rev_overall_prescreen_included,
              'rev_overall_screen': rev_overall_screen,
              'rev_overall_coded': rev_overall_coded,
+             'rev_overall_coding': rev_overall_coding,
              \
              'non_bw_searched': non_bw_searched,
              }
@@ -349,7 +351,7 @@ def stat_print(field1, val1, connector=None, field2=None, val2=None):
     if val2 is None:
         val2 = ''
     if field1 != '':
-        stat = ' |  - ' + field1 + ':'
+        stat = ' |  - ' + field1
     else:
         stat = ' | '
     rjust_padd = 35-len(stat)
@@ -367,8 +369,6 @@ def stat_print(field1, val1, connector=None, field2=None, val2=None):
 
 def review_status():
     global status_freq
-    SCREEN = repo_setup.paths['SCREEN']
-    DATA = repo_setup.paths['DATA']
 
     # Principle: first column shows total records/PDFs in each stage
     # the second column shows
@@ -412,76 +412,72 @@ def review_status():
                    status_freq['md_duplicates_removed'])
 
         print(' |')
-
-        # Screen
-        if not os.path.exists(SCREEN):
-            print(' | Screen')
-            print(' |  - Not initiated')
-            print(' |')
+        print(' | Pre-screen')
+        if status_freq['rev_overall_prescreen'] == 0:
+            stat_print('Not initiated', '')
         else:
-
-            print(' | Pre-screen')
-
             stat_print('Prescreen size', status_freq['rev_overall_prescreen'])
             if 0 != status_freq['rev_need_prescreen']:
-                stat_print('', '', '*', status_freq['rev_need_prescreen'],
-                           'records to prescreen')
+                stat_print('', '', '*', 'records to prescreen',
+                           status_freq['rev_need_prescreen'])
             stat_print('Included',
                        status_freq['rev_overall_prescreen_included'],
                        '->', 'records excluded',
                        status_freq['rev_prescreen_excluded'])
 
-            print(' |')
-            print(' | PDFs')
+        print(' |')
+        print(' | PDFs')
 
-            stat_print('PDFs required', status_freq['pdfs_overall_required'])
-            if 0 != status_freq['pdfs_to_retrieve']:
-                stat_print('', '', '*', 'PDFs to retrieve',
-                           status_freq['pdfs_to_retrieve'])
-            if status_freq['pdfs_not_available'] > 0:
-                stat_print('PDFs retrieved',
-                           status_freq['pdfs_overall_retrieved'],
-                           '*', 'PDFs not available',
-                           status_freq['pdfs_not_available'])
-            else:
-                stat_print('PDFs retrieved',
-                           status_freq['pdfs_overall_retrieved'])
-            if status_freq['pdfs_to_prepare_manually'] > 0:
-                stat_print('', '', '*', 'PDFs need manual preparation',
-                           status_freq['pdfs_to_prepare_manually'])
-            if 0 != status_freq['pdfs_imported']:
-                stat_print('', '', '*', 'PDFs to prepare',
-                           status_freq['pdfs_imported'])
-            stat_print('PDFs prepared', status_freq['pdfs_overall_prepared'])
+        stat_print('PDFs required', status_freq['pdfs_overall_required'])
+        if 0 != status_freq['pdfs_need_retrieval']:
+            stat_print('', '', '*', 'PDFs to retrieve',
+                       status_freq['pdfs_need_retrieval'])
+        if status_freq['pdfs_not_available'] > 0:
+            stat_print('PDFs retrieved',
+                       status_freq['pdfs_overall_retrieved'],
+                       '*', 'PDFs not available',
+                       status_freq['pdfs_not_available'])
+        else:
+            stat_print('PDFs retrieved',
+                       status_freq['pdfs_overall_retrieved'])
+        if status_freq['pdfs_need_man_prep'] > 0:
+            stat_print('', '', '*', 'PDFs need manual preparation',
+                       status_freq['pdfs_need_man_prep'])
+        if 0 != status_freq['pdfs_imported']:
+            stat_print('', '', '*', 'PDFs to prepare',
+                       status_freq['pdfs_imported'])
+        stat_print('PDFs prepared', status_freq['pdfs_overall_prepared'])
 
-            print(' |')
-            print(' | Screen')
-
+        print(' |')
+        print(' | Screen')
+        if status_freq['rev_overall_screen'] == 0:
+            stat_print('Not initiated', '')
+        else:
             stat_print('Screen size', status_freq['rev_overall_screen'])
             if 0 != status_freq['rev_need_screen']:
                 stat_print('', '', '*', 'records to screen',
                            status_freq['rev_need_screen'])
             stat_print('Included', status_freq['rev_screen_included'], '->',
                        'records excluded', status_freq['rev_screen_excluded'])
-            print(' |')
 
-        # Data
-        if not os.path.exists(DATA):
-            print(' | Data')
-            print(' |  - Not initiated')
+        print(' |')
+        print(' | Data and synthesis')
+        if status_freq['rev_need_coding'] == 0:
+            stat_print('Not initiated', '')
         else:
-            print(' | Data extraction')
-            stat_print('Total', status_freq['rev_need_coding'])
+            stat_print('Total', status_freq['rev_overall_coding'])
             if 0 != status_freq['rev_need_coding']:
-                stat_print('TODO', status_freq['coded'])
+                stat_print('Coded', status_freq['rev_overall_coded'], '*',
+                           'need coding', status_freq['rev_need_coding'])
 
     return
 
 
-def review_instructions():
-    global status_freq
+def review_instructions(status_freq=None):
+    if status_freq is None:
+        status_freq = get_status_freq()
 
-    print('\n\nInstructions (review_template)\n')
+    print('\n\nInstructions\n')
     # Note: review_template init is suggested in repository_validation()
     if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
         print('  To import, copy search results to the search directory. ' +
@@ -513,7 +509,7 @@ def review_instructions():
               'use\n     review_template prescreen')
         return
 
-    if status_freq['pdfs_to_retrieve'] > 0:
+    if status_freq['pdfs_need_retrieval'] > 0:
         print('  To continue with pdf acquisition, '
               'use\n     review_template pdfs')
         return
@@ -523,9 +519,10 @@ def review_instructions():
               'use\n     review_template pdf-prepare')
         return
 
-    if status_freq['non_bw_searched'] > 0:
-        print('  To execute backward search, '
-              'use\n     review_template back-search')
+    # TBD: how/when should we offer that option?
+    # if status_freq['non_bw_searched'] > 0:
+    #     print('  To execute backward search, '
+    #           'use\n     review_template back-search')
         # no return because backward searches are optional
 
     if status_freq['rev_need_screen'] > 0:
@@ -543,17 +540,20 @@ def review_instructions():
           'papers to search/ and use\n     review_template process')
     if 'MANUSCRIPT' == repo_setup.config['DATA_FORMAT']:
         print('\n  To build the paper use\n     review_template paper')
-    return
+    return status_freq
 
 
-def collaboration_instructions():
-    global status_freq
+def collaboration_instructions(status_freq):
 
-    global cur_stati
-    cur_stati = get_status()
+    print('\n\nVersioning and collaboration\n')
 
-    print('\n\nCollaboration and sharing (git)\n')
+    if repo.is_dirty():
+        print(f'  {colors.RED}Uncommitted changes{colors.END}'
+              '\n  To add, use\n     git add .'
+              '\n  To commit, use\n     git commit -m')
+    print('\n  To inspect changes, use\n     gitk')
 
+    print()
     nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
 
     if nr_commits_behind == -1 and nr_commits_ahead == -1:
@@ -638,9 +638,9 @@ def main():
 
     repository_validation()
     repository_load()
-    review_status()
-    review_instructions()
-    collaboration_instructions()
+    status_freq = review_status()
+    review_instructions(status_freq)
+    collaboration_instructions(status_freq)
 
     print('Documentation\n\n   '
           'See https://github.com/geritwagner/review_template/docs\n')

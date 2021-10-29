@@ -255,7 +255,7 @@ def prepare_pdfs(db, repo):
             logging.info('Continuing batch preparation started earlier')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        pool.map(prepare_pdf, db.entries)
+        db.entries = pool.map(prepare_pdf, db.entries)
         pool.close()
         pool.join()
 
@@ -292,6 +292,8 @@ def prepare_pdfs(db, repo):
 
 
 def main():
+    # TODO: temporary fix: remove all lines containint PDFType1Font from log.
+    # https://github.com/pdfminer/pdfminer.six/issues/282
 
     db = utils.load_references_bib(True, initialize=True)
     repo = init.get_repo()
