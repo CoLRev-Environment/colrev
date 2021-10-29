@@ -542,8 +542,14 @@ def get_dblp_venue(venue_string):
                f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
     ret = requests.get(url, headers=headers)
     data = json.loads(ret.text)
-    venue = data['result']['hits']['hit'][0]['info']['venue']
-    re.sub(r' \(.*?\)', '', venue)
+
+    hits = data['result']['hits']['hit']
+    for hit in hits:
+        if f'/{venue_string.lower()}/' in hit['info']['url']:
+            venue = hit['info']['venue']
+            break
+
+    venue = re.sub(r' \(.*?\)', '', venue)
     return venue
 
 
@@ -560,56 +566,73 @@ def get_metadata_from_dblp(entry):
     try:
 
         data = json.loads(ret.text)
-        items = data['result']['hits']['hit']
-        item = items[0]['info']
+        hits = data['result']['hits']['hit']
+        for hit in hits:
+            item = hit['info']
 
-        author_string = ' and '.join([author['text']
-                                     for author in item['authors']['author']])
-        author_string = format_author_field(author_string)
+            author_string = \
+                ' and '.join([author['text']
+                              for author in item['authors']['author']])
+            author_string = format_author_field(author_string)
 
-        author_similarity = ratio(
-            dedupe.format_authors_string(author_string),
-            dedupe.format_authors_string(entry['author']),
-        )
-        title_similarity = ratio(
-            item['title'].lower(),
-            entry['title'].lower(),
-        )
-        # container_similarity = ratio(
-        #     item['venue'].lower(),
-        #     get_container_title(entry).lower(),
-        # )
-        year_similarity = ratio(
-            item['year'],
-            entry['year'],
-        )
-        # print(f'author_similarity: {author_similarity}')
-        # print(f'title_similarity: {title_similarity}')
-        # print(f'container_similarity: {container_similarity}')
-        # print(f'year_similarity: {year_similarity}')
+            author_similarity = ratio(
+                dedupe.format_authors_string(author_string)[:50],
+                dedupe.format_authors_string(entry['author'])[:50],
+            )
+            title_similarity = ratio(
+                item['title'].lower(),
+                entry['title'].lower(),
+            )
+            # container_similarity = ratio(
+            #     item['venue'].lower(),
+            #     get_container_title(entry).lower(),
+            # )
+            year_similarity = ratio(
+                item['year'],
+                entry['year'],
+            )
+            # print(f'author_similarity: {author_similarity}')
+            # print(f'title_similarity: {title_similarity}')
+            # print(f'container_similarity: {container_similarity}')
+            # print(f'year_similarity: {year_similarity}')
 
-        weights = [0.4, 0.3, 0.3]
-        similarities = [title_similarity, author_similarity, year_similarity]
+            weights = [0.4, 0.3, 0.3]
+            similarities = [title_similarity,
+                            author_similarity, year_similarity]
 
-        similarity = sum(similarities[g] * weights[g]
-                         for g in range(len(similarities)))
+            similarity = sum(similarities[g] * weights[g]
+                             for g in range(len(similarities)))
 
-        if similarity > 0.95:
-            if 'Journal Articles' == item['type']:
-                if 'booktitle' in entry:
-                    del entry['booktitle']
-                entry['ENTRYTYPE'] = 'article'
-                entry['journal'] = get_dblp_venue(item['venue'])
-                entry['volume'] = item['volume']
-                entry['issue'] = item['number']
-            if 'Conference and Workshop Papers' == item['type']:
-                if 'journal' in entry:
-                    del entry['journal']
-                entry['ENTRYTYPE'] = 'inproceedings'
-                entry['booktitle'] = get_dblp_venue(item['venue'])
-            if 'doi' in item:
-                entry['doi'] = item['doi']
-            entry['dblp_key'] = 'https://dblp.org/rec/' + item['key']
+            if similarity > 0.95:
+                if 'Journal Articles' == item['type']:
+                    if 'booktitle' in entry:
+                        del entry['booktitle']
+                    entry['ENTRYTYPE'] = 'article'
+                    lpos = item['key'].find('/')+1
+                    rpos = item['key'].rfind('/')
+                    jour = item['key'][lpos:rpos]
+                    entry['journal'] = get_dblp_venue(jour)
+                    entry['author'] = author_string
+                    entry['volume'] = item['volume']
+                    if 'number' in item:
+                        entry['issue'] = item['number']
+                    if 'pages' in item:
+                        entry['pages'] = item['pages']
+                    # Note: we may think of a better variable name:
+                    entry['complete_based_on_doi'] = 'True'
+                if 'Conference and Workshop Papers' == item['type']:
+                    if 'journal' in entry:
+                        del entry['journal']
+                    entry['ENTRYTYPE'] = 'inproceedings'
+                    entry['author'] = author_string
+                    entry['booktitle'] = get_dblp_venue(item['venue'])
+                    # Note: we may think of a better variable name:
+                    entry['complete_based_on_doi'] = 'True'
+                if 'doi' in item:
+                    entry['doi'] = item['doi']
+                if 'url' not in entry:
+                    entry['url'] = item['ee']
+                entry['dblp_key'] = 'https://dblp.org/rec/' + item['key']
     except KeyError:
         pass
     except UnicodeEncodeError:
@@ -915,11 +938,12 @@ fields_to_keep = [
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
     'rev_status', 'md_status', 'pdf_status',
-    'fulltext', 'entry_link',
-    'dblp_key', 'semantic_scholar_id'
+    'fulltext', 'origin',
+    'dblp_key', 'semantic_scholar_id',
+    'url'
 ]
 fields_to_drop = [
-    'type', 'url', 'organization',
+    'type', 'organization',
     'issn', 'isbn', 'note', 'number',
     'unique-id', 'month', 'researcherid-numbers',
     'orcid-numbers', 'eissn', 'article-number',

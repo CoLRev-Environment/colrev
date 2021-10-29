@@ -26,7 +26,6 @@ from review_template import repo_setup
 from review_template import status
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-SCREEN = repo_setup.paths['SCREEN']
 DATA = repo_setup.paths['DATA']
 SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
 
@@ -69,11 +68,6 @@ def propagated_citation_key(citation_key):
 
     propagated = False
 
-    if os.path.exists(SCREEN):
-        screen = pd.read_csv(SCREEN, dtype=str)
-        if citation_key in screen['citation_key'].tolist():
-            propagated = True
-
     if os.path.exists(DATA):
         # Note: this may be redundant, but just to be sure:
         data = pd.read_csv(DATA, dtype=str)
@@ -111,7 +105,7 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         if propagated_citation_key(entry['ID']):
             raise CitationKeyPropagationError(
                 'WARNING: do not change citation_keys that have been ',
-                'propagated to ' + SCREEN + ' and/or ' + DATA + ' (' +
+                'propagated to ' + DATA + ' (' +
                 entry['ID'] + ')',
             )
 
@@ -303,6 +297,14 @@ def get_bib_files():
     return bib_files
 
 
+def get_included_IDs(db):
+    included = []
+    for entry in db.entries:
+        if entry.get('rev_status', 'NA') in ['included', 'coded']:
+            included.append(entry['ID'])
+    return included
+
+
 def save_bib_file(bib_database, target_file=None):
 
     if target_file is None:
@@ -314,8 +316,8 @@ def save_bib_file(bib_database, target_file=None):
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
         'origin',
-        'md_status',
         'rev_status',
+        'md_status',
         'pdf_status',
         'doi',
         'author',

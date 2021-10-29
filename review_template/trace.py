@@ -13,7 +13,6 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-SCREEN = repo_setup.paths['SCREEN']
 DATA = repo_setup.paths['DATA']
 
 
@@ -27,7 +26,7 @@ def main(citation_key):
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    prev_entry, prev_screen, prev_data = [], '', ''
+    prev_entry, prev_data = [], ''
     for commit in reversed(list(revlist)):
         commit_message_first_line = commit.message.partition('\n')[0]
         print('\n\nCommit: ' +
@@ -55,14 +54,6 @@ def main(citation_key):
                     for diff in diffs:
                         pp.pprint(diff)
                 prev_entry = entry
-
-        if (SCREEN in commit.tree):
-            filecontents = (commit.tree / SCREEN).data_stream.read()
-            for line in str(filecontents).split('\\n'):
-                if citation_key in line:
-                    if line != prev_screen:
-                        print(f'Screen: {line}')
-                        prev_screen = line
 
         if (DATA in commit.tree):
             filecontents = (commit.tree / DATA).data_stream.read()

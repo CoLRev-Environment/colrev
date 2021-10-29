@@ -13,7 +13,6 @@ from review_template import repo_setup
 from review_template import utils
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-SCREEN = repo_setup.paths['SCREEN']
 SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 

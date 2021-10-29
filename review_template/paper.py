@@ -15,7 +15,7 @@ def main():
     uid = os.stat(repo_setup.paths['MAIN_REFERENCES']).st_uid
     gid = os.stat(repo_setup.paths['MAIN_REFERENCES']).st_gid
 
-    script = 'coding.md --citeproc --bibliography references.bib ' + \
+    script = 'paper.md --citeproc --bibliography references.bib ' + \
         '--output paper.docx'
 
     client = docker.from_env()

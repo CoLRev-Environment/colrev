@@ -1,57 +1,21 @@
 #! /usr/bin/env python
-import csv
+import logging
 import os
+import re
 import sys
 
 import git
-import pandas as pd
 
+from review_template import init
 from review_template import repo_setup
 from review_template import utils
 
-
-SCREEN = repo_setup.paths['SCREEN']
-DATA_FILE = repo_setup.paths['DATA']
-
-nr_entries_added = 0
-nr_current_entries = 0
+MANUSCRIPT = 'paper.md'
 
 
-def generate_data_pages():
-
-    global nr_entries_added
-
-    print('Data pages')
-
-    # TOOD: possibly include a template that is copied?
-
-    if not os.path.exists('coding'):
-        os.mkdir('coding')
-
-    screen = pd.read_csv(SCREEN, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
-
-    screen = screen['citation_key'].tolist()
-    if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
-        sys.exit()
-
-    for record_id in screen:
-        record_file = 'coding/' + record_id + '.md'
-        if not os.path.exists(record_file):
-            text_file = open(record_file, 'w')
-            text_file.write('')
-            text_file.close()
-            nr_entries_added += 1
-
-    print(f'{nr_entries_added} records created (coding/citation_key.md)\n')
-
-    return
-
-
-def get_data_page_missing(DATA_PAGE, records):
+def get_data_page_missing(MANUSCRIPT, records):
     available = []
-    with open(DATA_PAGE) as f:
+    with open(MANUSCRIPT) as f:
         line = f.read()
         for record in records:
             if record in line:
@@ -60,155 +24,168 @@ def get_data_page_missing(DATA_PAGE, records):
     return list(set(records) - set(available))
 
 
-def generate_data_page():
+def get_to_code_in_manuscript(records_for_coding):
+    in_manuscript_to_code = []
+    print(MANUSCRIPT)
+    with open(MANUSCRIPT) as f:
+        for line in f:
+            if '<!-- NEW_RECORD_SOURCE -->' in line:
+                while line != '':
+                    line = f.readline()
+                    if re.search(r'- @.*', line):
+                        citation_key = re.findall(r'- @(.*)$', line)
+                        in_manuscript_to_code.append(citation_key[0])
+                        if line == '\n':
+                            break
 
-    global nr_entries_added
+    in_manuscript_to_code = [x for x in in_manuscript_to_code
+                             if x in records_for_coding]
+    return in_manuscript_to_code
 
-    print('Data page')
 
-    screen = pd.read_csv(SCREEN, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
+def get_synthesized_ids(bib_database):
 
-    screen = screen['citation_key'].tolist()
-    if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
+    records_for_coding = [x['ID']for x in bib_database.entries
+                          if x.get('rev_status', 'NA') in
+                          ['included', 'in_manuscript']]
+
+    in_manuscript_to_code = get_to_code_in_manuscript(records_for_coding)
+
+    synthesized = set(set(records_for_coding) - set(in_manuscript_to_code))
+    return list(synthesized)
+
+
+def update_manuscript(repo, bib_database):
+
+    synthesized_in_manuscript = get_synthesized_ids(bib_database)
+    included = utils.get_included_IDs(bib_database)
+
+    if 0 == len(included):
+        logging.info('No records included yet')
         sys.exit()
 
-    DATA_PAGE = 'coding.md'
-    if not os.path.exists(DATA_PAGE):
-        f = open(DATA_PAGE, 'w')
-        f.write('# Coding and synthesis\n')
-        f.close()
-
-    missing_records = get_data_page_missing(DATA_PAGE, screen)
-    missing_records = sorted(missing_records)
-    if 0 != len(missing_records):
-        text_file = open(DATA_PAGE, 'a')
-        text_file.write('\n# TODO\n\n- ' + '\n- '.join(missing_records))
-        text_file.close()
-        nr_entries_added = len(missing_records)
-
-    print(f'{nr_entries_added} records created (coding/citation_key.md)\n')
-
-    return
-
-
-def generate_data_csv(coding_dimensions):
-    global nr_entries_added
-
-    screen = pd.read_csv(SCREEN, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
-    if len(screen) == 0:
-        print('no records included yet (SCREEN$inclusion_2 == yes)\n')
-        sys.exit()
-
-    del screen['inclusion_1']
-    del screen['inclusion_2']
-
-    for column in screen.columns:
-        if column.startswith('ec_'):
-            del screen[column]
-
-    del screen['comment']
-
-    for dimension in coding_dimensions:
-        screen[dimension] = 'TODO'
-    screen.sort_values(by=['citation_key'], inplace=True)
-    screen.to_csv(DATA_FILE, index=False, quoting=csv.QUOTE_ALL)
-
-    return
-
-
-def update_data_csv():
-
-    global nr_entries_added
-
-    data = pd.read_csv(DATA_FILE, dtype=str)
-    screen = pd.read_csv(SCREEN, dtype=str)
-    screen = screen.drop(screen[screen['inclusion_2'] != 'yes'].index)
-
-    print('TODO: warn when records are no longer included')
-
-    for record_id in screen['citation_key'].tolist():
-        # skip when already available
-        if 0 < len(data[data['citation_key'].str.startswith(record_id)]):
-            continue
-
-        add_entry = pd.DataFrame({'citation_key': [record_id]})
-        add_entry = add_entry.reindex(columns=data.columns, fill_value='TODO')
-        data = pd.concat([data, add_entry], axis=0, ignore_index=True)
-        nr_entries_added = nr_entries_added + 1
-
-    data.sort_values(by=['citation_key'], inplace=True)
-    data.to_csv(DATA_FILE, index=False, quoting=csv.QUOTE_ALL)
-
-    return
-
-
-def generate_data_sheet():
-
-    print('Data')
-    print('TODO: validation to be implemented here')
-
-    if not os.path.exists(DATA_FILE):
-        print(f'Creating {DATA_FILE}')
-        coding_dimensions = \
-            input('Provide a list of coding dimensions [dim1,dim2,...]:')
-
-        coding_dimensions = coding_dimensions.strip('[]')\
-                                             .replace(' ', '_')\
-                                             .split(',')
-
-        # Coding dimensions should be unique
-        assert len(coding_dimensions) == len(set(coding_dimensions))
-
-        generate_data_csv(coding_dimensions)
-        print(f'Created {DATA_FILE}')
-        print(f'0 records in {DATA_FILE}')
+    if os.path.exists(MANUSCRIPT):
+        missing_records = get_data_page_missing(MANUSCRIPT, included)
+        missing_records = sorted(missing_records)
     else:
-        print(f'Loaded existing {DATA_FILE}')
-        file = open(DATA_FILE)
-        reader = csv.reader(file)
-        lines = len(list(reader))-1
-        print(f'{lines} records in {DATA_FILE}')
+        missing_records = included
 
-        update_data_csv()
+    if 0 == len(missing_records):
+        logging.info(f'All records included in {MANUSCRIPT}')
+        return synthesized_in_manuscript
 
-    print(f'{nr_entries_added} records added to {DATA_FILE}')
-    file = open(DATA_FILE)
-    reader = csv.reader(file)
-    lines = len(list(reader))-1
-    print(f'{lines} records in {DATA_FILE}\n')
+    changedFiles = [item.a_path for item in repo.index.diff(None)]
+    if MANUSCRIPT in changedFiles:
+        logging.error(f'Changes in {MANUSCRIPT}. Use git add {MANUSCRIPT} and '
+                      'try again.')
+        sys.exit()
 
-    return
+    logging.info('Updating manuscript')
 
+    title = 'Manuscript template'
+    if os.path.exists('readme.md'):
+        with open('readme.md') as f:
+            title = f.readline()
+            title = title.replace('# ', '').replace('\n', '')
+    author = repo_setup.config['GIT_ACTOR']
 
-def generate_manuscript():
-    print('TODO: add header and #References')
-    generate_data_page()
-    return
+    if not os.path.exists(MANUSCRIPT):
+        init.retrieve_template_file('../template/paper.md', 'paper.md')
+        init.inplace_change('paper.md', '{{project_title}}', title)
+        init.inplace_change('paper.md', '{{author}}', author)
+        logging.info('Created manuscript.')
+        logging.info('Please update title and authors.')
+
+    temp = f'.tmp_{MANUSCRIPT}'
+    os.rename(MANUSCRIPT, temp)
+    with open(temp) as reader, open(MANUSCRIPT, 'w') as writer:
+        appended = False
+        completed = False
+        line = reader.readline()
+        while line != '':
+            if '<!-- NEW_RECORD_SOURCE -->' in line:
+                if '_Records to analyze_' not in line:
+                    line = '_Records to analyze_:' + line + '\n'
+                    writer.write(line)
+                else:
+                    writer.write(line)
+                    writer.write('\n')
+
+                for missing_record in missing_records:
+                    writer.write('- @' + missing_record + '\n')
+                    logging.info(f' {missing_record}'.ljust(
+                        18, ' ') + ' added')
+
+                # skip empty lines between to connect lists
+                line = reader.readline()
+                if '\n' != line:
+                    writer.write(line)
+
+                appended = True
+
+            elif appended and not completed:
+                if '- @' == line[:3]:
+                    writer.write(line)
+                else:
+                    if '\n' != line:
+                        writer.write('\n')
+                    writer.write(line)
+                    completed = True
+            else:
+                writer.write(line)
+            line = reader.readline()
+
+        if not appended:
+            logging.warning('Marker <!-- NEW_RECORD_SOURCE --> not found in '
+                            f'{MANUSCRIPT}. Adding records at the end of '
+                            'the document.')
+            if line != '\n':
+                writer.write('\n')
+            writer.write('<!-- NEW_RECORD_SOURCE -->_Records to analyze_:\n\n')
+            for missing_record in missing_records:
+                writer.write('- @' + missing_record + '\n')
+                logging.info(f' {missing_record}'.ljust(18, ' ') + ' added')
+
+    os.remove(temp)
+
+    nr_entries_added = len(missing_records)
+    logging.info(f'{nr_entries_added} records added ({MANUSCRIPT})\n')
+
+    synthesized_in_manuscript = get_synthesized_ids(bib_database)
+
+    return synthesized_in_manuscript
 
 
 def main():
 
     repo = git.Repo()
-    utils.require_clean_repo(repo)
+    utils.require_clean_repo(repo, ignore_pattern='paper.md')
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
 
-    if 'NONE' == DATA_FORMAT:
-        print('Data extraction format = NONE '
-              '(change shared_config to start data extraction)')
-    if 'CSV_TABLE' == DATA_FORMAT:
-        generate_data_sheet()
-    if 'MD_SHEET' == DATA_FORMAT:
-        generate_data_page()
-    if 'MD_SHEETS' == DATA_FORMAT:
-        generate_data_pages()
-    if 'MA_VARIABLES_CSV' == DATA_FORMAT:
-        print('Not yet implemented: '
-              'structured data extraction for meta-analysis')
+    bib_database = utils.load_references_bib(
+        modification_check=True, initialize=False,
+    )
+
     if 'MANUSCRIPT' == DATA_FORMAT:
-        generate_manuscript()
+        synthesized_in_manuscript = update_manuscript(repo, bib_database)
+
+    # TODO: add other forms of data extraction/analysis/synthesis
+
+    for entry in bib_database.entries:
+        # TODO: add other forms of data extraction/analysis/synthesis
+        if entry['ID'] in synthesized_in_manuscript:
+            entry.update(rev_status='coded')
+            logging.info(f'{entry["ID"]}'.ljust(18, ' ') +
+                         'set status "coded"')
+
+    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
+    repo.index.add([MANUSCRIPT])
+    repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+
+    if 'y' == input('Create commit (y/n)?'):
+        utils.create_commit(repo, 'Data and synthesis', manual_author=True)
+
+    return
 
 
 if __name__ == '__main__':

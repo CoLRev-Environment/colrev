@@ -56,11 +56,8 @@ logging.basicConfig(
 
 #############################################################################
 
-# v_0.1
-
-paths_v_0_1 = dict(
+paths_v1 = dict(
     MAIN_REFERENCES='references.bib',
-    SCREEN='screen.csv',
     DATA='data.csv',
     PDF_DIRECTORY='pdfs/',
     SEARCH_DETAILS='search/search_details.csv'
@@ -73,4 +70,4 @@ paths_v_0_1 = dict(
 #     {'v_0.1': paths_v_0_1}
 
 if config['REPO_SETUP_VERSION'] == 'v_0.1':
-    paths = paths_v_0_1
+    paths = paths_v1

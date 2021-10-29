@@ -44,8 +44,6 @@ def get_value(msg, options):
 
 def init_new_repo():
 
-    repo = git.Repo.init()
-
     print('\n\nInitialize review repository')
     project_title = input('Project title: ')
 
@@ -62,17 +60,17 @@ def init_new_repo():
     print('\n\nParameters for the review project\n Details avilable at: '
           'TODO/docs')
 
-    SCREEN_TYPE = get_value('Select screen type',
-                            ['NONE', 'PRE_SCREEN', 'SCREEN'])
-    # TODO: allow multiple?
-    DATA_FORMAT = get_value('Select data structure',
-                            ['NONE', 'TABLE', 'PAGE',
-                             'SHEETs', 'MACODING'])
+    DATA_FORMAT = 'MANUSCRIPT'
+    # # TODO: allow multiple?
+    # DATA_FORMAT = get_value('Select data structure',
+    #                         ['NONE', 'TABLE', 'PAGE',
+    #                          'SHEETs', 'MACODING'])
     SHARE_STAT_REQ = get_value('Select share status requirement',
                                ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
     PDF_HANDLING = get_value('Select pdf handling', ['EXT', 'GIT'])
     print()
 
+    repo = git.Repo.init()
     os.mkdir('search')
 
     retrieve_template_file('../template/readme.md', 'readme.md')
@@ -98,7 +96,6 @@ def init_new_repo():
     shared_config = configparser.ConfigParser()
     shared_config.add_section('general')
     shared_config['general']['REPO_SETUP_VERSION'] = REPO_SETUP_VERSION
-    shared_config['general']['SCREEN_TYPE'] = SCREEN_TYPE
     shared_config['general']['DATA_FORMAT'] = DATA_FORMAT
     shared_config['general']['SHARE_STAT_REQ'] = SHARE_STAT_REQ
     shared_config['general']['PDF_HANDLING'] = PDF_HANDLING

@@ -85,31 +85,27 @@ def check_delay(db, min_status_requirement):
     prior_md_status = ['retrieved', 'imported', 'needs_manual_preparation']
     if 'md_prepared' == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
-            print('\nTo completed the preparation step, use \n'
-                  ' review_template man-prep\n\n')
+            status.review_instructions()
             raise DelayRequirement
 
     prior_md_status.append('prepared')
     prior_md_status.append('needs_manual_merging')
     if 'md_processed' == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
-            print('\nTo complete the  removal step, use \n'
-                  ' review_template man-dedupe\n\n')
+            status.review_instructions()
             raise DelayRequirement
 
-    prior_md_status.append('processed')
+    # prior_md_status.append('processed') - this is the "end-state"
     if 'prescreen_inclusion' == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
-            print('\nTo complete the processing, use \n'
-                  ' review_template process\n\n')
+            status.review_instructions()
             raise DelayRequirement
 
     prior_rev_status = ['retrieved']
     if 'pdf_needs_retrieval' == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status) or \
                 any(x in cur_rev_status for x in prior_rev_status):
-            print('\nTo completed the prescreen, use \n'
-                  ' review_template prescreen\n\n')
+            status.review_instructions()
             raise DelayRequirement
 
     prior_pdf_status = ['needs_retrieval']
@@ -118,8 +114,7 @@ def check_delay(db, min_status_requirement):
     if 'pdf_imported' == min_status_requirement:
         if any(x in cur_pdf_status for x in prior_pdf_status) or \
                 any(x in cur_rev_status for x in prior_rev_status):
-            print('\nTo completed the PDF retrieval step, use \n'
-                  ' review_template prescreen\n\n')
+            status.review_instructions()
             raise DelayRequirement
 
     prior_pdf_status.append('imported')
@@ -127,6 +122,7 @@ def check_delay(db, min_status_requirement):
     if 'prescreened_and_pdf_prepared' == min_status_requirement:
         if any(x in cur_pdf_status for x in prior_pdf_status) or \
                 any(x in cur_rev_status for x in prior_rev_status):
+            status.review_instructions()
             raise DelayRequirement
 
     # prior_rev_status.append('prescreen_included')
