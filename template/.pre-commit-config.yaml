@@ -9,9 +9,9 @@ repos:
         entry: pipeline_validation_hooks/consistency_checks.py
         language: script
         verbose: true
-        files: references.bib
+        files: 'references.bib,paper.md'
     -   id: formatting
         name: formatting
         entry: pipeline_validation_hooks/formatting.py
         language: script
-        files: references.bib
+        files: 'references.bib,paper.md'

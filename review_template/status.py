@@ -64,16 +64,28 @@ def get_nr_search():
 def get_status_freq():
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
+    stat = {}
+    stat['metadata_status'] = {}
+    stat['metadata_status']['overall'] = {}
+    stat['metadata_status']['currently'] = {}
+    stat['pdf_status'] = {}
+    stat['pdf_status']['overall'] = {}
+    stat['pdf_status']['currently'] = {}
+    stat['review_status'] = {}
+    stat['review_status']['overall'] = {}
+    stat['review_status']['currently'] = {}
+
     md_imported = 0
     md_prepared = 0
     md_need_man_prep = 0
     md_need_man_dedupe = 0
+    md_duplicates_removed = 0
     md_processed = 0
 
     pdfs_need_retrieval = 0
     pdfs_imported = 0
     pdfs_need_man_prep = 0
-    pdfs_overall_prepared = 0
+    pdfs_prepared = 0
     pdfs_not_available = 0
 
     rev_retrieved = 0
@@ -81,10 +93,9 @@ def get_status_freq():
     rev_prescreen_excluded = 0
     rev_screen_included = 0
     rev_screen_excluded = 0
-    rev_coded = 0
+    rev_synthesized = 0
 
     entry_links = 0
-    md_duplicates_removed = 0
 
     if os.path.exists(MAIN_REFERENCES):
         with open(MAIN_REFERENCES) as f:
@@ -101,8 +112,8 @@ def get_status_freq():
                         rev_screen_included += 1
                     if '{excluded}' in line:
                         rev_screen_excluded += 1
-                    if '{coded}' in line:
-                        rev_coded += 1
+                    if '{synthesized}' in line:
+                        rev_synthesized += 1
                 if ' md_status ' in line:
                     if '{imported}' in line:
                         md_imported += 1
@@ -122,7 +133,7 @@ def get_status_freq():
                     if '{needs_manual_preparation}' in line:
                         pdfs_need_man_prep += 1
                     if '{prepared}' in line:
-                        pdfs_overall_prepared += 1
+                        pdfs_prepared += 1
                     if '{not_available}' in line:
                         pdfs_not_available += 1
                 if ' origin ' in line:
@@ -143,15 +154,15 @@ def get_status_freq():
     md_non_imported = md_overall_retrieved - entry_links
 
     # Reverse order (overall_x means x or later status)
-    pdfs_overall_prepared = pdfs_overall_prepared
+    pdfs_overall_prepared = pdfs_prepared
     pdfs_overall_retrieved = \
         pdfs_overall_prepared + pdfs_need_man_prep + pdfs_imported
     pdfs_overall_required = \
         pdfs_overall_retrieved + pdfs_need_retrieval + pdfs_not_available
 
     # Reverse order (overall_x means x or later status)
-    rev_overall_coded = rev_coded
-    rev_overall_included = rev_screen_included + rev_coded
+    rev_overall_synthesized = rev_synthesized
+    rev_overall_included = rev_screen_included + rev_synthesized
     rev_overall_excluded = rev_screen_excluded
     rev_overall_screen = pdfs_overall_prepared
     rev_overall_prescreen_included = \
@@ -162,56 +173,62 @@ def get_status_freq():
         rev_overall_prescreen_included - rev_prescreen_excluded
     rev_need_screen = \
         rev_overall_screen - rev_overall_included - rev_screen_excluded
-    rev_overall_coding = rev_screen_included
-    rev_need_coding = rev_screen_included - rev_coded
+    rev_overall_synthesis = rev_overall_included
+    rev_need_synthesis = rev_overall_included - rev_synthesized
 
-    non_bw_searched = 0
+    # if os.path.exists('pdfs/'):
+    #     pdf_files = [x for x in os.listdir('pdfs/')]
+    #     search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
+    #     non_bw_searched = len([x for x in pdf_files
+    #                            if not x.replace('.pdf', 'bw_search.bib')
+    #                            in search_files])
 
-    if os.path.exists('pdfs/'):
-        pdf_files = [x for x in os.listdir('pdfs/')]
-        search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
-        non_bw_searched = len([x for x in pdf_files
-                               if not x.replace('.pdf', 'bw_search.bib')
-                               in search_files])
-    freqs = {'md_non_imported': md_non_imported,
-             'md_imported': md_imported,
-             'md_prepared': md_prepared,
-             'md_need_man_prep': md_need_man_prep,
-             'md_duplicates_removed': md_duplicates_removed,
-             'md_need_man_dedupe': md_need_man_dedupe,
-             'md_processed': md_processed,
-             'md_overall_retrieved': md_overall_retrieved,
-             'md_overall_imported': md_overall_imported,
-             'md_overall_prepared': md_overall_prepared,
-             'md_overall_processed': md_overall_processed,
-             \
-             'pdfs_need_retrieval': pdfs_need_retrieval,
-             'pdfs_not_available': pdfs_not_available,
-             'pdfs_imported': pdfs_imported,
-             'pdfs_need_man_prep': pdfs_need_man_prep,
-             'pdfs_overall_required': pdfs_overall_required,
-             'pdfs_overall_retrieved': pdfs_overall_retrieved,
-             'pdfs_overall_prepared': pdfs_overall_prepared,
-             \
-             'rev_retrieved': rev_retrieved,
-             'rev_need_prescreen': rev_need_prescreen,
-             'rev_prescreen_excluded': rev_prescreen_excluded,
-             'rev_prescreen_included': rev_prescreen_included,
-             'rev_need_screen': rev_need_screen,
-             'rev_screen_excluded': rev_screen_excluded,
-             'rev_screen_included': rev_screen_included,
-             'rev_need_coding': rev_need_coding,
-             'rev_coded': rev_coded,
-             'rev_overall_prescreen': rev_overall_prescreen,
-             'rev_overall_prescreen_included': rev_overall_prescreen_included,
-             'rev_overall_screen': rev_overall_screen,
-             'rev_overall_coded': rev_overall_coded,
-             'rev_overall_coding': rev_overall_coding,
-             \
-             'non_bw_searched': non_bw_searched,
-             }
+    md_cur_stat = stat['metadata_status']['currently']
+    md_cur_stat['non_imported'] = md_non_imported
+    md_cur_stat['imported'] = md_imported
+    md_cur_stat['prepared'] = md_prepared
+    md_cur_stat['need_man_prep'] = md_need_man_prep
+    md_cur_stat['need_man_dedupe'] = md_need_man_dedupe
+    md_cur_stat['processed'] = md_processed
+    md_cur_stat['duplicates_removed'] = md_duplicates_removed
 
-    return freqs
+    md_overall_stat = stat['metadata_status']['overall']
+    md_overall_stat['retrieved'] = md_overall_retrieved
+    md_overall_stat['imported'] = md_overall_imported
+    md_overall_stat['prepared'] = md_overall_prepared
+    md_overall_stat['processed'] = md_overall_processed
+
+    pdf_cur_stat = stat['pdf_status']['currently']
+    pdf_cur_stat['need_retrieval'] = pdfs_need_retrieval
+    pdf_cur_stat['imported'] = pdfs_imported
+    pdf_cur_stat['need_man_prep'] = pdfs_need_man_prep
+    pdf_cur_stat['not_available'] = pdfs_not_available
+    pdf_cur_stat['prepared'] = pdfs_prepared
+
+    pdf_overall_stat = stat['pdf_status']['overall']
+    pdf_overall_stat['required'] = pdfs_overall_required
+    pdf_overall_stat['retrieved'] = pdfs_overall_retrieved
+    pdf_overall_stat['prepared'] = pdfs_overall_prepared
+
+    rev_cur_stat = stat['review_status']['currently']
+    rev_cur_stat['retrieved'] = rev_retrieved
+    rev_cur_stat['prescreen_included'] = rev_prescreen_included
+    rev_cur_stat['prescreen_excluded'] = rev_prescreen_excluded
+    rev_cur_stat['screen_included'] = rev_screen_included
+    rev_cur_stat['screen_excluded'] = rev_screen_excluded
+    rev_cur_stat['synthesized'] = rev_synthesized
+    rev_cur_stat['need_prescreen'] = rev_need_prescreen
+    rev_cur_stat['need_screen'] = rev_need_screen
+    rev_cur_stat['need_synthesis'] = rev_need_synthesis
+
+    rev_overall_stat = stat['review_status']['overall']
+    rev_overall_stat['prescreen'] = rev_overall_prescreen
+    rev_overall_stat['prescreen_included'] = rev_overall_prescreen_included
+    rev_overall_stat['screen'] = rev_overall_screen
+    rev_overall_stat['synthesized'] = rev_overall_synthesized
+    rev_overall_stat['synthesis'] = rev_overall_synthesis
+
+    return stat
 
 
 def get_status():
@@ -381,101 +398,103 @@ def review_status():
         print(' | Search')
         print(' |  - Not initiated')
     else:
-        status_freq = get_status_freq()
-        # TODO: set all status_freq to str() to avoid frequent str() calls
-        # for the Instructions, parse all to int
-        # Search
+        stat = get_status_freq()
+        metadata, review, pdfs = \
+            stat['metadata_status'], stat['review_status'], stat['pdf_status']
 
         print(' | Search')
-        stat_print('Records retrieved',
-                   status_freq['md_overall_retrieved'])
-        if status_freq['md_non_imported'] > 0:
+        stat_print('Records retrieved', metadata['overall']['retrieved'])
+        if metadata['currently']['non_imported'] > 0:
             stat_print('', '', '*', 'record(s) not yet imported',
-                       status_freq['md_non_imported'])
-        stat_print('Records imported', status_freq['md_overall_imported'])
-        if status_freq['md_imported'] > 0:
+                       metadata['currently']['non_imported'])
+        stat_print('Records imported', metadata['overall']['imported'])
+        if metadata['currently']['imported'] > 0:
             stat_print('', '', '*', 'record(s) need preparation',
-                       status_freq['md_imported'])
-        if status_freq['md_need_man_prep'] > 0:
+                       metadata['currently']['imported'])
+        if metadata['currently']['need_man_prep'] > 0:
             stat_print('', '', '*', 'record(s) need manual preparation',
-                       status_freq['md_need_man_prep'])
-        stat_print('Records prepared', status_freq['md_overall_prepared'])
-        if status_freq['md_prepared'] > 0:
+                       metadata['currently']['need_man_prep'])
+        stat_print('Records prepared', metadata['overall']['prepared'])
+        if metadata['currently']['prepared'] > 0:
             stat_print('', '', '*', 'record(s) need merging',
-                       status_freq['md_prepared'])
-        if status_freq['md_need_man_dedupe'] > 0:
+                       metadata['currently']['prepared'])
+        if metadata['currently']['need_man_dedupe'] > 0:
             stat_print('', '', '*', 'record(s) need manual merging',
-                       status_freq['md_need_man_dedupe'])
+                       metadata['currently']['need_man_dedupe'])
         stat_print('Records processed',
-                   status_freq['md_overall_processed'], '->',
+                   metadata['overall']['processed'], '->',
                    'duplicates removed',
-                   status_freq['md_duplicates_removed'])
+                   metadata['currently']['duplicates_removed'])
 
         print(' |')
         print(' | Pre-screen')
-        if status_freq['rev_overall_prescreen'] == 0:
+        if review['overall']['prescreen'] == 0:
             stat_print('Not initiated', '')
         else:
-            stat_print('Prescreen size', status_freq['rev_overall_prescreen'])
-            if 0 != status_freq['rev_need_prescreen']:
+            stat_print('Prescreen size', review['overall']['prescreen'])
+            if 0 != review['currently']['need_prescreen']:
                 stat_print('', '', '*', 'records to prescreen',
-                           status_freq['rev_need_prescreen'])
+                           review['currently']['need_prescreen'])
             stat_print('Included',
-                       status_freq['rev_overall_prescreen_included'],
+                       review['overall']['prescreen_included'],
                        '->', 'records excluded',
-                       status_freq['rev_prescreen_excluded'])
+                       review['currently']['prescreen_excluded'])
 
         print(' |')
         print(' | PDFs')
-
-        stat_print('PDFs required', status_freq['pdfs_overall_required'])
-        if 0 != status_freq['pdfs_need_retrieval']:
+        stat_print('PDFs required', pdfs['overall']['required'])
+        if 0 != pdfs['currently']['need_retrieval']:
             stat_print('', '', '*', 'PDFs to retrieve',
-                       status_freq['pdfs_need_retrieval'])
-        if status_freq['pdfs_not_available'] > 0:
+                       pdfs['currently']['need_retrieval'])
+        if pdfs['currently']['not_available'] > 0:
             stat_print('PDFs retrieved',
-                       status_freq['pdfs_overall_retrieved'],
+                       pdfs['overall']['retrieved'],
                        '*', 'PDFs not available',
-                       status_freq['pdfs_not_available'])
+                       pdfs['currently']['not_available'])
         else:
             stat_print('PDFs retrieved',
-                       status_freq['pdfs_overall_retrieved'])
-        if status_freq['pdfs_need_man_prep'] > 0:
+                       pdfs['overall']['retrieved'])
+        if pdfs['currently']['need_man_prep'] > 0:
             stat_print('', '', '*', 'PDFs need manual preparation',
-                       status_freq['pdfs_need_man_prep'])
-        if 0 != status_freq['pdfs_imported']:
+                       pdfs['currently']['need_man_prep'])
+        if 0 != pdfs['currently']['imported']:
             stat_print('', '', '*', 'PDFs to prepare',
-                       status_freq['pdfs_imported'])
-        stat_print('PDFs prepared', status_freq['pdfs_overall_prepared'])
+                       pdfs['currently']['imported'])
+        stat_print('PDFs prepared', pdfs['overall']['prepared'])
 
         print(' |')
         print(' | Screen')
-        if status_freq['rev_overall_screen'] == 0:
+        if review['overall']['screen'] == 0:
             stat_print('Not initiated', '')
         else:
-            stat_print('Screen size', status_freq['rev_overall_screen'])
-            if 0 != status_freq['rev_need_screen']:
+            stat_print('Screen size', review['overall']['screen'])
+            if 0 != review['currently']['need_screen']:
                 stat_print('', '', '*', 'records to screen',
-                           status_freq['rev_need_screen'])
-            stat_print('Included', status_freq['rev_screen_included'], '->',
-                       'records excluded', status_freq['rev_screen_excluded'])
+                           review['currently']['need_screen'])
+            stat_print('Included', review['currently']['screen_included'],
+                       '->', 'records excluded',
+                       review['currently']['screen_excluded'])
 
         print(' |')
         print(' | Data and synthesis')
-        if status_freq['rev_need_coding'] == 0:
+        if review['overall']['synthesis'] == 0:
             stat_print('Not initiated', '')
         else:
-            stat_print('Total', status_freq['rev_overall_coding'])
-            if 0 != status_freq['rev_need_coding']:
-                stat_print('Coded', status_freq['rev_overall_coded'], '*',
-                           'need coding', status_freq['rev_need_coding'])
-
+            stat_print('Total', review['overall']['synthesis'])
+            if 0 != review['currently']['need_synthesis']:
+                stat_print('Synthesized', review['overall']['synthesis'], '*',
+                           'need synthesis',
+                           review['currently']['need_synthesis'])
+            else:
+                stat_print('Synthesized', review['overall']['synthesis'])
     return
 
 
 def review_instructions(status_freq=None):
     if status_freq is None:
-        status_freq = get_status_freq()
+        stat = get_status_freq()
+    metadata, review, pdfs = \
+        stat['metadata_status'], stat['review_status'], stat['pdf_status']
 
     print('\n\nInstructions\n')
     # Note: review_template init is suggested in repository_validation()
@@ -484,37 +503,37 @@ def review_instructions(status_freq=None):
               'Then use\n     review_template process')
         return
 
-    if status_freq['md_non_imported'] > 0:
+    if metadata['currently']['non_imported'] > 0:
         print('  To import, use\n     review_template process')
         return
 
-    if status_freq['md_need_man_prep'] > 0:
+    if metadata['currently']['need_man_prep'] > 0:
         print('  To continue with manual preparation, '
               'use\n     review_template man-prep')
         return
 
-    if status_freq['md_prepared'] > 0:
+    if metadata['currently']['prepared'] > 0:
         print('  To continue with entry preparation, '
               'use\n     review_template process')
         return
 
-    if status_freq['md_need_man_dedupe'] > 0:
+    if metadata['currently']['need_man_dedupe'] > 0:
         print('  To continue manual processing of duplicates, '
               'use\n     review_template man-dedupe')
         return
 
     # TODO: if pre-screening activated in template variables
-    if status_freq['rev_need_prescreen'] > 0:
+    if review['currently']['need_prescreen'] > 0:
         print('  To continue with prescreen, '
               'use\n     review_template prescreen')
         return
 
-    if status_freq['pdfs_need_retrieval'] > 0:
+    if pdfs['currently']['need_retrieval'] > 0:
         print('  To continue with pdf acquisition, '
               'use\n     review_template pdfs')
         return
 
-    if status_freq['pdfs_imported'] > 0:
+    if pdfs['currently']['imported'] > 0:
         print('  To continue with pdf preparation, '
               'use\n     review_template pdf-prepare')
         return
@@ -525,13 +544,13 @@ def review_instructions(status_freq=None):
     #           'use\n     review_template back-search')
         # no return because backward searches are optional
 
-    if status_freq['rev_need_screen'] > 0:
+    if review['currently']['need_screen'] > 0:
         print('  To continue with screen, '
               'use\n     review_template screen')
         return
 
     # TODO: if data activated in template variables
-    if status_freq['rev_need_coding'] > 0:
+    if review['currently']['need_synthesis'] > 0:
         print('  To continue with data extraction/analysis, '
               'use\n     review_template data')
         return
