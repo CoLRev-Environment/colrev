@@ -4,42 +4,54 @@ import logging
 import multiprocessing as mp
 import os
 
+from review_template import init
+
 # Note: including the paths here is useful to ensure that a passing pre-commit
 # means that the files are in the specified places. This is particularly
 # important for gathering crowd-sourced data across review repositories.
 
-repo_version_fallback = 'v_0.1'
+local_config = configparser.ConfigParser()
+confs = []
+if os.path.exists('shared_config.ini'):
+    confs.append('shared_config.ini')
+if os.path.exists('private_config.ini'):
+    confs.append('private_config.ini')
+local_config.read(confs)
 
-if os.path.exists('shared_config.ini') and \
-        os.path.exists('private_config.ini'):
-    local_config = configparser.ConfigParser()
-    local_config.read(['shared_config.ini', 'private_config.ini'])
 
-    config = dict(
-        REPO_SETUP_VERSION=local_config.get('general',
-                                            'REPO_SETUP_VERSION',
-                                            fallback=repo_version_fallback),
-        DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
-            'general', 'DELAY_AUTOMATED_PROCESSING', fallback=True),
-        BATCH_SIZE=local_config.getint('general', 'BATCH_SIZE', fallback=500),
-        SHARE_STAT_REQ=local_config.get(
-            'general', 'SHARE_STAT_REQ', fallback='PROCESSED'),
-        CPUS=local_config.getint('general', 'CPUS', fallback=mp.cpu_count()-1),
-        MERGING_NON_DUP_THRESHOLD=local_config.getfloat(
-            'general', 'MERGING_NON_DUP_THRESHOLD', fallback=0.7),
-        MERGING_DUP_THRESHOLD=local_config.getfloat(
-            'general', 'MERGING_DUP_THRESHOLD', fallback=0.95),
-        EMAIL=local_config['general']['EMAIL'],
-        GIT_ACTOR=local_config['general']['GIT_ACTOR'],
-        DEBUG_MODE=local_config.get('general', 'DEBUG_MODE', fallback=False),
-        DATA_FORMAT=local_config.get(
-            'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
-        PDF_HANDLING=local_config.get(
-            'general', 'PDF_HANDLING', fallback='EXT')
-    )
+def email_fallback():
+    name, email = init.get_name_mail_from_global_git_config()
+    return email
 
-else:
-    config = dict(REPO_SETUP_VERSION=repo_version_fallback)
+
+def actor_fallback():
+    name, email = init.get_name_mail_from_global_git_config()
+    return name
+
+
+config = dict(
+    REPO_SETUP_VERSION=local_config.get('general',
+                                        'REPO_SETUP_VERSION',
+                                        fallback='v_0.1'),
+    DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
+        'general', 'DELAY_AUTOMATED_PROCESSING', fallback=True),
+    BATCH_SIZE=local_config.getint('general', 'BATCH_SIZE', fallback=500),
+    SHARE_STAT_REQ=local_config.get(
+        'general', 'SHARE_STAT_REQ', fallback='PROCESSED'),
+    CPUS=local_config.getint('general', 'CPUS', fallback=mp.cpu_count()-1),
+    MERGING_NON_DUP_THRESHOLD=local_config.getfloat(
+        'general', 'MERGING_NON_DUP_THRESHOLD', fallback=0.7),
+    MERGING_DUP_THRESHOLD=local_config.getfloat(
+        'general', 'MERGING_DUP_THRESHOLD', fallback=0.95),
+    EMAIL=local_config.get('general', 'EMAIL', fallback=email_fallback()),
+    GIT_ACTOR=local_config.get('general', 'GIT_ACTOR',
+                               fallback=actor_fallback()),
+    DEBUG_MODE=local_config.get('general', 'DEBUG_MODE', fallback=False),
+    DATA_FORMAT=local_config.get(
+        'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
+    PDF_HANDLING=local_config.get(
+        'general', 'PDF_HANDLING', fallback='EXT')
+)
 
 if os.path.exists('report.log'):
     os.remove('report.log')

@@ -287,9 +287,8 @@ def repository_validation():
 
     repo = git.Repo('')
 
-    required_paths = ['search', 'private_config.ini',
-                      'shared_config.ini', '.pre-commit-config.yaml',
-                      '.gitignore']
+    # Note : 'private_config.ini', 'shared_config.ini' are optional
+    required_paths = ['search', '.pre-commit-config.yaml', '.gitignore']
     if not all(os.path.exists(x) for x in required_paths):
         print('No review_template repository\n  Missing: ' +
               ', '.join([x for x in required_paths if not os.path.exists(x)]) +

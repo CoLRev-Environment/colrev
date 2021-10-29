@@ -42,11 +42,7 @@ def get_value(msg, options):
     return user_input
 
 
-def init_new_repo():
-
-    print('\n\nInitialize review repository')
-    project_title = input('Project title: ')
-
+def get_name_mail_from_global_git_config():
     ggit_conf_path = os.path.normpath(os.path.expanduser('~/.gitconfig'))
     if os.path.exists(ggit_conf_path):
         glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
@@ -56,6 +52,15 @@ def init_new_repo():
     else:
         committer_name = input('Please provide your name')
         committer_email = input('Please provide your e-mail')
+    return committer_name, committer_email
+
+
+def init_new_repo():
+
+    print('\n\nInitialize review repository')
+    project_title = input('Project title: ')
+
+    committer_name, committer_email = get_name_mail_from_global_git_config()
 
     print('\n\nParameters for the review project\n Details avilable at: '
           'TODO/docs')
