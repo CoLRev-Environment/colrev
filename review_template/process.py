@@ -51,8 +51,7 @@ def reprocess_id(id, repo):
     )
     logging.info(f'Created commit ({com_msg})')
     print()
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     return
 
 

@@ -4,6 +4,7 @@ import json
 import logging
 import multiprocessing as mp
 import os
+import pprint
 import re
 import sys
 import urllib
@@ -19,6 +20,7 @@ from review_template import repo_setup
 from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+pp = pprint.PrettyPrinter(indent=4, width=140)
 
 prepared, need_manual_prep = 0, 0
 
@@ -995,6 +997,7 @@ def log_notifications(entry, unprepared_entry):
 
 def prepare(entry):
     global current_batch_counter
+    logging.debug(f'prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
 
     if 'imported' != entry['md_status']:
         return entry
@@ -1074,8 +1077,7 @@ def prepare_entries(db, repo):
     global need_manual_prep
 
     process.check_delay(db, min_status_requirement='md_imported')
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
 
     logging.info('Prepare')
     logging.info(f'Batch size: {BATCH_SIZE}')
