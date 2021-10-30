@@ -5,6 +5,7 @@ import sys
 import git
 import yaml
 
+from review_template import init
 from review_template import repo_setup
 from review_template import utils
 
@@ -308,11 +309,17 @@ def repository_validation():
         if repository['repo'] == remote_pv_hooks_repo:
             local_hooks_version = repository['rev']
             installed_hooks = [hook['id'] for hook in repository['hooks']]
-    if not installed_hooks == ['consistency-checks', 'formatting']:
-        print(f'{colors.RED}Pre-commit hooks not installed{colors.END}.'
-              '\n See '
-              'https://github.com/geritwagner/pipeline-validation-hooks'
-              '#using-the-pre-commit-hook for details')
+    if not installed_hooks == ['check', 'format']:
+        os.rename('.pre-commit-config.yaml', 'bak_pre-commit-config.yaml')
+        init.retrieve_template_file(
+            '../template/.pre-commit-config.yaml',
+            '.pre-commit-config.yaml',
+        )
+        os.system('pre-commit install')
+        os.system('pre-commit autoupdate')
+
+        print('Updated pre-commit hook. Please check/remove '
+              'bak_pre-commit-config.yaml')
         sys.exit()
 
     try:

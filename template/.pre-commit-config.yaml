@@ -4,14 +4,14 @@ repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
     rev: 978b3be344b6e93ca41293f1fc947cc5f557c2cb
     hooks:
-    -   id: consistency-checks
-        name: consistency-checks
-        entry: pipeline_validation_hooks/consistency_checks.py
+    -   id: check
+        name: check
+        entry: pipeline_validation_hooks/check.py
         language: script
         verbose: true
-        files: 'references.bib,paper.md'
-    -   id: formatting
-        name: formatting
-        entry: pipeline_validation_hooks/formatting.py
+        files: 'references.bib|paper.md'
+    -   id: format
+        name: format
+        entry: pipeline_validation_hooks/format.py
         language: script
-        files: 'references.bib,paper.md'
+        files: 'references.bib|paper.md'
