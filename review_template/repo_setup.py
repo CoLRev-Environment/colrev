@@ -46,7 +46,8 @@ config = dict(
     EMAIL=local_config.get('general', 'EMAIL', fallback=email_fallback()),
     GIT_ACTOR=local_config.get('general', 'GIT_ACTOR',
                                fallback=actor_fallback()),
-    DEBUG_MODE=local_config.get('general', 'DEBUG_MODE', fallback=False),
+    DEBUG_MODE=local_config.getboolean('general', 'DEBUG_MODE',
+                                       fallback=False),
     DATA_FORMAT=local_config.get(
         'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
     PDF_HANDLING=local_config.get(
@@ -56,8 +57,13 @@ config = dict(
 if os.path.exists('report.log'):
     os.remove('report.log')
 
+if config['DEBUG_MODE']:
+    logging_level = logging.DEBUG
+else:
+    logging_level = logging.INFO
+
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging_level,
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[

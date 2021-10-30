@@ -241,8 +241,7 @@ def prepare_pdfs(db, repo):
 
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     logging.info('Prepare PDFs')
 
     in_process = True

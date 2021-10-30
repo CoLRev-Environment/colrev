@@ -97,8 +97,7 @@ def main():
     utils.require_clean_repo(repo)
     grobid_client.start_grobid()
 
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     logging.info('Backward search')
 
     bib_database = utils.load_references_bib(True, initialize=True)

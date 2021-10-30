@@ -415,6 +415,13 @@ def update_status_yaml():
     return
 
 
+def reset_log():
+    if not repo_setup.config['DEBUG_MODE']:
+        with open('report.log', 'r+') as f:
+            f.truncate(0)
+    return
+
+
 def create_commit(repo, msg, manual_author=False):
 
     if repo.is_dirty():
@@ -452,8 +459,7 @@ def create_commit(repo, msg, manual_author=False):
         )
         logging.info('Created commit')
         print()
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
+        reset_log()
         return True
     else:
         return False

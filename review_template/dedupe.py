@@ -4,6 +4,7 @@ import itertools
 import logging
 import multiprocessing as mp
 import os
+import pprint
 import re
 
 import pandas as pd
@@ -21,6 +22,7 @@ MERGING_NON_DUP_THRESHOLD = repo_setup.config['MERGING_NON_DUP_THRESHOLD']
 MERGING_DUP_THRESHOLD = repo_setup.config['MERGING_DUP_THRESHOLD']
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+pp = pprint.PrettyPrinter(indent=4, width=140)
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -257,6 +259,7 @@ def get_prev_queue(queue_order, origin):
 
 def append_merges(entry):
     global current_batch_counter
+    logging.debug(f'append_merges {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
 
     if 'prepared' != entry['md_status']:
         return
@@ -462,8 +465,7 @@ def apply_merges(bib_database):
 
 def dedupe_entries(db, repo):
 
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     process.check_delay(db, min_status_requirement='md_prepared')
 
     logging.info('Process duplicates')

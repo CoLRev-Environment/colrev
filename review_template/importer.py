@@ -3,6 +3,7 @@ import itertools
 import logging
 import multiprocessing as mp
 import os
+import pprint
 import re
 import shutil
 from itertools import chain
@@ -23,6 +24,7 @@ logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
 def get_search_files():
@@ -91,6 +93,7 @@ def save_imported_entry_links(bib_database):
 
 
 def import_entry(entry):
+    logging.debug(f'import_entry {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
 
     if 'retrieved' != entry['md_status']:
         return entry
@@ -471,8 +474,7 @@ def import_entries(repo):
     global batch_start
     global batch_end
 
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     logging.info('Import')
     logging.info(f'Batch size: {BATCH_SIZE}')
 

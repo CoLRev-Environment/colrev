@@ -188,8 +188,7 @@ def acquire_pdfs(db, repo):
 
     print('TODO: download if there is a fulltext link in the entry')
 
-    with open('report.log', 'r+') as f:
-        f.truncate(0)
+    utils.reset_log()
     logging.info('Retrieve PDFs')
 
     in_process = True
