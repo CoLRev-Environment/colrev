@@ -149,6 +149,8 @@ def correct_entrytype(entry):
                 entry.update(journal=journal_string)
                 del entry['series']
 
+    logging.debug(f'correct_entrytype(...): \n{pp.pformat(entry)}\n\n')
+
     return entry
 
 
@@ -210,6 +212,8 @@ def homogenize_entry(entry):
         entry.update(issue=entry['number'])
         del entry['number']
 
+    logging.debug(f'homogenize_entry(...): \n{pp.pformat(entry)}\n\n')
+
     return entry
 
 
@@ -235,6 +239,8 @@ def apply_local_rules(entry):
             if row['abbreviation'].lower() == entry['booktitle'].lower():
                 entry.update(booktitle=row['conference'])
 
+    logging.debug(f'apply_local_rules(...): \n{pp.pformat(entry)}\n\n')
+
     return entry
 
 
@@ -259,6 +265,8 @@ def apply_crowd_rules(entry):
         for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['booktitle'].lower():
                 entry.update(booktitle=row['conference'])
+
+    logging.debug(f'apply_crowd_rules(...): \n{pp.pformat(entry)}\n\n')
 
     return entry
 
@@ -359,7 +367,8 @@ def crossref_query(entry):
               'query.container-title': container_title}
     url = api_url + urllib.parse.urlencode(params)
     headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+               f'{os.path.basename(__file__)} ' +
+               f'(mailto:{repo_setup.config["EMAIL"]})'}
     ret = requests.get(url, headers=headers)
     if ret.status_code != 200:
         return
@@ -431,6 +440,7 @@ def get_doi_from_crossref(entry):
                 entry.update(doi=ret['result']['doi'])
         except KeyboardInterrupt:
             sys.exit()
+    logging.debug(f'get_doi_from_crossref(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -442,7 +452,8 @@ def get_metadata_from_semantic_scholar(entry):
         'https://api.semanticscholar.org/graph/v1/paper/search?query='
     url = search_api_url + entry.get('title', '').replace(' ', '+')
     headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+               f'{os.path.basename(__file__)} ' +
+               f'(mailto:{repo_setup.config["EMAIL"]})'}
     ret = requests.get(url, headers=headers)
 
     try:
@@ -532,7 +543,8 @@ def get_metadata_from_semantic_scholar(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
-
+    logging.debug('get_metadata_from_semantic_scholar(...): ' +
+                  f'\n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -541,7 +553,8 @@ def get_dblp_venue(venue_string):
     api_url = 'https://dblp.org/search/venue/api?q='
     url = api_url + venue_string.replace(' ', '+') + '&format=json'
     headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+               f'{os.path.basename(__file__)} ' +
+               f' (mailto:{repo_setup.config["EMAIL"]})'}
     ret = requests.get(url, headers=headers)
     data = json.loads(ret.text)
 
@@ -562,7 +575,8 @@ def get_metadata_from_dblp(entry):
     api_url = 'https://dblp.org/search/publ/api?q='
     url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
     headers = {'user-agent':
-               f'prepare.py (mailto:{repo_setup.config["EMAIL"]})'}
+               f'{os.path.basename(__file__)} ' +
+               f' (mailto:{repo_setup.config["EMAIL"]})'}
     ret = requests.get(url, headers=headers)
 
     try:
@@ -641,7 +655,7 @@ def get_metadata_from_dblp(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
-
+    logging.debug(f'get_metadata-from_dblp(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -686,6 +700,7 @@ def get_doi_from_links(entry):
             print(f'exception: {e}')
             return entry
             pass
+    logging.debug(f'get_doi-from_links(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -838,9 +853,8 @@ def retrieve_doi_metadata(entry):
         logging.error(f'ConnectionError: {entry["ID"]}')
         return orig_entry
         pass
-
     entry['complete_based_on_doi'] = 'True'
-
+    logging.debug(f'retrieve_doi_metadata(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
