@@ -7,6 +7,7 @@ import yaml
 
 from review_template import init
 from review_template import repo_setup
+from review_template import screen
 from review_template import utils
 
 repo = None
@@ -97,6 +98,7 @@ def get_status_freq():
     rev_synthesized = 0
 
     entry_links = 0
+    exclusion_criteria = []
 
     if os.path.exists(MAIN_REFERENCES):
         with open(MAIN_REFERENCES) as f:
@@ -137,12 +139,23 @@ def get_status_freq():
                         pdfs_prepared += 1
                     if '{not_available}' in line:
                         pdfs_not_available += 1
-                if ' origin ' in line:
+                if 'origin' == line.lstrip()[:6]:
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
                     md_duplicates_removed += nr_entry_links
-
+                if ' exclusion_criteria ' in line:
+                    exclusion_criteria_field = \
+                        line[line.find('{')+1:line.find('}')]
+                    exclusion_criteria.append(exclusion_criteria_field)
                 line = f.readline()
+
+    if exclusion_criteria:
+        criteria = screen.get_exclusion_criteria(exclusion_criteria[0])
+        exclusion_statistics = {crit: 0 for crit in criteria}
+        for exclusion_case in exclusion_criteria:
+            for crit in criteria:
+                if crit+'=yes' in exclusion_case:
+                    exclusion_statistics[crit] += 1
 
     # Reverse order (overall_x means x or later status)
     md_overall_processed = md_processed
@@ -221,6 +234,8 @@ def get_status_freq():
     rev_cur_stat['need_prescreen'] = rev_need_prescreen
     rev_cur_stat['need_screen'] = rev_need_screen
     rev_cur_stat['need_synthesis'] = rev_need_synthesis
+
+    stat['review_status']['currently']['exclusion'] = exclusion_statistics
 
     rev_overall_stat = stat['review_status']['overall']
     rev_overall_stat['prescreen'] = rev_overall_prescreen
@@ -481,6 +496,9 @@ def review_status():
             stat_print('Included', review['overall']['included'],
                        '->', 'records excluded',
                        review['currently']['screen_excluded'])
+            if 'exclusion' in review['currently']:
+                for crit, nr in review['currently']['exclusion'].items():
+                    stat_print('', '', '->', f'reason: {crit}', nr)
 
         print(' |')
         print(' | Data and synthesis')

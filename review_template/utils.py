@@ -320,6 +320,7 @@ def save_bib_file(bib_database, target_file=None):
         'rev_status',
         'md_status',
         'pdf_status',
+        'exclusion_criteria',
         'doi',
         'author',
         'booktitle',

@@ -26,6 +26,14 @@ def customsort(dict1, key_order):
     return sorted_dict
 
 
+def get_exclusion_criteria(ec_string):
+    criteria = []
+    for exclusion_criterion in ec_string.split(';'):
+        exclusion_criterion = exclusion_criterion.split('=')[0]
+        criteria.append(exclusion_criterion)
+    return criteria
+
+
 def prescreen():
 
     repo = git.Repo('')
@@ -106,12 +114,15 @@ def screen():
 
     pp = pprint.PrettyPrinter(indent=4, width=140)
 
-    # exclusion_criteria = load_exclusion_criteria()
-    # col.startswith('ec_')
+    ec_string = [x.get('exclusion_criteria') for x in bib_database.entries
+                 if 'exclusion_criteria' in x]
 
-    exclusion_criteria = input('Provide exclusion criteria (comma separated)')
-    exclusion_criteria = exclusion_criteria.split(',')
-    exclusion_criteria = ['ec_' + x for x in exclusion_criteria]
+    if ec_string:
+        exclusion_criteria = get_exclusion_criteria(ec_string[0])
+    else:
+        exclusion_criteria = \
+            input('Provide exclusion criteria (comma separated)')
+        exclusion_criteria = exclusion_criteria.split(',')
 
     exclusion_criteria_available = 0 < len(exclusion_criteria)
 
@@ -126,6 +137,7 @@ def screen():
             pp.pprint(reventry)
 
             if exclusion_criteria_available:
+                decisions = []
                 for exclusion_criterion in exclusion_criteria:
                     decision = 'TODO'
 
@@ -135,11 +147,8 @@ def screen():
                     decision = \
                         decision.replace('y', 'yes')\
                                 .replace('n', 'no')
-                    entry[exclusion_criterion] = decision
-                if all([
-                    entry.get(exclusion_criterion) == 'no'
-                    for exclusion_criterion in exclusion_criteria
-                ]):
+                    decisions.append([exclusion_criterion, decision])
+                if all([decision == 'no' for ec, decision in decisions]):
                     logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                                  'Included')
                     entry.update(rev_status='included')
@@ -147,6 +156,13 @@ def screen():
                     logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                                  'Excluded')
                     entry.update(rev_status='excluded')
+
+                ec_field = ''
+                for exclusion_criterion, decision in decisions:
+                    if ec_field != '':
+                        ec_field = f'{ec_field};'
+                    ec_field = f'{ec_field}{exclusion_criterion}={decision}'
+                entry['exclusion_criteria'] = ec_field.replace(' ', '')
             else:
                 decision = 'TODO'
                 while decision not in ['y', 'n']:
