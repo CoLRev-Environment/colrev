@@ -413,6 +413,9 @@ def update_status_yaml():
     with open('status.yaml', 'w') as f:
         yaml.dump(status_freq, f, allow_unicode=True)
 
+    repo = git.Repo()
+    repo.index.add(['status.yaml'])
+
     return
 
 
@@ -437,7 +440,19 @@ def create_commit(repo, msg, manual_author=False):
         processing_report = ''
         if os.path.exists('report.log'):
             with open('report.log') as f:
-                processing_report = f.readlines()
+                line = f.readline()
+                debug_part = False
+                while line:
+                    if '[DEBUG]' in line or debug_part:
+                        debug_part = True
+                        if any(x in line for x in
+                                ['[INFO]', '[ERROR]',
+                                 '[WARNING]', '[CRITICAL']):
+                            debug_part = False
+                    if not debug_part:
+                        processing_report = processing_report + line
+                    line = f.readline()
+
             processing_report = \
                 '\nProcessing report\n\n' + ''.join(processing_report)
 

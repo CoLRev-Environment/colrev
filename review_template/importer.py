@@ -70,10 +70,12 @@ def load_entries(filepath):
     for entry in search_db.entries:
         entry['origin'] = search_file + '/' + entry['ID']
         if entry['origin'] in imported_entry_links:
+            logging.debug(f'skipped entry {entry["ID"]} (already imported)')
             continue
 
         entry.update(rev_status='retrieved')
         entry.update(md_status='retrieved')
+        logging.debug(f'append entry {entry["ID"]} \n{pp.pformat(entry)}\n\n')
         entry_list.append(entry)
 
     return entry_list

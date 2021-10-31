@@ -149,6 +149,7 @@ def get_status_freq():
                     exclusion_criteria.append(exclusion_criteria_field)
                 line = f.readline()
 
+    exclusion_statistics = {}
     if exclusion_criteria:
         criteria = screen.get_exclusion_criteria(exclusion_criteria[0])
         exclusion_statistics = {crit: 0 for crit in criteria}

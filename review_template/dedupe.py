@@ -353,6 +353,7 @@ def append_merges(entry):
 
     max_similarity = references.similarity.max()
     citation_key = references.loc[references['similarity'].idxmax()]['ID']
+    logging.debug(f'max_similarity ({max_similarity}): {citation_key}')
     if max_similarity <= MERGING_NON_DUP_THRESHOLD:
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
