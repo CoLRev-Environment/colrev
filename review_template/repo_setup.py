@@ -78,7 +78,8 @@ paths_v1 = dict(
     MAIN_REFERENCES='references.bib',
     DATA='data.csv',
     PDF_DIRECTORY='pdfs/',
-    SEARCH_DETAILS='search/search_details.csv'
+    SEARCH_DETAILS='search/search_details.csv',
+    MANUSCRIPT='paper.md'
 )
 
 #############################################################################
