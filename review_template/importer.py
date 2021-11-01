@@ -505,7 +505,7 @@ def import_entries(repo):
         pool.close()
         pool.join()
 
-        db = utils.set_citation_keys(db)
+        db = utils.set_IDs(db)
 
         if save_imported_files(repo, db):
             utils.create_commit(repo, '⚙️ Import search results')

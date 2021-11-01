@@ -16,9 +16,9 @@ MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 DATA = repo_setup.paths['DATA']
 
 
-def main(citation_key):
+def main(ID):
 
-    print(f'Trace entry by citation_key: {citation_key}')
+    print(f'Trace entry by ID: {ID}')
 
     repo = git.Repo()
 
@@ -43,11 +43,11 @@ def main(citation_key):
             individual_bib_database = bibtexparser.loads(filecontents)
             entry = [
                 entry for entry in individual_bib_database.entries
-                if entry['ID'] == citation_key
+                if entry['ID'] == ID
             ]
 
             if len(entry) == 0:
-                print(f'Entry {citation_key} not in commit.')
+                print(f'Entry {ID} not in commit.')
             else:
                 diffs = list(dictdiffer.diff(prev_entry, entry))
                 if len(diffs) > 0:
@@ -58,7 +58,7 @@ def main(citation_key):
         if (DATA in commit.tree):
             filecontents = (commit.tree / DATA).data_stream.read()
             for line in str(filecontents).split('\\n'):
-                if citation_key in line:
+                if ID in line:
                     if line != prev_data:
                         print(f'Data: {line}')
                         prev_data = line

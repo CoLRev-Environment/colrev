@@ -167,8 +167,8 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
         # due to prior merging operations
         return bib_database
 
-    a_propagated = utils.propagated_citation_key(entry_a_ID)
-    b_propagated = utils.propagated_citation_key(entry_b_ID)
+    a_propagated = utils.propagated_ID(entry_a_ID)
+    b_propagated = utils.propagated_ID(entry_b_ID)
 
     if not a_propagated and not b_propagated:
 
@@ -183,7 +183,7 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
             # if none of the IDs has a letter appended.
 
     if a_propagated and b_propagated:
-        print('WARNING: both citation_keys propagated:' +
+        print('WARNING: both IDs propagated:' +
               f' {entry_a_ID}, {entry_b_ID}')
         return bib_database
 

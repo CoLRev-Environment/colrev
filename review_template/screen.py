@@ -181,8 +181,7 @@ def screen():
 
     except IndexError:
         MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-        print('Index error/citation_key not found in ' +
-              f'{MAIN_REFERENCES}: {entry["ID"]}')
+        print(f'Index error/ID not found in {MAIN_REFERENCES}: {entry["ID"]}')
         pass
     except KeyboardInterrupt:
         print('\n\nStopping screen 1\n')

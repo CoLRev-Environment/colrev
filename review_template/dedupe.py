@@ -352,8 +352,8 @@ def append_merges(entry):
     references = calculate_similarities_entry(references)
 
     max_similarity = references.similarity.max()
-    citation_key = references.loc[references['similarity'].idxmax()]['ID']
-    logging.debug(f'max_similarity ({max_similarity}): {citation_key}')
+    ID = references.loc[references['similarity'].idxmax()]['ID']
+    logging.debug(f'max_similarity ({max_similarity}): {ID}')
     if max_similarity <= MERGING_NON_DUP_THRESHOLD:
         # Note: if no other entry has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other entries)
@@ -371,12 +371,12 @@ def append_merges(entry):
                 fd.write('"ID1","ID2","max_similarity"\n')
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             # to ensure a consistent order
-            entry_a, entry_b = sorted([citation_key, entry['ID']])
+            entry_a, entry_b = sorted([ID, entry['ID']])
             line = '"' + entry_a + '","' + entry_b + '","' + \
                 str(max_similarity) + '"\n'
             fd.write(line)
         logging.info('Potential duplicate to check: '
-                     f'{citation_key} - {entry["ID"]}'
+                     f'{ID} - {entry["ID"]}'
                      f' (similarity: {max_similarity})')
 
     if max_similarity >= MERGING_DUP_THRESHOLD:
@@ -387,8 +387,8 @@ def append_merges(entry):
             with open('duplicate_tuples.csv', 'a') as fd:
                 fd.write('"ID1","ID2"\n')
         with open('duplicate_tuples.csv', 'a') as fd:
-            fd.write('"' + citation_key + '","' + entry['ID'] + '"\n')
-        logging.info(f'Dropped duplicate: {citation_key} <- {entry["ID"]}'
+            fd.write('"' + ID + '","' + entry['ID'] + '"\n')
+        logging.info(f'Dropped duplicate: {ID} <- {entry["ID"]}'
                      f' (similarity: {max_similarity})')
 
     return
@@ -396,7 +396,7 @@ def append_merges(entry):
 
 def apply_merges(bib_database):
 
-    # The merging also needs to consider whether citation_keys are propagated
+    # The merging also needs to consider whether IDs are propagated
     # Completeness of comparisons should be ensured by the
     # append_merges procedure (which ensures that all prior entries
     # in global queue_order are considered before completing

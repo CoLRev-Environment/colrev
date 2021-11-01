@@ -14,7 +14,7 @@ entry_type_mapping = {'a': 'article', 'p': 'inproceedings',
                       'mt': 'masterthesis',
                       'o': 'other', 'unp': 'unpublished'}
 
-citation_key_list = []
+ID_list = []
 
 
 def print_entry(entry):
@@ -77,7 +77,7 @@ def man_fix_incomplete_fields(entry):
 
 def man_prep_entry(entry):
 
-    global citation_key_list
+    global ID_list
 
     if 'needs_manual_preparation' != entry['md_status']:
         return entry
@@ -99,18 +99,18 @@ def man_prep_entry(entry):
             not prepare.has_inconsistent_fields(entry) and \
             not prepare.has_incomplete_fields(entry):
         entry = prepare.drop_fields(entry)
-        entry.update(ID=utils.generate_citation_key_blacklist(
-            entry, citation_key_list,
+        entry.update(ID=utils.generate_ID_blacklist(
+            entry, ID_list,
             entry_in_bib_db=True,
             raise_error=False))
-        citation_key_list.append(entry['ID'])
+        ID_list.append(entry['ID'])
         entry.update(md_status='prepared')
 
     return entry
 
 
 def man_prep_entries():
-    global citation_key_list
+    global ID_list
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
@@ -120,13 +120,13 @@ def man_prep_entries():
         modification_check=True, initialize=False,
     )
 
-    citation_key_list = [entry['ID'] for entry in bib_database.entries]
+    ID_list = [entry['ID'] for entry in bib_database.entries]
 
     for entry in bib_database.entries:
         entry = man_prep_entry(entry)
         utils.save_bib_file(bib_database)
 
-    bib_database = utils.set_citation_keys(bib_database)
+    bib_database = utils.set_IDs(bib_database)
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
     utils.save_bib_file(bib_database, MAIN_REFERENCES)
     repo.index.add([MAIN_REFERENCES])
