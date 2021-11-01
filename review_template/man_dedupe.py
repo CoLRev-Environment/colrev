@@ -66,7 +66,7 @@ def print_diff(change, prefix_len):
     return
 
 
-def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
+def merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat):
     global quit_pressed
     global removed_tuples
     # Note: all changes must be made to the main_entry (i.e., if we display
@@ -75,9 +75,9 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
     # We effectively have to consider only cases in which the user
     # wants to merge fields from the duplicate entry into the main entry
 
-    main_entry = [x for x in bib_database.entries if main_ID == x['ID']][0]
+    main_entry = [x for x in bib_db.entries if main_ID == x['ID']][0]
     duplicate_entry = \
-        [x for x in bib_database.entries if duplicate_ID == x['ID']][0]
+        [x for x in bib_db.entries if duplicate_ID == x['ID']][0]
 
     # Escape sequence to clear terminal output for each new comparison
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -140,12 +140,12 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
         main_entry.update(origin=combined_el_list)
 
         main_entry.update(md_status='processed')
-        bib_database.entries = [x for x in bib_database.entries
-                                if x['ID'] != duplicate_entry['ID']]
+        bib_db.entries = [x for x in bib_db.entries
+                          if x['ID'] != duplicate_entry['ID']]
         removed_tuples.append([main_ID, duplicate_ID])
 
     if 'n' == response:
-        # do not merge entries/modify the bib_database
+        # do not merge entries/modify the bib_db
         removed_tuples.append([main_ID, duplicate_ID])
     # 'd' == response: TODO
         # Modification examples:
@@ -155,17 +155,17 @@ def merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat):
     if 'q' == response:
         quit_pressed = True
 
-    return bib_database
+    return bib_db
 
 
-def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
+def merge_manual(bib_db, entry_a_ID, entry_b_ID, stat):
     global removed_tuples
 
-    if not all(eid in [x['ID'] for x in bib_database.entries]
+    if not all(eid in [x['ID'] for x in bib_db.entries]
                for eid in [entry_a_ID, entry_b_ID]):
         # Note: entry IDs may no longer be in entries
         # due to prior merging operations
-        return bib_database
+        return bib_db
 
     a_propagated = utils.propagated_ID(entry_a_ID)
     b_propagated = utils.propagated_ID(entry_b_ID)
@@ -185,23 +185,20 @@ def merge_manual(bib_database, entry_a_ID, entry_b_ID, stat):
     if a_propagated and b_propagated:
         print('WARNING: both IDs propagated:' +
               f' {entry_a_ID}, {entry_b_ID}')
-        return bib_database
+        return bib_db
 
     if a_propagated:
-        main_ID = \
-            [x['ID'] for x in bib_database.entries if entry_a_ID == x['ID']][0]
+        main_ID = [x['ID'] for x in bib_db.entries if entry_a_ID == x['ID']][0]
         duplicate_ID = \
-            [x['ID'] for x in bib_database.entries if entry_b_ID == x['ID']][0]
+            [x['ID'] for x in bib_db.entries if entry_b_ID == x['ID']][0]
     else:
-        main_ID = \
-            [x['ID'] for x in bib_database.entries if entry_b_ID == x['ID']][0]
+        main_ID = [x['ID'] for x in bib_db.entries if entry_b_ID == x['ID']][0]
         duplicate_ID = \
-            [x['ID'] for x in bib_database.entries if entry_a_ID == x['ID']][0]
+            [x['ID'] for x in bib_db.entries if entry_a_ID == x['ID']][0]
 
-    bib_database = \
-        merge_manual_dialogue(bib_database, main_ID, duplicate_ID, stat)
+    bib_db = merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat)
 
-    return bib_database
+    return bib_db
 
 
 def main():
@@ -210,9 +207,7 @@ def main():
     repo = git.Repo('')
     utils.require_clean_repo(repo)
 
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
+    bib_db = utils.load_main_refs()
 
     potential_duplicate = pd.read_csv('potential_duplicate_tuples.csv')
 
@@ -228,7 +223,7 @@ def main():
         entry_b_ID = potential_duplicate.iloc[i, second_entry_col]
 
         stat = str(i+1) + '/' + str(potential_duplicate.shape[0])
-        bib_database = merge_manual(bib_database, entry_a_ID, entry_b_ID, stat)
+        bib_db = merge_manual(bib_db, entry_a_ID, entry_b_ID, stat)
         if quit_pressed:
             break
 
@@ -243,7 +238,7 @@ def main():
     not_completely_processed = potential_duplicate['ID1'].tolist() + \
         potential_duplicate['ID2'].tolist()
 
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         if entry['ID'] not in not_completely_processed and \
                 'needs_manual_merging' == entry['md_status']:
             entry.update(md_status='processed')
@@ -255,7 +250,7 @@ def main():
                                    index=False,
                                    quoting=csv.QUOTE_ALL)
 
-    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
+    utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])
     repo.git.add(update=True)
     # deletion of 'potential_duplicate_tuples.csv' may added to git staging
 

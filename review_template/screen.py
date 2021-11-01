@@ -38,10 +38,9 @@ def prescreen():
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-    process.check_delay(bib_database, min_status_requirement='md_processed')
+    bib_db = utils.load_main_refs()
+
+    process.check_delay(bib_db, min_status_requirement='md_processed')
 
     print('\n\nRun prescreen')
 
@@ -49,7 +48,7 @@ def prescreen():
 
     print('To stop screening, press ctrl-c')
     try:
-        for entry in bib_database.entries:
+        for entry in bib_db.entries:
             os.system('cls' if os.name == 'nt' else 'clear')
             # Skip records that have already been screened
             if 'retrieved' != entry.get('rev_status', 'NA'):
@@ -81,7 +80,7 @@ def prescreen():
                 entry.update(pdf_status='needs_retrieval')
 
             utils.save_bib_file(
-                bib_database, repo_setup.paths['MAIN_REFERENCES'])
+                bib_db, repo_setup.paths['MAIN_REFERENCES'])
 
     except KeyboardInterrupt:
         print('\n\nstopping screen 1\n')
@@ -102,10 +101,9 @@ def screen():
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
-    process.check_delay(bib_database,
+    bib_db = utils.load_main_refs()
+
+    process.check_delay(bib_db,
                         min_status_requirement='prescreened_and_pdf_prepared')
 
     print('\n\nRun screen')
@@ -114,7 +112,7 @@ def screen():
 
     pp = pprint.PrettyPrinter(indent=4, width=140)
 
-    ec_string = [x.get('exclusion_criteria') for x in bib_database.entries
+    ec_string = [x.get('exclusion_criteria') for x in bib_db.entries
                  if 'exclusion_criteria' in x]
 
     if ec_string:
@@ -127,7 +125,7 @@ def screen():
     exclusion_criteria_available = 0 < len(exclusion_criteria)
 
     try:
-        for entry in bib_database.entries:
+        for entry in bib_db.entries:
             if 'prepared' != entry.get('pdf_status', 'NA') or \
                     'prescreen_included' != entry.get('rev_status', 'NA'):
                 continue
@@ -177,7 +175,7 @@ def screen():
                     entry.update(rev_status='excluded')
 
             utils.save_bib_file(
-                bib_database, repo_setup.paths['MAIN_REFERENCES'])
+                bib_db, repo_setup.paths['MAIN_REFERENCES'])
 
     except IndexError:
         MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']

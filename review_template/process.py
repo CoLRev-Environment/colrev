@@ -33,13 +33,12 @@ def reprocess_id(id, repo):
         repo.index.remove([MAIN_REFERENCES], working_tree=True)
 
     else:
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
-        )
+        bib_db = utils.load_main_refs(mod_check=False)
+
         com_msg = '⚙️ Reprocess ' + id
-        bib_database.entries = [
-            x for x in bib_database.entries if id != x['ID']]
-        utils.save_bib_file(bib_database, MAIN_REFERENCES)
+        bib_db.entries = [
+            x for x in bib_db.entries if id != x['ID']]
+        utils.save_bib_file(bib_db, MAIN_REFERENCES)
         repo.index.add([MAIN_REFERENCES])
 
     repo.index.commit(
@@ -138,15 +137,15 @@ def main(reprocess_ids=None):
     reprocess_id(reprocess_ids, repo)
 
     try:
-        db = importer.import_entries(repo)
+        bib_db = importer.import_entries(repo)
 
-        db = prepare.prepare_entries(db, repo)
+        bib_db = prepare.prepare_entries(bib_db, repo)
 
-        db = dedupe.dedupe_entries(db, repo)
+        bib_db = dedupe.dedupe_entries(bib_db, repo)
 
-        db = pdfs.acquire_pdfs(db, repo)
+        bib_db = pdfs.acquire_pdfs(bib_db, repo)
 
-        db = pdf_prepare.prepare_pdfs(db, repo)
+        bib_db = pdf_prepare.prepare_pdfs(bib_db, repo)
 
         # Note: the checks for delaying the screen
         # are implemented in the screen.py

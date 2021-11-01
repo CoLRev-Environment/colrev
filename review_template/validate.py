@@ -19,14 +19,14 @@ from review_template import utils
 def load_entries(bib_file):
 
     with open(bib_file) as bibtex_file:
-        individual_bib_database = bibtexparser.bparser.BibTexParser(
+        individual_bib_db = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True,
         ).parse_file(bibtex_file, partial=True)
         search_file = os.path.basename(bib_file)
-        for entry in individual_bib_database.entries:
+        for entry in individual_bib_db.entries:
             entry['origin'] = search_file + '/' + entry['ID']
 
-    return individual_bib_database.entries
+    return individual_bib_db.entries
 
 
 def get_search_entries():
@@ -38,11 +38,11 @@ def get_search_entries():
     return entries
 
 
-def validate_preparation_changes(bib_database, search_entries):
+def validate_preparation_changes(bib_db, search_entries):
 
     print('Calculating preparation differences...')
     change_diff = []
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         if 'changed_in_target_commit' not in entry:
             continue
         del entry['changed_in_target_commit']
@@ -77,7 +77,7 @@ def validate_preparation_changes(bib_database, search_entries):
         print('Difference: ' + str(round(difference, 4)) + '\n\n')
         entry_1 = [x for x in search_entries if entry_link == x['origin']]
         pp.pprint(entry_1[0])
-        entry_2 = [x for x in bib_database.entries if eid == x['ID']]
+        entry_2 = [x for x in bib_db.entries if eid == x['ID']]
         pp.pprint(entry_2[0])
 
         print('\n\n')
@@ -92,13 +92,13 @@ def validate_preparation_changes(bib_database, search_entries):
     return
 
 
-def validate_merging_changes(bib_database, search_entries):
+def validate_merging_changes(bib_db, search_entries):
 
     os.system('cls' if os.name == 'nt' else 'clear')
     print('Calculating differences between merged records...')
     change_diff = []
     merged_entries = False
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         if 'changed_in_target_commit' not in entry:
             continue
         del entry['changed_in_target_commit']
@@ -107,10 +107,8 @@ def validate_merging_changes(bib_database, search_entries):
             els = entry['origin'].split(';')
             duplicate_el_pairs = list(itertools.combinations(els, 2))
             for el_1, el_2 in duplicate_el_pairs:
-                entry_1 = [x for x in search_entries
-                           if el_1 == x['origin']]
-                entry_2 = [x for x in search_entries
-                           if el_2 == x['origin']]
+                entry_1 = [x for x in search_entries if el_1 == x['origin']]
+                entry_2 = [x for x in search_entries if el_2 == x['origin']]
 
                 similarity = \
                     dedupe.get_entry_similarity(entry_1[0], entry_2[0])
@@ -147,15 +145,12 @@ def validate_merging_changes(bib_database, search_entries):
     return
 
 
-def load_bib_database(target_commit):
+def load_bib_db(target_commit):
 
     if 'none' == target_commit:
         print('Loading data...')
-        bib_database = utils.load_references_bib(
-            modification_check=False, initialize=False,
-        )
-        [x.update(changed_in_target_commit='True')
-            for x in bib_database.entries]
+        bib_db = utils.load_main_refs(mod_check=False)
+        [x.update(changed_in_target_commit='True') for x in bib_db.entries]
 
     else:
         print('Loading data from history...')
@@ -170,39 +165,39 @@ def load_bib_database(target_commit):
         found = False
         for commit, filecontents in list(revlist):
             if found:  # load the MAIN_REFERENCES in the following commit
-                prior_bib_database = bibtexparser.loads(filecontents)
+                prior_bib_db = bibtexparser.loads(filecontents)
                 break
             if commit == target_commit:
-                bib_database = bibtexparser.loads(filecontents)
+                bib_db = bibtexparser.loads(filecontents)
                 found = True
 
         # determine which entries have been changed (prepared or merged)
         # in the target_commit
-        for entry in bib_database.entries:
-            prior_entry = [x for x in prior_bib_database.entries
+        for entry in bib_db.entries:
+            prior_entry = [x for x in prior_bib_db.entries
                            if x['ID'] == entry['ID']][0]
             # Note: the following is an exact comparison of all fields
             if entry != prior_entry:
                 entry.update(changed_in_target_commit='True')
 
-    return bib_database
+    return bib_db
 
 
 def main(scope, target_commit):
 
     # TODO: extension: filter for changes of contributor (git author)
 
-    bib_database = load_bib_database(target_commit)
+    bib_db = load_bib_db(target_commit)
 
     # Note: search entries are considered immutable
     # we therefore load the latest files
     search_entries = get_search_entries()
 
     if 'prepare' == scope or 'all' == scope:
-        validate_preparation_changes(bib_database, search_entries)
+        validate_preparation_changes(bib_db, search_entries)
 
     if 'merge' == scope or 'all' == scope:
-        validate_merging_changes(bib_database, search_entries)
+        validate_merging_changes(bib_db, search_entries)
 
     return
 

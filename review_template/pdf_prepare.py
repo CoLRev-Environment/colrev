@@ -235,9 +235,9 @@ def prepare_pdf(entry):
     return entry
 
 
-def prepare_pdfs(db, repo):
+def prepare_pdfs(bib_db, repo):
 
-    process.check_delay(db, min_status_requirement='pdf_imported')
+    process.check_delay(bib_db, min_status_requirement='pdf_imported')
 
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
@@ -254,7 +254,7 @@ def prepare_pdfs(db, repo):
             logging.info('Continuing batch preparation started earlier')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        db.entries = pool.map(prepare_pdf, db.entries)
+        bib_db.entries = pool.map(prepare_pdf, bib_db.entries)
         pool.close()
         pool.join()
 
@@ -266,7 +266,7 @@ def prepare_pdfs(db, repo):
                          f'(entries {batch_start} to {batch_end})')
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-            utils.save_bib_file(db, MAIN_REFERENCES)
+            utils.save_bib_file(bib_db, MAIN_REFERENCES)
             repo.index.add([MAIN_REFERENCES])
 
             if 'GIT' == repo_setup.config['PDF_HANDLING']:
@@ -287,16 +287,16 @@ def prepare_pdfs(db, repo):
 
     print()
 
-    return db
+    return bib_db
 
 
 def main():
     # TODO: temporary fix: remove all lines containint PDFType1Font from log.
     # https://github.com/pdfminer/pdfminer.six/issues/282
 
-    db = utils.load_references_bib(True, initialize=True)
+    bib_db = utils.load_main_refs()
     repo = init.get_repo()
-    prepare_pdfs(db, repo)
+    prepare_pdfs(bib_db, repo)
     return
 
 
