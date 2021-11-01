@@ -241,6 +241,8 @@ def acquire_pdfs(db, repo):
 
 def main():
 
+    # TODO: the global counters need to be adapted to multiprocessing
+
     db = utils.load_references_bib(True, initialize=True)
     repo = init.get_repo()
     acquire_pdfs(db, repo)

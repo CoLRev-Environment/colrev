@@ -4,7 +4,6 @@ import os
 import numpy as np
 import pandas as pd
 
-from review_template import repo_setup
 from review_template import utils
 
 
@@ -36,29 +35,26 @@ def main():
                              'outlet',
                              'year',
                              'volume',
-                             'number',
+                             'issue',
                              'pages',
                              'doi',
                              ]]
 
-    SCREEN = repo_setup.paths['SCREEN']
-    screen = pd.read_csv(SCREEN, dtype=str)
-    DATA = repo_setup.paths['SCREEN']
-    data = pd.read_csv(DATA, dtype=str)
+    included_papers = utils.get_included_IDs(bib_database)
 
-    observations = \
-        references[references['citation_key'].isin(
-            screen[screen['inclusion_2'] == 'yes']['citation_key'].tolist()
-        )]
+    observations = references[references['citation_key'].isin(included_papers)]
 
-    missing_outlet = observations[observations['outlet'].isnull(
-    )]['citation_key'].tolist()
-    print(f'No outlet: {missing_outlet}')
+    missing_outlet = \
+        observations[observations['outlet'].isnull()]['citation_key'].tolist()
+    if len(missing_outlet) > 0:
+        print(f'No outlet: {missing_outlet}')
 
-    observations = pd.merge(observations, data, how='left', on='citation_key')
-
+    # TODO: fill missing years
     observations.to_csv('output/sample.csv', index=False)
     # print(observations.crosstab)
+
+    observations['year'] = observations['year'].astype(int)
+
     tabulated = pd.pivot_table(observations[['outlet', 'year']],
                                index=['outlet'],
                                columns=['year'],
