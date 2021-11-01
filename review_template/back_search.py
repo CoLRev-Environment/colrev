@@ -100,13 +100,13 @@ def main():
     utils.reset_log()
     logging.info('Backward search')
 
-    bib_database = utils.load_references_bib(True, initialize=True)
+    bib_db = utils.load_main_refs()
 
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         process_backward_search(entry)
 
     bibfilenames = [x['bib_filename']
-                    for x in bib_database.entries if 'bib_filename' in x]
+                    for x in bib_db.entries if 'bib_filename' in x]
     if len(bibfilenames) > 0:
         repo.index.add([SEARCH_DETAILS])
         for f in bibfilenames:

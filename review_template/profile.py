@@ -11,15 +11,12 @@ def main():
 
     print('\n\nSample profile\n')
 
-    bib_database = utils.load_references_bib(
-        modification_check=False,
-        initialize=False,
-    )
+    bib_db = utils.load_main_refs(mod_check=False)
 
     if not os.path.exists('output'):
         os.mkdir('output')
 
-    references = pd.DataFrame.from_dict(bib_database.entries)
+    references = pd.DataFrame.from_dict(bib_db.entries)
 
     references['outlet'] = np.where(~references['journal'].isnull(),
                                     references['journal'],
@@ -39,7 +36,7 @@ def main():
                              'doi',
                              ]]
 
-    included_papers = utils.get_included_IDs(bib_database)
+    included_papers = utils.get_included_IDs(bib_db)
 
     observations = references[references['ID'].isin(included_papers)]
 

@@ -181,10 +181,10 @@ def export_retrieval_table(missing_entries):
     return
 
 
-def acquire_pdfs(db, repo):
+def acquire_pdfs(bib_db, repo):
 
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
-    process.check_delay(db, min_status_requirement='pdf_needs_retrieval')
+    process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
 
     print('TODO: download if there is a fulltext link in the entry')
 
@@ -201,14 +201,14 @@ def acquire_pdfs(db, repo):
             logging.info('Continuing batch preparation started earlier')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        db.entries = pool.map(acquire_pdf, db.entries)
+        bib_db.entries = pool.map(acquire_pdf, bib_db.entries)
         pool.close()
         pool.join()
 
         with current_batch_counter.get_lock():
             batch_end = current_batch_counter.value + batch_start - 1
 
-        missing_entries = get_missing_entries(db)
+        missing_entries = get_missing_entries(bib_db)
 
         if batch_end > 0:
             logging.info('Completed pdf acquisition batch '
@@ -217,7 +217,7 @@ def acquire_pdfs(db, repo):
             print_details(missing_entries)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-            utils.save_bib_file(db, MAIN_REFERENCES)
+            utils.save_bib_file(bib_db, MAIN_REFERENCES)
             repo.index.add([MAIN_REFERENCES])
 
             if 'GIT' == repo_setup.config['PDF_HANDLING']:
@@ -236,16 +236,16 @@ def acquire_pdfs(db, repo):
 
     export_retrieval_table(missing_entries)
     print()
-    return db
+    return bib_db
 
 
 def main():
 
     # TODO: the global counters need to be adapted to multiprocessing
 
-    db = utils.load_references_bib(True, initialize=True)
+    bib_db = utils.load_main_refs()
     repo = init.get_repo()
-    acquire_pdfs(db, repo)
+    acquire_pdfs(bib_db, repo)
 
     status.review_instructions()
     return

@@ -81,9 +81,9 @@ def load_entries(filepath):
     return entry_list
 
 
-def save_imported_entry_links(bib_database):
+def save_imported_entry_links(bib_db):
     imported_entry_links = [x['origin'].split(';')
-                            for x in bib_database.entries
+                            for x in bib_db.entries
                             if 'origin' in x]
     imported_entry_links = list(itertools.chain(*imported_entry_links))
 
@@ -107,8 +107,8 @@ def import_entry(entry):
 
 def load_all_entries():
 
-    bib_database = utils.load_references_bib(True, initialize=True)
-    save_imported_entry_links(bib_database)
+    bib_db = utils.load_main_refs(mod_check=True, init=True)
+    save_imported_entry_links(bib_db)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
     search_files = get_search_files()
     if any('.pdf' in x for x in search_files):
@@ -116,7 +116,7 @@ def load_all_entries():
     additional_records = load_pool.map(load_entries, search_files)
     load_pool.close()
     load_pool.join()
-    additional_records = list(chain(bib_database.entries, *additional_records))
+    additional_records = list(chain(bib_db.entries, *additional_records))
 
     if os.path.exists('imported_entry_links.csv'):
         os.remove('imported_entry_links.csv')
@@ -177,15 +177,15 @@ def getbib(file):
         bib_r = re.compile(r'^@.*{.*,', re.M)
         if len(re.findall(bib_r, contents)) == 0:
             logging.info('Error: Not a bib file? ' + os.path.basename(file))
-            individual_bib_database = None
+            db = None
         else:
             with open(file) as bibtex_file:
-                individual_bib_database = BibTexParser(
+                db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
                     common_strings=True,
                 ).parse_file(bibtex_file, partial=True)
-    return individual_bib_database
+    return db
 
 
 def ris2bib(file):
@@ -452,16 +452,16 @@ def processing_condition(entry):
     return False
 
 
-def save_imported_files(repo, bib_database):
-    if bib_database is None:
+def save_imported_files(repo, bib_db):
+    if bib_db is None:
         logging.info('No entries imported')
         return False
 
-    if 0 == len(bib_database.entries):
+    if 0 == len(bib_db.entries):
         logging.info('No entries imported')
         return False
 
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(bib_db, MAIN_REFERENCES)
     repo.index.add(get_search_files())
     repo.index.add([MAIN_REFERENCES])
 
@@ -480,10 +480,10 @@ def import_entries(repo):
     logging.info('Import')
     logging.info(f'Batch size: {BATCH_SIZE}')
 
-    db = BibDatabase()
+    bib_db = BibDatabase()
     entry_iterator = IteratorEx(load_all_entries())
     for entry in entry_iterator:
-        db.entries.append(entry)
+        bib_db.entries.append(entry)
         if entry_iterator.hasNext:
             if not processing_condition(entry):
                 continue  # keep appending entries
@@ -501,16 +501,16 @@ def import_entries(repo):
             logging.info(f'Importing entries {batch_start} to {batch_end}')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        db.entries = pool.map(import_entry, db.entries)
+        bib_db.entries = pool.map(import_entry, bib_db.entries)
         pool.close()
         pool.join()
 
-        db = utils.set_IDs(db)
+        bib_db = utils.set_IDs(bib_db)
 
-        if save_imported_files(repo, db):
+        if save_imported_files(repo, bib_db):
             utils.create_commit(repo, '⚙️ Import search results')
 
     print()
-    db.entries = sorted(db.entries, key=lambda d: d['ID'])
+    bib_db.entries = sorted(bib_db.entries, key=lambda d: d['ID'])
 
-    return db
+    return bib_db

@@ -80,10 +80,10 @@ def propagated_ID(ID):
     return propagated
 
 
-def generate_ID(entry, bib_database=None, entry_in_bib_db=False,
+def generate_ID(entry, bib_db=None, entry_in_bib_db=False,
                 raise_error=True):
-    if bib_database is not None:
-        ID_blacklist = [entry['ID'] for entry in bib_database.entries]
+    if bib_db is not None:
+        ID_blacklist = [entry['ID'] for entry in bib_db.entries]
     else:
         ID_blacklist = None
     ID = generate_ID_blacklist(entry, ID_blacklist, entry_in_bib_db,
@@ -135,7 +135,7 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
                 other_ids.remove(entry['ID'])
         else:
             # ID can remain the same, but it has to change
-            # if it is already in bib_database
+            # if it is already in bib_db
             other_ids = ID_blacklist
 
         letters = iter(ascii_lowercase)
@@ -222,19 +222,19 @@ def validate_bib_file(filename):
                 ).name
             ].number_records.item()
             with open(filename) as bibtex_file:
-                bib_database = BibTexParser(
+                bib_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
                     common_strings=True,
                 ).parse_file(bibtex_file, partial=True)
 
-            if len(bib_database.entries) != records_expected:
+            if len(bib_db.entries) != records_expected:
                 print(
                     'Error while loading the file: number of records ',
                     'imported not identical to ',
                     'search/search_details.csv$number_records',
                 )
-                print(f'Loaded: {len(bib_database.entries)}')
+                print(f'Loaded: {len(bib_db.entries)}')
                 print(f'Expected: {records_expected}')
                 return False
         except ValueError:
@@ -247,25 +247,29 @@ def validate_bib_file(filename):
     return True
 
 
-def load_references_bib(modification_check=True, initialize=False):
+def load_main_refs(mod_check=None, init=None):
+    if mod_check is None:
+        mod_check = True
+    if init is None:
+        init = False
 
     if os.path.exists(os.path.join(os.getcwd(), MAIN_REFERENCES)):
-        if modification_check:
+        if mod_check:
             git_modification_check(MAIN_REFERENCES)
         with open(MAIN_REFERENCES) as target_db:
-            references_bib = BibTexParser(
+            bib_db = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=False,
                 common_strings=True,
             ).parse_file(target_db, partial=True)
     else:
-        if initialize:
-            references_bib = BibDatabase()
+        if init:
+            bib_db = BibDatabase()
         else:
             print(f'{MAIN_REFERENCES} does not exist')
             sys.exit()
 
-    return references_bib
+    return bib_db
 
 
 def git_modification_check(filename):
@@ -300,7 +304,7 @@ def get_included_IDs(db):
     return included
 
 
-def save_bib_file(bib_database, target_file=None):
+def save_bib_file(bib_db, target_file=None):
 
     if target_file is None:
         target_file = MAIN_REFERENCES
@@ -333,7 +337,7 @@ def save_bib_file(bib_database, target_file=None):
     ]
 
     try:
-        bib_database.comments.remove('% Encoding: UTF-8')
+        bib_db.comments.remove('% Encoding: UTF-8')
     except ValueError:
         pass
 
@@ -341,7 +345,7 @@ def save_bib_file(bib_database, target_file=None):
     writer.add_trailing_comma = True
     writer.align_values = True
     writer.indent = '  '
-    bibtex_str = bibtexparser.dumps(bib_database, writer)
+    bibtex_str = bibtexparser.dumps(bib_db, writer)
 
     with open(target_file, 'w') as out:
         out.write(bibtex_str)

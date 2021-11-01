@@ -43,9 +43,9 @@ def get_to_synthesize_in_manuscript(records_for_synthesis):
     return in_manuscript_to_synthesize
 
 
-def get_synthesized_ids(bib_database):
+def get_synthesized_ids(bib_db):
 
-    records_for_synthesis = [x['ID']for x in bib_database.entries
+    records_for_synthesis = [x['ID']for x in bib_db.entries
                              if x.get('rev_status', 'NA') in
                              ['included', 'in_manuscript']]
 
@@ -57,10 +57,10 @@ def get_synthesized_ids(bib_database):
     return list(synthesized)
 
 
-def update_manuscript(repo, bib_database):
+def update_manuscript(repo, bib_db):
 
-    synthesized_in_manuscript = get_synthesized_ids(bib_database)
-    included = utils.get_included_IDs(bib_database)
+    synthesized_in_manuscript = get_synthesized_ids(bib_db)
+    included = utils.get_included_IDs(bib_db)
 
     if 0 == len(included):
         logging.info('No records included yet')
@@ -154,7 +154,7 @@ def update_manuscript(repo, bib_database):
     nr_entries_added = len(missing_records)
     logging.info(f'{nr_entries_added} records added ({MANUSCRIPT})\n')
 
-    synthesized_in_manuscript = get_synthesized_ids(bib_database)
+    synthesized_in_manuscript = get_synthesized_ids(bib_db)
 
     return synthesized_in_manuscript
 
@@ -165,23 +165,21 @@ def main():
     utils.require_clean_repo(repo, ignore_pattern='paper.md')
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
 
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
+    bib_db = utils.load_main_refs()
 
     if 'MANUSCRIPT' == DATA_FORMAT:
-        synthesized_in_manuscript = update_manuscript(repo, bib_database)
+        synthesized_in_manuscript = update_manuscript(repo, bib_db)
 
     # TODO: add other forms of data extraction/analysis/synthesis
 
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         # TODO: add other forms of data extraction/analysis/synthesis
         if entry['ID'] in synthesized_in_manuscript:
             entry.update(rev_status='synthesized')
             logging.info(f'{entry["ID"]}'.ljust(18, ' ') +
                          'set status "synthesized"')
 
-    utils.save_bib_file(bib_database, repo_setup.paths['MAIN_REFERENCES'])
+    utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])
     repo.index.add([MANUSCRIPT])
     repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
 

@@ -116,19 +116,17 @@ def man_prep_entries():
     utils.require_clean_repo(repo)
 
     print('Loading records for manual preparation...')
-    bib_database = utils.load_references_bib(
-        modification_check=True, initialize=False,
-    )
+    bib_db = utils.load_main_refs()
 
-    ID_list = [entry['ID'] for entry in bib_database.entries]
+    ID_list = [entry['ID'] for entry in bib_db.entries]
 
-    for entry in bib_database.entries:
+    for entry in bib_db.entries:
         entry = man_prep_entry(entry)
-        utils.save_bib_file(bib_database)
+        utils.save_bib_file(bib_db)
 
-    bib_database = utils.set_IDs(bib_database)
+    bib_db = utils.set_IDs(bib_db)
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-    utils.save_bib_file(bib_database, MAIN_REFERENCES)
+    utils.save_bib_file(bib_db, MAIN_REFERENCES)
     repo.index.add([MAIN_REFERENCES])
 
     utils.create_commit(repo, 'Prepare records for import', manual_author=True)

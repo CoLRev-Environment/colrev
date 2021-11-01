@@ -270,14 +270,12 @@ def append_merges(entry):
         else:
             current_batch_counter.value += 1
 
-    bib_database = utils.load_references_bib(
-        modification_check=False, initialize=False,
-    )
+    bib_db = utils.load_main_refs(mod_check=False)
 
     # add all processed entries to the queue order before first (re)run
     if not os.path.exists('queue_order.csv'):
         with open('queue_order.csv', 'a') as fd:
-            for x in bib_database.entries:
+            for x in bib_db.entries:
                 if 'processed' == x.get('md_status', 'NA'):
                     fd.write(x['origin'] + '\n')
 
@@ -294,12 +292,12 @@ def append_merges(entry):
     entry_links_in_prepared_file = []
     # note: no need to wait for completion of preparation
     entry_links_in_prepared_file = [entry['origin'].split(';')
-                                    for entry in bib_database.entries
+                                    for entry in bib_db.entries
                                     if 'origin' in entry]
     entry_links_in_prepared_file = \
         list(itertools.chain(*entry_links_in_prepared_file))
 
-    # if the entry is the first one added to the bib_database
+    # if the entry is the first one added to the bib_db
     # (in a preceding processing step), it can be propagated
     if len(required_prior_entry_links) < 2:
         if not os.path.exists('non_duplicates.csv'):
@@ -312,7 +310,7 @@ def append_merges(entry):
     merge_ignore_status = ['needs_manual_preparation',
                            'needs_manual_merging']
 
-    prior_entries = [x for x in bib_database.entries
+    prior_entries = [x for x in bib_db.entries
                      if x.get('md_status', 'NA') not in merge_ignore_status]
 
     prior_entries = [x for x in prior_entries
@@ -394,7 +392,7 @@ def append_merges(entry):
     return
 
 
-def apply_merges(bib_database):
+def apply_merges(bib_db):
 
     # The merging also needs to consider whether IDs are propagated
     # Completeness of comparisons should be ensured by the
@@ -414,15 +412,15 @@ def apply_merges(bib_database):
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 el_to_merge = []
-                for entry in bib_database.entries:
+                for entry in bib_db.entries:
                     if entry['ID'] == row[1]:
                         el_to_merge = entry['origin'].split(';')
                         # Drop the duplicated entry
-                        bib_database.entries = \
-                            [i for i in bib_database.entries
+                        bib_db.entries = \
+                            [i for i in bib_db.entries
                              if not (i['ID'] == entry['ID'])]
                         break
-                for entry in bib_database.entries:
+                for entry in bib_db.entries:
                     if entry['ID'] == row[0]:
                         els = el_to_merge + entry['origin'].split(';')
                         els = list(set(els))
@@ -437,7 +435,7 @@ def apply_merges(bib_database):
         with open('non_duplicates.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
-                for entry in bib_database.entries:
+                for entry in bib_db.entries:
                     if entry['ID'] == row[0]:
                         if 'prepared' == entry['md_status']:
                             entry.update(md_status='processed')
@@ -449,7 +447,7 @@ def apply_merges(bib_database):
         with open('potential_duplicate_tuples.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
-                for entry in bib_database.entries:
+                for entry in bib_db.entries:
                     if (entry['ID'] == row[1]) or (entry['ID'] == row[2]):
                         entry.update(md_status='needs_manual_merging')
         potential_duplicates = \
@@ -461,7 +459,7 @@ def apply_merges(bib_database):
             quoting=csv.QUOTE_ALL, na_rep='NA',
         )
 
-    return bib_database
+    return bib_db
 
 
 def dedupe_entries(db, repo):

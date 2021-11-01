@@ -40,9 +40,9 @@ def main(ID):
 
         if (MAIN_REFERENCES in commit.tree):
             filecontents = (commit.tree / MAIN_REFERENCES).data_stream.read()
-            individual_bib_database = bibtexparser.loads(filecontents)
+            individual_bib_db = bibtexparser.loads(filecontents)
             entry = [
-                entry for entry in individual_bib_database.entries
+                entry for entry in individual_bib_db.entries
                 if entry['ID'] == ID
             ]
 
