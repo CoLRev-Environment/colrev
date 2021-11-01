@@ -65,14 +65,14 @@ class CitationKeyPropagationError(Exception):
     pass
 
 
-def propagated_citation_key(citation_key):
+def propagated_ID(ID):
 
     propagated = False
 
     if os.path.exists(DATA):
         # Note: this may be redundant, but just to be sure:
         data = pd.read_csv(DATA, dtype=str)
-        if citation_key in data['citation_key'].tolist():
+        if ID in data['ID'].tolist():
             propagated = True
 
     # TODO: also check data_pages?
@@ -80,35 +80,29 @@ def propagated_citation_key(citation_key):
     return propagated
 
 
-def generate_citation_key(entry, bib_database=None,
+def generate_ID(entry, bib_database=None, entry_in_bib_db=False,
+                raise_error=True):
+    if bib_database is not None:
+        ID_blacklist = [entry['ID'] for entry in bib_database.entries]
+    else:
+        ID_blacklist = None
+    ID = generate_ID_blacklist(entry, ID_blacklist, entry_in_bib_db,
+                               raise_error)
+    return ID
+
+
+def generate_ID_blacklist(entry, ID_blacklist=None,
                           entry_in_bib_db=False,
                           raise_error=True):
-    if bib_database is not None:
-        citation_key_blacklist = [entry['ID']
-                                  for entry in bib_database.entries]
-    else:
-        citation_key_blacklist = None
-    citation_key = generate_citation_key_blacklist(entry,
-                                                   citation_key_blacklist,
-                                                   entry_in_bib_db,
-                                                   raise_error)
-    return citation_key
 
-
-def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
-                                    entry_in_bib_db=False,
-                                    raise_error=True):
-
-    # Make sure that citation_keys that have been propagated to the
+    # Make sure that IDs that have been propagated to the
     # screen or data will not be replaced
     # (this would break the chain of evidence)
     if raise_error:
-        if propagated_citation_key(entry['ID']):
+        if propagated_ID(entry['ID']):
             raise CitationKeyPropagationError(
-                'WARNING: do not change citation_keys that have been ',
-                'propagated to ' + DATA + ' (' +
-                entry['ID'] + ')',
-            )
+                'WARNING: do not change IDs that have been ' +
+                f'propagated to {DATA} ({entry["ID"]})')
 
     if 'author' in entry:
         author = prepare.format_author_field(entry['author'])
@@ -121,20 +115,20 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         author = author.split(',')[0].replace(' ', '')
     else:
         author = author.split(' ')[0]
-    temp_citation_key = author + str(entry.get('year', ''))
+    temp_ID = f'{author}{str(entry.get("year", ""))}'
 
-    if temp_citation_key.isupper():
-        temp_citation_key = temp_citation_key.capitalize()
+    if temp_ID.isupper():
+        temp_ID = temp_ID.capitalize()
     # Replace special characters
-    # (because citation_keys may be used as file names)
-    temp_citation_key = remove_accents(temp_citation_key)
-    temp_citation_key = re.sub(r'\(.*\)', '', temp_citation_key)
-    temp_citation_key = re.sub('[^0-9a-zA-Z]+', '', temp_citation_key)
+    # (because IDs may be used as file names)
+    temp_ID = remove_accents(temp_ID)
+    temp_ID = re.sub(r'\(.*\)', '', temp_ID)
+    temp_ID = re.sub('[^0-9a-zA-Z]+', '', temp_ID)
 
-    if citation_key_blacklist is not None:
+    if ID_blacklist is not None:
         if entry_in_bib_db:
             # allow IDs to remain the same.
-            other_ids = citation_key_blacklist
+            other_ids = ID_blacklist
             # Note: only remove it once. It needs to change when there are
             # other entries with the same ID
             if entry['ID'] in other_ids:
@@ -142,33 +136,33 @@ def generate_citation_key_blacklist(entry, citation_key_blacklist=None,
         else:
             # ID can remain the same, but it has to change
             # if it is already in bib_database
-            other_ids = citation_key_blacklist
+            other_ids = ID_blacklist
 
         letters = iter(ascii_lowercase)
-        while temp_citation_key in other_ids:
+        while temp_ID in other_ids:
             try:
                 next_letter = next(letters)
                 if next_letter == 'a':
-                    temp_citation_key = temp_citation_key + next_letter
+                    temp_ID = temp_ID + next_letter
                 else:
-                    temp_citation_key = temp_citation_key[:-1] + next_letter
+                    temp_ID = temp_ID[:-1] + next_letter
             except StopIteration:
                 letters = iter(ascii_lowercase)
                 pass
 
-    return temp_citation_key
+    return temp_ID
 
 
-def set_citation_keys(db):
-    logging.info('Set citation_keys')
-    citation_key_list = [entry['ID'] for entry in db.entries]
+def set_IDs(db):
+    logging.info('Set IDs')
+    ID_list = [entry['ID'] for entry in db.entries]
     for entry in db.entries:
         if entry['md_status'] in ['imported', 'prepared']:
-            entry.update(ID=generate_citation_key_blacklist(
-                entry, citation_key_list,
+            entry.update(ID=generate_ID_blacklist(
+                entry, ID_list,
                 entry_in_bib_db=True,
                 raise_error=False))
-            citation_key_list.append(entry['ID'])
+            ID_list.append(entry['ID'])
     return db
 
 

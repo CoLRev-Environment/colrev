@@ -20,13 +20,12 @@ def main():
         os.mkdir('output')
 
     references = pd.DataFrame.from_dict(bib_database.entries)
-    references.rename(columns={'ID': 'citation_key'}, inplace=True)
 
     references['outlet'] = np.where(~references['journal'].isnull(),
                                     references['journal'],
                                     references['booktitle'])
 
-    references = references[['citation_key',
+    references = references[['ID',
                              'ENTRYTYPE',
                              'author',
                              'title',
@@ -42,10 +41,10 @@ def main():
 
     included_papers = utils.get_included_IDs(bib_database)
 
-    observations = references[references['citation_key'].isin(included_papers)]
+    observations = references[references['ID'].isin(included_papers)]
 
     missing_outlet = \
-        observations[observations['outlet'].isnull()]['citation_key'].tolist()
+        observations[observations['outlet'].isnull()]['ID'].tolist()
     if len(missing_outlet) > 0:
         print(f'No outlet: {missing_outlet}')
 

@@ -33,8 +33,8 @@ def get_to_synthesize_in_manuscript(records_for_synthesis):
                 while line != '':
                     line = f.readline()
                     if re.search(r'- @.*', line):
-                        citation_key = re.findall(r'- @(.*)$', line)
-                        in_manuscript_to_synthesize.append(citation_key[0])
+                        ID = re.findall(r'- @(.*)$', line)
+                        in_manuscript_to_synthesize.append(ID[0])
                         if line == '\n':
                             break
 

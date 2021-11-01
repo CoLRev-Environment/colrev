@@ -1119,7 +1119,7 @@ def prepare_entries(db, repo):
             logging.info('Completed preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            db = utils.set_citation_keys(db)
+            db = utils.set_IDs(db)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
             utils.save_bib_file(db, MAIN_REFERENCES)
