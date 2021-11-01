@@ -26,7 +26,6 @@ def get_data_page_missing(MANUSCRIPT, records):
 
 def get_to_synthesize_in_manuscript(records_for_synthesis):
     in_manuscript_to_synthesize = []
-    print(MANUSCRIPT)
     with open(MANUSCRIPT) as f:
         for line in f:
             if '<!-- NEW_RECORD_SOURCE -->' in line:
@@ -59,7 +58,6 @@ def get_synthesized_ids(bib_db):
 
 def update_manuscript(repo, bib_db):
 
-    synthesized_in_manuscript = get_synthesized_ids(bib_db)
     included = utils.get_included_IDs(bib_db)
 
     if 0 == len(included):
@@ -74,7 +72,7 @@ def update_manuscript(repo, bib_db):
 
     if 0 == len(missing_records):
         logging.info(f'All records included in {MANUSCRIPT}')
-        return synthesized_in_manuscript
+        return bib_db
 
     changedFiles = [item.a_path for item in repo.index.diff(None)]
     if MANUSCRIPT in changedFiles:
@@ -152,11 +150,9 @@ def update_manuscript(repo, bib_db):
     os.remove(temp)
 
     nr_entries_added = len(missing_records)
-    logging.info(f'{nr_entries_added} records added ({MANUSCRIPT})\n')
+    logging.info(f'{nr_entries_added} records added ({MANUSCRIPT})')
 
-    synthesized_in_manuscript = get_synthesized_ids(bib_db)
-
-    return synthesized_in_manuscript
+    return bib_db
 
 
 def main():
@@ -164,19 +160,19 @@ def main():
     repo = git.Repo()
     utils.require_clean_repo(repo, ignore_pattern='paper.md')
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
-
     bib_db = utils.load_main_refs()
 
     if 'MANUSCRIPT' == DATA_FORMAT:
-        synthesized_in_manuscript = update_manuscript(repo, bib_db)
+        bib_db = update_manuscript(repo, bib_db)
 
     # TODO: add other forms of data extraction/analysis/synthesis
+    synthesized_in_manuscript = get_synthesized_ids(bib_db)
 
     for entry in bib_db.entries:
         # TODO: add other forms of data extraction/analysis/synthesis
         if entry['ID'] in synthesized_in_manuscript:
             entry.update(rev_status='synthesized')
-            logging.info(f'{entry["ID"]}'.ljust(18, ' ') +
+            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                          'set status "synthesized"')
 
     utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])

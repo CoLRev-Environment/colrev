@@ -54,9 +54,6 @@ config = dict(
         'general', 'PDF_HANDLING', fallback='EXT')
 )
 
-if os.path.exists('report.log'):
-    os.remove('report.log')
-
 if config['DEBUG_MODE']:
     logging_level = logging.DEBUG
 else:
@@ -67,7 +64,7 @@ logging.basicConfig(
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
     handlers=[
-        logging.FileHandler('report.log'),
+        logging.FileHandler('report.log', mode='a'),
         logging.StreamHandler()
     ]
 )

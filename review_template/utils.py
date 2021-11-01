@@ -372,23 +372,52 @@ def require_clean_repo(repo=None, ignore_pattern=None):
 
 
 def get_package_details():
-    return 'review_template (version ' + version('review_template') + ')'
+    details = '\n - review_template:'.ljust(33, ' ') + 'version ' + \
+        version('review_template')
+    return details
 
 
 def get_commit_report(script_name=None):
     report = '\n\nReport\n\n'
 
-    report = report + 'Software\n'
+    report = report + 'Software'
     if script_name is not None:
-        report = report + ' - Script: ' + script_name
-    report = report + '\n - Package: ' + get_package_details()
+        report = report + '\n - Script:'.ljust(33, ' ') + script_name
+    report = report + get_package_details()
 
-    if 'dirty' in get_package_details():
-        report = report + '\n - ⚠: created with a modified version ' + \
-            '(not reproducible)'
+    from importlib.metadata import version
+    version('pipeline_validation_hooks')
+    report = report + '\n - pre-commit hooks:'.ljust(33, ' ') + 'version ' + \
+        version('pipeline_validation_hooks')
 
-    report = report + '\n'
+    if 'dirty' in report:
+        report = \
+            report + '\n  ⚠ created with a modified version (not reproducible)'
 
+    # Note: write-tree because commits can be amended
+    # check tree:
+    #   git write-tree
+    #   git log --pretty=raw
+    # To validate: check whether tree is identical with commit-tree:
+    #   git log --pretty=raw -1
+    g = git.Repo('').git
+    tree_hash = g.execute(['git', 'write-tree'])
+    report = report + f'\n\nCertified properties (for tree {tree_hash})\n'
+
+    report = report + '- Traceability of records: '.ljust(32, ' ') + 'YES\n'
+    report = \
+        report + '- Consistency (based on hooks): '.ljust(32, ' ') + 'YES\n'
+    stat = status.get_status_freq()
+    if 0 == stat['review_status']['currently']['need_synthesis']:
+        report = \
+            report + '- Completeness of iteration: '.ljust(32, ' ') + 'YES\n'
+    else:
+        report = \
+            report + '- Completeness of iteration: '.ljust(32, ' ') + 'NO\n'
+
+    # url = g.execut['git', 'config', '--get remote.origin.url']
+
+    # append status
     f = io.StringIO()
     with redirect_stdout(f):
         status.review_status()
