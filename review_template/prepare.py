@@ -9,6 +9,7 @@ import re
 import sys
 import urllib
 
+import dictdiffer
 import pandas as pd
 import requests
 from fuzzywuzzy import fuzz
@@ -150,8 +151,6 @@ def correct_entrytype(entry):
                 entry.update(journal=journal_string)
                 del entry['series']
 
-    logging.debug(f'correct_entrytype(...): \n{pp.pformat(entry)}\n\n')
-
     return entry
 
 
@@ -213,8 +212,6 @@ def homogenize_entry(entry):
         entry.update(issue=entry['number'])
         del entry['number']
 
-    logging.debug(f'homogenize_entry(...): \n{pp.pformat(entry)}\n\n')
-
     return entry
 
 
@@ -240,8 +237,6 @@ def apply_local_rules(entry):
             if row['abbreviation'].lower() == entry['booktitle'].lower():
                 entry.update(booktitle=row['conference'])
 
-    logging.debug(f'apply_local_rules(...): \n{pp.pformat(entry)}\n\n')
-
     return entry
 
 
@@ -266,8 +261,6 @@ def apply_crowd_rules(entry):
         for i, row in CR_CONFERENCE_ABBREVIATIONS.iterrows():
             if row['abbreviation'].lower() == entry['booktitle'].lower():
                 entry.update(booktitle=row['conference'])
-
-    logging.debug(f'apply_crowd_rules(...): \n{pp.pformat(entry)}\n\n')
 
     return entry
 
@@ -351,7 +344,7 @@ def unify_pages_field(input_string):
     return input_string
 
 
-def get_metadata_from_doi(entry):
+def get_md_from_doi(entry):
     if 'doi' not in entry:
         return entry
 
@@ -440,7 +433,6 @@ def json_to_entry(item):
             retrieved_abstract = str(retrieved_abstract).replace('\n', '')\
                 .lstrip().rstrip()
             entry.update(abstract=retrieved_abstract)
-    logging.debug(f'json_to_entry(...) : {pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -500,12 +492,11 @@ def crossref_query(entry):
     return most_similar_entry
 
 
-def get_metadata_from_crossref(entry):
-    if ('title' not in entry) or ('doi' in entry) or \
-            ('metadata_source' in entry):
+def get_md_from_crossref(entry):
+    if ('title' not in entry) or ('doi' in entry):
         return entry
 
-    logging.debug(f'get_metadata_from_crossref({entry["ID"]})')
+    logging.debug(f'get_md_from_crossref({entry["ID"]})')
     MAX_RETRIES_ON_ERROR = 3
     # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
     if len(entry['title']) > 35:
@@ -530,8 +521,6 @@ def get_metadata_from_crossref(entry):
 
         except KeyboardInterrupt:
             sys.exit()
-    logging.debug(
-        f'get_metadata_from_crossref(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -571,9 +560,7 @@ def sem_scholar_json_to_entry(item, entry):
     return retrieved_entry
 
 
-def get_metadata_from_semantic_scholar(entry):
-    if ('metadata_source' in entry):
-        return entry
+def get_md_from_sem_scholar(entry):
 
     try:
         search_api_url = \
@@ -616,8 +603,6 @@ def get_metadata_from_semantic_scholar(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
-    logging.debug('get_metadata_from_semantic_scholar(...): ' +
-                  f'\n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -671,9 +656,7 @@ def dblp_json_to_entry(item):
     return retrieved_entry
 
 
-def get_metadata_from_dblp(entry):
-    if ('metadata_source' in entry):
-        return entry
+def get_md_from_dblp(entry):
 
     try:
         api_url = 'https://dblp.org/search/publ/api?q='
@@ -704,7 +687,6 @@ def get_metadata_from_dblp(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
-    logging.debug(f'get_metadata-from_dblp(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -744,13 +726,10 @@ def retrieve_doi_metadata(entry):
         logging.error(f'ConnectionError: {entry["ID"]}')
         return orig_entry
         pass
-    logging.debug(f'retrieve_doi_metadata(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
-def get_metadata_from_urls(entry):
-    if ('metadata_source' in entry):
-        return entry
+def get_md_from_urls(entry):
 
     url = entry.get('url', entry.get('fulltext', 'NA'))
     if 'NA' != url:
@@ -788,7 +767,6 @@ def get_metadata_from_urls(entry):
             print(f'exception: {e}')
             return entry
             pass
-    logging.debug(f'get_metadata_from_urls(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -955,30 +933,33 @@ def prepare(entry):
         else:
             current_batch_counter.value += 1
 
-    logging.debug(f'prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
+    # # Note: we require (almost) perfect matches for the scripts.
+    # # Cases with higher dissimilarity will be handled in the man_prep.py
+    prep_scripts = {'correct_entrytype': correct_entrytype,
+                    'homogenize_entry': homogenize_entry,
+                    'apply_local_rules': apply_local_rules,
+                    'apply_crowd_rules': apply_crowd_rules,
+                    'get_md_from_doi': get_md_from_doi,
+                    'get_md_from_crossref': get_md_from_crossref,
+                    'get_md_from_dblp': get_md_from_dblp,
+                    'get_md_from_sem_scholar': get_md_from_sem_scholar,
+                    'get_md_from_urls': get_md_from_urls,
+                    }
 
     unprepared_entry = entry.copy()
-
-    entry = correct_entrytype(entry)
-
-    entry = homogenize_entry(entry)
-
-    entry = apply_local_rules(entry)
-
-    entry = apply_crowd_rules(entry)
-
-    # Note: we require (almost) perfect matches for the following.
-    # Cases with higher dissimilarity will be handled in the man_prep.py
-
-    entry = get_metadata_from_doi(entry)
-
-    entry = get_metadata_from_crossref(entry)
-
-    entry = get_metadata_from_dblp(entry)
-
-    entry = get_metadata_from_semantic_scholar(entry)
-
-    entry = get_metadata_from_urls(entry)
+    logging.info(f'Prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
+    for prep_script in prep_scripts:
+        prior = entry.copy()
+        logging.debug(f'{prep_script}({entry["ID"]}) called')
+        entry = prep_scripts[prep_script](entry)
+        diffs = list(dictdiffer.diff(prior, entry))
+        if diffs:
+            logging.info(f'{prep_script}({entry["ID"]}) changed:'
+                         f' \n{pp.pformat(diffs)}\n')
+        else:
+            logging.debug(f'{prep_script} changed: -')
+        if is_complete_metadata_source(entry):
+            break
 
     if (is_complete(entry) or is_complete_metadata_source(entry)) and \
             not has_inconsistent_fields(entry) and \
