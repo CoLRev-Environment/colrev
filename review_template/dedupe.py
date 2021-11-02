@@ -7,6 +7,8 @@ import os
 import pprint
 import re
 
+import click
+import git
 import pandas as pd
 from fuzzywuzzy import fuzz
 
@@ -474,10 +476,10 @@ def apply_merges(bib_db):
     return bib_db
 
 
-def dedupe_entries(db, repo):
+def main(bib_db, repo):
 
     utils.reset_log()
-    process.check_delay(db, min_status_requirement='md_prepared')
+    process.check_delay(bib_db, min_status_requirement='md_prepared')
 
     logging.info('Process duplicates')
 
@@ -492,10 +494,10 @@ def dedupe_entries(db, repo):
                 .info('Continuing batch duplicate processing started earlier')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        pool.map(append_merges, db.entries)
+        pool.map(append_merges, bib_db.entries)
         pool.close()
         pool.join()
-        db = apply_merges(db)
+        bib_db = apply_merges(bib_db)
 
         with current_batch_counter.get_lock():
             batch_end = current_batch_counter.value + batch_start - 1
@@ -504,7 +506,7 @@ def dedupe_entries(db, repo):
             logging.info('Completed duplicate processing batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            utils.save_bib_file(db, MAIN_REFERENCES)
+            utils.save_bib_file(bib_db, MAIN_REFERENCES)
             if os.path.exists('potential_duplicate_tuples.csv'):
                 repo.index.add(['potential_duplicate_tuples.csv'])
             repo.index.add([MAIN_REFERENCES])
@@ -521,4 +523,16 @@ def dedupe_entries(db, repo):
 
     print()
 
-    return db
+    return bib_db
+
+
+@click.command()
+def cli():
+    repo = git.Repo()
+    bib_db = utils.load_main_refs(mod_check=True, init=False)
+    main(bib_db, repo)
+    return 0
+
+
+if __name__ == '__main__':
+    main()

@@ -153,17 +153,17 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
     return temp_ID
 
 
-def set_IDs(db):
+def set_IDs(bib_db):
     logging.info('Set IDs')
-    ID_list = [entry['ID'] for entry in db.entries]
-    for entry in db.entries:
+    ID_list = [entry['ID'] for entry in bib_db.entries]
+    for entry in bib_db.entries:
         if entry['md_status'] in ['imported', 'prepared']:
             entry.update(ID=generate_ID_blacklist(
                 entry, ID_list,
                 entry_in_bib_db=True,
                 raise_error=False))
             ID_list.append(entry['ID'])
-    return db
+    return bib_db
 
 
 def validate_search_details():

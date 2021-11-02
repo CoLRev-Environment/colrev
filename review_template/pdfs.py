@@ -5,6 +5,7 @@ import logging
 import multiprocessing as mp
 import os
 
+import click
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -141,9 +142,9 @@ def acquire_pdf(entry):
     return entry
 
 
-def get_missing_entries(db):
+def get_missing_entries(bib_db):
     missing_entries = BibDatabase()
-    for entry in db.entries:
+    for entry in bib_db.entries:
         if 'needs_retrieval' == entry.get('pdf_status', 'NA'):
             missing_entries.entries.append(entry)
     return missing_entries
@@ -181,7 +182,7 @@ def export_retrieval_table(missing_entries):
     return
 
 
-def acquire_pdfs(bib_db, repo):
+def main(bib_db, repo):
 
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
     process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
@@ -236,19 +237,21 @@ def acquire_pdfs(bib_db, repo):
 
     export_retrieval_table(missing_entries)
     print()
+
+    status.review_instructions()
+
     return bib_db
 
 
-def main():
-
+@click.command()
+def cli():
     # TODO: the global counters need to be adapted to multiprocessing
 
     bib_db = utils.load_main_refs()
     repo = init.get_repo()
-    acquire_pdfs(bib_db, repo)
+    main(bib_db, repo)
 
-    status.review_instructions()
-    return
+    return 0
 
 
 if __name__ == '__main__':

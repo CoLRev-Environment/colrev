@@ -5,6 +5,7 @@ import multiprocessing as mp
 import os
 import re
 
+import click
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
@@ -235,7 +236,7 @@ def prepare_pdf(entry):
     return entry
 
 
-def prepare_pdfs(bib_db, repo):
+def main(bib_db, repo):
 
     process.check_delay(bib_db, min_status_requirement='pdf_imported')
 
@@ -290,14 +291,16 @@ def prepare_pdfs(bib_db, repo):
     return bib_db
 
 
-def main():
+@click.command()
+def cli():
     # TODO: temporary fix: remove all lines containint PDFType1Font from log.
     # https://github.com/pdfminer/pdfminer.six/issues/282
 
     bib_db = utils.load_main_refs()
     repo = init.get_repo()
-    prepare_pdfs(bib_db, repo)
-    return
+    main(bib_db, repo)
+
+    return 0
 
 
 if __name__ == '__main__':
