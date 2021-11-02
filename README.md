@@ -1,6 +1,8 @@
 # Literature review template
 
-[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/) [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+[![GitHub release](https://img.shields.io/github/v/release/geritwagner/review_template.svg)](https://github.com/geritwagner/review_template/releases/)
 
 - Git-based collaborative literature reviews
 - Easy to learn: one command, `review_template status`, provides an overview and instructions
@@ -41,7 +43,7 @@ Further information is available in the documentation (add-link).
 For the processing, the following `review_template commands` are available.
 
 ```bash
-$review_template
+/home/user/repository$review_template
 Usage: review_template [OPTIONS] COMMAND [ARGS]...
 
   Review template pipeline
@@ -54,19 +56,22 @@ Options:
 Commands:
   init         Initialize repository
   status       Show status
-  process      Process pipeline
-  man-prep     Prepare records manually
-  man-dedupe   Process duplicates manually
-  prescreen    Execute pre-screen
-  screen       Execute screen
-  pdfs         Acquire PDFs
-  pdf-check    Check PDFs
-  back-search  Execute backward search based on PDFs
-  data         Execute data extraction
+  process      Process records (automated steps)
+  importer     Import records (part of automated processing)
+  prepare      Prepare records (part of automated processing)
+  dedupe       Deduplicate records (part of automated processing)
+  man-prep     Manual preparation of records
+  man-dedupe   Manual processing of duplicates
+  prescreen    Pre-screen based on titles and abstracts
+  screen       Screen based on exclusion criteria and fulltext documents
+  pdfs         Retrieve PDFs (part of automated processing)
+  pdf-prepare  Prepare PDFs (part of automated processing)
+  back-search  Backward search based on PDFs
+  data         Extract data
   profile      Generate a sample profile
   validate     Validate changes
-  trace        Trace an entry
-  paper        Build the paper from markdown
+  trace        Trace a record
+  paper        Build the paper
 ```
 
 # We build on the shoulders of (growing) giants

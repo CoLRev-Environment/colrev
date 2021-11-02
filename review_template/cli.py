@@ -75,76 +75,100 @@ def status(ctx):
 @click.option('--reprocess',
               help='Entry ID to reprocess ("all" to reprocess all).')
 def process(ctx, reprocess):
-    """Process pipeline"""
+    """Process records (automated steps)"""
     from review_template import process
     process.main(reprocess)
 
 
+@main.command(help_priority=4)
+@click.pass_context
+def importer(ctx):
+    """Import records (part of automated processing)"""
+    from review_template import importer
+    importer.main()
+
+
 @main.command(help_priority=5)
 @click.pass_context
-def man_prep(ctx):
-    """Prepare records manually"""
-    from review_template import prepare_manual
-    prepare_manual.main()
+def prepare(ctx):
+    """Prepare records (part of automated processing)"""
+    from review_template import prepare
+    prepare.main()
 
 
 @main.command(help_priority=6)
 @click.pass_context
-def man_dedupe(ctx):
-    """Process duplicates manually"""
-    from review_template import man_dedupe
-    man_dedupe.main()
+def dedupe(ctx):
+    """Deduplicate records (part of automated processing)"""
+    from review_template import dedupe
+    dedupe.main()
 
 
 @main.command(help_priority=7)
 @click.pass_context
-def prescreen(ctx):
-    """Execute pre-screen"""
-    from review_template import screen
-    screen.prescreen()
+def man_prep(ctx):
+    """Manual preparation of records"""
+    from review_template import prepare_manual
+    prepare_manual.main()
 
 
 @main.command(help_priority=8)
 @click.pass_context
-def screen(ctx):
-    """Execute screen"""
-    from review_template import screen
-    screen.screen()
+def man_dedupe(ctx):
+    """Manual processing of duplicates"""
+    from review_template import man_dedupe
+    man_dedupe.main()
 
 
 @main.command(help_priority=9)
 @click.pass_context
-def pdfs(ctx):
-    """Acquire PDFs"""
-    from review_template import pdfs
-    pdfs.main()
+def prescreen(ctx):
+    """Pre-screen based on titles and abstracts"""
+    from review_template import screen
+    screen.prescreen()
 
 
 @main.command(help_priority=10)
 @click.pass_context
-def pdf_prepare(ctx):
-    """Prepare PDFs"""
-    from review_template import pdf_prepare
-    pdf_prepare.main()
+def screen(ctx):
+    """Screen based on exclusion criteria and fulltext documents"""
+    from review_template import screen
+    screen.screen()
 
 
 @main.command(help_priority=11)
 @click.pass_context
-def back_search(ctx):
-    """Execute backward search based on PDFs"""
-    from review_template import back_search
-    back_search.main()
+def pdfs(ctx):
+    """Retrieve PDFs  (part of automated processing)"""
+    from review_template import pdfs
+    pdfs.main()
 
 
 @main.command(help_priority=12)
 @click.pass_context
+def pdf_prepare(ctx):
+    """Prepare PDFs  (part of automated processing)"""
+    from review_template import pdf_prepare
+    pdf_prepare.main()
+
+
+@main.command(help_priority=13)
+@click.pass_context
+def back_search(ctx):
+    """Backward search based on PDFs"""
+    from review_template import back_search
+    back_search.main()
+
+
+@main.command(help_priority=14)
+@click.pass_context
 def data(ctx):
-    """Execute data extraction"""
+    """Extract data"""
     from review_template import data
     data.main()
 
 
-@main.command(help_priority=13)
+@main.command(help_priority=15)
 @click.pass_context
 def profile(ctx):
     """Generate a sample profile"""
@@ -176,7 +200,7 @@ def validate_commit(ctx, param, value):
         raise click.BadParameter('not a git commit id')
 
 
-@main.command(help_priority=14)
+@main.command(help_priority=16)
 @click.option('--scope',
               type=click.Choice(['prepare', 'merge', 'all'],
                                 case_sensitive=False),
@@ -190,19 +214,19 @@ def validate(ctx, scope, commit):
     validate.main(scope, commit)
 
 
-@main.command(help_priority=16)
+@main.command(help_priority=17)
 @click.pass_context
-@click.option('--id', help='Entry ID to trace (citation_key).', required=True)
+@click.option('--id', help='Record ID to trace (citation_key).', required=True)
 def trace(ctx, id):
-    """Trace an entry"""
+    """Trace a record"""
     from review_template import trace
     trace.main(id)
 
 
-@main.command(help_priority=17)
+@main.command(help_priority=18)
 @click.pass_context
 def paper(ctx):
-    """Build the paper from markdown"""
+    """Build the paper"""
     from review_template import paper
     paper.main()
 

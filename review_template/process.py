@@ -137,15 +137,15 @@ def main(reprocess_ids=None):
     reprocess_id(reprocess_ids, repo)
 
     try:
-        bib_db = importer.import_entries(repo)
+        bib_db = importer.main(repo)
 
-        bib_db = prepare.prepare_entries(bib_db, repo)
+        bib_db = prepare.main(bib_db, repo)
 
-        bib_db = dedupe.dedupe_entries(bib_db, repo)
+        bib_db = dedupe.main(bib_db, repo)
 
-        bib_db = pdfs.acquire_pdfs(bib_db, repo)
+        bib_db = pdfs.main(bib_db, repo)
 
-        bib_db = pdf_prepare.prepare_pdfs(bib_db, repo)
+        bib_db = pdf_prepare.main(bib_db, repo)
 
         # Note: the checks for delaying the screen
         # are implemented in the screen.py

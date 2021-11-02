@@ -9,6 +9,8 @@ import shutil
 from itertools import chain
 
 import bibtexparser
+import click
+import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -472,7 +474,7 @@ def save_imported_files(repo, bib_db):
     return True
 
 
-def import_entries(repo):
+def main(repo):
     global batch_start
     global batch_end
 
@@ -514,3 +516,14 @@ def import_entries(repo):
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d['ID'])
 
     return bib_db
+
+
+@click.command()
+def cli():
+    repo = git.Repo()
+    main(repo)
+    return 0
+
+
+if __name__ == '__main__':
+    main()

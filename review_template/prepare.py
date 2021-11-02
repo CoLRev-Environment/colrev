@@ -9,7 +9,9 @@ import re
 import sys
 import urllib
 
+import click
 import dictdiffer
+import git
 import pandas as pd
 import requests
 from fuzzywuzzy import fuzz
@@ -975,24 +977,24 @@ def prepare(entry):
     return entry
 
 
-def set_stats_beginning(db):
+def set_stats_beginning(bib_db):
     global prepared
     global need_manual_prep
-    prepared = len([x for x in db.entries
+    prepared = len([x for x in bib_db.entries
                     if 'prepared' == x.get('md_status', 'NA')])
     need_manual_prep = \
-        len([x for x in db.entries
+        len([x for x in bib_db.entries
             if 'needs_manual_preparation' == x.get('md_status', 'NA')])
     return
 
 
-def print_stats_end(db):
+def print_stats_end(bib_db):
     global prepared
     global need_manual_prep
-    prepared = len([x for x in db.entries
+    prepared = len([x for x in bib_db.entries
                     if 'prepared' == x.get('md_status', 'NA')]) - prepared
     need_manual_prep = \
-        len([x for x in db.entries
+        len([x for x in bib_db.entries
             if 'needs_manual_preparation' == x.get('md_status', 'NA')]) \
         - need_manual_prep
     if prepared > 0:
@@ -1003,11 +1005,11 @@ def print_stats_end(db):
     return
 
 
-def prepare_entries(db, repo):
+def main(bib_db, repo):
     global prepared
     global need_manual_prep
 
-    process.check_delay(db, min_status_requirement='md_imported')
+    process.check_delay(bib_db, min_status_requirement='md_imported')
     utils.reset_log()
 
     logging.info('Prepare')
@@ -1022,10 +1024,10 @@ def prepare_entries(db, repo):
         if batch_start > 1:
             logging.info('Continuing batch preparation started earlier')
 
-        set_stats_beginning(db)
+        set_stats_beginning(bib_db)
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        db.entries = pool.map(prepare, db.entries)
+        bib_db.entries = pool.map(prepare, bib_db.entries)
         pool.close()
         pool.join()
 
@@ -1036,13 +1038,13 @@ def prepare_entries(db, repo):
             logging.info('Completed preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            db = utils.set_IDs(db)
+            bib_db = utils.set_IDs(bib_db)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-            utils.save_bib_file(db, MAIN_REFERENCES)
+            utils.save_bib_file(bib_db, MAIN_REFERENCES)
             repo.index.add([MAIN_REFERENCES])
 
-            print_stats_end(db)
+            print_stats_end(bib_db)
             logging.info('Instructions on resetting entries and analyzing '
                          'preparation steps available in the documentation '
                          '(link)')
@@ -1055,4 +1057,16 @@ def prepare_entries(db, repo):
 
     print()
 
-    return db
+    return bib_db
+
+
+@click.command()
+def cli():
+    repo = git.Repo()
+    bib_db = utils.load_main_refs(mod_check=True, init=False)
+    main(bib_db, repo)
+    return 0
+
+
+if __name__ == '__main__':
+    main()
