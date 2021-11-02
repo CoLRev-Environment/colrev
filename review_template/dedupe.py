@@ -49,6 +49,17 @@ def format_authors_string(authors):
     return authors_string
 
 
+def year_similarity(y1, y2):
+    sim = 0
+    if int(y1) == int(y2):
+        sim = 1
+    elif int(y1) in [int(y1)-1, int(y1)+1]:
+        sim = 0.8
+    elif int(y1) in [int(y1)-2, int(y1)+2]:
+        sim = 0.5
+    return sim
+
+
 def get_entry_similarity(entry_a, entry_b):
     if 'title' not in entry_a:
         entry_a['title'] = ''
@@ -104,13 +115,14 @@ def get_similarity(df_a, df_b):
     author_similarity = fuzz.partial_ratio(df_a['author'], df_b['author'])/100
 
     title_similarity = \
-        fuzz.ratio(df_a['title'].lower(), df_b['title'].lower())/100
+        fuzz.partial_ratio(df_a['title'].lower(), df_b['title'].lower())/100
 
     # partial ratio (catching 2010-10 or 2001-2002)
     year_similarity = fuzz.partial_ratio(df_a['year'], df_b['year'])/100
 
     outlet_similarity = \
-        fuzz.ratio(df_a['container_title'], df_b['container_title'])/100
+        fuzz.partial_ratio(df_a['container_title'],
+                           df_b['container_title'])/100
 
     if (str(df_a['journal']) != 'nan'):
         # Note: for journals papers, we expect more details

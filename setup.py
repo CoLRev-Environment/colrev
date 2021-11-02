@@ -20,7 +20,6 @@ requirements = ['Click==8.0.1',
                 'nameparser==1.0.6',
                 'pandas==1.2.5',
                 'pdfminer.six==20211012',
-                'python_Levenshtein==0.12.2',
                 'requests==2.22.0',
                 'docker_py==1.10.6']
 # 'configparser>=5.0'
