@@ -11,7 +11,7 @@ import urllib
 
 import pandas as pd
 import requests
-from Levenshtein import ratio
+from fuzzywuzzy import fuzz
 from nameparser import HumanName
 
 from review_template import dedupe
@@ -20,6 +20,7 @@ from review_template import repo_setup
 from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
+EMAIL = repo_setup.config['EMAIL']
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 prepared, need_manual_prep = 0, 0
@@ -208,7 +209,7 @@ def homogenize_entry(entry):
     if 'doi' in entry:
         entry.update(doi=entry['doi'].replace('http://dx.doi.org/', ''))
 
-    if 'issue' in entry and 'number' not in entry:
+    if 'issue' not in entry and 'number' in entry:
         entry.update(issue=entry['number'])
         del entry['number']
 
@@ -291,10 +292,9 @@ def title_if_mostly_upper_case(input_string):
 
 
 def format_author_field(input_string):
-    # also in repo_setup.py - consider updating it separately
 
-    # DBLP appends identifiers to non-unique authors
     input_string = input_string.replace('\n', ' ')
+    # DBLP appends identifiers to non-unique authors
     input_string = str(re.sub(r'[0-9]{4}', '', input_string))
 
     names = input_string.split(' and ')
@@ -331,10 +331,8 @@ def get_container_title(entry):
         container_title = entry.get('journal', 'NA')
     if 'inproceedings' == entry['ENTRYTYPE']:
         container_title = entry.get('booktitle', 'NA')
-
     if 'book' == entry['ENTRYTYPE']:
         container_title = entry.get('title', 'NA')
-
     if 'inbook' == entry['ENTRYTYPE']:
         container_title = entry.get('booktitle', 'NA')
     return container_title
@@ -350,8 +348,100 @@ def unify_pages_field(input_string):
             .replace('----', '--')\
             .replace(' -- ', '--')\
             .rstrip('.')
-
     return input_string
+
+
+def get_metadata_from_doi(entry):
+    if 'doi' not in entry:
+        return entry
+
+    entry = retrieve_doi_metadata(entry)
+    entry.update(metadata_source='DOI.ORG')
+
+    return entry
+
+
+def json_to_entry(item):
+    # Note: the format differst between crossref and doi.org
+
+    entry = {}
+
+    if 'title' in item:
+        retrieved_title = item['title']
+        if isinstance(retrieved_title, list):
+            retrieved_title = retrieved_title[0]
+        retrieved_title = \
+            re.sub(r'\s+', ' ', str(retrieved_title)).replace('\n', ' ')
+        entry.update(title=retrieved_title)
+
+    container_title = None
+    if 'container-title' in item:
+        container_title = item['container-title']
+        if isinstance(container_title, list):
+            container_title = container_title[0]
+
+    if 'type' in item:
+        if 'journal-article' == item.get('type', 'NA'):
+            entry.update(ENTRYTYPE='article')
+            if container_title is not None:
+                entry.update(journal=container_title)
+        if 'proceedings-article' == item.get('type', 'NA'):
+            entry.update(ENTRYTYPE='inproceedings')
+            if container_title is not None:
+                entry.update(booktitle=container_title)
+        if 'book' == item.get('type', 'NA'):
+            entry.update(ENTRYTYPE='book')
+            if container_title is not None:
+                entry.update(series=container_title)
+
+    if 'DOI' in item:
+        entry.update(doi=item['DOI'])
+
+    authors = [f'{author["family"]}, {author.get("given", "")}'
+               for author in item['author']
+               if 'family' in author]
+    authors_string = ' and '.join(authors)
+    # authors_string = format_author_field(authors_string)
+    entry.update(author=authors_string)
+
+    try:
+        if 'published-print' in item:
+            date_parts = item['published-print']['date-parts']
+            entry.update(year=str(date_parts[0][0]))
+        elif 'published-online' in item:
+            date_parts = item['published-online']['date-parts']
+            entry.update(year=str(date_parts[0][0]))
+    except KeyError:
+        pass
+
+    retrieved_pages = item.get('page', '')
+    if retrieved_pages != '':
+        # DOI data often has only the first page.
+        if not entry.get('pages', 'no_pages') in retrieved_pages \
+                and '-' in retrieved_pages:
+            entry.update(pages=unify_pages_field(str(retrieved_pages)))
+    retrieved_volume = item.get('volume', '')
+    if not retrieved_volume == '':
+        entry.update(volume=str(retrieved_volume))
+
+    retrieved_issue = item.get('issue', '')
+    if 'journal-issue' in item:
+        if 'issue' in item['journal-issue']:
+            retrieved_issue = item['journal-issue']['issue']
+    if not retrieved_issue == '':
+        entry.update(issue=str(retrieved_issue))
+
+    if 'abstract' in item:
+        retrieved_abstract = item['abstract']
+        if not retrieved_abstract == '':
+            retrieved_abstract = \
+                re.sub(r'<\/?jats\:[^>]*>', ' ', retrieved_abstract)
+            retrieved_abstract = re.sub(r'\s+', ' ', retrieved_abstract)
+            retrieved_abstract = str(retrieved_abstract).replace('\n', '')\
+                .lstrip().rstrip()
+            entry.update(abstract=retrieved_abstract)
+    logging.debug(f'json_to_entry(...) : {pp.pformat(entry)}\n\n')
+    return entry
 
 
 def crossref_query(entry):
@@ -362,101 +452,136 @@ def crossref_query(entry):
     container_title = get_container_title(entry)
     container_title = container_title.replace('...', '').replace('…', '')
     author_string = entry['author'].replace('...', '').replace('…', '')
-    params = {'rows': '5', 'query.bibliographic': bibliographic,
+    params = {'rows': '5',
+              'query.bibliographic': bibliographic,
               'query.author': author_string,
               'query.container-title': container_title}
     url = api_url + urllib.parse.urlencode(params)
-    headers = {'user-agent':
-               f'{os.path.basename(__file__)} ' +
-               f'(mailto:{repo_setup.config["EMAIL"]})'}
+    headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
     ret = requests.get(url, headers=headers)
     if ret.status_code != 200:
+        logging.debug(f'crossref_query failed with status {ret.status_code}')
         return
 
     data = json.loads(ret.text)
     items = data['message']['items']
-    most_similar = {
-        'crossref_title': '',
-        'similarity': 0,
-        'doi': '',
-    }
+    most_similar = 0
+    most_similar_entry = None
     for item in items:
         if 'title' not in item:
             continue
 
-        # TODO: author
-        try:
-            title_similarity = ratio(
-                item['title'].pop().lower(),
-                entry['title'].lower(),
-            )
-            # TODO: could also be a proceedings paper...
-            container_similarity = ratio(
-                item['container-title'].pop().lower(),
-                entry['journal'].lower(),
-            )
-            weights = [0.6, 0.4]
-            similarities = [title_similarity, container_similarity]
+        retrieved_entry = json_to_entry(item)
+        # logging.debug(f'crossref_query({entry["ID"]}) retrieved '
+        #               f' {pp.pformat(retrieved_entry)}')
 
-            similarity = sum(similarities[g] * weights[g]
-                             for g in range(len(similarities)))
+        title_similarity = fuzz.partial_ratio(
+            retrieved_entry['title'].lower(),
+            entry['title'].lower(),
+        )
+        # TODO: could also be a proceedings paper...
+        container_similarity = fuzz.partial_ratio(
+            retrieved_entry['journal'].lower(),
+            entry['journal'].lower(),
+        )
+        weights = [0.6, 0.4]
+        similarities = [title_similarity, container_similarity]
 
-            result = {
-                'similarity': similarity,
-                'doi': item['DOI'],
-            }
-            if most_similar['similarity'] < result['similarity']:
-                most_similar = result
-        except KeyError:
-            pass
+        similarity = sum(similarities[g] * weights[g]
+                         for g in range(len(similarities)))
+        # logging.debug(f'entry: {pp.pformat(entry)}')
+        # logging.debug(f'similarities: {similarities}')
+        # logging.debug(f'similarity: {similarity}')
 
-    return {'success': True, 'result': most_similar}
+        if most_similar < similarity:
+            most_similar = similarity
+            most_similar_entry = retrieved_entry
+
+    return most_similar_entry
 
 
-def get_doi_from_crossref(entry):
-    if ('title' not in entry) or ('doi' in entry):
+def get_metadata_from_crossref(entry):
+    if ('title' not in entry) or ('doi' in entry) or \
+            ('metadata_source' in entry):
         return entry
 
+    logging.debug(f'get_metadata_from_crossref({entry["ID"]})')
     MAX_RETRIES_ON_ERROR = 3
     # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
     if len(entry['title']) > 35:
         try:
-            ret = crossref_query(entry)
+
+            retrieved_entry = crossref_query(entry)
             retries = 0
-            while not ret['success'] and retries < MAX_RETRIES_ON_ERROR:
+            while not retrieved_entry and retries < MAX_RETRIES_ON_ERROR:
                 retries += 1
-                ret = crossref_query(entry)
+                retrieved_entry = crossref_query(entry)
 
-            # print(ret)
-            # print('\n\n\n')
-            # dummy = entry.copy()
-            # dummy['doi'] = ret['result']['doi']
-            # dummy = retrieve_doi_metadata(dummy)
-            # print(dummy)
-            # print(dedupe.get_entry_similarity(dummy, entry.copy()))
-            # if dedupe.get_entry_similarity(dummy, entry.copy()) > 0.95:
+            if retrieved_entry is None:
+                return entry
 
-            if ret['result']['similarity'] > 0.9:
-                entry.update(doi=ret['result']['doi'])
+            similarity = dedupe.get_entry_similarity(entry.copy(),
+                                                     retrieved_entry.copy())
+            logging.debug(f'crossref similarity: {similarity}')
+            if similarity > 0.90:
+                for key, val in retrieved_entry.items():
+                    entry[key] = val
+                entry.update(metadata_source='CROSSREF')
+
         except KeyboardInterrupt:
             sys.exit()
-    logging.debug(f'get_doi_from_crossref(...): \n{pp.pformat(entry)}\n\n')
+    logging.debug(
+        f'get_metadata_from_crossref(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
+def sem_scholar_json_to_entry(item, entry):
+    retrieved_entry = {}
+    if 'authors' in item:
+        authors_string = ' and '.join([author['name']
+                                       for author in item['authors']])
+        authors_string = format_author_field(authors_string)
+        retrieved_entry.update(author=authors_string)
+    if 'abstract' in item:
+        retrieved_entry.update(abstract=item['abstract'])
+    if 'doi' in item:
+        retrieved_entry.update(doi=item['doi'])
+    if 'title' in item:
+        retrieved_entry.update(title=item['title'])
+    if 'year' in item:
+        retrieved_entry.update(year=item['year'])
+    # Note: semantic scholar does not provide data on the type of venue.
+    # we therefore use the original entrytype
+    if 'venue' in item:
+        if 'journal' in entry:
+            retrieved_entry.update(journal=item['venue'])
+        if 'booktitle' in entry:
+            retrieved_entry.update(booktitle=item['venue'])
+    if 'url' in item:
+        retrieved_entry.update(sem_scholar_id=item['url'])
+
+    keys_to_drop = []
+    for key, value in retrieved_entry.items():
+        retrieved_entry[key] =  \
+            str(value).replace('\n', ' ').lstrip().rstrip()
+        if value in ['', 'None'] or value is None:
+            keys_to_drop.append(key)
+    for key in keys_to_drop:
+        del retrieved_entry[key]
+    return retrieved_entry
+
+
 def get_metadata_from_semantic_scholar(entry):
-    if 'doi' in entry:
+    if ('metadata_source' in entry):
         return entry
 
-    search_api_url = \
-        'https://api.semanticscholar.org/graph/v1/paper/search?query='
-    url = search_api_url + entry.get('title', '').replace(' ', '+')
-    headers = {'user-agent':
-               f'{os.path.basename(__file__)} ' +
-               f'(mailto:{repo_setup.config["EMAIL"]})'}
-    ret = requests.get(url, headers=headers)
-
     try:
+        search_api_url = \
+            'https://api.semanticscholar.org/graph/v1/paper/search?query='
+        url = search_api_url + entry.get('title', '').replace(' ', '+')
+        headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
+        ret = requests.get(url, headers=headers)
+
         data = json.loads(ret.text)
         items = data['data']
         if len(items) == 0:
@@ -465,76 +590,24 @@ def get_metadata_from_semantic_scholar(entry):
             return entry
 
         paper_id = items[0]['paperId']
-
         entry_retrieval_url = \
             'https://api.semanticscholar.org/v1/paper/' + paper_id
-
         ret_ent = requests.get(entry_retrieval_url, headers=headers)
-
         item = json.loads(ret_ent.text)
-        retrieved_entry = {}
-
-        if 'authors' in item:
-            authors_string = ' and '.join([author['name']
-                                           for author in item['authors']])
-            authors_string = format_author_field(authors_string)
-            retrieved_entry.update(author=authors_string)
-        if 'abstract' in item:
-            retrieved_entry.update(abstract=item['abstract'])
-        if 'doi' in item:
-            retrieved_entry.update(doi=item['doi'])
-        if 'title' in item:
-            retrieved_entry.update(title=item['title'])
-        if 'year' in item:
-            retrieved_entry.update(year=item['year'])
-        if 'venue' in item:
-            retrieved_entry.update(venue=item['venue'])
-        if 'url' in item:
-            retrieved_entry.update(semantic_scholar_id=item['url'])
-
-        keys_to_drop = []
-        for key, value in retrieved_entry.items():
-            retrieved_entry[key] =  \
-                str(value).replace('\n', ' ').lstrip().rstrip()
-            if value in ['', 'None'] or value is None:
-                keys_to_drop.append(key)
-        for key in keys_to_drop:
-            del retrieved_entry[key]
+        retrieved_entry = sem_scholar_json_to_entry(item, entry)
 
         red_entry_copy = entry.copy()
         for key in ['volume', 'number', 'issue', 'pages']:
             if key in red_entry_copy:
                 del red_entry_copy[key]
 
-        # sim = dedupe.get_entry_similarity(red_entry_copy,
-        #                 retrieved_entry.copy())
-        # if sim > 0.7:
-        #     print(entry)
-        #     print(retrieved_entry)
-        #     print(sim)
-        #     print('\n\n\n\n')
-
-        if dedupe.get_entry_similarity(red_entry_copy,
-                                       retrieved_entry.copy()) > 0.9:
-            if 'title' in retrieved_entry:
-                entry.update(title=retrieved_entry['title'])
-            if 'doi' in retrieved_entry:
-                entry.update(doi=retrieved_entry['doi'])
-            if 'abstract' in retrieved_entry:
-                entry.update(abstract=retrieved_entry['abstract'])
-            if 'author' in retrieved_entry:
-                entry.update(author=retrieved_entry['author'])
-            if 'year' in retrieved_entry:
-                entry.update(year=retrieved_entry['year'])
-            if 'abstract' in retrieved_entry:
-                entry.update(abstract=retrieved_entry['abstract'])
-            if 'venue' in retrieved_entry:
-                if 'journal' in entry:
-                    entry.update(journal=retrieved_entry['venue'])
-                if 'booktitle' in entry:
-                    entry.update(booktitle=retrieved_entry['venue'])
-            entry.update(
-                semantic_scholar_id=retrieved_entry['semantic_scholar_id'])
+        similarity = dedupe.get_entry_similarity(red_entry_copy,
+                                                 retrieved_entry.copy())
+        logging.debug(f'scholar similarity: {similarity}')
+        if similarity > 0.9:
+            for key, val in retrieved_entry.items():
+                entry[key] = val
+            entry.update(metadata_source='SEMANTIC_SCHOLAR')
 
     except KeyError:
         pass
@@ -552,9 +625,7 @@ def get_dblp_venue(venue_string):
     venue = venue_string
     api_url = 'https://dblp.org/search/venue/api?q='
     url = api_url + venue_string.replace(' ', '+') + '&format=json'
-    headers = {'user-agent':
-               f'{os.path.basename(__file__)} ' +
-               f' (mailto:{repo_setup.config["EMAIL"]})'}
+    headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
     ret = requests.get(url, headers=headers)
     data = json.loads(ret.text)
 
@@ -568,87 +639,65 @@ def get_dblp_venue(venue_string):
     return venue
 
 
+def dblp_json_to_entry(item):
+    retrieved_entry = {}
+    if 'Journal Articles' == item['type']:
+        retrieved_entry['ENTRYTYPE'] = 'article'
+        lpos = item['key'].find('/')+1
+        rpos = item['key'].rfind('/')
+        jour = item['key'][lpos:rpos]
+        retrieved_entry['journal'] = get_dblp_venue(jour)
+    if 'Conference and Workshop Papers' == item['type']:
+        retrieved_entry['ENTRYTYPE'] = 'inproceedings'
+        retrieved_entry['booktitle'] = get_dblp_venue(item['venue'])
+
+    if 'volume' in item:
+        retrieved_entry['volume'] = item['volume']
+    if 'number' in item:
+        retrieved_entry['issue'] = item['number']
+    if 'pages' in item:
+        retrieved_entry['pages'] = item['pages']
+
+    authors = [author['text'] for author in item['authors']['author']]
+    author_string = ' and '.join(authors)
+    author_string = format_author_field(author_string)
+    retrieved_entry['author'] = author_string
+
+    if 'doi' in item:
+        retrieved_entry['doi'] = item['doi']
+    if 'url' not in item:
+        retrieved_entry['url'] = item['ee']
+
+    return retrieved_entry
+
+
 def get_metadata_from_dblp(entry):
-    if 'doi' in entry:
+    if ('metadata_source' in entry):
         return entry
 
-    api_url = 'https://dblp.org/search/publ/api?q='
-    url = api_url + entry.get('title', '').replace(' ', '+') + '&format=json'
-    headers = {'user-agent':
-               f'{os.path.basename(__file__)} ' +
-               f' (mailto:{repo_setup.config["EMAIL"]})'}
-    ret = requests.get(url, headers=headers)
-
     try:
+        api_url = 'https://dblp.org/search/publ/api?q='
+        url = api_url + \
+            entry.get('title', '').replace(' ', '+') + '&format=json'
+        headers = {'user-agent': f'{__name__}  (mailto:{EMAIL})'}
+        ret = requests.get(url, headers=headers)
 
         data = json.loads(ret.text)
         hits = data['result']['hits']['hit']
         for hit in hits:
             item = hit['info']
 
-            author_string = \
-                ' and '.join([author['text']
-                              for author in item['authors']['author']])
-            author_string = format_author_field(author_string)
+            retrieved_entry = dblp_json_to_entry(item)
 
-            author_similarity = ratio(
-                dedupe.format_authors_string(author_string)[:50],
-                dedupe.format_authors_string(entry['author'])[:50],
-            )
-            title_similarity = ratio(
-                item['title'].lower(),
-                entry['title'].lower(),
-            )
-            # container_similarity = ratio(
-            #     item['venue'].lower(),
-            #     get_container_title(entry).lower(),
-            # )
-            year_similarity = ratio(
-                item['year'],
-                entry['year'],
-            )
-            # print(f'author_similarity: {author_similarity}')
-            # print(f'title_similarity: {title_similarity}')
-            # print(f'container_similarity: {container_similarity}')
-            # print(f'year_similarity: {year_similarity}')
-
-            weights = [0.4, 0.3, 0.3]
-            similarities = [title_similarity,
-                            author_similarity, year_similarity]
-
-            similarity = sum(similarities[g] * weights[g]
-                             for g in range(len(similarities)))
-
-            if similarity > 0.95:
-                if 'Journal Articles' == item['type']:
-                    if 'booktitle' in entry:
-                        del entry['booktitle']
-                    entry['ENTRYTYPE'] = 'article'
-                    lpos = item['key'].find('/')+1
-                    rpos = item['key'].rfind('/')
-                    jour = item['key'][lpos:rpos]
-                    entry['journal'] = get_dblp_venue(jour)
-                    entry['author'] = author_string
-                    entry['volume'] = item['volume']
-                    if 'number' in item:
-                        entry['issue'] = item['number']
-                    if 'pages' in item:
-                        entry['pages'] = item['pages']
-                    # Note: we may think of a better variable name:
-                    entry['complete_based_on_doi'] = 'True'
-                if 'Conference and Workshop Papers' == item['type']:
-                    if 'journal' in entry:
-                        del entry['journal']
-                    entry['ENTRYTYPE'] = 'inproceedings'
-                    entry['author'] = author_string
-                    entry['booktitle'] = get_dblp_venue(item['venue'])
-                    # Note: we may think of a better variable name:
-                    entry['complete_based_on_doi'] = 'True'
-                if 'doi' in item:
-                    entry['doi'] = item['doi']
-                if 'url' not in entry:
-                    entry['url'] = item['ee']
+            similarity = dedupe.get_entry_similarity(entry.copy(),
+                                                     retrieved_entry.copy())
+            logging.debug(f'dblp similarity: {similarity}')
+            if similarity > 0.90:
+                for key, val in retrieved_entry.items():
+                    entry[key] = val
                 entry['dblp_key'] = 'https://dblp.org/rec/' + item['key']
+                entry.update(metadata_source='DBLP')
+
     except KeyError:
         pass
     except UnicodeEncodeError:
@@ -663,35 +712,74 @@ def get_metadata_from_dblp(entry):
 doi_regex = re.compile(r'10\.\d{4,9}/[-._;/:A-Za-z0-9]*')
 
 
-def get_doi_from_links(entry):
-    if 'doi' in entry:
+def retrieve_doi_metadata(entry):
+    if 'doi' not in entry:
         return entry
 
-    url = ''
-    url = entry.get('url', entry.get('fulltext', ''))
-    if url != '':
+    # for testing:
+    # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
+    # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
+
+    try:
+        url = 'http://dx.doi.org/' + entry['doi']
+        headers = {'accept': 'application/vnd.citationstyles.csl+json'}
+        r = requests.get(url, headers=headers)
+        if r.status_code != 200:
+            logging.info(f' {entry["ID"]}'.ljust(18, ' ') + 'metadata for ' +
+                         f'doi  {entry["doi"]} not (yet) available')
+            return entry
+
+        # For exceptions:
+        orig_entry = entry.copy()
+
+        retrieved_json = json.loads(r.text)
+        retrieved_entry = json_to_entry(retrieved_json)
+        for key, val in retrieved_entry.items():
+            entry[key] = val
+
+    # except IndexError:
+    # except json.decoder.JSONDecodeError:
+    # except TypeError:
+    except requests.exceptions.ConnectionError:
+        logging.error(f'ConnectionError: {entry["ID"]}')
+        return orig_entry
+        pass
+    logging.debug(f'retrieve_doi_metadata(...): \n{pp.pformat(entry)}\n\n')
+    return entry
+
+
+def get_metadata_from_urls(entry):
+    if ('metadata_source' in entry):
+        return entry
+
+    url = entry.get('url', entry.get('fulltext', 'NA'))
+    if 'NA' != url:
         try:
-            r = requests.get(url)
-            res = re.findall(doi_regex, r.text)
+            headers = {'user-agent': f'{__name__}  (mailto:{EMAIL})'}
+            ret = requests.get(url, headers=headers)
+            res = re.findall(doi_regex, ret.text)
             if res:
                 if len(res) == 1:
                     ret_doi = res[0]
-                    entry['doi'] = ret_doi
                 else:
                     counter = collections.Counter(res)
                     ret_doi = counter.most_common(1)[0][0]
-                    entry['doi'] = ret_doi
 
-                # print('  - TODO: retrieve meta-data and valdiate, '
-                #       'especially if multiple dois matched')
-                doi_entry = {'doi': entry['doi'], 'ID': entry['ID']}
-                doi_entry = retrieve_doi_metadata(doi_entry)
-                if dedupe.get_entry_similarity(entry.copy(), doi_entry) < 0.95:
-                    if 'doi' in entry:
-                        del entry['doi']
+                if not ret_doi:
+                    return entry
 
-                if 'doi' in entry:
-                    logging.info(f'Added doi from website: {entry["doi"]}')
+                # TODO: check multiple dois if applicable
+                retrieved_entry = {'doi': ret_doi, 'ID': entry['ID']}
+                retrieved_entry = retrieve_doi_metadata(retrieved_entry)
+                similarity = \
+                    dedupe.get_entry_similarity(entry.copy(), retrieved_entry)
+                if similarity > 0.95:
+                    for key, val in retrieved_entry.items():
+                        entry[key] = val
+
+                    logging.info('Retrieved metadata based on doi from'
+                                 f' website: {entry["doi"]}')
+                    entry.update(metadata_source='LINKED_URL')
 
         except requests.exceptions.ConnectionError:
             return entry
@@ -700,161 +788,7 @@ def get_doi_from_links(entry):
             print(f'exception: {e}')
             return entry
             pass
-    logging.debug(f'get_doi-from_links(...): \n{pp.pformat(entry)}\n\n')
-    return entry
-
-
-def retrieve_doi_metadata(entry):
-    # for testing:
-    # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
-    # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
-
-    if 'doi' not in entry:
-        return entry
-
-    try:
-        url = 'http://dx.doi.org/' + entry['doi']
-        headers = {'accept': 'application/vnd.citationstyles.csl+json'}
-        r = requests.get(url, headers=headers)
-        if r.status_code != 200:
-            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
-                         f'metadata for doi {entry["doi"]} '
-                         'not (yet) available')
-            return entry
-
-        # For exceptions:
-        orig_entry = entry.copy()
-
-        full_data = r.text
-        retrieved_record = json.loads(full_data)
-        if 'type' in retrieved_record:
-            if 'journal-article' == retrieved_record.get('type', 'NA'):
-                entry['ENTRYTYPE'] = 'article'
-            if 'proceedings-article' == retrieved_record.get('type', 'NA'):
-                entry['ENTRYTYPE'] = 'inproceedings'
-            if 'book' == retrieved_record.get('type', 'NA'):
-                entry['ENTRYTYPE'] = 'book'
-        author_string = ''
-        for author in retrieved_record.get('author', ''):
-            if 'family' not in author:
-                continue
-            if '' != author_string:
-                author_string = author_string + ' and '
-            author_given = author.get('given', '')
-            # Use local given name when no given name is provided by doi
-            if '' == author_given:
-                authors = entry['author'].split(' and ')
-                local_author_string = [x for x in authors
-                                       if author.get('family', '').lower()
-                                       in x.lower()]
-                local_author = HumanName(local_author_string.pop())
-
-                author_string = author_string + \
-                    author.get('family', '') + ', ' + \
-                    local_author.first + ' ' + local_author.middle
-                # Note: if there is an exception, use:
-                # author_string = author_string + \
-                # author.get('family', '')
-            else:
-                author_string = author_string + \
-                    author.get('family', '') + ', ' + \
-                    author.get('given', '')
-
-        if not author_string == '':
-            if mostly_upper_case(author_string
-                                 .replace(' and ', '')
-                                 .replace('Jr', '')):
-
-                names = author_string.split(' and ')
-                entry.update(author='')
-                for name in names:
-                    # Note: https://github.com/derek73/python-nameparser
-                    # is very effective (maybe not perfect)
-                    parsed_name = HumanName(name)
-                    parsed_name.string_format = \
-                        '{last} {suffix}, {first} ({nickname}) {middle}'
-                    parsed_name.capitalize(force=True)
-                    entry.update(author=entry['author'] + ' and ' +
-                                 str(parsed_name).replace(' , ', ', '))
-                if entry['author'].startswith(' and '):
-                    entry.update(author=entry['author'][5:]
-                                 .rstrip()
-                                 .replace('  ', ' '))
-            else:
-                entry.update(author=str(
-                    author_string).rstrip().replace('  ', ' '))
-
-        retrieved_title = retrieved_record.get('title', '')
-        if not retrieved_title == '':
-            retrieved_title = \
-                re.sub(r'\s+', ' ', str(retrieved_title)).replace('\n', ' ')
-            entry.update(title=retrieved_title)
-        try:
-            if 'published-print' in retrieved_record:
-                date_parts = retrieved_record['published-print']['date-parts']
-                entry.update(year=str(date_parts[0][0]))
-            elif 'published-online' in retrieved_record:
-                date_parts = retrieved_record['published-online']['date-parts']
-                entry.update(year=str(date_parts[0][0]))
-        except KeyError:
-            pass
-
-        retrieved_pages = retrieved_record.get('page', '')
-        if retrieved_pages != '':
-            # DOI data often has only the first page.
-            if not entry.get('pages', 'no_pages') in retrieved_pages \
-                    and '-' in retrieved_pages:
-                entry.update(pages=unify_pages_field(str(retrieved_pages)))
-        retrieved_volume = retrieved_record.get('volume', '')
-        if not retrieved_volume == '':
-            entry.update(volume=str(retrieved_volume))
-
-        retrieved_issue = retrieved_record.get('issue', '')
-        if 'journal-issue' in retrieved_record:
-            if 'issue' in retrieved_record['journal-issue']:
-                retrieved_issue = retrieved_record['journal-issue']['issue']
-        if not retrieved_issue == '':
-            entry.update(issue=str(retrieved_issue))
-
-        retrieved_container_title = \
-            str(retrieved_record.get('container-title', ''))
-        if not retrieved_container_title == '':
-            if 'journal' in entry:
-                entry.update(journal=retrieved_container_title)
-            elif 'booktitle' in entry:
-                entry.update(booktitle=retrieved_container_title)
-            elif 'series' in entry:
-                entry.update(series=retrieved_container_title)
-
-        if 'abstract' not in entry:
-            retrieved_abstract = retrieved_record.get('abstract', '')
-            if not retrieved_abstract == '':
-                retrieved_abstract = \
-                    re.sub(r'<\/?jats\:[^>]*>', ' ', retrieved_abstract)
-                retrieved_abstract = re.sub(r'\s+', ' ', retrieved_abstract)
-                retrieved_abstract = str(retrieved_abstract).replace('\n', '')\
-                    .lstrip().rstrip()
-                entry.update(abstract=retrieved_abstract)
-
-    # except IndexError:
-    #     logging.error(f'Index error (authors?) for {entry["ID"]}')
-    #     return orig_entry
-    #     pass
-    # except json.decoder.JSONDecodeError:
-    #     logging.error(f'{entry.get("ID", "NO_ID")}'.ljust(17, ' ') +
-    #                   f'DOI retrieval error ({entry["doi"]})')
-    #     return orig_entry
-    #     pass
-    # except TypeError:
-    #     logging.error(f'Type error: {entry["ID"]}')
-    #     return orig_entry
-    #     pass
-    except requests.exceptions.ConnectionError:
-        logging.error(f'ConnectionError: {entry["ID"]}')
-        return orig_entry
-        pass
-    entry['complete_based_on_doi'] = 'True'
-    logging.debug(f'retrieve_doi_metadata(...): \n{pp.pformat(entry)}\n\n')
+    logging.debug(f'get_metadata_from_urls(...): \n{pp.pformat(entry)}\n\n')
     return entry
 
 
@@ -891,9 +825,10 @@ def is_complete(entry):
     return sufficiently_complete
 
 
-def is_doi_complete(entry):
-    # Note: complete_based_on_doi is set at the end of retrieve_doi_metadata
-    return 'True' == entry.get('complete_based_on_doi', 'NA')
+def is_complete_metadata_source(entry):
+    # Note: metadata_source is set at the end of each procedure
+    # that completes/corrects metadata based on an external source
+    return 'metadata_source' in entry
 
 
 entry_field_inconsistencies = \
@@ -955,8 +890,8 @@ fields_to_keep = [
     'book-author', 'keywords', 'file',
     'rev_status', 'md_status', 'pdf_status',
     'fulltext', 'origin',
-    'dblp_key', 'semantic_scholar_id',
-    'url'
+    'dblp_key', 'sem_scholar_id',
+    'url', 'metadata_source'
 ]
 fields_to_drop = [
     'type', 'organization',
@@ -971,8 +906,7 @@ fields_to_drop = [
     'web-of-science-categories', 'number-of-cited-references',
     'times-cited', 'journal-iso', 'oa', 'keywords-plus',
     'funding-text', 'funding-acknowledgement', 'day',
-    'related', 'bibsource', 'timestamp', 'biburl',
-    'complete_based_on_doi'
+    'related', 'bibsource', 'timestamp', 'biburl'
 ]
 
 
@@ -994,7 +928,7 @@ def log_notifications(entry, unprepared_entry):
         logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                      f'Change score: {round(change, 2)}')
 
-    if not (is_complete(entry) or is_doi_complete(entry)):
+    if not (is_complete(entry) or is_complete_metadata_source(entry)):
         logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
                      f'{str(entry["ENTRYTYPE"]).title()} '
                      f'missing {missing_fields(entry)}')
@@ -1011,7 +945,6 @@ def log_notifications(entry, unprepared_entry):
 
 def prepare(entry):
     global current_batch_counter
-    logging.debug(f'prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
 
     if 'imported' != entry['md_status']:
         return entry
@@ -1021,6 +954,8 @@ def prepare(entry):
             return entry
         else:
             current_batch_counter.value += 1
+
+    logging.debug(f'prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
 
     unprepared_entry = entry.copy()
 
@@ -1034,24 +969,25 @@ def prepare(entry):
 
     # Note: we require (almost) perfect matches for the following.
     # Cases with higher dissimilarity will be handled in the man_prep.py
-    entry = get_doi_from_crossref(entry)
+
+    entry = get_metadata_from_doi(entry)
+
+    entry = get_metadata_from_crossref(entry)
 
     entry = get_metadata_from_dblp(entry)
 
     entry = get_metadata_from_semantic_scholar(entry)
 
-    entry = get_doi_from_links(entry)
+    entry = get_metadata_from_urls(entry)
 
-    entry = retrieve_doi_metadata(entry)
-
-    if (is_complete(entry) or is_doi_complete(entry)) and \
+    if (is_complete(entry) or is_complete_metadata_source(entry)) and \
             not has_inconsistent_fields(entry) and \
             not has_incomplete_fields(entry):
         entry = drop_fields(entry)
         entry.update(md_status='prepared')
     else:
-        if 'complete_based_on_doi' in entry:
-            del entry['complete_based_on_doi']
+        # if 'metadata_source' in entry:
+        #     del entry['metadata_source']
         log_notifications(entry, unprepared_entry)
         entry.update(md_status='needs_manual_preparation')
 
@@ -1126,7 +1062,9 @@ def prepare_entries(db, repo):
             repo.index.add([MAIN_REFERENCES])
 
             print_stats_end(db)
-
+            logging.info('Instructions on resetting entries and analyzing '
+                         'preparation steps available in the documentation '
+                         '(link)')
             in_process = utils.create_commit(repo, '⚙️ Prepare records')
 
         if batch_end < BATCH_SIZE or batch_end == 0:

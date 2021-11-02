@@ -447,9 +447,8 @@ def update_status_yaml():
 
 
 def reset_log():
-    if not repo_setup.config['DEBUG_MODE']:
-        with open('report.log', 'r+') as f:
-            f.truncate(0)
+    with open('report.log', 'r+') as f:
+        f.truncate(0)
     return
 
 
