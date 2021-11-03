@@ -26,7 +26,7 @@ def customsort(dict1, key_order):
     return sorted_dict
 
 
-def get_exclusion_criteria(ec_string):
+def get_excl_criteria(ec_string):
     criteria = []
     for exclusion_criterion in ec_string.split(';'):
         exclusion_criterion = exclusion_criterion.split('=')[0]
@@ -135,17 +135,16 @@ def screen():
 
     pp = pprint.PrettyPrinter(indent=4, width=140)
 
-    ec_string = [x.get('exclusion_criteria') for x in bib_db.entries
-                 if 'exclusion_criteria' in x]
+    ec_string = [x.get('excl_criteria') for x in bib_db.entries
+                 if 'excl_criteria' in x]
 
     if ec_string:
-        exclusion_criteria = get_exclusion_criteria(ec_string[0])
+        excl_criteria = get_excl_criteria(ec_string[0])
     else:
-        exclusion_criteria = \
-            input('Provide exclusion criteria (comma separated)')
-        exclusion_criteria = exclusion_criteria.split(',')
+        excl_criteria = input('Provide exclusion criteria (comma separated)')
+        excl_criteria = excl_criteria.split(',')
 
-    exclusion_criteria_available = 0 < len(exclusion_criteria)
+    excl_criteria_available = (0 < len(excl_criteria))
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
     try:
         for entry in bib_db.entries:
@@ -157,12 +156,19 @@ def screen():
             reventry = customsort(entry, desired_order_list)
             pp.pprint(reventry)
 
-            if exclusion_criteria_available:
+            if excl_criteria_available:
                 decisions = []
-                for exclusion_criterion in exclusion_criteria:
+                for exclusion_criterion in excl_criteria:
                     decision = 'TODO'
 
                     while decision not in ['y', 'n']:
+                        # if [''] == excl_criteria:
+                        #     decision = \
+                        #       nput(f'Include {exclusion_criterion} (y/n)?')
+                        #     decision = \
+                        #         decision.replace('y', 'no')\
+                        #                 .replace('n', 'yes')
+                        # else:
                         decision = \
                             input(f'Violates {exclusion_criterion} (y/n)?')
                     decision = \
@@ -183,7 +189,7 @@ def screen():
                     if ec_field != '':
                         ec_field = f'{ec_field};'
                     ec_field = f'{ec_field}{exclusion_criterion}={decision}'
-                entry['exclusion_criteria'] = ec_field.replace(' ', '')
+                entry['excl_criteria'] = ec_field.replace(' ', '')
             else:
                 decision = 'TODO'
                 while decision not in ['y', 'n']:

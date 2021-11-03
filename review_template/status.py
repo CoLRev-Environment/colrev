@@ -63,6 +63,32 @@ def get_nr_search():
     return number_search
 
 
+def get_completeness_condition():
+    stat = get_status_freq()
+    completeness_condition = True
+    if 0 != stat['review_status']['currently']['need_synthesis']:
+        completeness_condition = False
+    if 0 != stat['review_status']['currently']['need_synthesis']:
+        completeness_condition = False
+    if 0 != stat['metadata_status']['currently']['non_imported']:
+        completeness_condition = False
+    if 0 != stat['metadata_status']['currently']['need_man_prep']:
+        completeness_condition = False
+    if 0 != stat['metadata_status']['currently']['need_man_dedupe']:
+        completeness_condition = False
+    if 0 != stat['pdf_status']['currently']['need_retrieval']:
+        completeness_condition = False
+    if 0 != stat['pdf_status']['currently']['need_man_prep']:
+        completeness_condition = False
+    if 0 != stat['review_status']['currently']['need_prescreen']:
+        completeness_condition = False
+    if 0 != stat['review_status']['currently']['need_screen']:
+        completeness_condition = False
+    if 0 != stat['review_status']['currently']['need_synthesis']:
+        completeness_condition = False
+    return completeness_condition
+
+
 def get_status_freq():
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
@@ -98,7 +124,7 @@ def get_status_freq():
     rev_synthesized = 0
 
     entry_links = 0
-    exclusion_criteria = []
+    excl_criteria = []
 
     if os.path.exists(MAIN_REFERENCES):
         with open(MAIN_REFERENCES) as f:
@@ -143,17 +169,17 @@ def get_status_freq():
                     nr_entry_links = line.count(';')
                     entry_links += nr_entry_links + 1
                     md_duplicates_removed += nr_entry_links
-                if ' exclusion_criteria ' in line:
-                    exclusion_criteria_field = \
+                if ' excl_criteria ' in line:
+                    excl_criteria_field = \
                         line[line.find('{')+1:line.find('}')]
-                    exclusion_criteria.append(exclusion_criteria_field)
+                    excl_criteria.append(excl_criteria_field)
                 line = f.readline()
 
     exclusion_statistics = {}
-    if exclusion_criteria:
-        criteria = screen.get_exclusion_criteria(exclusion_criteria[0])
+    if excl_criteria:
+        criteria = screen.get_excl_criteria(excl_criteria[0])
         exclusion_statistics = {crit: 0 for crit in criteria}
-        for exclusion_case in exclusion_criteria:
+        for exclusion_case in excl_criteria:
             for crit in criteria:
                 if crit+'=yes' in exclusion_case:
                     exclusion_statistics[crit] += 1

@@ -340,7 +340,7 @@ def save_bib_file(bib_db, target_file=None):
         'rev_status',
         'md_status',
         'pdf_status',
-        'exclusion_criteria',
+        'excl_criteria',
         'doi',
         'author',
         'booktitle',
@@ -429,28 +429,8 @@ def get_commit_report(script_name=None):
     report = report + '- Traceability of records: '.ljust(32, ' ') + 'YES\n'
     report = \
         report + '- Consistency (based on hooks): '.ljust(32, ' ') + 'YES\n'
-    stat = status.get_status_freq()
-    completeness_condition = True
-    if 0 != stat['review_status']['currently']['need_synthesis']:
-        completeness_condition = False
-    if 0 != stat['review_status']['currently']['need_synthesis']:
-        completeness_condition = False
-    if 0 != stat['metadata_status']['currently']['non_imported']:
-        completeness_condition = False
-    if 0 != stat['metadata_status']['currently']['need_man_prep']:
-        completeness_condition = False
-    if 0 != stat['metadata_status']['currently']['need_man_dedupe']:
-        completeness_condition = False
-    if 0 != stat['pdf_status']['currently']['need_retrieval']:
-        completeness_condition = False
-    if 0 != stat['pdf_status']['currently']['need_man_prep']:
-        completeness_condition = False
-    if 0 != stat['review_status']['currently']['need_prescreen']:
-        completeness_condition = False
-    if 0 != stat['review_status']['currently']['need_screen']:
-        completeness_condition = False
-    if 0 != stat['review_status']['currently']['need_synthesis']:
-        completeness_condition = False
+
+    completeness_condition = status.get_completeness_condition()
 
     if completeness_condition:
         report = \
