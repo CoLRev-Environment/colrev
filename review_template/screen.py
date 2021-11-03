@@ -14,7 +14,7 @@ from review_template import utils
 
 desired_order_list = ['ENTRYTYPE', 'ID', 'year', 'author',
                       'title', 'journal', 'booktitle',
-                      'volume', 'issue', 'doi',
+                      'volume', 'number', 'doi',
                       'link', 'url', 'fulltext']
 
 

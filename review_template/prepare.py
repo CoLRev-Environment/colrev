@@ -162,7 +162,7 @@ def homogenize_entry(entry):
     fields_to_process = [
         'author', 'year', 'title',
         'journal', 'booktitle', 'series',
-        'volume', 'issue', 'pages', 'doi',
+        'volume', 'number', 'pages', 'doi',
         'abstract'
     ]
     for field in fields_to_process:
@@ -211,9 +211,9 @@ def homogenize_entry(entry):
     if 'doi' in entry:
         entry.update(doi=entry['doi'].replace('http://dx.doi.org/', ''))
 
-    if 'issue' not in entry and 'number' in entry:
-        entry.update(issue=entry['number'])
-        del entry['number']
+    if 'number' not in entry and 'issue' in entry:
+        entry.update(number=entry['issue'])
+        del entry['issue']
 
     return entry
 
@@ -423,12 +423,12 @@ def json_to_entry(item):
     if not retrieved_volume == '':
         entry.update(volume=str(retrieved_volume))
 
-    retrieved_issue = item.get('issue', '')
+    retrieved_number = item.get('issue', '')
     if 'journal-issue' in item:
         if 'issue' in item['journal-issue']:
-            retrieved_issue = item['journal-issue']['issue']
-    if not retrieved_issue == '':
-        entry.update(issue=str(retrieved_issue))
+            retrieved_number = item['journal-issue']['issue']
+    if not retrieved_number == '':
+        entry.update(number=str(retrieved_number))
 
     if 'abstract' in item:
         retrieved_abstract = item['abstract']
@@ -593,7 +593,7 @@ def get_md_from_sem_scholar(entry):
         retrieved_entry = sem_scholar_json_to_entry(item, entry)
 
         red_entry_copy = entry.copy()
-        for key in ['volume', 'number', 'issue', 'pages']:
+        for key in ['volume', 'number', 'number', 'pages']:
             if key in red_entry_copy:
                 del red_entry_copy[key]
 
@@ -658,7 +658,7 @@ def dblp_json_to_entry(item):
     if 'volume' in item:
         retrieved_entry['volume'] = item['volume']
     if 'number' in item:
-        retrieved_entry['issue'] = item['number']
+        retrieved_entry['number'] = item['number']
     if 'pages' in item:
         retrieved_entry['pages'] = item['pages']
 
@@ -797,7 +797,7 @@ def get_md_from_urls(entry):
 
 # Based on https://en.wikipedia.org/wiki/BibTeX
 entry_field_requirements = \
-    {'article': ['author', 'title', 'journal', 'year', 'volume', 'issue'],
+    {'article': ['author', 'title', 'journal', 'year', 'volume', 'number'],
      'inproceedings': ['author', 'title', 'booktitle', 'year'],
      'incollection': ['author', 'title', 'booktitle', 'publisher', 'year'],
      'inbook': ['author', 'title', 'chapter', 'publisher', 'year'],
@@ -887,7 +887,7 @@ fields_to_keep = [
     'ID', 'ENTRYTYPE',
     'author', 'year', 'title',
     'journal', 'booktitle', 'series',
-    'volume', 'issue', 'pages', 'doi',
+    'volume', 'number', 'pages', 'doi',
     'abstract', 'school',
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
