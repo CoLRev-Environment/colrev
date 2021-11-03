@@ -25,6 +25,7 @@ from review_template import utils
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 EMAIL = repo_setup.config['EMAIL']
 pp = pprint.PrettyPrinter(indent=4, width=140)
+PAD = 0
 
 prepared, need_manual_prep = 0, 0
 
@@ -108,7 +109,7 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'Set from {prior_e_type} to phdthesis '
                      '("dissertation" in fulltext link)')
         # TODO: if school is not set: using named entity recognition or
@@ -118,7 +119,7 @@ def correct_entrytype(entry):
             entry['ENTRYTYPE'] != 'phdthesis':
         prior_e_type = entry['ENTRYTYPE']
         entry.update(ENTRYTYPE='phdthesis')
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'Set from {prior_e_type} to phdthesis '
                      '("thesis" in fulltext link)')
         # TODO: if school is not set: using named entity recognition or
@@ -204,7 +205,7 @@ def homogenize_entry(entry):
         if not re.match(r'^\d*$', entry['pages']) and \
                 not re.match(r'^\d*--\d*$', entry['pages']) and\
                 not re.match(r'^[xivXIV]*--[xivXIV]*$', entry['pages']):
-            logging.info(f' {entry["ID"]}:'.ljust(18, ' ') +
+            logging.info(f' {entry["ID"]}:'.ljust(PAD, ' ') +
                          f'Unusual pages: {entry["pages"]}')
 
     if 'doi' in entry:
@@ -322,14 +323,17 @@ def format_author_field(input_string):
 
 def get_container_title(entry):
     container_title = 'NA'
-    if 'article' == entry['ENTRYTYPE']:
-        container_title = entry.get('journal', 'NA')
-    if 'inproceedings' == entry['ENTRYTYPE']:
-        container_title = entry.get('booktitle', 'NA')
-    if 'book' == entry['ENTRYTYPE']:
-        container_title = entry.get('title', 'NA')
-    if 'inbook' == entry['ENTRYTYPE']:
-        container_title = entry.get('booktitle', 'NA')
+    if 'ENTRYTYPE' not in entry:
+        container_title = entry.get('journal', entry.get('booktitle', 'NA'))
+    else:
+        if 'article' == entry['ENTRYTYPE']:
+            container_title = entry.get('journal', 'NA')
+        if 'inproceedings' == entry['ENTRYTYPE']:
+            container_title = entry.get('booktitle', 'NA')
+        if 'book' == entry['ENTRYTYPE']:
+            container_title = entry.get('title', 'NA')
+        if 'inbook' == entry['ENTRYTYPE']:
+            container_title = entry.get('booktitle', 'NA')
     return container_title
 
 
@@ -452,44 +456,46 @@ def crossref_query(entry):
               'query.container-title': container_title}
     url = api_url + urllib.parse.urlencode(params)
     headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
-    ret = requests.get(url, headers=headers)
-    if ret.status_code != 200:
-        logging.debug(f'crossref_query failed with status {ret.status_code}')
-        return
+    try:
+        ret = requests.get(url, headers=headers)
+        if ret.status_code != 200:
+            logging.debug(
+                f'crossref_query failed with status {ret.status_code}')
+            return None
 
-    data = json.loads(ret.text)
-    items = data['message']['items']
-    most_similar = 0
-    most_similar_entry = None
-    for item in items:
-        if 'title' not in item:
-            continue
+        data = json.loads(ret.text)
+        items = data['message']['items']
+        most_similar = 0
+        most_similar_entry = None
+        for item in items:
+            if 'title' not in item:
+                continue
 
-        retrieved_entry = json_to_entry(item)
-        # logging.debug(f'crossref_query({entry["ID"]}) retrieved '
-        #               f' {pp.pformat(retrieved_entry)}')
+            retrieved_entry = json_to_entry(item)
 
-        title_similarity = fuzz.partial_ratio(
-            retrieved_entry['title'].lower(),
-            entry['title'].lower(),
-        )
-        # TODO: could also be a proceedings paper...
-        container_similarity = fuzz.partial_ratio(
-            retrieved_entry['journal'].lower(),
-            entry['journal'].lower(),
-        )
-        weights = [0.6, 0.4]
-        similarities = [title_similarity, container_similarity]
+            title_similarity = fuzz.partial_ratio(
+                retrieved_entry['title'].lower(),
+                entry['title'].lower(),
+            )
+            container_similarity = fuzz.partial_ratio(
+                get_container_title(retrieved_entry).lower(),
+                get_container_title(entry).lower(),
+            )
+            weights = [0.6, 0.4]
+            similarities = [title_similarity, container_similarity]
 
-        similarity = sum(similarities[g] * weights[g]
-                         for g in range(len(similarities)))
-        # logging.debug(f'entry: {pp.pformat(entry)}')
-        # logging.debug(f'similarities: {similarities}')
-        # logging.debug(f'similarity: {similarity}')
+            similarity = sum(similarities[g] * weights[g]
+                             for g in range(len(similarities)))
+            # logging.debug(f'entry: {pp.pformat(entry)}')
+            # logging.debug(f'similarities: {similarities}')
+            # logging.debug(f'similarity: {similarity}')
 
-        if most_similar < similarity:
-            most_similar = similarity
-            most_similar_entry = retrieved_entry
+            if most_similar < similarity:
+                most_similar = similarity
+                most_similar_entry = retrieved_entry
+    except requests.exceptions.ConnectionError:
+        logging.error('requests.exceptions.ConnectionError in crossref_query')
+        return None
 
     return most_similar_entry
 
@@ -530,7 +536,8 @@ def sem_scholar_json_to_entry(item, entry):
     retrieved_entry = {}
     if 'authors' in item:
         authors_string = ' and '.join([author['name']
-                                       for author in item['authors']])
+                                       for author in item['authors']
+                                       if 'name' in author])
         authors_string = format_author_field(authors_string)
         retrieved_entry.update(author=authors_string)
     if 'abstract' in item:
@@ -605,6 +612,10 @@ def get_md_from_sem_scholar(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
+    except requests.exceptions.ConnectionError:
+        logging.error('requests.exceptions.ConnectionError '
+                      'in get_md_from_sem_scholar')
+        pass
     return entry
 
 
@@ -613,20 +624,26 @@ def get_dblp_venue(venue_string):
     api_url = 'https://dblp.org/search/venue/api?q='
     url = api_url + venue_string.replace(' ', '+') + '&format=json'
     headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
-    ret = requests.get(url, headers=headers)
-    data = json.loads(ret.text)
+    try:
+        ret = requests.get(url, headers=headers)
+        data = json.loads(ret.text)
 
-    hits = data['result']['hits']['hit']
-    for hit in hits:
-        if f'/{venue_string.lower()}/' in hit['info']['url']:
-            venue = hit['info']['venue']
-            break
+        hits = data['result']['hits']['hit']
+        for hit in hits:
+            if f'/{venue_string.lower()}/' in hit['info']['url']:
+                venue = hit['info']['venue']
+                break
 
-    venue = re.sub(r' \(.*?\)', '', venue)
+        venue = re.sub(r' \(.*?\)', '', venue)
+    except requests.exceptions.ConnectionError:
+        logging.info('requests.exceptions.ConnectionError in get_dblp_venue()')
+        pass
     return venue
 
 
 def dblp_json_to_entry(item):
+    # To test in browser:
+    # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
     retrieved_entry = {}
     if 'Journal Articles' == item['type']:
         retrieved_entry['ENTRYTYPE'] = 'article'
@@ -645,10 +662,13 @@ def dblp_json_to_entry(item):
     if 'pages' in item:
         retrieved_entry['pages'] = item['pages']
 
-    authors = [author['text'] for author in item['authors']['author']]
-    author_string = ' and '.join(authors)
-    author_string = format_author_field(author_string)
-    retrieved_entry['author'] = author_string
+    if 'author' in item['authors']:
+        authors = [author for author in item['authors']['author']
+                   if isinstance(author, dict)]
+        authors = [x['text'] for x in authors if 'text' in x]
+        author_string = ' and '.join(authors)
+        author_string = format_author_field(author_string)
+        retrieved_entry['author'] = author_string
 
     if 'doi' in item:
         retrieved_entry['doi'] = item['doi']
@@ -689,6 +709,9 @@ def get_md_from_dblp(entry):
         logging.error(
             'UnicodeEncodeError - this needs to be fixed at some time')
         pass
+    except requests.exceptions.ConnectionError:
+        logging.error('requests.exceptions.ConnectionError in crossref_query')
+        return entry
     return entry
 
 
@@ -709,7 +732,7 @@ def retrieve_doi_metadata(entry):
         headers = {'accept': 'application/vnd.citationstyles.csl+json'}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            logging.info(f' {entry["ID"]}'.ljust(18, ' ') + 'metadata for ' +
+            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') + 'metadata for ' +
                          f'doi  {entry["doi"]} not (yet) available')
             return entry
 
@@ -905,20 +928,20 @@ def drop_fields(entry):
 def log_notifications(entry, unprepared_entry):
     change = 1 - dedupe.get_entry_similarity(entry.copy(), unprepared_entry)
     if change > 0.1:
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'Change score: {round(change, 2)}')
 
     if not (is_complete(entry) or is_complete_metadata_source(entry)):
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'{str(entry["ENTRYTYPE"]).title()} '
                      f'missing {missing_fields(entry)}')
     if has_inconsistent_fields(entry):
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'{str(entry["ENTRYTYPE"]).title()} '
                      f'with {get_inconsistencies(entry)} field(s)'
                      ' (inconsistent')
     if has_incomplete_fields(entry):
-        logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                      f'Incomplete fields {get_incomplete_fields(entry)}')
     return
 
@@ -949,7 +972,8 @@ def prepare(entry):
                     }
 
     unprepared_entry = entry.copy()
-    logging.info(f'Prepare {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
+    logging.info(f'{entry["ID"]}'.ljust(PAD, ' ') +
+                 f'start preparation: \n{pp.pformat(entry)}\n\n')
     for prep_script in prep_scripts:
         prior = entry.copy()
         logging.debug(f'{prep_script}({entry["ID"]}) called')
@@ -1008,6 +1032,8 @@ def print_stats_end(bib_db):
 def main(bib_db, repo):
     global prepared
     global need_manual_prep
+    global PAD
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
 
     process.check_delay(bib_db, min_status_requirement='md_imported')
     utils.reset_log()

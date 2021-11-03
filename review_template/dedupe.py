@@ -387,9 +387,8 @@ def append_merges(entry):
             line = '"' + entry_a + '","' + entry_b + '","' + \
                 str(max_similarity) + '"\n'
             fd.write(line)
-        logging.info('Potential duplicate to check: '
-                     f'{ID} - {entry["ID"]}'
-                     f' (similarity: {max_similarity})')
+        logging.info(f'{ID} - {entry["ID"]}'.lpad(35, ' ') +
+                     f'Potential duplicate (similarity: {max_similarity})')
 
     if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but
@@ -462,7 +461,7 @@ def apply_merges(bib_db):
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 for entry in bib_db.entries:
-                    if (entry['ID'] == row[1]) or (entry['ID'] == row[2]):
+                    if (entry['ID'] == row[0]) or (entry['ID'] == row[1]):
                         entry.update(md_status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)

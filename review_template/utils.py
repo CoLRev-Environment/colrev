@@ -105,17 +105,39 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
                 f'propagated to {DATA} ({entry["ID"]})')
 
     if 'author' in entry:
-        author = prepare.format_author_field(entry['author'])
+        authors = prepare.format_author_field(entry['author'])
     else:
-        author = ''
+        authors = ''
 
-    if ' and ' in author:
-        author = author.split(' and ')[0].replace(' ', '')
-    if ',' in author:
-        author = author.split(',')[0].replace(' ', '')
+    if ' and ' in authors:
+        authors = authors.split(' and ')
     else:
-        author = author.split(' ')[0]
-    temp_ID = f'{author}{str(entry.get("year", ""))}'
+        authors = [authors]
+
+    # Use family names
+    for author in authors:
+        if ',' in author:
+            author = author.split(',')[0]
+        else:
+            author = author.split(' ')[0]
+
+    ID_PATTERN = repo_setup.config['ID_PATTERN']
+
+    assert ID_PATTERN in ['FIRST_AUTHOR', 'THREE_AUTHORS']
+    if 'FIRST_AUTHOR' == ID_PATTERN:
+        temp_ID = f'{author.replace(" ", "")}{str(entry.get("year", ""))}'
+
+    if 'THREE_AUTHORS' == ID_PATTERN:
+        temp_ID = ''
+        indices = len(authors)
+        if len(authors) > 3:
+            indices = 3
+        for ind in range(0, indices):
+            temp_ID = temp_ID + \
+                f'{authors[ind].split(",")[0].replace(" ", "")}'
+        if len(authors) > 3:
+            temp_ID = temp_ID + 'EtAl'
+        temp_ID = temp_ID + str(entry.get('year', ''))
 
     if temp_ID.isupper():
         temp_ID = temp_ID.capitalize()

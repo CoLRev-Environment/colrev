@@ -51,7 +51,10 @@ config = dict(
     DATA_FORMAT=local_config.get(
         'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
     PDF_HANDLING=local_config.get(
-        'general', 'PDF_HANDLING', fallback='EXT')
+        'general', 'PDF_HANDLING', fallback='EXT'),
+    ID_PATTERN=local_config.get(
+        'general', 'ID_PATTERN', fallback='THREE_AUTHORS'),
+
 )
 
 if config['DEBUG_MODE']:
