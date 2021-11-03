@@ -102,6 +102,19 @@ def import_entry(entry):
     if 'retrieved' != entry['md_status']:
         return entry
 
+    # For better readability of the git diff:
+    fields_to_process = [
+        'author', 'year', 'title',
+        'journal', 'booktitle', 'series',
+        'volume', 'issue', 'pages', 'doi',
+        'abstract'
+    ]
+    for field in fields_to_process:
+        if field in entry:
+            entry[field] = entry[field].replace('\n', ' ')\
+                .rstrip().lstrip()\
+                .replace('{', '').replace('}', '')
+
     entry.update(md_status='imported')
 
     return entry
@@ -393,7 +406,7 @@ def load_search_results_file(search_file_path):
         if search_file.endswith('_ref_list.pdf'):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
-        logging.info(f'Loading {filetype}: {search_file}')
+        logging.debug(f'Loading {filetype}: {search_file}')
         db = importer_scripts[filetype](search_file_path)
         if db is None:
             logging.error('No entries loaded')

@@ -34,63 +34,86 @@ def get_exclusion_criteria(ec_string):
     return criteria
 
 
-def prescreen():
+def prescreen(include_all):
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
     bib_db = utils.load_main_refs()
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
 
     process.check_delay(bib_db, min_status_requirement='md_processed')
 
-    print('\n\nRun prescreen')
-
-    pp = pprint.PrettyPrinter(indent=4, width=140)
-
-    print('To stop screening, press ctrl-c')
-    try:
+    if include_all:
         for entry in bib_db.entries:
-            os.system('cls' if os.name == 'nt' else 'clear')
-            # Skip records that have already been screened
             if 'retrieved' != entry.get('rev_status', 'NA'):
                 continue
             if 'processed' != entry.get('md_status', 'NA'):
-                print(f'Skipping {entry["ID"]} - not yet processed')
-                input('Enter to continue')
                 continue
 
-            inclusion_decision = 'TODO'
+            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                         'Included in prescreen (automatically)')
+            entry.update(rev_status='prescreen_included')
+            entry.update(pdf_status='needs_retrieval')
+        utils.save_bib_file(
+            bib_db, repo_setup.paths['MAIN_REFERENCES'])
+        repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+        # Ask whether to create a commit/if records remain for pre-screening
+        if 'y' == input('Create commit (y/n)?'):
+            utils.create_commit(repo, 'Pre-screening (manual)',
+                                manual_author=False)
 
-            while inclusion_decision not in ['y', 'n']:
-                reventry = customsort(entry, desired_order_list)
-                pp.pprint(reventry)
+    else:
 
-                print()
-                inclusion_decision = input('include (y) or exclude (n)?')
-            inclusion_decision = inclusion_decision\
-                .replace('y', 'yes')\
-                .replace('n', 'no')
-            if 'no' == inclusion_decision:
-                entry.update(rev_status='prescreen_excluded')
-                logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
-                             'Excluded in prescreen')
-            if 'yes' == inclusion_decision:
-                logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
-                             'Included in prescreen')
-                entry.update(rev_status='prescreen_included')
-                entry.update(pdf_status='needs_retrieval')
+        print('\n\nRun prescreen')
 
-            utils.save_bib_file(
-                bib_db, repo_setup.paths['MAIN_REFERENCES'])
+        pp = pprint.PrettyPrinter(indent=4, width=140)
 
-    except KeyboardInterrupt:
-        print('\n\nstopping screen 1\n')
-        pass
-    os.system('cls' if os.name == 'nt' else 'clear')
+        print('To stop screening, press ctrl-c')
+        try:
+            for entry in bib_db.entries:
+                os.system('cls' if os.name == 'nt' else 'clear')
+                # Skip records that have already been screened
+                if 'retrieved' != entry.get('rev_status', 'NA'):
+                    continue
+                if 'processed' != entry.get('md_status', 'NA'):
+                    print(f'Skipping {entry["ID"]} - not yet processed')
+                    input('Enter to continue')
+                    continue
 
-    repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
-    # Ask whether to create a commit/if records remain for pre-screening
-    if 'y' == input('Create commit (y/n)?'):
-        utils.create_commit(repo, 'Pre-screening (manual)', manual_author=True)
+                inclusion_decision = 'TODO'
+
+                while inclusion_decision not in ['y', 'n']:
+                    reventry = customsort(entry, desired_order_list)
+                    pp.pprint(reventry)
+
+                    print()
+                    inclusion_decision = input('include (y) or exclude (n)?')
+                inclusion_decision = inclusion_decision\
+                    .replace('y', 'yes')\
+                    .replace('n', 'no')
+                if 'no' == inclusion_decision:
+                    entry.update(rev_status='prescreen_excluded')
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                                 'Excluded in prescreen')
+                if 'yes' == inclusion_decision:
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                                 'Included in prescreen')
+                    entry.update(rev_status='prescreen_included')
+                    entry.update(pdf_status='needs_retrieval')
+
+                utils.save_bib_file(
+                    bib_db, repo_setup.paths['MAIN_REFERENCES'])
+
+        except KeyboardInterrupt:
+            print('\n\nstopping screen 1\n')
+            pass
+        os.system('cls' if os.name == 'nt' else 'clear')
+
+        repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+        # Ask whether to create a commit/if records remain for pre-screening
+        if 'y' == input('Create commit (y/n)?'):
+            utils.create_commit(repo, 'Pre-screening (manual)',
+                                manual_author=True)
 
     status.review_instructions()
 
@@ -123,7 +146,7 @@ def screen():
         exclusion_criteria = exclusion_criteria.split(',')
 
     exclusion_criteria_available = 0 < len(exclusion_criteria)
-
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
     try:
         for entry in bib_db.entries:
             if 'prepared' != entry.get('pdf_status', 'NA') or \
@@ -147,11 +170,11 @@ def screen():
                                 .replace('n', 'no')
                     decisions.append([exclusion_criterion, decision])
                 if all([decision == 'no' for ec, decision in decisions]):
-                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                                  'Included')
                     entry.update(rev_status='included')
                 else:
-                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded')
                     entry.update(rev_status='excluded')
 
@@ -166,11 +189,11 @@ def screen():
                 while decision not in ['y', 'n']:
                     decision = input('Include (y/n)?')
                 if decision == 'y':
-                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                                  'Included')
                     entry.update(rev_status='included')
                 if decision == 'n':
-                    logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded')
                     entry.update(rev_status='excluded')
 
@@ -194,5 +217,5 @@ def screen():
 
 
 if __name__ == '__main__':
-    prescreen()
+    prescreen(include_all=False)
     screen()

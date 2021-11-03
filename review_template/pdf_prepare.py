@@ -23,7 +23,7 @@ from review_template import repo_setup
 from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
-
+IPAD, EPAD = 0, 0
 current_batch_counter = mp.Value('i', 0)
 
 
@@ -69,12 +69,13 @@ def get_text_from_pdf(entry):
 
         entry['text_from_pdf'] = text
     except PDFSyntaxError:
-        logging.error('PDF reader error: check whether '
-                      f'{entry["file"]} is a pdf')
+        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+                      'PDF reader error: check whether is a pdf')
         entry.update(pdf_status='needs_manual_preparation')
         pass
     except PDFTextExtractionNotAllowed:
-        logging.error(f'PDF reader error: protection {entry["file"]}')
+        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+                      'PDF reader error: protection')
         entry.update(pdf_status='needs_manual_preparation')
         pass
 
@@ -96,9 +97,8 @@ def pdf_check_ocr(entry):
         return entry
 
     if probability_english(entry['text_from_pdf']) < 0.9:
-        logging.error(
-            'Validation error (OCR or language problems):'
-            f' {entry["ID"]}')
+        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+                      'Validation error (OCR or language problems)')
         entry.update(pdf_status='needs_manual_preparation')
 
     return entry
@@ -121,7 +121,8 @@ def validate_pdf_metadata(entry):
             match_count += 1
 
     if match_count/len(title_words) < 0.9:
-        logging.error(f'Title not found in first pages: {entry["ID"]}')
+        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+                      'Title not found in first pages')
         entry.update(pdf_status='needs_manual_preparation')
 
     match_count = 0
@@ -132,7 +133,8 @@ def validate_pdf_metadata(entry):
             match_count += 1
 
     if match_count/len(entry['author'].split(' and ')) < 0.8:
-        logging.error(f'author not found in first pages: {entry["ID"]}')
+        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+                      'author not found in first pages')
         entry.update(pdf_status='needs_manual_preparation')
 
     return entry
@@ -146,14 +148,15 @@ def validate_completeness(entry):
         'morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas'
     if full_version_purchase_notice in \
             extract_text_by_page(entry).replace(' ', ''):
-        logging.error(f'{entry["ID"]} not the full version of the paper')
+        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+                      ' not the full version of the paper')
         entry.update(pdf_status='needs_manual_preparation')
         return entry
 
     pages_metadata = entry.get('pages', 'NA')
     if 'NA' == pages_metadata or not re.match(r'^\d*--\d*$', pages_metadata):
-        logging.error(f'{entry["ID"]} could not validate completeness '
-                      f'- no pages in metadata')
+        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+                      'could not validate completeness: no pages in metadata')
         entry.update(pdf_status='needs_manual_preparation')
         return entry
 
@@ -161,8 +164,8 @@ def validate_completeness(entry):
         int(pages_metadata.split('--')[0]) + 1
 
     if nr_pages_metadata != entry['pages_in_file']:
-        logging.error(f'{entry["ID"]} Nr of pages in file '
-                      f'({entry["pages_in_file"]}) not '
+        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+                      f'Nr of pages in file ({entry["pages_in_file"]}) not '
                       f'identical with record ({nr_pages_metadata} pages)')
         entry.update(pdf_status='needs_manual_preparation')
     return entry
@@ -182,7 +185,8 @@ def prepare_pdf(entry):
 
     pdf = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     if not os.path.exists(pdf):
-        logging.error(f'Linked file/pdf does not exist for {entry["ID"]}')
+        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+                      'Linked file/pdf does not exist')
         return entry
 
     # TODO
@@ -204,34 +208,27 @@ def prepare_pdf(entry):
             del entry['pages_in_file']
         return entry
 
-    # OCR
-    entry = pdf_check_ocr(entry)
-    if 'needs_manual_preparation' == entry.get('pdf_status'):
-        if 'text_from_pdf' in entry:
-            del entry['text_from_pdf']
-            del entry['pages_in_file']
-        return entry
+    prep_scripts = {'pdf_check_ocr': pdf_check_ocr,
+                    'validate_pdf_metadata': validate_pdf_metadata,
+                    'validate_completeness': validate_completeness,
+                    }
 
-    # Match with meta-data
-    entry = validate_pdf_metadata(entry)
-    if 'needs_manual_preparation' == entry.get('pdf_status'):
-        if 'text_from_pdf' in entry:
-            del entry['text_from_pdf']
-            del entry['pages_in_file']
-        return entry
-
-    # Completeness (nr pages/no cover-pages)
-    entry = validate_completeness(entry)
-    if 'needs_manual_preparation' == entry.get('pdf_status'):
-        if 'text_from_pdf' in entry:
-            del entry['text_from_pdf']
-            del entry['pages_in_file']
-        return entry
+    # Note: if there are problems pdf_status is set to needs_manual_preparation
+    logging.debug(f'Prepare pdf for {entry["ID"]}')
+    for prep_script in prep_scripts:
+        logging.debug(f'{prep_script}({entry["ID"]}) called')
+        entry = prep_scripts[prep_script](entry)
+        if 'needs_manual_preparation' == entry.get('pdf_status'):
+            break
 
     if 'text_from_pdf' in entry:
         del entry['text_from_pdf']
         del entry['pages_in_file']
-    entry.update(pdf_status='prepared')
+
+    if 'imported' == entry.get('pdf_status'):
+        logging.info(f' {entry["ID"]}'.ljust(IPAD, ' ') + 'Prepared pdf')
+
+        entry.update(pdf_status='prepared')
 
     return entry
 
@@ -239,6 +236,10 @@ def prepare_pdf(entry):
 def main(bib_db, repo):
 
     process.check_delay(bib_db, min_status_requirement='pdf_imported')
+    global IPAD
+    global EPAD
+    IPAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
+    EPAD = IPAD-1
 
     print('TODO: if no OCR detected, create a copy & ocrmypdf')
 
@@ -304,4 +305,6 @@ def cli():
 
 
 if __name__ == '__main__':
-    main()
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    main(bib_db, repo)

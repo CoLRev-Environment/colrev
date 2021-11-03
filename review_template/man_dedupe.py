@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import csv
 import difflib
+import logging
 import os
 
 import ansiwrap
@@ -133,6 +134,8 @@ def merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat):
         response = input(response_string)
 
     if 'y' == response:
+        logging.info(f'{main_ID}/{duplicate_ID}'.ljust(40, ' ') +
+                     'recorded: duplicate')
         # Note: update md_status and remove the other entry
         combined_el_list = \
             get_combined_origin_list(main_entry, duplicate_entry)
@@ -145,6 +148,8 @@ def merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat):
         removed_tuples.append([main_ID, duplicate_ID])
 
     if 'n' == response:
+        logging.info(f'{main_ID}/{duplicate_ID}'.ljust(40, ' ') +
+                     'recorded: no duplicate')
         # do not merge entries/modify the bib_db
         removed_tuples.append([main_ID, duplicate_ID])
     # 'd' == response: TODO

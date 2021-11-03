@@ -86,7 +86,7 @@ def is_pdf(path_to_file):
     #    return False
 
 
-def acquire_pdf(entry):
+def retrieve_pdf(entry):
     global pdfs_retrieved
     global existing_pdfs_linked
 
@@ -110,7 +110,7 @@ def acquire_pdf(entry):
         entry.update(pdf_status='imported')
         if 'file' not in entry:
             entry.update(file=':' + pdf_filepath + ':PDF')
-            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
+            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
                          'linked pdf')
             existing_pdfs_linked += 1
         return entry
@@ -172,7 +172,7 @@ def export_retrieval_table(missing_entries):
         missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
         col_order = [
             'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'number', 'pages', 'doi'
+            'year', 'volume', 'issue', 'pages', 'doi'
         ]
         missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
         missing_entries_df.to_csv('missing_pdf_files.csv',
@@ -186,6 +186,8 @@ def main(bib_db, repo):
 
     utils.require_clean_repo(repo, ignore_pattern='pdfs/')
     process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
+    global PAD
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
 
     print('TODO: download if there is a fulltext link in the entry')
 
@@ -202,7 +204,7 @@ def main(bib_db, repo):
             logging.info('Continuing batch preparation started earlier')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        bib_db.entries = pool.map(acquire_pdf, bib_db.entries)
+        bib_db.entries = pool.map(retrieve_pdf, bib_db.entries)
         pool.close()
         pool.join()
 
@@ -212,7 +214,7 @@ def main(bib_db, repo):
         missing_entries = get_missing_entries(bib_db)
 
         if batch_end > 0:
-            logging.info('Completed pdf acquisition batch '
+            logging.info('Completed pdf retrieval batch '
                          f'(entries {batch_start} to {batch_end})')
 
             print_details(missing_entries)
@@ -228,7 +230,7 @@ def main(bib_db, repo):
                         if filepath.endswith('.pdf'):
                             repo.index.add([os.path.join(dirname, filepath)])
 
-            in_process = utils.create_commit(repo, '⚙️ Acquire PDFs')
+            in_process = utils.create_commit(repo, '⚙️ Retrieve PDFs')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
@@ -255,4 +257,6 @@ def cli():
 
 
 if __name__ == '__main__':
-    main()
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    main(bib_db, repo)

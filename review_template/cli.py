@@ -121,11 +121,12 @@ def man_dedupe(ctx):
 
 
 @main.command(help_priority=9)
+@click.option('--include-all/--include-manually', is_flag=True, default=False)
 @click.pass_context
-def prescreen(ctx):
+def prescreen(ctx, include_all):
     """Pre-screen based on titles and abstracts"""
     from review_template import screen
-    screen.prescreen()
+    screen.prescreen(include_all)
 
 
 @main.command(help_priority=10)
@@ -140,16 +141,20 @@ def screen(ctx):
 @click.pass_context
 def pdfs(ctx):
     """Retrieve PDFs  (part of automated processing)"""
-    from review_template import pdfs
-    pdfs.main()
+    from review_template import pdfs, utils, init
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    pdfs.main(bib_db, repo)
 
 
 @main.command(help_priority=12)
 @click.pass_context
 def pdf_prepare(ctx):
     """Prepare PDFs  (part of automated processing)"""
-    from review_template import pdf_prepare
-    pdf_prepare.main()
+    from review_template import pdf_prepare, utils, init
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    pdf_prepare.main(bib_db, repo)
 
 
 @main.command(help_priority=13)
