@@ -166,11 +166,13 @@ def back_search(ctx):
 
 
 @main.command(help_priority=14)
+@click.option('--edit_csv/--no_csv_edit', is_flag=True, default=False)
+@click.option('--load-csv/--no_csv_load', is_flag=True, default=False)
 @click.pass_context
-def data(ctx):
+def data(ctx, edit_csv, load_csv):
     """Extract data"""
     from review_template import data
-    data.main()
+    data.main(edit_csv, load_csv)
 
 
 @main.command(help_priority=15)

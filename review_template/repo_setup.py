@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import ast
 import configparser
 import logging
 import multiprocessing as mp
@@ -54,8 +55,8 @@ config = dict(
                                fallback=actor_fallback()),
     DEBUG_MODE=local_config.getboolean('general', 'DEBUG_MODE',
                                        fallback=False),
-    DATA_FORMAT=local_config.get(
-        'general', 'DATA_FORMAT', fallback='MANUSCRIPT'),
+    DATA_FORMAT=ast.literal_eval(local_config.get(
+        'general', 'DATA_FORMAT', fallback='["MANUSCRIPT"]')),
     PDF_HANDLING=local_config.get(
         'general', 'PDF_HANDLING', fallback='EXT'),
     ID_PATTERN=local_config.get(
@@ -85,7 +86,7 @@ logging.basicConfig(
 
 paths_v1 = dict(
     MAIN_REFERENCES='references.bib',
-    DATA='data.csv',
+    DATA='data.yaml',
     PDF_DIRECTORY='pdfs/',
     SEARCH_DETAILS='search/search_details.csv',
     MANUSCRIPT='paper.md'
