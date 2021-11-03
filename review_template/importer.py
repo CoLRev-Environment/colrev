@@ -106,7 +106,7 @@ def import_entry(entry):
     fields_to_process = [
         'author', 'year', 'title',
         'journal', 'booktitle', 'series',
-        'volume', 'issue', 'pages', 'doi',
+        'volume', 'number', 'pages', 'doi',
         'abstract'
     ]
     for field in fields_to_process:

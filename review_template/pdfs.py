@@ -172,7 +172,7 @@ def export_retrieval_table(missing_entries):
         missing_entries_df = pd.DataFrame.from_records(missing_entries.entries)
         col_order = [
             'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'issue', 'pages', 'doi'
+            'year', 'volume', 'number', 'pages', 'doi'
         ]
         missing_entries_df = missing_entries_df.reindex(col_order, axis=1)
         missing_entries_df.to_csv('missing_pdf_files.csv',
