@@ -1,16 +1,22 @@
 #! /usr/bin/env python
+import itertools
+import json
 import logging
 import os
 import re
 import sys
 
 import git
+import pandas as pd
+import yaml
+from yaml import safe_load
 
 from review_template import init
 from review_template import repo_setup
 from review_template import utils
 PAD = 0
 MANUSCRIPT = 'paper.md'
+DATA = repo_setup.paths['DATA']
 
 
 def get_data_page_missing(MANUSCRIPT, records):
@@ -50,19 +56,45 @@ def get_synthesized_ids(bib_db):
 
     in_manuscript_to_synthesize = \
         get_to_synthesize_in_manuscript(records_for_synthesis)
+    # Assuming that all records have been added to the MANUSCRIPT before
+    synthesized = [x for x in records_for_synthesis
+                   if x not in in_manuscript_to_synthesize]
 
-    synthesized = \
-        set(set(records_for_synthesis) - set(in_manuscript_to_synthesize))
-    return list(synthesized)
+    return synthesized
 
 
-def update_manuscript(repo, bib_db):
+def get_data_extracted(records_for_data_extraction):
+    data_extracted = []
+    with open(DATA) as f:
+        data_df = pd.json_normalize(safe_load(f))
 
-    included = utils.get_included_IDs(bib_db)
+        for record in records_for_data_extraction:
+            drec = data_df.loc[data_df['ID'] == record]
+            if 1 == drec.shape[0]:
+                if 'TODO' not in drec.iloc[0].tolist():
+                    data_extracted.append(drec.loc[0, 'ID'])
 
-    if 0 == len(included):
-        logging.info('No records included yet (use review_template screen)')
-        sys.exit()
+    data_extracted = [x for x in data_extracted
+                      if x in records_for_data_extraction]
+    return data_extracted
+
+
+def get_structured_data_extracted(bib_db):
+
+    records_for_data_extraction = [x['ID']for x in bib_db.entries
+                                   if x.get('rev_status', 'NA') in
+                                   ['included', 'in_manuscript']]
+
+    data_extracted = get_data_extracted(records_for_data_extraction)
+    input(data_extracted)
+
+    data_extracted = [x for x in data_extracted
+                      if x in records_for_data_extraction]
+
+    return data_extracted
+
+
+def update_manuscript(repo, bib_db, included):
 
     if os.path.exists(MANUSCRIPT):
         missing_records = get_data_page_missing(MANUSCRIPT, included)
@@ -155,7 +187,73 @@ def update_manuscript(repo, bib_db):
     return bib_db
 
 
-def main():
+def update_structured_data(repo, bib_db, included):
+
+    if not os.path.exists(DATA):
+        included = utils.get_included_IDs(bib_db)
+
+        coding_dimensions = \
+            input('Enter columns for data extraction (comma-separted)')
+        coding_dimensions = coding_dimensions.replace(' ', '_').split(',')
+
+        data = []
+        for included_id in included:
+            item = [[included_id], ['TODO'] * len(coding_dimensions)]
+            data.append(list(itertools.chain(*item)))
+
+        data_df = pd.DataFrame(data, columns=['ID'] + coding_dimensions)
+        data_df.sort_values(by=['ID'], inplace=True)
+
+        with open(DATA, 'w') as f:
+            yaml.dump(json.loads(data_df.to_json(orient='records')),
+                      f, default_flow_style=False)
+
+    else:
+
+        nr_entries_added = 0
+
+        with open(DATA) as f:
+            data = pd.json_normalize(safe_load(f))
+
+        for record_id in included:
+            # skip when already available
+            if 0 < len(data[data['ID'].str.startswith(record_id)]):
+                continue
+
+            add_entry = pd.DataFrame({'ID': [record_id]})
+            add_entry = \
+                add_entry.reindex(columns=data.columns, fill_value='TODO')
+            data = pd.concat([data, add_entry], axis=0, ignore_index=True)
+            nr_entries_added = nr_entries_added + 1
+
+        data.sort_values(by=['ID'], inplace=True)
+        with open(DATA, 'w') as f:
+            yaml.dump(json.loads(data.to_json(orient='records')),
+                      f, default_flow_style=False)
+
+        logging.info(f'{nr_entries_added} records added ({DATA})')
+
+    return
+
+
+def main(edit_csv, load_csv):
+
+    DATA_CSV = DATA.replace('.yaml', '.csv')
+    if edit_csv:
+        with open(DATA) as f:
+            data_df = pd.json_normalize(safe_load(f))
+            data_df.to_csv(DATA.replace('.yaml', '.csv'), index=False)
+            logging.info(f'Created {DATA_CSV} based on {DATA}')
+        return
+
+    if load_csv:
+        data_df = pd.read_csv(DATA_CSV)
+        with open(DATA, 'w') as f:
+            yaml.dump(json.loads(data_df.to_json(orient='records')),
+                      f, default_flow_style=False)
+        logging.info(f'Loaded {DATA_CSV} into {DATA}')
+        return
+
     global PAD
     repo = git.Repo()
     utils.require_clean_repo(repo, ignore_pattern='paper.md')
@@ -163,21 +261,38 @@ def main():
     bib_db = utils.load_main_refs()
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
 
-    if 'MANUSCRIPT' == DATA_FORMAT:
-        bib_db = update_manuscript(repo, bib_db)
+    included = utils.get_included_IDs(bib_db)
 
-    # TODO: add other forms of data extraction/analysis/synthesis
+    if 0 == len(included):
+        logging.info('No records included yet (use review_template screen)')
+        sys.exit()
+
+    if 'MANUSCRIPT' in DATA_FORMAT:
+        bib_db = update_manuscript(repo, bib_db, included)
+        repo.index.add([MANUSCRIPT])
+    if 'STRUCTURED' in DATA_FORMAT:
+        update_structured_data(repo, bib_db, included)
+        repo.index.add([DATA])
+
     synthesized_in_manuscript = get_synthesized_ids(bib_db)
+    structured_data_extracted = get_structured_data_extracted(bib_db)
+
+    print(synthesized_in_manuscript)
+    print(structured_data_extracted)
 
     for entry in bib_db.entries:
-        # TODO: add other forms of data extraction/analysis/synthesis
-        if entry['ID'] in synthesized_in_manuscript:
-            entry.update(rev_status='synthesized')
-            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
-                         'set status to synthesized')
+        if 'MANUSCRIPT' in DATA_FORMAT and \
+                entry['ID'] not in synthesized_in_manuscript:
+            continue
+        if 'STRUCTURED' in DATA_FORMAT and \
+                entry['ID'] not in structured_data_extracted:
+            continue
+
+        entry.update(rev_status='synthesized')
+        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                     'set status to synthesized')
 
     utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])
-    repo.index.add([MANUSCRIPT])
     repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
 
     if 'y' == input('Create commit (y/n)?'):
@@ -187,4 +302,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    main(edit_csv=False, load_csv=False)

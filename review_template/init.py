@@ -67,7 +67,7 @@ def init_new_repo():
 
     # # TODO: allow multiple?
     # DATA_FORMAT = get_value('Select data structure',
-    #                         ['NONE', 'TABLE', 'PAGE',
+    #                         ['NONE', 'STRUCTURED', 'MANUSCRIPT',
     #                          'SHEETs', 'MACODING'])
     SHARE_STAT_REQ = get_value('Select share status requirement',
                                ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
