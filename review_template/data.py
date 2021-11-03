@@ -9,7 +9,7 @@ import git
 from review_template import init
 from review_template import repo_setup
 from review_template import utils
-
+PAD = 0
 MANUSCRIPT = 'paper.md'
 
 
@@ -91,7 +91,7 @@ def update_manuscript(repo, bib_db):
         init.retrieve_template_file('../template/paper.md', 'paper.md')
         init.inplace_change('paper.md', '{{project_title}}', title)
         init.inplace_change('paper.md', '{{author}}', author)
-        logging.info('Created manuscript.')
+        logging.info('Created manuscript')
         logging.info('Please update title and authors.')
     else:
         logging.info('Updating manuscript')
@@ -113,8 +113,8 @@ def update_manuscript(repo, bib_db):
 
                 for missing_record in missing_records:
                     writer.write('- @' + missing_record + '\n')
-                    logging.info(f' {missing_record}'.ljust(
-                        18, ' ') + ' added')
+                    logging.info(f' {missing_record}'.ljust(PAD, ' ') +
+                                 f' added to {MANUSCRIPT}')
 
                 # skip empty lines between to connect lists
                 line = reader.readline()
@@ -145,7 +145,7 @@ def update_manuscript(repo, bib_db):
             writer.write(marker)
             for missing_record in missing_records:
                 writer.write('- @' + missing_record + '\n')
-                logging.info(f' {missing_record}'.ljust(18, ' ') + ' added')
+                logging.info(f' {missing_record}'.ljust(PAD, ' ') + ' added')
 
     os.remove(temp)
 
@@ -156,11 +156,12 @@ def update_manuscript(repo, bib_db):
 
 
 def main():
-
+    global PAD
     repo = git.Repo()
     utils.require_clean_repo(repo, ignore_pattern='paper.md')
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
     bib_db = utils.load_main_refs()
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
 
     if 'MANUSCRIPT' == DATA_FORMAT:
         bib_db = update_manuscript(repo, bib_db)
@@ -172,8 +173,8 @@ def main():
         # TODO: add other forms of data extraction/analysis/synthesis
         if entry['ID'] in synthesized_in_manuscript:
             entry.update(rev_status='synthesized')
-            logging.info(f' {entry["ID"]}'.ljust(18, ' ') +
-                         'set status "synthesized"')
+            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                         'set status to synthesized')
 
     utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])
     repo.index.add([MANUSCRIPT])
