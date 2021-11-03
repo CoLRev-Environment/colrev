@@ -425,13 +425,10 @@ def get_commit_report(script_name=None):
     g = git.Repo('').git
     tree_hash = g.execute(['git', 'write-tree'])
     report = report + f'\n\nCertified properties (for tree {tree_hash})\n'
-
     report = report + '- Traceability of records: '.ljust(32, ' ') + 'YES\n'
     report = \
         report + '- Consistency (based on hooks): '.ljust(32, ' ') + 'YES\n'
-
     completeness_condition = status.get_completeness_condition()
-
     if completeness_condition:
         report = \
             report + '- Completeness of iteration: '.ljust(32, ' ') + 'YES\n'
@@ -445,7 +442,10 @@ def get_commit_report(script_name=None):
     f = io.StringIO()
     with redirect_stdout(f):
         status.review_status()
-    report = report + f.getvalue()
+    # Remove colors for commit message
+    status_page = f.getvalue().replace('\033[91m', '').replace('\033[92m', '')\
+        .replace('\033[93m', '').replace('\033[94m', '').replace('\033[0m', '')
+    report = report + status_page
 
     return report
 

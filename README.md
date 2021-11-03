@@ -78,7 +78,6 @@ Commands:
 
 We build on amazing projects and benefit from their ongoing improvements
 
-- [git](https://github.com/git/git), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/git/git/blob/master/COPYING). [![git](https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic)](https://github.com/git/git)
 - [GitPython](https://github.com/gitpython-developers/GitPython), which is available under the [BSD 3-Clause License](https://github.com/gitpython-developers/GitPython/blob/main/LICENSE). [![GitPython](https://img.shields.io/github/commit-activity/y/gitpython-developers/GitPython?color=green&style=plastic)](https://github.com/gitpython-developers/GitPython)
 - [pre-commit](https://github.com/pre-commit/pre-commit), which is available under the [MIT License](https://github.com/pre-commit/pre-commit/blob/master/LICENSE). [![pre-commit](https://img.shields.io/github/commit-activity/y/pre-commit/pre-commit?color=green&style=plastic)](https://github.com/pre-commit/pre-commit.six)
 - [docker-py](https://github.com/docker/docker-py), which is available under the [Apache-2.0 License](https://github.com/docker/docker-py/blob/master/LICENSE). [![docker-py](https://img.shields.io/github/commit-activity/y/docker/docker-py?color=green&style=plastic)](https://github.com/docker/docker-py)
@@ -88,6 +87,7 @@ We build on amazing projects and benefit from their ongoing improvements
 
 Dynamically loaded
 
+- [git](https://github.com/git/git), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/git/git/blob/master/COPYING). [![git](https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic)](https://github.com/git/git)
 - [GROBID](https://github.com/kermitt2/grobid), which is available under the [Apache 2.0 License](https://github.com/kermitt2/grobid/blob/master/LICENSE). [![GROBID](https://img.shields.io/github/commit-activity/y/kermitt2/grobid?color=green&style=plastic)](https://github.com/kermitt2/grobid)
 - [OCRmyPDF](https://github.com/jbarlow83/OCRmyPDF), which is available under the [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jbarlow83/OCRmyPDF?color=green&style=plastic)](https://github.com/jbarlow83/OCRmyPDF)
 - [pandoc](https://github.com/jgm/pandoc), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
