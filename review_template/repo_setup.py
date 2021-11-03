@@ -29,6 +29,12 @@ def actor_fallback():
     return name
 
 
+csl_fallback = 'https://raw.githubusercontent.com/citation-style-language/' + \
+    'styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl'
+
+word_template_url_fallback = \
+    'https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx'
+
 config = dict(
     REPO_SETUP_VERSION=local_config.get('general',
                                         'REPO_SETUP_VERSION',
@@ -49,12 +55,15 @@ config = dict(
     DEBUG_MODE=local_config.getboolean('general', 'DEBUG_MODE',
                                        fallback=False),
     DATA_FORMAT=local_config.get(
-        'general', 'DATA_FORMAT', fallback='CSV_TABLE'),
+        'general', 'DATA_FORMAT', fallback='MANUSCRIPT'),
     PDF_HANDLING=local_config.get(
         'general', 'PDF_HANDLING', fallback='EXT'),
     ID_PATTERN=local_config.get(
         'general', 'ID_PATTERN', fallback='THREE_AUTHORS'),
-
+    CSL=local_config.get(
+        'general', 'CSL', fallback=csl_fallback),
+    WORD_TEMPLATE_URL=local_config.get(
+        'general', 'WORD_TEMPLATE_URL', fallback=word_template_url_fallback),
 )
 
 if config['DEBUG_MODE']:

@@ -65,7 +65,6 @@ def init_new_repo():
     print('\n\nParameters for the review project\n Details avilable at: '
           'TODO/docs')
 
-    DATA_FORMAT = 'MANUSCRIPT'
     # # TODO: allow multiple?
     # DATA_FORMAT = get_value('Select data structure',
     #                         ['NONE', 'TABLE', 'PAGE',
@@ -101,13 +100,8 @@ def init_new_repo():
     shared_config = configparser.ConfigParser()
     shared_config.add_section('general')
     shared_config['general']['REPO_SETUP_VERSION'] = REPO_SETUP_VERSION
-    shared_config['general']['DATA_FORMAT'] = DATA_FORMAT
     shared_config['general']['SHARE_STAT_REQ'] = SHARE_STAT_REQ
     shared_config['general']['PDF_HANDLING'] = PDF_HANDLING
-    shared_config['general']['BATCH_SIZE'] = '2000'
-    shared_config['general']['MERGING_DUP_THRESHOLD'] = '0.95'
-    shared_config['general']['MERGING_NON_DUP_THRESHOLD'] = '0.7'
-    shared_config['general']['DELAY_AUTOMATED_PROCESSING'] = 'yes'
     with open('shared_config.ini', 'w') as configfile:
         shared_config.write(configfile)
 

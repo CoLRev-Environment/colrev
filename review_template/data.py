@@ -61,7 +61,7 @@ def update_manuscript(repo, bib_db):
     included = utils.get_included_IDs(bib_db)
 
     if 0 == len(included):
-        logging.info('No records included yet')
+        logging.info('No records included yet (use review_template screen)')
         sys.exit()
 
     if os.path.exists(MANUSCRIPT):
@@ -80,8 +80,6 @@ def update_manuscript(repo, bib_db):
                       'try again.')
         sys.exit()
 
-    logging.info('Updating manuscript')
-
     title = 'Manuscript template'
     if os.path.exists('readme.md'):
         with open('readme.md') as f:
@@ -95,6 +93,8 @@ def update_manuscript(repo, bib_db):
         init.inplace_change('paper.md', '{{author}}', author)
         logging.info('Created manuscript.')
         logging.info('Please update title and authors.')
+    else:
+        logging.info('Updating manuscript')
 
     temp = f'.tmp_{MANUSCRIPT}'
     os.rename(MANUSCRIPT, temp)
