@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-import csv
+import json
 import logging
 import os
 from datetime import datetime
@@ -7,6 +7,8 @@ from datetime import datetime
 import git
 import pandas as pd
 import requests
+import yaml
+from yaml import safe_load
 
 from review_template import grobid_client
 from review_template import repo_setup
@@ -34,9 +36,11 @@ def process_backward_search(entry):
         logging.error(f'File does not exist ({entry["ID"]})')
         return entry
 
-    search_details = pd.read_csv(SEARCH_DETAILS)
+    with open(SEARCH_DETAILS) as f:
+        search_details_df = pd.json_normalize(safe_load(f))
+        search_details = search_details_df.to_dict('records')
 
-    if bib_filename in search_details['source_url']:
+    if bib_filename in [x['source_url'] for x in search_details]:
         return entry
 
     logging.info(f'Extract references for {entry["ID"]}')
@@ -57,37 +61,32 @@ def process_backward_search(entry):
         f.write(bib_content)
         entry['bib_filename'] = bib_filename
 
-    if len(search_details.index) == 0:
-        iteration_number = 1
-    else:
-        iteration_number = str(int(search_details['iteration'].max()))
+    iteration = max(x['iteration'] for x in search_details)
 
-    new_record = pd.DataFrame(
-        [[
-            bib_filename,
-            r.text.count('\n@'),
-            iteration_number,
-            datetime.today().strftime('%Y-%m-%d'),
-            datetime.today().strftime('%Y-%m-%d'),
-            bib_filename,
-            '',
-            'backward_search.py',
-            '',
-        ]],
-        columns=[
-            'filename',
-            'number_records',
-            'iteration',
-            'date_start',
-            'date_completion',
-            'source_url',
-            'search_parameters',
-            'responsible',
-            'comment',
-        ],
-    )
-    search_details = pd.concat([search_details, new_record])
-    search_details.to_csv(SEARCH_DETAILS, index=False, quoting=csv.QUOTE_ALL)
+    new_record = {'filename': bib_filename,
+                  'search_type': 'BACK_CIT',
+                  'source_name': 'PDF',
+                  'source_url': bib_filename,
+                  'iteration': int(iteration),
+                  'start_date': datetime.today().strftime('%Y-%m-%d'),
+                  'completion_date': datetime.today().strftime('%Y-%m-%d'),
+                  'number_records': r.text.count('\n@'),
+                  'search_parameters': 'NA',
+                  'comment': 'backward_search.py',
+                  }
+
+    search_details.append(new_record)
+
+    search_details_df = pd.DataFrame(search_details)
+    orderedCols = ['filename', 'number_records', 'search_type',
+                   'source_name', 'source_url', 'iteration',
+                   'start_date', 'completion_date',
+                   'search_parameters', 'comment']
+    search_details_df = search_details_df.reindex(columns=orderedCols)
+
+    with open(SEARCH_DETAILS, 'w') as f:
+        yaml.dump(json.loads(search_details_df.to_json(orient='records')),
+                  f, default_flow_style=False, sort_keys=False)
 
     return entry
 

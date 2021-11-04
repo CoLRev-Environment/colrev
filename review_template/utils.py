@@ -9,7 +9,6 @@ import sys
 import unicodedata
 from contextlib import redirect_stdout
 from importlib.metadata import version
-from pathlib import Path
 from string import ascii_lowercase
 
 import bibtexparser
@@ -186,87 +185,6 @@ def set_IDs(bib_db):
                 raise_error=False))
             ID_list.append(entry['ID'])
     return bib_db
-
-
-def validate_search_details():
-
-    search_details = pd.read_csv(SEARCH_DETAILS)
-
-    # check columns
-    predef_colnames = {
-        'filename',
-        'number_records',
-        'iteration',
-        'date_start',
-        'date_completion',
-        'source_url',
-        'search_parameters',
-        'responsible',
-        'comment',
-    }
-    if not set(search_details.columns) == predef_colnames:
-        print(
-            'Problem: columns in search/search_details.csv ',
-            'not matching predefined colnames',
-        )
-        print(set(search_details.columns))
-        print('Should be')
-        print(predef_colnames)
-        print('')
-        sys.exit()
-
-    # TODO: filenames should exist, all files should have
-    # a row, iteration, number_records should be int, start
-
-    return
-
-
-def validate_bib_file(filename):
-
-    # Do not load/warn when bib-file contains the field "Early Access Date"
-    # https://github.com/sciunto-org/python-bibtexparser/issues/230
-
-    with open(filename) as bibfile:
-        if 'Early Access Date' in bibfile.read():
-            print(
-                'Error while loading the file: ',
-                'replace Early Access Date in bibfile before loading!',
-            )
-            return False
-
-    # check number_records matching search_details.csv
-    if os.path.exists(SEARCH_DETAILS):
-        search_details = pd.read_csv(SEARCH_DETAILS)
-        try:
-            records_expected = search_details.loc[
-                search_details['filename'] == Path(
-                    filename,
-                ).name
-            ].number_records.item()
-            with open(filename) as bibtex_file:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-
-            if len(bib_db.entries) != records_expected:
-                print(
-                    'Error while loading the file: number of records ',
-                    'imported not identical to ',
-                    'search/search_details.csv$number_records',
-                )
-                print(f'Loaded: {len(bib_db.entries)}')
-                print(f'Expected: {records_expected}')
-                return False
-        except ValueError:
-            # print(
-            #     'WARNING: no details on ',
-            #     os.path.basename(filename),
-            #     ' provided in ' + SEARCH_DETAILS,
-            # )
-            pass
-    return True
 
 
 def load_main_refs(mod_check=None, init=None):

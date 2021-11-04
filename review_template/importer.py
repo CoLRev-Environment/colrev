@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import itertools
+import json
 import logging
 import multiprocessing as mp
 import os
@@ -13,9 +14,11 @@ import click
 import git
 import pandas as pd
 import requests
+import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
+from yaml import safe_load
 
 import docker
 from review_template import grobid_client
@@ -24,9 +27,12 @@ from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
+SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 pp = pprint.PrettyPrinter(indent=4, width=140)
+
+search_type_opts = ['DB', 'TOC', 'BACK_CIT', 'FORW_CIT', 'OTHER']
 
 
 def get_search_files():
@@ -37,8 +43,7 @@ def get_search_files():
     search_dir = os.path.join(os.getcwd(), 'search/')
     files = [os.path.join(search_dir, x)
              for x in os.listdir(search_dir)
-             if any(x.endswith(ext) for ext in supported_extensions)
-             and not 'search_details.csv' == os.path.basename(x)]
+             if any(x.endswith(ext) for ext in supported_extensions)]
     return files
 
 
@@ -120,6 +125,64 @@ def import_entry(entry):
     return entry
 
 
+def check_update_search_details(search_files):
+
+    if os.path.exists(SEARCH_DETAILS):
+        with open(SEARCH_DETAILS) as f:
+            search_details_df = pd.json_normalize(safe_load(f))
+            search_details = search_details_df.to_dict('records')
+    else:
+        search_details = []
+    for search_file_path in search_files:
+        search_file = os.path.basename(search_file_path)
+        if search_file not in [x['filename'] for x in search_details]:
+            print(f'Please provide details for {search_file}')
+            number_records = 'TODO'
+            while not number_records.isdigit():
+                number_records = input('Enter nr of records')
+            search_type = 'TODO'
+            while search_type not in search_type_opts:
+                search_type = input(f'Enter search type {search_type_opts}')
+            source_name = input('Enter source name (e.g., GoogleScholar)')
+            source_url = input('Enter source_url')
+            iteration = 'TOD'
+            while not iteration.isdigit():
+                iteration = input('Enter iteration')
+            start_date = 'TODO'
+            while not re.search(r'^\d{4}-\d{2}-\d{2}$', start_date):
+                start_date = input('Enter start date (YYYY-MM-DD)')
+            completion_date = 'TODO'
+            while not re.search(r'^\d{4}-\d{2}-\d{2}$', completion_date):
+                completion_date = input('Enter completion date (YYYY-MM-DD)')
+            search_parameters = input('Enter search_parameters')
+            comment = input('Enter a comment (or NA)')
+            new_entry = {'filename': search_file,
+                         'search_type': search_type,
+                         'source_name': source_name,
+                         'source_url': source_url,
+                         'iteration': int(iteration),
+                         'start_date': start_date,
+                         'completion_date': completion_date,
+                         'number_records': int(number_records),
+                         'search_parameters': search_parameters,
+                         'comment': comment,
+                         }
+            search_details.append(new_entry)
+            logging.info(f'Added infos to {SEARCH_DETAILS}: \n{new_entry}')
+
+    search_details_df = pd.DataFrame(search_details)
+    orderedCols = ['filename', 'number_records', 'search_type',
+                   'source_name', 'source_url', 'iteration',
+                   'start_date', 'completion_date',
+                   'search_parameters', 'comment']
+    search_details_df = search_details_df.reindex(columns=orderedCols)
+
+    with open(SEARCH_DETAILS, 'w') as f:
+        yaml.dump(json.loads(search_details_df.to_json(orient='records')),
+                  f, default_flow_style=False, sort_keys=False)
+    return
+
+
 def load_all_entries():
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
@@ -128,6 +191,7 @@ def load_all_entries():
     search_files = get_search_files()
     if any('.pdf' in x for x in search_files):
         grobid_client.start_grobid()
+    check_update_search_details(search_files)
     additional_records = load_pool.map(load_entries, search_files)
     load_pool.close()
     load_pool.join()
@@ -477,6 +541,7 @@ def save_imported_files(repo, bib_db):
         return False
 
     utils.save_bib_file(bib_db, MAIN_REFERENCES)
+    repo.index.add([SEARCH_DETAILS])
     repo.index.add(get_search_files())
     repo.index.add([MAIN_REFERENCES])
 
@@ -519,7 +584,7 @@ def main(repo):
         bib_db.entries = pool.map(import_entry, bib_db.entries)
         pool.close()
         pool.join()
-
+        input('stop')
         bib_db = utils.set_IDs(bib_db)
 
         if save_imported_files(repo, bib_db):
