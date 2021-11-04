@@ -55,8 +55,8 @@ config = dict(
                                fallback=actor_fallback()),
     DEBUG_MODE=local_config.getboolean('general', 'DEBUG_MODE',
                                        fallback=False),
-    DATA_FORMAT=ast.literal_eval(local_config.get(
-        'general', 'DATA_FORMAT', fallback='["MANUSCRIPT"]')),
+    DATA_FORMAT=local_config.get(
+        'general', 'DATA_FORMAT', fallback='["MANUSCRIPT"]'),
     PDF_HANDLING=local_config.get(
         'general', 'PDF_HANDLING', fallback='EXT'),
     ID_PATTERN=local_config.get(
@@ -66,6 +66,14 @@ config = dict(
     WORD_TEMPLATE_URL=local_config.get(
         'general', 'WORD_TEMPLATE_URL', fallback=word_template_url_fallback),
 )
+
+try:
+    config['DATA_FORMAT'] = ast.literal_eval(config['DATA_FORMAT'])
+except ValueError:
+    logging.error(f'Could not load DATA_FORMAT ({config["DATA_FORMAT"] }), '
+                  'using fallback')
+    config['DATA_FORMAT'] = ['MANUSCRIPT']
+    pass
 
 if config['DEBUG_MODE']:
     logging_level = logging.DEBUG
@@ -82,13 +90,14 @@ logging.basicConfig(
     ]
 )
 
+
 #############################################################################
 
 paths_v1 = dict(
     MAIN_REFERENCES='references.bib',
     DATA='data.yaml',
     PDF_DIRECTORY='pdfs/',
-    SEARCH_DETAILS='search/search_details.csv',
+    SEARCH_DETAILS='search_details.yaml',
     MANUSCRIPT='paper.md'
 )
 
@@ -100,3 +109,6 @@ paths_v1 = dict(
 
 if config['REPO_SETUP_VERSION'] == 'v_0.1':
     paths = paths_v1
+
+logging.debug(f'config: {config}')
+logging.debug(f'paths: {paths}')
