@@ -387,8 +387,8 @@ def append_merges(entry):
             line = '"' + entry_a + '","' + entry_b + '","' + \
                 str(max_similarity) + '"\n'
             fd.write(line)
-        logging.info(f'{ID} - {entry["ID"]}'.lpad(35, ' ') +
-                     f'Potential duplicate (similarity: {max_similarity})')
+        logging.info(f'{ID} - {entry["ID"]}'.ljust(35, ' ') +
+                     f'  - potential duplicate (similarity: {max_similarity})')
 
     if max_similarity >= MERGING_DUP_THRESHOLD:
         # note: the following status will not be saved in the bib file but

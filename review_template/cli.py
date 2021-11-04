@@ -74,29 +74,35 @@ def status(ctx):
 @click.pass_context
 @click.option('--reprocess',
               help='Entry ID to reprocess ("all" to reprocess all).')
-def process(ctx, reprocess):
+@click.option('--suppress-ID-changes/--change-IDs',
+              is_flag=True, default=False)
+def process(ctx, reprocess, suppress_id_changes):
     """Process records (automated steps)"""
     from review_template import process
-    process.main(reprocess)
+    process.main(reprocess, suppress_id_changes)
 
 
 @main.command(help_priority=4)
+@click.option('--suppress-ID-changes/--change-IDs',
+              is_flag=True, default=False)
 @click.pass_context
-def importer(ctx):
+def importer(ctx, suppress_id_changes):
     """Import records (part of automated processing)"""
     from review_template import importer, init
     repo = init.get_repo()
-    importer.main(repo)
+    importer.main(repo, suppress_id_changes)
 
 
 @main.command(help_priority=5)
+@click.option('--suppress-ID-changes/--change-IDs',
+              is_flag=True, default=False)
 @click.pass_context
-def prepare(ctx):
+def prepare(ctx, suppress_id_changes):
     """Prepare records (part of automated processing)"""
     from review_template import prepare, init, utils
     repo = init.get_repo()
     bib_db = utils.load_main_refs()
-    prepare.main(bib_db, repo)
+    prepare.main(bib_db, repo, suppress_id_changes)
 
 
 @main.command(help_priority=6)
