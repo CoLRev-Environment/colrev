@@ -1096,7 +1096,7 @@ def reorder_log(IDs):
     return
 
 
-def main(bib_db, repo):
+def main(bib_db, repo, suppress_ID_changes=False):
     global prepared
     global need_manual_prep
     global PAD
@@ -1132,7 +1132,8 @@ def main(bib_db, repo):
             logging.info('Completed preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            bib_db = utils.set_IDs(bib_db)
+            if not suppress_ID_changes:
+                bib_db = utils.set_IDs(bib_db)
 
             MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
             utils.save_bib_file(bib_db, MAIN_REFERENCES)

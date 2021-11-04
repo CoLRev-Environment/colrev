@@ -137,43 +137,30 @@ def check_update_search_details(search_files):
         search_file = os.path.basename(search_file_path)
         if search_file not in [x['filename'] for x in search_details]:
             print(f'Please provide details for {search_file}')
-            number_records = 'TODO'
-            while not number_records.isdigit():
-                number_records = input('Enter nr of records')
             search_type = 'TODO'
             while search_type not in search_type_opts:
-                search_type = input(f'Enter search type {search_type_opts}')
-            source_name = input('Enter source name (e.g., GoogleScholar)')
-            source_url = input('Enter source_url')
-            iteration = 'TOD'
-            while not iteration.isdigit():
-                iteration = input('Enter iteration')
-            start_date = 'TODO'
-            while not re.search(r'^\d{4}-\d{2}-\d{2}$', start_date):
-                start_date = input('Enter start date (YYYY-MM-DD)')
-            completion_date = 'TODO'
-            while not re.search(r'^\d{4}-\d{2}-\d{2}$', completion_date):
-                completion_date = input('Enter completion date (YYYY-MM-DD)')
-            search_parameters = input('Enter search_parameters')
-            comment = input('Enter a comment (or NA)')
+                print(f'Search type options: {search_type_opts}')
+                search_type = input('Enter search type'.ljust(40, ' ') + ': ')
+            source_name = input('Enter source name (e.g., GoogleScholar)'
+                                .ljust(40, ' ') + ': ')
+            source_url = input('Enter source_url'.ljust(40, ' ') + ': ')
+            search_parameters = input('Enter search_parameters'
+                                      .ljust(40, ' ') + ': ')
+            comment = input('Enter a comment (or NA)'.ljust(40, ' ') + ': ')
             new_entry = {'filename': search_file,
                          'search_type': search_type,
                          'source_name': source_name,
                          'source_url': source_url,
-                         'iteration': int(iteration),
-                         'start_date': start_date,
-                         'completion_date': completion_date,
-                         'number_records': int(number_records),
                          'search_parameters': search_parameters,
                          'comment': comment,
                          }
             search_details.append(new_entry)
-            logging.info(f'Added infos to {SEARCH_DETAILS}: \n{new_entry}')
+            logging.info(f'Added infos to {SEARCH_DETAILS}:'
+                         f' \n{pp.pformat(new_entry)}')
 
     search_details_df = pd.DataFrame(search_details)
-    orderedCols = ['filename', 'number_records', 'search_type',
-                   'source_name', 'source_url', 'iteration',
-                   'start_date', 'completion_date',
+    orderedCols = ['filename', 'search_type',
+                   'source_name', 'source_url',
                    'search_parameters', 'comment']
     search_details_df = search_details_df.reindex(columns=orderedCols)
 
@@ -552,7 +539,7 @@ def save_imported_files(repo, bib_db):
     return True
 
 
-def main(repo):
+def main(repo, suppress_id_changes):
     global batch_start
     global batch_end
 
@@ -584,8 +571,9 @@ def main(repo):
         bib_db.entries = pool.map(import_entry, bib_db.entries)
         pool.close()
         pool.join()
-        input('stop')
-        bib_db = utils.set_IDs(bib_db)
+
+        if not suppress_id_changes:
+            bib_db = utils.set_IDs(bib_db)
 
         if save_imported_files(repo, bib_db):
             utils.create_commit(repo, '⚙️ Import search results')
