@@ -84,16 +84,19 @@ def process(ctx, reprocess):
 @click.pass_context
 def importer(ctx):
     """Import records (part of automated processing)"""
-    from review_template import importer
-    importer.main()
+    from review_template import importer, init
+    repo = init.get_repo()
+    importer.main(repo)
 
 
 @main.command(help_priority=5)
 @click.pass_context
 def prepare(ctx):
     """Prepare records (part of automated processing)"""
-    from review_template import prepare
-    prepare.main()
+    from review_template import prepare, init, utils
+    repo = init.get_repo()
+    bib_db = utils.load_main_refs()
+    prepare.main(bib_db, repo)
 
 
 @main.command(help_priority=6)

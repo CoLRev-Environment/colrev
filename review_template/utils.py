@@ -175,14 +175,17 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
 
 
 def set_IDs(bib_db):
-    logging.info('Set IDs')
     ID_list = [entry['ID'] for entry in bib_db.entries]
     for entry in bib_db.entries:
         if entry['md_status'] in ['imported', 'prepared']:
-            entry.update(ID=generate_ID_blacklist(
+            old_id = entry['ID']
+            new_id = generate_ID_blacklist(
                 entry, ID_list,
                 entry_in_bib_db=True,
-                raise_error=False))
+                raise_error=False)
+            entry.update(ID=new_id)
+            if old_id != new_id:
+                logging.info(f'set_ID({old_id}) to {new_id}')
             ID_list.append(entry['ID'])
     return bib_db
 
