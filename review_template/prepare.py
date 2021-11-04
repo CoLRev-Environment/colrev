@@ -24,7 +24,7 @@ from review_template import utils
 
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 EMAIL = repo_setup.config['EMAIL']
-pp = pprint.PrettyPrinter(indent=4, width=140)
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 
 prepared, need_manual_prep = 0, 0
@@ -198,7 +198,8 @@ def homogenize_entry(entry):
         entry.update(booktitle=stripped_btitle)
 
     if 'journal' in entry:
-        entry.update(journal=title_if_mostly_upper_case(entry['journal']))
+        if len(entry['journal']) > 10:
+            entry.update(journal=title_if_mostly_upper_case(entry['journal']))
 
     if 'pages' in entry:
         entry.update(pages=unify_pages_field(entry['pages']))
@@ -306,7 +307,8 @@ def format_author_field(input_string):
             parsed_name.capitalize(force=True)
 
         parsed_name.string_format = \
-            '{last} {suffix}, {first} ({nickname}) {middle}'
+            '{last} {suffix}, {first} {middle}'
+        # '{last} {suffix}, {first} ({nickname}) {middle}'
         author_name_string = str(parsed_name).replace(' , ', ', ')
         # Note: there are errors for the following author:
         # JR Cromwell and HK Gardner
@@ -501,8 +503,11 @@ def crossref_query(entry):
 
 
 def get_md_from_crossref(entry):
-    if ('title' not in entry) or ('doi' in entry):
+    if ('title' not in entry) or ('doi' in entry) or \
+            is_complete_metadata_source(entry):
         return entry
+    # To test the metadata provided for a particular DOI use:
+    # https://api.crossref.org/works/DOI
 
     logging.debug(f'get_md_from_crossref({entry["ID"]})')
     MAX_RETRIES_ON_ERROR = 3
@@ -570,6 +575,8 @@ def sem_scholar_json_to_entry(item, entry):
 
 
 def get_md_from_sem_scholar(entry):
+    if is_complete_metadata_source(entry):
+        return entry
 
     try:
         search_api_url = \
@@ -679,6 +686,8 @@ def dblp_json_to_entry(item):
 
 
 def get_md_from_dblp(entry):
+    if is_complete_metadata_source(entry):
+        return entry
 
     try:
         api_url = 'https://dblp.org/search/publ/api?q='
@@ -755,6 +764,8 @@ def retrieve_doi_metadata(entry):
 
 
 def get_md_from_urls(entry):
+    if is_complete_metadata_source(entry):
+        return entry
 
     url = entry.get('url', entry.get('fulltext', 'NA'))
     if 'NA' != url:
@@ -898,7 +909,7 @@ fields_to_keep = [
 ]
 fields_to_drop = [
     'type', 'organization',
-    'issn', 'isbn', 'note', 'number',
+    'issn', 'isbn', 'note',
     'unique-id', 'month', 'researcherid-numbers',
     'orcid-numbers', 'eissn', 'article-number',
     'publisher', 'author_keywords', 'source',
@@ -946,6 +957,14 @@ def log_notifications(entry, unprepared_entry):
     return
 
 
+def remove_nicknames(entry):
+    if 'author' in entry:
+        # Replace nicknames in parentheses
+        entry['author'] = re.sub(r'\([^)]*\)', '', entry['author'])
+        entry['author'] = entry['author'].replace('  ', ' ')
+    return entry
+
+
 def prepare(entry):
     global current_batch_counter
 
@@ -969,11 +988,14 @@ def prepare(entry):
                     'get_md_from_dblp': get_md_from_dblp,
                     'get_md_from_sem_scholar': get_md_from_sem_scholar,
                     'get_md_from_urls': get_md_from_urls,
+                    'remove_nicknames': remove_nicknames,
                     }
 
     unprepared_entry = entry.copy()
-    logging.info(f'{entry["ID"]}'.ljust(PAD, ' ') +
-                 f'start preparation: \n{pp.pformat(entry)}\n\n')
+    short_form = entry.copy()
+    short_form = drop_fields(short_form)
+    logging.info(f'prepare({entry["ID"]})' +
+                 f' started with: \n{pp.pformat(short_form)}\n\n')
     for prep_script in prep_scripts:
         prior = entry.copy()
         logging.debug(f'{prep_script}({entry["ID"]}) called')
@@ -984,8 +1006,6 @@ def prepare(entry):
                          f' \n{pp.pformat(diffs)}\n')
         else:
             logging.debug(f'{prep_script} changed: -')
-        if is_complete_metadata_source(entry):
-            break
 
     if (is_complete(entry) or is_complete_metadata_source(entry)) and \
             not has_inconsistent_fields(entry) and \
@@ -1029,11 +1049,59 @@ def print_stats_end(bib_db):
     return
 
 
+def reorder_log(IDs):
+    # https://docs.python.org/3/howto/logging-cookbook.html
+    # #logging-to-a-single-file-from-multiple-processes
+    firsts = []
+    with open('report.log') as r:
+        items = []
+        item = ''
+        for line in r.readlines():
+            if any(x in line for x in ['[INFO] Prepare',
+                                       '[INFO] Completed preparation ',
+                                       '[INFO] Batch size',
+                                       '[INFO] Summary: Prepared',
+                                       '[INFO] Instructions on resetting']):
+                firsts.append(line)
+                continue
+            if re.search(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ', line):
+                if item != '':
+                    item = item.replace('\n\n', '\n').replace('\n\n', '\n')
+                    items.append(item)
+                    item = ''
+                item = line
+            else:
+                item = item + line
+        items.append(item.replace('\n\n', '\n').replace('\n\n', '\n'))
+
+    ordered_items = ''
+    consumed_items = []
+    for ID in IDs:
+        for item in items:
+            # if f'({ID})' in item:
+            if f'({ID})' in item:
+                formatted_item = item
+                if '] prepare(' in formatted_item:
+                    formatted_item = f'\n\n{formatted_item}'
+                ordered_items = ordered_items + formatted_item
+                consumed_items.append(item)
+
+    for x in consumed_items:
+        items.remove(x)
+
+    ordered_items = ''.join(firsts) + '\nDetailed report\n\n' + \
+        ordered_items.lstrip('\n') + ''.join(items)
+    with open('report.log', 'w') as f:
+        f.write(ordered_items)
+    return
+
+
 def main(bib_db, repo):
     global prepared
     global need_manual_prep
     global PAD
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
+    prior_ids = [x['ID'] for x in bib_db.entries]
 
     process.check_delay(bib_db, min_status_requirement='md_imported')
     utils.reset_log()
@@ -1074,6 +1142,11 @@ def main(bib_db, repo):
             logging.info('Instructions on resetting entries and analyzing '
                          'preparation steps available in the documentation '
                          '(link)')
+
+            # Multiprocessing mixes logs of different entries.
+            # For better readability:
+            reorder_log(prior_ids)
+
             in_process = utils.create_commit(repo, '⚙️ Prepare records')
 
         if batch_end < BATCH_SIZE or batch_end == 0:
