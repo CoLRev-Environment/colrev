@@ -9,108 +9,108 @@ from review_template import repo_setup
 from review_template import utils
 
 
-entry_type_mapping = {'a': 'article', 'p': 'inproceedings',
-                      'b': 'book', 'ib': 'inbook', 'pt': 'phdthesis',
-                      'mt': 'masterthesis',
-                      'o': 'other', 'unp': 'unpublished'}
+record_type_mapping = {'a': 'article', 'p': 'inproceedings',
+                       'b': 'book', 'ib': 'inbook', 'pt': 'phdthesis',
+                       'mt': 'masterthesis',
+                       'o': 'other', 'unp': 'unpublished'}
 
 ID_list = []
 
 
-def print_entry(entry):
+def print_record(record):
     pp = pprint.PrettyPrinter(indent=4, width=140)
     # Escape sequence to clear terminal output for each new comparison
     os.system('cls' if os.name == 'nt' else 'clear')
-    pp.pprint(entry)
-    if 'title' in entry:
+    pp.pprint(record)
+    if 'title' in record:
         print('https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q=' +
-              entry['title'].replace(' ', '+'))
+              record['title'].replace(' ', '+'))
     return
 
 
-def man_correct_entrytype(entry):
+def man_correct_recordtype(record):
 
-    if 'n' == input('ENTRYTYPE=' + entry['ENTRYTYPE'] + ' correct?'):
+    if 'n' == input('ENTRYTYPE=' + record['ENTRYTYPE'] + ' correct?'):
         choice = input('Correct type: ' +
                        'a (article), p (inproceedings), ' +
                        'b (book), ib (inbook), ' +
                        'pt (phdthesis), mt (masterthesis), '
                        'unp (unpublished), o (other), ')
-        assert choice in entry_type_mapping.keys()
-        correct_entry_type = [value for (key, value)
-                              in entry_type_mapping.items()
-                              if key == choice]
-        entry['ENTRYTYPE'] = correct_entry_type[0]
-    return entry
+        assert choice in record_type_mapping.keys()
+        correct_record_type = [value for (key, value)
+                               in record_type_mapping.items()
+                               if key == choice]
+        record['ENTRYTYPE'] = correct_record_type[0]
+    return record
 
 
-def man_provide_required_fields(entry):
-    if prepare.is_complete(entry):
-        return entry
+def man_provide_required_fields(record):
+    if prepare.is_complete(record):
+        return record
 
-    reqs = prepare.entry_field_requirements[entry['ENTRYTYPE']]
+    reqs = prepare.record_field_requirements[record['ENTRYTYPE']]
     for field in reqs:
-        if field not in entry:
+        if field not in record:
             value = input('Please provide the ' + field + ' (or NA)')
-            entry[field] = value
-    return entry
+            record[field] = value
+    return record
 
 
-def man_fix_field_inconsistencies(entry):
-    if not prepare.has_inconsistent_fields(entry):
-        return entry
+def man_fix_field_inconsistencies(record):
+    if not prepare.has_inconsistent_fields(record):
+        return record
 
     print('TODO: ask whether the inconsistent fields can be dropped?')
 
-    return entry
+    return record
 
 
-def man_fix_incomplete_fields(entry):
-    if not prepare.has_incomplete_fields(entry):
-        return entry
+def man_fix_incomplete_fields(record):
+    if not prepare.has_incomplete_fields(record):
+        return record
 
     print('TODO: ask for completion of fields')
     # organize has_incomplete_fields() values in a dict?
 
-    return entry
+    return record
 
 
-def man_prep_entry(entry):
+def man_prep_record(record):
 
     global ID_list
 
-    if 'needs_manual_preparation' != entry['md_status']:
-        return entry
+    if 'needs_manual_preparation' != record['md_status']:
+        return record
 
-    print_entry(entry)
+    print_record(record)
 
-    man_correct_entrytype(entry)
+    man_correct_recordtype(record)
 
-    man_provide_required_fields(entry)
+    man_provide_required_fields(record)
 
-    man_fix_field_inconsistencies(entry)
+    man_fix_field_inconsistencies(record)
 
-    man_fix_incomplete_fields(entry)
+    man_fix_incomplete_fields(record)
 
     # Note: for complete_based_on_doi field:
-    entry = prepare.retrieve_doi_metadata(entry)
+    record = prepare.retrieve_doi_metadata(record)
 
-    if (prepare.is_complete(entry) or prepare.is_doi_complete(entry)) and \
-            not prepare.has_inconsistent_fields(entry) and \
-            not prepare.has_incomplete_fields(entry):
-        entry = prepare.drop_fields(entry)
-        entry.update(ID=utils.generate_ID_blacklist(
-            entry, ID_list,
-            entry_in_bib_db=True,
+    if (prepare.is_complete(record) or prepare.is_doi_complete(record)) and \
+            not prepare.has_inconsistent_fields(record) and \
+            not prepare.has_incomplete_fields(record):
+        record = prepare.drop_fields(record)
+        record.update(ID=utils.generate_ID_blacklist(
+            record, ID_list,
+            record_in_bib_db=True,
             raise_error=False))
-        ID_list.append(entry['ID'])
-        entry.update(md_status='prepared')
-        entry.update(metadata_source='MAN_PREP')
+        ID_list.append(record['ID'])
+        record.update(md_status='prepared')
+        record.update(metadata_source='MAN_PREP')
 
-    return entry
+    return record
 
 
-def man_prep_entries():
+def man_prep_records():
     global ID_list
 
     repo = git.Repo('')
@@ -119,10 +119,10 @@ def man_prep_entries():
     print('Loading records for manual preparation...')
     bib_db = utils.load_main_refs()
 
-    ID_list = [entry['ID'] for entry in bib_db.entries]
+    ID_list = [record['ID'] for record in bib_db.entries]
 
-    for entry in bib_db.entries:
-        entry = man_prep_entry(entry)
+    for record in bib_db.entries:
+        record = man_prep_record(record)
         utils.save_bib_file(bib_db)
 
     bib_db = utils.set_IDs(bib_db)
@@ -136,7 +136,7 @@ def man_prep_entries():
 
 def main():
     print('TODO: include processing_reports')
-    man_prep_entries()
+    man_prep_records()
     return
 
 

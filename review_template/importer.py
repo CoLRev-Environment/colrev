@@ -48,25 +48,25 @@ def get_search_files():
     return files
 
 
-def get_imported_entry_links():
+def get_imported_record_links():
 
-    imported_entry_links = []
+    imported_record_links = []
     try:
-        imported_entry_links = pd.read_csv('imported_entry_links.csv',
-                                           header=None)
-        imported_entry_links = \
-            imported_entry_links[imported_entry_links.columns[0]].tolist()
+        imported_record_links = pd.read_csv('imported_record_links.csv',
+                                            header=None)
+        imported_record_links = \
+            imported_record_links[imported_record_links.columns[0]].tolist()
     except pd.errors.EmptyDataError:
         # ok if no search results have been imported before
         if not os.path.exists(MAIN_REFERENCES):
             pass
 
-    return imported_entry_links
+    return imported_record_links
 
 
-def load_entries(filepath):
+def load_records(filepath):
 
-    imported_entry_links = get_imported_entry_links()
+    imported_record_links = get_imported_record_links()
 
     search_db = load_search_results_file(filepath)
 
@@ -74,39 +74,40 @@ def load_entries(filepath):
         return []
 
     search_file = os.path.basename(filepath)
-    entry_list = []
-    for entry in search_db.entries:
-        entry['origin'] = search_file + '/' + entry['ID']
-        if entry['origin'] in imported_entry_links:
-            logging.debug(f'skipped entry {entry["ID"]} (already imported)')
+    record_list = []
+    for record in search_db.entries:
+        record['origin'] = search_file + '/' + record['ID']
+        if record['origin'] in imported_record_links:
+            logging.debug(f'skipped record {record["ID"]} (already imported)')
             continue
 
-        entry.update(rev_status='retrieved')
-        entry.update(md_status='retrieved')
-        logging.debug(f'append entry {entry["ID"]} \n{pp.pformat(entry)}\n\n')
-        entry_list.append(entry)
+        record.update(rev_status='retrieved')
+        record.update(md_status='retrieved')
+        logging.debug(
+            f'append record {record["ID"]} \n{pp.pformat(record)}\n\n')
+        record_list.append(record)
 
-    return entry_list
+    return record_list
 
 
-def save_imported_entry_links(bib_db):
-    imported_entry_links = [x['origin'].split(';')
-                            for x in bib_db.entries
-                            if 'origin' in x]
-    imported_entry_links = list(itertools.chain(*imported_entry_links))
+def save_imported_record_links(bib_db):
+    imported_record_links = [x['origin'].split(';')
+                             for x in bib_db.entries
+                             if 'origin' in x]
+    imported_record_links = list(itertools.chain(*imported_record_links))
 
-    with open('imported_entry_links.csv', 'a') as fd:
-        for el in imported_entry_links:
+    with open('imported_record_links.csv', 'a') as fd:
+        for el in imported_record_links:
             fd.write(el + '\n')
 
     return
 
 
-def import_entry(entry):
-    logging.debug(f'import_entry {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
+def import_record(record):
+    logging.debug(f'import_record {record["ID"]}: \n{pp.pformat(record)}\n\n')
 
-    if 'retrieved' != entry['md_status']:
-        return entry
+    if 'retrieved' != record['md_status']:
+        return record
 
     # For better readability of the git diff:
     fields_to_process = [
@@ -116,14 +117,14 @@ def import_entry(entry):
         'abstract'
     ]
     for field in fields_to_process:
-        if field in entry:
-            entry[field] = entry[field].replace('\n', ' ')\
+        if field in record:
+            record[field] = record[field].replace('\n', ' ')\
                 .rstrip().lstrip()\
                 .replace('{', '').replace('}', '')
 
-    entry.update(md_status='imported')
+    record.update(md_status='imported')
 
-    return entry
+    return record
 
 
 def check_update_search_details(search_files):
@@ -148,16 +149,16 @@ def check_update_search_details(search_files):
             search_parameters = input('Enter search_parameters'
                                       .ljust(40, ' ') + ': ')
             comment = input('Enter a comment (or NA)'.ljust(40, ' ') + ': ')
-            new_entry = {'filename': search_file,
-                         'search_type': search_type,
-                         'source_name': source_name,
-                         'source_url': source_url,
-                         'search_parameters': search_parameters,
-                         'comment': comment,
-                         }
-            search_details.append(new_entry)
+            new_record = {'filename': search_file,
+                          'search_type': search_type,
+                          'source_name': source_name,
+                          'source_url': source_url,
+                          'search_parameters': search_parameters,
+                          'comment': comment,
+                          }
+            search_details.append(new_record)
             logging.info(f'Added infos to {SEARCH_DETAILS}:'
-                         f' \n{pp.pformat(new_entry)}')
+                         f' \n{pp.pformat(new_record)}')
 
     search_details_df = pd.DataFrame(search_details)
     orderedCols = ['filename', 'search_type',
@@ -188,23 +189,23 @@ def rename_search_files(search_files):
     return ret_list
 
 
-def load_all_entries():
+def load_all_records():
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
-    save_imported_entry_links(bib_db)
+    save_imported_record_links(bib_db)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
     search_files = get_search_files()
     search_files = rename_search_files(search_files)
     if any('.pdf' in x for x in search_files):
         grobid_client.start_grobid()
     check_update_search_details(search_files)
-    additional_records = load_pool.map(load_entries, search_files)
+    additional_records = load_pool.map(load_records, search_files)
     load_pool.close()
     load_pool.join()
     additional_records = list(chain(bib_db.entries, *additional_records))
 
-    if os.path.exists('imported_entry_links.csv'):
-        os.remove('imported_entry_links.csv')
+    if os.path.exists('imported_record_links.csv'):
+        os.remove('imported_record_links.csv')
 
     return additional_records
 
@@ -334,7 +335,7 @@ def txt2bib(file):
     return db
 
 
-def preprocess_entries(data):
+def preprocess_records(data):
     for x in data:
         # TODO: more sophisticated setting of ENTRYTYPE, ID is needed.
         # could also use simple numbers as IDs...
@@ -357,7 +358,7 @@ def csv2bib(file):
     data.columns = data.columns.str.replace(' ', '_')
     data.columns = data.columns.str.replace('-', '_')
     data = data.to_dict('records')
-    data = preprocess_entries(data)
+    data = preprocess_records(data)
 
     db = BibDatabase()
     db.entries = data
@@ -374,7 +375,7 @@ def xlsx2bib(file):
     data.columns = data.columns.str.replace(' ', '_')
     data.columns = data.columns.str.replace('-', '_')
     data = data.to_dict('records')
-    data = preprocess_entries(data)
+    data = preprocess_records(data)
 
     db = BibDatabase()
     db.entries = data
@@ -484,9 +485,9 @@ def load_search_results_file(search_file_path):
         logging.debug(f'Loading {filetype}: {search_file}')
         db = importer_scripts[filetype](search_file_path)
         if db is None:
-            logging.error('No entries loaded')
+            logging.error('No records loaded')
             return None
-        logging.info(f'Loaded {len(db.entries)} entries from {search_file}')
+        logging.info(f'Loaded {len(db.entries)} records from {search_file}')
         if corresponding_bib_file != search_file and \
                 not '.bib' == search_file[-4]:
             new_file_path = search_file_path.replace('.' + filetype, '.bib')
@@ -520,13 +521,13 @@ batch_start = 1
 batch_end = 0
 
 
-def processing_condition(entry):
+def processing_condition(record):
     global current_batch_counter
     global batch_start
     global batch_end
 
-    # Do not count entries that have already been imported
-    if 'retrieved' != entry.get('md_status', 'NA'):
+    # Do not count records that have already been imported
+    if 'retrieved' != record.get('md_status', 'NA'):
         return False
 
     if 0 == current_batch_counter:
@@ -544,11 +545,11 @@ def processing_condition(entry):
 
 def save_imported_files(repo, bib_db):
     if bib_db is None:
-        logging.info('No entries imported')
+        logging.info('No records imported')
         return False
 
     if 0 == len(bib_db.entries):
-        logging.info('No entries imported')
+        logging.info('No records imported')
         return False
 
     utils.save_bib_file(bib_db, MAIN_REFERENCES)
@@ -572,14 +573,14 @@ def main(repo, keep_ids):
     logging.info(f'Batch size: {BATCH_SIZE}')
 
     bib_db = BibDatabase()
-    entry_iterator = IteratorEx(load_all_entries())
-    for entry in entry_iterator:
-        bib_db.entries.append(entry)
-        if entry_iterator.hasNext:
-            if not processing_condition(entry):
-                continue  # keep appending entries
+    record_iterator = IteratorEx(load_all_records())
+    for record in record_iterator:
+        bib_db.entries.append(record)
+        if record_iterator.hasNext:
+            if not processing_condition(record):
+                continue  # keep appending records
         else:
-            processing_condition(entry)  # updates counters
+            processing_condition(record)  # updates counters
 
         if batch_start > 1:
             logging.info('Continuing batch import started earlier')
@@ -587,12 +588,12 @@ def main(repo, keep_ids):
             logging.info('No new records')
             break
         if 1 == batch_end:
-            logging.info('Importing one entry')
+            logging.info('Importing one record')
         if batch_end != 1:
-            logging.info(f'Importing entries {batch_start} to {batch_end}')
+            logging.info(f'Importing records {batch_start} to {batch_end}')
 
         pool = mp.Pool(repo_setup.config['CPUS'])
-        bib_db.entries = pool.map(import_entry, bib_db.entries)
+        bib_db.entries = pool.map(import_record, bib_db.entries)
         pool.close()
         pool.join()
 

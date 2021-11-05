@@ -73,10 +73,10 @@ def status(ctx):
 @main.command(help_priority=3)
 @click.pass_context
 @click.option('--reprocess',
-              help='Entry ID to reprocess ("all" to reprocess all).')
+              help='Record ID to reprocess ("all" to reprocess all).')
 @click.option('-k', '--keep-IDs',
               is_flag=True, default=False,
-              help='Do not change the entry IDs. Useful when importing ' +
+              help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
 def process(ctx, reprocess, k):
     """Process records (automated steps)"""
@@ -87,7 +87,7 @@ def process(ctx, reprocess, k):
 @main.command(help_priority=4)
 @click.option('-k', '--keep-IDs',
               is_flag=True, default=False,
-              help='Do not change the entry IDs. Useful when importing ' +
+              help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
 @click.pass_context
 def importer(ctx, k):
@@ -100,16 +100,16 @@ def importer(ctx, k):
 @main.command(help_priority=5)
 @click.option('--reset-ID',
               default=False,
-              help='Reset entry metadata to the imported version. '
+              help='Reset record metadata to the imported version. '
               'Format: --reset-ID ID1,ID2,ID3')
 @click.option('--reprocess',
               is_flag=True, default=False,
-              help='Prepare all entries set to md_status=' +
+              help='Prepare all records set to md_status=' +
               'needs_manual_preparation again. Useful if ' +
               'network/databases were not available')
 @click.option('-k', '--keep-IDs',
               is_flag=True, default=True,
-              help='Do not change the entry IDs. Useful when importing ' +
+              help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
 @click.pass_context
 def prepare(ctx, reset_id, reprocess, keep_ids):

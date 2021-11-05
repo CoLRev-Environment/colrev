@@ -46,16 +46,16 @@ def prescreen(include_all):
     process.check_delay(bib_db, min_status_requirement='md_processed')
 
     if include_all:
-        for entry in bib_db.entries:
-            if 'retrieved' != entry.get('rev_status', 'NA'):
+        for record in bib_db.entries:
+            if 'retrieved' != record.get('rev_status', 'NA'):
                 continue
-            if 'processed' != entry.get('md_status', 'NA'):
+            if 'processed' != record.get('md_status', 'NA'):
                 continue
 
-            logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+            logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                          'Included in prescreen (automatically)')
-            entry.update(rev_status='prescreen_included')
-            entry.update(pdf_status='needs_retrieval')
+            record.update(rev_status='prescreen_included')
+            record.update(pdf_status='needs_retrieval')
         utils.save_bib_file(
             bib_db, repo_setup.paths['MAIN_REFERENCES'])
         repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
@@ -72,21 +72,21 @@ def prescreen(include_all):
 
         print('To stop screening, press ctrl-c')
         try:
-            for entry in bib_db.entries:
+            for record in bib_db.entries:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 # Skip records that have already been screened
-                if 'retrieved' != entry.get('rev_status', 'NA'):
+                if 'retrieved' != record.get('rev_status', 'NA'):
                     continue
-                if 'processed' != entry.get('md_status', 'NA'):
-                    print(f'Skipping {entry["ID"]} - not yet processed')
+                if 'processed' != record.get('md_status', 'NA'):
+                    print(f'Skipping {record["ID"]} - not yet processed')
                     input('Enter to continue')
                     continue
 
                 inclusion_decision = 'TODO'
 
                 while inclusion_decision not in ['y', 'n']:
-                    reventry = customsort(entry, desired_order_list)
-                    pp.pprint(reventry)
+                    revrecord = customsort(record, desired_order_list)
+                    pp.pprint(revrecord)
 
                     print()
                     inclusion_decision = input('include (y) or exclude (n)?')
@@ -94,14 +94,14 @@ def prescreen(include_all):
                     .replace('y', 'yes')\
                     .replace('n', 'no')
                 if 'no' == inclusion_decision:
-                    entry.update(rev_status='prescreen_excluded')
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    record.update(rev_status='prescreen_excluded')
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded in prescreen')
                 if 'yes' == inclusion_decision:
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Included in prescreen')
-                    entry.update(rev_status='prescreen_included')
-                    entry.update(pdf_status='needs_retrieval')
+                    record.update(rev_status='prescreen_included')
+                    record.update(pdf_status='needs_retrieval')
 
                 utils.save_bib_file(
                     bib_db, repo_setup.paths['MAIN_REFERENCES'])
@@ -125,37 +125,37 @@ def prescreen(include_all):
 def export_spreadsheet(bib_db, export_csv):
 
     tbl = []
-    for entry in bib_db.entries:
+    for record in bib_db.entries:
         inclusion_2 = 'NA'
-        if 'retrieved' == entry['rev_status']:
+        if 'retrieved' == record['rev_status']:
             inclusion_1 = 'TODO'
-        if 'prescreen_excluded' == entry['rev_status']:
+        if 'prescreen_excluded' == record['rev_status']:
             inclusion_1 = 'no'
         else:
             inclusion_1 = 'yes'
             inclusion_2 = 'TODO'
-            if 'excluded' == entry['rev_status']:
+            if 'excluded' == record['rev_status']:
                 inclusion_2 = 'no'
             else:
                 inclusion_2 = 'yes'
 
         excl_criteria = {}
-        if 'excl_criteria' in entry:
-            for ecrit in entry['excl_criteria'].split(';'):
+        if 'excl_criteria' in record:
+            for ecrit in record['excl_criteria'].split(';'):
                 criteria = {ecrit.split('=')[0]: ecrit.split('=')[1]}
                 excl_criteria.update(criteria)
 
-        row = {'ID': entry['ID'],
-               'author': entry.get('author', ''),
-               'title': entry.get('title', ''),
-               'journal': entry.get('journal', ''),
-               'booktitle': entry.get('booktitle', ''),
-               'year': entry.get('year', ''),
-               'volume': entry.get('volume', ''),
-               'number': entry.get('number', ''),
-               'pages': entry.get('pages', ''),
-               'doi': entry.get('doi', ''),
-               'abstract': entry.get('abstract', ''),
+        row = {'ID': record['ID'],
+               'author': record.get('author', ''),
+               'title': record.get('title', ''),
+               'journal': record.get('journal', ''),
+               'booktitle': record.get('booktitle', ''),
+               'year': record.get('year', ''),
+               'volume': record.get('volume', ''),
+               'number': record.get('number', ''),
+               'pages': record.get('pages', ''),
+               'doi': record.get('doi', ''),
+               'abstract': record.get('abstract', ''),
                'inclusion_1': inclusion_1,
                'inclusion_2': inclusion_2}
         row.update(excl_criteria)
@@ -176,22 +176,22 @@ def import_csv_file(bib_db):
         return
     screen_df = pd.read_csv('screen_table.csv')
     screen_df.fillna('', inplace=True)
-    entries = screen_df.to_dict('records')
+    records = screen_df.to_dict('records')
 
     for x in [[x.get('ID', ''),
                x.get('inclusion_1', ''),
-               x.get('inclusion_2', '')] for x in entries]:
-        entry = [e for e in bib_db.entries if e['ID'] == x[0]]
-        if len(entry) == 1:
-            entry = entry[0]
+               x.get('inclusion_2', '')] for x in records]:
+        record = [e for e in bib_db.entries if e['ID'] == x[0]]
+        if len(record) == 1:
+            record = record[0]
             if x[1] == 'no':
-                entry['rev_status'] = 'prescreen_excluded'
+                record['rev_status'] = 'prescreen_excluded'
             if x[1] == 'yes':
-                entry['rev_status'] = 'prescreen_inclued'
+                record['rev_status'] = 'prescreen_inclued'
             if x[2] == 'no':
-                entry['rev_status'] = 'excluded'
+                record['rev_status'] = 'excluded'
             if x[2] == 'yes':
-                entry['rev_status'] = 'included'
+                record['rev_status'] = 'included'
             # TODO: exclusion-criteria
 
     utils.save_bib_file(
@@ -234,14 +234,14 @@ def screen(export_csv=None, import_csv=None):
     excl_criteria_available = (0 < len(excl_criteria))
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
     try:
-        for entry in bib_db.entries:
-            if 'prepared' != entry.get('pdf_status', 'NA') or \
-                    'prescreen_included' != entry.get('rev_status', 'NA'):
+        for record in bib_db.entries:
+            if 'prepared' != record.get('pdf_status', 'NA') or \
+                    'prescreen_included' != record.get('rev_status', 'NA'):
                 continue
             os.system('cls' if os.name == 'nt' else 'clear')
 
-            reventry = customsort(entry, desired_order_list)
-            pp.pprint(reventry)
+            revrecord = customsort(record, desired_order_list)
+            pp.pprint(revrecord)
 
             if excl_criteria_available:
                 decisions = []
@@ -263,39 +263,39 @@ def screen(export_csv=None, import_csv=None):
                                 .replace('n', 'no')
                     decisions.append([exclusion_criterion, decision])
                 if all([decision == 'no' for ec, decision in decisions]):
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Included')
-                    entry.update(rev_status='included')
+                    record.update(rev_status='included')
                 else:
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded')
-                    entry.update(rev_status='excluded')
+                    record.update(rev_status='excluded')
 
                 ec_field = ''
                 for exclusion_criterion, decision in decisions:
                     if ec_field != '':
                         ec_field = f'{ec_field};'
                     ec_field = f'{ec_field}{exclusion_criterion}={decision}'
-                entry['excl_criteria'] = ec_field.replace(' ', '')
+                record['excl_criteria'] = ec_field.replace(' ', '')
             else:
                 decision = 'TODO'
                 while decision not in ['y', 'n']:
                     decision = input('Include (y/n)?')
                 if decision == 'y':
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Included')
-                    entry.update(rev_status='included')
+                    record.update(rev_status='included')
                 if decision == 'n':
-                    logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded')
-                    entry.update(rev_status='excluded')
+                    record.update(rev_status='excluded')
 
             utils.save_bib_file(
                 bib_db, repo_setup.paths['MAIN_REFERENCES'])
 
     except IndexError:
         MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
-        print(f'Index error/ID not found in {MAIN_REFERENCES}: {entry["ID"]}')
+        print(f'Index error/ID not found in {MAIN_REFERENCES}: {record["ID"]}')
         pass
     except KeyboardInterrupt:
         print('\n\nStopping screen 1\n')
