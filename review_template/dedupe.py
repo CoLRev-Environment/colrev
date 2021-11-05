@@ -16,8 +16,8 @@ from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
-nr_entries_added = 0
-nr_current_entries = 0
+nr_records_added = 0
+nr_current_records = 0
 
 
 MERGING_NON_DUP_THRESHOLD = repo_setup.config['MERGING_NON_DUP_THRESHOLD']
@@ -62,52 +62,52 @@ def year_similarity(y1, y2):
     return sim
 
 
-def get_entry_similarity(entry_a, entry_b):
-    if 'title' not in entry_a:
-        entry_a['title'] = ''
-    if 'author' not in entry_a:
-        entry_a['author'] = ''
-    if 'year' not in entry_a:
-        entry_a['year'] = ''
-    if 'journal' not in entry_a:
-        entry_a['journal'] = ''
-    if 'volume' not in entry_a:
-        entry_a['volume'] = ''
-    if 'number' not in entry_a:
-        entry_a['number'] = ''
-    if 'pages' not in entry_a:
-        entry_a['pages'] = ''
-    if 'booktitle' not in entry_a:
-        entry_a['booktitle'] = ''
-    if 'title' not in entry_b:
-        entry_b['title'] = ''
-    if 'author' not in entry_b:
-        entry_b['author'] = ''
-    if 'year' not in entry_b:
-        entry_b['year'] = ''
-    if 'journal' not in entry_b:
-        entry_b['journal'] = ''
-    if 'volume' not in entry_b:
-        entry_b['volume'] = ''
-    if 'number' not in entry_b:
-        entry_b['number'] = ''
-    if 'pages' not in entry_b:
-        entry_b['pages'] = ''
-    if 'booktitle' not in entry_b:
-        entry_b['booktitle'] = ''
+def get_record_similarity(record_a, record_b):
+    if 'title' not in record_a:
+        record_a['title'] = ''
+    if 'author' not in record_a:
+        record_a['author'] = ''
+    if 'year' not in record_a:
+        record_a['year'] = ''
+    if 'journal' not in record_a:
+        record_a['journal'] = ''
+    if 'volume' not in record_a:
+        record_a['volume'] = ''
+    if 'number' not in record_a:
+        record_a['number'] = ''
+    if 'pages' not in record_a:
+        record_a['pages'] = ''
+    if 'booktitle' not in record_a:
+        record_a['booktitle'] = ''
+    if 'title' not in record_b:
+        record_b['title'] = ''
+    if 'author' not in record_b:
+        record_b['author'] = ''
+    if 'year' not in record_b:
+        record_b['year'] = ''
+    if 'journal' not in record_b:
+        record_b['journal'] = ''
+    if 'volume' not in record_b:
+        record_b['volume'] = ''
+    if 'number' not in record_b:
+        record_b['number'] = ''
+    if 'pages' not in record_b:
+        record_b['pages'] = ''
+    if 'booktitle' not in record_b:
+        record_b['booktitle'] = ''
 
-    if 'container_title' not in entry_a:
-        entry_a['container_title'] = entry_a.get('journal', '') + \
-            entry_a.get('booktitle', '') + \
-            entry_a.get('series', '')
+    if 'container_title' not in record_a:
+        record_a['container_title'] = record_a.get('journal', '') + \
+            record_a.get('booktitle', '') + \
+            record_a.get('series', '')
 
-    if 'container_title' not in entry_b:
-        entry_b['container_title'] = entry_b.get('journal', '') + \
-            entry_b.get('booktitle', '') + \
-            entry_b.get('series', '')
+    if 'container_title' not in record_b:
+        record_b['container_title'] = record_b.get('journal', '') + \
+            record_b.get('booktitle', '') + \
+            record_b.get('series', '')
 
-    df_a = pd.DataFrame.from_dict([entry_a])
-    df_b = pd.DataFrame.from_dict([entry_b])
+    df_a = pd.DataFrame.from_dict([record_a])
+    df_b = pd.DataFrame.from_dict([record_b])
 
     return get_similarity(df_a.iloc[0], df_b.iloc[0])
 
@@ -244,16 +244,16 @@ def prep_references(references):
     return references
 
 
-def calculate_similarities_entry(references):
+def calculate_similarities_record(references):
     # Note: per definition, similarities are needed relative to the first row.
     references = prep_references(references)
     # references.to_csv('preped_references.csv')
     references['similarity'] = 0
     sim_col = references.columns.get_loc('similarity')
-    for base_entry_i in range(1, references.shape[0]):
-        references.iloc[base_entry_i, sim_col] = \
-            get_similarity(references.iloc[base_entry_i], references.iloc[0])
-    # Note: return all other entries (not the comparison entry/first row)
+    for base_record_i in range(1, references.shape[0]):
+        references.iloc[base_record_i, sim_col] = \
+            get_similarity(references.iloc[base_record_i], references.iloc[0])
+    # Note: return all other records (not the comparison record/first row)
     # and restrict it to the ID and similarity
     ck_col = references.columns.get_loc('ID')
     sim_col = references.columns.get_loc('similarity')
@@ -261,21 +261,21 @@ def calculate_similarities_entry(references):
 
 
 def get_prev_queue(queue_order, origin):
-    # Note: Because we only introduce individual (non-merged entries),
+    # Note: Because we only introduce individual (non-merged records),
     # there should be no semicolons in origin!
-    prev_entries = []
+    prev_records = []
     for idx, el in enumerate(queue_order):
         if origin == el:
-            prev_entries = queue_order[:idx]
+            prev_records = queue_order[:idx]
             break
-    return prev_entries
+    return prev_records
 
 
-def append_merges(entry):
+def append_merges(record):
     global current_batch_counter
-    logging.debug(f'append_merges {entry["ID"]}: \n{pp.pformat(entry)}\n\n')
+    logging.debug(f'append_merges {record["ID"]}: \n{pp.pformat(record)}\n\n')
 
-    if 'prepared' != entry['md_status']:
+    if 'prepared' != record['md_status']:
         return
 
     with current_batch_counter.get_lock():
@@ -286,7 +286,7 @@ def append_merges(entry):
 
     bib_db = utils.load_main_refs(mod_check=False)
 
-    # add all processed entries to the queue order before first (re)run
+    # add all processed records to the queue order before first (re)run
     if not os.path.exists('queue_order.csv'):
         with open('queue_order.csv', 'a') as fd:
             for x in bib_db.entries:
@@ -297,83 +297,83 @@ def append_merges(entry):
     # additional record is compared to/merged with all prior records in
     # the queue)
     with open('queue_order.csv', 'a') as fd:
-        fd.write(entry['origin'] + '\n')
+        fd.write(record['origin'] + '\n')
     queue_order = pd.read_csv('queue_order.csv', header=None)
     queue_order = queue_order[queue_order.columns[0]].tolist()
-    required_prior_entry_links = \
-        get_prev_queue(queue_order, entry['origin'])
+    required_prior_record_links = \
+        get_prev_queue(queue_order, record['origin'])
 
-    entry_links_in_prepared_file = []
+    record_links_in_prepared_file = []
     # note: no need to wait for completion of preparation
-    entry_links_in_prepared_file = [entry['origin'].split(';')
-                                    for entry in bib_db.entries
-                                    if 'origin' in entry]
-    entry_links_in_prepared_file = \
-        list(itertools.chain(*entry_links_in_prepared_file))
+    record_links_in_prepared_file = [record['origin'].split(';')
+                                     for record in bib_db.entries
+                                     if 'origin' in record]
+    record_links_in_prepared_file = \
+        list(itertools.chain(*record_links_in_prepared_file))
 
-    # if the entry is the first one added to the bib_db
+    # if the record is the first one added to the bib_db
     # (in a preceding processing step), it can be propagated
-    if len(required_prior_entry_links) < 2:
+    if len(required_prior_record_links) < 2:
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
         with open('non_duplicates.csv', 'a') as fd:
-            fd.write('"' + entry['ID'] + '"\n')
+            fd.write('"' + record['ID'] + '"\n')
         return
 
     merge_ignore_status = ['needs_manual_preparation',
                            'needs_manual_merging']
 
-    prior_entries = [x for x in bib_db.entries
+    prior_records = [x for x in bib_db.entries
                      if x.get('md_status', 'NA') not in merge_ignore_status]
 
-    prior_entries = [x for x in prior_entries
-                     if any(entry_link in x['origin'].split(',')
-                            for entry_link in required_prior_entry_links)]
+    prior_records = [x for x in prior_records
+                     if any(record_link in x['origin'].split(',')
+                            for record_link in required_prior_record_links)]
 
-    if len(prior_entries) < 1:
-        # Note: the first entry is a non_duplicate (by definition)
+    if len(prior_records) < 1:
+        # Note: the first record is a non_duplicate (by definition)
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
         with open('non_duplicates.csv', 'a') as fd:
-            fd.write('"' + entry['ID'] + '"\n')
+            fd.write('"' + record['ID'] + '"\n')
         return
 
-    # df to get_similarities for each other entry
-    references = pd.DataFrame.from_dict([entry] + prior_entries)
+    # df to get_similarities for each other record
+    references = pd.DataFrame.from_dict([record] + prior_records)
 
-    # drop the same ID entry
-    # Note: the entry is simply added as the first row.
-    # references = references[~(references['ID'] == entry['ID'])]
+    # drop the same ID record
+    # Note: the record is simply added as the first row.
+    # references = references[~(references['ID'] == record['ID'])]
     # dropping them before calculating similarities prevents errors
     # caused by unavailable fields!
-    # Note: ignore entries that need manual preparation in the merging
+    # Note: ignore records that need manual preparation in the merging
     # (until they have been prepared!)
     references = references[~references['md_status'].str
                             .contains('|'.join(merge_ignore_status), na=False)]
 
-    # means that all prior entries are tagged as needs_manual_preparation
+    # means that all prior records are tagged as needs_manual_preparation
     if references.shape[0] == 0:
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
         with open('non_duplicates.csv', 'a') as fd:
-            fd.write('"' + entry['ID'] + '"\n')
+            fd.write('"' + record['ID'] + '"\n')
         return
-    references = calculate_similarities_entry(references)
+    references = calculate_similarities_record(references)
 
     max_similarity = references.similarity.max()
     ID = references.loc[references['similarity'].idxmax()]['ID']
     logging.debug(f'max_similarity ({max_similarity}): {ID}')
     if max_similarity <= MERGING_NON_DUP_THRESHOLD:
-        # Note: if no other entry has a similarity exceeding the threshold,
-        # it is considered a non-duplicate (in relation to all other entries)
+        # Note: if no other record has a similarity exceeding the threshold,
+        # it is considered a non-duplicate (in relation to all other records)
         if not os.path.exists('non_duplicates.csv'):
             with open('non_duplicates.csv', 'a') as fd:
                 fd.write('"ID"\n')
         with open('non_duplicates.csv', 'a') as fd:
-            fd.write('"' + entry['ID'] + '"\n')
+            fd.write('"' + record['ID'] + '"\n')
     if max_similarity > MERGING_NON_DUP_THRESHOLD and \
             max_similarity < MERGING_DUP_THRESHOLD:
         # The needs_manual_merging status is only set
@@ -383,11 +383,11 @@ def append_merges(entry):
                 fd.write('"ID1","ID2","max_similarity"\n')
         with open('potential_duplicate_tuples.csv', 'a') as fd:
             # to ensure a consistent order
-            entry_a, entry_b = sorted([ID, entry['ID']])
-            line = '"' + entry_a + '","' + entry_b + '","' + \
+            record_a, record_b = sorted([ID, record['ID']])
+            line = '"' + record_a + '","' + record_b + '","' + \
                 str(max_similarity) + '"\n'
             fd.write(line)
-        logging.info(f'{ID} - {entry["ID"]}'.ljust(35, ' ') +
+        logging.info(f'{ID} - {record["ID"]}'.ljust(35, ' ') +
                      f'  - potential duplicate (similarity: {max_similarity})')
 
     if max_similarity >= MERGING_DUP_THRESHOLD:
@@ -398,8 +398,8 @@ def append_merges(entry):
             with open('duplicate_tuples.csv', 'a') as fd:
                 fd.write('"ID1","ID2"\n')
         with open('duplicate_tuples.csv', 'a') as fd:
-            fd.write('"' + ID + '","' + entry['ID'] + '"\n')
-        logging.info(f'Dropped duplicate: {ID} <- {entry["ID"]}'
+            fd.write('"' + ID + '","' + record['ID'] + '"\n')
+        logging.info(f'Dropped duplicate: {ID} <- {record["ID"]}'
                      f' (similarity: {max_similarity})')
 
     return
@@ -409,9 +409,9 @@ def apply_merges(bib_db):
 
     # The merging also needs to consider whether IDs are propagated
     # Completeness of comparisons should be ensured by the
-    # append_merges procedure (which ensures that all prior entries
+    # append_merges procedure (which ensures that all prior records
     # in global queue_order are considered before completing
-    # the comparison/adding entries ot the csvs)
+    # the comparison/adding records ot the csvs)
 
     try:
         os.remove('queue_order.csv')
@@ -425,21 +425,21 @@ def apply_merges(bib_db):
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 el_to_merge = []
-                for entry in bib_db.entries:
-                    if entry['ID'] == row[1]:
-                        el_to_merge = entry['origin'].split(';')
-                        # Drop the duplicated entry
+                for record in bib_db.entries:
+                    if record['ID'] == row[1]:
+                        el_to_merge = record['origin'].split(';')
+                        # Drop the duplicated record
                         bib_db.entries = \
                             [i for i in bib_db.entries
-                             if not (i['ID'] == entry['ID'])]
+                             if not (i['ID'] == record['ID'])]
                         break
-                for entry in bib_db.entries:
-                    if entry['ID'] == row[0]:
-                        els = el_to_merge + entry['origin'].split(';')
+                for record in bib_db.entries:
+                    if record['ID'] == row[0]:
+                        els = el_to_merge + record['origin'].split(';')
                         els = list(set(els))
-                        entry.update(origin=str(';'.join(els)))
-                        if 'prepared' == entry['md_status']:
-                            entry.update(md_status='processed')
+                        record.update(origin=str(';'.join(els)))
+                        if 'prepared' == record['md_status']:
+                            record.update(md_status='processed')
                         merge_details += row[0] + ' < ' + row[1] + '\n'
                         break
 
@@ -448,21 +448,21 @@ def apply_merges(bib_db):
         with open('non_duplicates.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
-                for entry in bib_db.entries:
-                    if entry['ID'] == row[0]:
-                        if 'prepared' == entry['md_status']:
-                            entry.update(md_status='processed')
+                for record in bib_db.entries:
+                    if record['ID'] == row[0]:
+                        if 'prepared' == record['md_status']:
+                            record.update(md_status='processed')
         os.remove('non_duplicates.csv')
 
     # note: potential_duplicate_tuples need to be processed manually but we
-    # tag the second entry (row[1]) as "needs_manual_merging"
+    # tag the second record (row[1]) as "needs_manual_merging"
     if os.path.exists('potential_duplicate_tuples.csv'):
         with open('potential_duplicate_tuples.csv') as read_obj:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
-                for entry in bib_db.entries:
-                    if (entry['ID'] == row[0]) or (entry['ID'] == row[1]):
-                        entry.update(md_status='needs_manual_merging')
+                for record in bib_db.entries:
+                    if (record['ID'] == row[0]) or (record['ID'] == row[1]):
+                        record.update(md_status='needs_manual_merging')
         potential_duplicates = \
             pd.read_csv('potential_duplicate_tuples.csv', dtype=str)
         potential_duplicates.sort_values(by=['max_similarity', 'ID1', 'ID2'],
@@ -503,7 +503,7 @@ def main(bib_db, repo):
 
         if batch_end > 0:
             logging.info('Completed duplicate processing batch '
-                         f'(entries {batch_start} to {batch_end})')
+                         f'(records {batch_start} to {batch_end})')
 
             utils.save_bib_file(bib_db, MAIN_REFERENCES)
             if os.path.exists('potential_duplicate_tuples.csv'):
@@ -517,7 +517,7 @@ def main(bib_db, repo):
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
-                logging.info('No additional entries to check for duplicates')
+                logging.info('No additional records to check for duplicates')
             break
 
     print()

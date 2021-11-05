@@ -16,46 +16,46 @@ from review_template import repo_setup
 from review_template import utils
 
 
-def load_entries(bib_file):
+def load_records(bib_file):
 
     with open(bib_file) as bibtex_file:
         individual_bib_db = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode, common_strings=True,
         ).parse_file(bibtex_file, partial=True)
         search_file = os.path.basename(bib_file)
-        for entry in individual_bib_db.entries:
-            entry['origin'] = search_file + '/' + entry['ID']
+        for record in individual_bib_db.entries:
+            record['origin'] = search_file + '/' + record['ID']
 
     return individual_bib_db.entries
 
 
-def get_search_entries():
+def get_search_records():
 
     pool = mp.Pool(repo_setup.config['CPUS'])
-    entries = pool.map(load_entries, utils.get_bib_files())
-    entries = list(chain(*entries))
+    records = pool.map(load_records, utils.get_bib_files())
+    records = list(chain(*records))
 
-    return entries
+    return records
 
 
-def validate_preparation_changes(bib_db, search_entries):
+def validate_preparation_changes(bib_db, search_records):
 
     print('Calculating preparation differences...')
     change_diff = []
-    for entry in bib_db.entries:
-        if 'changed_in_target_commit' not in entry:
+    for record in bib_db.entries:
+        if 'changed_in_target_commit' not in record:
             continue
-        del entry['changed_in_target_commit']
-        del entry['rev_status']
-        del entry['md_status']
-        del entry['pdf_status']
-        # del entry['origin']
-        for cur_entry_link in entry['origin'].split(';'):
-            prior_entries = [x for x in search_entries
-                             if cur_entry_link in x['origin'].split(',')]
-            for prior_entry in prior_entries:
-                similarity = dedupe.get_entry_similarity(entry, prior_entry)
-                change_diff.append([entry['ID'], cur_entry_link, similarity])
+        del record['changed_in_target_commit']
+        del record['rev_status']
+        del record['md_status']
+        del record['pdf_status']
+        # del record['origin']
+        for cur_record_link in record['origin'].split(';'):
+            prior_records = [x for x in search_records
+                             if cur_record_link in x['origin'].split(',')]
+            for prior_record in prior_records:
+                similarity = dedupe.get_record_similarity(record, prior_record)
+                change_diff.append([record['ID'], cur_record_link, similarity])
 
     change_diff = [[e1, e2, 1-sim] for [e1, e2, sim] in change_diff if sim < 1]
     # sort according to similarity
@@ -69,49 +69,49 @@ def validate_preparation_changes(bib_db, search_entries):
     input('continue')
 
     pp = pprint.PrettyPrinter(indent=4)
-    for eid, entry_link, difference in change_diff:
+    for eid, record_link, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
-        print('Entry with ID: ' + eid)
+        print('Record with ID: ' + eid)
 
         print('Difference: ' + str(round(difference, 4)) + '\n\n')
-        entry_1 = [x for x in search_entries if entry_link == x['origin']]
-        pp.pprint(entry_1[0])
-        entry_2 = [x for x in bib_db.entries if eid == x['ID']]
-        pp.pprint(entry_2[0])
+        record_1 = [x for x in search_records if record_link == x['origin']]
+        pp.pprint(record_1[0])
+        record_2 = [x for x in bib_db.entries if eid == x['ID']]
+        pp.pprint(record_2[0])
 
         print('\n\n')
-        for diff in list(dictdiffer.diff(entry_1, entry_2)):
+        for diff in list(dictdiffer.diff(record_1, record_2)):
             # Note: may treat fields differently (e.g., status, ID, ...)
             pp.pprint(diff)
 
         if 'n' == input('continue (y/n)?'):
             break
-        # input('TODO: correct? if not, replace current entry with old one')
+        # input('TODO: correct? if not, replace current record with old one')
 
     return
 
 
-def validate_merging_changes(bib_db, search_entries):
+def validate_merging_changes(bib_db, search_records):
 
     os.system('cls' if os.name == 'nt' else 'clear')
     print('Calculating differences between merged records...')
     change_diff = []
-    merged_entries = False
-    for entry in bib_db.entries:
-        if 'changed_in_target_commit' not in entry:
+    merged_records = False
+    for record in bib_db.entries:
+        if 'changed_in_target_commit' not in record:
             continue
-        del entry['changed_in_target_commit']
-        if ';' in entry['origin']:
-            merged_entries = True
-            els = entry['origin'].split(';')
+        del record['changed_in_target_commit']
+        if ';' in record['origin']:
+            merged_records = True
+            els = record['origin'].split(';')
             duplicate_el_pairs = list(itertools.combinations(els, 2))
             for el_1, el_2 in duplicate_el_pairs:
-                entry_1 = [x for x in search_entries if el_1 == x['origin']]
-                entry_2 = [x for x in search_entries if el_2 == x['origin']]
+                record_1 = [x for x in search_records if el_1 == x['origin']]
+                record_2 = [x for x in search_records if el_2 == x['origin']]
 
                 similarity = \
-                    dedupe.get_entry_similarity(entry_1[0], entry_2[0])
+                    dedupe.get_record_similarity(record_1[0], record_2[0])
                 change_diff.append([el_1, el_2, similarity])
 
     change_diff = [[e1, e2, 1-sim] for [e1, e2, sim] in change_diff if sim < 1]
@@ -120,10 +120,10 @@ def validate_merging_changes(bib_db, search_entries):
     change_diff.sort(key=lambda x: x[2], reverse=True)
 
     if 0 == len(change_diff):
-        if merged_entries:
+        if merged_records:
             print('No substantial differences found.')
         else:
-            print('No merged entries')
+            print('No merged records')
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -131,12 +131,12 @@ def validate_merging_changes(bib_db, search_entries):
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        print('Differences between merged entries:' +
+        print('Differences between merged records:' +
               f' {round(difference, 4)}\n\n')
-        entry_1 = [x for x in search_entries if el_1 == x['origin']]
-        pp.pprint(entry_1[0])
-        entry_2 = [x for x in search_entries if el_2 == x['origin']]
-        pp.pprint(entry_2[0])
+        record_1 = [x for x in search_records if el_1 == x['origin']]
+        pp.pprint(record_1[0])
+        record_2 = [x for x in search_records if el_2 == x['origin']]
+        pp.pprint(record_2[0])
 
         if 'n' == input('continue (y/n)?'):
             break
@@ -171,14 +171,14 @@ def load_bib_db(target_commit):
                 bib_db = bibtexparser.loads(filecontents)
                 found = True
 
-        # determine which entries have been changed (prepared or merged)
+        # determine which records have been changed (prepared or merged)
         # in the target_commit
-        for entry in bib_db.entries:
-            prior_entry = [x for x in prior_bib_db.entries
-                           if x['ID'] == entry['ID']][0]
+        for record in bib_db.entries:
+            prior_record = [x for x in prior_bib_db.entries
+                            if x['ID'] == record['ID']][0]
             # Note: the following is an exact comparison of all fields
-            if entry != prior_entry:
-                entry.update(changed_in_target_commit='True')
+            if record != prior_record:
+                record.update(changed_in_target_commit='True')
 
     return bib_db
 
@@ -189,15 +189,15 @@ def main(scope, target_commit):
 
     bib_db = load_bib_db(target_commit)
 
-    # Note: search entries are considered immutable
+    # Note: search records are considered immutable
     # we therefore load the latest files
-    search_entries = get_search_entries()
+    search_records = get_search_records()
 
     if 'prepare' == scope or 'all' == scope:
-        validate_preparation_changes(bib_db, search_entries)
+        validate_preparation_changes(bib_db, search_records)
 
     if 'merge' == scope or 'all' == scope:
-        validate_merging_changes(bib_db, search_entries)
+        validate_merging_changes(bib_db, search_records)
 
     return
 

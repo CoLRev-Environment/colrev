@@ -27,8 +27,8 @@ def reprocess_id(id, repo):
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
     if 'all' == id:
-        logging.info('Removing/reprocessing all entries')
-        com_msg = '⚙️ Reprocess all entries'
+        logging.info('Removing/reprocessing all records')
+        com_msg = '⚙️ Reprocess all records'
         os.remove(MAIN_REFERENCES)
         repo.index.remove([MAIN_REFERENCES], working_tree=True)
 
@@ -60,8 +60,8 @@ class DelayRequirement(Exception):
 
 def check_delay(db, min_status_requirement):
 
-    # all entries need to have at least the min_status_requirement (or latter)
-    # ie. raise DelayRequirement if any entry has a prior status
+    # all records need to have at least the min_status_requirement (or latter)
+    # ie. raise DelayRequirement if any record has a prior status
     # do not consider terminal states:
     # prescreen_excluded, not_available, excluded
 

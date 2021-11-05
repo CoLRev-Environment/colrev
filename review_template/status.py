@@ -123,7 +123,7 @@ def get_status_freq():
     rev_screen_excluded = 0
     rev_synthesized = 0
 
-    entry_links = 0
+    record_links = 0
     excl_criteria = []
 
     if os.path.exists(MAIN_REFERENCES):
@@ -166,9 +166,9 @@ def get_status_freq():
                     if '{not_available}' in line:
                         pdfs_not_available += 1
                 if 'origin' == line.lstrip()[:6]:
-                    nr_entry_links = line.count(';')
-                    entry_links += nr_entry_links + 1
-                    md_duplicates_removed += nr_entry_links
+                    nr_record_links = line.count(';')
+                    record_links += nr_record_links + 1
+                    md_duplicates_removed += nr_record_links
                 if ' excl_criteria ' in line:
                     excl_criteria_field = \
                         line[line.find('{')+1:line.find('}')]
@@ -192,7 +192,7 @@ def get_status_freq():
         md_overall_prepared + md_need_man_prep + md_imported
     md_overall_retrieved = get_nr_search()
 
-    md_non_imported = md_overall_retrieved - entry_links
+    md_non_imported = md_overall_retrieved - record_links
 
     # Reverse order (overall_x means x or later status)
     pdfs_overall_prepared = pdfs_prepared
@@ -565,7 +565,7 @@ def review_instructions(status_freq=None):
         return
 
     if metadata['currently']['prepared'] > 0:
-        print('  To continue with entry preparation, '
+        print('  To continue with record preparation, '
               'use\n     review_template process')
         return
 

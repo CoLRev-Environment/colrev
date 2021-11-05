@@ -21,29 +21,29 @@ BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 data_dir = ''
 
 
-def process_backward_search(entry):
+def process_backward_search(record):
 
-    if entry['pdf_status'] != 'prepared':
-        return entry
+    if record['pdf_status'] != 'prepared':
+        return record
 
-    bib_filename = data_dir + 'search/' + entry['ID'] + '_bw_search.bib'
-    pdf_filename = data_dir + 'pdfs/' + entry['ID'] + '.pdf'
+    bib_filename = data_dir + 'search/' + record['ID'] + '_bw_search.bib'
+    pdf_filename = data_dir + 'pdfs/' + record['ID'] + '.pdf'
 
-    filename = entry.get('file', 'NA').replace('.pdf:PDF', '.pdf')\
+    filename = record.get('file', 'NA').replace('.pdf:PDF', '.pdf')\
         .replace(':', '')
     pdf_path = os.path.join(os.getcwd(), filename)
     if not os.path.exists(pdf_path):
-        logging.error(f'File does not exist ({entry["ID"]})')
-        return entry
+        logging.error(f'File does not exist ({record["ID"]})')
+        return record
 
     with open(SEARCH_DETAILS) as f:
         search_details_df = pd.json_normalize(safe_load(f))
         search_details = search_details_df.to_dict('records')
 
     if bib_filename in [x['source_url'] for x in search_details]:
-        return entry
+        return record
 
-    logging.info(f'Extract references for {entry["ID"]}')
+    logging.info(f'Extract references for {record["ID"]}')
     # alternative python-batch:
     # https://github.com/kermitt2/grobid_client_python
     grobid_client.check_grobid_availability()
@@ -59,7 +59,7 @@ def process_backward_search(entry):
     bib_content = r.text.encode('utf-8')
     with open(bib_filename, 'wb') as f:
         f.write(bib_content)
-        entry['bib_filename'] = bib_filename
+        record['bib_filename'] = bib_filename
 
     iteration = max(x['iteration'] for x in search_details)
 
@@ -88,7 +88,7 @@ def process_backward_search(entry):
         yaml.dump(json.loads(search_details_df.to_json(orient='records')),
                   f, default_flow_style=False, sort_keys=False)
 
-    return entry
+    return record
 
 
 def main():
@@ -101,8 +101,8 @@ def main():
 
     bib_db = utils.load_main_refs()
 
-    for entry in bib_db.entries:
-        process_backward_search(entry)
+    for record in bib_db.entries:
+        process_backward_search(record)
 
     bibfilenames = [x['bib_filename']
                     for x in bib_db.entries if 'bib_filename' in x]

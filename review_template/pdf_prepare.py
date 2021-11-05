@@ -27,10 +27,10 @@ IPAD, EPAD = 0, 0
 current_batch_counter = mp.Value('i', 0)
 
 
-def extract_text_by_page(entry, pages=None):
+def extract_text_by_page(record, pages=None):
 
     text_list = []
-    pdf_path = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
+    pdf_path = record['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     with open(pdf_path, 'rb') as fh:
         for page in PDFPage.get_pages(
             fh,
@@ -53,33 +53,33 @@ def extract_text_by_page(entry, pages=None):
     return ''.join(text_list)
 
 
-def get_text_from_pdf(entry):
+def get_text_from_pdf(record):
 
-    pdf_path = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
+    pdf_path = record['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     file = open(pdf_path, 'rb')
     parser = PDFParser(file)
     document = PDFDocument(parser)
 
     pages_in_file = resolve1(document.catalog['Pages'])['Count']
-    entry['pages_in_file'] = pages_in_file
+    record['pages_in_file'] = pages_in_file
 
     try:
         pages = [0, 1, 2]
-        text = extract_text_by_page(entry, pages)
+        text = extract_text_by_page(record, pages)
 
-        entry['text_from_pdf'] = text
+        record['text_from_pdf'] = text
     except PDFSyntaxError:
-        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+        logging.error(f'{record["file"]}'.ljust(EPAD, ' ') +
                       'PDF reader error: check whether is a pdf')
-        entry.update(pdf_status='needs_manual_preparation')
+        record.update(pdf_status='needs_manual_preparation')
         pass
     except PDFTextExtractionNotAllowed:
-        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+        logging.error(f'{record["file"]}'.ljust(EPAD, ' ') +
                       'PDF reader error: protection')
-        entry.update(pdf_status='needs_manual_preparation')
+        record.update(pdf_status='needs_manual_preparation')
         pass
 
-    return entry
+    return record
 
 
 def probability_english(text):
@@ -91,29 +91,29 @@ def probability_english(text):
     return probability_english
 
 
-def pdf_check_ocr(entry):
+def pdf_check_ocr(record):
 
-    if 'imported' != entry.get('pdf_status', 'NA'):
-        return entry
+    if 'imported' != record.get('pdf_status', 'NA'):
+        return record
 
-    if probability_english(entry['text_from_pdf']) < 0.9:
-        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+    if probability_english(record['text_from_pdf']) < 0.9:
+        logging.error(f'{record["file"]}'.ljust(EPAD, ' ') +
                       'Validation error (OCR or language problems)')
-        entry.update(pdf_status='needs_manual_preparation')
+        record.update(pdf_status='needs_manual_preparation')
 
-    return entry
+    return record
 
 
-def validate_pdf_metadata(entry):
+def validate_pdf_metadata(record):
 
-    if 'imported' != entry.get('pdf_status', 'NA'):
-        return entry
+    if 'imported' != record.get('pdf_status', 'NA'):
+        return record
 
-    text = entry['text_from_pdf']
+    text = record['text_from_pdf']
     text = text.replace(' ', '').replace('\n', '').lower()
     text = re.sub('[^a-zA-Z ]+', '', text)
 
-    title_words = re.sub('[^a-zA-Z ]+', '', entry['title'])\
+    title_words = re.sub('[^a-zA-Z ]+', '', record['title'])\
                     .lower().split()
     match_count = 0
     for title_word in title_words:
@@ -121,73 +121,73 @@ def validate_pdf_metadata(entry):
             match_count += 1
 
     if match_count/len(title_words) < 0.9:
-        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+        logging.error(f'{record["file"]}'.ljust(EPAD, ' ') +
                       'Title not found in first pages')
-        entry.update(pdf_status='needs_manual_preparation')
+        record.update(pdf_status='needs_manual_preparation')
 
     match_count = 0
-    for author_name in entry['author'].split(' and '):
+    for author_name in record['author'].split(' and '):
         author_name = \
             author_name.split(',')[0].lower().replace(' ', '')
         if (re.sub('[^a-zA-Z ]+', '', author_name) in text):
             match_count += 1
 
-    if match_count/len(entry['author'].split(' and ')) < 0.8:
-        logging.error(f'{entry["file"]}'.ljust(EPAD, ' ') +
+    if match_count/len(record['author'].split(' and ')) < 0.8:
+        logging.error(f'{record["file"]}'.ljust(EPAD, ' ') +
                       'author not found in first pages')
-        entry.update(pdf_status='needs_manual_preparation')
+        record.update(pdf_status='needs_manual_preparation')
 
-    return entry
+    return record
 
 
-def validate_completeness(entry):
-    if 'imported' != entry.get('pdf_status', 'NA'):
-        return entry
+def validate_completeness(record):
+    if 'imported' != record.get('pdf_status', 'NA'):
+        return record
 
     full_version_purchase_notice = \
         'morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas'
     if full_version_purchase_notice in \
-            extract_text_by_page(entry).replace(' ', ''):
-        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+            extract_text_by_page(record).replace(' ', ''):
+        logging.error(f'{record["ID"]}'.ljust(EPAD, ' ') +
                       ' not the full version of the paper')
-        entry.update(pdf_status='needs_manual_preparation')
-        return entry
+        record.update(pdf_status='needs_manual_preparation')
+        return record
 
-    pages_metadata = entry.get('pages', 'NA')
+    pages_metadata = record.get('pages', 'NA')
     if 'NA' == pages_metadata or not re.match(r'^\d*--\d*$', pages_metadata):
-        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+        logging.error(f'{record["ID"]}'.ljust(EPAD, ' ') +
                       'could not validate completeness: no pages in metadata')
-        entry.update(pdf_status='needs_manual_preparation')
-        return entry
+        record.update(pdf_status='needs_manual_preparation')
+        return record
 
     nr_pages_metadata = int(pages_metadata.split('--')[1]) - \
         int(pages_metadata.split('--')[0]) + 1
 
-    if nr_pages_metadata != entry['pages_in_file']:
-        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
-                      f'Nr of pages in file ({entry["pages_in_file"]}) not '
+    if nr_pages_metadata != record['pages_in_file']:
+        logging.error(f'{record["ID"]}'.ljust(EPAD, ' ') +
+                      f'Nr of pages in file ({record["pages_in_file"]}) not '
                       f'identical with record ({nr_pages_metadata} pages)')
-        entry.update(pdf_status='needs_manual_preparation')
-    return entry
+        record.update(pdf_status='needs_manual_preparation')
+    return record
 
 
-def prepare_pdf(entry):
+def prepare_pdf(record):
 
-    if 'imported' != entry.get('pdf_status', 'NA') or \
-            'file' not in entry:
-        return entry
+    if 'imported' != record.get('pdf_status', 'NA') or \
+            'file' not in record:
+        return record
 
     with current_batch_counter.get_lock():
         if current_batch_counter.value >= BATCH_SIZE:
-            return entry
+            return record
         else:
             current_batch_counter.value += 1
 
-    pdf = entry['file'].replace(':', '').replace('.pdfPDF', '.pdf')
+    pdf = record['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     if not os.path.exists(pdf):
-        logging.error(f'{entry["ID"]}'.ljust(EPAD, ' ') +
+        logging.error(f'{record["ID"]}'.ljust(EPAD, ' ') +
                       'Linked file/pdf does not exist')
-        return entry
+        return record
 
     # TODO
     # Remove cover pages and decorations
@@ -201,12 +201,12 @@ def prepare_pdf(entry):
     # pdf_tools.remove_coverpage(filepath)
     # pdf_tools.remove_last_page_info(filepath)
 
-    entry = get_text_from_pdf(entry)
-    if 'needs_manual_preparation' == entry.get('pdf_status'):
-        if 'text_from_pdf' in entry:
-            del entry['text_from_pdf']
-            del entry['pages_in_file']
-        return entry
+    record = get_text_from_pdf(record)
+    if 'needs_manual_preparation' == record.get('pdf_status'):
+        if 'text_from_pdf' in record:
+            del record['text_from_pdf']
+            del record['pages_in_file']
+        return record
 
     prep_scripts = {'pdf_check_ocr': pdf_check_ocr,
                     'validate_pdf_metadata': validate_pdf_metadata,
@@ -214,23 +214,23 @@ def prepare_pdf(entry):
                     }
 
     # Note: if there are problems pdf_status is set to needs_manual_preparation
-    logging.debug(f'Prepare pdf for {entry["ID"]}')
+    logging.debug(f'Prepare pdf for {record["ID"]}')
     for prep_script in prep_scripts:
-        logging.debug(f'{prep_script}({entry["ID"]}) called')
-        entry = prep_scripts[prep_script](entry)
-        if 'needs_manual_preparation' == entry.get('pdf_status'):
+        logging.debug(f'{prep_script}({record["ID"]}) called')
+        record = prep_scripts[prep_script](record)
+        if 'needs_manual_preparation' == record.get('pdf_status'):
             break
 
-    if 'text_from_pdf' in entry:
-        del entry['text_from_pdf']
-        del entry['pages_in_file']
+    if 'text_from_pdf' in record:
+        del record['text_from_pdf']
+        del record['pages_in_file']
 
-    if 'imported' == entry.get('pdf_status'):
-        logging.info(f' {entry["ID"]}'.ljust(IPAD, ' ') + 'Prepared pdf')
+    if 'imported' == record.get('pdf_status'):
+        logging.info(f' {record["ID"]}'.ljust(IPAD, ' ') + 'Prepared pdf')
 
-        entry.update(pdf_status='prepared')
+        record.update(pdf_status='prepared')
 
-    return entry
+    return record
 
 
 def main(bib_db, repo):

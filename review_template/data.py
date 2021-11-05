@@ -182,8 +182,8 @@ def update_manuscript(repo, bib_db, included):
 
     os.remove(temp)
 
-    nr_entries_added = len(missing_records)
-    logging.info(f'{nr_entries_added} records added ({MANUSCRIPT})')
+    nr_records_added = len(missing_records)
+    logging.info(f'{nr_records_added} records added ({MANUSCRIPT})')
 
     return bib_db
 
@@ -211,7 +211,7 @@ def update_structured_data(repo, bib_db, included):
 
     else:
 
-        nr_entries_added = 0
+        nr_records_added = 0
 
         with open(DATA) as f:
             data = pd.json_normalize(safe_load(f))
@@ -221,18 +221,18 @@ def update_structured_data(repo, bib_db, included):
             if 0 < len(data[data['ID'].str.startswith(record_id)]):
                 continue
 
-            add_entry = pd.DataFrame({'ID': [record_id]})
-            add_entry = \
-                add_entry.reindex(columns=data.columns, fill_value='TODO')
-            data = pd.concat([data, add_entry], axis=0, ignore_index=True)
-            nr_entries_added = nr_entries_added + 1
+            add_record = pd.DataFrame({'ID': [record_id]})
+            add_record = \
+                add_record.reindex(columns=data.columns, fill_value='TODO')
+            data = pd.concat([data, add_record], axis=0, ignore_index=True)
+            nr_records_added = nr_records_added + 1
 
         data.sort_values(by=['ID'], inplace=True)
         with open(DATA, 'w') as f:
             yaml.dump(json.loads(data.to_json(orient='records')),
                       f, default_flow_style=False)
 
-        logging.info(f'{nr_entries_added} records added ({DATA})')
+        logging.info(f'{nr_records_added} records added ({DATA})')
 
     return
 
@@ -278,16 +278,16 @@ def main(edit_csv, load_csv):
     synthesized_in_manuscript = get_synthesized_ids(bib_db)
     structured_data_extracted = get_structured_data_extracted(bib_db)
 
-    for entry in bib_db.entries:
+    for record in bib_db.entries:
         if 'MANUSCRIPT' in DATA_FORMAT and \
-                entry['ID'] not in synthesized_in_manuscript:
+                record['ID'] not in synthesized_in_manuscript:
             continue
         if 'STRUCTURED' in DATA_FORMAT and \
-                entry['ID'] not in structured_data_extracted:
+                record['ID'] not in structured_data_extracted:
             continue
 
-        entry.update(rev_status='synthesized')
-        logging.info(f' {entry["ID"]}'.ljust(PAD, ' ') +
+        record.update(rev_status='synthesized')
+        logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                      'set status to synthesized')
 
     utils.save_bib_file(bib_db, repo_setup.paths['MAIN_REFERENCES'])

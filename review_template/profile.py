@@ -17,8 +17,8 @@ class colors:
 
 
 def prep_references(bib_db):
-    for entry in bib_db.entries:
-        entry['outlet'] = entry.get('journal', entry.get('booktitle', 'NA'))
+    for record in bib_db.entries:
+        record['outlet'] = record.get('journal', record.get('booktitle', 'NA'))
 
     references = pd.DataFrame.from_dict(bib_db.entries)
 

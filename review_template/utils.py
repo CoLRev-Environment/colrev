@@ -79,32 +79,32 @@ def propagated_ID(ID):
     return propagated
 
 
-def generate_ID(entry, bib_db=None, entry_in_bib_db=False,
+def generate_ID(record, bib_db=None, record_in_bib_db=False,
                 raise_error=True):
     if bib_db is not None:
-        ID_blacklist = [entry['ID'] for entry in bib_db.entries]
+        ID_blacklist = [record['ID'] for record in bib_db.entries]
     else:
         ID_blacklist = None
-    ID = generate_ID_blacklist(entry, ID_blacklist, entry_in_bib_db,
+    ID = generate_ID_blacklist(record, ID_blacklist, record_in_bib_db,
                                raise_error)
     return ID
 
 
-def generate_ID_blacklist(entry, ID_blacklist=None,
-                          entry_in_bib_db=False,
+def generate_ID_blacklist(record, ID_blacklist=None,
+                          record_in_bib_db=False,
                           raise_error=True):
 
     # Make sure that IDs that have been propagated to the
     # screen or data will not be replaced
     # (this would break the chain of evidence)
     if raise_error:
-        if propagated_ID(entry['ID']):
+        if propagated_ID(record['ID']):
             raise CitationKeyPropagationError(
                 'WARNING: do not change IDs that have been ' +
-                f'propagated to {DATA} ({entry["ID"]})')
+                f'propagated to {DATA} ({record["ID"]})')
 
-    if 'author' in entry:
-        authors = prepare.format_author_field(entry['author'])
+    if 'author' in record:
+        authors = prepare.format_author_field(record['author'])
     else:
         authors = ''
 
@@ -124,7 +124,7 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
 
     assert ID_PATTERN in ['FIRST_AUTHOR', 'THREE_AUTHORS']
     if 'FIRST_AUTHOR' == ID_PATTERN:
-        temp_ID = f'{author.replace(" ", "")}{str(entry.get("year", ""))}'
+        temp_ID = f'{author.replace(" ", "")}{str(record.get("year", ""))}'
 
     if 'THREE_AUTHORS' == ID_PATTERN:
         temp_ID = ''
@@ -136,7 +136,7 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
                 f'{authors[ind].split(",")[0].replace(" ", "")}'
         if len(authors) > 3:
             temp_ID = temp_ID + 'EtAl'
-        temp_ID = temp_ID + str(entry.get('year', ''))
+        temp_ID = temp_ID + str(record.get('year', ''))
 
     if temp_ID.isupper():
         temp_ID = temp_ID.capitalize()
@@ -147,13 +147,13 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
     temp_ID = re.sub('[^0-9a-zA-Z]+', '', temp_ID)
 
     if ID_blacklist is not None:
-        if entry_in_bib_db:
+        if record_in_bib_db:
             # allow IDs to remain the same.
             other_ids = ID_blacklist
             # Note: only remove it once. It needs to change when there are
-            # other entries with the same ID
-            if entry['ID'] in other_ids:
-                other_ids.remove(entry['ID'])
+            # other records with the same ID
+            if record['ID'] in other_ids:
+                other_ids.remove(record['ID'])
         else:
             # ID can remain the same, but it has to change
             # if it is already in bib_db
@@ -175,18 +175,18 @@ def generate_ID_blacklist(entry, ID_blacklist=None,
 
 
 def set_IDs(bib_db):
-    ID_list = [entry['ID'] for entry in bib_db.entries]
-    for entry in bib_db.entries:
-        if entry['md_status'] in ['imported', 'prepared']:
-            old_id = entry['ID']
+    ID_list = [record['ID'] for record in bib_db.entries]
+    for record in bib_db.entries:
+        if record['md_status'] in ['imported', 'prepared']:
+            old_id = record['ID']
             new_id = generate_ID_blacklist(
-                entry, ID_list,
-                entry_in_bib_db=True,
+                record, ID_list,
+                record_in_bib_db=True,
                 raise_error=False)
-            entry.update(ID=new_id)
+            record.update(ID=new_id)
             if old_id != new_id:
                 logging.info(f'set_ID({old_id}) to {new_id}')
-            ID_list.append(entry['ID'])
+            ID_list.append(record['ID'])
     return bib_db
 
 
@@ -218,7 +218,7 @@ def load_main_refs(mod_check=None, init=None):
 def git_modification_check(filename):
     repo = git.Repo()
     index = repo.index
-    if filename in [entry.a_path for entry in index.diff(None)]:
+    if filename in [record.a_path for record in index.diff(None)]:
         print(
             f'WARNING: There are changes in {filename}',
             ' that are not yet added to the git index. ',
@@ -241,9 +241,9 @@ def get_bib_files():
 
 def get_included_IDs(db):
     included = []
-    for entry in db.entries:
-        if entry.get('rev_status', 'NA') in ['included', 'synthesized']:
-            included.append(entry['ID'])
+    for record in db.entries:
+        if record.get('rev_status', 'NA') in ['included', 'synthesized']:
+            included.append(record['ID'])
     return included
 
 
