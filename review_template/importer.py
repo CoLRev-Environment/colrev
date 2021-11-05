@@ -261,8 +261,13 @@ def getbib(file):
         contents = bibtex_file.read()
         bib_r = re.compile(r'^@.*{.*,', re.M)
         if len(re.findall(bib_r, contents)) == 0:
-            logging.info('Error: Not a bib file? ' + os.path.basename(file))
+            logging.error(f'Not a bib file? {os.path.basename(file)}')
             db = None
+        if 'Early Access Date' in contents:
+            logging.error('Replace Early Access Date in bibfile before '
+                          f'loading! {os.path.basename(file)}')
+            return None
+
         else:
             with open(file) as bibtex_file:
                 db = BibTexParser(

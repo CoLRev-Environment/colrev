@@ -105,6 +105,7 @@ def man_prep_entry(entry):
             raise_error=False))
         ID_list.append(entry['ID'])
         entry.update(md_status='prepared')
+        entry.update(metadata_source='MAN_PREP')
 
     return entry
 
