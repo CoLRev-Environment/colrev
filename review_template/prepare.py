@@ -9,6 +9,7 @@ import re
 import sys
 import urllib
 
+import bibtexparser
 import click
 import dictdiffer
 import git
@@ -22,6 +23,7 @@ from review_template import process
 from review_template import repo_setup
 from review_template import utils
 
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 EMAIL = repo_setup.config['EMAIL']
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -1096,7 +1098,38 @@ def reorder_log(IDs):
     return
 
 
-def main(bib_db, repo, suppress_ID_changes=False):
+def reset(bib_db, id):
+    entry = [x for x in bib_db.entries if x['ID'] == id]
+    if len(entry) == 0:
+        logging.info(f'entry with ID {entry["ID"]} not found')
+        return
+    # Note: the case len(entry) > 1 should not occur.
+    entry = entry[0]
+    if 'prepared' != entry['md_status']:
+        logging.error(f'{id}: md_status must be prepared '
+                      f'(is {entry["md_status"]})')
+        return
+
+    origins = entry['origin'].split(';')
+
+    repo = git.Repo()
+    revlist = (
+        ((commit.tree / MAIN_REFERENCES).data_stream.read())
+        for commit in repo.iter_commits(paths=MAIN_REFERENCES)
+    )
+    for filecontents in list(revlist):
+        prior_bib_db = bibtexparser.loads(filecontents)
+        for e in prior_bib_db.entries:
+            if 'imported' == e['md_status'] and \
+                    any(o in e['origin'] for o in origins):
+                e.update(md_status='needs_manual_preparation')
+                logging.info(f'reset({entry["ID"]}) to\n{pp.pformat(e)}\n\n')
+                entry.update(e)
+                break
+    return
+
+
+def main(bib_db, repo, reset_ids, reprocess=False, keep_ids=False):
     global prepared
     global need_manual_prep
     global PAD
@@ -1105,6 +1138,22 @@ def main(bib_db, repo, suppress_ID_changes=False):
 
     process.check_delay(bib_db, min_status_requirement='md_imported')
     utils.reset_log()
+
+    if reset_ids:
+        for reset_id in reset_ids:
+            reset(bib_db, reset_id)
+        utils.save_bib_file(bib_db, MAIN_REFERENCES)
+        repo.index.add([MAIN_REFERENCES])
+        utils.create_commit(repo, '⚙️ Reset metadata for manual preparation')
+        return
+
+    # Note: resetting needs_manual_preparation to imported would also be
+    # consistent with the check7valid_transitions because it will either
+    # transition to prepared or to needs_manual_preparation
+    if reprocess:
+        for entry in bib_db.entries:
+            if 'needs_manual_preparation' == entry['md_status']:
+                entry['md_status'] = 'imported'
 
     logging.info('Prepare')
     logging.info(f'Batch size: {BATCH_SIZE}')
@@ -1132,14 +1181,15 @@ def main(bib_db, repo, suppress_ID_changes=False):
             logging.info('Completed preparation batch '
                          f'(entries {batch_start} to {batch_end})')
 
-            if not suppress_ID_changes:
+            if keep_ids:
                 bib_db = utils.set_IDs(bib_db)
 
-            MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
             utils.save_bib_file(bib_db, MAIN_REFERENCES)
             repo.index.add([MAIN_REFERENCES])
 
             print_stats_end(bib_db)
+            logging.info('To reset the metdatata of entries, use \n'
+                         '   review_template prepare --reset-ID [ID1,ID2]')
             logging.info('Instructions on resetting entries and analyzing '
                          'preparation steps available in the documentation '
                          '(link)')

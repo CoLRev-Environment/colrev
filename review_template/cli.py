@@ -74,35 +74,59 @@ def status(ctx):
 @click.pass_context
 @click.option('--reprocess',
               help='Entry ID to reprocess ("all" to reprocess all).')
-@click.option('--suppress-ID-changes/--change-IDs',
-              is_flag=True, default=False)
-def process(ctx, reprocess, suppress_id_changes):
+@click.option('-k', '--keep-IDs',
+              is_flag=True, default=False,
+              help='Do not change the entry IDs. Useful when importing ' +
+              'an existing sample.')
+def process(ctx, reprocess, k):
     """Process records (automated steps)"""
     from review_template import process
-    process.main(reprocess, suppress_id_changes)
+    process.main(reprocess, k)
 
 
 @main.command(help_priority=4)
-@click.option('--suppress-ID-changes/--change-IDs',
-              is_flag=True, default=False)
+@click.option('-k', '--keep-IDs',
+              is_flag=True, default=False,
+              help='Do not change the entry IDs. Useful when importing ' +
+              'an existing sample.')
 @click.pass_context
-def importer(ctx, suppress_id_changes):
+def importer(ctx, k):
     """Import records (part of automated processing)"""
     from review_template import importer, init
     repo = init.get_repo()
-    importer.main(repo, suppress_id_changes)
+    importer.main(repo, k)
 
 
 @main.command(help_priority=5)
-@click.option('--suppress-ID-changes/--change-IDs',
-              is_flag=True, default=False)
+@click.option('--reset-ID',
+              default=False,
+              help='Reset entry metadata to the imported version. '
+              'Format: --reset-ID ID1,ID2,ID3')
+@click.option('--reprocess',
+              is_flag=True, default=False,
+              help='Prepare all entries set to md_status=' +
+              'needs_manual_preparation again. Useful if ' +
+              'network/databases were not available')
+@click.option('-k', '--keep-IDs',
+              is_flag=True, default=True,
+              help='Do not change the entry IDs. Useful when importing ' +
+              'an existing sample.')
 @click.pass_context
-def prepare(ctx, suppress_id_changes):
+def prepare(ctx, reset_id, reprocess, keep_ids):
     """Prepare records (part of automated processing)"""
     from review_template import prepare, init, utils
     repo = init.get_repo()
     bib_db = utils.load_main_refs()
-    prepare.main(bib_db, repo, suppress_id_changes)
+
+    # parse to reset_ids list
+    if reset_id:
+        try:
+            reset_id = str(reset_id)
+        except ValueError:
+            pass
+        reset_ids = reset_id.split(',')
+
+    prepare.main(bib_db, repo, reset_ids, reprocess, keep_ids)
 
 
 @main.command(help_priority=6)
@@ -130,7 +154,7 @@ def man_dedupe(ctx):
 
 
 @main.command(help_priority=9)
-@click.option('--include-all/--include-manually', is_flag=True, default=False)
+@click.option('--include-all', is_flag=True, default=False)
 @click.pass_context
 def prescreen(ctx, include_all):
     """Pre-screen based on titles and abstracts"""
@@ -139,11 +163,16 @@ def prescreen(ctx, include_all):
 
 
 @main.command(help_priority=10)
+@click.option('--export', type=click.Choice(['CSV', 'XLSX'],
+              case_sensitive=False),
+              help='Export table with the screening decisions')
+@click.option('--load', type=click.Path(),
+              help='Import file with the screening decisions (csv supported)')
 @click.pass_context
-def screen(ctx):
+def screen(ctx, export, load):
     """Screen based on exclusion criteria and fulltext documents"""
     from review_template import screen
-    screen.screen()
+    screen.screen(export, load)
 
 
 @main.command(help_priority=11)
@@ -175,8 +204,8 @@ def back_search(ctx):
 
 
 @main.command(help_priority=14)
-@click.option('--edit_csv/--no_csv_edit', is_flag=True, default=False)
-@click.option('--load-csv/--no_csv_load', is_flag=True, default=False)
+@click.option('--edit_csv', is_flag=True, default=False)
+@click.option('--load-csv', is_flag=True, default=False)
 @click.pass_context
 def data(ctx, edit_csv, load_csv):
     """Extract data"""
@@ -232,7 +261,9 @@ def validate(ctx, scope, commit):
 
 @main.command(help_priority=17)
 @click.pass_context
-@click.option('--id', help='Record ID to trace (citation_key).', required=True)
+@click.option('--id',
+              help='Record ID to trace (citation_key).',
+              required=True)
 def trace(ctx, id):
     """Trace a record"""
     from review_template import trace

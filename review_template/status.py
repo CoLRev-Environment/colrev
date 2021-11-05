@@ -428,7 +428,7 @@ def stat_print(field1, val1, connector=None, field2=None, val2=None):
         rjust_padd = 45-len(stat)
         stat = stat + str(val2).rjust(rjust_padd, ' ') + ' '
     if field2 != '':
-        stat = stat + str(field2) + '.'
+        stat = stat + str(field2)
     print(stat)
     return
 

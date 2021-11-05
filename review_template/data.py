@@ -80,13 +80,14 @@ def get_data_extracted(records_for_data_extraction):
 
 
 def get_structured_data_extracted(bib_db):
+    if not os.path.exists(DATA):
+        return []
 
     records_for_data_extraction = [x['ID']for x in bib_db.entries
                                    if x.get('rev_status', 'NA') in
                                    ['included', 'in_manuscript']]
 
     data_extracted = get_data_extracted(records_for_data_extraction)
-    input(data_extracted)
 
     data_extracted = [x for x in data_extracted
                       if x in records_for_data_extraction]
@@ -276,9 +277,6 @@ def main(edit_csv, load_csv):
 
     synthesized_in_manuscript = get_synthesized_ids(bib_db)
     structured_data_extracted = get_structured_data_extracted(bib_db)
-
-    print(synthesized_in_manuscript)
-    print(structured_data_extracted)
 
     for entry in bib_db.entries:
         if 'MANUSCRIPT' in DATA_FORMAT and \
