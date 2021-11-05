@@ -7,6 +7,7 @@ import os
 import pprint
 import re
 import shutil
+from datetime import datetime
 from itertools import chain
 
 import bibtexparser
@@ -170,12 +171,30 @@ def check_update_search_details(search_files):
     return
 
 
+def rename_search_files(search_files):
+    ret_list = []
+    date_regex = r'^\d{4}-\d{2}-\d{2}'
+    for search_file in search_files:
+        if re.search(date_regex, os.path.basename(search_file)):
+            ret_list.append(search_file)
+        else:
+            new_filename = \
+                os.path.join(os.path.dirname(search_file),
+                             datetime.today().strftime('%Y-%m-%d-') +
+                             os.path.basename(search_file))
+            new_filename = new_filename.replace(' ', '_')
+            os.rename(search_file, new_filename)
+            ret_list.append(new_filename)
+    return ret_list
+
+
 def load_all_entries():
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
     save_imported_entry_links(bib_db)
     load_pool = mp.Pool(repo_setup.config['CPUS'])
     search_files = get_search_files()
+    search_files = rename_search_files(search_files)
     if any('.pdf' in x for x in search_files):
         grobid_client.start_grobid()
     check_update_search_details(search_files)
@@ -539,7 +558,7 @@ def save_imported_files(repo, bib_db):
     return True
 
 
-def main(repo, suppress_id_changes):
+def main(repo, keep_ids):
     global batch_start
     global batch_end
 
@@ -572,7 +591,7 @@ def main(repo, suppress_id_changes):
         pool.close()
         pool.join()
 
-        if not suppress_id_changes:
+        if not keep_ids:
             bib_db = utils.set_IDs(bib_db)
 
         if save_imported_files(repo, bib_db):

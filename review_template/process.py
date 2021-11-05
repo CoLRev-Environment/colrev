@@ -128,7 +128,7 @@ def check_delay(db, min_status_requirement):
     return False
 
 
-def main(reprocess_ids=None, suppress_id_changes=False):
+def main(reprocess_ids=None, keep_ids=False):
 
     status.repository_validation()
     repo = init.get_repo()
@@ -137,9 +137,9 @@ def main(reprocess_ids=None, suppress_id_changes=False):
     reprocess_id(reprocess_ids, repo)
 
     try:
-        bib_db = importer.main(repo, suppress_id_changes)
+        bib_db = importer.main(repo, keep_ids)
 
-        bib_db = prepare.main(bib_db, repo, suppress_id_changes)
+        bib_db = prepare.main(bib_db, repo, keep_ids)
 
         bib_db = dedupe.main(bib_db, repo)
 

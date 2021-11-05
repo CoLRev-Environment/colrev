@@ -1,10 +1,12 @@
 #! /usr/bin/env python
+import csv
 import logging
 import os
 import pprint
 from collections import OrderedDict
 
 import git
+import pandas as pd
 
 from review_template import process
 from review_template import repo_setup
@@ -120,7 +122,85 @@ def prescreen(include_all):
     return
 
 
-def screen():
+def export_spreadsheet(bib_db, export_csv):
+
+    tbl = []
+    for entry in bib_db.entries:
+        inclusion_2 = 'NA'
+        if 'retrieved' == entry['rev_status']:
+            inclusion_1 = 'TODO'
+        if 'prescreen_excluded' == entry['rev_status']:
+            inclusion_1 = 'no'
+        else:
+            inclusion_1 = 'yes'
+            inclusion_2 = 'TODO'
+            if 'excluded' == entry['rev_status']:
+                inclusion_2 = 'no'
+            else:
+                inclusion_2 = 'yes'
+
+        excl_criteria = {}
+        if 'excl_criteria' in entry:
+            for ecrit in entry['excl_criteria'].split(';'):
+                criteria = {ecrit.split('=')[0]: ecrit.split('=')[1]}
+                excl_criteria.update(criteria)
+
+        row = {'ID': entry['ID'],
+               'author': entry.get('author', ''),
+               'title': entry.get('title', ''),
+               'journal': entry.get('journal', ''),
+               'booktitle': entry.get('booktitle', ''),
+               'year': entry.get('year', ''),
+               'volume': entry.get('volume', ''),
+               'number': entry.get('number', ''),
+               'pages': entry.get('pages', ''),
+               'doi': entry.get('doi', ''),
+               'abstract': entry.get('abstract', ''),
+               'inclusion_1': inclusion_1,
+               'inclusion_2': inclusion_2}
+        row.update(excl_criteria)
+        tbl.append(row)
+
+    if 'csv' == export_csv.lower():
+        screen_df = pd.DataFrame(tbl)
+        screen_df.to_csv('screen_table.csv', index=False,
+                         quoting=csv.QUOTE_ALL)
+        logging.info('Created screen_table (csv)')
+
+    return
+
+
+def import_csv_file(bib_db):
+    if not os.path.exists('screen_table.csv'):
+        print('Did not find screen_table.csv - exiting.')
+        return
+    screen_df = pd.read_csv('screen_table.csv')
+    screen_df.fillna('', inplace=True)
+    entries = screen_df.to_dict('records')
+
+    for x in [[x.get('ID', ''),
+               x.get('inclusion_1', ''),
+               x.get('inclusion_2', '')] for x in entries]:
+        entry = [e for e in bib_db.entries if e['ID'] == x[0]]
+        if len(entry) == 1:
+            entry = entry[0]
+            if x[1] == 'no':
+                entry['rev_status'] = 'prescreen_excluded'
+            if x[1] == 'yes':
+                entry['rev_status'] = 'prescreen_inclued'
+            if x[2] == 'no':
+                entry['rev_status'] = 'excluded'
+            if x[2] == 'yes':
+                entry['rev_status'] = 'included'
+            # TODO: exclusion-criteria
+
+    utils.save_bib_file(
+        bib_db, repo_setup.paths['MAIN_REFERENCES'])
+
+    return
+
+
+def screen(export_csv=None, import_csv=None):
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
@@ -128,6 +208,13 @@ def screen():
 
     process.check_delay(bib_db,
                         min_status_requirement='prescreened_and_pdf_prepared')
+
+    if export_csv:
+        export_spreadsheet(bib_db, export_csv)
+        return
+    if import_csv:
+        import_csv_file(bib_db)
+        return
 
     print('\n\nRun screen')
 
