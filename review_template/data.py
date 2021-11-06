@@ -238,6 +238,7 @@ def update_structured_data(repo, bib_db, included):
 
 
 def main(edit_csv, load_csv):
+    saved_args = locals()
 
     DATA_CSV = DATA.replace('.yaml', '.csv')
     if edit_csv:
@@ -294,7 +295,9 @@ def main(edit_csv, load_csv):
     repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
 
     if 'y' == input('Create commit (y/n)?'):
-        utils.create_commit(repo, 'Data and synthesis', manual_author=True)
+        utils.create_commit(repo, 'Data and synthesis',
+                            saved_args,
+                            manual_author=True)
 
     return
 

@@ -476,6 +476,7 @@ def apply_merges(bib_db):
 
 
 def main(bib_db, repo):
+    saved_args = locals()
 
     utils.reset_log()
     process.check_delay(bib_db, min_status_requirement='md_prepared')
@@ -510,7 +511,9 @@ def main(bib_db, repo):
                 repo.index.add(['potential_duplicate_tuples.csv'])
             repo.index.add([MAIN_REFERENCES])
 
-            in_process = utils.create_commit(repo, '⚙️ Process duplicates')
+            in_process = utils.create_commit(repo,
+                                             '⚙️ Process duplicates',
+                                             saved_args)
             if not in_process:
                 logging.info('No duplicates merged/potential duplicates '
                              'identified')

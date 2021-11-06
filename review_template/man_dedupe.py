@@ -209,6 +209,7 @@ def merge_manual(bib_db, record_a_ID, record_b_ID, stat):
 
 
 def main():
+    saved_args = locals()
     global removed_tuples
 
     repo = git.Repo('')
@@ -265,9 +266,11 @@ def main():
     if not stat.split('/')[0] == stat.split('/')[1]:
         if 'y' == input('Create commit (y/n)?'):
             utils.create_commit(repo, 'Process duplicates manually',
+                                saved_args,
                                 manual_author=True)
     else:
         utils.create_commit(repo, 'Process duplicates manually',
+                            saved_args,
                             manual_author=True)
 
 

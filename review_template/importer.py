@@ -558,6 +558,9 @@ def save_imported_files(repo, bib_db):
 
 
 def main(repo, keep_ids):
+    saved_args = locals()
+    if not keep_ids:
+        del saved_args['keep_ids']
     global batch_start
     global batch_end
 
@@ -594,7 +597,7 @@ def main(repo, keep_ids):
             bib_db = utils.set_IDs(bib_db)
 
         if save_imported_files(repo, bib_db):
-            utils.create_commit(repo, '⚙️ Import search results')
+            utils.create_commit(repo, '⚙️ Import search results', saved_args)
 
     print()
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d['ID'])

@@ -3,7 +3,6 @@ import logging
 import os
 
 import click
-import git
 
 from review_template import dedupe
 from review_template import importer
@@ -21,6 +20,7 @@ DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
 
 
 def reprocess_id(id, repo):
+    saved_args = locals()
     if id is None:
         return
 
@@ -28,27 +28,19 @@ def reprocess_id(id, repo):
 
     if 'all' == id:
         logging.info('Removing/reprocessing all records')
-        com_msg = '⚙️ Reprocess all records'
         os.remove(MAIN_REFERENCES)
         repo.index.remove([MAIN_REFERENCES], working_tree=True)
 
     else:
         bib_db = utils.load_main_refs(mod_check=False)
-
-        com_msg = '⚙️ Reprocess ' + id
         bib_db.entries = [
             x for x in bib_db.entries if id != x['ID']]
         utils.save_bib_file(bib_db, MAIN_REFERENCES)
         repo.index.add([MAIN_REFERENCES])
 
-    repo.index.commit(
-        com_msg + utils.get_version_flag() +
-        utils.get_commit_report(os.path.basename(__file__)),
-        author=git.Actor('script:process.py', ''),
-        committer=git.Actor(repo_setup.config['GIT_ACTOR'],
-                            repo_setup.config['EMAIL']),
-    )
-    logging.info(f'Created commit ({com_msg})')
+    utils.create_commit(repo, '⚙️ Reprocess', saved_args)
+
+    logging.info('Create commit)')
     print()
     utils.reset_log()
     return
@@ -128,13 +120,13 @@ def check_delay(db, min_status_requirement):
     return False
 
 
-def main(reprocess_ids=None, keep_ids=False):
+def main(reprocess=None, keep_ids=False):
 
     status.repository_validation()
     repo = init.get_repo()
     utils.require_clean_repo(repo, ignore_pattern='search/')
     utils.build_docker_images()
-    reprocess_id(reprocess_ids, repo)
+    reprocess_id(reprocess, repo)
 
     try:
         bib_db = importer.main(repo, keep_ids)
