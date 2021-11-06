@@ -383,10 +383,11 @@ def xlsx2bib(file):
 
 
 def move_to_pdf_dir(filepath):
+    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
-    if not os.path.exists('/pdfs'):
-        os.mkdir('/pdfs')
-        shutil.move(filepath, '/pdfs/' + filepath)
+    if not os.path.exists(PDF_DIRECTORY):
+        os.mkdir(PDF_DIRECTORY)
+        shutil.move(filepath, os.path.join(PDF_DIRECTORY, filepath))
     return
 
 
@@ -396,27 +397,19 @@ def move_to_pdf_dir(filepath):
 def pdf2bib(file):
     grobid_client.check_grobid_availability()
 
-    # TODO: switch consolidateHeader on again once issue is resolved:
     # https://github.com/kermitt2/grobid/issues/837
     r = requests.post(
         grobid_client.get_grobid_url() + '/api/processHeaderDocument',
         headers={'Accept': 'application/x-bibtex'},
-        params={'consolidateHeader': '0'},
+        params={'consolidateHeader': '1'},
         files=dict(input=open(file, 'rb'))
     )
-    print(r.status_code)
-    print(r.request.url)
-    print(r.request.headers)
-    # print(r.request.body)
 
     if 200 == r.status_code:
-        print(r.text)
-        print(file)
         db = bibtexparser.loads(r.text)
-        with open(file, 'w') as f:
+        with open(file.replace('.pdf', '.bib'), 'w') as f:
             f.write(r.text)
-        move_to_pdf_dir(file.replace('.pdf', '.bib'))
-
+        move_to_pdf_dir(file)
         return db
     if 500 == r.status_code:
         logging.error(f'Not a readable pdf file: {os.path.basename(file)}')

@@ -109,6 +109,9 @@ def validate_pdf_metadata(record):
     if 'imported' != record.get('pdf_status', 'NA'):
         return record
 
+    if 'text_from_pdf' not in record:
+        record = get_text_from_pdf(record)
+
     text = record['text_from_pdf']
     text = text.replace(' ', '').replace('\n', '').lower()
     text = re.sub('[^a-zA-Z ]+', '', text)

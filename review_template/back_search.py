@@ -26,8 +26,11 @@ def process_backward_search(record):
     if record['pdf_status'] != 'prepared':
         return record
 
-    bib_filename = data_dir + 'search/' + record['ID'] + '_bw_search.bib'
-    pdf_filename = data_dir + 'pdfs/' + record['ID'] + '.pdf'
+    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+
+    bib_filename = \
+        os.path.join(data_dir, 'search/', record['ID'] + '_bw_search.bib')
+    pdf_filename = os.path.join(data_dir, PDF_DIRECTORY, record['ID'] + '.pdf')
 
     filename = record.get('file', 'NA').replace('.pdf:PDF', '.pdf')\
         .replace(':', '')
