@@ -350,25 +350,28 @@ def get_commit_report(script_name=None, saved_args=None):
         report = \
             report + '\n  ⚠ created with a modified version (not reproducible)'
 
-    # Note: write-tree because commits can be amended
     # check tree:
     #   git write-tree
     #   git log --pretty=raw
     # To validate: check whether tree is identical with commit-tree:
     #   git log --pretty=raw -1
-    g = git.Repo('').git
-    tree_hash = g.execute(['git', 'write-tree'])
-    report = report + f'\n\nCertified properties (for tree {tree_hash})\n'
-    report = report + '- Traceability of records: '.ljust(32, ' ') + 'YES\n'
+    repo = git.Repo('')
+    tree_hash = repo.git.execute(['git', 'write-tree'])
+    report = report + f'\n\nCertified properties for tree {tree_hash}\n'
+    report = report + '- To check tree_hash use'.ljust(32, ' ') + \
+        ' git log --pretty=raw -1\n'
+    report = report + '- To validate use'.ljust(32, ' ') + \
+        ' review_template validate --properties --commit INSERT_COMMIT_HASH\n'
+    report = report + '- Traceability of records '.ljust(32, ' ') + 'YES\n'
     report = \
-        report + '- Consistency (based on hooks): '.ljust(32, ' ') + 'YES\n'
+        report + '- Consistency (based on hooks) '.ljust(32, ' ') + 'YES\n'
     completeness_condition = status.get_completeness_condition()
     if completeness_condition:
         report = \
-            report + '- Completeness of iteration: '.ljust(32, ' ') + 'YES\n'
+            report + '- Completeness of iteration '.ljust(32, ' ') + 'YES\n'
     else:
         report = \
-            report + '- Completeness of iteration: '.ljust(32, ' ') + 'NO\n'
+            report + '- Completeness of iteration '.ljust(32, ' ') + 'NO\n'
 
     # url = g.execut['git', 'config', '--get remote.origin.url']
 

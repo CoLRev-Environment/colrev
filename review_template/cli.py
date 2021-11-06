@@ -250,13 +250,15 @@ def validate_commit(ctx, param, value):
               type=click.Choice(['prepare', 'merge', 'all'],
                                 case_sensitive=False),
               default='all', help='prepare, merge, or all.')
+@click.option('--properties', is_flag=True, default=False,
+              help='Git commit id to validate.')
 @click.option('--commit', help='Git commit id to validate.',
-              default='none', callback=validate_commit)
+              default=None, callback=validate_commit)
 @click.pass_context
-def validate(ctx, scope, commit):
+def validate(ctx, scope, properties, commit):
     """Validate changes"""
     from review_template import validate
-    validate.main(scope, commit)
+    validate.main(scope, properties, commit)
 
 
 @main.command(help_priority=17)
