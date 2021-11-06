@@ -1066,7 +1066,8 @@ def reorder_log(IDs):
                                        '[INFO] Completed preparation ',
                                        '[INFO] Batch size',
                                        '[INFO] Summary: Prepared',
-                                       '[INFO] Instructions on resetting']):
+                                       '[INFO] Further instructions ',
+                                       '[INFO] To reset the metdatata']):
                 firsts.append(line)
                 continue
             if re.search(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ', line):
@@ -1132,7 +1133,14 @@ def reset(bib_db, id):
     return
 
 
-def main(bib_db, repo, reset_ids, reprocess=False, keep_ids=False):
+def main(bib_db, repo, reset_ids=None, reprocess=False, keep_ids=False):
+    saved_args = locals()
+    if not reset_ids:
+        del saved_args['reset_ids']
+    if not reprocess:
+        del saved_args['reprocess']
+    if not keep_ids:
+        del saved_args['keep_ids']
     global prepared
     global need_manual_prep
     global PAD
@@ -1191,17 +1199,18 @@ def main(bib_db, repo, reset_ids, reprocess=False, keep_ids=False):
             repo.index.add([MAIN_REFERENCES])
 
             print_stats_end(bib_db)
-            logging.info('To reset the metdatata of records, use \n'
-                         '   review_template prepare --reset-ID [ID1,ID2]')
-            logging.info('Instructions on resetting records and analyzing '
-                         'preparation steps available in the documentation '
-                         '(link)')
+            logging.info('To reset the metdatata of records, use '
+                         'review_template prepare --reset-ID [ID1,ID2]')
+            logging.info('Further instructions are available in the '
+                         'documentation (TODO: link)')
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
             reorder_log(prior_ids)
 
-            in_process = utils.create_commit(repo, '⚙️ Prepare records')
+            in_process = utils.create_commit(repo,
+                                             '⚙️ Prepare records',
+                                             saved_args)
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

@@ -242,6 +242,7 @@ def check_existing_unlinked_pdfs(bib_db):
 
 
 def main(bib_db, repo):
+    saved_args = locals()
 
     utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
     process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
@@ -291,7 +292,9 @@ def main(bib_db, repo):
                         if os.path.exists(filepath):
                             repo.index.add([filepath])
 
-            in_process = utils.create_commit(repo, '⚙️ Retrieve PDFs')
+            in_process = utils.create_commit(repo,
+                                             '⚙️ Retrieve PDFs',
+                                             saved_args)
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

@@ -237,6 +237,7 @@ def prepare_pdf(record):
 
 
 def main(bib_db, repo):
+    saved_args = locals()
 
     process.check_delay(bib_db, min_status_requirement='pdf_imported')
     global IPAD
@@ -281,7 +282,9 @@ def main(bib_db, repo):
                         if filepath.endswith('.pdf'):
                             repo.index.add([os.path.join(dirname, filepath)])
 
-            in_process = utils.create_commit(repo, '⚙️ Prepare PDFs')
+            in_process = utils.create_commit(repo,
+                                             '⚙️ Prepare PDFs',
+                                             saved_args)
             if not in_process:
                 logging.info('No PDFs prepared')
 

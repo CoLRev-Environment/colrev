@@ -95,6 +95,7 @@ def process_backward_search(record):
 
 
 def main():
+    saved_args = locals()
     repo = git.Repo()
     utils.require_clean_repo(repo)
     grobid_client.start_grobid()
@@ -113,7 +114,7 @@ def main():
         repo.index.add([SEARCH_DETAILS])
         for f in bibfilenames:
             repo.index.add([f])
-        utils.create_commit(repo, '⚙️ Backward search')
+        utils.create_commit(repo, '⚙️ Backward search', saved_args)
 
     return
 

@@ -36,7 +36,10 @@ def get_excl_criteria(ec_string):
     return criteria
 
 
-def prescreen(include_all):
+def prescreen(include_all=False):
+    saved_args = locals()
+    if not include_all:
+        del saved_args['include_all']
 
     repo = git.Repo('')
     utils.require_clean_repo(repo)
@@ -62,6 +65,7 @@ def prescreen(include_all):
         # Ask whether to create a commit/if records remain for pre-screening
         if 'y' == input('Create commit (y/n)?'):
             utils.create_commit(repo, 'Pre-screening (manual)',
+                                saved_args,
                                 manual_author=False)
 
     else:
@@ -115,6 +119,7 @@ def prescreen(include_all):
         # Ask whether to create a commit/if records remain for pre-screening
         if 'y' == input('Create commit (y/n)?'):
             utils.create_commit(repo, 'Pre-screening (manual)',
+                                saved_args,
                                 manual_author=True)
 
     status.review_instructions()
@@ -167,6 +172,9 @@ def export_spreadsheet(bib_db, export_csv):
                          quoting=csv.QUOTE_ALL)
         logging.info('Created screen_table (csv)')
 
+    if 'xlsx' == export_csv.lower():
+        print('TODO: XLSX')
+
     return
 
 
@@ -201,7 +209,11 @@ def import_csv_file(bib_db):
 
 
 def screen(export_csv=None, import_csv=None):
-
+    saved_args = locals()
+    if not export_csv:
+        del saved_args['export_csv']
+    if not import_csv:
+        del saved_args['export_csv']
     repo = git.Repo('')
     utils.require_clean_repo(repo)
     bib_db = utils.load_main_refs()
@@ -304,7 +316,9 @@ def screen(export_csv=None, import_csv=None):
     repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
     # Ask whether to create a commit/if records remain for screening
     if 'y' == input('Create commit (y/n)?'):
-        utils.create_commit(repo, 'Screening (manual)', manual_author=True)
+        utils.create_commit(repo, 'Screening (manual)',
+                            saved_args,
+                            manual_author=True)
 
     return
 

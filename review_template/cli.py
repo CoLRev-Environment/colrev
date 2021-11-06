@@ -74,18 +74,18 @@ def status(ctx):
 @click.pass_context
 @click.option('--reprocess',
               help='Record ID to reprocess ("all" to reprocess all).')
-@click.option('-k', '--keep-IDs',
+@click.option('-k', '--keep_ids',
               is_flag=True, default=False,
               help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
-def process(ctx, reprocess, k):
+def process(ctx, reprocess, keep_ids):
     """Process records (automated steps)"""
     from review_template import process
-    process.main(reprocess, k)
+    process.main(reprocess, keep_ids)
 
 
 @main.command(help_priority=4)
-@click.option('-k', '--keep-IDs',
+@click.option('-k', '--keep_ids',
               is_flag=True, default=False,
               help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
@@ -98,7 +98,7 @@ def importer(ctx, k):
 
 
 @main.command(help_priority=5)
-@click.option('--reset-ID',
+@click.option('--reset_id',
               default=False,
               help='Reset record metadata to the imported version. '
               'Format: --reset-ID ID1,ID2,ID3')
@@ -107,8 +107,8 @@ def importer(ctx, k):
               help='Prepare all records set to md_status=' +
               'needs_manual_preparation again. Useful if ' +
               'network/databases were not available')
-@click.option('-k', '--keep-IDs',
-              is_flag=True, default=True,
+@click.option('-k', '--keep_ids',
+              is_flag=True, default=False,
               help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
 @click.pass_context
@@ -124,9 +124,9 @@ def prepare(ctx, reset_id, reprocess, keep_ids):
             reset_id = str(reset_id)
         except ValueError:
             pass
-        reset_ids = reset_id.split(',')
+        reset_id = reset_id.split(',')
 
-    prepare.main(bib_db, repo, reset_ids, reprocess, keep_ids)
+    prepare.main(bib_db, repo, reset_id, reprocess, keep_ids)
 
 
 @main.command(help_priority=6)
@@ -154,7 +154,7 @@ def man_dedupe(ctx):
 
 
 @main.command(help_priority=9)
-@click.option('--include-all', is_flag=True, default=False)
+@click.option('--include_all', is_flag=True, default=False)
 @click.pass_context
 def prescreen(ctx, include_all):
     """Pre-screen based on titles and abstracts"""
@@ -205,7 +205,7 @@ def back_search(ctx):
 
 @main.command(help_priority=14)
 @click.option('--edit_csv', is_flag=True, default=False)
-@click.option('--load-csv', is_flag=True, default=False)
+@click.option('--load_csv', is_flag=True, default=False)
 @click.pass_context
 def data(ctx, edit_csv, load_csv):
     """Extract data"""

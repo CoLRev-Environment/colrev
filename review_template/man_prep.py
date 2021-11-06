@@ -111,6 +111,7 @@ def man_prep_record(record):
 
 
 def man_prep_records():
+    saved_args = locals()
     global ID_list
 
     repo = git.Repo('')
@@ -130,7 +131,9 @@ def man_prep_records():
     utils.save_bib_file(bib_db, MAIN_REFERENCES)
     repo.index.add([MAIN_REFERENCES])
 
-    utils.create_commit(repo, 'Prepare records for import', manual_author=True)
+    utils.create_commit(repo, 'Prepare records for import',
+                        saved_args,
+                        manual_author=True)
     return
 
 

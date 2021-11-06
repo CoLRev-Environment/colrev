@@ -320,12 +320,25 @@ def get_package_details():
     return details
 
 
-def get_commit_report(script_name=None):
+def get_commit_report(script_name=None, saved_args=None):
     report = '\n\nReport\n\n'
 
-    report = report + 'Software'
     if script_name is not None:
-        report = report + '\n - Script:'.ljust(33, ' ') + script_name
+        report = report + f'Command\n {script_name}\n'
+    if saved_args is not None:
+        repo = None
+        for k, v in saved_args.items():
+            if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
+                report = report + f'   --{k}={v}\n'
+            if isinstance(v, git.repo.base.Repo):
+                repo = v.head.commit.hexsha
+            # TODO: should we do anything with the bib_db?
+        if repo:
+            # Note: this allows users to see whether the commit was changed!
+            report = report + f' On git repo with version {repo}.\n'
+        report = report + '\n'
+
+    report = report + 'Software'
     report = report + get_package_details()
 
     from importlib.metadata import version
@@ -397,7 +410,7 @@ def reset_log():
     return
 
 
-def create_commit(repo, msg, manual_author=False):
+def create_commit(repo, msg, saved_args, manual_author=False):
 
     if repo.is_dirty():
 
@@ -436,8 +449,8 @@ def create_commit(repo, msg, manual_author=False):
 
         repo.index.commit(
             msg + get_version_flag() +
-            get_commit_report(f'{script} (committed by '
-                              f'{os.path.basename(__file__)}).') +
+            get_commit_report(f'{script}',
+                              saved_args) +
             processing_report,
             author=git_author,
             committer=git.Actor(repo_setup.config['GIT_ACTOR'],
