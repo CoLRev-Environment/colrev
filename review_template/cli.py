@@ -90,18 +90,18 @@ def process(ctx, reprocess, keep_ids):
               help='Do not change the record IDs. Useful when importing ' +
               'an existing sample.')
 @click.pass_context
-def importer(ctx, k):
+def importer(ctx, keep_ids):
     """Import records (part of automated processing)"""
     from review_template import importer, init
     repo = init.get_repo()
-    importer.main(repo, k)
+    importer.main(repo, keep_ids)
 
 
 @main.command(help_priority=5)
 @click.option('--reset_id',
               default=False,
               help='Reset record metadata to the imported version. '
-              'Format: --reset-ID ID1,ID2,ID3')
+              'Format: --reset_id ID1,ID2,ID3')
 @click.option('--reprocess',
               is_flag=True, default=False,
               help='Prepare all records set to md_status=' +

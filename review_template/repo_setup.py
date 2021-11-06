@@ -67,14 +67,6 @@ config = dict(
         'general', 'WORD_TEMPLATE_URL', fallback=word_template_url_fallback),
 )
 
-try:
-    config['DATA_FORMAT'] = ast.literal_eval(config['DATA_FORMAT'])
-except ValueError:
-    logging.error(f'Could not load DATA_FORMAT ({config["DATA_FORMAT"] }), '
-                  'using fallback')
-    config['DATA_FORMAT'] = ['MANUSCRIPT']
-    pass
-
 if config['DEBUG_MODE']:
     logging_level = logging.DEBUG
 else:
@@ -89,6 +81,17 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
+try:
+    config['DATA_FORMAT'] = ast.literal_eval(config['DATA_FORMAT'])
+except ValueError:
+    logging.error(f'Could not load DATA_FORMAT ({config["DATA_FORMAT"] }), '
+                  'using fallback')
+    config['DATA_FORMAT'] = ['MANUSCRIPT']
+    pass
+
+# handle = "review_template"
+# rt_logger = logging.getLogger(handle)
 
 
 #############################################################################

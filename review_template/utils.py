@@ -315,7 +315,7 @@ def require_clean_repo(repo=None, ignore_pattern=None):
 
 
 def get_package_details():
-    details = '\n - review_template:'.ljust(33, ' ') + 'version ' + \
+    details = '\n   - review_template:'.ljust(33, ' ') + 'version ' + \
         version('review_template')
     return details
 
@@ -324,18 +324,18 @@ def get_commit_report(script_name=None, saved_args=None):
     report = '\n\nReport\n\n'
 
     if script_name is not None:
-        report = report + f'Command\n {script_name}\n'
+        report = report + f'Command\n   {script_name}\n'
     if saved_args is not None:
         repo = None
         for k, v in saved_args.items():
             if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
-                report = report + f'   --{k}={v}\n'
+                report = report + f'     --{k}={v}\n'
             if isinstance(v, git.repo.base.Repo):
                 repo = v.head.commit.hexsha
             # TODO: should we do anything with the bib_db?
         if repo:
             # Note: this allows users to see whether the commit was changed!
-            report = report + f' On git repo with version {repo}.\n'
+            report = report + f'   On git repo with version {repo}.\n'
         report = report + '\n'
 
     report = report + 'Software'
@@ -343,12 +343,13 @@ def get_commit_report(script_name=None, saved_args=None):
 
     from importlib.metadata import version
     version('pipeline_validation_hooks')
-    report = report + '\n - pre-commit hooks:'.ljust(33, ' ') + 'version ' + \
-        version('pipeline_validation_hooks')
+    report = report + '\n   - pre-commit hooks:'.ljust(33, ' ') + \
+        'version ' + version('pipeline_validation_hooks')
 
     if 'dirty' in report:
         report = \
-            report + '\n  ⚠ created with a modified version (not reproducible)'
+            report + \
+            '\n    ⚠ created with a modified version (not reproducible)'
 
     # check tree:
     #   git write-tree
@@ -358,20 +359,20 @@ def get_commit_report(script_name=None, saved_args=None):
     repo = git.Repo('')
     tree_hash = repo.git.execute(['git', 'write-tree'])
     report = report + f'\n\nCertified properties for tree {tree_hash}\n'
-    report = report + '- To check tree_hash use'.ljust(32, ' ') + \
-        ' git log --pretty=raw -1\n'
-    report = report + '- To validate use'.ljust(32, ' ') + \
-        ' review_template validate --properties --commit INSERT_COMMIT_HASH\n'
-    report = report + '- Traceability of records '.ljust(32, ' ') + 'YES\n'
+    report = report + '   - Traceability of records '.ljust(38, ' ') + 'YES\n'
     report = \
-        report + '- Consistency (based on hooks) '.ljust(32, ' ') + 'YES\n'
+        report + '   - Consistency (based on hooks) '.ljust(38, ' ') + 'YES\n'
     completeness_condition = status.get_completeness_condition()
     if completeness_condition:
         report = \
-            report + '- Completeness of iteration '.ljust(32, ' ') + 'YES\n'
+            report + '   - Completeness of iteration '.ljust(38, ' ') + 'YES\n'
     else:
         report = \
-            report + '- Completeness of iteration '.ljust(32, ' ') + 'NO\n'
+            report + '   - Completeness of iteration '.ljust(38, ' ') + 'NO\n'
+    report = report + '   To check tree_hash use'.ljust(38, ' ') + \
+        'git log --pretty=raw -1\n'
+    report = report + '   To validate use'.ljust(38, ' ') + \
+        'review_template validate --properties --commit INSERT_COMMIT_HASH\n'
 
     # url = g.execut['git', 'config', '--get remote.origin.url']
 
@@ -382,6 +383,7 @@ def get_commit_report(script_name=None, saved_args=None):
     # Remove colors for commit message
     status_page = f.getvalue().replace('\033[91m', '').replace('\033[92m', '')\
         .replace('\033[93m', '').replace('\033[94m', '').replace('\033[0m', '')
+    status_page = status_page.replace('Status\n\n', 'Status\n')
     report = report + status_page
 
     return report
@@ -441,7 +443,7 @@ def create_commit(repo, msg, saved_args, manual_author=False):
                     line = f.readline()
 
             processing_report = \
-                '\nProcessing report\n\n' + ''.join(processing_report)
+                '\nProcessing report\n' + ''.join(processing_report)
 
         script = str(os.path.basename(inspect.stack()[1][1]))
         if manual_author:
