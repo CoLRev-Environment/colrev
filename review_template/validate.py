@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import itertools
+import logging
 import multiprocessing as mp
 import os
 import pprint
@@ -8,11 +9,14 @@ from itertools import chain
 import bibtexparser
 import dictdiffer
 import git
+import pipeline_validation_hooks
 from bashplotlib.histogram import plot_hist
 from bibtexparser.customization import convert_to_unicode
+from pipeline_validation_hooks import check  # noqa: F401
 
 from review_template import dedupe
 from review_template import repo_setup
+from review_template import status
 from review_template import utils
 
 
@@ -183,8 +187,48 @@ def load_bib_db(target_commit):
     return bib_db
 
 
-def main(scope, target_commit):
+def validate_properties(target_commit):
+    # TODO: option: --history: check all preceding commits (create a list...)
+    repo = git.Repo()
+    cur_sha = repo.head.commit.hexsha
+    cur_branch = repo.active_branch.name
+    logging.info(f'Current commit: {cur_sha} (branch {cur_branch})')
 
+    if not target_commit:
+        target_commit = cur_sha
+    if repo.is_dirty() and not target_commit == cur_sha:
+        print('Error: Need a clean repository to validate properties '
+              'of prior commit')
+        return
+    if not target_commit == cur_sha:
+        print(f'Check out target_commit = {target_commit}')
+        repo.git.checkout(target_commit)
+
+    completeness_condition = status.get_completeness_condition()
+    if completeness_condition:
+        print('Completeness of iteration'.ljust(32, ' ') + 'YES (validated)')
+    else:
+        print('Completeness of iteration'.ljust(32, ' ') + 'NO')
+    if 0 == pipeline_validation_hooks.check.main():
+        print('Traceability of records'.ljust(32, ' ') + 'YES (validated)')
+        print('Consistency (based on hooks)' .ljust(32, ' ') +
+              'YES (validated)')
+    else:
+        print('Traceability of records'.ljust(32, ' ') + 'NO')
+        print('Consistency (based on hooks)' .ljust(32, ' ') + 'NO')
+
+    repo.git.checkout(cur_branch, force=True)
+
+    return
+
+
+def main(scope, properties=False, target_commit=None):
+
+    if properties:
+        validate_properties(target_commit)
+        return
+
+    #
     # TODO: extension: filter for changes of contributor (git author)
 
     bib_db = load_bib_db(target_commit)

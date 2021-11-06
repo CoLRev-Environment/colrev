@@ -70,6 +70,10 @@ def get_completeness_condition():
         completeness_condition = False
     if 0 != stat['review_status']['currently']['need_synthesis']:
         completeness_condition = False
+    if 0 != stat['metadata_status']['currently']['imported']:
+        completeness_condition = False
+    if 0 != stat['metadata_status']['currently']['prepared']:
+        completeness_condition = False
     if 0 != stat['metadata_status']['currently']['non_imported']:
         completeness_condition = False
     if 0 != stat['metadata_status']['currently']['need_man_prep']:
