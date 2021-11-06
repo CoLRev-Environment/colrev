@@ -127,6 +127,16 @@ def import_record(record):
     return record
 
 
+def source_heuristics(search_file):
+    with open(search_file) as f:
+        for line in f.readlines():
+            if 'bibsource = {dblp computer science' + \
+                    ' bibliography, https://dblp.org}' in line:
+                return 'DBLP'
+
+    return None
+
+
 def check_update_search_details(search_files):
 
     if os.path.exists(SEARCH_DETAILS):
@@ -138,13 +148,17 @@ def check_update_search_details(search_files):
     for search_file_path in search_files:
         search_file = os.path.basename(search_file_path)
         if search_file not in [x['filename'] for x in search_details]:
+            source_name = source_heuristics(search_file_path)
             print(f'Please provide details for {search_file}')
             search_type = 'TODO'
             while search_type not in search_type_opts:
                 print(f'Search type options: {search_type_opts}')
                 search_type = input('Enter search type'.ljust(40, ' ') + ': ')
-            source_name = input('Enter source name (e.g., GoogleScholar)'
-                                .ljust(40, ' ') + ': ')
+            if source_name is None:
+                source_name = input('Enter source name (e.g., GoogleScholar)'
+                                    .ljust(40, ' ') + ': ')
+            else:
+                print('Source name'.ljust(40, ' ') + f': {source_name}')
             source_url = input('Enter source_url'.ljust(40, ' ') + ': ')
             search_parameters = input('Enter search_parameters'
                                       .ljust(40, ' ') + ': ')
