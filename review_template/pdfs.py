@@ -233,7 +233,7 @@ def check_existing_unlinked_pdfs(bib_db):
                 max_sim_record = \
                     pdf_prepare.validate_pdf_metadata(max_sim_record)
                 pdf_status = max_sim_record.get('pdf_status', 'NA')
-                if 'need_manual_preparation' != pdf_status:
+                if 'needs_manual_preparation' != pdf_status:
                     os.rename(file, new_filename)
                     logging.info('checked and renamed pdf:'
                                  f' {file} > {new_filename}')
