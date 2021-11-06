@@ -217,8 +217,9 @@ def get_status_freq():
     rev_overall_synthesis = rev_overall_included
     rev_need_synthesis = rev_overall_included - rev_synthesized
 
-    # if os.path.exists('pdfs/'):
-    #     pdf_files = [x for x in os.listdir('pdfs/')]
+    # PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+    # if os.path.exists(PDF_DIRECTORY):
+    #     pdf_files = [x for x in os.listdir(PDF_DIRECTORY)]
     #     search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
     #     non_bw_searched = len([x for x in pdf_files
     #                            if not x.replace('.pdf', 'bw_search.bib')

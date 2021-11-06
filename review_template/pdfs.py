@@ -10,7 +10,11 @@ import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
+from review_template import dedupe
+from review_template import grobid_client
+from review_template import importer
 from review_template import init
+from review_template import pdf_prepare
 from review_template import process
 from review_template import repo_setup
 from review_template import status
@@ -21,6 +25,7 @@ existing_pdfs_linked = 0
 
 # https://github.com/ContentMine/getpapers
 
+PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 current_batch_counter = mp.Value('i', 0)
@@ -98,8 +103,6 @@ def retrieve_pdf(record):
             return record
         else:
             current_batch_counter.value += 1
-
-    PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
@@ -182,17 +185,74 @@ def export_retrieval_table(missing_records):
     return
 
 
+def get_pdfs_from_dir(directory):
+    list_of_files = []
+    for (dirpath, dirnames, filenames) in os.walk(directory):
+        for filename in filenames:
+            if filename.endswith('.pdf'):
+                list_of_files.append(os.path.join(dirpath, filename))
+    return list_of_files
+
+
+def check_existing_unlinked_pdfs(bib_db):
+    pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
+
+    if not pdf_files:
+        return
+
+    grobid_client.start_grobid()
+
+    IDs = [x['ID'] for x in bib_db.entries]
+
+    for file in pdf_files:
+        if os.path.exists(os.path.basename(file).replace('.pdf', '')):
+            continue
+        if os.path.basename(file).replace('.pdf', '') not in IDs:
+            db = importer.pdf2bib(file)
+            corresponding_bib_file = file.replace('.pdf', '.bib')
+            if os.path.exists(corresponding_bib_file):
+                os.remove(corresponding_bib_file)
+
+            if not db:
+                continue
+
+            record = db.entries[0]
+            max_similarity = 0
+            max_sim_record = None
+            for bib_record in bib_db.entries:
+                sim = dedupe.get_record_similarity(record, bib_record.copy())
+                if sim > max_similarity:
+                    max_similarity = sim
+                    max_sim_record = bib_record.copy()
+
+            new_filename = os.path.join(os.path.dirname(file),
+                                        max_sim_record['ID'] + '.pdf')
+            if max_similarity > 0.5:
+                max_sim_record.update(pdf_status='imported')
+                max_sim_record.update(file=':' + file + ':PDF')
+                max_sim_record = \
+                    pdf_prepare.validate_pdf_metadata(max_sim_record)
+                pdf_status = max_sim_record.get('pdf_status', 'NA')
+                if 'need_manual_preparation' != pdf_status:
+                    os.rename(file, new_filename)
+                    logging.info('checked and renamed pdf:'
+                                 f' {file} > {new_filename}')
+
+    return bib_db
+
+
 def main(bib_db, repo):
 
-    utils.require_clean_repo(repo, ignore_pattern='pdfs/')
+    utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
     process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
     global PAD
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
-
     print('TODO: download if there is a fulltext link in the record')
 
     utils.reset_log()
     logging.info('Retrieve PDFs')
+
+    check_existing_unlinked_pdfs(bib_db)
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -224,11 +284,12 @@ def main(bib_db, repo):
             repo.index.add([MAIN_REFERENCES])
 
             if 'GIT' == repo_setup.config['PDF_HANDLING']:
-                dirname = repo_setup.paths['PDF_DIRECTORY']
-                if os.path.exists(dirname):
-                    for filepath in os.listdir(dirname):
-                        if filepath.endswith('.pdf'):
-                            repo.index.add([os.path.join(dirname, filepath)])
+                if os.path.exists(PDF_DIRECTORY):
+                    for record in bib_db.entries:
+                        filepath = os.path.join(PDF_DIRECTORY,
+                                                record['ID'] + '.pdf')
+                        if os.path.exists(filepath):
+                            repo.index.add([filepath])
 
             in_process = utils.create_commit(repo, '⚙️ Retrieve PDFs')
 
