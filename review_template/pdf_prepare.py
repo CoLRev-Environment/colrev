@@ -174,6 +174,12 @@ def validate_completeness(record):
     return record
 
 
+prep_scripts = {'pdf_check_ocr': pdf_check_ocr,
+                'validate_pdf_metadata': validate_pdf_metadata,
+                'validate_completeness': validate_completeness,
+                }
+
+
 def prepare_pdf(record):
 
     if 'imported' != record.get('pdf_status', 'NA') or \
@@ -210,11 +216,6 @@ def prepare_pdf(record):
             del record['text_from_pdf']
             del record['pages_in_file']
         return record
-
-    prep_scripts = {'pdf_check_ocr': pdf_check_ocr,
-                    'validate_pdf_metadata': validate_pdf_metadata,
-                    'validate_completeness': validate_completeness,
-                    }
 
     # Note: if there are problems pdf_status is set to needs_manual_preparation
     logging.debug(f'Prepare pdf for {record["ID"]}')

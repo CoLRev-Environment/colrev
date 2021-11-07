@@ -1,5 +1,6 @@
 # Literature review template
 
+[![License](https://img.shields.io/github/license/geritwagner/review_template.svg)](https://github.com/geritwagner/review_template/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![GitHub release](https://img.shields.io/github/v/release/geritwagner/review_template.svg)](https://github.com/geritwagner/review_template/releases/)
