@@ -594,14 +594,13 @@ def review_instructions(status_freq=None):
         return
 
     if pdfs['currently']['needs_retrieval'] > 0:
-        print('  To continue with pdf acquisition, '
+        print('  To continue with pdf retrieval, '
               'use\n     review_template pdfs')
         return
 
     if pdfs['currently']['needs_manual_retrieval'] > 0:
-        print('  To continue with manual pdf acquisition, '
-              'copy PDFs to the pdfs directory (missing_pdfs.csv) and '
-              'use\n     review_template pdfs')
+        print('  To continue with manual pdf retrieval, '
+              'use\n     review_template pdf-get-man')
         return
 
     if pdfs['currently']['imported'] > 0:

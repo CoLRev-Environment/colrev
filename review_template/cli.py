@@ -197,13 +197,33 @@ def pdf_prepare(ctx):
 
 @main.command(help_priority=13)
 @click.pass_context
+def pdf_get_man(ctx):
+    """Get PDFs manually"""
+    from review_template import pdf_get_man, utils, init
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    pdf_get_man.main(bib_db, repo)
+
+
+@main.command(help_priority=14)
+@click.pass_context
+def pdf_prep_man(ctx):
+    """Prepare PDFs manually"""
+    from review_template import pdf_prep_man, utils, init
+    bib_db = utils.load_main_refs()
+    repo = init.get_repo()
+    pdf_prep_man.main(bib_db, repo)
+
+
+@main.command(help_priority=15)
+@click.pass_context
 def back_search(ctx):
     """Backward search based on PDFs"""
     from review_template import back_search
     back_search.main()
 
 
-@main.command(help_priority=14)
+@main.command(help_priority=16)
 @click.option('--edit_csv', is_flag=True, default=False)
 @click.option('--load_csv', is_flag=True, default=False)
 @click.pass_context
@@ -213,7 +233,7 @@ def data(ctx, edit_csv, load_csv):
     data.main(edit_csv, load_csv)
 
 
-@main.command(help_priority=15)
+@main.command(help_priority=17)
 @click.pass_context
 def profile(ctx):
     """Generate a sample profile"""
@@ -245,7 +265,7 @@ def validate_commit(ctx, param, value):
         raise click.BadParameter('not a git commit id')
 
 
-@main.command(help_priority=16)
+@main.command(help_priority=18)
 @click.option('--scope',
               type=click.Choice(['prepare', 'merge', 'all'],
                                 case_sensitive=False),
@@ -261,7 +281,7 @@ def validate(ctx, scope, properties, commit):
     validate.main(scope, properties, commit)
 
 
-@main.command(help_priority=17)
+@main.command(help_priority=19)
 @click.pass_context
 @click.option('--id',
               help='Record ID to trace (citation_key).',
@@ -272,7 +292,7 @@ def trace(ctx, id):
     trace.main(id)
 
 
-@main.command(help_priority=18)
+@main.command(help_priority=20)
 @click.pass_context
 def paper(ctx):
     """Build the paper"""

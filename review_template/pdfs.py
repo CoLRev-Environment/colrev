@@ -1,12 +1,10 @@
 #! /usr/bin/env python
-import csv
 import json
 import logging
 import multiprocessing as mp
 import os
 
 import click
-import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
@@ -19,9 +17,6 @@ from review_template import process
 from review_template import repo_setup
 from review_template import status
 from review_template import utils
-
-pdfs_retrieved = 0
-existing_pdfs_linked = 0
 
 # https://github.com/ContentMine/getpapers
 
@@ -91,10 +86,49 @@ def is_pdf(path_to_file):
     #    return False
 
 
-def retrieve_pdf(record):
-    global pdfs_retrieved
-    global existing_pdfs_linked
+def get_pdf_from_unpaywall(record):
+    if 'doi' not in record:
+        return record
 
+    pdf_filepath = os.path.join(PDF_DIRECTORY, record['ID'] + '.pdf')
+    url = unpaywall(record['doi'])
+    if url is not None:
+        if 'Invalid/unknown DOI' not in url:
+            res = requests.get(
+                url, headers={
+                    'User-Agent': 'Chrome/51.0.2704.103',
+                    'referer': 'https://www.doi.org',
+                },
+            )
+            if 200 == res.status_code:
+                with open(pdf_filepath, 'wb') as f:
+                    f.write(res.content)
+                if is_pdf(pdf_filepath):
+                    logging.info('Retrieved pdf (unpaywall):'
+                                 f' {pdf_filepath}')
+                else:
+                    os.remove(pdf_filepath)
+            else:
+                logging.info('Unpaywall retrieval error '
+                             f'{res.status_code}/{url}')
+    return record
+
+
+def link_pdf(record):
+    if 'PAD' not in globals():
+        PAD = 40
+    pdf_filepath = os.path.join(PDF_DIRECTORY, record['ID'] + '.pdf')
+    if os.path.exists(pdf_filepath):
+        record.update(pdf_status='imported')
+        record.update(file=':' + pdf_filepath + ':PDF')
+        logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
+                     'linked pdf')
+    else:
+        record.update(pdf_status='needs_manual_retrieval')
+    return record
+
+
+def retrieve_pdf(record):
     if 'needs_retrieval' != record.get('pdf_status', 'NA'):
         return record
 
@@ -104,84 +138,38 @@ def retrieve_pdf(record):
         else:
             current_batch_counter.value += 1
 
-    if not os.path.exists(PDF_DIRECTORY):
-        os.mkdir(PDF_DIRECTORY)
+    retrieval_scripts = {'get_pdf_from_unpaywall': get_pdf_from_unpaywall}
 
-    pdf_filepath = os.path.join(PDF_DIRECTORY, record['ID'] + '.pdf')
+    for retrieval_script in retrieval_scripts:
+        logging.debug(f'{retrieval_script}({record["ID"]}) called')
+        record = retrieval_scripts[retrieval_script](record)
 
-    if os.path.exists(pdf_filepath):
-        record.update(pdf_status='imported')
-        if 'file' not in record:
-            record.update(file=':' + pdf_filepath + ':PDF')
-            logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
-                         'linked pdf')
-            existing_pdfs_linked += 1
-        return record
+    record = get_pdf_from_unpaywall(record)
 
-    if 'doi' in record:
-        url = unpaywall(record['doi'])
-        if url is not None:
-            if 'Invalid/unknown DOI' not in url:
-                res = requests.get(
-                    url, headers={
-                        'User-Agent': 'Chrome/51.0.2704.103',
-                        'referer': 'https://www.doi.org',
-                    },
-                )
-                if 200 == res.status_code:
-                    with open(pdf_filepath, 'wb') as f:
-                        f.write(res.content)
-                    if is_pdf(pdf_filepath):
-                        logging.info('Retrieved pdf (unpaywall):'
-                                     f' {pdf_filepath}')
-                        record.update(file=':' + pdf_filepath + ':PDF')
-                        record.update(pdf_status='imported')
-                        pdfs_retrieved += 1
-                    else:
-                        os.remove(pdf_filepath)
-                else:
-                    logging.info('Unpaywall retrieval error '
-                                 f'{res.status_code}/{url}')
+    record = link_pdf(record)
+
     return record
 
 
 def get_missing_records(bib_db):
     missing_records = BibDatabase()
     for record in bib_db.entries:
-        if 'needs_retrieval' == record.get('pdf_status', 'NA'):
+        if record.get('pdf_status', 'NA') in ['needs_retrieval',
+                                              'needs_manual_retrieval']:
             missing_records.entries.append(record)
     return missing_records
 
 
 def print_details(missing_records):
-    global pdfs_retrieved
-    global existing_pdfs_linked
-
-    if existing_pdfs_linked > 0:
-        logging.info(
-            f'{existing_pdfs_linked} existing PDFs linked in bib file')
-    if pdfs_retrieved > 0:
-        logging.info(f'{pdfs_retrieved} PDFs retrieved')
-    else:
-        logging.info('No PDFs retrieved')
+    # TODO: instead of a global counter, compare prior/latter stats
+    # like prepare/set_stats_beginning, print_stats_end
+    # global pdfs_retrieved
+    # if pdfs_retrieved > 0:
+    #     logging.info(f'{pdfs_retrieved} PDFs retrieved')
+    # else:
+    #     logging.info('No PDFs retrieved')
     if len(missing_records.entries) > 0:
         logging.info(f'{len(missing_records.entries)} PDFs missing ')
-    return
-
-
-def export_retrieval_table(missing_records):
-
-    if len(missing_records.entries) > 0:
-        missing_records_df = pd.DataFrame.from_records(missing_records.entries)
-        col_order = [
-            'ID', 'author', 'title', 'journal', 'booktitle',
-            'year', 'volume', 'number', 'pages', 'doi'
-        ]
-        missing_records_df = missing_records_df.reindex(col_order, axis=1)
-        missing_records_df.to_csv('missing_pdf_files.csv',
-                                  index=False, quoting=csv.QUOTE_ALL)
-
-        logging.info('See missing_pdf_files.csv for paper details')
     return
 
 
@@ -198,8 +186,9 @@ def check_existing_unlinked_pdfs(bib_db):
     pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
 
     if not pdf_files:
-        return
+        return bib_db
 
+    logging.info('Starting GROBID service to extract metadata from PDFs')
     grobid_client.start_grobid()
 
     IDs = [x['ID'] for x in bib_db.entries]
@@ -249,11 +238,13 @@ def main(bib_db, repo):
     global PAD
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
     print('TODO: download if there is a fulltext link in the record')
+    if not os.path.exists(PDF_DIRECTORY):
+        os.mkdir(PDF_DIRECTORY)
 
     utils.reset_log()
     logging.info('Retrieve PDFs')
 
-    check_existing_unlinked_pdfs(bib_db)
+    bib_db = check_existing_unlinked_pdfs(bib_db)
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -301,7 +292,6 @@ def main(bib_db, repo):
                 logging.info('No additional pdfs to retrieve')
             break
 
-    export_retrieval_table(missing_records)
     print()
 
     status.review_instructions()
@@ -311,7 +301,6 @@ def main(bib_db, repo):
 
 @click.command()
 def cli():
-    # TODO: the global counters need to be adapted to multiprocessing
 
     bib_db = utils.load_main_refs()
     repo = init.get_repo()
