@@ -239,7 +239,7 @@ def bibutils_convert(script, data):
     client = docker.APIClient()
     try:
         cur_tag = docker.from_env().images.get('bibutils').tags[0]
-        logging.info(f'Running docker container created from image {cur_tag}')
+        logging.info(f'Running docker container created from {cur_tag}')
         container = \
             client.create_container('bibutils', script, stdin_open=True)
     except docker.errors.ImageNotFound:
