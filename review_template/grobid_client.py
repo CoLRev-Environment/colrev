@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import logging
 import os
 import subprocess
 import sys
@@ -39,8 +40,11 @@ def start_grobid():
             return True
     except requests.exceptions.ConnectionError:
         print('Starting grobid service...')
+        grobid_image = 'grobid/grobid:0.7.1-SNAPSHOT'
+        logging.info('Running docker container created '
+                     f'from image {grobid_image}')
         subprocess.Popen(['docker run -t --rm -m "4g" -p 8070:8070 ' +
-                          '-p 8071:8071 grobid/grobid:0.7.1-SNAPSHOT'],
+                          f'-p 8071:8071 {grobid_image}'],
                          shell=True,
                          stdin=None,
                          stdout=open(os.devnull, 'wb'),
