@@ -112,15 +112,6 @@ def init_new_repo():
             '\n.index-*\nmissing_pdf_files.csv')
     f.close()
 
-    from review_template import repo_setup
-    SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
-    f = open(SEARCH_DETAILS, 'w')
-    header = '"filename","number_records","iteration","date_start",' + \
-        '"date_completion","source_url",' + \
-        '"search_parameters","responsible","comment"'
-    f.write(header)
-    f.close()
-
     os.system('pre-commit install')
     os.system('pre-commit autoupdate')
 
@@ -128,7 +119,6 @@ def init_new_repo():
 
     repo.index.add([
         'readme.md',
-        SEARCH_DETAILS,
         '.pre-commit-config.yaml',
         '.gitattributes',
         '.gitignore',

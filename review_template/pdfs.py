@@ -115,6 +115,7 @@ def get_pdf_from_unpaywall(record):
 
 
 def link_pdf(record):
+    global PAD
     if 'PAD' not in globals():
         PAD = 40
     pdf_filepath = os.path.join(PDF_DIRECTORY, record['ID'] + '.pdf')
