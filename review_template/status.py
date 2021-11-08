@@ -398,7 +398,8 @@ def repository_validation():
         #     sys.exit()
         #     # once we use tags, we may consider recommending
         #     # pre-commit autoupdate --bleeding-edge
-    except git.exc.GitCommandError:
+    except git.exc.GitCommandError as e:
+        print(e)
         print('  Warning: No Internet connection, cannot check remote '
               'pipeline-validation-hooks repository for updates.')
         pass

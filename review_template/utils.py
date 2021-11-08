@@ -314,12 +314,6 @@ def require_clean_repo(repo=None, ignore_pattern=None):
     return True
 
 
-def get_package_details():
-    details = '\n   - review_template:'.ljust(33, ' ') + 'version ' + \
-        version('review_template')
-    return details
-
-
 def get_commit_report(script_name=None, saved_args=None):
     report = '\n\nReport\n\n'
 
@@ -339,12 +333,23 @@ def get_commit_report(script_name=None, saved_args=None):
         report = report + '\n'
 
     report = report + 'Software'
-    report = report + get_package_details()
-
-    from importlib.metadata import version
+    rt_version = version('review_template')
+    report = report + '\n   - review_template:'.ljust(33, ' ') + 'version ' + \
+        rt_version
     version('pipeline_validation_hooks')
     report = report + '\n   - pre-commit hooks:'.ljust(33, ' ') + \
         'version ' + version('pipeline_validation_hooks')
+    sys_v = sys.version
+    report = report + '\n   - Python:'.ljust(33, ' ') + \
+        'version ' + sys_v[:sys_v.find(' ')]
+    gitv = git.Repo().git
+    git_v = gitv.execute(['git', '--version'])
+    report = report + '\n   - Git:'.ljust(33, ' ') + \
+        git_v.replace('git ', '')
+    stream = os.popen('docker --version')
+    docker_v = stream.read()
+    report = report + '\n   - Docker:'.ljust(33, ' ') + \
+        docker_v.replace('Docker ', '').replace('\n', '')
 
     if 'dirty' in report:
         report = \
@@ -391,7 +396,7 @@ def get_commit_report(script_name=None, saved_args=None):
 
 def get_version_flag():
     flag = ''
-    if 'dirty' in get_package_details():
+    if 'dirty' in version('review_template'):
         flag = ' ⚠️'
     return flag
 
