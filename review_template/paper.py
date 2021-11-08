@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import logging
 import os
 
 import click
@@ -40,7 +41,11 @@ def main():
 
     client = docker.from_env()
     try:
-        client.containers.run(image='pandoc/ubuntu-latex:2.14',
+        pandoc_u_latex_image = 'pandoc/ubuntu-latex:2.14'
+        logging.info('Running docker container created from '
+                     f'image {pandoc_u_latex_image}')
+
+        client.containers.run(image=pandoc_u_latex_image,
                               command=script,
                               user=f'{uid}:{gid}',
                               volumes=[os.getcwd() + ':/data']
