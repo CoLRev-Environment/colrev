@@ -3,7 +3,23 @@ import os
 import sys
 
 import click
+import click_completion.core
 import git
+
+
+def custom_startswith(string, incomplete):
+    """A custom completion matching that supports case insensitive matching"""
+    if os.environ.get('_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE'):
+        string = string.lower()
+        incomplete = incomplete.lower()
+    return string.startswith(incomplete)
+
+# Note: autocompletion needs bash/... activation:
+# https://click.palletsprojects.com/en/7.x/bashcomplete/
+
+
+click_completion.core.startswith = custom_startswith
+click_completion.init()
 
 
 class SpecialHelpOrder(click.Group):
@@ -36,9 +52,6 @@ class SpecialHelpOrder(click.Group):
             return cmd
 
         return decorator
-
-# Note: autocompletion needs bash/... activation:
-# https://click.palletsprojects.com/en/7.x/bashcomplete/
 
 
 @click.group(cls=SpecialHelpOrder)
@@ -298,6 +311,31 @@ def paper(ctx):
     """Build the paper"""
     from review_template import paper
     paper.main()
+
+
+ccs = click_completion.core.shells
+
+
+@main.command(hidden=True)
+@click.option('--append/--overwrite',
+              help='Append the completion code to the file',
+              default=None)
+@click.option('-i', '--case-insensitive/--no-case-insensitive',
+              help='Case insensitive completion')
+@click.argument('shell', required=False,
+                type=click_completion.DocumentedChoice(ccs))
+@click.argument('path', required=False)
+def cli_completion_activate(append, case_insensitive, shell, path):
+    """Install the click-completion-command completion"""
+    extra_env = \
+        {'_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE': 'ON'} if\
+        case_insensitive else {}
+    shell, path = \
+        click_completion.core.install(shell=shell,
+                                      path=path,
+                                      append=append,
+                                      extra_env=extra_env)
+    click.echo(f'{shell} completion installed in {path}')
 
 
 if __name__ == '__main__':
