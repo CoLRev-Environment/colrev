@@ -264,14 +264,11 @@ def main():
 
     # If there are remaining duplicates, ask whether to create a commit
     if not stat.split('/')[0] == stat.split('/')[1]:
-        if 'y' == input('Create commit (y/n)?'):
-            utils.create_commit(repo, 'Process duplicates manually',
-                                saved_args,
-                                manual_author=True)
-    else:
-        utils.create_commit(repo, 'Process duplicates manually',
-                            saved_args,
-                            manual_author=True)
+        if 'y' != input('Create commit (y/n)?'):
+            return
+    utils.create_commit(repo, 'Process duplicates manually',
+                        saved_args,
+                        manual_author=True)
 
 
 if __name__ == '__main__':
