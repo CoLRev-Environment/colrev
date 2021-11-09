@@ -75,9 +75,9 @@ Commands:
   paper        Build the paper
 ```
 
-# We build on the shoulders of (growing) giants
+# Credits
 
-We build on amazing projects and benefit from their ongoing improvements
+We build on the shoulders of (growing) giants (amazing projects) and benefit from their ongoing improvements
 
 - [GitPython](https://github.com/gitpython-developers/GitPython), which is available under the [BSD 3-Clause License](https://github.com/gitpython-developers/GitPython/blob/main/LICENSE). [![GitPython](https://img.shields.io/github/commit-activity/y/gitpython-developers/GitPython?color=green&style=plastic)](https://github.com/gitpython-developers/GitPython)
 - [pre-commit](https://github.com/pre-commit/pre-commit), which is available under the [MIT License](https://github.com/pre-commit/pre-commit/blob/master/LICENSE). [![pre-commit](https://img.shields.io/github/commit-activity/y/pre-commit/pre-commit?color=green&style=plastic)](https://github.com/pre-commit/pre-commit.six)
@@ -94,7 +94,7 @@ Dynamically loaded
 - [pandoc](https://github.com/jgm/pandoc), which is available under the [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
 - [bibutils](http://bibutils.refbase.org/), which is available under the [GNU Public License (GPL)](http://bibutils.refbase.org/).
 
-For meta-data preparation and PDF retrieval, we rely on
+For meta-data preparation and PDF retrieval, we rely on the following data sources
 
 - [Crossref](https://www.crossref.org/) with over 125,000,000 curated metadata records across disciplines
 - [Semantic Scholar](https://www.semanticscholar.org/) with over 175,000,000 records across disciplines
