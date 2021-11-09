@@ -14,6 +14,8 @@ from review_template import status
 from review_template import utils
 
 
+MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+
 desired_order_list = ['ENTRYTYPE', 'ID', 'year', 'author',
                       'title', 'journal', 'booktitle',
                       'volume', 'number', 'doi',
@@ -32,7 +34,8 @@ def get_excl_criteria(ec_string):
     criteria = []
     for exclusion_criterion in ec_string.split(';'):
         exclusion_criterion = exclusion_criterion.split('=')[0]
-        criteria.append(exclusion_criterion)
+        if exclusion_criterion != 'NA':
+            criteria.append(exclusion_criterion)
     return criteria
 
 
@@ -59,9 +62,8 @@ def prescreen(include_all=False):
                          'Included in prescreen (automatically)')
             record.update(rev_status='prescreen_included')
             record.update(pdf_status='needs_retrieval')
-        utils.save_bib_file(
-            bib_db, repo_setup.paths['MAIN_REFERENCES'])
-        repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+        utils.save_bib_file(bib_db, MAIN_REFERENCES)
+        repo.index.add([MAIN_REFERENCES])
         # Ask whether to create a commit/if records remain for pre-screening
         if 'y' == input('Create commit (y/n)?'):
             utils.create_commit(repo, 'Pre-screening (manual)',
@@ -75,9 +77,12 @@ def prescreen(include_all=False):
         pp = pprint.PrettyPrinter(indent=4, width=140)
 
         print('To stop screening, press ctrl-c')
+        i = 1
+        stat_len = len([x for x in bib_db.entries
+                        if 'retrieved' == x.get('rev_status', 'NA')])
+
         try:
             for record in bib_db.entries:
-                os.system('cls' if os.name == 'nt' else 'clear')
                 # Skip records that have already been screened
                 if 'retrieved' != record.get('rev_status', 'NA'):
                     continue
@@ -88,12 +93,15 @@ def prescreen(include_all=False):
 
                 inclusion_decision = 'TODO'
 
-                while inclusion_decision not in ['y', 'n']:
-                    revrecord = customsort(record, desired_order_list)
-                    pp.pprint(revrecord)
+                os.system('cls' if os.name == 'nt' else 'clear')
+                print(f'{i}/{stat_len}')
+                i += 1
+                revrecord = customsort(record, desired_order_list)
+                pp.pprint(revrecord)
 
-                    print()
+                while inclusion_decision not in ['y', 'n']:
                     inclusion_decision = input('include (y) or exclude (n)?')
+
                 inclusion_decision = inclusion_decision\
                     .replace('y', 'yes')\
                     .replace('n', 'no')
@@ -107,20 +115,21 @@ def prescreen(include_all=False):
                     record.update(rev_status='prescreen_included')
                     record.update(pdf_status='needs_retrieval')
 
-                utils.save_bib_file(
-                    bib_db, repo_setup.paths['MAIN_REFERENCES'])
+                utils.save_bib_file(bib_db, MAIN_REFERENCES)
 
         except KeyboardInterrupt:
             print('\n\nstopping screen 1\n')
             pass
         os.system('cls' if os.name == 'nt' else 'clear')
 
-        repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+        repo.index.add([MAIN_REFERENCES])
         # Ask whether to create a commit/if records remain for pre-screening
-        if 'y' == input('Create commit (y/n)?'):
-            utils.create_commit(repo, 'Pre-screening (manual)',
-                                saved_args,
-                                manual_author=True)
+        if i < stat_len:
+            if 'y' != input('Create commit (y/n)?'):
+                return
+        utils.create_commit(repo, 'Pre-screening (manual)',
+                            saved_args,
+                            manual_author=True)
 
     status.review_instructions()
 
@@ -202,31 +211,30 @@ def import_csv_file(bib_db):
                 record['rev_status'] = 'included'
             # TODO: exclusion-criteria
 
-    utils.save_bib_file(
-        bib_db, repo_setup.paths['MAIN_REFERENCES'])
+    utils.save_bib_file(bib_db, MAIN_REFERENCES)
 
     return
 
 
 def screen(export_csv=None, import_csv=None):
     saved_args = locals()
-    if not export_csv:
-        del saved_args['export_csv']
-    if not import_csv:
-        del saved_args['export_csv']
-    repo = git.Repo('')
-    utils.require_clean_repo(repo)
     bib_db = utils.load_main_refs()
-
-    process.check_delay(bib_db,
-                        min_status_requirement='prescreened_and_pdf_prepared')
-
     if export_csv:
         export_spreadsheet(bib_db, export_csv)
         return
+    else:
+        del saved_args['export_csv']
     if import_csv:
         import_csv_file(bib_db)
         return
+        del saved_args['import_csv']
+
+    repo = git.Repo('')
+    utils.require_clean_repo(repo,
+                             ignore_pattern=MAIN_REFERENCES)
+
+    process.check_delay(bib_db,
+                        min_status_requirement='prescreened_and_pdf_prepared')
 
     print('\n\nRun screen')
 
@@ -240,18 +248,35 @@ def screen(export_csv=None, import_csv=None):
     if ec_string:
         excl_criteria = get_excl_criteria(ec_string[0])
     else:
-        excl_criteria = input('Provide exclusion criteria (comma separated)')
+        excl_criteria = \
+            input('Provide exclusion criteria (comma separated or NA)')
         excl_criteria = excl_criteria.split(',')
+        if '' in excl_criteria:
+            excl_criteria = excl_criteria.remove('')
+    if 'NA' in excl_criteria:
+        excl_criteria = excl_criteria.remove('NA')
 
-    excl_criteria_available = (0 < len(excl_criteria))
+    if excl_criteria:
+        excl_criteria_available = True
+    else:
+        excl_criteria_available = False
+        excl_criteria = ['NA']
+
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
+
+    i = 1
+    stat_len = len([x for x in bib_db.entries
+                    if 'prescreen_included' == x.get('rev_status', 'NA')])
+
     try:
         for record in bib_db.entries:
             if 'prepared' != record.get('pdf_status', 'NA') or \
                     'prescreen_included' != record.get('rev_status', 'NA'):
                 continue
-            os.system('cls' if os.name == 'nt' else 'clear')
 
+            os.system('cls' if os.name == 'nt' else 'clear')
+            print(f'{i}/{stat_len}')
+            i += 1
             revrecord = customsort(record, desired_order_list)
             pp.pprint(revrecord)
 
@@ -301,24 +326,25 @@ def screen(export_csv=None, import_csv=None):
                     logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                                  'Excluded')
                     record.update(rev_status='excluded')
+                record['excl_criteria'] = 'NA'
 
-            utils.save_bib_file(
-                bib_db, repo_setup.paths['MAIN_REFERENCES'])
+            utils.save_bib_file(bib_db, MAIN_REFERENCES)
 
     except IndexError:
-        MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
         print(f'Index error/ID not found in {MAIN_REFERENCES}: {record["ID"]}')
         pass
     except KeyboardInterrupt:
         print('\n\nStopping screen 1\n')
         pass
 
-    repo.index.add([repo_setup.paths['MAIN_REFERENCES']])
+    repo.index.add([MAIN_REFERENCES])
     # Ask whether to create a commit/if records remain for screening
-    if 'y' == input('Create commit (y/n)?'):
-        utils.create_commit(repo, 'Screening (manual)',
-                            saved_args,
-                            manual_author=True)
+    if i < stat_len:
+        if 'y' != input('Create commit (y/n)?'):
+            return
+    utils.create_commit(repo, 'Screening (manual)',
+                        saved_args,
+                        manual_author=True)
 
     return
 
