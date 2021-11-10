@@ -55,7 +55,7 @@ def main():
                               volumes=[os.getcwd() + ':/data']
                               )
     except docker.errors.ImageNotFound:
-        print('Docker image not found')
+        logging.error('Docker image not found')
         return
         pass
 

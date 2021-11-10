@@ -31,6 +31,5 @@ def main(bib_db, repo):
     for record in bib_db.entries:
         record = man_prep_pdf(record)
 
-    print()
     status.review_instructions()
     return bib_db

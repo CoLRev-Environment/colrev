@@ -38,10 +38,10 @@ def start_grobid():
     try:
         r = requests.get(GROBID_URL + '/api/isalive')
         if r.text == 'true':
-            # print('Docker running')
+            logging.debug('Docker running')
             return True
     except requests.exceptions.ConnectionError:
-        print('Starting grobid service...')
+        logging.info('Starting grobid service...')
         subprocess.Popen(['docker run -t --rm -m "4g" -p 8070:8070 ' +
                           f'-p 8071:8071 {grobid_image}'],
                          shell=True,
@@ -59,7 +59,7 @@ def start_grobid():
         try:
             r = requests.get(GROBID_URL + '/api/isalive')
             if r.text == 'true':
-                print('Grobid service alive.')
+                logging.info('Grobid service alive.')
                 return True
         except requests.exceptions.ConnectionError:
             pass

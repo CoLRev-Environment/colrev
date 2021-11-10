@@ -18,7 +18,7 @@ DATA = repo_setup.paths['DATA']
 
 def main(ID):
 
-    print(f'Trace record by ID: {ID}')
+    logging.info(f'Trace record by ID: {ID}')
 
     repo = git.Repo()
 

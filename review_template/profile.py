@@ -49,13 +49,13 @@ def prep_observations(references, bib_db):
     missing_outlet = \
         observations[observations['outlet'].isnull()]['ID'].tolist()
     if len(missing_outlet) > 0:
-        print(f'No outlet: {missing_outlet}')
+        logging.info(f'No outlet: {missing_outlet}')
     return observations
 
 
 def main():
 
-    print('\n\nSample profile\n')
+    logging.info('Sample profile')
 
     if not status.get_completeness_condition():
         logging.warning(

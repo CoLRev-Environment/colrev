@@ -70,7 +70,7 @@ def export_spreadsheet(bib_db, export_csv):
 
 def import_csv_file(bib_db):
     if not os.path.exists('screen_table.csv'):
-        print('Did not find screen_table.csv - exiting.')
+        logging.error('Did not find screen_table.csv - exiting.')
         return
     screen_df = pd.read_csv('screen_table.csv')
     screen_df.fillna('', inplace=True)
@@ -156,7 +156,8 @@ def prescreen(include_all=False, export_csv=None, import_csv=None):
                 if 'retrieved' != record.get('rev_status', 'NA'):
                     continue
                 if 'processed' != record.get('md_status', 'NA'):
-                    print(f'Skipping {record["ID"]} - not yet processed')
+                    logging.info(
+                        f'Skipping {record["ID"]} - not yet processed')
                     input('Enter to continue')
                     continue
 
@@ -188,7 +189,7 @@ def prescreen(include_all=False, export_csv=None, import_csv=None):
                 utils.save_bib_file(bib_db, MAIN_REFERENCES)
 
         except KeyboardInterrupt:
-            print('\n\nstopping screen 1\n')
+            logging.info('\n\nstopping screen 1\n')
             pass
         os.system('cls' if os.name == 'nt' else 'clear')
 

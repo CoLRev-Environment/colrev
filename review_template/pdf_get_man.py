@@ -111,8 +111,6 @@ def main(bib_db, repo):
                      f'the {PDF_DIRECTORY}. Afterwards, use '
                      'review_template pdf-get-man')
 
-    print()
-
     status.review_instructions()
 
     return bib_db

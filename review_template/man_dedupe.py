@@ -188,8 +188,7 @@ def merge_manual(bib_db, record_a_ID, record_b_ID, stat):
             # if none of the IDs has a letter appended.
 
     if a_propagated and b_propagated:
-        print('WARNING: both IDs propagated:' +
-              f' {record_a_ID}, {record_b_ID}')
+        logging.error(f'Both IDs propagated: {record_a_ID}, {record_b_ID}')
         return bib_db
 
     if a_propagated:

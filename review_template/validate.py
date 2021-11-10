@@ -44,7 +44,7 @@ def get_search_records():
 
 def validate_preparation_changes(bib_db, search_records):
 
-    print('Calculating preparation differences...')
+    logging.info('Calculating preparation differences...')
     change_diff = []
     for record in bib_db.entries:
         if 'changed_in_target_commit' not in record:
@@ -66,7 +66,7 @@ def validate_preparation_changes(bib_db, search_records):
     change_diff.sort(key=lambda x: x[2], reverse=True)
 
     if 0 == len(change_diff):
-        print('No substantial differences found.')
+        logging.info('No substantial differences found.')
 
     plot_hist([sim for [e1, e2, sim] in change_diff],
               bincount=100, xlab=True, showSummary=True)
@@ -76,9 +76,9 @@ def validate_preparation_changes(bib_db, search_records):
     for eid, record_link, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system('cls' if os.name == 'nt' else 'clear')
-        print('Record with ID: ' + eid)
+        logging.info('Record with ID: ' + eid)
 
-        print('Difference: ' + str(round(difference, 4)) + '\n\n')
+        logging.info('Difference: ' + str(round(difference, 4)) + '\n\n')
         record_1 = [x for x in search_records if record_link == x['origin']]
         pp.pprint(record_1[0])
         record_2 = [x for x in bib_db.entries if eid == x['ID']]
@@ -99,7 +99,7 @@ def validate_preparation_changes(bib_db, search_records):
 def validate_merging_changes(bib_db, search_records):
 
     os.system('cls' if os.name == 'nt' else 'clear')
-    print('Calculating differences between merged records...')
+    logging.info('Calculating differences between merged records...')
     change_diff = []
     merged_records = False
     for record in bib_db.entries:
@@ -125,9 +125,9 @@ def validate_merging_changes(bib_db, search_records):
 
     if 0 == len(change_diff):
         if merged_records:
-            print('No substantial differences found.')
+            logging.info('No substantial differences found.')
         else:
-            print('No merged records')
+            logging.info('No merged records')
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -152,12 +152,12 @@ def validate_merging_changes(bib_db, search_records):
 def load_bib_db(target_commit):
 
     if 'none' == target_commit:
-        print('Loading data...')
+        logging.info('Loading data...')
         bib_db = utils.load_main_refs(mod_check=False)
         [x.update(changed_in_target_commit='True') for x in bib_db.entries]
 
     else:
-        print('Loading data from history...')
+        logging.info('Loading data from history...')
         repo = git.Repo()
 
         MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
@@ -197,25 +197,27 @@ def validate_properties(target_commit):
     if not target_commit:
         target_commit = cur_sha
     if repo.is_dirty() and not target_commit == cur_sha:
-        print('Error: Need a clean repository to validate properties '
-              'of prior commit')
+        logging.error('Error: Need a clean repository to validate properties '
+                      'of prior commit')
         return
     if not target_commit == cur_sha:
-        print(f'Check out target_commit = {target_commit}')
+        logging.info(f'Check out target_commit = {target_commit}')
         repo.git.checkout(target_commit)
 
     completeness_condition = status.get_completeness_condition()
     if completeness_condition:
-        print('Completeness of iteration'.ljust(32, ' ') + 'YES (validated)')
+        logging.info('Completeness of iteration'.ljust(32, ' ') +
+                     'YES (validated)')
     else:
-        print('Completeness of iteration'.ljust(32, ' ') + 'NO')
+        logging.error('Completeness of iteration'.ljust(32, ' ') + 'NO')
     if 0 == pipeline_validation_hooks.check.main():
-        print('Traceability of records'.ljust(32, ' ') + 'YES (validated)')
-        print('Consistency (based on hooks)' .ljust(32, ' ') +
-              'YES (validated)')
+        logging.info('Traceability of records'.ljust(32, ' ') +
+                     'YES (validated)')
+        logging.info('Consistency (based on hooks)' .ljust(32, ' ') +
+                     'YES (validated)')
     else:
-        print('Traceability of records'.ljust(32, ' ') + 'NO')
-        print('Consistency (based on hooks)' .ljust(32, ' ') + 'NO')
+        logging.error('Traceability of records'.ljust(32, ' ') + 'NO')
+        logging.error('Consistency (based on hooks)' .ljust(32, ' ') + 'NO')
 
     repo.git.checkout(cur_branch, force=True)
 
