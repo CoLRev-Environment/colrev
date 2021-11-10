@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import itertools
-import json
 import logging
 import multiprocessing as mp
 import os
@@ -15,11 +14,9 @@ import click
 import git
 import pandas as pd
 import requests
-import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from yaml import safe_load
 
 import docker
 from review_template import grobid_client
@@ -139,12 +136,8 @@ def source_heuristics(search_file):
 
 def check_update_search_details(search_files):
 
-    if os.path.exists(SEARCH_DETAILS):
-        with open(SEARCH_DETAILS) as f:
-            search_details_df = pd.json_normalize(safe_load(f))
-            search_details = search_details_df.to_dict('records')
-    else:
-        search_details = []
+    search_details = utils.load_search_details()
+
     for search_file_path in search_files:
         search_file = os.path.basename(search_file_path)
         if search_file not in [x['filename'] for x in search_details]:
@@ -174,15 +167,8 @@ def check_update_search_details(search_files):
             logging.info(f'Added infos to {SEARCH_DETAILS}:'
                          f' \n{pp.pformat(new_record)}')
 
-    search_details_df = pd.DataFrame(search_details)
-    orderedCols = ['filename', 'search_type',
-                   'source_name', 'source_url',
-                   'search_parameters', 'comment']
-    search_details_df = search_details_df.reindex(columns=orderedCols)
+    utils.save_search_details(search_details)
 
-    with open(SEARCH_DETAILS, 'w') as f:
-        yaml.dump(json.loads(search_details_df.to_json(orient='records')),
-                  f, default_flow_style=False, sort_keys=False)
     return
 
 

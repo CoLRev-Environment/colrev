@@ -50,6 +50,7 @@ def get_pdf_from_google(record):
 
 def get_pdf_from_author_email(record):
     webbrowser.open('mailto:author_mail', new=1)
+    # Note: does not seem to work with chrome...
     # ?subject=Your paper&body=Hi, can you share paper x?
     return record
 

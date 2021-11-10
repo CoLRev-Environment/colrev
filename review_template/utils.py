@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import inspect
 import io
+import json
 import logging
 import os
 import pkgutil
@@ -19,6 +20,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
+from yaml import safe_load
 
 import docker
 from review_template import prepare
@@ -190,6 +192,30 @@ def set_IDs(bib_db):
     return bib_db
 
 
+def load_search_details():
+
+    if os.path.exists(SEARCH_DETAILS):
+        with open(SEARCH_DETAILS) as f:
+            search_details_df = pd.json_normalize(safe_load(f))
+            search_details = search_details_df.to_dict('records')
+    else:
+        search_details = []
+    return search_details
+
+
+def save_search_details(search_details):
+    search_details_df = pd.DataFrame(search_details)
+    orderedCols = ['filename', 'search_type',
+                   'source_name', 'source_url',
+                   'search_parameters', 'comment']
+    search_details_df = search_details_df.reindex(columns=orderedCols)
+
+    with open(SEARCH_DETAILS, 'w') as f:
+        yaml.dump(json.loads(search_details_df.to_json(orient='records')),
+                  f, default_flow_style=False, sort_keys=False)
+    return
+
+
 def load_main_refs(mod_check=None, init=None):
     if mod_check is None:
         mod_check = True
@@ -318,7 +344,8 @@ def get_commit_report(script_name=None, saved_args=None):
     report = '\n\nReport\n\n'
 
     if script_name is not None:
-        report = report + f'Command\n   {script_name}\n'
+        script_name = script_name.replace('.py', '').replace('_', '-')
+        report = report + f'Command\n   review_template {script_name}\n'
     if saved_args is not None:
         repo = None
         for k, v in saved_args.items():

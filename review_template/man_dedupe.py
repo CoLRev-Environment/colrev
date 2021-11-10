@@ -217,6 +217,11 @@ def main():
 
     bib_db = utils.load_main_refs()
 
+    if not os.path.exists('potential_duplicate_tuples.csv'):
+        logging.info('No potential duplicates found '
+                     '(potential_duplicate_tuples.csv)')
+        return
+
     potential_duplicate = pd.read_csv('potential_duplicate_tuples.csv')
 
     first_record_col = potential_duplicate.columns.get_loc('ID1')

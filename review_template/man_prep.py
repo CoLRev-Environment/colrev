@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import logging
 import os
 import pprint
 
@@ -75,41 +76,6 @@ def man_fix_incomplete_fields(record):
     return record
 
 
-def man_prep_record(record):
-
-    global ID_list
-
-    if 'needs_manual_preparation' != record['md_status']:
-        return record
-
-    print_record(record)
-
-    man_correct_recordtype(record)
-
-    man_provide_required_fields(record)
-
-    man_fix_field_inconsistencies(record)
-
-    man_fix_incomplete_fields(record)
-
-    # Note: for complete_based_on_doi field:
-    record = prepare.retrieve_doi_metadata(record)
-
-    if (prepare.is_complete(record) or prepare.is_doi_complete(record)) and \
-            not prepare.has_inconsistent_fields(record) and \
-            not prepare.has_incomplete_fields(record):
-        record = prepare.drop_fields(record)
-        record.update(ID=utils.generate_ID_blacklist(
-            record, ID_list,
-            record_in_bib_db=True,
-            raise_error=False))
-        ID_list.append(record['ID'])
-        record.update(md_status='prepared')
-        record.update(metadata_source='MAN_PREP')
-
-    return record
-
-
 def man_prep_records():
     saved_args = locals()
     global ID_list
@@ -117,13 +83,51 @@ def man_prep_records():
     repo = git.Repo('')
     utils.require_clean_repo(repo)
 
-    print('Loading records for manual preparation...')
+    logging.info('Loading records for manual preparation...')
     bib_db = utils.load_main_refs()
 
     ID_list = [record['ID'] for record in bib_db.entries]
 
+    i = 1
+    stat_len = \
+        len([x for x in bib_db.entries
+             if 'needs_manual_preparation' == x.get('rev_status', 'NA')])
+    if 0 == stat_len:
+        logging.info('No records to prepare manually')
+        return
+
     for record in bib_db.entries:
-        record = man_prep_record(record)
+
+        if 'needs_manual_preparation' != record['md_status']:
+            continue
+
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print(f'{i}/{stat_len}')
+        i += 1
+
+        print_record(record)
+
+        man_correct_recordtype(record)
+        man_provide_required_fields(record)
+        man_fix_field_inconsistencies(record)
+        man_fix_incomplete_fields(record)
+
+        # Note: for complete_based_on_doi field:
+        record = prepare.retrieve_doi_metadata(record)
+
+        if (prepare.is_complete(record) or
+            prepare.is_doi_complete(record)) and \
+                not prepare.has_inconsistent_fields(record) and \
+                not prepare.has_incomplete_fields(record):
+            record = prepare.drop_fields(record)
+            record.update(ID=utils.generate_ID_blacklist(
+                record, ID_list,
+                record_in_bib_db=True,
+                raise_error=False))
+            ID_list.append(record['ID'])
+            record.update(md_status='prepared')
+            record.update(metadata_source='MAN_PREP')
+
         utils.save_bib_file(bib_db)
 
     bib_db = utils.set_IDs(bib_db)

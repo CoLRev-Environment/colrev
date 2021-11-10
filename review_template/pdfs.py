@@ -12,7 +12,6 @@ from review_template import dedupe
 from review_template import grobid_client
 from review_template import importer
 from review_template import init
-from review_template import pdf_prepare
 from review_template import process
 from review_template import repo_setup
 from review_template import status
@@ -24,6 +23,7 @@ PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 current_batch_counter = mp.Value('i', 0)
+linked_existing_files = False
 
 
 def unpaywall(doi, retry=0, pdfonly=True):
@@ -184,6 +184,7 @@ def get_pdfs_from_dir(directory):
 
 
 def check_existing_unlinked_pdfs(bib_db):
+    global linked_existing_files
     pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
 
     if not pdf_files:
@@ -213,25 +214,28 @@ def check_existing_unlinked_pdfs(bib_db):
                 sim = dedupe.get_record_similarity(record, bib_record.copy())
                 if sim > max_similarity:
                     max_similarity = sim
-                    max_sim_record = bib_record.copy()
+                    max_sim_record = bib_record
 
-            new_filename = os.path.join(os.path.dirname(file),
-                                        max_sim_record['ID'] + '.pdf')
             if max_similarity > 0.5:
+                new_filename = os.path.join(os.path.dirname(file),
+                                            max_sim_record['ID'] + '.pdf')
+                max_sim_record.update(file=':' + new_filename + ':PDF')
                 max_sim_record.update(pdf_status='imported')
-                max_sim_record.update(file=':' + file + ':PDF')
-                max_sim_record = \
-                    pdf_prepare.validate_pdf_metadata(max_sim_record)
-                pdf_status = max_sim_record.get('pdf_status', 'NA')
-                if 'needs_manual_preparation' != pdf_status:
-                    os.rename(file, new_filename)
-                    logging.info('checked and renamed pdf:'
-                                 f' {file} > {new_filename}')
+                linked_existing_files = True
+                os.rename(file, new_filename)
+                logging.info('checked and renamed pdf:'
+                             f' {file} > {new_filename}')
+                # max_sim_record = \
+                #     pdf_prepare.validate_pdf_metadata(max_sim_record)
+                # pdf_status = max_sim_record.get('pdf_status', 'NA')
+                # if 'needs_manual_preparation' == pdf_status:
+                #     # revert?
 
     return bib_db
 
 
 def main(bib_db, repo):
+    global linked_existing_files
     saved_args = locals()
 
     utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
@@ -266,7 +270,7 @@ def main(bib_db, repo):
 
         missing_records = get_missing_records(bib_db)
 
-        if batch_end > 0:
+        if batch_end > 0 or linked_existing_files:
             logging.info('Completed pdf retrieval batch '
                          f'(records {batch_start} to {batch_end})')
 

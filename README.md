@@ -77,7 +77,7 @@ Commands:
 
 # Credits
 
-We build on the shoulders of (growing) giants (amazing projects) and benefit from their ongoing improvements
+We build on the shoulders of amazing projects (growing giants) and benefit from their ongoing improvements
 
 - [GitPython](https://github.com/gitpython-developers/GitPython), which is available under the [BSD 3-Clause License](https://github.com/gitpython-developers/GitPython/blob/main/LICENSE). [![GitPython](https://img.shields.io/github/commit-activity/y/gitpython-developers/GitPython?color=green&style=plastic)](https://github.com/gitpython-developers/GitPython)
 - [pre-commit](https://github.com/pre-commit/pre-commit), which is available under the [MIT License](https://github.com/pre-commit/pre-commit/blob/master/LICENSE). [![pre-commit](https://img.shields.io/github/commit-activity/y/pre-commit/pre-commit?color=green&style=plastic)](https://github.com/pre-commit/pre-commit.six)

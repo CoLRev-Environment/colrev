@@ -69,6 +69,10 @@ def main():
     references = prep_references(bib_db)
     observations = prep_observations(references, bib_db)
 
+    if observations.empty:
+        logging.info('No sample/observations available')
+        return
+
     # TODO: fill missing years
     logging.info('Generate output/sample.csv')
     observations.to_csv('output/sample.csv', index=False)
