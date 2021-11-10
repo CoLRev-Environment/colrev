@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import logging
-import os
 import pprint
 from collections import OrderedDict
 
@@ -12,10 +11,19 @@ from review_template import utils
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
-desired_order_list = ['ENTRYTYPE', 'ID', 'year', 'author',
-                      'title', 'journal', 'booktitle',
-                      'volume', 'number', 'doi',
-                      'link', 'url', 'fulltext']
+desired_order_list = ['ENTRYTYPE',
+                      'ID',
+                      'year',
+                      'author',
+                      'title',
+                      'journal',
+                      'booktitle',
+                      'volume',
+                      'number',
+                      'doi',
+                      'link',
+                      'url',
+                      'fulltext']
 
 
 def customsort(dict1, key_order):
@@ -27,136 +35,148 @@ def customsort(dict1, key_order):
 
 
 def get_excl_criteria(ec_string):
-    criteria = []
-    for exclusion_criterion in ec_string.split(';'):
-        exclusion_criterion = exclusion_criterion.split('=')[0]
-        if exclusion_criterion != 'NA':
-            criteria.append(exclusion_criterion)
-    return criteria
+    return [ec.split('=')[0] for ec in ec_string.split(';') if ec != 'NA']
 
 
-def screen():
-    saved_args = locals()
-    bib_db = utils.load_main_refs()
-    repo = git.Repo('')
-    utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
-
-    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
-    i = 1
-    stat_len = len([x for x in bib_db.entries
-                    if 'prescreen_included' == x.get('rev_status', 'NA')])
-
-    try:
-        req = 'prescreened_and_pdf_prepared'
-        process.check_delay(bib_db, min_status_requirement=req)
-    except process.DelayRequirement:
-        if stat_len > 0:
-            logging.info('Prior processing steps not completed'
-                         ' (DELAY_AUTOMATED_PROCESSING)')
-        else:
-            logging.info('No records to screen')
-        return
-        pass
-
-    logging.info('Run screen')
-
-    pp = pprint.PrettyPrinter(indent=4, width=140)
-
+def get_exclusion_criteria(bib_db):
     ec_string = [x.get('excl_criteria') for x in bib_db.entries
                  if 'excl_criteria' in x]
 
     if ec_string:
         excl_criteria = get_excl_criteria(ec_string[0])
     else:
-        excl_criteria = \
-            input('Provide exclusion criteria (comma separated or NA)')
+        excl_criteria = input('Exclusion criteria (comma separated or NA)')
         excl_criteria = excl_criteria.split(',')
         if '' in excl_criteria:
             excl_criteria = excl_criteria.remove('')
     if 'NA' in excl_criteria:
         excl_criteria = excl_criteria.remove('NA')
 
+    return excl_criteria
+
+
+def screen():
+    saved_args = locals()
+    bib_db = utils.load_main_refs(mod_check=False)
+    repo = git.Repo('')
+    utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
+
+    req = 'prescreened_and_pdf_prepared'
+    process.check_delay(bib_db, min_status_requirement=req)
+
+    logging.info('Start screen')
+
+    pp = pprint.PrettyPrinter(indent=4, width=140)
+
+    excl_criteria = get_exclusion_criteria(bib_db)
     if excl_criteria:
         excl_criteria_available = True
     else:
         excl_criteria_available = False
         excl_criteria = ['NA']
 
-    try:
-        for record in bib_db.entries:
-            if 'prepared' != record.get('pdf_status', 'NA') or \
-                    'prescreen_included' != record.get('rev_status', 'NA'):
+    PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
+    i, quit_pressed = 0, False
+    stat_len = len([x for x in bib_db.entries
+                    if 'prescreen_included' == x.get('rev_status', 'NA')])
+
+    for record in bib_db.entries:
+        if 'prepared' != record.get('pdf_status', 'NA') or \
+                'prescreen_included' != record.get('rev_status', 'NA'):
+            continue
+
+        print('\n\n')
+        i += 1
+        skip_pressed = False
+        revrecord = customsort(record, desired_order_list)
+        pp.pprint(revrecord)
+
+        if excl_criteria_available:
+            decisions = []
+
+            for exclusion_criterion in excl_criteria:
+
+                decision, ret = 'NA', 'NA'
+                while ret not in ['y', 'n', 'q', 's']:
+                    ret = input(f'({i}/{stat_len}) Violates'
+                                f' {exclusion_criterion} [y,n,q,s]? ')
+                    if 'q' == ret:
+                        quit_pressed = True
+                    elif 's' == ret:
+                        skip_pressed = True
+                        continue
+                    elif ret in ['y', 'n']:
+                        decision = ret
+
+                if quit_pressed or skip_pressed:
+                    break
+
+                decisions.append([exclusion_criterion, decision])
+
+            if skip_pressed:
                 continue
+            if quit_pressed:
+                break
 
-            os.system('cls' if os.name == 'nt' else 'clear')
-            print(f'{i}/{stat_len}')
-            i += 1
-            revrecord = customsort(record, desired_order_list)
-            pp.pprint(revrecord)
-
-            if excl_criteria_available:
-                decisions = []
-                for exclusion_criterion in excl_criteria:
-                    decision = 'TODO'
-
-                    while decision not in ['y', 'n']:
-                        # if [''] == excl_criteria:
-                        #     decision = \
-                        #       nput(f'Include {exclusion_criterion} (y/n)?')
-                        #     decision = \
-                        #         decision.replace('y', 'no')\
-                        #                 .replace('n', 'yes')
-                        # else:
-                        decision = \
-                            input(f'Violates {exclusion_criterion} (y/n)?')
-                    decision = \
-                        decision.replace('y', 'yes')\
-                                .replace('n', 'no')
-                    decisions.append([exclusion_criterion, decision])
-                if all([decision == 'no' for ec, decision in decisions]):
-                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
-                                 'Included')
-                    record.update(rev_status='included')
-                else:
-                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
-                                 'Excluded')
-                    record.update(rev_status='excluded')
-
-                ec_field = ''
-                for exclusion_criterion, decision in decisions:
-                    if ec_field != '':
-                        ec_field = f'{ec_field};'
-                    ec_field = f'{ec_field}{exclusion_criterion}={decision}'
-                record['excl_criteria'] = ec_field.replace(' ', '')
+            if all([decision == 'n' for ec, decision in decisions]):
+                logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
+                             'Included')
+                record.update(rev_status='included')
             else:
-                decision = 'TODO'
-                while decision not in ['y', 'n']:
-                    decision = input('Include (y/n)?')
-                if decision == 'y':
-                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
-                                 'Included')
-                    record.update(rev_status='included')
-                if decision == 'n':
-                    logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
-                                 'Excluded')
-                    record.update(rev_status='excluded')
-                record['excl_criteria'] = 'NA'
+                logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
+                             'Excluded')
+                record.update(rev_status='excluded')
 
-            utils.save_bib_file(bib_db, MAIN_REFERENCES)
+            ec_field = ''
+            for exclusion_criterion, decision in decisions:
+                if ec_field != '':
+                    ec_field = f'{ec_field};'
+                decision = decision.replace('y', 'yes').replace('n', 'no')
+                ec_field = f'{ec_field}{exclusion_criterion}={decision}'
+            record['excl_criteria'] = ec_field.replace(' ', '')
 
-    except IndexError:
-        logging.error('Index error/ID not found '
-                      f'in {MAIN_REFERENCES}: {record["ID"]}')
-        pass
-    except KeyboardInterrupt:
-        logging.info('\n\nStopping screen 1\n')
-        pass
+        else:
 
-    repo.index.add([MAIN_REFERENCES])
-    # Ask whether to create a commit/if records remain for screening
-    if i < stat_len:
+            decision, ret = 'NA', 'NA'
+            while ret not in ['y', 'n', 'q', 's']:
+                ret = input(f'({i}/{stat_len}) Include'
+                            f' {exclusion_criterion} [y,n,q,s]? ')
+                if 'q' == ret:
+                    quit_pressed = True
+                elif 's' == ret:
+                    skip_pressed = True
+                    continue
+                elif ret in ['y', 'n']:
+                    decision = ret
+
+            if quit_pressed:
+                break
+
+            if decision == 'y':
+                logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
+                             'Included')
+                record.update(rev_status='included')
+            if decision == 'n':
+                logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
+                             'Excluded')
+                record.update(rev_status='excluded')
+
+            record['excl_criteria'] = 'NA'
+
+        if quit_pressed:
+            logging.info('Stop screen')
+            break
+
+        utils.save_bib_file(bib_db, MAIN_REFERENCES)
+
+    if stat_len == 0:
+        logging.info('No records to screen')
+        return
+
+    if i < stat_len:  # if records remain for screening
         if 'y' != input('Create commit (y/n)?'):
             return
+    repo.index.add([MAIN_REFERENCES])
     utils.create_commit(repo, 'Screening (manual)',
                         saved_args,
                         manual_author=True)

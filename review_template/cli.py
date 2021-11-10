@@ -169,16 +169,16 @@ def man_dedupe(ctx):
 
 @main.command(help_priority=9)
 @click.option('--include_all', is_flag=True, default=False)
-@click.option('--export', type=click.Choice(['CSV', 'XLSX'],
+@click.option('--export_format', type=click.Choice(['CSV', 'XLSX'],
               case_sensitive=False),
               help='Export table with the screening decisions')
-@click.option('--load', type=click.Path(),
+@click.option('--import_table', type=click.Path(),
               help='Import file with the screening decisions (csv supported)')
 @click.pass_context
-def prescreen(ctx, include_all, export, load):
+def prescreen(ctx, include_all, export_format, import_table):
     """Pre-screen based on titles and abstracts"""
     from review_template import prescreen
-    prescreen.prescreen(include_all, export, load)
+    prescreen.main(include_all, export_format, import_table)
 
 
 @main.command(help_priority=10)

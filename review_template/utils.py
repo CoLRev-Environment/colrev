@@ -327,8 +327,8 @@ def require_clean_repo(repo=None, ignore_pattern=None):
         repo = git.Repo('')
     if repo.is_dirty():
         if ignore_pattern is None:
-            logging.errror('Clean repository required '
-                           '(commit, discard or stash changes).')
+            logging.error('Clean repository required '
+                          '(commit, discard or stash changes).')
             sys.exit()
         else:
             changedFiles = [item.a_path for item in repo.index.diff(None)
