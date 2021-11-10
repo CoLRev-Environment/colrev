@@ -385,8 +385,9 @@ def repository_validation():
             logging.info('Updating pre-commit hooks...')
             os.system('pre-commit autoupdate')
 
-            logging.info('Commit updated pre-commit hooks')
-            repo.index.add(['.pre-commit-config.yaml'])
+            utils.update_status_yaml()
+
+            repo.index.add(['.pre-commit-config.yaml', 'status.yaml'])
             repo.index.commit(
                 'Update pre-commit-config' + utils.get_version_flag() +
                 utils.get_commit_report(),
@@ -394,6 +395,8 @@ def repository_validation():
                 committer=git.Actor(repo_setup.config['GIT_ACTOR'],
                                     repo_setup.config['EMAIL']),
             )
+            logging.info('Commited updated pre-commit hooks')
+            utils.reset_log()
         # we could offer a parameter to disable autoupdates (warn accordingly)
         #     print('  pipeline-validation-hooks version outdated.\n  use ',
         #           f'{colors.RED}pre-commit autoupdate{colors.END}')
