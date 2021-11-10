@@ -14,6 +14,7 @@ import dictdiffer
 import git
 import pandas as pd
 import requests
+from bibtexparser.bibdatabase import BibDatabase
 from fuzzywuzzy import fuzz
 from nameparser import HumanName
 
@@ -33,7 +34,7 @@ prepared, need_manual_prep = 0, 0
 current_batch_counter = mp.Value('i', 0)
 
 
-def retrieve_local_resources():
+def retrieve_local_resources() -> [list, list, list]:
 
     if os.path.exists('lexicon/JOURNAL_ABBREVIATIONS.csv'):
         JOURNAL_ABBREVIATIONS = pd.read_csv(
@@ -57,7 +58,7 @@ def retrieve_local_resources():
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
 
-def retrieve_crowd_resources():
+def retrieve_crowd_resources() -> [list, list, list]:
 
     JOURNAL_ABBREVIATIONS = pd.DataFrame(
         [], columns=['journal', 'abbreviation'])
@@ -85,7 +86,7 @@ def retrieve_crowd_resources():
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
 
-def correct_recordtype(record):
+def correct_recordtype(record: dict) -> dict:
 
     conf_strings = [
         'proceedings',
@@ -158,12 +159,19 @@ def correct_recordtype(record):
     return record
 
 
-def homogenize_record(record):
+def homogenize_record(record: dict) -> dict:
 
     fields_to_process = [
-        'author', 'year', 'title',
-        'journal', 'booktitle', 'series',
-        'volume', 'number', 'pages', 'doi',
+        'author',
+        'year',
+        'title',
+        'journal',
+        'booktitle',
+        'series',
+        'volume',
+        'number',
+        'pages',
+        'doi',
         'abstract'
     ]
     for field in fields_to_process:
@@ -228,7 +236,7 @@ LOCAL_JOURNAL_ABBREVIATIONS, \
     retrieve_local_resources()
 
 
-def apply_local_rules(record):
+def apply_local_rules(record: dict) -> dict:
 
     if 'journal' in record:
         for i, row in LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
@@ -253,7 +261,7 @@ CR_JOURNAL_ABBREVIATIONS, \
     retrieve_crowd_resources()
 
 
-def apply_crowd_rules(record):
+def apply_crowd_rules(record: dict) -> dict:
 
     if 'journal' in record:
         for i, row in CR_JOURNAL_ABBREVIATIONS.iterrows():
@@ -272,7 +280,7 @@ def apply_crowd_rules(record):
     return record
 
 
-def mostly_upper_case(input_string):
+def mostly_upper_case(input_string: str) -> bool:
     # also in repo_setup.py - consider updating it separately
     if not re.match(r'[a-zA-Z]+', input_string):
         return input_string
@@ -281,7 +289,7 @@ def mostly_upper_case(input_string):
     return sum(word.isupper() for word in words)/len(words) > 0.8
 
 
-def title_if_mostly_upper_case(input_string):
+def title_if_mostly_upper_case(input_string: str) -> str:
     if not re.match(r'[a-zA-Z]+', input_string):
         return input_string
     words = input_string.split()
@@ -291,7 +299,7 @@ def title_if_mostly_upper_case(input_string):
         return input_string
 
 
-def format_author_field(input_string):
+def format_author_field(input_string: str) -> str:
 
     input_string = input_string.replace('\n', ' ')
     # DBLP appends identifiers to non-unique authors
@@ -326,7 +334,7 @@ def format_author_field(input_string):
     return author_string
 
 
-def get_container_title(record):
+def get_container_title(record: dict) -> str:
     container_title = 'NA'
     if 'ENTRYTYPE' not in record:
         container_title = record.get('journal', record.get('booktitle', 'NA'))
@@ -342,7 +350,7 @@ def get_container_title(record):
     return container_title
 
 
-def unify_pages_field(input_string):
+def unify_pages_field(input_string: str) -> str:
     # also in repo_setup.py - consider updating it separately
     if not isinstance(input_string, str):
         return input_string
@@ -355,7 +363,7 @@ def unify_pages_field(input_string):
     return input_string
 
 
-def get_md_from_doi(record):
+def get_md_from_doi(record: dict) -> dict:
     if 'doi' not in record:
         return record
 
@@ -365,7 +373,7 @@ def get_md_from_doi(record):
     return record
 
 
-def json_to_record(item):
+def json_to_record(item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
 
     record = {}
@@ -447,7 +455,7 @@ def json_to_record(item):
     return record
 
 
-def crossref_query(record):
+def crossref_query(record: dict) -> dict:
     # https://github.com/CrossRef/rest-api-doc
     api_url = 'https://api.crossref.org/works?'
     bibliographic = record['title'] + ' ' + record.get('year', '')
@@ -540,7 +548,7 @@ def get_md_from_crossref(record):
     return record
 
 
-def sem_scholar_json_to_record(item, record):
+def sem_scholar_json_to_record(item: dict, record: dict) -> dict:
     retrieved_record = {}
     if 'authors' in item:
         authors_string = ' and '.join([author['name']
@@ -577,7 +585,7 @@ def sem_scholar_json_to_record(item, record):
     return retrieved_record
 
 
-def get_md_from_sem_scholar(record):
+def get_md_from_sem_scholar(record: dict) -> dict:
     if is_complete_metadata_source(record):
         return record
 
@@ -629,7 +637,7 @@ def get_md_from_sem_scholar(record):
     return record
 
 
-def get_dblp_venue(venue_string):
+def get_dblp_venue(venue_string: str) -> str:
     venue = venue_string
     api_url = 'https://dblp.org/search/venue/api?q='
     url = api_url + venue_string.replace(' ', '+') + '&format=json'
@@ -651,7 +659,7 @@ def get_dblp_venue(venue_string):
     return venue
 
 
-def dblp_json_to_record(item):
+def dblp_json_to_record(item: dict) -> dict:
     # To test in browser:
     # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
     retrieved_record = {}
@@ -688,7 +696,7 @@ def dblp_json_to_record(item):
     return retrieved_record
 
 
-def get_md_from_dblp(record):
+def get_md_from_dblp(record: dict) -> dict:
     if is_complete_metadata_source(record):
         return record
 
@@ -731,7 +739,7 @@ def get_md_from_dblp(record):
 doi_regex = re.compile(r'10\.\d{4,9}/[-._;/:A-Za-z0-9]*')
 
 
-def retrieve_doi_metadata(record):
+def retrieve_doi_metadata(record: dict) -> dict:
     if 'doi' not in record:
         return record
 
@@ -766,7 +774,7 @@ def retrieve_doi_metadata(record):
     return record
 
 
-def get_md_from_urls(record):
+def get_md_from_urls(record: dict) -> dict:
     if is_complete_metadata_source(record):
         return record
 
@@ -825,7 +833,7 @@ record_field_requirements = \
 # book, inbook: author <- editor
 
 
-def missing_fields(record):
+def missing_fields(record: dict) -> list:
     missing_fields = []
     if record['ENTRYTYPE'] in record_field_requirements.keys():
         reqs = record_field_requirements[record['ENTRYTYPE']]
@@ -835,7 +843,7 @@ def missing_fields(record):
     return missing_fields
 
 
-def is_complete(record):
+def is_complete(record: dict) -> bool:
     sufficiently_complete = False
     if record['ENTRYTYPE'] in record_field_requirements.keys():
         if len(missing_fields(record)) == 0:
@@ -843,7 +851,7 @@ def is_complete(record):
     return sufficiently_complete
 
 
-def is_complete_metadata_source(record):
+def is_complete_metadata_source(record: dict) -> bool:
     # Note: metadata_source is set at the end of each procedure
     # that completes/corrects metadata based on an external source
     return 'metadata_source' in record
@@ -861,7 +869,7 @@ record_field_inconsistencies = \
      'unpublished': ['volume', 'issue', 'number', 'journal', 'booktitle']}
 
 
-def get_inconsistencies(record):
+def get_inconsistencies(record: dict) -> list:
     inconsistent_fields = []
     if record['ENTRYTYPE'] in record_field_inconsistencies.keys():
         incons_fields = record_field_inconsistencies[record['ENTRYTYPE']]
@@ -872,7 +880,7 @@ def get_inconsistencies(record):
     return inconsistent_fields
 
 
-def has_inconsistent_fields(record):
+def has_inconsistent_fields(record: dict) -> bool:
     found_inconsistencies = False
     if record['ENTRYTYPE'] in record_field_inconsistencies.keys():
         inconsistencies = get_inconsistencies(record)
@@ -881,7 +889,7 @@ def has_inconsistent_fields(record):
     return found_inconsistencies
 
 
-def get_incomplete_fields(record):
+def get_incomplete_fields(record: dict) -> list:
     incomplete_fields = []
     for key in record.keys():
         if key in ['title', 'journal', 'booktitle', 'author']:
@@ -892,7 +900,7 @@ def get_incomplete_fields(record):
     return incomplete_fields
 
 
-def has_incomplete_fields(record):
+def has_incomplete_fields(record: dict) -> bool:
     if len(get_incomplete_fields(record)) > 0:
         return True
     return False
@@ -928,7 +936,7 @@ fields_to_drop = [
 ]
 
 
-def drop_fields(record):
+def drop_fields(record: dict) -> dict:
     for key in list(record):
         if 'NA' == record[key]:
             del record[key]
@@ -940,7 +948,9 @@ def drop_fields(record):
     return record
 
 
-def log_notifications(record, unprepared_record):
+def log_notifications(record: dict,
+                      unprepared_record: dict) -> None:
+
     change = 1 - dedupe.get_record_similarity(record.copy(), unprepared_record)
     if change > 0.1:
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
@@ -961,7 +971,7 @@ def log_notifications(record, unprepared_record):
     return
 
 
-def remove_nicknames(record):
+def remove_nicknames(record: dict) -> dict:
     if 'author' in record:
         # Replace nicknames in parentheses
         record['author'] = re.sub(r'\([^)]*\)', '', record['author'])
@@ -969,7 +979,7 @@ def remove_nicknames(record):
     return record
 
 
-def prepare(record):
+def prepare(record: dict) -> dict:
     global current_batch_counter
 
     if 'imported' != record['md_status']:
@@ -1025,7 +1035,7 @@ def prepare(record):
     return record
 
 
-def set_stats_beginning(bib_db):
+def set_stats_beginning(bib_db: BibDatabase) -> None:
     global prepared
     global need_manual_prep
     prepared = len([x for x in bib_db.entries
@@ -1036,7 +1046,7 @@ def set_stats_beginning(bib_db):
     return
 
 
-def print_stats_end(bib_db):
+def print_stats_end(bib_db: BibDatabase) -> None:
     global prepared
     global need_manual_prep
     prepared = len([x for x in bib_db.entries
@@ -1053,7 +1063,7 @@ def print_stats_end(bib_db):
     return
 
 
-def reorder_log(IDs):
+def reorder_log(IDs: list) -> None:
     # https://docs.python.org/3/howto/logging-cookbook.html
     # #logging-to-a-single-file-from-multiple-processes
     firsts = []
@@ -1101,7 +1111,9 @@ def reorder_log(IDs):
     return
 
 
-def reset(bib_db, id):
+def reset(bib_db: BibDatabase,
+          id: str) -> None:
+
     record = [x for x in bib_db.entries if x['ID'] == id]
     if len(record) == 0:
         logging.info(f'record with ID {record["ID"]} not found')
@@ -1132,7 +1144,12 @@ def reset(bib_db, id):
     return
 
 
-def main(bib_db, repo, reset_ids=None, reprocess=False, keep_ids=False):
+def main(bib_db: BibDatabase,
+         repo: git.Repo,
+         reset_ids: bool = None,
+         reprocess: bool = False,
+         keep_ids: bool = False) -> BibDatabase:
+
     saved_args = locals()
     if not reset_ids:
         del saved_args['reset_ids']

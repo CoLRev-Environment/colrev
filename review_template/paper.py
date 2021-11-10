@@ -9,7 +9,7 @@ from review_template import repo_setup
 from review_template import utils
 
 
-def main():
+def main() -> None:
 
     if not os.path.exists('paper.md'):
         logging.error('File paper.md does not exist.')

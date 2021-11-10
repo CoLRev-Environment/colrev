@@ -6,6 +6,7 @@ import pprint
 
 import git
 import pandas as pd
+from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import process
 from review_template import repo_setup
@@ -13,12 +14,12 @@ from review_template import screen
 from review_template import status
 from review_template import utils
 
-
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 PAD = 0
 
 
-def export_table(bib_db, export_table_format) -> None:
+def export_table(bib_db: BibDatabase,
+                 export_table_format: str) -> None:
 
     tbl = []
     for record in bib_db.entries:
@@ -69,7 +70,8 @@ def export_table(bib_db, export_table_format) -> None:
     return
 
 
-def import_table(bib_db, import_table_path) -> None:
+def import_table(bib_db: BibDatabase,
+                 import_table_path: str) -> None:
     if not os.path.exists(import_table_path):
         logging.error(f'Did not find {import_table_path} - exiting.')
         return
@@ -98,7 +100,9 @@ def import_table(bib_db, import_table_path) -> None:
     return
 
 
-def include_all_in_prescreen(bib_db, repo, saved_args) -> None:
+def include_all_in_prescreen(bib_db: BibDatabase,
+                             repo: git.Repo,
+                             saved_args: dict) -> None:
 
     for record in bib_db.entries:
         if record.get('rev_status', 'NA') in ['retrieved', 'processed']:
@@ -119,7 +123,9 @@ def include_all_in_prescreen(bib_db, repo, saved_args) -> None:
     return
 
 
-def prescreen(bib_db, repo, saved_args) -> None:
+def prescreen(bib_db: BibDatabase,
+              repo: git.Repo,
+              saved_args: dict) -> None:
 
     logging.info('Start prescreen')
 
@@ -178,7 +184,9 @@ def prescreen(bib_db, repo, saved_args) -> None:
     return
 
 
-def main(include_all=False, export_table_format=None, import_table_path=None):
+def main(include_all: bool = False,
+         export_table_format: str = None,
+         import_table_path: str = None) -> None:
     saved_args = locals()
     bib_db = utils.load_main_refs()
 

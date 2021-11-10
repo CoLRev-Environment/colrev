@@ -3,6 +3,7 @@ import logging
 import os
 
 import pandas as pd
+from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import status
 from review_template import utils
@@ -16,7 +17,7 @@ class colors:
     END = '\033[0m'
 
 
-def prep_references(bib_db):
+def prep_references(bib_db: BibDatabase) -> pd.DataFrame:
     for record in bib_db.entries:
         record['outlet'] = record.get('journal', record.get('booktitle', 'NA'))
 
@@ -41,7 +42,8 @@ def prep_references(bib_db):
     return references
 
 
-def prep_observations(references, bib_db):
+def prep_observations(references: dict,
+                      bib_db: BibDatabase) -> pd.DataFrame:
 
     included_papers = utils.get_included_IDs(bib_db)
     observations = references[references['ID'].isin(included_papers)]
@@ -53,7 +55,7 @@ def prep_observations(references, bib_db):
     return observations
 
 
-def main():
+def main() -> None:
 
     logging.info('Sample profile')
 

@@ -7,7 +7,9 @@ import os
 import pprint
 import re
 
+import git
 import pandas as pd
+from bibtexparser.bibdatabase import BibDatabase
 from fuzzywuzzy import fuzz
 
 from review_template import process
@@ -29,7 +31,7 @@ pd.options.mode.chained_assignment = None  # default='warn'
 current_batch_counter = mp.Value('i', 0)
 
 
-def format_authors_string(authors):
+def format_authors_string(authors: str) -> str:
     authors = str(authors).lower()
     authors_string = ''
     authors = utils.remove_accents(authors)
@@ -49,7 +51,7 @@ def format_authors_string(authors):
     return authors_string
 
 
-def year_similarity(y1, y2):
+def year_similarity(y1: int, y2: int) -> float:
     sim = 0
     if int(y1) == int(y2):
         sim = 1
@@ -60,7 +62,7 @@ def year_similarity(y1, y2):
     return sim
 
 
-def get_record_similarity(record_a, record_b):
+def get_record_similarity(record_a: dict, record_b: dict) -> float:
     if 'title' not in record_a:
         record_a['title'] = ''
     if 'author' not in record_a:
@@ -110,7 +112,7 @@ def get_record_similarity(record_a, record_b):
     return get_similarity(df_a.iloc[0], df_b.iloc[0])
 
 
-def get_similarity(df_a, df_b):
+def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
 
     author_similarity = fuzz.partial_ratio(df_a['author'], df_b['author'])/100
 
@@ -184,7 +186,7 @@ def get_similarity(df_a, df_b):
     return round(weighted_average, 4)
 
 
-def prep_references(references):
+def prep_references(references: pd.DataFrame) -> pd.DataFrame:
     if 'volume' not in references:
         references['volume'] = 'nan'
     if 'number' not in references:
@@ -242,7 +244,7 @@ def prep_references(references):
     return references
 
 
-def calculate_similarities_record(references):
+def calculate_similarities_record(references: pd.DataFrame) -> list:
     # Note: per definition, similarities are needed relative to the first row.
     references = prep_references(references)
     # references.to_csv('preped_references.csv')
@@ -258,7 +260,7 @@ def calculate_similarities_record(references):
     return references.iloc[1:, [ck_col, sim_col]]
 
 
-def get_prev_queue(queue_order, origin):
+def get_prev_queue(queue_order: list, origin: str) -> list:
     # Note: Because we only introduce individual (non-merged records),
     # there should be no semicolons in origin!
     prev_records = []
@@ -269,7 +271,7 @@ def get_prev_queue(queue_order, origin):
     return prev_records
 
 
-def append_merges(record):
+def append_merges(record: dict) -> None:
     global current_batch_counter
     logging.debug(f'append_merges {record["ID"]}: \n{pp.pformat(record)}\n\n')
 
@@ -403,7 +405,7 @@ def append_merges(record):
     return
 
 
-def apply_merges(bib_db):
+def apply_merges(bib_db: BibDatabase) -> BibDatabase:
 
     # The merging also needs to consider whether IDs are propagated
     # Completeness of comparisons should be ensured by the
@@ -473,7 +475,9 @@ def apply_merges(bib_db):
     return bib_db
 
 
-def main(bib_db, repo):
+def main(bib_db: BibDatabase,
+         repo: git.Repo) -> BibDatabase:
+
     saved_args = locals()
 
     utils.reset_log()

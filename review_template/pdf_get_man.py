@@ -6,7 +6,9 @@ import os
 import urllib.parse
 import webbrowser
 
+import git
 import pandas as pd
+from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import pdfs
 from review_template import repo_setup
@@ -23,7 +25,7 @@ BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 current_batch_counter = mp.Value('i', 0)
 
 
-def export_retrieval_table(missing_records):
+def export_retrieval_table(missing_records: list) -> None:
     if len(missing_records.entries) > 0:
         missing_records_df = pd.DataFrame.from_records(missing_records.entries)
         col_order = [
@@ -38,7 +40,7 @@ def export_retrieval_table(missing_records):
     return
 
 
-def get_pdf_from_google(record):
+def get_pdf_from_google(record: dict) -> dict:
     title = record['title']
     title = urllib.parse.quote_plus(title)
     url = f'https://www.google.com/search?q={title}+filetype%3Apdf'
@@ -46,14 +48,14 @@ def get_pdf_from_google(record):
     return record
 
 
-def get_pdf_from_author_email(record):
+def get_pdf_from_author_email(record: dict) -> dict:
     webbrowser.open('mailto:author_mail', new=1)
     # Note: does not seem to work with chrome...
     # ?subject=Your paper&body=Hi, can you share paper x?
     return record
 
 
-def man_retrieve(record):
+def man_retrieve(record: dict) -> dict:
     retrieval_scripts = \
         {'get_pdf_from_google': get_pdf_from_google,
          'get_pdf_from_author_email': get_pdf_from_author_email}
@@ -68,7 +70,8 @@ def man_retrieve(record):
     return record
 
 
-def main(bib_db, repo):
+def main(bib_db: BibDatabase,
+         repo: git.Repo) -> BibDatabase:
     saved_args = locals()
 
     utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)

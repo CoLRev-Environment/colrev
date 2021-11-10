@@ -20,12 +20,12 @@ if os.path.exists('private_config.ini'):
 local_config.read(confs)
 
 
-def email_fallback():
+def email_fallback() -> str:
     name, email = init.get_name_mail_from_global_git_config()
     return email
 
 
-def actor_fallback():
+def actor_fallback() -> str:
     name, email = init.get_name_mail_from_global_git_config()
     return name
 

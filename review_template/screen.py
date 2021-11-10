@@ -4,6 +4,7 @@ import pprint
 from collections import OrderedDict
 
 import git
+from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import process
 from review_template import repo_setup
@@ -11,22 +12,22 @@ from review_template import utils
 
 MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
-desired_order_list = ['ENTRYTYPE',
-                      'ID',
-                      'year',
-                      'author',
-                      'title',
-                      'journal',
-                      'booktitle',
-                      'volume',
-                      'number',
-                      'doi',
-                      'link',
-                      'url',
-                      'fulltext']
+key_order = ['ENTRYTYPE',
+             'ID',
+             'year',
+             'author',
+             'title',
+             'journal',
+             'booktitle',
+             'volume',
+             'number',
+             'doi',
+             'link',
+             'url',
+             'fulltext']
 
 
-def customsort(dict1, key_order):
+def customsort(dict1: dict) -> OrderedDict:
     items = [dict1[k] if k in dict1.keys() else '' for k in key_order]
     sorted_dict = OrderedDict()
     for i in range(len(key_order)):
@@ -34,11 +35,11 @@ def customsort(dict1, key_order):
     return sorted_dict
 
 
-def get_excl_criteria(ec_string):
+def get_excl_criteria(ec_string: str) -> list:
     return [ec.split('=')[0] for ec in ec_string.split(';') if ec != 'NA']
 
 
-def get_exclusion_criteria(bib_db):
+def get_exclusion_criteria(bib_db: BibDatabase) -> list:
     ec_string = [x.get('excl_criteria') for x in bib_db.entries
                  if 'excl_criteria' in x]
 
@@ -55,7 +56,7 @@ def get_exclusion_criteria(bib_db):
     return excl_criteria
 
 
-def screen():
+def screen() -> None:
     saved_args = locals()
     bib_db = utils.load_main_refs(mod_check=False)
     repo = git.Repo('')
@@ -88,7 +89,7 @@ def screen():
         print('\n\n')
         i += 1
         skip_pressed = False
-        revrecord = customsort(record, desired_order_list)
+        revrecord = customsort(record)
         pp.pprint(revrecord)
 
         if excl_criteria_available:

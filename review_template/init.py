@@ -9,7 +9,8 @@ import git
 import requests
 
 
-def retrieve_template_file(template_file, target):
+def retrieve_template_file(template_file: str,
+                           target: str) -> None:
     filedata = pkgutil.get_data(__name__, template_file)
     filedata = filedata.decode('utf-8')
     with open(target, 'w') as file:
@@ -17,7 +18,10 @@ def retrieve_template_file(template_file, target):
     return
 
 
-def inplace_change(filename, old_string, new_string):
+def inplace_change(filename: str,
+                   old_string: str,
+                   new_string: str) -> None:
+
     # Safely read the input filename using 'with'
     with open(filename) as f:
         s = f.read()
@@ -32,7 +36,8 @@ def inplace_change(filename, old_string, new_string):
     return
 
 
-def get_value(msg, options):
+def get_value(msg: str,
+              options: dict) -> str:
     valid_response = False
     user_input = ''
     while not valid_response:
@@ -43,7 +48,7 @@ def get_value(msg, options):
     return user_input
 
 
-def get_name_mail_from_global_git_config():
+def get_name_mail_from_global_git_config() -> [str, str]:
     ggit_conf_path = os.path.normpath(os.path.expanduser('~/.gitconfig'))
     if os.path.exists(ggit_conf_path):
         glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
@@ -56,9 +61,9 @@ def get_name_mail_from_global_git_config():
     return committer_name, committer_email
 
 
-def init_new_repo():
+def init_new_repo() -> git.Repo:
 
-    logging.info('\n\nInitialize review repository')
+    logging.info('Initialize review repository')
     project_title = input('Project title: ')
 
     committer_name, committer_email = get_name_mail_from_global_git_config()
@@ -151,7 +156,7 @@ def init_new_repo():
     return repo
 
 
-def clone_shared_repo():
+def clone_shared_repo() -> git.Repo:
     logging.info('Connecting to a shared repository ...')
     logging.info('To initiate a new project, cancel (ctrl+c) and use '
                  'review_template init in an empty directory')
@@ -171,7 +176,7 @@ def clone_shared_repo():
     return repo
 
 
-def initialize_repo():
+def initialize_repo() -> git.Repo:
     if 0 != len(os.listdir(os.getcwd())):
         if 'y' == input('Connect to a shared repo (y/n)?'):
             repo = clone_shared_repo()
@@ -185,10 +190,9 @@ def initialize_repo():
     return repo
 
 
-def get_repo():
+def get_repo() -> git.Repo:
     try:
         repo = git.Repo()
-        # TODO: further checks?
         return repo
     except git.exc.InvalidGitRepositoryError:
         logging.error('No git repository found.')

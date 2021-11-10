@@ -25,7 +25,8 @@ IPAD, EPAD = 0, 0
 current_batch_counter = mp.Value('i', 0)
 
 
-def extract_text_by_page(record, pages=None):
+def extract_text_by_page(record: dict,
+                         pages: list = None) -> str:
 
     text_list = []
     pdf_path = record['file'].replace(':', '').replace('.pdfPDF', '.pdf')
@@ -51,7 +52,7 @@ def extract_text_by_page(record, pages=None):
     return ''.join(text_list)
 
 
-def get_text_from_pdf(record):
+def get_text_from_pdf(record: dict) -> dict:
 
     pdf_path = record['file'].replace(':', '').replace('.pdfPDF', '.pdf')
     file = open(pdf_path, 'rb')
@@ -102,7 +103,7 @@ def pdf_check_ocr(record):
     return record
 
 
-def validate_pdf_metadata(record):
+def validate_pdf_metadata(record: dict) -> dict:
 
     if 'imported' != record.get('pdf_status', 'NA'):
         return record
@@ -141,7 +142,7 @@ def validate_pdf_metadata(record):
     return record
 
 
-def validate_completeness(record):
+def validate_completeness(record: dict) -> dict:
     if 'imported' != record.get('pdf_status', 'NA'):
         return record
 
@@ -178,7 +179,7 @@ prep_scripts = {'pdf_check_ocr': pdf_check_ocr,
                 }
 
 
-def prepare_pdf(record):
+def prepare_pdf(record: dict) -> dict:
 
     if 'imported' != record.get('pdf_status', 'NA') or \
             'file' not in record:
