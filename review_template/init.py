@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import configparser
+import logging
 import os
 import pkgutil
 import sys
@@ -21,7 +22,7 @@ def inplace_change(filename, old_string, new_string):
     with open(filename) as f:
         s = f.read()
         if old_string not in s:
-            print(f'"{old_string}" not found in {filename}.')
+            logging.info(f'"{old_string}" not found in {filename}.')
             return
 
     # Safely write the changed content, if found in the file
@@ -35,7 +36,7 @@ def get_value(msg, options):
     valid_response = False
     user_input = ''
     while not valid_response:
-        print(f' {msg} (' + '|'.join(options) + ')', file=sys.stderr)
+        logging.error(f' {msg} (' + '|'.join(options) + ')', file=sys.stderr)
         user_input = input()
         if user_input in options:
             valid_response = True
@@ -57,13 +58,13 @@ def get_name_mail_from_global_git_config():
 
 def init_new_repo():
 
-    print('\n\nInitialize review repository')
+    logging.info('\n\nInitialize review repository')
     project_title = input('Project title: ')
 
     committer_name, committer_email = get_name_mail_from_global_git_config()
 
-    print('\n\nParameters for the review project\n Details avilable at: '
-          'TODO/docs')
+    logging.info('\n\nParameters for the review project\n'
+                 'Details avilable at: TODO/docs')
 
     # # TODO: allow multiple?
     # DATA_FORMAT = get_value('Select data structure',
@@ -72,7 +73,6 @@ def init_new_repo():
     SHARE_STAT_REQ = get_value('Select share status requirement',
                                ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
     PDF_HANDLING = get_value('Select pdf handling', ['EXT', 'GIT'])
-    print()
 
     repo = git.Repo.init()
     os.mkdir('search')
@@ -139,9 +139,9 @@ def init_new_repo():
             repo.heads.main.set_tracking_branch(origin.refs.main)
             origin.push()
         except requests.ConnectionError:
-            print('URL of shared repository cannot be reached. Use '
-                  'git remote add origin https://github.com/user/repo\n'
-                  'git push origin main')
+            logging.error('URL of shared repository cannot be reached. Use '
+                          'git remote add origin https://github.com/user/repo'
+                          '\ngit push origin main')
             pass
 
     # git remote add origin https://github.com/geritwagner/octo-fiesta.git
@@ -152,21 +152,21 @@ def init_new_repo():
 
 
 def clone_shared_repo():
-    print('Connecting to a shared repository ...')
-    print('To initiate a new project, cancel (ctrl+c) and use '
-          'review_template init in an empty directory')
+    logging.info('Connecting to a shared repository ...')
+    logging.info('To initiate a new project, cancel (ctrl+c) and use '
+                 'review_template init in an empty directory')
 
     remote_url = input('URL of shared repository:')
     try:
         requests.get(remote_url)
         repo_name = os.path.splitext(os.path.basename(remote_url))[0]
-        print('Clone shared repository...')
+        logging.info('Clone shared repository...')
         repo = git.Repo.clone_from(remote_url, repo_name)
-        print(f'Use cd {repo_name}')
+        logging.info(f'Use cd {repo_name}')
     except requests.ConnectionError:
-        print('URL of shared repository cannot be reached. Use '
-              'git remote add origin https://github.com/user/repo\n'
-              'git push origin main')
+        logging.error('URL of shared repository cannot be reached. Use '
+                      'git remote add origin https://github.com/user/repo\n'
+                      'git push origin main')
         pass
     return repo
 
@@ -191,7 +191,7 @@ def get_repo():
         # TODO: further checks?
         return repo
     except git.exc.InvalidGitRepositoryError:
-        print('No git repository found.')
+        logging.error('No git repository found.')
         pass
 
     repo = initialize_repo()

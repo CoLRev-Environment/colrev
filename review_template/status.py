@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import logging
 import os
 import sys
 
@@ -335,8 +336,8 @@ def is_git_repo(path):
 def repository_validation():
     global repo
     if not is_git_repo(os.getcwd()):
-        print('No git repository. Use '
-              f'{colors.GREEN}review_template init{colors.END}')
+        logging.error('No git repository. Use '
+                      f'{colors.GREEN}review_template init{colors.END}')
         sys.exit()
 
     repo = git.Repo('')
@@ -344,12 +345,13 @@ def repository_validation():
     # Note : 'private_config.ini', 'shared_config.ini' are optional
     required_paths = ['search', '.pre-commit-config.yaml', '.gitignore']
     if not all(os.path.exists(x) for x in required_paths):
-        print('No review_template repository\n  Missing: ' +
-              ', '.join([x for x in required_paths if not os.path.exists(x)]) +
-              '\n  To retrieve a shared repository, use ' +
-              f'{colors.GREEN}review_template init{colors.END}.' +
-              '\n  To initalize a new repository, execute the command ' +
-              'in an empty directory.\nExit.')
+        logging.error('No review_template repository\n  Missing: ' +
+                      ', '.join([x for x in required_paths
+                                 if not os.path.exists(x)]) +
+                      '\n  To retrieve a shared repository, use ' +
+                      f'{colors.GREEN}review_template init{colors.END}.' +
+                      '\n  To initalize a new repository, execute the ' +
+                      'command in an empty directory.\nExit.')
         sys.exit()
 
     with open('.pre-commit-config.yaml') as pre_commit_y:
@@ -370,8 +372,8 @@ def repository_validation():
         os.system('pre-commit install')
         os.system('pre-commit autoupdate')
 
-        print('Updated pre-commit hook. Please check/remove '
-              'bak_pre-commit-config.yaml')
+        logging.warning('Updated pre-commit hook. Please check/remove '
+                        'bak_pre-commit-config.yaml')
         sys.exit()
 
     try:
@@ -380,10 +382,10 @@ def repository_validation():
 
         if not remote_sha == local_hooks_version:
             # Default: automatically update hooks
-            print('Updating pre-commit hooks...')
+            logging.info('Updating pre-commit hooks...')
             os.system('pre-commit autoupdate')
 
-            print('Commit updated pre-commit hooks')
+            logging.info('Commit updated pre-commit hooks')
             repo.index.add(['.pre-commit-config.yaml'])
             repo.index.commit(
                 'Update pre-commit-config' + utils.get_version_flag() +
@@ -399,9 +401,9 @@ def repository_validation():
         #     # once we use tags, we may consider recommending
         #     # pre-commit autoupdate --bleeding-edge
     except git.exc.GitCommandError as e:
-        print(e)
-        print('  Warning: No Internet connection, cannot check remote '
-              'pipeline-validation-hooks repository for updates.')
+        logging.error(e)
+        logging.warning(' No Internet connection, cannot check remote '
+                        'pipeline-validation-hooks repository for updates.')
         pass
 
     return
@@ -417,8 +419,8 @@ def repository_load():
     non_tracked = [item.a_path for item in repo.index.diff(None)
                    if '.bib' == item.a_path[-4:]]
     if len(non_tracked) > 0:
-        print('Warning: Non-tracked files that may cause failing checks: '
-              + ','.join(non_tracked))
+        logging.warning('Warning: Non-tracked files that may cause ' +
+                        'failing checks: ' + ','.join(non_tracked))
     return
 
 

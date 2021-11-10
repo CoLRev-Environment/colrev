@@ -599,7 +599,6 @@ def main(repo, keep_ids):
         if save_imported_files(repo, bib_db):
             utils.create_commit(repo, '⚙️ Import search results', saved_args)
 
-    print()
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d['ID'])
 
     return bib_db

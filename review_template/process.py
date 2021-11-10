@@ -39,7 +39,6 @@ def reprocess_id(id, repo):
     utils.create_commit(repo, '⚙️ Reprocess', saved_args)
 
     logging.info('Create commit)')
-    print()
     utils.reset_log()
     return
 
@@ -60,7 +59,7 @@ def check_delay(db, min_status_requirement):
     if 'md_imported' == min_status_requirement:
         # Note: md_status=retrieved should not happen
         if len(db.entries) == 0:
-            print('No search results available for import.')
+            logging.error('No search results available for import.')
             raise DelayRequirement
 
     if not DELAY_AUTOMATED_PROCESSING:

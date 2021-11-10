@@ -235,7 +235,7 @@ def load_main_refs(mod_check=None, init=None):
         if init:
             bib_db = BibDatabase()
         else:
-            print(f'{MAIN_REFERENCES} does not exist')
+            logging.error(f'{MAIN_REFERENCES} does not exist')
             sys.exit()
 
     return bib_db
@@ -245,7 +245,7 @@ def git_modification_check(filename):
     repo = git.Repo()
     index = repo.index
     if filename in [record.a_path for record in index.diff(None)]:
-        print(
+        logging.warning(
             f'WARNING: There are changes in {filename}',
             ' that are not yet added to the git index. ',
             'They may be overwritten by this script. ',
@@ -327,15 +327,15 @@ def require_clean_repo(repo=None, ignore_pattern=None):
         repo = git.Repo('')
     if repo.is_dirty():
         if ignore_pattern is None:
-            print('Clean repository required '
-                  '(commit, discard or stash changes).')
+            logging.errror('Clean repository required '
+                           '(commit, discard or stash changes).')
             sys.exit()
         else:
             changedFiles = [item.a_path for item in repo.index.diff(None)
                             if ignore_pattern not in item.a_path]
             if changedFiles:
-                print('Clean repository required '
-                      '(commit, discard or stash changes).')
+                logging.error('Clean repository required '
+                              '(commit, discard or stash changes).')
                 sys.exit()
     return True
 
@@ -495,7 +495,7 @@ def create_commit(repo, msg, saved_args, manual_author=False):
             skip_hooks=hook_skipping
         )
         logging.info('Created commit')
-        print()
+
         reset_log()
         return True
     else:
@@ -511,15 +511,15 @@ def build_docker_images():
                  for sublist in repo_tags for item in sublist]
 
     if 'bibutils' not in repo_tags:
-        print('Building bibutils Docker image...')
+        logging.info('Building bibutils Docker image...')
         filedata = pkgutil.get_data(__name__, '../docker/bibutils/Dockerfile')
         fileobj = io.BytesIO(filedata)
         client.images.build(fileobj=fileobj, tag='bibutils:latest')
     if 'lfoppiano/grobid' not in repo_tags:
-        print('Pulling grobid Docker image...')
+        logging.info('Pulling grobid Docker image...')
         client.images.pull('lfoppiano/grobid:0.7.0')
     if 'pandoc/ubuntu-latex' not in repo_tags:
-        print('Pulling v image...')
+        logging.info('Pulling v image...')
         client.images.pull('pandoc/ubuntu-latex:2.14')
 
     # jbarlow83/ocrmypdf
