@@ -1,6 +1,5 @@
 import datetime
 import os
-import sys
 
 import click
 import click_completion.core
@@ -340,7 +339,3 @@ def cli_completion_activate(append, case_insensitive, shell, path):
                                       append=append,
                                       extra_env=extra_env)
     click.echo(f'{shell} completion installed in {path}')
-
-
-if __name__ == '__main__':
-    sys.exit(main())

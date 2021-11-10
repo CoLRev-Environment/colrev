@@ -244,7 +244,3 @@ def main(scope, properties=False, target_commit=None):
         validate_merging_changes(bib_db, search_records)
 
     return
-
-
-if __name__ == '__main__':
-    main()

@@ -100,7 +100,3 @@ def main():
         utils.create_commit(repo, '⚙️ Backward search', saved_args)
 
     return
-
-
-if __name__ == '__main__':
-    main()

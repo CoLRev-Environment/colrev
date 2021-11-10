@@ -5,7 +5,6 @@ import multiprocessing as mp
 import os
 import re
 
-import click
 from langdetect import detect_langs
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
@@ -17,7 +16,6 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 
-from review_template import init
 from review_template import process
 from review_template import repo_setup
 from review_template import utils
@@ -297,21 +295,3 @@ def main(bib_db, repo):
     print()
 
     return bib_db
-
-
-@click.command()
-def cli():
-    # TODO: temporary fix: remove all lines containint PDFType1Font from log.
-    # https://github.com/pdfminer/pdfminer.six/issues/282
-
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)
-
-    return 0
-
-
-if __name__ == '__main__':
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)

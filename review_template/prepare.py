@@ -10,7 +10,6 @@ import sys
 import urllib
 
 import bibtexparser
-import click
 import dictdiffer
 import git
 import pandas as pd
@@ -1218,17 +1217,4 @@ def main(bib_db, repo, reset_ids=None, reprocess=False, keep_ids=False):
             break
 
     print()
-
     return bib_db
-
-
-@click.command()
-def cli():
-    repo = git.Repo()
-    bib_db = utils.load_main_refs(mod_check=True, init=False)
-    main(bib_db, repo)
-    return 0
-
-
-if __name__ == '__main__':
-    main()

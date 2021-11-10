@@ -10,8 +10,6 @@ from datetime import datetime
 from itertools import chain
 
 import bibtexparser
-import click
-import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -605,14 +603,3 @@ def main(repo, keep_ids):
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d['ID'])
 
     return bib_db
-
-
-@click.command()
-def cli():
-    repo = git.Repo()
-    main(repo)
-    return 0
-
-
-if __name__ == '__main__':
-    main()

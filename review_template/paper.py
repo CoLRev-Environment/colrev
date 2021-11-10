@@ -2,7 +2,6 @@
 import logging
 import os
 
-import click
 import requests
 
 import docker
@@ -61,13 +60,3 @@ def main():
         pass
 
     return
-
-
-@click.command()
-def paper():
-    main()
-    return 0
-
-
-if __name__ == '__main__':
-    main()

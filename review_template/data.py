@@ -300,7 +300,3 @@ def main(edit_csv, load_csv):
                             manual_author=True)
 
     return
-
-
-if __name__ == '__main__':
-    main(edit_csv=False, load_csv=False)
