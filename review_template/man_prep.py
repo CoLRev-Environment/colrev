@@ -83,6 +83,8 @@ def man_prep_records():
     repo = git.Repo('')
     utils.require_clean_repo(repo)
 
+    print('TODO: include processing_reports')
+
     logging.info('Loading records for manual preparation...')
     bib_db = utils.load_main_refs()
 
@@ -139,13 +141,3 @@ def man_prep_records():
                         saved_args,
                         manual_author=True)
     return
-
-
-def main():
-    print('TODO: include processing_reports')
-    man_prep_records()
-    return
-
-
-if __name__ == '__main__':
-    main()

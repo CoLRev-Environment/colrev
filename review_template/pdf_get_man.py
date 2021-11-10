@@ -6,10 +6,8 @@ import os
 import urllib.parse
 import webbrowser
 
-import click
 import pandas as pd
 
-from review_template import init
 from review_template import pdfs
 from review_template import repo_setup
 from review_template import status
@@ -118,19 +116,3 @@ def main(bib_db, repo):
     status.review_instructions()
 
     return bib_db
-
-
-@click.command()
-def cli():
-
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)
-
-    return 0
-
-
-if __name__ == '__main__':
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)

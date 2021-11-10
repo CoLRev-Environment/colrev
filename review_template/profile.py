@@ -96,7 +96,3 @@ def main():
     tabulated.to_csv('output/ENTRYTYPES.csv')
 
     return
-
-
-if __name__ == '__main__':
-    main()

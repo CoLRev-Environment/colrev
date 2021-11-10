@@ -736,7 +736,3 @@ def main():
           'See https://github.com/geritwagner/review_template/docs\n')
 
     return
-
-
-if __name__ == '__main__':
-    main()

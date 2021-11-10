@@ -7,8 +7,6 @@ import os
 import pprint
 import re
 
-import click
-import git
 import pandas as pd
 from fuzzywuzzy import fuzz
 
@@ -526,15 +524,3 @@ def main(bib_db, repo):
     print()
 
     return bib_db
-
-
-@click.command()
-def cli():
-    repo = git.Repo()
-    bib_db = utils.load_main_refs(mod_check=True, init=False)
-    main(bib_db, repo)
-    return 0
-
-
-if __name__ == '__main__':
-    main()

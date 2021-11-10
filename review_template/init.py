@@ -196,8 +196,3 @@ def get_repo():
 
     repo = initialize_repo()
     return repo
-
-
-if __name__ == '__main__':
-
-    initialize_repo()

@@ -1,9 +1,6 @@
 #! /usr/bin/env python
 import logging
 
-import click
-
-from review_template import init
 from review_template import pdf_prepare
 from review_template import repo_setup
 from review_template import status
@@ -35,23 +32,5 @@ def main(bib_db, repo):
         record = man_prep_pdf(record)
 
     print()
-
     status.review_instructions()
-
     return bib_db
-
-
-@click.command()
-def cli():
-
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)
-
-    return 0
-
-
-if __name__ == '__main__':
-    bib_db = utils.load_main_refs()
-    repo = init.get_repo()
-    main(bib_db, repo)

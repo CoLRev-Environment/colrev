@@ -204,7 +204,3 @@ def prescreen(include_all=False, export_csv=None, import_csv=None):
     status.review_instructions()
 
     return
-
-
-if __name__ == '__main__':
-    prescreen(include_all=False)

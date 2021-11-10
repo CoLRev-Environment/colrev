@@ -64,7 +64,3 @@ def main(ID):
                         prev_data = line
 
     return
-
-
-if __name__ == '__main__':
-    main()

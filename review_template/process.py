@@ -2,8 +2,6 @@
 import logging
 import os
 
-import click
-
 from review_template import dedupe
 from review_template import importer
 from review_template import init
@@ -148,13 +146,3 @@ def main(reprocess=None, keep_ids=False):
     os.system('pre-commit run -a')
 
     return 0
-
-
-@click.command()
-def cli():
-    main()
-    return 0
-
-
-if __name__ == '__main__':
-    main()

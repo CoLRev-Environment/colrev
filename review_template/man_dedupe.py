@@ -274,7 +274,4 @@ def main():
     utils.create_commit(repo, 'Process duplicates manually',
                         saved_args,
                         manual_author=True)
-
-
-if __name__ == '__main__':
-    main()
+    return
