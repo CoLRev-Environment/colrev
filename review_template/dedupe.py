@@ -520,7 +520,7 @@ def main(bib_db, repo):
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
-                logging.info('No additional records to check for duplicates')
+                logging.info('No records to check for duplicates')
             break
 
     print()

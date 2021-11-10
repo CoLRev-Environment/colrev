@@ -173,7 +173,10 @@ def clone_shared_repo():
 
 def initialize_repo():
     if 0 != len(os.listdir(os.getcwd())):
-        repo = clone_shared_repo()
+        if 'y' == input('Connect to a shared repo (y/n)?'):
+            repo = clone_shared_repo()
+        else:
+            return
     else:
         if 'y' == input('Retrieve shared repository?'):
             repo = clone_shared_repo()

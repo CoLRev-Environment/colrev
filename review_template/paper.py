@@ -12,6 +12,11 @@ from review_template import utils
 
 def main():
 
+    if not os.path.exists('paper.md'):
+        logging.error('File paper.md does not exist.')
+        logging.info('Complete processing and use review_template data')
+        return
+
     utils.build_docker_images()
 
     uid = os.stat(repo_setup.paths['MAIN_REFERENCES']).st_uid
@@ -31,8 +36,8 @@ def main():
         #     pass
     if 'github.com' not in CSL_FILE and not os.path.exists(CSL_FILE):
         CSL_FILE = 'https://raw.githubusercontent.com/citation-style-' + \
-            'language/styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/' + \
-            f'{CSL_FILE}'
+            'language/styles/6152ccea8b7d7a472910d36524d1bf3557' + \
+            'a83bfc/mis-quarterly.csl'
 
     script = 'paper.md --citeproc --bibliography references.bib ' + \
         f'--csl {CSL_FILE} ' + \

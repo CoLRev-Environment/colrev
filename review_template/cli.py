@@ -146,16 +146,18 @@ def prepare(ctx, reset_id, reprocess, keep_ids):
 @click.pass_context
 def dedupe(ctx):
     """Deduplicate records (part of automated processing)"""
-    from review_template import dedupe
-    dedupe.main()
+    from review_template import dedupe, init, utils
+    repo = init.get_repo()
+    bib_db = utils.load_main_refs()
+    dedupe.main(bib_db, repo)
 
 
 @main.command(help_priority=7)
 @click.pass_context
 def man_prep(ctx):
     """Manual preparation of records"""
-    from review_template import prepare_manual
-    prepare_manual.main()
+    from review_template import man_prep
+    man_prep.main()
 
 
 @main.command(help_priority=8)
@@ -168,24 +170,24 @@ def man_dedupe(ctx):
 
 @main.command(help_priority=9)
 @click.option('--include_all', is_flag=True, default=False)
-@click.pass_context
-def prescreen(ctx, include_all):
-    """Pre-screen based on titles and abstracts"""
-    from review_template import screen
-    screen.prescreen(include_all)
-
-
-@main.command(help_priority=10)
 @click.option('--export', type=click.Choice(['CSV', 'XLSX'],
               case_sensitive=False),
               help='Export table with the screening decisions')
 @click.option('--load', type=click.Path(),
               help='Import file with the screening decisions (csv supported)')
 @click.pass_context
-def screen(ctx, export, load):
+def prescreen(ctx, include_all, export, load):
+    """Pre-screen based on titles and abstracts"""
+    from review_template import prescreen
+    prescreen.prescreen(include_all, export, load)
+
+
+@main.command(help_priority=10)
+@click.pass_context
+def screen(ctx):
     """Screen based on exclusion criteria and fulltext documents"""
     from review_template import screen
-    screen.screen(export, load)
+    screen.screen()
 
 
 @main.command(help_priority=11)
@@ -266,14 +268,16 @@ def validate_commit(ctx, param, value):
         return value
     else:
         print('Error: Invalid value for \'--commit\': not a git commit id\n')
-        print('Select any of the following commit ids:')
+        print('Select any of the following commit ids:\n')
+        print('commit-id'.ljust(41, ' ') + 'date'.ljust(24, ' ') +
+              'commit message')
         commits_for_checking = []
         for c in reversed(list(revlist)):
             commits_for_checking.append(c)
         for commit in revlist:
             print(commit.hexsha,
                   datetime.datetime.fromtimestamp(commit.committed_date),
-                  ' - ', commit.message.replace('\n', ' '))
+                  ' - ', commit.message.split('\n')[0])
         print('\n')
         raise click.BadParameter('not a git commit id')
 

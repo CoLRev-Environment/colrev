@@ -1,14 +1,11 @@
 #! /usr/bin/env python
-import json
 import logging
 import os
 from datetime import datetime
 
+import bibtexparser
 import git
-import pandas as pd
 import requests
-import yaml
-from yaml import safe_load
 
 from review_template import grobid_client
 from review_template import repo_setup
@@ -21,16 +18,18 @@ BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 data_dir = ''
 
 
-def process_backward_search(record):
+def backward_search(record):
 
     if record['pdf_status'] != 'prepared':
         return record
 
     PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 
+    curdate = datetime.today().strftime('%Y-%m-%d')
     bib_filename = \
-        os.path.join(data_dir, 'search/', record['ID'] + '_bw_search.bib')
-    pdf_filename = os.path.join(data_dir, PDF_DIRECTORY, record['ID'] + '.pdf')
+        os.path.join(
+            data_dir, f'search/{curdate}-{record["ID"]}_bw_search.bib')
+    pdf_filename = os.path.join(data_dir, PDF_DIRECTORY, f'{record["ID"]}.pdf')
 
     filename = record.get('file', 'NA').replace('.pdf:PDF', '.pdf')\
         .replace(':', '')
@@ -39,14 +38,11 @@ def process_backward_search(record):
         logging.error(f'File does not exist ({record["ID"]})')
         return record
 
-    with open(SEARCH_DETAILS) as f:
-        search_details_df = pd.json_normalize(safe_load(f))
-        search_details = search_details_df.to_dict('records')
+    search_details = utils.load_search_details()
 
     if bib_filename in [x['source_url'] for x in search_details]:
         return record
 
-    logging.info(f'Extract references for {record["ID"]}')
     # alternative python-batch:
     # https://github.com/kermitt2/grobid_client_python
     grobid_client.check_grobid_availability()
@@ -64,32 +60,21 @@ def process_backward_search(record):
         f.write(bib_content)
         record['bib_filename'] = bib_filename
 
-    iteration = max(x['iteration'] for x in search_details)
+    bib_db = bibtexparser.loads(bib_content)
+    logging.info(f'backward_search({record["ID"]}):'
+                 f' {len(bib_db.entries)} records')
 
     new_record = {'filename': bib_filename,
                   'search_type': 'BACK_CIT',
                   'source_name': 'PDF',
-                  'source_url': bib_filename,
-                  'iteration': int(iteration),
-                  'start_date': datetime.today().strftime('%Y-%m-%d'),
-                  'completion_date': datetime.today().strftime('%Y-%m-%d'),
-                  'number_records': r.text.count('\n@'),
+                  'source_url': bib_filename.replace('search/', ''),
                   'search_parameters': 'NA',
-                  'comment': 'backward_search.py',
+                  'comment': 'extracted with review_template back-search',
                   }
 
     search_details.append(new_record)
 
-    search_details_df = pd.DataFrame(search_details)
-    orderedCols = ['filename', 'number_records', 'search_type',
-                   'source_name', 'source_url', 'iteration',
-                   'start_date', 'completion_date',
-                   'search_parameters', 'comment']
-    search_details_df = search_details_df.reindex(columns=orderedCols)
-
-    with open(SEARCH_DETAILS, 'w') as f:
-        yaml.dump(json.loads(search_details_df.to_json(orient='records')),
-                  f, default_flow_style=False, sort_keys=False)
+    utils.save_search_details(search_details)
 
     return record
 
@@ -98,15 +83,13 @@ def main():
     saved_args = locals()
     repo = git.Repo()
     utils.require_clean_repo(repo)
-    grobid_client.start_grobid()
-
     utils.reset_log()
     logging.info('Backward search')
-
+    grobid_client.start_grobid()
     bib_db = utils.load_main_refs()
 
     for record in bib_db.entries:
-        process_backward_search(record)
+        backward_search(record)
 
     bibfilenames = [x['bib_filename']
                     for x in bib_db.entries if 'bib_filename' in x]

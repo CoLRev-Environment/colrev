@@ -1214,7 +1214,7 @@ def main(bib_db, repo, reset_ids=None, reprocess=False, keep_ids=False):
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
-                logging.info('No additional records to prepare')
+                logging.info('No records to prepare')
             break
 
     print()

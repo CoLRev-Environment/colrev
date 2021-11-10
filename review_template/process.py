@@ -112,7 +112,6 @@ def check_delay(db, min_status_requirement):
     if 'prescreened_and_pdf_prepared' == min_status_requirement:
         if any(x in cur_pdf_status for x in prior_pdf_status) or \
                 any(x in cur_rev_status for x in prior_rev_status):
-            status.review_instructions()
             raise DelayRequirement
 
     # prior_rev_status.append('prescreen_included')
