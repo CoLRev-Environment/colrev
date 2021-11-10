@@ -8,6 +8,7 @@ import dictdiffer
 import git
 
 from review_template import repo_setup
+from review_template import utils
 
 logging.getLogger('bibtexparser').setLevel(logging.CRITICAL)
 
@@ -16,7 +17,7 @@ MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 DATA = repo_setup.paths['DATA']
 
 
-def main(ID):
+def main(ID: str) -> None:
 
     logging.info(f'Trace record by ID: {ID}')
 
@@ -29,14 +30,13 @@ def main(ID):
     prev_record, prev_data = [], ''
     for commit in reversed(list(revlist)):
         commit_message_first_line = commit.message.partition('\n')[0]
-        print('\n\nCommit: ' +
-              f'{commit} - {commit_message_first_line}' +
-              f' {commit.author.name} ' +
-              time.strftime(
-                  '%a, %d %b %Y %H:%M',
-                  time.gmtime(commit.committed_date),
-              )
-              )
+        print('\n\n' + time.strftime(
+            '%Y-%m-%d %H:%M',
+            time.gmtime(commit.committed_date),
+        ) +
+            f' {commit} '.ljust(40, ' ') +
+            f' {commit_message_first_line} (by {commit.author.name})'
+        )
 
         if (MAIN_REFERENCES in commit.tree):
             filecontents = (commit.tree / MAIN_REFERENCES).data_stream.read()
@@ -52,7 +52,7 @@ def main(ID):
                 diffs = list(dictdiffer.diff(prev_record, record))
                 if len(diffs) > 0:
                     for diff in diffs:
-                        pp.pprint(diff)
+                        print(utils.lpad_multiline(pp.pformat(diff), 5))
                 prev_record = record
 
         if (DATA in commit.tree):

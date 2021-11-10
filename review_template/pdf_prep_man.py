@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 import logging
 
+import git
+from bibtexparser.bibdatabase import BibDatabase
+
 from review_template import pdf_prepare
 from review_template import repo_setup
 from review_template import status
@@ -9,7 +12,7 @@ from review_template import utils
 PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
 
 
-def man_prep_pdf(record):
+def man_prep_pdf(record: dict) -> dict:
 
     for prep_script in pdf_prepare.prep_scripts:
         logging.debug(f'{prep_script}({record["ID"]}) called')
@@ -20,7 +23,8 @@ def man_prep_pdf(record):
     return record
 
 
-def main(bib_db, repo):
+def main(bib_db: BibDatabase,
+         repo: git.Repo) -> BibDatabase:
     saved_args = locals()
 
     utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)

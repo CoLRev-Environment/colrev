@@ -32,7 +32,12 @@ DATA = repo_setup.paths['DATA']
 SEARCH_DETAILS = repo_setup.paths['SEARCH_DETAILS']
 
 
-def rmdiacritics(char):
+def lpad_multiline(s: str, lpad: int) -> str:
+    lines = s.splitlines()
+    return '\n'.join([''.join([' '*lpad]) + line for line in lines])
+
+
+def rmdiacritics(char: str) -> str:
     '''
     Return the base character of char, by "removing" any
     diacritics like accents or curls and strokes and the like.
@@ -48,7 +53,7 @@ def rmdiacritics(char):
     return char
 
 
-def remove_accents(input_str):
+def remove_accents(input_str: str) -> str:
     try:
         nfkd_form = unicodedata.normalize('NFKD', input_str)
         wo_ac = [
@@ -66,7 +71,7 @@ class CitationKeyPropagationError(Exception):
     pass
 
 
-def propagated_ID(ID):
+def propagated_ID(ID: str) -> bool:
 
     propagated = False
 
@@ -81,8 +86,11 @@ def propagated_ID(ID):
     return propagated
 
 
-def generate_ID(record, bib_db=None, record_in_bib_db=False,
-                raise_error=True):
+def generate_ID(record: dict,
+                bib_db: BibDatabase = None,
+                record_in_bib_db: bool = False,
+                raise_error: bool = True) -> str:
+
     if bib_db is not None:
         ID_blacklist = [record['ID'] for record in bib_db.entries]
     else:
@@ -92,9 +100,10 @@ def generate_ID(record, bib_db=None, record_in_bib_db=False,
     return ID
 
 
-def generate_ID_blacklist(record, ID_blacklist=None,
-                          record_in_bib_db=False,
-                          raise_error=True):
+def generate_ID_blacklist(record: dict,
+                          ID_blacklist: list = None,
+                          record_in_bib_db: bool = False,
+                          raise_error: bool = True) -> str:
 
     # Make sure that IDs that have been propagated to the
     # screen or data will not be replaced
@@ -176,7 +185,7 @@ def generate_ID_blacklist(record, ID_blacklist=None,
     return temp_ID
 
 
-def set_IDs(bib_db):
+def set_IDs(bib_db: BibDatabase) -> BibDatabase:
     ID_list = [record['ID'] for record in bib_db.entries]
     for record in bib_db.entries:
         if record['md_status'] in ['imported', 'prepared']:
@@ -192,7 +201,7 @@ def set_IDs(bib_db):
     return bib_db
 
 
-def load_search_details():
+def load_search_details() -> list:
 
     if os.path.exists(SEARCH_DETAILS):
         with open(SEARCH_DETAILS) as f:
@@ -203,7 +212,7 @@ def load_search_details():
     return search_details
 
 
-def save_search_details(search_details):
+def save_search_details(search_details: list) -> None:
     search_details_df = pd.DataFrame(search_details)
     orderedCols = ['filename', 'search_type',
                    'source_name', 'source_url',
@@ -216,7 +225,9 @@ def save_search_details(search_details):
     return
 
 
-def load_main_refs(mod_check=None, init=None):
+def load_main_refs(mod_check: bool = None,
+                   init: bool = None) -> BibDatabase:
+
     if mod_check is None:
         mod_check = True
     if init is None:
@@ -241,7 +252,7 @@ def load_main_refs(mod_check=None, init=None):
     return bib_db
 
 
-def git_modification_check(filename):
+def git_modification_check(filename: str) -> None:
     repo = git.Repo()
     index = repo.index
     if filename in [record.a_path for record in index.diff(None)]:
@@ -257,7 +268,7 @@ def git_modification_check(filename):
     return
 
 
-def get_bib_files():
+def get_bib_files() -> None:
     bib_files = []
     search_dir = os.path.join(os.getcwd(), 'search/')
     bib_files = [os.path.join(search_dir, x)
@@ -265,15 +276,13 @@ def get_bib_files():
     return bib_files
 
 
-def get_included_IDs(db):
-    included = []
-    for record in db.entries:
-        if record.get('rev_status', 'NA') in ['included', 'synthesized']:
-            included.append(record['ID'])
-    return included
+def get_included_IDs(bib_db: BibDatabase) -> list:
+    return [x['ID'] for x in bib_db.entries
+            if x.get('rev_status', 'NA') in ['included', 'synthesized']]
 
 
-def save_bib_file(bib_db, target_file=None):
+def save_bib_file(bib_db: BibDatabase,
+                  target_file: str = None) -> None:
 
     if target_file is None:
         target_file = MAIN_REFERENCES
@@ -322,7 +331,9 @@ def save_bib_file(bib_db, target_file=None):
     return
 
 
-def require_clean_repo(repo=None, ignore_pattern=None):
+def require_clean_repo(repo: git.Repo = None,
+                       ignore_pattern: str = None) -> bool:
+
     if repo is None:
         repo = git.Repo('')
     if repo.is_dirty():
@@ -340,7 +351,8 @@ def require_clean_repo(repo=None, ignore_pattern=None):
     return True
 
 
-def get_commit_report(script_name=None, saved_args=None):
+def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
+
     report = '\n\nReport\n\n'
 
     if script_name is not None:
@@ -383,11 +395,6 @@ def get_commit_report(script_name=None, saved_args=None):
             report + \
             '\n    ⚠ created with a modified version (not reproducible)'
 
-    # check tree:
-    #   git write-tree
-    #   git log --pretty=raw
-    # To validate: check whether tree is identical with commit-tree:
-    #   git log --pretty=raw -1
     repo = git.Repo('')
     tree_hash = repo.git.execute(['git', 'write-tree'])
     report = report + f'\n\nCertified properties for tree {tree_hash}\n'
@@ -412,6 +419,7 @@ def get_commit_report(script_name=None, saved_args=None):
     f = io.StringIO()
     with redirect_stdout(f):
         status.review_status()
+
     # Remove colors for commit message
     status_page = f.getvalue().replace('\033[91m', '').replace('\033[92m', '')\
         .replace('\033[93m', '').replace('\033[94m', '').replace('\033[0m', '')
@@ -421,14 +429,14 @@ def get_commit_report(script_name=None, saved_args=None):
     return report
 
 
-def get_version_flag():
+def get_version_flag() -> str:
     flag = ''
     if 'dirty' in version('review_template'):
         flag = ' ⚠️'
     return flag
 
 
-def update_status_yaml():
+def update_status_yaml() -> None:
 
     status_freq = status.get_status_freq()
 
@@ -441,13 +449,16 @@ def update_status_yaml():
     return
 
 
-def reset_log():
+def reset_log() -> None:
     with open('report.log', 'r+') as f:
         f.truncate(0)
     return
 
 
-def create_commit(repo, msg, saved_args, manual_author=False):
+def create_commit(repo: git.Repo,
+                  msg: str,
+                  saved_args: dict,
+                  manual_author: bool = False) -> bool:
 
     if repo.is_dirty():
 
@@ -502,7 +513,7 @@ def create_commit(repo, msg, saved_args, manual_author=False):
         return False
 
 
-def build_docker_images():
+def build_docker_images() -> None:
 
     client = docker.from_env()
 
@@ -515,13 +526,15 @@ def build_docker_images():
         filedata = pkgutil.get_data(__name__, '../docker/bibutils/Dockerfile')
         fileobj = io.BytesIO(filedata)
         client.images.build(fileobj=fileobj, tag='bibutils:latest')
+
     if 'lfoppiano/grobid' not in repo_tags:
         logging.info('Pulling grobid Docker image...')
         client.images.pull('lfoppiano/grobid:0.7.0')
     if 'pandoc/ubuntu-latex' not in repo_tags:
-        logging.info('Pulling v image...')
+        logging.info('Pulling pandoc/ubuntu-latex image...')
         client.images.pull('pandoc/ubuntu-latex:2.14')
-
-    # jbarlow83/ocrmypdf
+    if 'jbarlow83/ocrmypdf' not in repo_tags:
+        logging.info('Pulling jbarlow83/ocrmypdf image...')
+        client.images.pull('pandoc/ubuntu-latex:latest')
 
     return

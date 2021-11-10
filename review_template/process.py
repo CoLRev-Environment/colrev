@@ -2,6 +2,9 @@
 import logging
 import os
 
+import git
+from bibtexparser.bibdatabase import BibDatabase
+
 from review_template import dedupe
 from review_template import importer
 from review_template import init
@@ -17,7 +20,8 @@ from review_template import utils
 DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
 
 
-def reprocess_id(id, repo):
+def reprocess_id(id: str,
+                 repo: git.Repo) -> None:
     saved_args = locals()
     if id is None:
         return
@@ -47,7 +51,8 @@ class DelayRequirement(Exception):
     pass
 
 
-def check_delay(db, min_status_requirement):
+def check_delay(bib_db: BibDatabase,
+                min_status_requirement: str) -> bool:
 
     # all records need to have at least the min_status_requirement (or latter)
     # ie. raise DelayRequirement if any record has a prior status
@@ -58,16 +63,16 @@ def check_delay(db, min_status_requirement):
 
     if 'md_imported' == min_status_requirement:
         # Note: md_status=retrieved should not happen
-        if len(db.entries) == 0:
+        if len(bib_db.entries) == 0:
             logging.error('No search results available for import.')
             raise DelayRequirement
 
     if not DELAY_AUTOMATED_PROCESSING:
         return False
 
-    cur_rev_status = [x.get('rev_status', 'NA') for x in db.entries]
-    cur_md_status = [x.get('md_status', 'NA') for x in db.entries]
-    cur_pdf_status = [x.get('pdf_status', 'NA') for x in db.entries]
+    cur_rev_status = [x.get('rev_status', 'NA') for x in bib_db.entries]
+    cur_md_status = [x.get('md_status', 'NA') for x in bib_db.entries]
+    cur_pdf_status = [x.get('pdf_status', 'NA') for x in bib_db.entries]
 
     prior_md_status = ['retrieved', 'imported', 'needs_manual_preparation']
     if 'md_prepared' == min_status_requirement:
@@ -116,7 +121,8 @@ def check_delay(db, min_status_requirement):
     return False
 
 
-def main(reprocess=None, keep_ids=False):
+def main(reprocess: bool = None,
+         keep_ids: bool = False) -> None:
 
     status.repository_validation()
     repo = init.get_repo()
@@ -144,4 +150,4 @@ def main(reprocess=None, keep_ids=False):
     print()
     os.system('pre-commit run -a')
 
-    return 0
+    return

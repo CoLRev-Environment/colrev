@@ -11,6 +11,7 @@ import dictdiffer
 import git
 import pipeline_validation_hooks
 from bashplotlib.histogram import plot_hist
+from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 from pipeline_validation_hooks import check  # noqa: F401
 
@@ -20,7 +21,7 @@ from review_template import status
 from review_template import utils
 
 
-def load_records(bib_file):
+def load_records(bib_file: str) -> list:
 
     with open(bib_file) as bibtex_file:
         individual_bib_db = bibtexparser.bparser.BibTexParser(
@@ -33,7 +34,7 @@ def load_records(bib_file):
     return individual_bib_db.entries
 
 
-def get_search_records():
+def get_search_records() -> list:
 
     pool = mp.Pool(repo_setup.config['CPUS'])
     records = pool.map(load_records, utils.get_bib_files())
@@ -42,7 +43,8 @@ def get_search_records():
     return records
 
 
-def validate_preparation_changes(bib_db, search_records):
+def validate_preparation_changes(bib_db: BibDatabase,
+                                 search_records: list) -> None:
 
     logging.info('Calculating preparation differences...')
     change_diff = []
@@ -96,7 +98,8 @@ def validate_preparation_changes(bib_db, search_records):
     return
 
 
-def validate_merging_changes(bib_db, search_records):
+def validate_merging_changes(bib_db: BibDatabase,
+                             search_records: list) -> None:
 
     os.system('cls' if os.name == 'nt' else 'clear')
     logging.info('Calculating differences between merged records...')
@@ -149,7 +152,7 @@ def validate_merging_changes(bib_db, search_records):
     return
 
 
-def load_bib_db(target_commit):
+def load_bib_db(target_commit: str) -> BibDatabase:
 
     if 'none' == target_commit:
         logging.info('Loading data...')
@@ -187,7 +190,7 @@ def load_bib_db(target_commit):
     return bib_db
 
 
-def validate_properties(target_commit):
+def validate_properties(target_commit: str) -> None:
     # TODO: option: --history: check all preceding commits (create a list...)
     repo = git.Repo()
     cur_sha = repo.head.commit.hexsha
@@ -224,7 +227,9 @@ def validate_properties(target_commit):
     return
 
 
-def main(scope, properties=False, target_commit=None):
+def main(scope: str,
+         properties: bool = False,
+         target_commit: str = None) -> None:
 
     if properties:
         validate_properties(target_commit)

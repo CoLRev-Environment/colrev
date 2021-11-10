@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 
+import git
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 
@@ -24,7 +25,9 @@ current_batch_counter = mp.Value('i', 0)
 linked_existing_files = False
 
 
-def unpaywall(doi, retry=0, pdfonly=True):
+def unpaywall(doi: str,
+              retry: int = 0,
+              pdfonly: bool = True) -> str:
 
     r = requests.get(
         'https://api.unpaywall.org/v2/{doi}',
@@ -74,7 +77,7 @@ def unpaywall(doi, retry=0, pdfonly=True):
     return best_loc['url_for_pdf']
 
 
-def is_pdf(path_to_file):
+def is_pdf(path_to_file: str) -> bool:
 
     # TODO: add exceptions
     # try:
@@ -84,7 +87,7 @@ def is_pdf(path_to_file):
     #    return False
 
 
-def get_pdf_from_unpaywall(record):
+def get_pdf_from_unpaywall(record: dict) -> dict:
     if 'doi' not in record:
         return record
 
@@ -112,7 +115,7 @@ def get_pdf_from_unpaywall(record):
     return record
 
 
-def link_pdf(record):
+def link_pdf(record: dict) -> dict:
     global PAD
     if 'PAD' not in globals():
         PAD = 40
@@ -127,7 +130,7 @@ def link_pdf(record):
     return record
 
 
-def retrieve_pdf(record):
+def retrieve_pdf(record: dict) -> dict:
     if 'needs_retrieval' != record.get('pdf_status', 'NA'):
         return record
 
@@ -150,7 +153,7 @@ def retrieve_pdf(record):
     return record
 
 
-def get_missing_records(bib_db):
+def get_missing_records(bib_db: BibDatabase) -> BibDatabase:
     missing_records = BibDatabase()
     for record in bib_db.entries:
         if record.get('pdf_status', 'NA') in ['needs_retrieval',
@@ -159,7 +162,7 @@ def get_missing_records(bib_db):
     return missing_records
 
 
-def print_details(missing_records):
+def print_details(missing_records: BibDatabase) -> None:
     # TODO: instead of a global counter, compare prior/latter stats
     # like prepare/set_stats_beginning, print_stats_end
     # global pdfs_retrieved
@@ -172,7 +175,7 @@ def print_details(missing_records):
     return
 
 
-def get_pdfs_from_dir(directory):
+def get_pdfs_from_dir(directory: str) -> list:
     list_of_files = []
     for (dirpath, dirnames, filenames) in os.walk(directory):
         for filename in filenames:
@@ -181,7 +184,8 @@ def get_pdfs_from_dir(directory):
     return list_of_files
 
 
-def check_existing_unlinked_pdfs(bib_db):
+def check_existing_unlinked_pdfs(bib_db: BibDatabase) \
+        -> BibDatabase:
     global linked_existing_files
     pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
 
@@ -232,7 +236,8 @@ def check_existing_unlinked_pdfs(bib_db):
     return bib_db
 
 
-def main(bib_db, repo):
+def main(bib_db: BibDatabase,
+         repo: git.Repo) -> BibDatabase:
     global linked_existing_files
     saved_args = locals()
 

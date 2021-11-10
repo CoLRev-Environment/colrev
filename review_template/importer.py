@@ -10,6 +10,7 @@ from datetime import datetime
 from itertools import chain
 
 import bibtexparser
+import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -28,13 +29,22 @@ MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
-search_type_opts = ['DB', 'TOC', 'BACK_CIT', 'FORW_CIT', 'OTHER']
+search_type_opts = ['DB',
+                    'TOC',
+                    'BACK_CIT',
+                    'FORW_CIT',
+                    'OTHER']
 
 
-def get_search_files():
-    supported_extensions = ['ris', 'bib', 'end',
-                            'txt', 'csv', 'txt',
-                            'xlsx', 'pdf']
+def get_search_files() -> None:
+    supported_extensions = ['ris',
+                            'bib',
+                            'end',
+                            'txt',
+                            'csv',
+                            'txt',
+                            'xlsx',
+                            'pdf']
     files = []
     search_dir = os.path.join(os.getcwd(), 'search/')
     files = [os.path.join(search_dir, x)
@@ -43,7 +53,7 @@ def get_search_files():
     return files
 
 
-def get_imported_record_links():
+def get_imported_record_links() -> list:
 
     imported_record_links = []
     try:
@@ -59,7 +69,7 @@ def get_imported_record_links():
     return imported_record_links
 
 
-def load_records(filepath):
+def load_records(filepath: str) -> list:
 
     imported_record_links = get_imported_record_links()
 
@@ -78,27 +88,26 @@ def load_records(filepath):
 
         record.update(rev_status='retrieved')
         record.update(md_status='retrieved')
-        logging.debug(
-            f'append record {record["ID"]} \n{pp.pformat(record)}\n\n')
+        logging.debug(f'append record {record["ID"]} '
+                      f'\n{pp.pformat(record)}\n\n')
         record_list.append(record)
 
     return record_list
 
 
-def save_imported_record_links(bib_db):
+def save_imported_record_links(bib_db: BibDatabase) -> None:
     imported_record_links = [x['origin'].split(';')
-                             for x in bib_db.entries
-                             if 'origin' in x]
+                             for x in bib_db.entries if 'origin' in x]
     imported_record_links = list(itertools.chain(*imported_record_links))
 
     with open('imported_record_links.csv', 'a') as fd:
         for el in imported_record_links:
             fd.write(el + '\n')
-
     return
 
 
-def import_record(record):
+def import_record(record: dict) -> dict:
+
     logging.debug(f'import_record {record["ID"]}: \n{pp.pformat(record)}\n\n')
 
     if 'retrieved' != record['md_status']:
@@ -106,9 +115,16 @@ def import_record(record):
 
     # For better readability of the git diff:
     fields_to_process = [
-        'author', 'year', 'title',
-        'journal', 'booktitle', 'series',
-        'volume', 'number', 'pages', 'doi',
+        'author',
+        'year',
+        'title',
+        'journal',
+        'booktitle',
+        'series',
+        'volume',
+        'number',
+        'pages',
+        'doi',
         'abstract'
     ]
     for field in fields_to_process:
@@ -122,7 +138,7 @@ def import_record(record):
     return record
 
 
-def source_heuristics(search_file):
+def source_heuristics(search_file: str) -> str:
     with open(search_file) as f:
         for line in f.readlines():
             if 'bibsource = {dblp computer science' + \
@@ -132,7 +148,7 @@ def source_heuristics(search_file):
     return None
 
 
-def check_update_search_details(search_files):
+def check_update_search_details(search_files: list) -> None:
 
     search_details = utils.load_search_details()
 
@@ -170,7 +186,7 @@ def check_update_search_details(search_files):
     return
 
 
-def rename_search_files(search_files):
+def rename_search_files(search_files: list) -> list:
     ret_list = []
     date_regex = r'^\d{4}-\d{2}-\d{2}'
     for search_file in search_files:
@@ -187,7 +203,7 @@ def rename_search_files(search_files):
     return ret_list
 
 
-def load_all_records():
+def load_all_records() -> list:
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
     save_imported_record_links(bib_db)
@@ -208,11 +224,14 @@ def load_all_records():
     return additional_records
 
 
-def bibutils_convert(script, data):
+def bibutils_convert(script: str, data: str) -> str:
 
-    assert script in ['ris2xml', 'end2xml',
-                      'endx2xml', 'isi2xml',
-                      'med2xml', 'xml2bib']
+    assert script in ['ris2xml',
+                      'end2xml',
+                      'endx2xml',
+                      'isi2xml',
+                      'med2xml',
+                      'xml2bib']
 
     if 'xml2bib' == script:
         script = script + ' -b -w '
@@ -224,16 +243,19 @@ def bibutils_convert(script, data):
     try:
         cur_tag = docker.from_env().images.get('bibutils').tags[0]
         logging.info(f'Running docker container created from {cur_tag}')
-        container = \
-            client.create_container('bibutils', script, stdin_open=True)
+        container = client.create_container('bibutils',
+                                            script,
+                                            stdin_open=True)
     except docker.errors.ImageNotFound:
         logging.info('Docker image not found')
         return ''
         pass
 
     sock = client.attach_socket(container,
-                                params={'stdin': 1, 'stdout': 1,
-                                        'stderr': 1, 'stream': 1})
+                                params={'stdin': 1,
+                                        'stdout': 1,
+                                        'stderr': 1,
+                                        'stream': 1})
     client.start(container)
 
     sock._sock.send(data)
@@ -257,7 +279,7 @@ def bibutils_convert(script, data):
     return stdout
 
 
-def getbib(file):
+def getbib(file: str) -> BibDatabase:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
         bib_r = re.compile(r'^@.*{.*,', re.M)
@@ -279,7 +301,7 @@ def getbib(file):
     return db
 
 
-def ris2bib(file):
+def ris2bib(file: str) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if 'TY  - ' not in data:
@@ -295,7 +317,7 @@ def ris2bib(file):
     return db
 
 
-def end2bib(file):
+def end2bib(file: str) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if '%%T ' not in data:
@@ -311,7 +333,7 @@ def end2bib(file):
     return db
 
 
-def txt2bib(file):
+def txt2bib(file: str) -> BibDatabase:
     grobid_client.check_grobid_availability()
     with open(file) as f:
         references = [line.rstrip() for line in f]
@@ -335,7 +357,7 @@ def txt2bib(file):
     return db
 
 
-def preprocess_records(data):
+def preprocess_records(data: list) -> list:
     for x in data:
         # TODO: more sophisticated setting of ENTRYTYPE, ID is needed.
         # could also use simple numbers as IDs...
@@ -348,7 +370,7 @@ def preprocess_records(data):
     return data
 
 
-def csv2bib(file):
+def csv2bib(file: str) -> BibDatabase:
     try:
         data = pd.read_csv(file)
     except pd.errors.ParserError:
@@ -365,7 +387,7 @@ def csv2bib(file):
     return db
 
 
-def xlsx2bib(file):
+def xlsx2bib(file: str) -> BibDatabase:
     try:
         data = pd.read_excel(file)
     except pd.errors.ParserError:
@@ -382,7 +404,7 @@ def xlsx2bib(file):
     return db
 
 
-def move_to_pdf_dir(filepath):
+def move_to_pdf_dir(filepath: str) -> None:
     PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
     if not os.path.exists(PDF_DIRECTORY):
@@ -394,7 +416,7 @@ def move_to_pdf_dir(filepath):
 # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
 # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
 # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-def pdf2bib(file):
+def pdf2bib(file: str) -> BibDatabase:
     grobid_client.check_grobid_availability()
 
     # https://github.com/kermitt2/grobid/issues/837
@@ -421,7 +443,7 @@ def pdf2bib(file):
     return None
 
 
-def pdfRefs2bib(file):
+def pdfRefs2bib(file: str) -> BibDatabase:
     grobid_client.check_grobid_availability()
 
     r = requests.post(
@@ -444,9 +466,9 @@ def pdfRefs2bib(file):
     return None
 
 
-def load_search_results_file(search_file_path):
+def load_search_results_file(search_file_p: str) -> BibDatabase:
 
-    search_file = os.path.basename(search_file_path)
+    search_file = os.path.basename(search_file_p)
 
     importer_scripts = {'bib': getbib,
                         'ris': ris2bib,
@@ -476,14 +498,14 @@ def load_search_results_file(search_file_path):
             filetype = 'pdf_refs'
     if filetype in importer_scripts.keys():
         logging.debug(f'Loading {filetype}: {search_file}')
-        db = importer_scripts[filetype](search_file_path)
+        db = importer_scripts[filetype](search_file_p)
         if db is None:
             logging.error('No records loaded')
             return None
         logging.info(f'Loaded {len(db.entries)} records from {search_file}')
         if corresponding_bib_file != search_file and \
                 not '.bib' == search_file[-4]:
-            new_file_path = search_file_path.replace('.' + filetype, '.bib')
+            new_file_path = search_file_p.replace('.' + filetype, '.bib')
             with open(new_file_path, 'w') as fi:
                 fi.write(bibtexparser.dumps(db))
         return db
@@ -514,7 +536,7 @@ batch_start = 1
 batch_end = 0
 
 
-def processing_condition(record):
+def processing_condition(record: dict) -> bool:
     global current_batch_counter
     global batch_start
     global batch_end
@@ -536,7 +558,8 @@ def processing_condition(record):
     return False
 
 
-def save_imported_files(repo, bib_db):
+def save_imported_files(repo: git.Repo,
+                        bib_db: BibDatabase) -> bool:
     if bib_db is None:
         logging.info('No records imported')
         return False
@@ -557,7 +580,9 @@ def save_imported_files(repo, bib_db):
     return True
 
 
-def main(repo, keep_ids):
+def main(repo: git.Repo,
+         keep_ids: bool) -> BibDatabase:
+
     saved_args = locals()
     if not keep_ids:
         del saved_args['keep_ids']

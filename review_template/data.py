@@ -9,17 +9,19 @@ import sys
 import git
 import pandas as pd
 import yaml
+from bibtexparser.bibdatabase import BibDatabase
 from yaml import safe_load
 
 from review_template import init
 from review_template import repo_setup
 from review_template import utils
+
 PAD = 0
 MANUSCRIPT = 'paper.md'
 DATA = repo_setup.paths['DATA']
 
 
-def get_data_page_missing(MANUSCRIPT, records):
+def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
     available = []
     with open(MANUSCRIPT) as f:
         line = f.read()
@@ -30,7 +32,7 @@ def get_data_page_missing(MANUSCRIPT, records):
     return list(set(records) - set(available))
 
 
-def get_to_synthesize_in_manuscript(records_for_synthesis):
+def get_to_synthesize_in_manuscript(records_for_synthesis: list) -> list:
     in_manuscript_to_synthesize = []
     with open(MANUSCRIPT) as f:
         for line in f:
@@ -48,7 +50,7 @@ def get_to_synthesize_in_manuscript(records_for_synthesis):
     return in_manuscript_to_synthesize
 
 
-def get_synthesized_ids(bib_db):
+def get_synthesized_ids(bib_db: BibDatabase) -> list:
 
     records_for_synthesis = [x['ID']for x in bib_db.entries
                              if x.get('rev_status', 'NA') in
@@ -63,7 +65,7 @@ def get_synthesized_ids(bib_db):
     return synthesized
 
 
-def get_data_extracted(records_for_data_extraction):
+def get_data_extracted(records_for_data_extraction: list) -> list:
     data_extracted = []
     with open(DATA) as f:
         data_df = pd.json_normalize(safe_load(f))
@@ -79,7 +81,7 @@ def get_data_extracted(records_for_data_extraction):
     return data_extracted
 
 
-def get_structured_data_extracted(bib_db):
+def get_structured_data_extracted(bib_db: BibDatabase) -> list:
     if not os.path.exists(DATA):
         return []
 
@@ -95,7 +97,9 @@ def get_structured_data_extracted(bib_db):
     return data_extracted
 
 
-def update_manuscript(repo, bib_db, included):
+def update_manuscript(bib_db: BibDatabase,
+                      repo: git.Repo,
+                      included: list) -> BibDatabase:
 
     if os.path.exists(MANUSCRIPT):
         missing_records = get_data_page_missing(MANUSCRIPT, included)
@@ -188,7 +192,9 @@ def update_manuscript(repo, bib_db, included):
     return bib_db
 
 
-def update_structured_data(repo, bib_db, included):
+def update_structured_data(bib_db: BibDatabase,
+                           repo: git.Repo,
+                           included: list) -> BibDatabase:
 
     if not os.path.exists(DATA):
         included = utils.get_included_IDs(bib_db)
@@ -234,10 +240,10 @@ def update_structured_data(repo, bib_db, included):
 
         logging.info(f'{nr_records_added} records added ({DATA})')
 
-    return
+    return bib_db
 
 
-def main(edit_csv, load_csv):
+def main(edit_csv: bool, load_csv: bool) -> None:
     saved_args = locals()
 
     DATA_CSV = DATA.replace('.yaml', '.csv')
@@ -270,10 +276,10 @@ def main(edit_csv, load_csv):
         sys.exit()
 
     if 'MANUSCRIPT' in DATA_FORMAT:
-        bib_db = update_manuscript(repo, bib_db, included)
+        bib_db = update_manuscript(bib_db, repo, included)
         repo.index.add([MANUSCRIPT])
     if 'STRUCTURED' in DATA_FORMAT:
-        update_structured_data(repo, bib_db, included)
+        bib_db = update_structured_data(bib_db, repo, included)
         repo.index.add([DATA])
 
     synthesized_in_manuscript = get_synthesized_ids(bib_db)

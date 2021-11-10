@@ -18,7 +18,7 @@ BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 data_dir = ''
 
 
-def backward_search(record):
+def backward_search(record: dict) -> dict:
 
     if record['pdf_status'] != 'prepared':
         return record
@@ -79,7 +79,7 @@ def backward_search(record):
     return record
 
 
-def main():
+def main() -> None:
     saved_args = locals()
     repo = git.Repo()
     utils.require_clean_repo(repo)

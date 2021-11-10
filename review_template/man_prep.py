@@ -18,7 +18,7 @@ record_type_mapping = {'a': 'article', 'p': 'inproceedings',
 ID_list = []
 
 
-def print_record(record):
+def print_record(record: dict) -> None:
     pp = pprint.PrettyPrinter(indent=4, width=140)
     # Escape sequence to clear terminal output for each new comparison
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -29,7 +29,7 @@ def print_record(record):
     return
 
 
-def man_correct_recordtype(record):
+def man_correct_recordtype(record: dict) -> dict:
 
     if 'n' == input('ENTRYTYPE=' + record['ENTRYTYPE'] + ' correct?'):
         choice = input('Correct type: ' +
@@ -45,7 +45,7 @@ def man_correct_recordtype(record):
     return record
 
 
-def man_provide_required_fields(record):
+def man_provide_required_fields(record: dict) -> dict:
     if prepare.is_complete(record):
         return record
 
@@ -57,7 +57,7 @@ def man_provide_required_fields(record):
     return record
 
 
-def man_fix_field_inconsistencies(record):
+def man_fix_field_inconsistencies(record: dict) -> dict:
     if not prepare.has_inconsistent_fields(record):
         return record
 
@@ -66,7 +66,7 @@ def man_fix_field_inconsistencies(record):
     return record
 
 
-def man_fix_incomplete_fields(record):
+def man_fix_incomplete_fields(record: dict) -> dict:
     if not prepare.has_incomplete_fields(record):
         return record
 
@@ -76,7 +76,7 @@ def man_fix_incomplete_fields(record):
     return record
 
 
-def man_prep_records():
+def man_prep_records() -> None:
     saved_args = locals()
     global ID_list
 

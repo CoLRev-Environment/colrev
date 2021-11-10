@@ -11,11 +11,11 @@ GROBID_URL = 'http://localhost:8070'
 grobid_image = 'grobid/grobid:0.7.1-SNAPSHOT'
 
 
-def get_grobid_url():
+def get_grobid_url() -> str:
     return GROBID_URL
 
 
-def check_grobid_availability():
+def check_grobid_availability() -> None:
     i = 0
     while True:
         i += 1
@@ -33,7 +33,7 @@ def check_grobid_availability():
     return
 
 
-def start_grobid():
+def start_grobid() -> bool:
     logging.info(f'Running docker container created from {grobid_image}')
     try:
         r = requests.get(GROBID_URL + '/api/isalive')

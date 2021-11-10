@@ -23,7 +23,7 @@ class colors:
     END = '\033[0m'
 
 
-def lsremote(url):
+def lsremote(url: str) -> str:
     remote_refs = {}
     g = git.cmd.Git()
     for ref in g.ls_remote(url).split('\n'):
@@ -32,15 +32,14 @@ def lsremote(url):
     return remote_refs
 
 
-def get_bib_files():
-    bib_files = []
+def get_bib_files() -> list:
     search_dir = os.path.join(os.getcwd(), 'search/')
-    bib_files = [os.path.join(search_dir, x)
-                 for x in os.listdir(search_dir) if x.endswith('.bib')]
-    return bib_files
+    return [os.path.join(search_dir, x)
+            for x in os.listdir(search_dir)
+            if x.endswith('.bib')]
 
 
-def get_nr_in_bib(file_path):
+def get_nr_in_bib(file_path: str) -> int:
 
     number_in_bib = 0
     with open(file_path) as f:
@@ -57,14 +56,14 @@ def get_nr_in_bib(file_path):
     return number_in_bib
 
 
-def get_nr_search():
+def get_nr_search() -> int:
     number_search = 0
     for search_file in get_bib_files():
         number_search += get_nr_in_bib(search_file)
     return number_search
 
 
-def get_completeness_condition():
+def get_completeness_condition() -> bool:
     stat = get_status_freq()
     completeness_condition = True
     if 0 != stat['metadata_status']['currently']['non_imported']:
@@ -94,7 +93,7 @@ def get_completeness_condition():
     return completeness_condition
 
 
-def get_status_freq():
+def get_status_freq() -> dict:
     MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
 
     stat = {}
@@ -286,7 +285,7 @@ def get_status_freq():
     return stat
 
 
-def get_status():
+def get_status() -> list:
     status_of_records = []
 
     with open(repo_setup.paths['MAIN_REFERENCES']) as f:
@@ -305,7 +304,7 @@ def get_status():
     return status_of_records
 
 
-def get_remote_commit_differences(repo):
+def get_remote_commit_differences(repo: git.Repo) -> [int, int]:
     nr_commits_behind, nr_commits_ahead = -1, -1
 
     if repo.active_branch.tracking_branch() is not None:
@@ -325,7 +324,7 @@ def get_remote_commit_differences(repo):
     return nr_commits_behind, nr_commits_ahead
 
 
-def is_git_repo(path):
+def is_git_repo(path: str) -> bool:
     try:
         _ = git.Repo(path).git_dir
         return True
@@ -333,7 +332,7 @@ def is_git_repo(path):
         return False
 
 
-def repository_validation():
+def repository_validation() -> None:
     global repo
     if not is_git_repo(os.getcwd()):
         logging.error('No git repository. Use '
@@ -412,7 +411,7 @@ def repository_validation():
     return
 
 
-def repository_load():
+def repository_load() -> None:
     global repo
 
     # TODO: check whether it is a valid git repo
@@ -427,7 +426,11 @@ def repository_load():
     return
 
 
-def stat_print(field1, val1, connector=None, field2=None, val2=None):
+def stat_print(field1: str,
+               val1: str,
+               connector: str = None,
+               field2: str = None,
+               val2: str = None) -> None:
     if field2 is None:
         field2 = ''
     if val2 is None:
@@ -449,7 +452,7 @@ def stat_print(field1, val1, connector=None, field2=None, val2=None):
     return
 
 
-def review_status():
+def review_status() -> None:
     global status_freq
 
     # Principle: first column shows total records/PDFs in each stage
@@ -561,7 +564,7 @@ def review_status():
     return
 
 
-def review_instructions(status_freq=None):
+def review_instructions(status_freq: dict = None) -> None:
     if status_freq is None:
         stat = get_status_freq()
     metadata, review, pdfs = \
@@ -638,7 +641,7 @@ def review_instructions(status_freq=None):
     return status_freq
 
 
-def collaboration_instructions(status_freq):
+def collaboration_instructions(status_freq: dict) -> None:
 
     print('\n\nVersioning and collaboration\n')
 
@@ -729,7 +732,7 @@ def collaboration_instructions(status_freq):
     return
 
 
-def main():
+def main() -> None:
 
     repository_validation()
     repository_load()

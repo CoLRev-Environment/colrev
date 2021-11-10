@@ -7,6 +7,7 @@ import os
 import ansiwrap
 import git
 import pandas as pd
+from bibtexparser.bibdatabase import BibDatabase
 from dictdiffer import diff
 
 from review_template import repo_setup
@@ -17,7 +18,8 @@ removed_tuples = []
 BATCH_SIZE = repo_setup.config['BATCH_SIZE']
 
 
-def get_combined_origin_list(record_a, record_b):
+def get_combined_origin_list(record_a: dict,
+                             record_b: dict) -> str:
 
     o_record_a = record_a['origin'].split(';')
     o_record_b = record_b['origin'].split(';')
@@ -35,7 +37,9 @@ class colors:
     END = '\033[0m'
 
 
-def print_diff(change, prefix_len):
+def print_diff(change: dict,
+               prefix_len: int) -> None:
+
     d = difflib.Differ()
 
     if change[0] == 'change':
@@ -67,7 +71,11 @@ def print_diff(change, prefix_len):
     return
 
 
-def merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat):
+def merge_manual_dialogue(bib_db: BibDatabase,
+                          main_ID: str,
+                          duplicate_ID: str,
+                          stat: str) -> BibDatabase:
+
     global quit_pressed
     global removed_tuples
     # Note: all changes must be made to the main_record (i.e., if we display
@@ -163,7 +171,10 @@ def merge_manual_dialogue(bib_db, main_ID, duplicate_ID, stat):
     return bib_db
 
 
-def merge_manual(bib_db, record_a_ID, record_b_ID, stat):
+def merge_manual(bib_db: BibDatabase,
+                 record_a_ID: str,
+                 record_b_ID: str,
+                 stat: str) -> BibDatabase:
     global removed_tuples
 
     if not all(eid in [x['ID'] for x in bib_db.entries]
@@ -207,7 +218,7 @@ def merge_manual(bib_db, record_a_ID, record_b_ID, stat):
     return bib_db
 
 
-def main():
+def main() -> None:
     saved_args = locals()
     global removed_tuples
 
