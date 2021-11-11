@@ -78,8 +78,15 @@ def status(ctx):
     status.repository_validation()
     utils.update_status_yaml()
     print('\nChecks\n')
-    os.system('pre-commit run -a')
-    status.main()
+    ret = os.system('pre-commit run -a')
+    if ret == 256:
+        print('\nInstructions to resolve:\n 1 https://docs.github.com/en/'
+              'pull-requests/collaborating-with-pull-requests/'
+              'addressing-merge-conflicts/resolving-a-merge-conflict-'
+              'using-the-command-line\n 2 For atom users: '
+              'https://www.youtube.com/watch?v=d6jCwUQaV5A\n')
+    if ret == 0:
+        status.main()
 
 
 @main.command(help_priority=3)
