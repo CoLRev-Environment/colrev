@@ -426,7 +426,8 @@ def repository_load() -> None:
     return
 
 
-def stat_print(field1: str,
+def stat_print(separate_category: bool,
+               field1: str,
                val1: str,
                connector: str = None,
                field2: str = None,
@@ -436,15 +437,18 @@ def stat_print(field1: str,
     if val2 is None:
         val2 = ''
     if field1 != '':
-        stat = ' |  - ' + field1
+        if separate_category:
+            stat = '     |  - ' + field1
+        else:
+            stat = ' |  - ' + field1
     else:
         stat = ' | '
-    rjust_padd = 35-len(stat)
+    rjust_padd = 37-len(stat)
     stat = stat + str(val1).rjust(rjust_padd, ' ')
     if connector is not None:
         stat = stat + '  ' + connector + '  '
     if val2 != '':
-        rjust_padd = 45-len(stat)
+        rjust_padd = 47-len(stat)
         stat = stat + str(val2).rjust(rjust_padd, ' ') + ' '
     if field2 != '':
         stat = stat + str(field2)
@@ -471,96 +475,102 @@ def review_status() -> None:
             stat['metadata_status'], stat['review_status'], stat['pdf_status']
 
         print(' | Search')
-        stat_print('Records retrieved', metadata['overall']['retrieved'])
+        stat_print(False, 'Records retrieved',
+                   metadata['overall']['retrieved'])
+        print(' |')
+        print('     | Metadata preparation')
         if metadata['currently']['non_imported'] > 0:
-            stat_print('', '', '*', 'record(s) not yet imported',
+            stat_print(True, '', '', '*', 'record(s) not yet imported',
                        metadata['currently']['non_imported'])
-        stat_print('Records imported', metadata['overall']['imported'])
+        stat_print(True, 'Records imported', metadata['overall']['imported'])
         if metadata['currently']['imported'] > 0:
-            stat_print('', '', '*', 'record(s) need preparation',
+            stat_print(True, '', '', '*', 'record(s) need preparation',
                        metadata['currently']['imported'])
         if metadata['currently']['needs_manual_preparation'] > 0:
-            stat_print('', '', '*', 'record(s) need manual preparation',
+            stat_print(True, '', '', '*', 'record(s) need manual preparation',
                        metadata['currently']['needs_manual_preparation'])
-        stat_print('Records prepared', metadata['overall']['prepared'])
+        stat_print(True, 'Records prepared', metadata['overall']['prepared'])
         if metadata['currently']['prepared'] > 0:
-            stat_print('', '', '*', 'record(s) need merging',
+            stat_print(True, '', '', '*', 'record(s) need merging',
                        metadata['currently']['prepared'])
         if metadata['currently']['needs_manual_merging'] > 0:
-            stat_print('', '', '*', 'record(s) need manual merging',
+            stat_print(True, '', '', '*', 'record(s) need manual merging',
                        metadata['currently']['needs_manual_merging'])
-        stat_print('Records processed',
+        stat_print(True, 'Records processed',
                    metadata['overall']['processed'], '->',
                    'duplicates removed',
                    metadata['currently']['duplicates_removed'])
 
         print(' |')
-        print(' | Pre-screen')
+        print(' | Prescreen')
         if review['overall']['prescreen'] == 0:
-            stat_print('Not initiated', '')
+            stat_print(False, 'Not initiated', '')
         else:
-            stat_print('Prescreen size', review['overall']['prescreen'])
+            stat_print(False, 'Prescreen size', review['overall']['prescreen'])
             if 0 != review['currently']['needs_prescreen']:
-                stat_print('', '', '*', 'records to prescreen',
+                stat_print(False, '', '', '*', 'records to prescreen',
                            review['currently']['needs_prescreen'])
-            stat_print('Included',
+            stat_print(False, 'Included',
                        review['overall']['prescreen_included'],
                        '->', 'records excluded',
                        review['currently']['prescreen_excluded'])
 
         print(' |')
-        print(' | PDFs')
-        stat_print('PDFs need retrieval', pdfs['overall']['needs_retrieval'])
+        print('     | PDF preparation')
+        stat_print(True, 'PDFs to retrieve',
+                   pdfs['overall']['needs_retrieval'])
         if 0 != pdfs['currently']['needs_retrieval']:
-            stat_print('', '', '*', 'PDFs to retrieve',
+            stat_print(True, '', '', '*', 'PDFs to retrieve',
                        pdfs['currently']['needs_retrieval'])
         if 0 != pdfs['currently']['needs_manual_retrieval']:
-            stat_print('', '', '*', 'PDFs to retrieve manually',
+            stat_print(True, '', '', '*', 'PDFs to retrieve manually',
                        pdfs['currently']['needs_manual_retrieval'])
         if pdfs['currently']['not_available'] > 0:
-            stat_print('PDFs retrieved',
+            stat_print(True, 'PDFs retrieved',
                        pdfs['overall']['retrieved'],
                        '*', 'PDFs not available',
                        pdfs['currently']['not_available'])
         else:
-            stat_print('PDFs retrieved',
+            stat_print(True, 'PDFs retrieved',
                        pdfs['overall']['retrieved'])
         if pdfs['currently']['needs_manual_preparation'] > 0:
-            stat_print('', '', '*', 'PDFs need manual preparation',
+            stat_print(True, '', '', '*', 'PDFs need manual preparation',
                        pdfs['currently']['needs_manual_preparation'])
         if 0 != pdfs['currently']['imported']:
-            stat_print('', '', '*', 'PDFs to prepare',
+            stat_print(True, '', '', '*', 'PDFs to prepare',
                        pdfs['currently']['imported'])
-        stat_print('PDFs prepared', pdfs['overall']['prepared'])
+        stat_print(True, 'PDFs prepared', pdfs['overall']['prepared'])
 
         print(' |')
         print(' | Screen')
         if review['overall']['screen'] == 0:
-            stat_print('Not initiated', '')
+            stat_print(False, 'Not initiated', '')
         else:
-            stat_print('Screen size', review['overall']['screen'])
+            stat_print(False, 'Screen size', review['overall']['screen'])
             if 0 != review['currently']['needs_screen']:
-                stat_print('', '', '*', 'records to screen',
+                stat_print(False, '', '', '*', 'records to screen',
                            review['currently']['needs_screen'])
-            stat_print('Included', review['overall']['included'],
+            stat_print(False, 'Included', review['overall']['included'],
                        '->', 'records excluded',
                        review['currently']['screen_excluded'])
             if 'exclusion' in review['currently']:
                 for crit, nr in review['currently']['exclusion'].items():
-                    stat_print('', '', '->', f'reason: {crit}', nr)
+                    stat_print(False, '', '', '->', f'reason: {crit}', nr)
 
         print(' |')
         print(' | Data and synthesis')
         if review['overall']['synthesis'] == 0:
-            stat_print('Not initiated', '')
+            stat_print(False, 'Not initiated', '')
         else:
-            stat_print('Total', review['overall']['synthesis'])
+            stat_print(False, 'Total', review['overall']['synthesis'])
             if 0 != review['currently']['needs_synthesis']:
-                stat_print('Synthesized', review['overall']['synthesized'],
+                stat_print(False, 'Synthesized',
+                           review['overall']['synthesized'],
                            '*', 'need synthesis',
                            review['currently']['needs_synthesis'])
             else:
-                stat_print('Synthesized', review['overall']['synthesized'])
+                stat_print(False, 'Synthesized',
+                           review['overall']['synthesized'])
     return
 
 
@@ -570,7 +580,7 @@ def review_instructions(status_freq: dict = None) -> None:
     metadata, review, pdfs = \
         stat['metadata_status'], stat['review_status'], stat['pdf_status']
 
-    print('\n\nInstructions\n')
+    print('\n\nNext steps\n')
     # Note: review_template init is suggested in repository_validation()
     if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
         print('  To import, copy search results to the search directory. ' +
@@ -634,8 +644,9 @@ def review_instructions(status_freq: dict = None) -> None:
               'use\n     review_template data')
         return
 
-    print('  Iteration completed. To start another review cycle, add '
-          'papers to search/ and use\n     review_template process')
+    print('  Iteration completed.\n     To start the next iteration of the '
+          'review, add records to search/ directory and use\n     '
+          'review_template process')
     if 'MANUSCRIPT' == repo_setup.config['DATA_FORMAT']:
         print('\n  To build the paper use\n     review_template paper')
     return status_freq
@@ -643,22 +654,19 @@ def review_instructions(status_freq: dict = None) -> None:
 
 def collaboration_instructions(status_freq: dict) -> None:
 
-    print('\n\nVersioning and collaboration\n')
+    nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+    if nr_commits_behind == -1 and nr_commits_ahead == -1:
+        print('\n\nVersioning\n')
+    else:
+        print('\n\nVersioning and collaboration\n')
 
     if repo.is_dirty():
-        print(f'  {colors.RED}Uncommitted changes{colors.END}'
-              '\n  To add, use\n     git add .'
-              '\n  To commit, use\n     git commit -m')
-    print('\n  To inspect changes, use\n     gitk')
-
-    print()
-    nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+        print(f'  {colors.RED}Uncommitted changes{colors.END}')
 
     if nr_commits_behind == -1 and nr_commits_ahead == -1:
         print('  Not connected to a shared repository '
-              '(tracking a remote branch).\n  Create remote repository and '
-              'use\n     git remote add origin https://github.com/user/repo\n'
-              f'     git push origin {repo.active_branch.name}')
+              '(not tracking a remote branch).')
+
     else:
         print(f' Requirement: {SHARE_STAT_REQ}')
 
