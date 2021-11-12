@@ -140,7 +140,7 @@ def prescreen(bib_db: BibDatabase,
             continue
 
         print('\n\n')
-        revrecord = screen.customsort(record, screen.desired_order_list)
+        revrecord = screen.customsort(record)
         pp.pprint(revrecord)
 
         ret, inclusion_decision = 'NA', 'NA'

@@ -442,7 +442,10 @@ def stat_print(separate_category: bool,
         else:
             stat = ' |  - ' + field1
     else:
-        stat = ' | '
+        if separate_category:
+            stat = '     | '
+        else:
+            stat = ' | '
     rjust_padd = 37-len(stat)
     stat = stat + str(val1).rjust(rjust_padd, ' ')
     if connector is not None:
