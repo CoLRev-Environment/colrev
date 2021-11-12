@@ -143,8 +143,7 @@ def screen() -> None:
 
             decision, ret = 'NA', 'NA'
             while ret not in ['y', 'n', 'q', 's']:
-                ret = input(f'({i}/{stat_len}) Include'
-                            f' {exclusion_criterion} [y,n,q,s]? ')
+                ret = input(f'({i}/{stat_len}) Include [y,n,q,s]? ')
                 if 'q' == ret:
                     quit_pressed = True
                 elif 's' == ret:
