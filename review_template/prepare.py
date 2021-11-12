@@ -710,7 +710,7 @@ def dblp_json_to_record(item: dict) -> dict:
     if 'number' in item:
         retrieved_record['number'] = item['number']
     if 'pages' in item:
-        retrieved_record['pages'] = item['pages']
+        retrieved_record['pages'] = item['pages'].replace('-', '--')
 
     if 'author' in item['authors']:
         authors = [author for author in item['authors']['author']
@@ -1095,54 +1095,6 @@ def print_stats_end(bib_db: BibDatabase) -> None:
     return
 
 
-def reorder_log(IDs: list) -> None:
-    # https://docs.python.org/3/howto/logging-cookbook.html
-    # #logging-to-a-single-file-from-multiple-processes
-    firsts = []
-    with open('report.log') as r:
-        items = []
-        item = ''
-        for line in r.readlines():
-            if any(x in line for x in ['[INFO] Prepare',
-                                       '[INFO] Completed preparation ',
-                                       '[INFO] Batch size',
-                                       '[INFO] Summary: Prepared',
-                                       '[INFO] Further instructions ',
-                                       '[INFO] To reset the metdatata']):
-                firsts.append(line)
-                continue
-            if re.search(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ', line):
-                if item != '':
-                    item = item.replace('\n\n', '\n').replace('\n\n', '\n')
-                    items.append(item)
-                    item = ''
-                item = line
-            else:
-                item = item + line
-        items.append(item.replace('\n\n', '\n').replace('\n\n', '\n'))
-
-    ordered_items = ''
-    consumed_items = []
-    for ID in IDs:
-        for item in items:
-            # if f'({ID})' in item:
-            if f'({ID})' in item:
-                formatted_item = item
-                if '] prepare(' in formatted_item:
-                    formatted_item = f'\n\n{formatted_item}'
-                ordered_items = ordered_items + formatted_item
-                consumed_items.append(item)
-
-    for x in consumed_items:
-        items.remove(x)
-
-    ordered_items = ''.join(firsts) + '\nDetailed report\n\n' + \
-        ordered_items.lstrip('\n') + ''.join(items)
-    with open('report.log', 'w') as f:
-        f.write(ordered_items)
-    return
-
-
 def reset(bib_db: BibDatabase,
           id: str) -> None:
 
@@ -1254,7 +1206,7 @@ def main(bib_db: BibDatabase,
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            reorder_log(prior_ids)
+            utils.reorder_log(prior_ids)
 
             in_process = utils.create_commit(repo,
                                              '⚙️ Prepare records',
