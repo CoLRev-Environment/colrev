@@ -513,7 +513,35 @@ def crossref_query(record: dict) -> dict:
     return most_similar_record
 
 
-def get_md_from_crossref(record):
+def get_retrieval_similarity(record: dict,
+                             retrieved_record: dict) -> float:
+
+    if not ('volume' in record and 'volume' in retrieved_record):
+        # if 'volume' in record:
+        record['volume'] = 'nan'
+        # if 'volume' in retrieved_record:
+        retrieved_record['volume'] = 'nan'
+    if not ('number' in record and 'number' in retrieved_record):
+        # if 'number' in record:
+        record['number'] = 'nan'
+        # if 'number' in retrieved_record:
+        retrieved_record['number'] = 'nan'
+    if not ('pages' in record and 'pages' in retrieved_record):
+        # if 'pages' in record:
+        record['pages'] = 'nan'
+        # if 'pages' in retrieved_record:
+        retrieved_record['pages'] = 'nan'
+
+    if 'editorial' in record.get('title', 'NA').lower():
+        if not all(x in record for x in ['volume', 'number']):
+            return 0
+
+    similarity = dedupe.get_record_similarity(record, retrieved_record)
+
+    return similarity
+
+
+def get_md_from_crossref(record: dict) -> dict:
     if ('title' not in record) or ('doi' in record) or \
             is_complete_metadata_source(record):
         return record
@@ -535,10 +563,10 @@ def get_md_from_crossref(record):
             if retrieved_record is None:
                 return record
 
-            similarity = dedupe.get_record_similarity(record.copy(),
-                                                      retrieved_record.copy())
+            similarity = get_retrieval_similarity(record.copy(),
+                                                  retrieved_record.copy())
             logging.debug(f'crossref similarity: {similarity}')
-            if similarity > 0.80:
+            if similarity > 0.9:
                 for key, val in retrieved_record.items():
                     record[key] = val
                 record.update(metadata_source='CROSSREF')
@@ -615,8 +643,8 @@ def get_md_from_sem_scholar(record: dict) -> dict:
             if key in red_record_copy:
                 del red_record_copy[key]
 
-        similarity = dedupe.get_record_similarity(red_record_copy,
-                                                  retrieved_record.copy())
+        similarity = get_retrieval_similarity(red_record_copy,
+                                              retrieved_record.copy())
         logging.debug(f'scholar similarity: {similarity}')
         if similarity > 0.9:
             for key, val in retrieved_record.items():
@@ -673,6 +701,10 @@ def dblp_json_to_record(item: dict) -> dict:
         retrieved_record['ENTRYTYPE'] = 'inproceedings'
         retrieved_record['booktitle'] = get_dblp_venue(item['venue'])
 
+    if 'title' in item:
+        retrieved_record['title'] = item['title']
+    if 'year' in item:
+        retrieved_record['year'] = item['year']
     if 'volume' in item:
         retrieved_record['volume'] = item['volume']
     if 'number' in item:
@@ -714,10 +746,11 @@ def get_md_from_dblp(record: dict) -> dict:
 
             retrieved_record = dblp_json_to_record(item)
 
-            similarity = dedupe.get_record_similarity(record.copy(),
-                                                      retrieved_record.copy())
+            similarity = get_retrieval_similarity(record.copy(),
+                                                  retrieved_record.copy())
+
             logging.debug(f'dblp similarity: {similarity}')
-            if similarity > 0.90:
+            if similarity > 0.9:
                 for key, val in retrieved_record.items():
                     record[key] = val
                 record['dblp_key'] = 'https://dblp.org/rec/' + item['key']
@@ -797,10 +830,9 @@ def get_md_from_urls(record: dict) -> dict:
                 # TODO: check multiple dois if applicable
                 retrieved_record = {'doi': ret_doi, 'ID': record['ID']}
                 retrieved_record = retrieve_doi_metadata(retrieved_record)
-                similarity = \
-                    dedupe.get_record_similarity(
-                        record.copy(), retrieved_record)
-                if similarity > 0.95:
+                similarity = get_retrieval_similarity(record.copy(),
+                                                      retrieved_record.copy())
+                if similarity > 0.9:
                     for key, val in retrieved_record.items():
                         record[key] = val
 
