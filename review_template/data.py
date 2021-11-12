@@ -102,10 +102,12 @@ def update_manuscript(bib_db: BibDatabase,
                       included: list) -> BibDatabase:
 
     if os.path.exists(MANUSCRIPT):
+        logging.info('Updating manuscript')
         missing_records = get_data_page_missing(MANUSCRIPT, included)
         missing_records = sorted(missing_records)
     else:
         missing_records = included
+        logging.info('Creating manuscript')
 
     if 0 == len(missing_records):
         logging.info(f'All records included in {MANUSCRIPT}')
@@ -125,13 +127,10 @@ def update_manuscript(bib_db: BibDatabase,
     author = repo_setup.config['GIT_ACTOR']
 
     if not os.path.exists(MANUSCRIPT):
-        init.retrieve_template_file('../template/paper.md', 'paper.md')
-        init.inplace_change('paper.md', '{{project_title}}', title)
-        init.inplace_change('paper.md', '{{author}}', author)
-        logging.info('Created manuscript')
-        logging.info('Please update title and authors.')
-    else:
-        logging.info('Updating manuscript')
+        init.retrieve_template_file('../template/' + MANUSCRIPT, MANUSCRIPT)
+        init.inplace_change(MANUSCRIPT, '{{project_title}}', title)
+        init.inplace_change(MANUSCRIPT, '{{author}}', author)
+        logging.info(f'Please update title and authors in {MANUSCRIPT}')
 
     temp = f'.tmp_{MANUSCRIPT}'
     os.rename(MANUSCRIPT, temp)
@@ -187,7 +186,7 @@ def update_manuscript(bib_db: BibDatabase,
     os.remove(temp)
 
     nr_records_added = len(missing_records)
-    logging.info(f'{nr_records_added} records added ({MANUSCRIPT})')
+    logging.info(f'{nr_records_added} records added to {MANUSCRIPT}')
 
     return bib_db
 
@@ -264,7 +263,7 @@ def main(edit_csv: bool, load_csv: bool) -> None:
 
     global PAD
     repo = git.Repo()
-    utils.require_clean_repo(repo, ignore_pattern='paper.md')
+    utils.require_clean_repo(repo, ignore_pattern=MANUSCRIPT)
     DATA_FORMAT = repo_setup.config['DATA_FORMAT']
     bib_db = utils.load_main_refs()
     PAD = min((max(len(x['ID']) for x in bib_db.entries) + 2), 35)
