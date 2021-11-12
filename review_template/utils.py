@@ -295,9 +295,13 @@ def save_bib_file(bib_db: BibDatabase,
         'origin',
         'rev_status',
         'md_status',
+        'metadata_source',
         'pdf_status',
+        'pdf_processed',
+        'file',
         'excl_criteria',
         'doi',
+        'dblp_key',
         'author',
         'booktitle',
         'journal',
@@ -311,7 +315,6 @@ def save_bib_file(bib_db: BibDatabase,
         'abstract',
         'book-author',
         'book-group-author',
-        'file',
     ]
 
     try:
@@ -366,9 +369,10 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
             if isinstance(v, git.repo.base.Repo):
                 repo = v.head.commit.hexsha
             # TODO: should we do anything with the bib_db?
-        if repo:
-            # Note: this allows users to see whether the commit was changed!
-            report = report + f'   On git repo with version {repo}.\n'
+        if not repo:
+            repo = git.Repo('').head.commit.hexsha
+        # Note: this allows users to see whether the commit was changed!
+        report = report + f'   On git repo with version {repo}\n'
         report = report + '\n'
 
     report = report + 'Software'
@@ -452,6 +456,54 @@ def update_status_yaml() -> None:
 def reset_log() -> None:
     with open('report.log', 'r+') as f:
         f.truncate(0)
+    return
+
+
+def reorder_log(IDs: list) -> None:
+    # https://docs.python.org/3/howto/logging-cookbook.html
+    # #logging-to-a-single-file-from-multiple-processes
+    firsts = []
+    with open('report.log') as r:
+        items = []
+        item = ''
+        for line in r.readlines():
+            if any(x in line for x in ['[INFO] Prepare',
+                                       '[INFO] Completed ',
+                                       '[INFO] Batch size',
+                                       '[INFO] Summary: Prepared',
+                                       '[INFO] Further instructions ',
+                                       '[INFO] To reset the metdatata']):
+                firsts.append(line)
+                continue
+            if re.search(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ', line):
+                if item != '':
+                    item = item.replace('\n\n', '\n').replace('\n\n', '\n')
+                    items.append(item)
+                    item = ''
+                item = line
+            else:
+                item = item + line
+        items.append(item.replace('\n\n', '\n').replace('\n\n', '\n'))
+
+    ordered_items = ''
+    consumed_items = []
+    for ID in IDs:
+        for item in items:
+            # if f'({ID})' in item:
+            if f'{ID}' in item:
+                formatted_item = item
+                if '] prepare(' in formatted_item:
+                    formatted_item = f'\n\n{formatted_item}'
+                ordered_items = ordered_items + formatted_item
+                consumed_items.append(item)
+
+    for x in consumed_items:
+        items.remove(x)
+
+    ordered_items = ''.join(firsts) + '\nDetailed report\n\n' + \
+        ordered_items.lstrip('\n') + '\n\n' + ''.join(items)
+    with open('report.log', 'w') as f:
+        f.write(ordered_items)
     return
 
 

@@ -31,8 +31,7 @@ def backward_search(record: dict) -> dict:
             data_dir, f'search/{curdate}-{record["ID"]}_bw_search.bib')
     pdf_filename = os.path.join(data_dir, PDF_DIRECTORY, f'{record["ID"]}.pdf')
 
-    filename = record.get('file', 'NA').replace('.pdf:PDF', '.pdf')\
-        .replace(':', '')
+    filename = record.get('file', 'NA')
     pdf_path = os.path.join(os.getcwd(), filename)
     if not os.path.exists(pdf_path):
         logging.error(f'File does not exist ({record["ID"]})')

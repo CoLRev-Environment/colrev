@@ -122,7 +122,7 @@ def link_pdf(record: dict) -> dict:
     pdf_filepath = os.path.join(PDF_DIRECTORY, record['ID'] + '.pdf')
     if os.path.exists(pdf_filepath):
         record.update(pdf_status='imported')
-        record.update(file=':' + pdf_filepath + ':PDF')
+        record.update(file=pdf_filepath)
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                      'linked pdf')
     else:
@@ -219,9 +219,11 @@ def check_existing_unlinked_pdfs(bib_db: BibDatabase) \
                     max_sim_record = bib_record
 
             if max_similarity > 0.5:
+                if 'prepared' == max_sim_record.get('pdf_status', 'NA'):
+                    continue
                 new_filename = os.path.join(os.path.dirname(file),
                                             max_sim_record['ID'] + '.pdf')
-                max_sim_record.update(file=':' + new_filename + ':PDF')
+                max_sim_record.update(file=new_filename)
                 max_sim_record.update(pdf_status='imported')
                 linked_existing_files = True
                 os.rename(file, new_filename)
