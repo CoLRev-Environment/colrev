@@ -2,7 +2,7 @@ default_language_version:
     python: python3
 repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
-    rev: 978b3be344b6e93ca41293f1fc947cc5f557c2cb
+    rev: d4706982ee39f9a6d8660bdf4aeeb6f14fa0683b
     hooks:
     -   id: check
         name: Check consistency of data

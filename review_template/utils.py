@@ -367,12 +367,19 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
             if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
                 report = report + f'     --{k}={v}\n'
             if isinstance(v, git.repo.base.Repo):
-                repo = v.head.commit.hexsha
+                try:
+                    repo = v.head.commit.hexsha
+                except ValueError:
+                    pass
             # TODO: should we do anything with the bib_db?
         if not repo:
-            repo = git.Repo('').head.commit.hexsha
+            try:
+                repo = git.Repo('').head.commit.hexsha
+            except ValueError:
+                pass
         # Note: this allows users to see whether the commit was changed!
-        report = report + f'   On git repo with version {repo}\n'
+        if repo:
+            report = report + f'   On git repo with version {repo}\n'
         report = report + '\n'
 
     report = report + 'Software'
@@ -401,21 +408,25 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
 
     repo = git.Repo('')
     tree_hash = repo.git.execute(['git', 'write-tree'])
-    report = report + f'\n\nCertified properties for tree {tree_hash}\n'
-    report = report + '   - Traceability of records '.ljust(38, ' ') + 'YES\n'
-    report = \
-        report + '   - Consistency (based on hooks) '.ljust(38, ' ') + 'YES\n'
-    completeness_condition = status.get_completeness_condition()
-    if completeness_condition:
-        report = \
-            report + '   - Completeness of iteration '.ljust(38, ' ') + 'YES\n'
-    else:
-        report = \
-            report + '   - Completeness of iteration '.ljust(38, ' ') + 'NO\n'
-    report = report + '   To check tree_hash use'.ljust(38, ' ') + \
-        'git log --pretty=raw -1\n'
-    report = report + '   To validate use'.ljust(38, ' ') + \
-        'review_template validate --properties --commit INSERT_COMMIT_HASH\n'
+    if os.path.exists(MAIN_REFERENCES):
+        report = report + f'\n\nCertified properties for tree {tree_hash}\n'
+        report = report + '   - Traceability of records '.ljust(38, ' ') + \
+            'YES\n'
+        report = report + \
+            '   - Consistency (based on hooks) '.ljust(38, ' ') + 'YES\n'
+        completeness_condition = status.get_completeness_condition()
+        if completeness_condition:
+            report = report + \
+                '   - Completeness of iteration '.ljust(38, ' ') + 'YES\n'
+        else:
+            report = report + \
+                '   - Completeness of iteration '.ljust(38, ' ') + 'NO\n'
+        report = report + '   To check tree_hash use'.ljust(38, ' ') + \
+            'git log --pretty=raw -1\n'
+        report = report + '   To validate use'.ljust(38, ' ') + \
+            'review_template validate --properties ' + \
+            '--commit INSERT_COMMIT_HASH'
+    report = report + '\n'
 
     # url = g.execut['git', 'config', '--get remote.origin.url']
 

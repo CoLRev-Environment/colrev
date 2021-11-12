@@ -471,7 +471,7 @@ def review_status() -> None:
 
     if not os.path.exists(repo_setup.paths['MAIN_REFERENCES']):
         print(' | Search')
-        print(' |  - Not initiated')
+        print(' |  - No records added yet')
     else:
         stat = get_status_freq()
         metadata, review, pdfs = \

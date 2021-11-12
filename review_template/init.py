@@ -3,7 +3,6 @@ import configparser
 import logging
 import os
 import pkgutil
-import sys
 
 import git
 import requests
@@ -41,7 +40,7 @@ def get_value(msg: str,
     valid_response = False
     user_input = ''
     while not valid_response:
-        logging.error(f' {msg} (' + '|'.join(options) + ')', file=sys.stderr)
+        print(f' {msg} (' + '|'.join(options) + ')')
         user_input = input()
         if user_input in options:
             valid_response = True
@@ -63,13 +62,16 @@ def get_name_mail_from_global_git_config() -> [str, str]:
 
 def init_new_repo() -> git.Repo:
 
+    from review_template import repo_setup  # noqa: F401
+    saved_args = locals()
+
     logging.info('Initialize review repository')
     project_title = input('Project title: ')
+    logging.info('Set project title:'.ljust(30, ' ') + f'{project_title}')
 
     committer_name, committer_email = get_name_mail_from_global_git_config()
-
-    logging.info('\n\nParameters for the review project\n'
-                 'Details avilable at: TODO/docs')
+    print('\n\nParameters for the review project\n'
+          'Details avilable at: TODO/docs')
 
     # # TODO: allow multiple?
     # DATA_FORMAT = get_value('Select data structure',
@@ -77,7 +79,10 @@ def init_new_repo() -> git.Repo:
     #                          'SHEETs', 'MACODING'])
     SHARE_STAT_REQ = get_value('Select share status requirement',
                                ['NONE', 'PROCESSED', 'SCREENED', 'COMPLETED'])
+    logging.info('Set SHARE_STAT_REQ:'.ljust(30, ' ') + f'{SHARE_STAT_REQ}')
+
     PDF_HANDLING = get_value('Select pdf handling', ['EXT', 'GIT'])
+    logging.info('Set PDF_HANDLING:'.ljust(30, ' ') + f'{PDF_HANDLING}')
 
     repo = git.Repo.init()
     os.mkdir('search')
@@ -110,6 +115,9 @@ def init_new_repo() -> git.Repo:
     with open('shared_config.ini', 'w') as configfile:
         shared_config.write(configfile)
 
+    logging.info('Set REPO_SETUP_VERSION:'.ljust(30, ' ') +
+                 f'{REPO_SETUP_VERSION}')
+
     # Note: need to write the .gitignore because file would otherwise be
     # ignored in the template directory.
     f = open('.gitignore', 'w')
@@ -130,11 +138,7 @@ def init_new_repo() -> git.Repo:
         'shared_config.ini',
     ])
 
-    repo.index.commit(
-        'Initial commit' + utils.get_version_flag(),
-        author=git.Actor('script:init.py', ''),
-        committer=git.Actor(committer_name, committer_email),
-    )
+    utils.create_commit(repo, 'Initial commit', saved_args, True)
 
     if 'y' == input('Connect to shared (remote) repository (y)?'):
         remote_url = input('URL:')
@@ -143,15 +147,13 @@ def init_new_repo() -> git.Repo:
             origin = repo.create_remote('origin', remote_url)
             repo.heads.main.set_tracking_branch(origin.refs.main)
             origin.push()
+            logging.info('Connected to shared repository:'.ljust(30, ' ') +
+                         f'{remote_url}')
         except requests.ConnectionError:
             logging.error('URL of shared repository cannot be reached. Use '
                           'git remote add origin https://github.com/user/repo'
                           '\ngit push origin main')
             pass
-
-    # git remote add origin https://github.com/geritwagner/octo-fiesta.git
-    # git branch -M main
-    # git push -u origin main
 
     return repo
 
@@ -183,7 +185,7 @@ def initialize_repo() -> git.Repo:
         else:
             return
     else:
-        if 'y' == input('Retrieve shared repository?'):
+        if 'y' == input('Retrieve shared repository (y/n)?'):
             repo = clone_shared_repo()
         else:
             repo = init_new_repo()
