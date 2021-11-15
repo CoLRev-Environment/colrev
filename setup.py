@@ -21,7 +21,8 @@ requirements = ['Click==8.0.1',
                 'pandas==1.2.5',
                 'pdfminer.six==20211012',
                 'requests==2.22.0',
-                'docker_py==1.10.6']
+                'docker_py==1.10.6',
+                'docker==2.1.0']
 # 'configparser>=5.0'
 
 # Note: docker and docker-py seem to be similar/identical?!

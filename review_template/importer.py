@@ -36,7 +36,8 @@ search_type_opts = ['DB',
                     'OTHER']
 
 
-def get_search_files() -> None:
+def get_search_files(restrict: list = None) -> None:
+
     supported_extensions = ['ris',
                             'bib',
                             'end',
@@ -45,6 +46,10 @@ def get_search_files() -> None:
                             'txt',
                             'xlsx',
                             'pdf']
+
+    if restrict:
+        supported_extensions = restrict
+
     files = []
     search_dir = os.path.join(os.getcwd(), 'search/')
     files = [os.path.join(search_dir, x)
@@ -73,7 +78,7 @@ def load_records(filepath: str) -> list:
 
     imported_record_links = get_imported_record_links()
 
-    search_db = load_search_results_file(filepath)
+    search_db = getbib(filepath)
 
     if search_db is None:
         return []
@@ -139,6 +144,10 @@ def import_record(record: dict) -> dict:
 
 
 def source_heuristics(search_file: str) -> str:
+    if search_file.endswith('_ref_list.bib'):
+        return 'PDF reference section'
+    if search_file.endswith('.pdf'):
+        return 'PDF'
     with open(search_file) as f:
         for line in f.readlines():
             if 'bibsource = {dblp computer science' + \
@@ -148,14 +157,27 @@ def source_heuristics(search_file: str) -> str:
     return None
 
 
+def append_search_details(new_record: dict) -> None:
+    search_details = utils.load_search_details()
+    search_details.append(new_record)
+    logging.debug(f'Added infos to {SEARCH_DETAILS}:'
+                  f' \n{pp.pformat(new_record)}')
+    utils.save_search_details(search_details)
+    return
+
+
 def check_update_search_details(search_files: list) -> None:
 
     search_details = utils.load_search_details()
 
-    for search_file_path in search_files:
-        search_file = os.path.basename(search_file_path)
+    for sfp in search_files:
+        if not sfp.endswith('bib') and \
+                os.path.exists(sfp[:sfp.rfind('.')] + '.bib'):
+            logging.debug('found corresponding bib file')
+            continue
+        search_file = os.path.basename(sfp)
         if search_file not in [x['filename'] for x in search_details]:
-            source_name = source_heuristics(search_file_path)
+            source_name = source_heuristics(sfp)
             print(f'Please provide details for {search_file}')
             search_type = 'TODO'
             while search_type not in search_type_opts:
@@ -170,6 +192,7 @@ def check_update_search_details(search_files: list) -> None:
             search_parameters = input('Enter search_parameters'
                                       .ljust(40, ' ') + ': ')
             comment = input('Enter a comment (or NA)'.ljust(40, ' ') + ': ')
+
             new_record = {'filename': search_file,
                           'search_type': search_type,
                           'source_name': source_name,
@@ -177,11 +200,7 @@ def check_update_search_details(search_files: list) -> None:
                           'search_parameters': search_parameters,
                           'comment': comment,
                           }
-            search_details.append(new_record)
-            logging.info(f'Added infos to {SEARCH_DETAILS}:'
-                         f' \n{pp.pformat(new_record)}')
-
-    utils.save_search_details(search_details)
+            append_search_details(new_record)
 
     return
 
@@ -207,15 +226,27 @@ def load_all_records() -> list:
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
     save_imported_record_links(bib_db)
-    load_pool = mp.Pool(repo_setup.config['CPUS'])
+
     search_files = get_search_files()
-    search_files = rename_search_files(search_files)
-    if any('.pdf' in x for x in search_files):
+    if any('.pdf' in x for x in search_files) or \
+            any('.txt' in x for x in search_files):
         grobid_client.start_grobid()
+    search_files = rename_search_files(search_files)
+    # Note: after the search_result_file (non-bib formats) has been loaded
+    # for the first time, we save a corresponding bib_file, which allows for
+    # more efficient status checking, tracing, and validation.
+    # This also applies to the pipeline_validation_hooks and is particularly
+    # relevant for pdf sources that require long processing times.
+    convert_to_bib(search_files)
+
+    search_files = get_search_files(restrict=['bib'])
     check_update_search_details(search_files)
+
+    load_pool = mp.Pool(repo_setup.config['CPUS'])
     additional_records = load_pool.map(load_records, search_files)
     load_pool.close()
     load_pool.join()
+
     additional_records = list(chain(bib_db.entries, *additional_records))
 
     if os.path.exists('imported_record_links.csv'):
@@ -234,7 +265,9 @@ def bibutils_convert(script: str, data: str) -> str:
                       'xml2bib']
 
     if 'xml2bib' == script:
-        script = script + ' -b -w '
+        script = script + ' -b -w -sk '
+    else:
+        script = script + ' -i unicode '
 
     if isinstance(data, str):
         data = data.encode()
@@ -313,14 +346,15 @@ def ris2bib(file: str) -> BibDatabase:
 
     data = bibutils_convert('ris2xml', data)
     data = bibutils_convert('xml2bib', data)
-    db = bibtexparser.loads(data)
+    parser = BibTexParser(customization=convert_to_unicode)
+    db = bibtexparser.loads(data, parser=parser)
     return db
 
 
 def end2bib(file: str) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
-    if '%%T ' not in data:
+    if '%T ' not in data:
         logging.error('Error: Not an end file? ' + os.path.basename(file))
         return None
 
@@ -329,7 +363,8 @@ def end2bib(file: str) -> BibDatabase:
 
     data = bibutils_convert('end2xml', data)
     data = bibutils_convert('xml2bib', data)
-    db = bibtexparser.loads(data)
+    parser = BibTexParser(customization=convert_to_unicode)
+    db = bibtexparser.loads(data, parser=parser)
     return db
 
 
@@ -338,7 +373,6 @@ def txt2bib(file: str) -> BibDatabase:
     with open(file) as f:
         references = [line.rstrip() for line in f]
 
-    # Note: processCitationList currently not working!??!
     data = ''
     ind = 0
     for ref in references:
@@ -353,7 +387,8 @@ def txt2bib(file: str) -> BibDatabase:
         ind += 1
         data = data + '\n' + r.text.replace('{-1,', '{' + str(ind) + ',')
 
-    db = bibtexparser.loads(data)
+    parser = BibTexParser(customization=convert_to_unicode)
+    db = bibtexparser.loads(data, parser=parser)
     return db
 
 
@@ -366,6 +401,33 @@ def preprocess_records(data: list) -> list:
             x['ID'] = x.pop('citation_key')
         for k, v in x.items():
             x[k] = str(v)
+
+    for x in data:
+        if 'no year' == x.get('year', 'NA'):
+            del x['year']
+        if 'no journal' == x.get('journal', 'NA'):
+            del x['journal']
+        if 'no volume' == x.get('volume', 'NA'):
+            del x['volume']
+        if 'no pages' == x.get('pages', 'NA'):
+            del x['pages']
+        if 'no issue' == x.get('issue', 'NA'):
+            del x['issue']
+        if 'no number' == x.get('number', 'NA'):
+            del x['number']
+        if 'no doi' == x.get('doi', 'NA'):
+            del x['doi']
+        if 'no type' == x.get('type', 'NA'):
+            del x['type']
+        if 'author_count' in x:
+            del x['author_count']
+        if 'no Number-of-Cited-References' == \
+                x.get('number_of_cited_references', 'NA'):
+            del x['number_of_cited_references']
+        if 'no file' in x.get('file_name', 'NA'):
+            del x['file_name']
+        if 'times_cited' == x.get('times_cited', 'NA'):
+            del x['times_cited']
 
     return data
 
@@ -404,13 +466,14 @@ def xlsx2bib(file: str) -> BibDatabase:
     return db
 
 
-def move_to_pdf_dir(filepath: str) -> None:
+def move_to_pdf_dir(filepath: str) -> str:
     PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
-        shutil.move(filepath, os.path.join(PDF_DIRECTORY, filepath))
-    return
+    new_fp = os.path.join(PDF_DIRECTORY, os.path.basename(filepath))
+    shutil.move(filepath, new_fp)
+    return new_fp
 
 
 # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
@@ -428,10 +491,8 @@ def pdf2bib(file: str) -> BibDatabase:
     )
 
     if 200 == r.status_code:
-        db = bibtexparser.loads(r.text)
-        with open(file.replace('.pdf', '.bib'), 'w') as f:
-            f.write(r.text)
-        move_to_pdf_dir(file)
+        parser = BibTexParser(customization=convert_to_unicode)
+        db = bibtexparser.loads(r.text, parser=parser)
         return db
     if 500 == r.status_code:
         logging.error(f'Not a readable pdf file: {os.path.basename(file)}')
@@ -453,8 +514,8 @@ def pdfRefs2bib(file: str) -> BibDatabase:
         headers={'Accept': 'application/x-bibtex'}
     )
     if 200 == r.status_code:
-        db = bibtexparser.loads(r.text)
-        move_to_pdf_dir(file.replace('.pdf', '.bib'))
+        parser = BibTexParser(customization=convert_to_unicode)
+        db = bibtexparser.loads(r.text, parser=parser)
         return db
     if 500 == r.status_code:
         logging.error(f'Not a readable pdf file? {os.path.basename(file)}')
@@ -466,9 +527,7 @@ def pdfRefs2bib(file: str) -> BibDatabase:
     return None
 
 
-def load_search_results_file(search_file_p: str) -> BibDatabase:
-
-    search_file = os.path.basename(search_file_p)
+def convert_to_bib(search_files: list) -> None:
 
     importer_scripts = {'bib': getbib,
                         'ris': ris2bib,
@@ -479,39 +538,68 @@ def load_search_results_file(search_file_p: str) -> BibDatabase:
                         'pdf': pdf2bib,
                         'pdf_refs': pdfRefs2bib}
 
-    assert any(search_file.endswith(ext) for ext in importer_scripts.keys())
+    for sfpath in search_files:
+        search_file = os.path.basename(sfpath)
+        corresponding_bib_file = sfpath[:sfpath.rfind('.')] + '.bib'
 
-    # Note: after the search_result_file (non-bib formats) has been loaded
-    # for the first time, a corresponding bib_file is saved, which allows
-    # for more efficient status checking, tracing, validation
-    # This also applies to the pipeline_validation_hooks and is particularly
-    # relevant for pdf sources that require long processing times
-    corresponding_bib_file = search_file[:search_file.rfind('.')] + '.bib'
+        if os.path.exists(corresponding_bib_file):
+            continue
 
-    if os.path.exists(corresponding_bib_file) and \
-            not '.bib' == search_file[-4]:
-        return None
+        assert any(sfpath.endswith(ext) for ext in importer_scripts.keys())
 
-    filetype = search_file[search_file.rfind('.')+1:]
-    if 'pdf' == filetype:
-        if search_file.endswith('_ref_list.pdf'):
-            filetype = 'pdf_refs'
-    if filetype in importer_scripts.keys():
-        logging.debug(f'Loading {filetype}: {search_file}')
-        db = importer_scripts[filetype](search_file_p)
-        if db is None:
-            logging.error('No records loaded')
-            return None
-        logging.info(f'Loaded {len(db.entries)} records from {search_file}')
-        if corresponding_bib_file != search_file and \
-                not '.bib' == search_file[-4]:
-            new_file_path = search_file_p.replace('.' + filetype, '.bib')
-            with open(new_file_path, 'w') as fi:
-                fi.write(bibtexparser.dumps(db))
-        return db
-    else:
-        logging.info('Filetype not recognized: ' + search_file)
-        return None
+        filetype = sfpath[sfpath.rfind('.')+1:]
+        if 'pdf' == filetype:
+            if sfpath.endswith('_ref_list.pdf'):
+                filetype = 'pdf_refs'
+
+        if filetype in importer_scripts.keys():
+            logging.info(f'Loading {filetype}: {search_file}')
+            db = importer_scripts[filetype](sfpath)
+
+            if db is None:
+                logging.error('No records loaded')
+                continue
+            elif 'pdf' == filetype:
+                new_fp = move_to_pdf_dir(sfpath)
+                new_record = {'filename':
+                              os.path.basename(corresponding_bib_file),
+                              'search_type': 'OTHER',
+                              'source_name': 'PDF (metadata)',
+                              'source_url': new_fp,
+                              'search_parameters': 'NA',
+                              'comment': 'Extracted with GROBID',
+                              }
+                append_search_details(new_record)
+                repo = git.Repo()
+                repo.index.add([new_fp])
+
+            elif 'pdf_refs' == filetype:
+                new_fp = move_to_pdf_dir(sfpath)
+                new_record = {'filename':
+                              os.path.basename(corresponding_bib_file),
+                              'search_type': 'BACK_CIT',
+                              'source_name': 'PDF backward search',
+                              'source_url': new_fp,
+                              'search_parameters': 'NA',
+                              'comment': 'Extracted with GROBID',
+                              }
+                append_search_details(new_record)
+                repo = git.Repo()
+                repo.index.add([new_fp])
+
+            if corresponding_bib_file != sfpath and \
+                    not '.bib' == sfpath[-4:]:
+                new_file_path = sfpath[:sfpath.rfind('.')] + '.bib'
+                if not os.path.exists(new_file_path):
+                    logging.info(f'Loaded {len(db.entries)} '
+                                 f'records from {search_file}')
+                    with open(new_file_path, 'w') as fi:
+                        fi.write(bibtexparser.dumps(db))
+        else:
+            logging.info('Filetype not recognized: ' + search_file)
+            continue
+
+    return
 
 
 class IteratorEx:
@@ -588,6 +676,11 @@ def main(repo: git.Repo,
         del saved_args['keep_ids']
     global batch_start
     global batch_end
+
+    if [x for x in os.listdir('search') if x.endswith('.pdf')]:
+        input('PDFs found in search directory. Filenames should end with '
+              '"_ref_list.pdf" to import the reference sections. '
+              'Press Enter to continue.')
 
     utils.reset_log()
     logging.info('Import')

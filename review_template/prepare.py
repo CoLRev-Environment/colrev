@@ -86,16 +86,22 @@ def retrieve_crowd_resources() -> [list, list, list]:
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
 
+conf_strings = [
+    'proceedings',
+    'conference',
+]
+
+LOCAL_JOURNAL_ABBREVIATIONS, \
+    LOCAL_JOURNAL_VARIATIONS, \
+    LOCAL_CONFERENCE_ABBREVIATIONS = \
+    retrieve_local_resources()
+
+for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
+    conf_strings.append(row['abbreviation'].lower())
+    conf_strings.append(row['conference'].lower())
+
+
 def correct_recordtype(record: dict) -> dict:
-
-    conf_strings = [
-        'proceedings',
-        'conference',
-    ]
-
-    for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
-        conf_strings.append(row['abbreviation'].lower())
-        conf_strings.append(row['conference'].lower())
 
     # Consistency checks
     if 'journal' in record:
@@ -106,6 +112,10 @@ def correct_recordtype(record: dict) -> dict:
     if 'booktitle' in record:
         if any(x in record['booktitle'].lower() for x in conf_strings):
             record.update(ENTRYTYPE='inproceedings')
+            if 'title' in record and 'chapter' in record:
+                record['booktitle'] = record['title']
+                record['title'] = record['chapter']
+                del record['chapter']
 
     if 'dissertation' in record.get('fulltext', 'NA').lower() and \
             record['ENTRYTYPE'] != 'phdthesis':
@@ -228,12 +238,6 @@ def homogenize_record(record: dict) -> dict:
         del record['issue']
 
     return record
-
-
-LOCAL_JOURNAL_ABBREVIATIONS, \
-    LOCAL_JOURNAL_VARIATIONS, \
-    LOCAL_CONFERENCE_ABBREVIATIONS = \
-    retrieve_local_resources()
 
 
 def apply_local_rules(record: dict) -> dict:
@@ -390,7 +394,8 @@ def json_to_record(item: dict) -> dict:
     if 'container-title' in item:
         container_title = item['container-title']
         if isinstance(container_title, list):
-            container_title = container_title[0]
+            if container_title:
+                container_title = container_title[0]
 
     if 'type' in item:
         if 'journal-article' == item.get('type', 'NA'):
@@ -795,7 +800,8 @@ def retrieve_doi_metadata(record: dict) -> dict:
         retrieved_json = json.loads(r.text)
         retrieved_record = json_to_record(retrieved_json)
         for key, val in retrieved_record.items():
-            record[key] = val
+            if val:
+                record[key] = str(val)
 
     # except IndexError:
     # except json.decoder.JSONDecodeError:

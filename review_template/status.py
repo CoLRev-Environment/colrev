@@ -369,7 +369,7 @@ def repository_validation() -> None:
             '.pre-commit-config.yaml',
         )
         os.system('pre-commit install')
-        os.system('pre-commit autoupdate')
+        os.system('pre-commit autoupdate --bleeding-edge')
 
         logging.warning('Updated pre-commit hook. Please check/remove '
                         'bak_pre-commit-config.yaml')
@@ -382,7 +382,7 @@ def repository_validation() -> None:
         if not remote_sha == local_hooks_version:
             # Default: automatically update hooks
             logging.info('Updating pre-commit hooks...')
-            os.system('pre-commit autoupdate')
+            os.system('pre-commit autoupdate --bleeding-edge')
 
             utils.update_status_yaml()
 

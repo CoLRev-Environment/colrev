@@ -114,15 +114,14 @@ def generate_ID_blacklist(record: dict,
                 'WARNING: do not change IDs that have been ' +
                 f'propagated to {DATA} ({record["ID"]})')
 
-    if 'author' in record:
+    if '' != record.get('author', 'NA'):
         authors = prepare.format_author_field(record['author'])
+        if ' and ' in authors:
+            authors = authors.split(' and ')
+        else:
+            authors = [authors]
     else:
-        authors = ''
-
-    if ' and ' in authors:
-        authors = authors.split(' and ')
-    else:
-        authors = [authors]
+        authors = ['Anonymous']
 
     # Use family names
     for author in authors:
@@ -135,7 +134,8 @@ def generate_ID_blacklist(record: dict,
 
     assert ID_PATTERN in ['FIRST_AUTHOR', 'THREE_AUTHORS']
     if 'FIRST_AUTHOR' == ID_PATTERN:
-        temp_ID = f'{author.replace(" ", "")}{str(record.get("year", ""))}'
+        temp_ID = \
+            f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
 
     if 'THREE_AUTHORS' == ID_PATTERN:
         temp_ID = ''
@@ -147,7 +147,7 @@ def generate_ID_blacklist(record: dict,
                 f'{authors[ind].split(",")[0].replace(" ", "")}'
         if len(authors) > 3:
             temp_ID = temp_ID + 'EtAl'
-        temp_ID = temp_ID + str(record.get('year', ''))
+        temp_ID = temp_ID + str(record.get('year', 'NoYear'))
 
     if temp_ID.isupper():
         temp_ID = temp_ID.capitalize()
@@ -509,7 +509,8 @@ def reorder_log(IDs: list) -> None:
                 consumed_items.append(item)
 
     for x in consumed_items:
-        items.remove(x)
+        if x in items:
+            items.remove(x)
 
     ordered_items = ''.join(firsts) + '\nDetailed report\n\n' + \
         ordered_items.lstrip('\n') + '\n\n' + ''.join(items)
