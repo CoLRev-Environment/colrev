@@ -91,6 +91,9 @@ def load_records(filepath: str) -> list:
             logging.debug(f'skipped record {record["ID"]} (already imported)')
             continue
 
+        # Drop empty fields
+        record = {k: v for k, v in record.items() if v}
+
         record.update(rev_status='retrieved')
         record.update(md_status='retrieved')
         logging.debug(f'append record {record["ID"]} '
@@ -215,8 +218,7 @@ def rename_search_files(search_files: list) -> list:
             new_filename = \
                 os.path.join(os.path.dirname(search_file),
                              datetime.today().strftime('%Y-%m-%d-') +
-                             os.path.basename(search_file))
-            new_filename = new_filename.replace(' ', '_')
+                             os.path.basename(search_file).replace(' ', '_'))
             os.rename(search_file, new_filename)
             ret_list.append(new_filename)
     return ret_list
@@ -516,6 +518,9 @@ def pdfRefs2bib(file: str) -> BibDatabase:
     if 200 == r.status_code:
         parser = BibTexParser(customization=convert_to_unicode)
         db = bibtexparser.loads(r.text, parser=parser)
+        # Use lpad to maintain the sort order (easier to catch errors)
+        for r in db.entries:
+            r['ID'] = r['ID'].rjust(3, '0')
         return db
     if 500 == r.status_code:
         logging.error(f'Not a readable pdf file? {os.path.basename(file)}')
@@ -529,14 +534,13 @@ def pdfRefs2bib(file: str) -> BibDatabase:
 
 def convert_to_bib(search_files: list) -> None:
 
-    importer_scripts = {'bib': getbib,
-                        'ris': ris2bib,
-                        'end': end2bib,
-                        'txt': txt2bib,
-                        'csv': csv2bib,
-                        'xlsx': xlsx2bib,
-                        'pdf': pdf2bib,
-                        'pdf_refs': pdfRefs2bib}
+    conversion_scripts = {'ris': ris2bib,
+                          'end': end2bib,
+                          'txt': txt2bib,
+                          'csv': csv2bib,
+                          'xlsx': xlsx2bib,
+                          'pdf': pdf2bib,
+                          'pdf_refs': pdfRefs2bib}
 
     for sfpath in search_files:
         search_file = os.path.basename(sfpath)
@@ -545,16 +549,16 @@ def convert_to_bib(search_files: list) -> None:
         if os.path.exists(corresponding_bib_file):
             continue
 
-        assert any(sfpath.endswith(ext) for ext in importer_scripts.keys())
+        assert any(sfpath.endswith(ext) for ext in conversion_scripts.keys())
 
         filetype = sfpath[sfpath.rfind('.')+1:]
         if 'pdf' == filetype:
             if sfpath.endswith('_ref_list.pdf'):
                 filetype = 'pdf_refs'
 
-        if filetype in importer_scripts.keys():
+        if filetype in conversion_scripts.keys():
             logging.info(f'Loading {filetype}: {search_file}')
-            db = importer_scripts[filetype](sfpath)
+            db = conversion_scripts[filetype](sfpath)
 
             if db is None:
                 logging.error('No records loaded')

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Added
 
+- Fetch metadata from Open Library
+- Required fields for misc
+- Information on needs_manual_preparation (man_prep_hints)
+
 ### Changed
 
 ### Removed
@@ -16,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 ### Fixed
 
 - Initializing repositories
+- Backward search adds two entries to search_details
 
 ### [0.2.0] - 2021-09-12
 

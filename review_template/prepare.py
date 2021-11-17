@@ -86,16 +86,12 @@ def retrieve_crowd_resources() -> [list, list, list]:
     return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
 
-conf_strings = [
-    'proceedings',
-    'conference',
-]
-
 LOCAL_JOURNAL_ABBREVIATIONS, \
     LOCAL_JOURNAL_VARIATIONS, \
     LOCAL_CONFERENCE_ABBREVIATIONS = \
     retrieve_local_resources()
 
+conf_strings = []
 for i, row in LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
     conf_strings.append(row['abbreviation'].lower())
     conf_strings.append(row['conference'].lower())
@@ -415,7 +411,7 @@ def json_to_record(item: dict) -> dict:
         record.update(doi=item['DOI'])
 
     authors = [f'{author["family"]}, {author.get("given", "")}'
-               for author in item['author']
+               for author in item.get('author', 'NA')
                if 'family' in author]
     authors_string = ' and '.join(authors)
     # authors_string = format_author_field(authors_string)
@@ -467,7 +463,8 @@ def crossref_query(record: dict) -> dict:
     bibliographic = bibliographic.replace('...', '').replace('…', '')
     container_title = get_container_title(record)
     container_title = container_title.replace('...', '').replace('…', '')
-    author_string = record['author'].replace('...', '').replace('…', '')
+    author_string = record.get('author', 'Anonymous').replace('...', '')\
+        .replace('…', '')
     params = {'rows': '5',
               'query.bibliographic': bibliographic,
               'query.author': author_string,
@@ -521,6 +518,11 @@ def crossref_query(record: dict) -> dict:
 def get_retrieval_similarity(record: dict,
                              retrieved_record: dict) -> float:
 
+    if 'author' in record:
+        record['author'] = dedupe.format_authors_string(record['author'])
+    if 'author' in retrieved_record:
+        retrieved_record['author'] = \
+            dedupe.format_authors_string(retrieved_record['author'])
     if not ('volume' in record and 'volume' in retrieved_record):
         # if 'volume' in record:
         record['volume'] = 'nan'
@@ -670,6 +672,93 @@ def get_md_from_sem_scholar(record: dict) -> dict:
     return record
 
 
+def open_library_json_to_record(item: dict) -> dict:
+    retrieved_record = {}
+
+    if 'author_name' in item:
+        authors_string = ' and '.join([format_author_field(author)
+                                       for author in item['author_name']])
+        retrieved_record.update(author=authors_string)
+    if 'publisher' in item:
+        retrieved_record.update(publisher=str(item['publisher'][0]))
+    if 'title' in item:
+        retrieved_record.update(title=str(item['title']))
+    if 'publish_year' in item:
+        retrieved_record.update(year=str(item['publish_year'][0]))
+    if 'edition_count' in item:
+        retrieved_record.update(edition=str(item['edition_count']))
+    if 'seed' in item:
+        if '/books/' in item['seed'][0]:
+            retrieved_record.update(ENTRYTYPE='book')
+    if 'publish_place' in item:
+        retrieved_record.update(address=str(item['publish_place'][0]))
+    if 'isbn' in item:
+        retrieved_record.update(isbn=str(item['isbn'][0]))
+
+    return retrieved_record
+
+
+def get_md_from_open_library(record: dict) -> dict:
+    if is_complete_metadata_source(record):
+        return record
+    # only consider entries that are not journal or conference papers
+    if record.get('ENTRYTYPE', 'NA') in ['article', 'inproceedings']:
+        return record
+
+    try:
+        base_url = 'https://openlibrary.org/search.json?'
+        url = ''
+        if record.get('author', 'NA').split(',')[0]:
+            url = base_url + '&author=' + \
+                record.get('author', 'NA').split(',')[0]
+        if 'inbook' == record['ENTRYTYPE'] and 'editor' in record:
+            if record.get('editor', 'NA').split(',')[0]:
+                url = base_url + '&author=' + \
+                    record.get('editor', 'NA').split(',')[0]
+        if base_url not in url:
+            return record
+
+        title = record.get('title', record.get('booktitle', 'NA'))
+        if len(title) < 10:
+            return record
+        if ':' in title:
+            title = title[:title.find(':')]  # To catch sub-titles
+        url = url + '&title=' + title.replace(' ', '+')
+        # print(url)
+        # headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
+        # ret = requests.get(url, headers=headers)
+        ret = requests.get(url)
+
+        # if we have an exact match, we don't need to check the similarity
+        if '"numFoundExact": true,' not in ret.text:
+            return record
+
+        data = json.loads(ret.text)
+        items = data['docs']
+        if not items:
+            return record
+        retrieved_record = open_library_json_to_record(items[0])
+
+        for key, val in retrieved_record.items():
+            record[key] = val
+        record.update(metadata_source='OPEN_LIBRARY')
+        if 'title' in record and 'booktitle' in record:
+            del record['booktitle']
+
+    # except KeyError:
+    #     pass
+
+    except UnicodeEncodeError:
+        logging.error(
+            'UnicodeEncodeError - this needs to be fixed at some time')
+        pass
+    except requests.exceptions.ConnectionError:
+        logging.error('requests.exceptions.ConnectionError '
+                      'in get_md_from_sem_scholar')
+        pass
+    return record
+
+
 def get_dblp_venue(venue_string: str) -> str:
     venue = venue_string
     api_url = 'https://dblp.org/search/venue/api?q='
@@ -678,7 +767,8 @@ def get_dblp_venue(venue_string: str) -> str:
     try:
         ret = requests.get(url, headers=headers)
         data = json.loads(ret.text)
-
+        if 'hit' not in data['result']['hits']:
+            return ''
         hits = data['result']['hits']['hit']
         for hit in hits:
             if f'/{venue_string.lower()}/' in hit['info']['url']:
@@ -705,9 +795,8 @@ def dblp_json_to_record(item: dict) -> dict:
     if 'Conference and Workshop Papers' == item['type']:
         retrieved_record['ENTRYTYPE'] = 'inproceedings'
         retrieved_record['booktitle'] = get_dblp_venue(item['venue'])
-
     if 'title' in item:
-        retrieved_record['title'] = item['title']
+        retrieved_record['title'] = item['title'].rstrip('.')
     if 'year' in item:
         retrieved_record['year'] = item['year']
     if 'volume' in item:
@@ -716,14 +805,17 @@ def dblp_json_to_record(item: dict) -> dict:
         retrieved_record['number'] = item['number']
     if 'pages' in item:
         retrieved_record['pages'] = item['pages'].replace('-', '--')
-
-    if 'author' in item['authors']:
-        authors = [author for author in item['authors']['author']
-                   if isinstance(author, dict)]
-        authors = [x['text'] for x in authors if 'text' in x]
-        author_string = ' and '.join(authors)
-        author_string = format_author_field(author_string)
-        retrieved_record['author'] = author_string
+    if 'authors' in item:
+        if 'author' in item['authors']:
+            if isinstance(item['authors']['author'], dict):
+                author_string = item['authors']['author']['text']
+            else:
+                authors = [author for author in item['authors']['author']
+                           if isinstance(author, dict)]
+                authors = [x['text'] for x in authors if 'text' in x]
+                author_string = ' and '.join(authors)
+            author_string = format_author_field(author_string)
+            retrieved_record['author'] = author_string
 
     if 'doi' in item:
         retrieved_record['doi'] = item['doi']
@@ -745,6 +837,8 @@ def get_md_from_dblp(record: dict) -> dict:
         ret = requests.get(url, headers=headers)
 
         data = json.loads(ret.text)
+        if 'hit' not in data['result']['hits']:
+            return record
         hits = data['result']['hits']['hit']
         for hit in hits:
             item = hit['info']
@@ -761,7 +855,10 @@ def get_md_from_dblp(record: dict) -> dict:
                 record['dblp_key'] = 'https://dblp.org/rec/' + item['key']
                 record.update(metadata_source='DBLP')
 
-    except KeyError:
+    # except KeyError:
+    #     pass
+    except json.decoder.JSONDecodeError:
+        logging.error('JSONDecodeError - this needs to be fixed at some time')
         pass
     except UnicodeEncodeError:
         logging.error(
@@ -866,7 +963,8 @@ record_field_requirements = \
      'phdthesis': ['author', 'title', 'school', 'year'],
      'masterthesis': ['author', 'title', 'school', 'year'],
      'techreport': ['author', 'title', 'institution', 'year'],
-     'unpublished': ['title', 'author', 'year']}
+     'unpublished': ['title', 'author', 'year'],
+     'misc': ['author', 'title', 'year']}
 
 # book, inbook: author <- editor
 
@@ -953,18 +1051,18 @@ fields_to_keep = [
     'editor', 'book-group-author',
     'book-author', 'keywords', 'file',
     'rev_status', 'md_status', 'pdf_status',
-    'fulltext', 'origin',
+    'fulltext', 'origin', 'publisher',
     'dblp_key', 'sem_scholar_id',
-    'url', 'metadata_source'
+    'url', 'metadata_source', 'isbn', 'address', 'edition'
 ]
 fields_to_drop = [
     'type', 'organization',
-    'issn', 'isbn', 'note',
+    'issn', 'note',
     'unique-id', 'month', 'researcherid-numbers',
     'orcid-numbers', 'eissn', 'article-number',
-    'publisher', 'author_keywords', 'source',
+    'author_keywords', 'source',
     'affiliation', 'document_type', 'art_number',
-    'address', 'language', 'doc-delivery-number',
+    'language', 'doc-delivery-number',
     'da', 'usage-count-last-180-days', 'usage-count-since-2013',
     'doc-delivery-number', 'research-areas',
     'web-of-science-categories', 'number-of-cited-references',
@@ -983,11 +1081,17 @@ def drop_fields(record: dict) -> dict:
             # warn if fields are dropped that are not in fields_to_drop
             if key not in fields_to_drop:
                 logging.info(f'Dropped {key} field')
+    if 'article' == record['ENTRYTYPE'] or \
+            'inproceedings' == record['ENTRYTYPE']:
+        if 'publisher' in record:
+            del record['publisher']
     return record
 
 
 def log_notifications(record: dict,
                       unprepared_record: dict) -> None:
+
+    msg = ''
 
     change = 1 - dedupe.get_record_similarity(record.copy(), unprepared_record)
     if change > 0.1:
@@ -998,15 +1102,25 @@ def log_notifications(record: dict,
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                      f'{str(record["ENTRYTYPE"]).title()} '
                      f'missing {missing_fields(record)}')
+        msg += f'missing: {missing_fields(record)}'
+
     if has_inconsistent_fields(record):
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                      f'{str(record["ENTRYTYPE"]).title()} '
                      f'with {get_inconsistencies(record)} field(s)'
                      ' (inconsistent')
+        msg += f'; inconsistent: {get_inconsistencies(record)}'
+
     if has_incomplete_fields(record):
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
                      f'Incomplete fields {get_incomplete_fields(record)}')
-    return
+        msg += f'; incomplete: {get_incomplete_fields(record)}'
+    if change > 0.1:
+        msg += f'; change-score: {change}'
+
+    record['man_prep_hints'] = msg.strip(';').lstrip(' ')
+
+    return record
 
 
 def remove_nicknames(record: dict) -> dict:
@@ -1014,6 +1128,20 @@ def remove_nicknames(record: dict) -> dict:
         # Replace nicknames in parentheses
         record['author'] = re.sub(r'\([^)]*\)', '', record['author'])
         record['author'] = record['author'].replace('  ', ' ')
+    return record
+
+
+def remove_redundant_fields(record: dict) -> dict:
+    if 'article' == record['ENTRYTYPE']:
+        if 'journal' in record and 'booktitle' in record:
+            if fuzz.partial_ratio(record['journal'].lower(),
+                                  record['booktitle'].lower())/100 > 0.9:
+                del record['booktitle']
+    if 'inproceedings' == record['ENTRYTYPE']:
+        if 'journal' in record and 'booktitle' in record:
+            if fuzz.partial_ratio(record['journal'].lower(),
+                                  record['booktitle'].lower())/100 > 0.9:
+                del record['journal']
     return record
 
 
@@ -1039,8 +1167,10 @@ def prepare(record: dict) -> dict:
                     'get_md_from_crossref': get_md_from_crossref,
                     'get_md_from_dblp': get_md_from_dblp,
                     'get_md_from_sem_scholar': get_md_from_sem_scholar,
+                    'get_md_from_open_library': get_md_from_open_library,
                     'get_md_from_urls': get_md_from_urls,
                     'remove_nicknames': remove_nicknames,
+                    'remove_redundant_fields': remove_redundant_fields,
                     }
 
     unprepared_record = record.copy()
@@ -1067,7 +1197,7 @@ def prepare(record: dict) -> dict:
     else:
         # if 'metadata_source' in record:
         #     del record['metadata_source']
-        log_notifications(record, unprepared_record)
+        record = log_notifications(record, unprepared_record)
         record.update(md_status='needs_manual_preparation')
 
     return record
@@ -1198,7 +1328,7 @@ def main(bib_db: BibDatabase,
             logging.info('Completed preparation batch '
                          f'(records {batch_start} to {batch_end})')
 
-            if keep_ids:
+            if not keep_ids:
                 bib_db = utils.set_IDs(bib_db)
 
             utils.save_bib_file(bib_db, MAIN_REFERENCES)
@@ -1218,7 +1348,8 @@ def main(bib_db: BibDatabase,
                                              '⚙️ Prepare records',
                                              saved_args)
 
-        if batch_end < BATCH_SIZE or batch_end == 0:
+        delta = batch_end % BATCH_SIZE
+        if (delta < BATCH_SIZE and delta > 0) or batch_end == 0:
             if batch_end == 0:
                 logging.info('No records to prepare')
             break

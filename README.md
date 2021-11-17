@@ -100,6 +100,7 @@ For meta-data preparation and PDF retrieval, we rely on the following data sourc
 - [Crossref](https://www.crossref.org/) with over 125,000,000 curated metadata records across disciplines
 - [Semantic Scholar](https://www.semanticscholar.org/) with over 175,000,000 records across disciplines
 - [dblp](https://dblp.org/) with over 5,750,000 curated metadata records in the IT/IS disciplines
+- [Open Library](https://openlibrary.org/) with over 20,000,000 curated metadata records (books)
 - [Unpaywall](https://unpaywall.org/) with over 30,000,000 free papers
 
 # Contributing, changes, and releases

@@ -115,7 +115,8 @@ def generate_ID_blacklist(record: dict,
                 f'propagated to {DATA} ({record["ID"]})')
 
     if '' != record.get('author', 'NA'):
-        authors = prepare.format_author_field(record['author'])
+        authors = \
+            prepare.format_author_field(record.get('author', 'Anonymous'))
         if ' and ' in authors:
             authors = authors.split(' and ')
         else:
@@ -296,6 +297,7 @@ def save_bib_file(bib_db: BibDatabase,
         'rev_status',
         'excl_criteria',
         'md_status',
+        'man_prep_hints',
         'metadata_source',
         'pdf_status',
         'pdf_processed',
@@ -483,7 +485,8 @@ def reorder_log(IDs: list) -> None:
                                        '[INFO] Batch size',
                                        '[INFO] Summary: Prepared',
                                        '[INFO] Further instructions ',
-                                       '[INFO] To reset the metdatata']):
+                                       '[INFO] To reset the metdatata',
+                                       '[INFO] Summary: ']):
                 firsts.append(line)
                 continue
             if re.search(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ', line):
