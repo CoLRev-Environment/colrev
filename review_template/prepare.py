@@ -515,8 +515,44 @@ def crossref_query(record: dict) -> dict:
     return most_similar_record
 
 
+def container_is_abbreviated(record: dict) -> bool:
+    if 'journal' in record:
+        if record['journal'].count('.') > 2:
+            return True
+        if record['journal'].isupper():
+            return True
+    if 'booktitle' in record:
+        if record['booktitle'].count('.') > 2:
+            return True
+        if record['booktitle'].isupper():
+            return True
+    # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
+    return False
+
+
+def abbreviate_container(record: dict, min_len: int) -> dict:
+    if 'journal' in record:
+        record['journal'] = ' '.join([x[:min_len]
+                                     for x in record['journal'].split(' ')])
+
+    return record
+
+
 def get_retrieval_similarity(record: dict,
                              retrieved_record: dict) -> float:
+
+    # TODO: also replace speicla characters (e.g., &amp;)
+
+    if container_is_abbreviated(record):
+        min_len = \
+            min(len(x) for x in record['journal'].replace('.', '').split(' '))
+        abbreviate_container(retrieved_record, min_len)
+        abbreviate_container(record, min_len)
+    if container_is_abbreviated(retrieved_record):
+        min_len = min(len(x) for x in retrieved_record['journal']
+                      .replace('.', '').split(' '))
+        abbreviate_container(record, min_len)
+        abbreviate_container(retrieved_record, min_len)
 
     if 'author' in record:
         record['author'] = dedupe.format_authors_string(record['author'])
@@ -524,25 +560,24 @@ def get_retrieval_similarity(record: dict,
         retrieved_record['author'] = \
             dedupe.format_authors_string(retrieved_record['author'])
     if not ('volume' in record and 'volume' in retrieved_record):
-        # if 'volume' in record:
         record['volume'] = 'nan'
-        # if 'volume' in retrieved_record:
         retrieved_record['volume'] = 'nan'
     if not ('number' in record and 'number' in retrieved_record):
-        # if 'number' in record:
         record['number'] = 'nan'
-        # if 'number' in retrieved_record:
         retrieved_record['number'] = 'nan'
     if not ('pages' in record and 'pages' in retrieved_record):
-        # if 'pages' in record:
         record['pages'] = 'nan'
-        # if 'pages' in retrieved_record:
+        retrieved_record['pages'] = 'nan'
+    # Sometimes, the number of pages is provided (not the range)
+    elif not ('--' in record['pages'] and '--' in retrieved_record['pages']):
+        record['pages'] = 'nan'
         retrieved_record['pages'] = 'nan'
 
     if 'editorial' in record.get('title', 'NA').lower():
         if not all(x in record for x in ['volume', 'number']):
             return 0
-
+    # pp.pprint(record)
+    # pp.pprint(retrieved_record)
     similarity = dedupe.get_record_similarity(record, retrieved_record)
 
     return similarity
