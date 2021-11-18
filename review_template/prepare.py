@@ -866,12 +866,25 @@ def get_md_from_dblp(record: dict) -> dict:
 
     try:
         api_url = 'https://dblp.org/search/publ/api?q='
-        url = api_url + \
-            record.get('title', '').replace(' ', '+') + '&format=json'
+        query = ''
+        if 'title' in record:
+            query = query + record['title']
+        if 'author' in record:
+            query = query + '_' + record['author'].split(',')[0]
+        if 'booktitle' in record:
+            query = query + '_' + record['booktitle']
+        if 'journal' in record:
+            query = query + '_' + record['journal']
+        if 'year' in record:
+            query = query + '_' + record['year']
+        query = re.sub(r'[\W]+', '', query.replace(' ', '_'))
+        url = api_url + query.replace('_', '+') + '&format=json'
         headers = {'user-agent': f'{__name__}  (mailto:{EMAIL})'}
         ret = requests.get(url, headers=headers)
 
         data = json.loads(ret.text)
+        if 'hits' not in data['result']:
+            return record
         if 'hit' not in data['result']['hits']:
             return record
         hits = data['result']['hits']['hit']
@@ -1144,7 +1157,7 @@ def log_notifications(record: dict,
                      f'{str(record["ENTRYTYPE"]).title()} '
                      f'with {get_inconsistencies(record)} field(s)'
                      ' (inconsistent')
-        msg += f'; inconsistent: {get_inconsistencies(record)}'
+        msg += f'; {record["ENTRYTYPE"]} but {get_inconsistencies(record)}'
 
     if has_incomplete_fields(record):
         logging.info(f' {record["ID"]}'.ljust(PAD, ' ') +
