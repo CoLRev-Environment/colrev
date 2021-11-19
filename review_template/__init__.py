@@ -2,7 +2,6 @@
 
 __author__ = """Gerit Wagner"""
 __email__ = "gerit.wagner@hec.ca"
-__version__ = "0.0.1"
 
 from . import _version
 
