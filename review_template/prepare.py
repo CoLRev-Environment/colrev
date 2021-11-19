@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import collections
+import html
 import json
 import logging
 import multiprocessing as mp
@@ -165,7 +166,7 @@ def correct_recordtype(record: dict) -> dict:
     return record
 
 
-def homogenize_record(record: dict) -> dict:
+def format(record: dict) -> dict:
 
     fields_to_process = [
         'author',
@@ -197,11 +198,10 @@ def homogenize_record(record: dict) -> dict:
 
     if 'title' in record:
         record.update(title=re.sub(r'\s+', ' ', record['title']).rstrip('.'))
-        record.update(title=title_if_mostly_upper_case(record['title']))
+        record.update(title=title_if_mostly_upper(record['title']))
 
     if 'booktitle' in record:
-        record.update(booktitle=title_if_mostly_upper_case(
-            record['booktitle']))
+        record.update(booktitle=title_if_mostly_upper(record['booktitle']))
 
         stripped_btitle = re.sub(r'\d{4}', '', record['booktitle'])
         stripped_btitle = re.sub(r'\d{1,2}th', '', stripped_btitle)
@@ -215,8 +215,7 @@ def homogenize_record(record: dict) -> dict:
 
     if 'journal' in record:
         if len(record['journal']) > 10:
-            record.update(
-                journal=title_if_mostly_upper_case(record['journal']))
+            record.update(journal=title_if_mostly_upper(record['journal']))
 
     if 'pages' in record:
         record.update(pages=unify_pages_field(record['pages']))
@@ -289,7 +288,7 @@ def mostly_upper_case(input_string: str) -> bool:
     return sum(word.isupper() for word in words)/len(words) > 0.8
 
 
-def title_if_mostly_upper_case(input_string: str) -> str:
+def title_if_mostly_upper(input_string: str) -> str:
     if not re.match(r'[a-zA-Z]+', input_string):
         return input_string
     words = input_string.split()
@@ -312,13 +311,11 @@ def format_author_field(input_string: str) -> str:
         # is very effective (maybe not perfect)
 
         parsed_name = HumanName(name)
-        if mostly_upper_case(input_string
-                             .replace(' and ', '')
+        if mostly_upper_case(input_string.replace(' and ', '')
                              .replace('Jr', '')):
             parsed_name.capitalize(force=True)
 
-        parsed_name.string_format = \
-            '{last} {suffix}, {first} {middle}'
+        parsed_name.string_format = '{last} {suffix}, {first} {middle}'
         # '{last} {suffix}, {first} ({nickname}) {middle}'
         author_name_string = str(parsed_name).replace(' , ', ', ')
         # Note: there are errors for the following author:
@@ -366,16 +363,13 @@ def unify_pages_field(input_string: str) -> str:
 def get_md_from_doi(record: dict) -> dict:
     if 'doi' not in record:
         return record
-
     record = retrieve_doi_metadata(record)
     record.update(metadata_source='DOI.ORG')
-
     return record
 
 
 def json_to_record(item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
-
     record = {}
 
     if 'title' in item:
@@ -459,19 +453,28 @@ def json_to_record(item: dict) -> dict:
 def crossref_query(record: dict) -> dict:
     # https://github.com/CrossRef/rest-api-doc
     api_url = 'https://api.crossref.org/works?'
-    bibliographic = record['title'] + ' ' + record.get('year', '')
-    bibliographic = bibliographic.replace('...', '').replace('…', '')
+
+    params = {'rows': '15'}
+    bibl = record['title'].replace('-', '_') + ' ' + record.get('year', '')
+    bibl = re.sub(r'[\W]+', '', bibl.replace(' ', '_'))
+    params['query.bibliographic'] = bibl.replace('_', ' ')
+
     container_title = get_container_title(record)
-    container_title = container_title.replace('...', '').replace('…', '')
-    author_string = record.get('author', 'Anonymous').replace('...', '')\
-        .replace('…', '')
-    params = {'rows': '5',
-              'query.bibliographic': bibliographic,
-              'query.author': author_string,
-              'query.container-title': container_title}
+    if '.' not in container_title:
+        container_title = container_title.replace(' ', '_')
+        container_title = re.sub(r'[\W]+', '', container_title)
+        params['query.container-title'] = container_title.replace('_', ' ')
+
+    author_last_names = [x.split(',')[0] for x in
+                         record.get('author', '').split(' and ')]
+    author_string = ' '.join(author_last_names)
+    author_string = re.sub(r'[\W]+', '', author_string.replace(' ', '_'))
+    params['query.author'] = author_string.replace('_', ' ')
+
     url = api_url + urllib.parse.urlencode(params)
     headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
     try:
+        logging.debug(url)
         ret = requests.get(url, headers=headers)
         if ret.status_code != 200:
             logging.debug(
@@ -538,19 +541,28 @@ def abbreviate_container(record: dict, min_len: int) -> dict:
     return record
 
 
+def get_abbrev_container_min_lin(record: dict) -> int:
+    min_len = -1
+    if 'journal' in record:
+        min_len = min(len(x) for x in record['journal']
+                      .replace('.', '').split(' '))
+    if 'booktitle' in record:
+        min_len = min(len(x) for x in record['booktitle']
+                      .replace('.', '').split(' '))
+    return min_len
+
+
 def get_retrieval_similarity(record: dict,
                              retrieved_record: dict) -> float:
 
     # TODO: also replace speicla characters (e.g., &amp;)
 
     if container_is_abbreviated(record):
-        min_len = \
-            min(len(x) for x in record['journal'].replace('.', '').split(' '))
+        min_len = get_abbrev_container_min_lin(record)
         abbreviate_container(retrieved_record, min_len)
         abbreviate_container(record, min_len)
     if container_is_abbreviated(retrieved_record):
-        min_len = min(len(x) for x in retrieved_record['journal']
-                      .replace('.', '').split(' '))
+        min_len = get_abbrev_container_min_lin(retrieved_record)
         abbreviate_container(record, min_len)
         abbreviate_container(retrieved_record, min_len)
 
@@ -663,6 +675,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         search_api_url = \
             'https://api.semanticscholar.org/graph/v1/paper/search?query='
         url = search_api_url + record.get('title', '').replace(' ', '+')
+        logging.debug(url)
         headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
         ret = requests.get(url, headers=headers)
 
@@ -676,6 +689,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         paper_id = items[0]['paperId']
         record_retrieval_url = \
             'https://api.semanticscholar.org/v1/paper/' + paper_id
+        logging.debug(record_retrieval_url)
         ret_ent = requests.get(record_retrieval_url, headers=headers)
         item = json.loads(ret_ent.text)
         retrieved_record = sem_scholar_json_to_record(item, record)
@@ -821,17 +835,24 @@ def dblp_json_to_record(item: dict) -> dict:
     # To test in browser:
     # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
     retrieved_record = {}
+    if 'Withdrawn Items' == item['type']:
+        if 'journals' == item['key'][:8]:
+            item['type'] = 'Journal Articles'
+        if 'conf' == item['key'][:4]:
+            item['type'] = 'Conference and Workshop Papers'
+        retrieved_record['warning'] = 'Withdrawn (according to DBLP)'
     if 'Journal Articles' == item['type']:
         retrieved_record['ENTRYTYPE'] = 'article'
         lpos = item['key'].find('/')+1
         rpos = item['key'].rfind('/')
         jour = item['key'][lpos:rpos]
-        retrieved_record['journal'] = get_dblp_venue(jour)
+        retrieved_record['journal'] = html.unescape(get_dblp_venue(jour))
     if 'Conference and Workshop Papers' == item['type']:
         retrieved_record['ENTRYTYPE'] = 'inproceedings'
-        retrieved_record['booktitle'] = get_dblp_venue(item['venue'])
+        retrieved_record['booktitle'] = \
+            html.unescape(get_dblp_venue(item['venue']))
     if 'title' in item:
-        retrieved_record['title'] = item['title'].rstrip('.')
+        retrieved_record['title'] = html.unescape(item['title'].rstrip('.'))
     if 'year' in item:
         retrieved_record['year'] = item['year']
     if 'volume' in item:
@@ -863,12 +884,12 @@ def dblp_json_to_record(item: dict) -> dict:
 def get_md_from_dblp(record: dict) -> dict:
     if is_complete_metadata_source(record):
         return record
-
+    # TODO: check if the url/dblp_key already points to a dblp page?
     try:
         api_url = 'https://dblp.org/search/publ/api?q='
         query = ''
         if 'title' in record:
-            query = query + record['title']
+            query = query + record['title'].replace('-', '_')
         if 'author' in record:
             query = query + '_' + record['author'].split(',')[0]
         if 'booktitle' in record:
@@ -877,9 +898,10 @@ def get_md_from_dblp(record: dict) -> dict:
             query = query + '_' + record['journal']
         if 'year' in record:
             query = query + '_' + record['year']
-        query = re.sub(r'[\W]+', '', query.replace(' ', '_'))
-        url = api_url + query.replace('_', '+') + '&format=json'
+        query = re.sub(r'[\W]+', ' ', query.replace(' ', '_'))
+        url = api_url + query.replace(' ', '+') + '&format=json'
         headers = {'user-agent': f'{__name__}  (mailto:{EMAIL})'}
+        logging.debug(url)
         ret = requests.get(url, headers=headers)
 
         data = json.loads(ret.text)
@@ -932,6 +954,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
 
     try:
         url = 'http://dx.doi.org/' + record['doi']
+        logging.debug(url)
         headers = {'accept': 'application/vnd.citationstyles.csl+json'}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
@@ -965,31 +988,32 @@ def get_md_from_urls(record: dict) -> dict:
     url = record.get('url', record.get('fulltext', 'NA'))
     if 'NA' != url:
         try:
+            logging.debug(url)
             headers = {'user-agent': f'{__name__}  (mailto:{EMAIL})'}
             ret = requests.get(url, headers=headers)
             res = re.findall(doi_regex, ret.text)
             if res:
                 if len(res) == 1:
-                    ret_doi = res[0]
+                    ret_dois = res[0]
                 else:
                     counter = collections.Counter(res)
-                    ret_doi = counter.most_common(1)[0][0]
+                    ret_dois = counter.most_common()
 
-                if not ret_doi:
+                if not ret_dois:
                     return record
+                for doi, freq in ret_dois:
+                    retrieved_record = {'doi': doi, 'ID': record['ID']}
+                    retrieved_record = retrieve_doi_metadata(retrieved_record)
+                    similarity = \
+                        get_retrieval_similarity(record.copy(),
+                                                 retrieved_record.copy())
+                    if similarity > 0.9:
+                        for key, val in retrieved_record.items():
+                            record[key] = val
 
-                # TODO: check multiple dois if applicable
-                retrieved_record = {'doi': ret_doi, 'ID': record['ID']}
-                retrieved_record = retrieve_doi_metadata(retrieved_record)
-                similarity = get_retrieval_similarity(record.copy(),
-                                                      retrieved_record.copy())
-                if similarity > 0.9:
-                    for key, val in retrieved_record.items():
-                        record[key] = val
-
-                    logging.info('Retrieved metadata based on doi from'
-                                 f' website: {record["doi"]}')
-                    record.update(metadata_source='LINKED_URL')
+                        logging.info('Retrieved metadata based on doi from'
+                                     f' website: {record["doi"]}')
+                        record.update(metadata_source='LINKED_URL')
 
         except requests.exceptions.ConnectionError:
             return record
@@ -1021,7 +1045,8 @@ def missing_fields(record: dict) -> list:
     missing_fields = []
     if record['ENTRYTYPE'] in record_field_requirements.keys():
         reqs = record_field_requirements[record['ENTRYTYPE']]
-        missing_fields = [x for x in reqs if x not in record.keys()]
+        missing_fields = \
+            [x for x in reqs if x not in record.keys() or '' == record[x]]
     else:
         missing_fields = ['no field requirements defined']
     return missing_fields
@@ -1101,7 +1126,7 @@ fields_to_keep = [
     'rev_status', 'md_status', 'pdf_status',
     'fulltext', 'origin', 'publisher',
     'dblp_key', 'sem_scholar_id',
-    'url', 'metadata_source', 'isbn', 'address', 'edition'
+    'url', 'metadata_source', 'isbn', 'address', 'edition', 'warning'
 ]
 fields_to_drop = [
     'type', 'organization',
@@ -1116,7 +1141,7 @@ fields_to_drop = [
     'web-of-science-categories', 'number-of-cited-references',
     'times-cited', 'journal-iso', 'oa', 'keywords-plus',
     'funding-text', 'funding-acknowledgement', 'day',
-    'related', 'bibsource', 'timestamp', 'biburl'
+    'related', 'bibsource', 'timestamp', 'biburl', 'crossref'
 ]
 
 
@@ -1129,6 +1154,9 @@ def drop_fields(record: dict) -> dict:
             # warn if fields are dropped that are not in fields_to_drop
             if key not in fields_to_drop:
                 logging.info(f'Dropped {key} field')
+    for key in list(record):
+        if '' == record[key]:
+            del record[key]
     if 'article' == record['ENTRYTYPE'] or \
             'inproceedings' == record['ENTRYTYPE']:
         if 'publisher' in record:
@@ -1193,6 +1221,25 @@ def remove_redundant_fields(record: dict) -> dict:
     return record
 
 
+def update_md_status(record: dict) -> dict:
+    logging.debug(f'is_complete({record["ID"]}): {is_complete(record)}')
+    logging.debug(f'is_complete_metadata_source({record["ID"]}): '
+                  '{is_complete_metadata_source(record)}')
+    logging.debug(f'has_inconsistent_fields({record["ID"]}): '
+                  '{has_inconsistent_fields(record)}')
+    logging.debug(f'has_incomplete_fields({record["ID"]}): '
+                  '{has_incomplete_fields(record)}')
+
+    if (is_complete(record) or is_complete_metadata_source(record)) and \
+            not has_inconsistent_fields(record) and \
+            not has_incomplete_fields(record):
+        record = drop_fields(record)
+        record.update(md_status='prepared')
+    else:
+        record.update(md_status='needs_manual_preparation')
+    return record
+
+
 def prepare(record: dict) -> dict:
     global current_batch_counter
 
@@ -1207,8 +1254,9 @@ def prepare(record: dict) -> dict:
 
     # # Note: we require (almost) perfect matches for the scripts.
     # # Cases with higher dissimilarity will be handled in the man_prep.py
-    prep_scripts = {'correct_recordtype': correct_recordtype,
-                    'homogenize_record': homogenize_record,
+    prep_scripts = {'drop_fields': drop_fields,
+                    'correct_recordtype': correct_recordtype,
+                    'format': format,
                     'apply_local_rules': apply_local_rules,
                     'apply_crowd_rules': apply_crowd_rules,
                     'get_md_from_doi': get_md_from_doi,
@@ -1219,11 +1267,11 @@ def prepare(record: dict) -> dict:
                     'get_md_from_urls': get_md_from_urls,
                     'remove_nicknames': remove_nicknames,
                     'remove_redundant_fields': remove_redundant_fields,
+                    'update_md_status': update_md_status,
                     }
 
     unprepared_record = record.copy()
-    short_form = record.copy()
-    short_form = drop_fields(short_form)
+    short_form = drop_fields(record.copy())
     logging.info(f'prepare({record["ID"]})' +
                  f' started with: \n{pp.pformat(short_form)}\n\n')
     for prep_script in prep_scripts:
@@ -1236,17 +1284,12 @@ def prepare(record: dict) -> dict:
                          f' \n{pp.pformat(diffs)}\n')
         else:
             logging.debug(f'{prep_script} changed: -')
+        # pp.pprint(record)
+        if repo_setup.config['DEBUG_MODE']:
+            print('\n')
 
-    if (is_complete(record) or is_complete_metadata_source(record)) and \
-            not has_inconsistent_fields(record) and \
-            not has_incomplete_fields(record):
-        record = drop_fields(record)
-        record.update(md_status='prepared')
-    else:
-        # if 'metadata_source' in record:
-        #     del record['metadata_source']
+    if 'needs_manual_preparation' == record.get('md_status', ''):
         record = log_notifications(record, unprepared_record)
-        record.update(md_status='needs_manual_preparation')
 
     return record
 
