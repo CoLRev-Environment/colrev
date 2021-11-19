@@ -336,7 +336,7 @@ def get_md_from_doi(record: dict) -> dict:
     return record
 
 
-def json_to_record(item: dict) -> dict:
+def crossref_json_to_record(item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
     record = {}
 
@@ -414,9 +414,9 @@ def json_to_record(item: dict) -> dict:
         if not retrieved_abstract == "":
             retrieved_abstract = re.sub(r"<\/?jats\:[^>]*>", " ", retrieved_abstract)
             retrieved_abstract = re.sub(r"\s+", " ", retrieved_abstract)
-            retrieved_abstract = (
-                str(retrieved_abstract).replace("\n", "").lstrip().rstrip()
-            )
+            retrieved_abstract = str(retrieved_abstract).replace("\n", "")
+            retrieved_abstract = retrieved_abstract.lstrip().rstrip()
+            retrieved_abstract = html.unescape(retrieved_abstract)
             record.update(abstract=retrieved_abstract)
     return record
 
@@ -460,7 +460,7 @@ def crossref_query(record: dict) -> dict:
             if "title" not in item:
                 continue
 
-            retrieved_record = json_to_record(item)
+            retrieved_record = crossref_json_to_record(item)
 
             title_similarity = fuzz.partial_ratio(
                 retrieved_record["title"].lower(),
@@ -937,7 +937,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
         orig_record = record.copy()
 
         retrieved_json = json.loads(r.text)
-        retrieved_record = json_to_record(retrieved_json)
+        retrieved_record = crossref_json_to_record(retrieved_json)
         for key, val in retrieved_record.items():
             if val:
                 record[key] = str(val)
@@ -1257,20 +1257,19 @@ def update_md_status(record: dict) -> dict:
     logging.debug(f'is_complete({record["ID"]}): {is_complete(record)}')
     logging.debug(
         f'is_complete_metadata_source({record["ID"]}): '
-        "{is_complete_metadata_source(record)}"
+        f"{is_complete_metadata_source(record)}"
     )
     logging.debug(
-        f'has_inconsistent_fields({record["ID"]}): ' "{has_inconsistent_fields(record)}"
+        f'has_inconsistent_fields({record["ID"]}): {has_inconsistent_fields(record)}'
     )
     logging.debug(
-        f'has_incomplete_fields({record["ID"]}): ' "{has_incomplete_fields(record)}"
+        f'has_incomplete_fields({record["ID"]}): {has_incomplete_fields(record)}'
     )
 
     if (
-        (is_complete(record) or is_complete_metadata_source(record))
-        and not has_inconsistent_fields(record)
-        and not has_incomplete_fields(record)
-    ):
+        (is_complete(record) and not has_incomplete_fields(record))
+        or is_complete_metadata_source(record)
+    ) and not has_inconsistent_fields(record):
         record = drop_fields(record)
         record.update(md_status="prepared")
     else:
