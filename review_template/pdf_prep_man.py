@@ -9,7 +9,7 @@ from review_template import repo_setup
 from review_template import status
 from review_template import utils
 
-PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
 
 
 def man_prep_pdf(record: dict) -> dict:
@@ -17,14 +17,15 @@ def man_prep_pdf(record: dict) -> dict:
     for prep_script in pdf_prepare.prep_scripts:
         logging.debug(f'{prep_script}({record["ID"]}) called')
         record = pdf_prepare.prep_scripts[prep_script](record)
-        print('TODO: check /print problems for each PDF with pdf_status = '
-              'needs_manual_preparation and suggest how it could be fixed')
+        print(
+            "TODO: check /print problems for each PDF with pdf_status = "
+            "needs_manual_preparation and suggest how it could be fixed"
+        )
 
     return record
 
 
-def main(bib_db: BibDatabase,
-         repo: git.Repo) -> BibDatabase:
+def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
     saved_args = locals()
 
     utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)

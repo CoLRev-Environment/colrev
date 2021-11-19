@@ -9,25 +9,26 @@ repos:
     -   id: check-yaml
     -   id: debug-statements
     -   id: name-tests-test
-    -   id: double-quote-string-fixer
     -   id: requirements-txt-fixer
+-   repo: https://github.com/ambv/black
+    rev: 21.11b1
+    hooks:
+    - id: black
+      language_version: python3.8
 -   repo: https://github.com/PyCQA/flake8
-    rev: 3.9.2
+    rev: 4.0.1
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.7.0]
         exclude: ^versioneer\.py$
--   repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v1.5.7
-    hooks:
-    -   id: autopep8
+        args: ['--max-line-length=88', '--extend-ignore=E203']
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v2.6.0
     hooks:
     -   id: reorder-python-imports
         args: [--py3-plus]
 -   repo: https://github.com/asottile/pyupgrade
-    rev: v2.26.0
+    rev: v2.29.1
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]

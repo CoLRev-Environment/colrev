@@ -17,32 +17,30 @@ from review_template import utils
 
 # Records should not be propagated/screened when the batch
 # has not yet been committed
-DELAY_AUTOMATED_PROCESSING = repo_setup.config['DELAY_AUTOMATED_PROCESSING']
+DELAY_AUTOMATED_PROCESSING = repo_setup.config["DELAY_AUTOMATED_PROCESSING"]
 
 
-def reprocess_id(id: str,
-                 repo: git.Repo) -> None:
+def reprocess_id(id: str, repo: git.Repo) -> None:
     saved_args = locals()
     if id is None:
         return
 
-    MAIN_REFERENCES = repo_setup.paths['MAIN_REFERENCES']
+    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
 
-    if 'all' == id:
-        logging.info('Removing/reprocessing all records')
+    if "all" == id:
+        logging.info("Removing/reprocessing all records")
         os.remove(MAIN_REFERENCES)
         repo.index.remove([MAIN_REFERENCES], working_tree=True)
 
     else:
         bib_db = utils.load_main_refs(mod_check=False)
-        bib_db.entries = [
-            x for x in bib_db.entries if id != x['ID']]
+        bib_db.entries = [x for x in bib_db.entries if id != x["ID"]]
         utils.save_bib_file(bib_db, MAIN_REFERENCES)
         repo.index.add([MAIN_REFERENCES])
 
-    utils.create_commit(repo, '⚙️ Reprocess', saved_args)
+    utils.create_commit(repo, "⚙️ Reprocess", saved_args)
 
-    logging.info('Create commit)')
+    logging.info("Create commit)")
     utils.reset_log()
     return
 
@@ -51,8 +49,7 @@ class DelayRequirement(Exception):
     pass
 
 
-def check_delay(bib_db: BibDatabase,
-                min_status_requirement: str) -> bool:
+def check_delay(bib_db: BibDatabase, min_status_requirement: str) -> bool:
 
     # all records need to have at least the min_status_requirement (or latter)
     # ie. raise DelayRequirement if any record has a prior status
@@ -61,59 +58,62 @@ def check_delay(bib_db: BibDatabase,
 
     # TODO: distingusih rev_status, md_status, pdf_status
 
-    if 'md_imported' == min_status_requirement:
+    if "md_imported" == min_status_requirement:
         # Note: md_status=retrieved should not happen
         if len(bib_db.entries) == 0:
-            logging.error('No search results available for import.')
+            logging.error("No search results available for import.")
             raise DelayRequirement
 
     if not DELAY_AUTOMATED_PROCESSING:
         return False
 
-    cur_rev_status = [x.get('rev_status', 'NA') for x in bib_db.entries]
-    cur_md_status = [x.get('md_status', 'NA') for x in bib_db.entries]
-    cur_pdf_status = [x.get('pdf_status', 'NA') for x in bib_db.entries]
+    cur_rev_status = [x.get("rev_status", "NA") for x in bib_db.entries]
+    cur_md_status = [x.get("md_status", "NA") for x in bib_db.entries]
+    cur_pdf_status = [x.get("pdf_status", "NA") for x in bib_db.entries]
 
-    prior_md_status = ['retrieved', 'imported', 'needs_manual_preparation']
-    if 'md_prepared' == min_status_requirement:
+    prior_md_status = ["retrieved", "imported", "needs_manual_preparation"]
+    if "md_prepared" == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
             status.review_instructions()
             raise DelayRequirement
 
-    prior_md_status.append('prepared')
-    prior_md_status.append('needs_manual_merging')
-    if 'md_processed' == min_status_requirement:
+    prior_md_status.append("prepared")
+    prior_md_status.append("needs_manual_merging")
+    if "md_processed" == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
             status.review_instructions()
             raise DelayRequirement
 
     # prior_md_status.append('processed') - this is the "end-state"
-    if 'prescreen_inclusion' == min_status_requirement:
+    if "prescreen_inclusion" == min_status_requirement:
         if any(x in cur_md_status for x in prior_md_status):
             status.review_instructions()
             raise DelayRequirement
 
-    prior_rev_status = ['retrieved']
-    if 'pdf_needs_retrieval' == min_status_requirement:
-        if any(x in cur_md_status for x in prior_md_status) or \
-                any(x in cur_rev_status for x in prior_rev_status):
+    prior_rev_status = ["retrieved"]
+    if "pdf_needs_retrieval" == min_status_requirement:
+        if any(x in cur_md_status for x in prior_md_status) or any(
+            x in cur_rev_status for x in prior_rev_status
+        ):
             status.review_instructions()
             raise DelayRequirement
 
-    prior_pdf_status = ['needs_retrieval']
-    prior_pdf_status.append('needs_manual_retrieval')
+    prior_pdf_status = ["needs_retrieval"]
+    prior_pdf_status.append("needs_manual_retrieval")
     # Note: it's ok if PDFs a re "not_available"
-    if 'pdf_imported' == min_status_requirement:
-        if any(x in cur_pdf_status for x in prior_pdf_status) or \
-                any(x in cur_rev_status for x in prior_rev_status):
+    if "pdf_imported" == min_status_requirement:
+        if any(x in cur_pdf_status for x in prior_pdf_status) or any(
+            x in cur_rev_status for x in prior_rev_status
+        ):
             status.review_instructions()
             raise DelayRequirement
 
-    prior_pdf_status.append('imported')
-    prior_pdf_status.append('pdf_needs_manual_preparation')
-    if 'prescreened_and_pdf_prepared' == min_status_requirement:
-        if any(x in cur_pdf_status for x in prior_pdf_status) or \
-                any(x in cur_rev_status for x in prior_rev_status):
+    prior_pdf_status.append("imported")
+    prior_pdf_status.append("pdf_needs_manual_preparation")
+    if "prescreened_and_pdf_prepared" == min_status_requirement:
+        if any(x in cur_pdf_status for x in prior_pdf_status) or any(
+            x in cur_rev_status for x in prior_rev_status
+        ):
             raise DelayRequirement
 
     # prior_rev_status.append('prescreen_included')
@@ -121,12 +121,11 @@ def check_delay(bib_db: BibDatabase,
     return False
 
 
-def main(reprocess: bool = None,
-         keep_ids: bool = False) -> None:
+def main(reprocess: bool = None, keep_ids: bool = False) -> None:
 
     status.repository_validation()
     repo = init.get_repo()
-    utils.require_clean_repo(repo, ignore_pattern='search/')
+    utils.require_clean_repo(repo, ignore_pattern="search/")
     utils.build_docker_images()
     reprocess_id(reprocess, repo)
 
@@ -148,6 +147,6 @@ def main(reprocess: bool = None,
         pass
 
     print()
-    os.system('pre-commit run -a')
+    os.system("pre-commit run -a")
 
     return
