@@ -1161,6 +1161,7 @@ fields_to_drop = [
     "timestamp",
     "biburl",
     "crossref",
+    "man_prep_hints",
 ]
 
 
@@ -1471,7 +1472,7 @@ def main(
 
         if batch_end > 0:
             logging.info(
-                "Completed preparation batch (records {batch_start} to {batch_end})"
+                f"Completed preparation batch (records {batch_start} to {batch_end})"
             )
 
             if not keep_ids:
