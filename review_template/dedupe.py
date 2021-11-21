@@ -10,7 +10,7 @@ import re
 import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
-from fuzzywuzzy import fuzz
+from thefuzz import fuzz
 
 from review_template import process
 from review_template import repo_setup

@@ -15,7 +15,7 @@ requirements = [
     "ansiwrap==0.8.4",
     "bibtexparser==1.2.0",
     "dictdiffer==0.8.1",
-    "fuzzywuzzy==0.18.0",
+    "thefuzz==0.19.0",
     "GitPython==3.1.24",
     "langdetect==1.0.9",
     "nameparser==1.0.6",

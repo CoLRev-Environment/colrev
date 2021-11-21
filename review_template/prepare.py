@@ -16,8 +16,8 @@ import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
-from fuzzywuzzy import fuzz
 from nameparser import HumanName
+from thefuzz import fuzz
 
 from review_template import dedupe
 from review_template import process
