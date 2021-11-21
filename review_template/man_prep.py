@@ -95,68 +95,65 @@ def man_fix_incomplete_fields(record: dict) -> dict:
 def man_prep_records() -> None:
     saved_args = locals()
     global ID_list
+    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
 
     repo = git.Repo("")
-    utils.require_clean_repo(repo)
+    utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
 
     print("TODO: include processing_reports")
 
     logging.info("Loading records for manual preparation...")
-    bib_db = utils.load_main_refs()
+    stat_len = 0
+    ID_list = []
+    with open(MAIN_REFERENCES) as f:
+        for record_str in utils.read_next_entry(f):
+            ID_list.append(record_str[record_str.find("{") + 1 : record_str.find(",")])
+            if "needs_manual_preparation" in record_str:
+                stat_len += 1
 
-    ID_list = [record["ID"] for record in bib_db.entries]
-
-    i = 1
-    stat_len = len(
-        [
-            x
-            for x in bib_db.entries
-            if "needs_manual_preparation" == x.get("rev_status", "NA")
-        ]
-    )
     if 0 == stat_len:
         logging.info("No records to prepare manually")
-        return
 
-    for record in bib_db.entries:
+    temp = MAIN_REFERENCES.replace(".bib", "_copy.bib")
+    i = 1
+    with open(MAIN_REFERENCES) as f, open(temp, "w") as m:
+        for record_str in utils.read_next_entry(f):
+            if "needs_manual_preparation" in record_str:
+                bib_database = bibtexparser.loads(record_str)
+                for record in bib_database.entries:
 
-        if "needs_manual_preparation" != record["md_status"]:
-            continue
+                    os.system("cls" if os.name == "nt" else "clear")
+                    print(f"{i}/{stat_len}")
+                    i += 1
 
-        os.system("cls" if os.name == "nt" else "clear")
-        print(f"{i}/{stat_len}")
-        i += 1
+                    print_record(record)
 
-        print_record(record)
+                    man_correct_recordtype(record)
+                    man_provide_required_fields(record)
+                    man_fix_field_inconsistencies(record)
+                    man_fix_incomplete_fields(record)
 
-        man_correct_recordtype(record)
-        man_provide_required_fields(record)
-        man_fix_field_inconsistencies(record)
-        man_fix_incomplete_fields(record)
+                    # Note: for complete_based_on_doi field:
+                    # record = prepare.retrieve_doi_metadata(record)
 
-        # Note: for complete_based_on_doi field:
-        record = prepare.retrieve_doi_metadata(record)
+                    record = prepare.drop_fields(record)
+                    record.update(
+                        ID=utils.generate_ID_blacklist(
+                            record, ID_list, record_in_bib_db=True, raise_error=False
+                        )
+                    )
+                    ID_list.append(record["ID"])
+                    record.update(md_status="prepared")
+                    record.update(metadata_source="MAN_PREP")
 
-        if (
-            (prepare.is_complete(record) or prepare.is_doi_complete(record))
-            and not prepare.has_inconsistent_fields(record)
-            and not prepare.has_incomplete_fields(record)
-        ):
-            record = prepare.drop_fields(record)
-            record.update(
-                ID=utils.generate_ID_blacklist(
-                    record, ID_list, record_in_bib_db=True, raise_error=False
-                )
-            )
-            ID_list.append(record["ID"])
-            record.update(md_status="prepared")
-            record.update(metadata_source="MAN_PREP")
+                record_str = bibtexparser.dumps(bib_database, utils.get_bibtex_writer())
+            else:
+                record_str += "\n"
 
-        utils.save_bib_file(bib_db)
+            m.write(record_str)
 
-    bib_db = utils.set_IDs(bib_db)
-    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-    utils.save_bib_file(bib_db, MAIN_REFERENCES)
+    os.remove(MAIN_REFERENCES)
+    os.rename(temp, MAIN_REFERENCES)
     repo.index.add([MAIN_REFERENCES])
 
     utils.create_commit(

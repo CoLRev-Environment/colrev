@@ -293,10 +293,7 @@ def get_included_IDs(bib_db: BibDatabase) -> list:
     ]
 
 
-def save_bib_file(bib_db: BibDatabase, target_file: str = None) -> None:
-
-    if target_file is None:
-        target_file = MAIN_REFERENCES
+def get_bibtex_writer():
 
     writer = BibTexWriter()
 
@@ -329,16 +326,24 @@ def save_bib_file(bib_db: BibDatabase, target_file: str = None) -> None:
         "book-group-author",
     ]
 
+    writer.order_entries_by = ("ID", "author", "year")
+    writer.add_trailing_comma = True
+    writer.align_values = True
+    writer.indent = "  "
+    return writer
+
+
+def save_bib_file(bib_db: BibDatabase, target_file: str = None) -> None:
+
+    if target_file is None:
+        target_file = MAIN_REFERENCES
+
     try:
         bib_db.comments.remove("% Encoding: UTF-8")
     except ValueError:
         pass
 
-    writer.order_entries_by = ("ID", "author", "year")
-    writer.add_trailing_comma = True
-    writer.align_values = True
-    writer.indent = "  "
-    bibtex_str = bibtexparser.dumps(bib_db, writer)
+    bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
     with open(target_file, "w") as out:
         out.write(bibtex_str)
@@ -644,3 +649,23 @@ def build_docker_images() -> None:
         client.images.pull("pandoc/ubuntu-latex:latest")
 
     return
+
+
+def read_next_entry(file_object) -> str:
+    data = ""
+    first_entry_processed = False
+    while True:
+        line = file_object.readline()
+        if not line:
+            break
+        if line[:1] == "%" or line == "\n":
+            continue
+        if line[:1] != "@":
+            data += line
+        else:
+            if first_entry_processed:
+                yield data
+            else:
+                first_entry_processed = True
+            data = line
+    yield data
