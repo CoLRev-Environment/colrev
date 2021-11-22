@@ -317,8 +317,12 @@ def get_status() -> list:
     return status_of_records
 
 
-def get_remote_commit_differences(repo: git.Repo) -> [int, int]:
+def get_remote_commit_differences(repo: git.Repo) -> list:
     nr_commits_behind, nr_commits_ahead = -1, -1
+
+    origin = repo.remotes.origin
+    if origin.exists():
+        origin.fetch()
 
     if repo.active_branch.tracking_branch() is not None:
 
@@ -331,8 +335,6 @@ def get_remote_commit_differences(repo: git.Repo) -> [int, int]:
         commits_ahead = repo.iter_commits(ahead_operation)
         nr_commits_behind = sum(1 for c in commits_behind)
         nr_commits_ahead = sum(1 for c in commits_ahead)
-
-        # TODO: check whether this also considers non-pulled changes!? (fetch?)
 
     return nr_commits_behind, nr_commits_ahead
 
