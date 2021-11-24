@@ -50,7 +50,7 @@ config = dict(
     SHARE_STAT_REQ=local_config.get("general", "SHARE_STAT_REQ", fallback="PROCESSED"),
     CPUS=local_config.getint("general", "CPUS", fallback=mp.cpu_count() - 1),
     MERGING_NON_DUP_THRESHOLD=local_config.getfloat(
-        "general", "MERGING_NON_DUP_THRESHOLD", fallback=0.7
+        "general", "MERGING_NON_DUP_THRESHOLD", fallback=0.75
     ),
     MERGING_DUP_THRESHOLD=local_config.getfloat(
         "general", "MERGING_DUP_THRESHOLD", fallback=0.95
