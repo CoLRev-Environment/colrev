@@ -35,33 +35,35 @@ prepared, need_manual_prep = 0, 0
 current_batch_counter = mp.Value("i", 0)
 
 
-def retrieve_local_resources() -> [list, list, list]:
-
+def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
     if os.path.exists("lexicon/JOURNAL_ABBREVIATIONS.csv"):
         JOURNAL_ABBREVIATIONS = pd.read_csv("lexicon/JOURNAL_ABBREVIATIONS.csv")
     else:
         JOURNAL_ABBREVIATIONS = pd.DataFrame([], columns=["journal", "abbreviation"])
+    return JOURNAL_ABBREVIATIONS
 
+
+def retrieve_local_JOURNAL_VARIATIONS() -> list:
     if os.path.exists("lexicon/JOURNAL_VARIATIONS.csv"):
         JOURNAL_VARIATIONS = pd.read_csv("lexicon/JOURNAL_VARIATIONS.csv")
     else:
         JOURNAL_VARIATIONS = pd.DataFrame([], columns=["journal", "variation"])
+    return JOURNAL_VARIATIONS
 
+
+def retrieve_local_CONFERENCE_ABBREVIATIONS() -> list:
     if os.path.exists("lexicon/CONFERENCE_ABBREVIATIONS.csv"):
         CONFERENCE_ABBREVIATIONS = pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
     else:
         CONFERENCE_ABBREVIATIONS = pd.DataFrame(
             [], columns=["conference", "abbreviation"]
         )
+    return CONFERENCE_ABBREVIATIONS
 
-    return JOURNAL_ABBREVIATIONS, JOURNAL_VARIATIONS, CONFERENCE_ABBREVIATIONS
 
-
-(
-    LOCAL_JOURNAL_ABBREVIATIONS,
-    LOCAL_JOURNAL_VARIATIONS,
-    LOCAL_CONFERENCE_ABBREVIATIONS,
-) = retrieve_local_resources()
+LOCAL_JOURNAL_ABBREVIATIONS = retrieve_local_JOURNAL_ABBREVIATIONS()
+LOCAL_JOURNAL_VARIATIONS = retrieve_local_JOURNAL_VARIATIONS()
+LOCAL_CONFERENCE_ABBREVIATIONS = retrieve_local_CONFERENCE_ABBREVIATIONS()
 
 
 conf_strings = []
