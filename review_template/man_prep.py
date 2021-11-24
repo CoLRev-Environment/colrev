@@ -157,7 +157,7 @@ def man_prep_records() -> None:
     repo.index.add([MAIN_REFERENCES])
 
     utils.create_commit(
-        repo, "Prepare records for import", saved_args, manual_author=True
+        repo, "Manual preparation of records", saved_args, manual_author=True
     )
     return
 
