@@ -473,6 +473,7 @@ def apply_merges(bib_db: BibDatabase) -> BibDatabase:
                 for record in bib_db.entries:
                     if record["ID"] == row[1]:
                         el_to_merge = record["origin"].split(";")
+                        file_to_merge = record.get("file", "NA")
                         # Drop the duplicated record
                         bib_db.entries = [
                             i for i in bib_db.entries if not (i["ID"] == record["ID"])
@@ -482,6 +483,13 @@ def apply_merges(bib_db: BibDatabase) -> BibDatabase:
                     if record["ID"] == row[0]:
                         els = el_to_merge + record["origin"].split(";")
                         els = list(set(els))
+                        if "NA" != file_to_merge:
+                            if "file" in record:
+                                record["file"] = (
+                                    record.get("file", "") + ";" + file_to_merge
+                                )
+                            else:
+                                record["file"] = file_to_merge
                         record.update(origin=str(";".join(els)))
                         if "prepared" == record["md_status"]:
                             record.update(md_status="processed")
