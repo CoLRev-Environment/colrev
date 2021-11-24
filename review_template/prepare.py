@@ -571,8 +571,13 @@ def get_md_from_crossref(record: dict) -> dict:
         ("title" not in record)
         or ("doi" in record)
         or is_complete_metadata_source(record)
-    ):
+    ) or "abstract" in record:
         return record
+
+    enrich_only = False
+    if is_complete_metadata_source(record):
+        enrich_only = True
+
     # To test the metadata provided for a particular DOI use:
     # https://api.crossref.org/works/DOI
 
@@ -597,8 +602,12 @@ def get_md_from_crossref(record: dict) -> dict:
             logging.debug(f"crossref similarity: {similarity}")
             if similarity > 0.9:
                 for key, val in retrieved_record.items():
+                    # Note: no abstracts in crossref?
+                    # if enrich_only and 'abstract' != key:
+                    #     continue
                     record[key] = val
-                record.update(metadata_source="CROSSREF")
+                if not enrich_only:
+                    record.update(metadata_source="CROSSREF")
 
         except KeyboardInterrupt:
             sys.exit()
@@ -642,8 +651,11 @@ def sem_scholar_json_to_record(item: dict, record: dict) -> dict:
 
 
 def get_md_from_sem_scholar(record: dict) -> dict:
-    if is_complete_metadata_source(record):
+    if is_complete_metadata_source(record) or "abstract" in record:
         return record
+    enrich_only = False
+    if is_complete_metadata_source(record):
+        enrich_only = True
 
     try:
         search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
@@ -675,8 +687,11 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         logging.debug(f"scholar similarity: {similarity}")
         if similarity > 0.9:
             for key, val in retrieved_record.items():
+                if enrich_only and "abstract" != key:
+                    continue
                 record[key] = val
-            record.update(metadata_source="SEMANTIC_SCHOLAR")
+            if not enrich_only:
+                record.update(metadata_source="SEMANTIC_SCHOLAR")
 
     except KeyError:
         pass
