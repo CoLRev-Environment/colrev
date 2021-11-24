@@ -29,7 +29,7 @@ MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
 BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
-search_type_opts = ["DB", "TOC", "BACK_CIT", "FORW_CIT", "OTHER"]
+search_type_opts = ["DB", "TOC", "BACK_CIT", "FORW_CIT", "LOCAL_PAPER_INDEX", "OTHER"]
 
 
 def get_search_files(restrict: list = None) -> None:
@@ -208,9 +208,17 @@ def check_update_search_details(search_files: list) -> None:
 
 def rename_search_files(search_files: list) -> list:
     ret_list = []
+
+    search_details = utils.load_search_details()
+    search_dir = os.path.join(os.getcwd(), "search/")
+    index_paths = [os.path.join(search_dir, x["filename"]) for x in search_details]
+
     date_regex = r"^\d{4}-\d{2}-\d{2}"
     for search_file in search_files:
-        if re.search(date_regex, os.path.basename(search_file)):
+        if (
+            re.search(date_regex, os.path.basename(search_file))
+            or search_file in index_paths
+        ):
             ret_list.append(search_file)
         else:
             new_filename = os.path.join(
@@ -663,7 +671,7 @@ def save_imported_files(repo: git.Repo, bib_db: BibDatabase) -> bool:
     return True
 
 
-def main(repo: git.Repo, keep_ids: bool) -> BibDatabase:
+def main(repo: git.Repo, keep_ids: bool = False) -> BibDatabase:
 
     saved_args = locals()
     if not keep_ids:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import inspect
 import io
 import json
 import logging
@@ -220,6 +219,9 @@ def save_search_details(search_details: list) -> None:
         "search_parameters",
         "comment",
     ]
+    orderedCols = orderedCols.append(
+        [x for x in search_details_df.columns if x not in orderedCols]
+    )
     search_details_df = search_details_df.reindex(columns=orderedCols)
 
     with open(SEARCH_DETAILS, "w") as f:
@@ -380,8 +382,12 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
     report = "\n\nReport\n\n"
 
     if script_name is not None:
-        script_name = script_name.replace(".py", "").replace("_", "-")
-        report = report + f"Command\n   review_template {script_name}\n"
+        script_name = (
+            script_name.split(" ")[0]
+            + " "
+            + script_name.split(" ")[1].replace("_", "-")
+        )
+        report = report + f"Command\n   {script_name}\n"
     if saved_args is not None:
         repo = None
         for k, v in saved_args.items():
@@ -427,6 +433,16 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
         + "\n   - Docker:".ljust(33, " ")
         + docker_v.replace("Docker ", "").replace("\n", "")
     )
+    if script_name is not None:
+        ext_script = script_name.split(" ")[0]
+        if ext_script != "review_template":
+            script_version = version(ext_script)
+            report = (
+                report
+                + f"\n   - {ext_script}:".ljust(33, " ")
+                + "version "
+                + script_version
+            )
 
     if "dirty" in report:
         report = report + "\n    ⚠ created with a modified version (not reproducible)"
@@ -598,7 +614,11 @@ def create_commit(
 
             processing_report = "\nProcessing report\n" + "".join(processing_report)
 
-        script = str(os.path.basename(inspect.stack()[1][1]))
+        caller = sys._getframe(1)
+        script = str(caller.f_globals["__name__"]).replace("-", "_").replace(".", " ")
+        if "Update pre-commit-config" in msg:
+            script = "pre-commit autoupdate"
+
         if manual_author:
             git_author = git.Actor(
                 repo_setup.config["GIT_ACTOR"], repo_setup.config["EMAIL"]

@@ -119,9 +119,11 @@ def init_new_repo() -> git.Repo:
     # ignored in the template directory.
     f = open(".gitignore", "w")
     f.write(
-        "*.bib.sav\nprivate_config.ini\n.local_pdf_indices"
-        + "\n.index-*\nmissing_pdf_files.csv\n"
-        + "manual_cleansing_statistics.csv"
+        "*.bib.sav\n"
+        + "private_config.ini\n"
+        + "missing_pdf_files.csv\n"
+        + "manual_cleansing_statistics.csv\n"
+        + "data.csv"
     )
     f.close()
 

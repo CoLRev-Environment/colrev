@@ -8,7 +8,9 @@ import time
 import requests
 
 GROBID_URL = "http://localhost:8070"
-grobid_image = "grobid/grobid:0.7.1-SNAPSHOT"
+# grobid_image = "grobid/grobid:0.7.1-SNAPSHOT"
+# grobid_image = "lfoppiano/grobid:0.7.0"
+grobid_image = "lfoppiano/grobid:0.6.2"
 
 
 def get_grobid_url() -> str:

@@ -470,6 +470,7 @@ def apply_merges(bib_db: BibDatabase) -> BibDatabase:
             csv_reader = csv.reader(read_obj)
             for row in csv_reader:
                 el_to_merge = []
+                file_to_merge = "NA"
                 for record in bib_db.entries:
                     if record["ID"] == row[1]:
                         el_to_merge = record["origin"].split(";")
