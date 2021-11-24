@@ -527,12 +527,12 @@ def review_status() -> dict:
     #               -> the number of records excluded/merged
 
     print("\nStatus\n")
+    stat = get_status_freq()
 
     if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
         print(" | Search")
         print(" |  - No records added yet")
     else:
-        stat = get_status_freq()
         metadata, review, pdfs = (
             stat["metadata_status"],
             stat["review_status"],
