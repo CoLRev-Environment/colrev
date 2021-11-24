@@ -292,6 +292,38 @@ def get_status_freq() -> dict:
     rev_overall_stat["synthesized"] = rev_synthesized
     rev_overall_stat["synthesis"] = rev_overall_synthesis
 
+    # Note: prepare, dedupe, prescreen, pdfs, pdf_prepare, screen, data
+    nr_steps = 7
+    total_atomic_steps = nr_steps * stat["metadata_status"]["overall"]["retrieved"]
+    # Remove record steps no longer required
+    # (multiplied by number of following steps no longer required)
+    total_atomic_steps = (
+        total_atomic_steps
+        - 5 * stat["metadata_status"]["currently"]["duplicates_removed"]
+    )
+    total_atomic_steps = (
+        total_atomic_steps
+        - 4 * stat["review_status"]["currently"]["prescreen_excluded"]
+    )
+    total_atomic_steps = (
+        total_atomic_steps - 2 * stat["pdf_status"]["currently"]["not_available"]
+    )
+    total_atomic_steps = (
+        total_atomic_steps - 1 * stat["review_status"]["currently"]["screen_excluded"]
+    )
+    rev_overall_stat["atomic_steps"] = total_atomic_steps
+
+    completed_steps = (
+        7 * stat["review_status"]["overall"]["synthesized"]
+        + 6 * stat["review_status"]["overall"]["screen"]
+        + 5 * stat["pdf_status"]["overall"]["prepared"]
+        + 4 * stat["pdf_status"]["overall"]["retrieved"]
+        + 3 * stat["review_status"]["overall"]["prescreen"]
+        + 2 * stat["metadata_status"]["overall"]["processed"]
+        + 1 * stat["metadata_status"]["overall"]["prepared"]
+    )
+    rev_cur_stat["completed_atomic_steps"] = completed_steps
+
     return stat
 
 
@@ -486,7 +518,7 @@ def stat_print(
     return
 
 
-def review_status() -> None:
+def review_status() -> dict:
     global status_freq
 
     # Principle: first column shows total records/PDFs in each stage
@@ -682,11 +714,11 @@ def review_status() -> None:
                 )
             else:
                 stat_print(False, "Synthesized", review["overall"]["synthesized"])
-    return
+    return stat
 
 
-def review_instructions(status_freq: dict = None) -> None:
-    if status_freq is None:
+def review_instructions(stat: dict = None) -> None:
+    if stat is None:
         stat = get_status_freq()
     metadata, review, pdfs = (
         stat["metadata_status"],
@@ -781,7 +813,12 @@ def review_instructions(status_freq: dict = None) -> None:
 
 def collaboration_instructions(status_freq: dict) -> None:
 
-    nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+    nr_commits_behind, nr_commits_ahead = 0, 0
+    if 0 != len(repo.remotes):
+        origin = repo.remotes.origin
+        if origin.exists():
+            nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+
     if nr_commits_behind == -1 and nr_commits_ahead == -1:
         print("\n\nVersioning\n")
     else:
@@ -794,7 +831,7 @@ def collaboration_instructions(status_freq: dict) -> None:
         print("  Not connected to a shared repository (not tracking a remote branch).")
 
     else:
-        print(f" Requirement: {SHARE_STAT_REQ}")
+        print(f"  Requirement: {SHARE_STAT_REQ}")
 
         if nr_commits_behind > 0:
             print(
@@ -890,13 +927,41 @@ def collaboration_instructions(status_freq: dict) -> None:
     return
 
 
+def print_progress(stat: dict) -> None:
+    # Prints the percentage of atomic processing tasks that have been completed
+    # possible extension: estimate the number of manual tasks (making assumptions on
+    # frequencies of man-prep, ...)?
+
+    total_atomic_steps = stat["review_status"]["overall"]["atomic_steps"]
+    completed_steps = stat["review_status"]["currently"]["completed_atomic_steps"]
+
+    current = int((completed_steps / total_atomic_steps) * 100)
+
+    sleep_interval = 1.3 / current
+    print()
+    from time import sleep
+    from tqdm import tqdm
+
+    for i in tqdm(
+        range(100),
+        desc="  Progress:",
+        bar_format="{desc} |{bar}|{percentage:.0f}%",
+        ncols=40,
+    ):
+        sleep(sleep_interval)
+        if current == i:
+            break
+    return
+
+
 def main() -> None:
 
     repository_validation()
     repository_load()
-    status_freq = review_status()
-    review_instructions(status_freq)
-    collaboration_instructions(status_freq)
+    stat = review_status()
+    print_progress(stat)
+    review_instructions(stat)
+    collaboration_instructions(stat)
 
     print(
         "Documentation\n\n   "
