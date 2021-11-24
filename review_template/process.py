@@ -15,10 +15,6 @@ from review_template import repo_setup
 from review_template import status
 from review_template import utils
 
-# Records should not be propagated/screened when the batch
-# has not yet been committed
-DELAY_AUTOMATED_PROCESSING = repo_setup.config["DELAY_AUTOMATED_PROCESSING"]
-
 
 def reprocess_id(id: str, repo: git.Repo) -> None:
     saved_args = locals()
@@ -57,6 +53,10 @@ def check_delay(bib_db: BibDatabase, min_status_requirement: str) -> bool:
     # prescreen_excluded, not_available, excluded
 
     # TODO: distingusih rev_status, md_status, pdf_status
+
+    # Records should not be propagated/screened when the batch
+    # has not yet been committed
+    DELAY_AUTOMATED_PROCESSING = repo_setup.config["DELAY_AUTOMATED_PROCESSING"]
 
     if "md_imported" == min_status_requirement:
         # Note: md_status=retrieved should not happen
