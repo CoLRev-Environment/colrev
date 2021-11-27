@@ -106,7 +106,7 @@ def man_prep_records() -> None:
     stat_len = 0
     ID_list = []
     with open(MAIN_REFERENCES) as f:
-        for record_str in utils.read_next_entry(f):
+        for record_str in utils.read_next_record_str(f):
             ID_list.append(record_str[record_str.find("{") + 1 : record_str.find(",")])
             if "needs_manual_preparation" in record_str:
                 stat_len += 1
@@ -117,7 +117,7 @@ def man_prep_records() -> None:
     temp = MAIN_REFERENCES.replace(".bib", "_copy.bib")
     i = 1
     with open(MAIN_REFERENCES) as f, open(temp, "w") as m:
-        for record_str in utils.read_next_entry(f):
+        for record_str in utils.read_next_record_str(f):
             if "needs_manual_preparation" in record_str:
                 bib_database = bibtexparser.loads(record_str)
                 for record in bib_database.entries:
@@ -149,16 +149,18 @@ def man_prep_records() -> None:
                 record_str = bibtexparser.dumps(bib_database, utils.get_bibtex_writer())
             else:
                 record_str += "\n"
-
             m.write(record_str)
 
     os.remove(MAIN_REFERENCES)
     os.rename(temp, MAIN_REFERENCES)
-    repo.index.add([MAIN_REFERENCES])
+    if stat_len > 0:
+        bib_db = utils.load_main_refs()
+        utils.save_bib_file(bib_db)
+        repo.index.add([MAIN_REFERENCES])
+        utils.create_commit(
+            repo, "Manual preparation of records", saved_args, manual_author=True
+        )
 
-    utils.create_commit(
-        repo, "Manual preparation of records", saved_args, manual_author=True
-    )
     return
 
 
@@ -280,15 +282,4 @@ def extract_needs_man_prep() -> None:
         with open("man_prep/search/" + file, "w") as fi:
             fi.write(bibtexparser.dumps(search_db))
 
-    return
-
-
-def main(stats: bool = False, extract: bool = False) -> None:
-
-    if stats:
-        man_prep_stats()
-    elif extract:
-        extract_needs_man_prep()
-    else:
-        man_prep_records()
     return

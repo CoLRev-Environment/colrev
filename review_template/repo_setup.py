@@ -4,8 +4,12 @@ import configparser
 import logging
 import multiprocessing as mp
 import os
+import pprint
 
-from review_template import init
+import git
+
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+
 
 # Note: including the paths here is useful to ensure that a passing pre-commit
 # means that the files are in the specified places. This is particularly
@@ -20,13 +24,25 @@ if os.path.exists("private_config.ini"):
 local_config.read(confs)
 
 
+def get_name_mail_from_global_git_config() -> list:
+    ggit_conf_path = os.path.normpath(os.path.expanduser("~/.gitconfig"))
+    global_conf_details = []
+    if os.path.exists(ggit_conf_path):
+        glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
+        global_conf_details = [
+            glob_git_conf.get("user", "name"),
+            glob_git_conf.get("user", "email"),
+        ]
+    return global_conf_details
+
+
 def email_fallback() -> str:
-    name, email = init.get_name_mail_from_global_git_config()
+    name, email = get_name_mail_from_global_git_config()
     return email
 
 
 def actor_fallback() -> str:
-    name, email = init.get_name_mail_from_global_git_config()
+    name, email = get_name_mail_from_global_git_config()
     return name
 
 
@@ -111,5 +127,5 @@ paths_v1 = dict(
 if config["REPO_SETUP_VERSION"] == "v_0.1":
     paths = paths_v1
 
-logging.debug(f"config: {config}")
-logging.debug(f"paths: {paths}")
+logging.debug(f"config: {pp.pformat(config)}")
+logging.debug(f"paths: {pp.pformat(paths)}")

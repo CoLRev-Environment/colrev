@@ -34,7 +34,17 @@ search_type_opts = ["DB", "TOC", "BACK_CIT", "FORW_CIT", "LOCAL_PAPER_INDEX", "O
 
 def get_search_files(restrict: list = None) -> None:
 
-    supported_extensions = ["ris", "bib", "end", "txt", "csv", "txt", "xlsx", "pdf"]
+    supported_extensions = [
+        "ris",
+        "bib",
+        "end",
+        "txt",
+        "csv",
+        "txt",
+        "xlsx",
+        "xls",
+        "pdf",
+    ]
 
     if restrict:
         supported_extensions = restrict
@@ -71,6 +81,8 @@ def load_records(filepath: str) -> list:
 
     search_db = getbib(filepath)
 
+    logging.debug(f"Loaded {filepath} with {len(search_db.entries)} records")
+
     if search_db is None:
         return []
 
@@ -89,6 +101,8 @@ def load_records(filepath: str) -> list:
         record.update(md_status="retrieved")
         logging.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
+
+    logging.debug(f"Thereof {len(record_list)} new records (not yet imported)")
 
     return record_list
 
@@ -155,6 +169,8 @@ def source_heuristics(search_file: str) -> str:
                 in line
             ):
                 return "DBLP"
+            if "UT_(Unique_WOS_ID) = {WOS:" in line:
+                return "WebOfScience"
 
     return None
 
@@ -164,45 +180,6 @@ def append_search_details(new_record: dict) -> None:
     search_details.append(new_record)
     logging.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
     utils.save_search_details(search_details)
-    return
-
-
-def check_update_search_details(search_files: list) -> None:
-
-    search_details = utils.load_search_details()
-
-    for sfp in search_files:
-        if not sfp.endswith("bib") and os.path.exists(sfp[: sfp.rfind(".")] + ".bib"):
-            logging.debug("found corresponding bib file")
-            continue
-        search_file = os.path.basename(sfp)
-        if search_file not in [x["filename"] for x in search_details]:
-            source_name = source_heuristics(sfp)
-            print(f"Please provide details for {search_file}")
-            search_type = "TODO"
-            while search_type not in search_type_opts:
-                print(f"Search type options: {search_type_opts}")
-                search_type = input("Enter search type".ljust(40, " ") + ": ")
-            if source_name is None:
-                source_name = input(
-                    "Enter source name (e.g., GoogleScholar)".ljust(40, " ") + ": "
-                )
-            else:
-                print("Source name".ljust(40, " ") + f": {source_name}")
-            source_url = input("Enter source_url".ljust(40, " ") + ": ")
-            search_parameters = input("Enter search_parameters".ljust(40, " ") + ": ")
-            comment = input("Enter a comment (or NA)".ljust(40, " ") + ": ")
-
-            new_record = {
-                "filename": search_file,
-                "search_type": search_type,
-                "source_name": source_name,
-                "source_url": source_url,
-                "search_parameters": search_parameters,
-                "comment": comment,
-            }
-            append_search_details(new_record)
-
     return
 
 
@@ -231,6 +208,28 @@ def rename_search_files(search_files: list) -> list:
     return ret_list
 
 
+class SearchDetailsMissingError(Exception):
+    def __init__(
+        self,
+        search_results_path,
+    ):
+        self.search_results_path = search_results_path
+        self.message = (
+            "Search results path "
+            + f"({os.path.basename(self.search_results_path)}) "
+            + "is not in search_details.yaml"
+        )
+        super().__init__(self.message)
+
+
+def check_search_details(search_files: list):
+    search_details = utils.load_search_details()
+    for search_file in search_files:
+        if os.path.basename(search_file) not in [x["filename"] for x in search_details]:
+            raise SearchDetailsMissingError(search_file)
+    return
+
+
 def load_all_records() -> list:
 
     bib_db = utils.load_main_refs(mod_check=True, init=True)
@@ -248,10 +247,13 @@ def load_all_records() -> list:
     convert_to_bib(search_files)
 
     search_files = get_search_files(restrict=["bib"])
-    check_update_search_details(search_files)
+    logging.debug(f"Search_files (bib, after conversion): {search_files}")
+    check_search_details(search_files)
 
     load_pool = mp.Pool(repo_setup.config["CPUS"])
     additional_records = load_pool.map(load_records, search_files)
+    len_lists = [len(additional_record) for additional_record in additional_records]
+    logging.debug(f"Length of additional_records lists: {len_lists}")
     load_pool.close()
     load_pool.join()
 
@@ -302,9 +304,9 @@ def bibutils_convert(script: str, data: str) -> str:
 
     client.remove_container(container)
 
-    # print('Exit: {}'.format(status_code))
-    # print('log stdout: {}'.format(stdout))
-    # print('log stderr: {}'.format(stderr))
+    # logging.debug('Exit: {}'.format(status_code))
+    # logging.debug('log stdout: {}'.format(stdout))
+    # logging.debug('log stderr: {}'.format(stderr))
 
     # TODO: else: raise error!
 
@@ -325,13 +327,13 @@ def getbib(file: str) -> BibDatabase:
             )
             return None
 
-        else:
-            with open(file) as bibtex_file:
-                db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
+    with open(file) as bibtex_file:
+        db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=True,
+            common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+
     return db
 
 
@@ -451,7 +453,7 @@ def csv2bib(file: str) -> BibDatabase:
 
 def xlsx2bib(file: str) -> BibDatabase:
     try:
-        data = pd.read_excel(file)
+        data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
     except pd.errors.ParserError:
         logging.error("Error: Not an xlsx file: " + os.path.basename(file))
         pass
@@ -496,11 +498,11 @@ def pdf2bib(file: str) -> BibDatabase:
         return db
     if 500 == r.status_code:
         logging.error(f"Not a readable pdf file: {os.path.basename(file)}")
-        print(f"Grobid: {r.text}")
+        logging.debug(f"Grobid: {r.text}")
         return None
 
-    print(f"Status: {r.status_code}")
-    print(f"Response: {r.text}")
+    logging.debug(f"Status: {r.status_code}")
+    logging.debug(f"Response: {r.text}")
     return None
 
 
@@ -522,25 +524,112 @@ def pdfRefs2bib(file: str) -> BibDatabase:
         return db
     if 500 == r.status_code:
         logging.error(f"Not a readable pdf file? {os.path.basename(file)}")
-        print(f"Grobid: {r.text}")
+        logging.debug(f"Grobid: {r.text}")
         return None
 
-    print(f"Status: {r.status_code}")
-    print(f"Response: {r.text}")
+    logging.debug(f"Status: {r.status_code}")
+    logging.debug(f"Response: {r.text}")
+    return None
+
+
+def unify_field_names(db: BibDatabase) -> BibDatabase:
+
+    # At some point, this may depend on the source (database)
+    # This should be available in the search_details.
+    # Note : if we do not unify (at least the author/year), the IDs of imported records
+    # will be AnonymousNoYear a,b,c,d,....
+    for record in db.entries:
+        if "Publication_Type" in record:
+            if "J" == record["Publication_Type"]:
+                record["ENTRYTYPE"] = "article"
+            if "C" == record["Publication_Type"]:
+                record["ENTRYTYPE"] = "inproceedings"
+            del record["Publication_Type"]
+        if "Author_Full_Names" in record:
+            record["author"] = record["Author_Full_Names"]
+            del record["Author_Full_Names"]
+        if "Publication_Year" in record:
+            record["year"] = record["Publication_Year"]
+            # match =re.match(r'([1-3][0-9]{3})', record['year'])
+            # if match is not None:
+            #     record['year'] = match.group(1)
+            del record["Publication_Year"]
+        if "Start_Page" in record and "End_Page" in record:
+            if record["Start_Page"] != "nan" and record["End_Page"] != "nan":
+                record["pages"] = record["Start_Page"] + "--" + record["End_Page"]
+                record["pages"] = record["pages"].replace(".0", "")
+                del record["Start_Page"]
+                del record["End_Page"]
+
+    return db
+
+
+def drop_empty_fields(db: BibDatabase) -> BibDatabase:
+    db.entries = [{k: v for k, v in r.items() if v is not None} for r in db.entries]
+    db.entries = [{k: v for k, v in r.items() if v != "nan"} for r in db.entries]
+    return db
+
+
+def set_IDs(db: BibDatabase) -> BibDatabase:
+
+    if 0 == len([r for r in db.entries if "ID" not in r]):
+        # IDs set for all records
+        return db
+
+    for i, record in enumerate(db.entries):
+        if "ID" not in record:
+            if "UT_(Unique_WOS_ID)" in record:
+                record["ID"] = record["UT_(Unique_WOS_ID)"].replace(":", "_")
+            else:
+                record["ID"] = f"{i+1}".rjust(10, "0")
+
+    return db
+
+
+def fix_keys(db: BibDatabase) -> BibDatabase:
+    for record in db.entries:
+        record = {
+            re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
+            for k, v in record.items()
+        }
+    return db
+
+
+conversion_scripts = {
+    "ris": ris2bib,
+    "end": end2bib,
+    "txt": txt2bib,
+    "csv": csv2bib,
+    "xlsx": xlsx2bib,
+    "xls": xlsx2bib,
+    "pdf": pdf2bib,
+    "pdf_refs": pdfRefs2bib,
+}
+
+
+class UnsupportedImportFormatError(Exception):
+    def __init__(
+        self,
+        import_path,
+    ):
+        self.import_path = import_path
+        self.message = (
+            "Format of search result file not (yet) supported "
+            + f"({os.path.basename(self.import_path)}) "
+        )
+        super().__init__(self.message)
+
+
+def validate_file_formats() -> None:
+    search_files = get_search_files()
+    for sfp in search_files:
+        if not any(sfp.endswith(ext) for ext in conversion_scripts.keys()):
+            if not sfp.endswith(".bib"):
+                raise UnsupportedImportFormatError(sfp)
     return None
 
 
 def convert_to_bib(search_files: list) -> None:
-
-    conversion_scripts = {
-        "ris": ris2bib,
-        "end": end2bib,
-        "txt": txt2bib,
-        "csv": csv2bib,
-        "xlsx": xlsx2bib,
-        "pdf": pdf2bib,
-        "pdf_refs": pdfRefs2bib,
-    }
 
     for sfpath in search_files:
         search_file = os.path.basename(sfpath)
@@ -549,7 +638,8 @@ def convert_to_bib(search_files: list) -> None:
         if os.path.exists(corresponding_bib_file):
             continue
 
-        assert any(sfpath.endswith(ext) for ext in conversion_scripts.keys())
+        if not any(sfpath.endswith(ext) for ext in conversion_scripts.keys()):
+            raise UnsupportedImportFormatError(sfpath)
 
         filetype = sfpath[sfpath.rfind(".") + 1 :]
         if "pdf" == filetype:
@@ -558,7 +648,13 @@ def convert_to_bib(search_files: list) -> None:
 
         if filetype in conversion_scripts.keys():
             logging.info(f"Loading {filetype}: {search_file}")
+            logging.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
             db = conversion_scripts[filetype](sfpath)
+
+            db = fix_keys(db)
+            db = set_IDs(db)
+            db = unify_field_names(db)
+            db = drop_empty_fields(db)
 
             if db is None:
                 logging.error("No records loaded")
@@ -678,13 +774,6 @@ def main(repo: git.Repo, keep_ids: bool = False) -> BibDatabase:
         del saved_args["keep_ids"]
     global batch_start
     global batch_end
-
-    if [x for x in os.listdir("search") if x.endswith(".pdf")]:
-        input(
-            "PDFs found in search directory. Filenames should end with "
-            '"_ref_list.pdf" to import the reference sections. '
-            "Press Enter to continue."
-        )
 
     utils.reset_log()
     logging.info("Import")

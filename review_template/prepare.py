@@ -102,8 +102,6 @@ def correct_recordtype(record: dict) -> dict:
             + f"Set from {prior_e_type} to phdthesis "
             '("dissertation" in fulltext link)'
         )
-        # TODO: if school is not set: using named entity recognition or
-        # following links: detect the school and set the field
 
     if (
         "thesis" in record.get("fulltext", "NA").lower()
@@ -116,8 +114,6 @@ def correct_recordtype(record: dict) -> dict:
             + f"Set from {prior_e_type} to phdthesis "
             '("thesis" in fulltext link)'
         )
-        # TODO: if school is not set: using named entity recognition or
-        # following links: detect the school and set the field
 
     # TODO: create a warning if any conference strings (ecis, icis, ..)
     # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
@@ -758,10 +754,8 @@ def get_md_from_open_library(record: dict) -> dict:
         if ":" in title:
             title = title[: title.find(":")]  # To catch sub-titles
         url = url + "&title=" + title.replace(" ", "+")
-        # print(url)
-        # headers = {'user-agent': f'{__name__} (mailto:{EMAIL})'}
-        # ret = requests.get(url, headers=headers)
         ret = requests.get(url)
+        logging.debug(url)
 
         # if we have an exact match, we don't need to check the similarity
         if '"numFoundExact": true,' not in ret.text:
@@ -778,9 +772,6 @@ def get_md_from_open_library(record: dict) -> dict:
         record.update(metadata_source="OPEN_LIBRARY")
         if "title" in record and "booktitle" in record:
             del record["booktitle"]
-
-    # except KeyError:
-    #     pass
 
     except UnicodeEncodeError:
         logging.error("UnicodeEncodeError - this needs to be fixed at some time")
@@ -888,6 +879,9 @@ def get_md_from_dblp(record: dict) -> dict:
         headers = {"user-agent": f"{__name__}  (mailto:{EMAIL})"}
         logging.debug(url)
         ret = requests.get(url, headers=headers)
+        if ret.status_code == 500:
+            logging.info("DBLP server error")
+            return record
 
         data = json.loads(ret.text)
         if "hits" not in data["result"]:
@@ -899,7 +893,7 @@ def get_md_from_dblp(record: dict) -> dict:
             item = hit["info"]
 
             retrieved_record = dblp_json_to_record(item)
-            print(retrieved_record)
+
             similarity = get_retrieval_similarity(
                 record.copy(), retrieved_record.copy()
             )
@@ -912,10 +906,8 @@ def get_md_from_dblp(record: dict) -> dict:
                 record.update(metadata_source="DBLP")
 
     # except KeyError:
+    # except json.decoder.JSONDecodeError:
     #     pass
-    except json.decoder.JSONDecodeError:
-        logging.error("JSONDecodeError - this needs to be fixed at some time")
-        pass
     except UnicodeEncodeError:
         logging.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
@@ -1341,7 +1333,6 @@ def prepare(record: dict) -> dict:
             )
         else:
             logging.debug(f"{prep_script} changed: -")
-        # pp.pprint(record)
         if repo_setup.config["DEBUG_MODE"]:
             print("\n")
 
@@ -1425,17 +1416,23 @@ def reset(bib_db: BibDatabase, id: str) -> None:
     return
 
 
+def reset_ids(bib_db: BibDatabase, repo: git.Repo, reset_ids: list) -> None:
+    for reset_id in reset_ids:
+        reset(bib_db, reset_id)
+    utils.save_bib_file(bib_db, MAIN_REFERENCES)
+    repo.index.add([MAIN_REFERENCES])
+    utils.create_commit(repo, "⚙️ Reset metadata for manual preparation")
+    return
+
+
 def main(
     bib_db: BibDatabase,
     repo: git.Repo,
-    reset_ids: bool = None,
     reprocess: bool = False,
     keep_ids: bool = False,
 ) -> BibDatabase:
 
     saved_args = locals()
-    if not reset_ids:
-        del saved_args["reset_ids"]
     if not reprocess:
         del saved_args["reprocess"]
     if not keep_ids:
@@ -1448,14 +1445,6 @@ def main(
 
     process.check_delay(bib_db, min_status_requirement="md_imported")
     utils.reset_log()
-
-    if reset_ids:
-        for reset_id in reset_ids:
-            reset(bib_db, reset_id)
-        utils.save_bib_file(bib_db, MAIN_REFERENCES)
-        repo.index.add([MAIN_REFERENCES])
-        utils.create_commit(repo, "⚙️ Reset metadata for manual preparation")
-        return
 
     # Note: resetting needs_manual_preparation to imported would also be
     # consistent with the check7valid_transitions because it will either

@@ -7,13 +7,13 @@ import os
 import git
 import requests
 from bibtexparser.bibdatabase import BibDatabase
+from pdfminer.high_level import extract_text
 
 from review_template import dedupe
 from review_template import grobid_client
 from review_template import importer
 from review_template import process
 from review_template import repo_setup
-from review_template import status
 from review_template import utils
 
 # https://github.com/ContentMine/getpapers
@@ -33,56 +33,37 @@ def unpaywall(doi: str, retry: int = 0, pdfonly: bool = True) -> str:
     )
 
     if r.status_code == 404:
-        # print("Invalid/unknown DOI {}".format(doi))
         return None
 
     if r.status_code == 500:
-        # print("Unpaywall API failed. Try: {}/3".format(retry+1))
-
         if retry < 3:
             return unpaywall(doi, retry + 1)
         else:
-            # print("Retried 3 times and failed. Giving up")
             return None
 
     best_loc = None
     try:
         best_loc = r.json()["best_oa_location"]
     except json.decoder.JSONDecodeError:
-        # print("Response was not json")
-        # print(r.text)
         return None
     except KeyError:
-        # print("best_oa_location not set")
-        # print(r.text)
         return None
-    # except:
-    # print("Something weird happened")
-    # print(r.text)
-    #  return None
 
     if not r.json()["is_oa"] or best_loc is None:
-        # print("No OA paper found for {}".format(doi))
         return None
 
     if best_loc["url_for_pdf"] is None and pdfonly is True:
-        # print("No PDF found..")
-        # print(best_loc)
         return None
     else:
-        return best_loc["url"]
-
-    return best_loc["url_for_pdf"]
+        return best_loc["url_for_pdf"]
 
 
 def is_pdf(path_to_file: str) -> bool:
-
-    # TODO: add exceptions
-    # try:
-    # extract_text(path_to_file)
-    return True
-    # except:
-    #    return False
+    try:
+        extract_text(path_to_file)
+        return True
+    except:  # noqa E722
+        return False
 
 
 def get_pdf_from_unpaywall(record: dict) -> dict:
@@ -296,9 +277,5 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
             if batch_end == 0:
                 logging.info("No additional pdfs to retrieve")
             break
-
-    print()
-
-    status.review_instructions()
 
     return bib_db

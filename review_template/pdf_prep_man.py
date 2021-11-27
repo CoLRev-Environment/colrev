@@ -6,7 +6,6 @@ from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import pdf_prepare
 from review_template import repo_setup
-from review_template import status
 from review_template import utils
 
 PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
@@ -36,5 +35,4 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
     for record in bib_db.entries:
         record = man_prep_pdf(record)
 
-    status.review_instructions()
     return bib_db

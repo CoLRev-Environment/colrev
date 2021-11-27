@@ -2,26 +2,26 @@
 import csv
 import logging
 import os
-import pprint
 
+import bibtexparser
 import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bparser import BibTexParser
+from bibtexparser.customization import convert_to_unicode
 
-from review_template import process
 from review_template import repo_setup
-from review_template import screen
-from review_template import status
 from review_template import utils
 
 MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-PAD = 0
 
 
 def export_table(bib_db: BibDatabase, export_table_format: str) -> None:
 
     tbl = []
     for record in bib_db.entries:
+
+        inclusion_1, inclusion_2 = "NA", "NA"
 
         if "retrieved" == record["rev_status"]:
             inclusion_1 = "TODO"
@@ -65,7 +65,9 @@ def export_table(bib_db: BibDatabase, export_table_format: str) -> None:
         logging.info("Created screen_table (csv)")
 
     if "xlsx" == export_table_format.lower():
-        print("TODO: XLSX")
+        screen_df = pd.DataFrame(tbl)
+        screen_df.to_excel("screen_table.xlsx", index=False, sheet_name="screen")
+        logging.info("Created screen_table (xlsx)")
 
     return
 
@@ -78,6 +80,9 @@ def import_table(bib_db: BibDatabase, import_table_path: str) -> None:
     screen_df.fillna("", inplace=True)
     records = screen_df.to_dict("records")
 
+    logging.warning(
+        "import_table not yet completed " "(exclusion_criteria are not yet imported)"
+    )
     for x in [
         [x.get("ID", ""), x.get("inclusion_1", ""), x.get("inclusion_2", "")]
         for x in records
@@ -100,10 +105,10 @@ def import_table(bib_db: BibDatabase, import_table_path: str) -> None:
     return
 
 
-def include_all_in_prescreen(
-    bib_db: BibDatabase, repo: git.Repo, saved_args: dict
-) -> None:
+def include_all_in_prescreen(bib_db: BibDatabase, repo: git.Repo) -> None:
 
+    saved_args = locals()
+    PAD = 50  # TODO
     for record in bib_db.entries:
         if record.get("rev_status", "NA") in ["retrieved", "processed"]:
             continue
@@ -115,99 +120,74 @@ def include_all_in_prescreen(
 
     utils.save_bib_file(bib_db)
     repo.index.add([MAIN_REFERENCES])
-    # Ask whether to create a commit/if records remain for pre-screening
-    if "y" == input("Create commit (y/n)?"):
-        utils.create_commit(
-            repo, "Pre-screening (manual)", saved_args, manual_author=False
-        )
+    utils.create_commit(repo, "Pre-screening (manual)", saved_args, manual_author=False)
 
     return
 
 
-def prescreen(bib_db: BibDatabase, repo: git.Repo, saved_args: dict) -> None:
+def get_next_prescreening_item():
+    prescreening_items = []
+    for record_string in utils.read_next_record_str():
+        rev_stat = "NA"
+        for line in record_string.split("\n"):
+            if "rev_status" == line.lstrip()[:10]:
+                rev_stat = line[line.find("{") + 1 : line.rfind("}")]
+                if "retrieved" == rev_stat:
+                    parser = BibTexParser(customization=convert_to_unicode)
+                    db = bibtexparser.loads(record_string, parser=parser)
+                    record = db.entries[0]
+                    prescreening_items.append(record)
+    yield from prescreening_items
 
-    logging.info("Start prescreen")
 
-    pp = pprint.PrettyPrinter(indent=4, width=140)
-    i, quit_pressed = 1, False
-    stat_len = len(
-        [x for x in bib_db.entries if "retrieved" == x.get("rev_status", "NA")]
-    )
+def replace_field(ID, key: str, val: str) -> None:
 
-    for record in bib_db.entries:
+    val = val.encode("utf-8")
+    current_ID = "NA"
+    with open(MAIN_REFERENCES, "r+b") as fd:
+        seekpos = fd.tell()
+        line = fd.readline()
+        while line:
+            if b"@" in line[:3]:
+                current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
+                current_ID = current_ID.decode("utf-8")
 
-        if "retrieved" != record.get("rev_status", "NA"):
-            continue
+            replacement = None
+            if current_ID == ID:
+                if line.lstrip()[: len(key)].decode("utf-8") == key:
+                    replacement = line[: line.find(b"{") + 1] + val + b"},\n"
 
-        print("\n\n")
-        revrecord = screen.customsort(record)
-        pp.pprint(revrecord)
-
-        ret, inclusion_decision = "NA", "NA"
-        while ret not in ["y", "n", "s", "q"]:
-            ret = input(f"({i}/{stat_len}) Include this record [y,n,q,s]? ")
-            if "q" == ret:
-                quit_pressed = True
-            elif "s" == ret:
-                continue
-            else:
-                inclusion_decision = ret.replace("y", "yes").replace("n", "no")
-        i += 1
-
-        if quit_pressed:
-            logging.info("Stop prescreen")
-            break
-
-        if "no" == inclusion_decision:
-            record.update(rev_status="prescreen_excluded")
-            logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Excluded in prescreen")
-        if "yes" == inclusion_decision:
-            logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen")
-            record.update(rev_status="prescreen_included")
-            record.update(pdf_status="needs_retrieval")
-
-        utils.save_bib_file(bib_db)
-
-    if 0 == stat_len:
-        logging.info("No records to prescreen")
-
-    else:
-        if i < stat_len:  # if records remain for pre-screening
-            if "y" != input("Create commit (y/n)?"):
-                return
-        repo.index.add([MAIN_REFERENCES])
-        utils.create_commit(
-            repo, "Pre-screening (manual)", saved_args, manual_author=True
-        )
+            if replacement == ":q":
+                break
+            if replacement:
+                if len(replacement) == len(line):
+                    fd.seek(seekpos)
+                    fd.write(replacement)
+                    fd.flush()
+                    os.fsync(fd)
+                else:
+                    remaining = fd.read()
+                    fd.seek(seekpos)
+                    fd.write(replacement)
+                    seekpos = fd.tell()
+                    fd.flush()
+                    os.fsync(fd)
+                    fd.write(remaining)
+                    fd.truncate()  # if the replacement is shorter...
+                    fd.seek(seekpos)
+                    line = fd.readline()
+                return  # We only need to replace once
+            seekpos = fd.tell()
+            line = fd.readline()
     return
 
 
-def main(
-    include_all: bool = False,
-    export_table_format: str = None,
-    import_table_path: str = None,
-) -> None:
-    saved_args = locals()
-    bib_db = utils.load_main_refs()
+def set_prescreen_status(ID, prescreen_inclusion: bool) -> None:
 
-    if export_table_format:
-        export_table(bib_db, export_table_format)
-    elif import_table_path:
-        import_table(bib_db, import_table_path)
+    if prescreen_inclusion:
+        replace_field(ID, "rev_status", "prescreen_included")
+        replace_field(ID, "pdf_status", "needs_retrieval")
     else:
-        del saved_args["export_table_format"]
-        del saved_args["import_table_path"]
-        repo = git.Repo("")
-        utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
-        process.check_delay(bib_db, min_status_requirement="md_processed")
-        global PAD
-        PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
-
-        if include_all:
-            include_all_in_prescreen(bib_db, repo, saved_args)
-        else:
-            del saved_args["include_all"]
-            prescreen(bib_db, repo, saved_args)
-        status.review_instructions()
+        replace_field(ID, "rev_status", "prescreen_excluded")
 
     return

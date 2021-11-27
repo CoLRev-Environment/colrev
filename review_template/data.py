@@ -12,7 +12,6 @@ import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from yaml import safe_load
 
-from review_template import init
 from review_template import repo_setup
 from review_template import utils
 
@@ -131,9 +130,9 @@ def update_manuscript(
     author = repo_setup.config["GIT_ACTOR"]
 
     if not os.path.exists(MANUSCRIPT):
-        init.retrieve_template_file("../template/" + MANUSCRIPT, MANUSCRIPT)
-        init.inplace_change(MANUSCRIPT, "{{project_title}}", title)
-        init.inplace_change(MANUSCRIPT, "{{author}}", author)
+        utils.retrieve_package_file("../template/" + MANUSCRIPT, MANUSCRIPT)
+        utils.inplace_change(MANUSCRIPT, "{{project_title}}", title)
+        utils.inplace_change(MANUSCRIPT, "{{author}}", author)
         logging.info(f"Please update title and authors in {MANUSCRIPT}")
 
     temp = f".tmp_{MANUSCRIPT}"

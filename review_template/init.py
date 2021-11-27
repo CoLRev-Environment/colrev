@@ -2,97 +2,90 @@
 import configparser
 import logging
 import os
-import pkgutil
+from subprocess import check_call
+from subprocess import DEVNULL
+from subprocess import STDOUT
 
 import git
 import requests
 
-
-def retrieve_template_file(template_file: str, target: str) -> None:
-    filedata = pkgutil.get_data(__name__, template_file)
-    filedata = filedata.decode("utf-8")
-    with open(target, "w") as file:
-        file.write(filedata)
-    return
+from review_template import utils
 
 
-def inplace_change(filename: str, old_string: str, new_string: str) -> None:
-
-    # Safely read the input filename using 'with'
-    with open(filename) as f:
-        s = f.read()
-        if old_string not in s:
-            logging.info(f'"{old_string}" not found in {filename}.')
-            return
-
-    # Safely write the changed content, if found in the file
-    with open(filename, "w") as f:
-        s = s.replace(old_string, new_string)
-        f.write(s)
-    return
-
-
-def get_value(msg: str, options: dict) -> str:
-    valid_response = False
-    user_input = ""
-    while not valid_response:
-        print(f" {msg} (" + "|".join(options) + ")")
-        user_input = input()
-        if user_input in options:
-            valid_response = True
-    return user_input
-
-
-def get_name_mail_from_global_git_config() -> [str, str]:
+def get_name_mail_from_global_git_config() -> list:
     ggit_conf_path = os.path.normpath(os.path.expanduser("~/.gitconfig"))
+    global_conf_details = []
     if os.path.exists(ggit_conf_path):
         glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
-        committer_name = glob_git_conf.get("user", "name")
-        committer_email = glob_git_conf.get("user", "email")
-        # TODO: test whether user and email are set in the global config
-    else:
-        committer_name = input("Please provide your name")
-        committer_email = input("Please provide your e-mail")
-    return committer_name, committer_email
+        global_conf_details = [
+            glob_git_conf.get("user", "name"),
+            glob_git_conf.get("user", "email"),
+        ]
+    return global_conf_details
 
 
-def init_new_repo() -> git.Repo:
+def connect_to_remote(repo: git.Repo, remote_url: str) -> None:
+    try:
+        requests.get(remote_url)
+        origin = repo.create_remote("origin", remote_url)
+        repo.heads.main.set_tracking_branch(origin.refs.main)
+        origin.push()
+        logging.info("Connected to shared repository:".ljust(30, " ") + f"{remote_url}")
+    except requests.ConnectionError:
+        logging.error(
+            "URL of shared repository cannot be reached. Use "
+            "git remote add origin https://github.com/user/repo"
+            "\ngit push origin main"
+        )
+        pass
+    return
 
-    from review_template import repo_setup  # noqa: F401
+
+def initialize_repo(
+    project_title: str,
+    SHARE_STAT_REQ: str,
+    PDF_HANDLING: str,
+    DATA_FORMAT: str,
+    remote_url: str = None,
+) -> bool:
 
     saved_args = locals()
 
+    if 0 != len(os.listdir(os.getcwd())) and ["report.log"] != os.listdir(os.getcwd()):
+        logging.error("Directory not empty.")
+        return 0
+
+    assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+    assert PDF_HANDLING in ["EXT", "GIT"]
+
+    # TODO: allow multiple?
+    assert DATA_FORMAT in ["NONE", "STRUCTURED", "MANUSCRIPT", "SHEETs", "MACODING"]
+
+    global_git_vars = get_name_mail_from_global_git_config()
+    if 2 != len(global_git_vars):
+        logging.error("Global git variables (user name and email) not available.")
+        return 0
+    committer_name, committer_email = global_git_vars
+
+    # REPO_SETUP_VERSION = repo_setup.paths.keys()[-1]
+    REPO_SETUP_VERSION = "v_0.1"
+
     logging.info("Initialize review repository")
-    project_title = input("Project title: ")
     logging.info("Set project title:".ljust(30, " ") + f"{project_title}")
-
-    committer_name, committer_email = get_name_mail_from_global_git_config()
-    print("\n\nParameters for the review project\n" "Details avilable at: TODO/docs")
-
-    # # TODO: allow multiple?
-    # DATA_FORMAT = get_value('Select data structure',
-    #                         ['NONE', 'STRUCTURED', 'MANUSCRIPT',
-    #                          'SHEETs', 'MACODING'])
-    SHARE_STAT_REQ = get_value(
-        "Select share status requirement",
-        ["NONE", "PROCESSED", "SCREENED", "COMPLETED"],
-    )
     logging.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
-
-    PDF_HANDLING = get_value("Select pdf handling", ["EXT", "GIT"])
     logging.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
+    logging.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
 
     repo = git.Repo.init()
     os.mkdir("search")
 
-    retrieve_template_file("../template/readme.md", "readme.md")
-    retrieve_template_file(
-        "../template/.pre-commit-config.yaml",
-        ".pre-commit-config.yaml",
+    utils.retrieve_package_file("../template/readme.md", "readme.md")
+    utils.retrieve_package_file(
+        "../template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
     )
-    retrieve_template_file("../template/.gitattributes", ".gitattributes")
+    utils.retrieve_package_file("../template/.gitattributes", ".gitattributes")
 
-    inplace_change("readme.md", "{{project_title}}", project_title)
+    utils.inplace_change("readme.md", "{{project_title}}", project_title.rstrip(" "))
 
     private_config = configparser.ConfigParser()
     private_config.add_section("general")
@@ -103,8 +96,6 @@ def init_new_repo() -> git.Repo:
     with open("private_config.ini", "w") as configfile:
         private_config.write(configfile)
 
-    # REPO_SETUP_VERSION = repo_setup.paths.keys()[-1]
-    REPO_SETUP_VERSION = "v_0.1"
     shared_config = configparser.ConfigParser()
     shared_config.add_section("general")
     shared_config["general"]["REPO_SETUP_VERSION"] = REPO_SETUP_VERSION
@@ -112,8 +103,6 @@ def init_new_repo() -> git.Repo:
     shared_config["general"]["PDF_HANDLING"] = PDF_HANDLING
     with open("shared_config.ini", "w") as configfile:
         shared_config.write(configfile)
-
-    logging.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
 
     # Note: need to write the .gitignore because file would otherwise be
     # ignored in the template directory.
@@ -127,10 +116,13 @@ def init_new_repo() -> git.Repo:
     )
     f.close()
 
-    os.system("pre-commit install")
-    os.system("pre-commit autoupdate")
+    logging.info("Install pre-commmit hooks")
+    check_call(["pre-commit", "install"], stdout=DEVNULL, stderr=STDOUT)
 
-    from review_template import utils
+    logging.info("Update pre-commmit hooks")
+    check_call(
+        ["pre-commit", "autoupdate", "--bleeding-edge"], stdout=DEVNULL, stderr=STDOUT
+    )
 
     repo.index.add(
         [
@@ -144,35 +136,13 @@ def init_new_repo() -> git.Repo:
 
     utils.create_commit(repo, "Initial commit", saved_args, True)
 
-    if "y" == input("Connect to shared (remote) repository (y)?"):
-        remote_url = input("URL:")
-        try:
-            requests.get(remote_url)
-            origin = repo.create_remote("origin", remote_url)
-            repo.heads.main.set_tracking_branch(origin.refs.main)
-            origin.push()
-            logging.info(
-                "Connected to shared repository:".ljust(30, " ") + f"{remote_url}"
-            )
-        except requests.ConnectionError:
-            logging.error(
-                "URL of shared repository cannot be reached. Use "
-                "git remote add origin https://github.com/user/repo"
-                "\ngit push origin main"
-            )
-            pass
+    if remote_url is not None:
+        connect_to_remote(repo, remote_url)
 
-    return repo
+    return 1
 
 
-def clone_shared_repo() -> git.Repo:
-    logging.info("Connecting to a shared repository ...")
-    logging.info(
-        "To initiate a new project, cancel (ctrl+c) and use "
-        "review_template init in an empty directory"
-    )
-
-    remote_url = input("URL of shared repository:")
+def clone_shared_repo(remote_url: str) -> git.Repo:
     try:
         requests.get(remote_url)
         repo_name = os.path.splitext(os.path.basename(remote_url))[0]
@@ -186,30 +156,4 @@ def clone_shared_repo() -> git.Repo:
             "git push origin main"
         )
         pass
-    return repo
-
-
-def initialize_repo() -> git.Repo:
-    if 0 != len(os.listdir(os.getcwd())):
-        if "y" == input("Connect to a shared repo (y/n)?"):
-            repo = clone_shared_repo()
-        else:
-            return
-    else:
-        if "y" == input("Retrieve shared repository (y/n)?"):
-            repo = clone_shared_repo()
-        else:
-            repo = init_new_repo()
-    return repo
-
-
-def get_repo() -> git.Repo:
-    try:
-        repo = git.Repo()
-        return repo
-    except git.exc.InvalidGitRepositoryError:
-        logging.error("No git repository found.")
-        pass
-
-    repo = initialize_repo()
     return repo

@@ -578,6 +578,4 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                 logging.info("No records to check for duplicates")
             break
 
-    print()
-
     return bib_db

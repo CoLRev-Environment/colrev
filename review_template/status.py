@@ -1,66 +1,19 @@
 #! /usr/bin/env python3
 import logging
 import os
-import sys
 
 import git
 import yaml
 
-from review_template import init
 from review_template import repo_setup
 from review_template import screen
 from review_template import utils
 
-repo = None
-SHARE_STAT_REQ, MAIN_REFERENCES = None, None
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
-
-
-def lsremote(url: str) -> str:
-    remote_refs = {}
-    g = git.cmd.Git()
-    for ref in g.ls_remote(url).split("\n"):
-        hash_ref_list = ref.split("\t")
-        remote_refs[hash_ref_list[1]] = hash_ref_list[0]
-    return remote_refs
-
-
-def get_bib_files() -> list:
-    search_dir = os.path.join(os.getcwd(), "search/")
-    return [
-        os.path.join(search_dir, x)
-        for x in os.listdir(search_dir)
-        if x.endswith(".bib")
-    ]
-
-
-def get_nr_in_bib(file_path: str) -> int:
-
-    number_in_bib = 0
-    with open(file_path) as f:
-        line = f.readline()
-        while line:
-            # Note: the '﻿' occured in some bibtex files
-            # (e.g., Publish or Perish exports)
-            if line.replace("﻿", "").lstrip()[:1] == "@":
-                if not "@comment" == line.replace("﻿", "").lstrip()[:8].lower():
-                    number_in_bib += 1
-            line = f.readline()
-
-    return number_in_bib
-
 
 def get_nr_search() -> int:
     number_search = 0
-    for search_file in get_bib_files():
-        number_search += get_nr_in_bib(search_file)
+    for search_file in utils.get_bib_files():
+        number_search += utils.get_nr_in_bib(search_file)
     return number_search
 
 
@@ -251,6 +204,14 @@ def get_status_freq() -> dict:
     md_cur_stat["needs_manual_merging"] = md_needs_manual_merging
     md_cur_stat["processed"] = md_processed
     md_cur_stat["duplicates_removed"] = md_duplicates_removed
+    md_cur_stat["non_processed"] = (
+        md_non_imported
+        + md_imported
+        + md_prepared
+        + md_needs_manual_preparation
+        + md_duplicates_removed
+        + md_needs_manual_merging
+    )
 
     md_overall_stat = stat["metadata_status"]["overall"]
     md_overall_stat["retrieved"] = md_overall_retrieved
@@ -277,6 +238,9 @@ def get_status_freq() -> dict:
     rev_cur_stat["prescreen_excluded"] = rev_prescreen_excluded
     rev_cur_stat["screen_included"] = rev_screen_included
     rev_cur_stat["screen_excluded"] = rev_screen_excluded
+    rev_cur_stat["non_screened"] = (
+        rev_retrieved + rev_needs_prescreen + rev_needs_screen
+    )
     rev_cur_stat["synthesized"] = rev_synthesized
     rev_cur_stat["needs_prescreen"] = rev_needs_prescreen
     rev_cur_stat["needs_screen"] = rev_needs_screen
@@ -291,6 +255,9 @@ def get_status_freq() -> dict:
     rev_overall_stat["included"] = rev_overall_included
     rev_overall_stat["synthesized"] = rev_synthesized
     rev_overall_stat["synthesis"] = rev_overall_synthesis
+    rev_overall_stat["non_completed"] = (
+        rev_retrieved + rev_needs_prescreen + rev_needs_screen + rev_overall_included
+    )
 
     # Note: prepare, dedupe, prescreen, pdfs, pdf_prepare, screen, data
     nr_steps = 7
@@ -327,26 +294,231 @@ def get_status_freq() -> dict:
     return stat
 
 
-def get_status() -> list:
-    status_of_records = []
+def is_git_repo(path: str) -> bool:
+    try:
+        _ = git.Repo(path).git_dir
+        return True
+    except git.exc.InvalidGitRepositoryError:
+        return False
 
-    with open(repo_setup.paths["MAIN_REFERENCES"]) as f:
-        line = f.readline()
-        while line:
-            if line.lstrip().startswith("status"):
-                status_of_records.append(
-                    line.replace("status", "")
-                    .replace("=", "")
-                    .replace("{", "")
-                    .replace("}", "")
-                    .replace(",", "")
-                    .lstrip()
-                    .rstrip()
-                )
-            line = f.readline()
-        status_of_records = list(set(status_of_records))
 
-    return status_of_records
+def is_review_template_project() -> bool:
+    # Note : 'private_config.ini', 'shared_config.ini' are optional
+    required_paths = ["search", ".pre-commit-config.yaml", ".gitignore"]
+    if not all(os.path.exists(x) for x in required_paths):
+        return False
+    return True
+
+
+def get_installed_hooks() -> dict:
+    installed_hooks = {}
+    with open(".pre-commit-config.yaml") as pre_commit_y:
+        pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+    installed_hooks[
+        "remote_pv_hooks_repo"
+    ] = "https://github.com/geritwagner/pipeline-validation-hooks"
+    for repository in pre_commit_config["repos"]:
+        if repository["repo"] == installed_hooks["remote_pv_hooks_repo"]:
+            installed_hooks["local_hooks_version"] = repository["rev"]
+            installed_hooks["hooks"] = [hook["id"] for hook in repository["hooks"]]
+    return installed_hooks
+
+
+def lsremote(url: str) -> str:
+    remote_refs = {}
+    g = git.cmd.Git()
+    for ref in g.ls_remote(url).split("\n"):
+        hash_ref_list = ref.split("\t")
+        remote_refs[hash_ref_list[1]] = hash_ref_list[0]
+    return remote_refs
+
+
+def hooks_up_to_date(installed_hooks: dict) -> bool:
+    refs = lsremote(installed_hooks["remote_pv_hooks_repo"])
+    remote_sha = refs["HEAD"]
+    if remote_sha == installed_hooks["local_hooks_version"]:
+        return True
+    return False
+
+
+def required_hooks_installed(installed_hooks: dict) -> bool:
+    return installed_hooks["hooks"] == ["check", "format"]
+
+
+def repository_validation() -> dict:
+    global repo
+
+    repo_report = {}
+
+    # 1. git repository?
+    if not is_git_repo(os.getcwd()):
+        repo_report["msg"] = "No git repository. Use review_template init"
+        repo_report["level"] = "ERROR"
+        return repo_report
+    repo = git.Repo("")
+
+    # 2. review_template project?
+    if not is_review_template_project():
+        repo_report["msg"] = (
+            "No review_template repository"
+            + "\n  To retrieve a shared repository, use review_template init."
+            + "\n  To initalize a new repository, execute the "
+            + "command in an empty directory.\nExit."
+        )
+        repo_report["level"] = "ERROR"
+        return repo_report
+
+    # 3. Pre-commit hooks installed?
+    installed_hooks = get_installed_hooks()
+    if not required_hooks_installed(installed_hooks):
+        repo_report["msg"] = (
+            "Pre-commit hooks not installed. See"
+            + " https://github.com/geritwagner/pipeline-validation-hooks for details"
+        )
+        repo_report["level"] = "ERROR"
+        return repo_report
+
+    # 4. Pre-commit hooks up-to-date?
+    try:
+        if not hooks_up_to_date(installed_hooks):
+            repo_report["msg"] = (
+                "Pre-commit hooks not up-to-date. "
+                + "Use pre-commit autoupdate (--bleeding-edge)"
+            )
+            repo_report["level"] = "WARNING"
+
+    except git.exc.GitCommandError as e:
+        repo_report["msg"] = (
+            "No Internet connection, cannot check remote "
+            "pipeline-validation-hooks repository for updates."
+        )
+        repo_report["level"] = "WARNING"
+        logging.error(e)
+        pass
+
+    return repo_report
+
+
+def get_review_instructions(stat: dict = None) -> dict:
+    if stat is None:
+        stat = get_status_freq()
+    instructions = []
+
+    metadata, review, pdfs = (
+        stat["metadata_status"],
+        stat["review_status"],
+        stat["pdf_status"],
+    )
+
+    if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
+        instruction = {
+            "msg": "To import, copy search results to the search directory.",
+            "cmd": "review_template importer",
+            # "high_level_cmd": "review_template metadata",
+        }
+        instructions.append(instruction)
+
+    if metadata["currently"]["non_imported"] > 0:
+        instruction = {
+            "msg": "Import search results",
+            "cmd": "review_template importer",
+            # "high_level_cmd": "review_template metadata",
+        }
+        instructions.append(instruction)
+
+    if metadata["currently"]["imported"] > 0:
+        instruction = {
+            "msg": "Continue with record preparation",
+            "cmd": "review_template prepare",
+            # "high_level_cmd": "review_template metadata",
+        }
+        instructions.append(instruction)
+
+    if metadata["currently"]["needs_manual_preparation"] > 0:
+        instruction = {
+            "msg": "Continue with manual preparation",
+            "cmd": "review_template man-prep",
+        }
+        instructions.append(instruction)
+
+    if metadata["currently"]["prepared"] > 0:
+        instruction = {
+            "msg": "Continue with record deduplication",
+            "cmd": "review_template dedupe",
+            # "high_level_cmd": "review_template metadata",
+        }
+        instructions.append(instruction)
+
+    if metadata["currently"]["needs_manual_merging"] > 0:
+        instruction = {
+            "msg": "To continue manual processing of duplicates",
+            "cmd": "review_template man-dedupe",
+        }
+        instructions.append(instruction)
+
+    if review["currently"]["needs_prescreen"] > 0:
+        instruction = {
+            "msg": "Continue with prescreen",
+            "cmd": "review_template prescreen",
+        }
+        instructions.append(instruction)
+
+    if pdfs["currently"]["needs_retrieval"] > 0:
+        instruction = {
+            "msg": "Continue with pdf retrieval",
+            "cmd": "review_template pdfs",
+        }
+        instructions.append(instruction)
+
+    if pdfs["currently"]["needs_manual_retrieval"] > 0:
+        instruction = {
+            "msg": "Continue with manual pdf retrieval",
+            "cmd": "review_template pdf-get-man",
+        }
+        instructions.append(instruction)
+
+    if pdfs["currently"]["imported"] > 0:
+        instruction = {
+            "msg": "Continue with pdf preparation",
+            "cmd": "review_template pdf-prepare",
+        }
+        instructions.append(instruction)
+
+    if review["currently"]["needs_screen"] > 0:
+        instruction = {
+            "msg": "Continue with screen",
+            "cmd": "review_template screen",
+        }
+        instructions.append(instruction)
+
+    if review["currently"]["needs_synthesis"] > 0:
+        instruction = {
+            "msg": "Continue with data extraction/analysis",
+            "cmd": "review_template data",
+        }
+        instructions.append(instruction)
+
+    if get_completeness_condition():
+        instruction = {
+            "info": "Iterationed completed.",
+            "msg": "To start the next iteration of the review, "
+            + "add records to search/ directory",
+            "cmd_after": "review_template importer",
+        }
+        instructions.append(instruction)
+
+    if "MANUSCRIPT" == repo_setup.config["DATA_FORMAT"]:
+        instruction = {
+            "msg": "Build the paper",
+            "cmd": "review_template paper",
+        }
+        instructions.append(instruction)
+
+    # Note : we can set the first in the list to priority
+    # because the instructions are appended in order
+    instructions[0]["priority"] = "yes"
+
+    return instructions
 
 
 def get_remote_commit_differences(repo: git.Repo) -> list:
@@ -360,127 +532,173 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
 
         branch_name = str(repo.active_branch)
         tracking_branch_name = str(repo.active_branch.tracking_branch())
-        print(f"{branch_name} - {tracking_branch_name}")
+        logging.debug(f"{branch_name} - {tracking_branch_name}")
+
         behind_operation = branch_name + ".." + tracking_branch_name
         commits_behind = repo.iter_commits(behind_operation)
+        nr_commits_behind = sum(1 for c in commits_behind)
+
         ahead_operation = tracking_branch_name + ".." + branch_name
         commits_ahead = repo.iter_commits(ahead_operation)
-        nr_commits_behind = sum(1 for c in commits_behind)
         nr_commits_ahead = sum(1 for c in commits_ahead)
 
     return nr_commits_behind, nr_commits_ahead
 
 
-def is_git_repo(path: str) -> bool:
-    try:
-        _ = git.Repo(path).git_dir
-        return True
-    except git.exc.InvalidGitRepositoryError:
-        return False
+def get_collaboration_instructions(stat: dict) -> dict:
 
+    instructions = {"items": []}
 
-def repository_validation() -> None:
-    global repo
-    if not is_git_repo(os.getcwd()):
-        logging.error(
-            "No git repository. Use " f"{colors.GREEN}review_template init{colors.END}"
-        )
-        sys.exit()
+    found_a_conflict = False
+    repo = git.Repo()
+    unmerged_blobs = repo.index.unmerged_blobs()
+    for path in unmerged_blobs:
+        list_of_blobs = unmerged_blobs[path]
+        for (stage, blob) in list_of_blobs:
+            if stage != 0:
+                found_a_conflict = True
 
-    repo = git.Repo("")
+    nr_commits_behind, nr_commits_ahead = 0, 0
 
-    # Note : 'private_config.ini', 'shared_config.ini' are optional
-    required_paths = ["search", ".pre-commit-config.yaml", ".gitignore"]
-    if not all(os.path.exists(x) for x in required_paths):
-        logging.error(
-            "No review_template repository\n  Missing: "
-            + ", ".join([x for x in required_paths if not os.path.exists(x)])
-            + "\n  To retrieve a shared repository, use "
-            + f"{colors.GREEN}review_template init{colors.END}."
-            + "\n  To initalize a new repository, execute the "
-            + "command in an empty directory.\nExit."
-        )
-        sys.exit()
+    SHARE_STAT_REQ = repo_setup.config["SHARE_STAT_REQ"]
+    CONNECTED_REMOTE = 0 != len(repo.remotes)
+    if CONNECTED_REMOTE:
+        origin = repo.remotes.origin
+        if origin.exists():
+            nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+    if CONNECTED_REMOTE:
+        instructions["title"] = "Versioning and collaboration"
+        instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
+    else:
+        instructions["title"] = "Versioning (not connected to shared repository)"
 
-    with open(".pre-commit-config.yaml") as pre_commit_y:
-        pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-    installed_hooks = []
-    remote_pv_hooks_repo = "https://github.com/geritwagner/pipeline-validation-hooks"
-    for repository in pre_commit_config["repos"]:
-        if repository["repo"] == remote_pv_hooks_repo:
-            local_hooks_version = repository["rev"]
-            installed_hooks = [hook["id"] for hook in repository["hooks"]]
-    if not installed_hooks == ["check", "format"]:
-        os.rename(".pre-commit-config.yaml", "bak_pre-commit-config.yaml")
-        init.retrieve_template_file(
-            "../template/.pre-commit-config.yaml",
-            ".pre-commit-config.yaml",
-        )
-        os.system("pre-commit install")
-        os.system("pre-commit autoupdate --bleeding-edge")
+    if found_a_conflict:
+        item = {
+            "title": "Git merge conflict detected",
+            "level": "WARNING",
+            "msg": "To resolve:\n  1 https://docs.github.com/en/"
+            + "pull-requests/collaborating-with-pull-requests/"
+            + "addressing-merge-conflicts/resolving-a-merge-conflict-"
+            + "using-the-command-line",
+        }
+        instructions["items"].append(item)
 
-        logging.warning(
-            "Updated pre-commit hook. Please check/remove bak_pre-commit-config.yaml"
-        )
-        sys.exit()
-
-    try:
-        refs = lsremote(remote_pv_hooks_repo)
-        remote_sha = refs["HEAD"]
-
-        if not remote_sha == local_hooks_version:
-            # Default: automatically update hooks
-            logging.info("Updating pre-commit hooks...")
-            os.system("pre-commit autoupdate --bleeding-edge")
-
-            utils.update_status_yaml()
-
-            repo.index.add([".pre-commit-config.yaml", "status.yaml"])
-            repo.index.commit(
-                "Update pre-commit-config"
-                + utils.get_version_flag()
-                + utils.get_commit_report(),
-                author=git.Actor("script:" + os.path.basename(__file__), ""),
-                committer=git.Actor(
-                    repo_setup.config["GIT_ACTOR"], repo_setup.config["EMAIL"]
-                ),
-            )
-            logging.info("Commited updated pre-commit hooks")
-            utils.reset_log()
-        # we could offer a parameter to disable autoupdates (warn accordingly)
-        #     print('  pipeline-validation-hooks version outdated.\n  use ',
-        #           f'{colors.RED}pre-commit autoupdate{colors.END}')
-        #     sys.exit()
-        #     # once we use tags, we may consider recommending
-        #     # pre-commit autoupdate --bleeding-edge
-    except git.exc.GitCommandError as e:
-        logging.error(e)
-        logging.warning(
-            " No Internet connection, cannot check remote "
-            "pipeline-validation-hooks repository for updates."
-        )
-        pass
-
-    return
-
-
-def repository_load() -> None:
-    global repo
-
-    # TODO: check whether it is a valid git repo
-
-    # Notify users when changes in bib files are not staged
+    # Notify when changes in bib files are not staged
     # (this may raise unexpected errors)
     non_tracked = [
         item.a_path for item in repo.index.diff(None) if ".bib" == item.a_path[-4:]
     ]
     if len(non_tracked) > 0:
-        logging.warning(
-            "Warning: Non-tracked files that may cause "
-            + "failing checks: "
-            + ",".join(non_tracked)
-        )
-    return
+        item = {
+            "title": "Non-tracked files that may "
+            + f"cause failing checks ({','.join(non_tracked)})",
+            "level": "WARNING",
+        }
+        instructions["items"].append(item)
+
+    if not found_a_conflict and repo.is_dirty():
+        item = {
+            "title": "Uncommitted changes",
+            "level": "WARNING",
+        }
+        instructions["items"].append(item)
+
+    elif not found_a_conflict:
+
+        if nr_commits_behind > 0:
+            item = {
+                "title": "Remote changes available on the server",
+                "msg": "Once you have committed your changes, get the latest "
+                + "remote changes",
+                "cmd_after": "git add FILENAME \n git commit -m 'MSG' \n "
+                + "git pull --rebase",
+            }
+            instructions["items"].append(item)
+
+        if nr_commits_ahead > 0:
+            # TODO: suggest detailed commands (depending on the working directory/index)
+            item = {
+                "title": "Local changes not yet on the server",
+                "msg": "Once you have committed your changes, upload them "
+                + "to the shared repository.",
+                "cmd_after": "git push",
+            }
+            instructions["items"].append(item)
+
+        if SHARE_STAT_REQ == "NONE":
+            instructions["status"] = {
+                "title": "Sharing: currently ready for sharing",
+                "level": "SUCCESS",
+                "msg": "If consistency checks pass",
+            }
+
+        # TODO all the following: should all search results be imported?!
+        if SHARE_STAT_REQ == "PROCESSED":
+            if 0 == stat["metadata_status"]["currently"]["non_processed"]:
+                instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "If consistency checks pass",
+                }
+
+            else:
+                instructions["status"] = {
+                    "title": "Sharing: currently not ready for sharing",
+                    "level": "WARNING",
+                    "msg": "All records should be processed before sharing "
+                    + "(see instructions above).",
+                }
+
+        # Note: if we use all(...) in the following,
+        # we do not need to distinguish whether
+        # a PRE_SCREEN or INCLUSION_SCREEN is needed
+        if SHARE_STAT_REQ == "SCREENED":
+            if 0 == stat["review_status"]["currently"]["non_screened"]:
+                instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "If consistency checks pass",
+                }
+
+            else:
+                instructions["status"] = {
+                    "title": "Sharing: currently not ready for sharing",
+                    "level": "WARNING",
+                    "msg": "All records should be screened before sharing "
+                    + "(see instructions above).",
+                }
+
+        if SHARE_STAT_REQ == "COMPLETED":
+            if 0 == stat["review_status"]["currently"]["non_completed"]:
+                instructions["status"] = {
+                    "title": "Sharing: currently ready for sharing",
+                    "level": "SUCCESS",
+                    "msg": "If consistency checks pass",
+                }
+            else:
+                instructions["status"] = {
+                    "title": "Sharing: currently not ready for sharing",
+                    "level": "WARNING",
+                    "msg": "All records should be completed before sharing "
+                    + "(see instructions above).",
+                }
+
+    else:
+        instructions["status"] = {
+            "title": "Sharing: currently not ready for sharing",
+            "level": "WARNING",
+            "msg": "Merge conflicts need to be resolved first.",
+        }
+
+    if 0 == len(instructions["items"]):
+        item = {
+            "title": "Up-to-date",
+            "level": "SUCCESS",
+            "msg": "No versioning/collaboration tasks required at the moment.",
+        }
+        instructions["items"].append(item)
+
+    return instructions
 
 
 def stat_print(
@@ -518,8 +736,7 @@ def stat_print(
     return
 
 
-def review_status() -> dict:
-    global status_freq
+def print_review_status(stat: dict) -> None:
 
     # Principle: first column shows total records/PDFs in each stage
     # the second column shows
@@ -527,7 +744,7 @@ def review_status() -> dict:
     #               -> the number of records excluded/merged
 
     print("\nStatus\n")
-    stat = get_status_freq()
+    from review_template import repo_setup
 
     if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
         print(" | Search")
@@ -714,258 +931,5 @@ def review_status() -> dict:
                 )
             else:
                 stat_print(False, "Synthesized", review["overall"]["synthesized"])
-    return stat
-
-
-def review_instructions(stat: dict = None) -> None:
-    if stat is None:
-        stat = get_status_freq()
-    metadata, review, pdfs = (
-        stat["metadata_status"],
-        stat["review_status"],
-        stat["pdf_status"],
-    )
-
-    print("\n\nNext steps\n")
-    # Note: review_template init is suggested in repository_validation()
-    if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
-        print(
-            "  To import, copy search results to the search directory. "
-            + "Then use\n     review_template process"
-        )
-        return
-
-    if metadata["currently"]["non_imported"] > 0:
-        print("  To import, use\n     review_template process")
-        return
-
-    if metadata["currently"]["needs_manual_preparation"] > 0:
-        print(
-            "  To continue with manual preparation, "
-            "use\n     review_template man-prep"
-        )
-        return
-
-    if metadata["currently"]["prepared"] > 0:
-        print(
-            "  To continue with record preparation, "
-            "use\n     review_template process"
-        )
-        return
-
-    if metadata["currently"]["needs_manual_merging"] > 0:
-        print(
-            "  To continue manual processing of duplicates, "
-            "use\n     review_template man-dedupe"
-        )
-        return
-
-    # TODO: if pre-screening activated in template variables
-    if review["currently"]["needs_prescreen"] > 0:
-        print("  To continue with prescreen, use\n     review_template prescreen")
-        return
-
-    if pdfs["currently"]["needs_retrieval"] > 0:
-        print("  To continue with pdf retrieval, use\n     review_template pdfs")
-        return
-
-    if pdfs["currently"]["needs_manual_retrieval"] > 0:
-        print(
-            "  To continue with manual pdf retrieval, "
-            "use\n     review_template pdf-get-man"
-        )
-        return
-
-    if pdfs["currently"]["imported"] > 0:
-        print(
-            "  To continue with pdf preparation, "
-            "use\n     review_template pdf-prepare"
-        )
-        return
-
-    # TBD: how/when should we offer that option?
-    # if status_freq['non_bw_searched'] > 0:
-    #     print('  To execute backward search, '
-    #           'use\n     review_template back-search')
-    # no return because backward searches are optional
-
-    if review["currently"]["needs_screen"] > 0:
-        print("  To continue with screen, use\n     review_template screen")
-        return
-
-    # TODO: if data activated in template variables
-    if review["currently"]["needs_synthesis"] > 0:
-        print(
-            "  To continue with data extraction/analysis, "
-            "use\n     review_template data"
-        )
-        return
-
-    print(
-        "  Iteration completed.\n     To start the next iteration of the "
-        "review, add records to search/ directory and use\n     "
-        "review_template process"
-    )
-    if "MANUSCRIPT" == repo_setup.config["DATA_FORMAT"]:
-        print("\n  To build the paper use\n     review_template paper")
-    return status_freq
-
-
-def collaboration_instructions(status_freq: dict) -> None:
-
-    nr_commits_behind, nr_commits_ahead = 0, 0
-    if 0 != len(repo.remotes):
-        origin = repo.remotes.origin
-        if origin.exists():
-            nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
-
-    if nr_commits_behind == -1 and nr_commits_ahead == -1:
-        print("\n\nVersioning\n")
-    else:
-        print("\n\nVersioning and collaboration\n")
-
-    if repo.is_dirty():
-        print(f"  {colors.RED}Uncommitted changes{colors.END}")
-
-    if nr_commits_behind == -1 and nr_commits_ahead == -1:
-        print("  Not connected to a shared repository (not tracking a remote branch).")
-
-    else:
-        print(f"  Requirement: {SHARE_STAT_REQ}")
-
-        if nr_commits_behind > 0:
-            print(
-                "Remote changes available on the server.\n"
-                "Once you have committed your changes, get the latest "
-                "remote changes. Use \n   git pull"
-            )
-        if nr_commits_ahead > 0:
-            print(
-                "Local changes not yet on the server.\n"
-                "Once you have committed your changes, upload them "
-                "to the remote server. Use \n   git push"
-            )
-
-        if SHARE_STAT_REQ == "NONE":
-            print(
-                f" Currently: "
-                f"{colors.GREEN}ready for sharing{colors.END}"
-                f" (if consistency checks pass)"
-            )
-
-        # TODO all the following: should all search results be imported?!
-        if SHARE_STAT_REQ == "PROCESSED":
-            non_processed = (
-                status_freq["md_non_imported"]
-                + status_freq["md_imported"]
-                + status_freq["md_prepared"]
-                + status_freq["md_needs_manual_preparation"]
-                + status_freq["md_duplicates_removed"]
-                + status_freq["md_needs_manual_merging"]
-            )
-            if len(non_processed) == 0:
-                print(
-                    f" Currently: "
-                    f"{colors.GREEN}ready for sharing{colors.END}"
-                    f" (if consistency checks pass)"
-                )
-            else:
-                print(
-                    f" Currently: "
-                    f"{colors.RED}not ready for sharing{colors.END}\n"
-                    f"  All records should be processed before sharing "
-                    "(see instructions above)."
-                )
-
-        # Note: if we use all(...) in the following,
-        # we do not need to distinguish whether
-        # a PRE_SCREEN or INCLUSION_SCREEN is needed
-        if SHARE_STAT_REQ == "SCREENED":
-            non_screened = (
-                status_freq["rev_retrieved"]
-                + status_freq["rev_needs_prescreen"]
-                + status_freq["rev_needs_screen"]
-            )
-
-            if len(non_screened) == 0:
-                print(
-                    f" Currently:"
-                    f" {colors.GREEN}ready for sharing{colors.END}"
-                    f" (if consistency checks pass)"
-                )
-            else:
-                print(
-                    f" Currently: "
-                    f"{colors.RED}not ready for sharing{colors.END}\n"
-                    f"  All records should be screened before sharing "
-                    "(see instructions above)."
-                )
-
-        if SHARE_STAT_REQ == "COMPLETED":
-            non_completed = (
-                status_freq["rev_retrieved"]
-                + status_freq["rev_needs_prescreen"]
-                + status_freq["rev_needs_screen"]
-                + status_freq["rev_overall_included"]
-            )
-            if len(non_completed) == 0:
-                print(
-                    f" Currently: "
-                    f"{colors.GREEN}ready for sharing{colors.END}"
-                    f" (if consistency checks pass)"
-                )
-            else:
-                print(
-                    f" Currently: "
-                    f"{colors.RED}not ready for sharing{colors.END}\n"
-                    f"  All records should be completed before sharing "
-                    "(see instructions above)."
-                )
-
-    print("\n")
-
-    return
-
-
-def print_progress(stat: dict) -> None:
-    # Prints the percentage of atomic processing tasks that have been completed
-    # possible extension: estimate the number of manual tasks (making assumptions on
-    # frequencies of man-prep, ...)?
-
-    total_atomic_steps = stat["review_status"]["overall"]["atomic_steps"]
-    completed_steps = stat["review_status"]["currently"]["completed_atomic_steps"]
-
-    current = int((completed_steps / total_atomic_steps) * 100)
-
-    sleep_interval = 1.3 / current
-    print()
-    from time import sleep
-    from tqdm import tqdm
-
-    for i in tqdm(
-        range(100),
-        desc="  Progress:",
-        bar_format="{desc} |{bar}|{percentage:.0f}%",
-        ncols=40,
-    ):
-        sleep(sleep_interval)
-        if current == i:
-            break
-    return
-
-
-def main() -> None:
-
-    repository_validation()
-    repository_load()
-    stat = review_status()
-    print_progress(stat)
-    review_instructions(stat)
-    collaboration_instructions(stat)
-
-    print(
-        "Documentation\n\n   "
-        "See https://github.com/geritwagner/review_template/docs\n"
-    )
 
     return

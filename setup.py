@@ -55,6 +55,7 @@ entry_points = [
     "paper=review_template.cli:paper",
     "profile=review_template.cli:profile",
     "trace=review_template.cli:trace",
+    "debug=review_template.cli:debug",
 ]
 
 setup(

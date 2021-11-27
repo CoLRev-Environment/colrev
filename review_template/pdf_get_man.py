@@ -12,7 +12,6 @@ from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import pdfs
 from review_template import repo_setup
-from review_template import status
 from review_template import utils
 
 existing_pdfs_linked = 0
@@ -122,7 +121,5 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
             f"the {PDF_DIRECTORY}. Afterwards, use "
             "review_template pdf-get-man"
         )
-
-    status.review_instructions()
 
     return bib_db

@@ -26,9 +26,8 @@ from review_template import prepare
 from review_template import repo_setup
 from review_template import status
 
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-DATA = repo_setup.paths["DATA"]
-SEARCH_DETAILS = repo_setup.paths["SEARCH_DETAILS"]
+# Note: do not load repo_setup paths (MAIN_REFERENCES etc.)
+# because utils functions may be needed before the repository is initialized.
 
 
 def lpad_multiline(s: str, lpad: int) -> str:
@@ -71,9 +70,9 @@ def propagated_ID(ID: str) -> bool:
 
     propagated = False
 
-    if os.path.exists(DATA):
+    if os.path.exists(repo_setup.paths["DATA"]):
         # Note: this may be redundant, but just to be sure:
-        data = pd.read_csv(DATA, dtype=str)
+        data = pd.read_csv(repo_setup.paths["DATA"], dtype=str)
         if ID in data["ID"].tolist():
             propagated = True
 
@@ -111,7 +110,7 @@ def generate_ID_blacklist(
         if propagated_ID(record["ID"]):
             raise CitationKeyPropagationError(
                 "WARNING: do not change IDs that have been "
-                + f'propagated to {DATA} ({record["ID"]})'
+                + f'propagated to {repo_setup.paths["DATA"]} ({record["ID"]})'
             )
 
     if "" != record.get("author", "NA"):
@@ -200,8 +199,8 @@ def set_IDs(bib_db: BibDatabase) -> BibDatabase:
 
 def load_search_details() -> list:
 
-    if os.path.exists(SEARCH_DETAILS):
-        with open(SEARCH_DETAILS) as f:
+    if os.path.exists(repo_setup.paths["SEARCH_DETAILS"]):
+        with open(repo_setup.paths["SEARCH_DETAILS"]) as f:
             search_details_df = pd.json_normalize(safe_load(f))
             search_details = search_details_df.to_dict("records")
     else:
@@ -224,7 +223,7 @@ def save_search_details(search_details: list) -> None:
     )
     search_details_df = search_details_df.reindex(columns=orderedCols)
 
-    with open(SEARCH_DETAILS, "w") as f:
+    with open(repo_setup.paths["SEARCH_DETAILS"], "w") as f:
         yaml.dump(
             json.loads(search_details_df.to_json(orient="records")),
             f,
@@ -240,6 +239,8 @@ def load_main_refs(mod_check: bool = None, init: bool = None) -> BibDatabase:
         mod_check = True
     if init is None:
         init = False
+
+    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
 
     if os.path.exists(os.path.join(os.getcwd(), MAIN_REFERENCES)):
         if mod_check:
@@ -277,14 +278,28 @@ def git_modification_check(filename: str) -> None:
 
 
 def get_bib_files() -> None:
-    bib_files = []
     search_dir = os.path.join(os.getcwd(), "search/")
-    bib_files = [
+    return [
         os.path.join(search_dir, x)
         for x in os.listdir(search_dir)
         if x.endswith(".bib")
     ]
-    return bib_files
+
+
+def get_nr_in_bib(file_path: str) -> int:
+
+    number_in_bib = 0
+    with open(file_path) as f:
+        line = f.readline()
+        while line:
+            # Note: the '﻿' occured in some bibtex files
+            # (e.g., Publish or Perish exports)
+            if line.replace("﻿", "").lstrip()[:1] == "@":
+                if not "@comment" == line.replace("﻿", "").lstrip()[:8].lower():
+                    number_in_bib += 1
+            line = f.readline()
+
+    return number_in_bib
 
 
 def get_included_IDs(bib_db: BibDatabase) -> list:
@@ -302,15 +317,15 @@ def get_bibtex_writer():
     writer.contents = ["entries", "comments"]
     # Note: IDs should be at the beginning to facilitate git versioning
     writer.display_order = [
-        "origin",
-        "rev_status",
+        "origin",  # must be in second line
+        "rev_status",  # must be in third line
+        "md_status",  # must be in fourthline
+        "pdf_status",  # must be in fifth line (if available)
         "excl_criteria",
-        "md_status",
         "man_prep_hints",
         "metadata_source",
-        "pdf_status",
         "pdf_processed",
-        "file",
+        "file",  # Note : do not change this order (parsers rely on it)
         "doi",
         "dblp_key",
         "author",
@@ -338,7 +353,7 @@ def get_bibtex_writer():
 def save_bib_file(bib_db: BibDatabase, target_file: str = None) -> None:
 
     if target_file is None:
-        target_file = MAIN_REFERENCES
+        target_file = repo_setup.paths["MAIN_REFERENCES"]
 
     try:
         bib_db.comments.remove("% Encoding: UTF-8")
@@ -449,7 +464,7 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
 
     repo = git.Repo("")
     tree_hash = repo.git.execute(["git", "write-tree"])
-    if os.path.exists(MAIN_REFERENCES):
+    if os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
         report = report + f"\n\nCertified properties for tree {tree_hash}\n"
         report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
         report = report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"
@@ -476,7 +491,8 @@ def get_commit_report(script_name: str = None, saved_args: dict = None) -> str:
     # append status
     f = io.StringIO()
     with redirect_stdout(f):
-        status.review_status()
+        stat = status.get_status_freq()
+        status.print_review_status(stat)
 
     # Remove colors for commit message
     status_page = (
@@ -645,6 +661,26 @@ def create_commit(
         return False
 
 
+def inplace_change(filename: str, old_string: str, new_string: str) -> None:
+    with open(filename) as f:
+        s = f.read()
+        if old_string not in s:
+            logging.info(f'"{old_string}" not found in {filename}.')
+            return
+    with open(filename, "w") as f:
+        s = s.replace(old_string, new_string)
+        f.write(s)
+    return
+
+
+def retrieve_package_file(template_file: str, target: str) -> None:
+    filedata = pkgutil.get_data(__name__, template_file)
+    filedata = filedata.decode("utf-8")
+    with open(target, "w") as file:
+        file.write(filedata)
+    return
+
+
 def build_docker_images() -> None:
 
     client = docker.from_env()
@@ -671,7 +707,37 @@ def build_docker_images() -> None:
     return
 
 
-def read_next_entry(file_object) -> str:
+def read_next_record_header_str(file_object=None, HEADER_LENGTH: int = None) -> str:
+    if HEADER_LENGTH is None:
+        HEADER_LENGTH = 9
+    if file_object is None:
+        file_object = open(repo_setup.paths["MAIN_REFERENCES"])
+    data = ""
+    first_entry_processed = False
+    header_line_count = 0
+    while True:
+        line = file_object.readline()
+        if not line:
+            break
+        if line[:1] == "%" or line == "\n":
+            continue
+        if line[:1] != "@":
+            if header_line_count < HEADER_LENGTH:
+                header_line_count = header_line_count + 1
+                data += line
+        else:
+            if first_entry_processed:
+                yield data
+                header_line_count = 0
+            else:
+                first_entry_processed = True
+            data = line
+    yield data
+
+
+def read_next_record_str(file_object=None) -> str:
+    if file_object is None:
+        file_object = open(repo_setup.paths["MAIN_REFERENCES"])
     data = ""
     first_entry_processed = False
     while True:
@@ -689,3 +755,14 @@ def read_next_entry(file_object) -> str:
                 first_entry_processed = True
             data = line
     yield data
+
+
+def read_next_record() -> dict:
+    records = []
+    with open(repo_setup.paths["MAIN_REFERENCES"]) as f:
+        for record_string in read_next_record_str(f):
+            parser = BibTexParser(customization=convert_to_unicode)
+            db = bibtexparser.loads(record_string, parser=parser)
+            record = db.entries[0]
+            records.append(record)
+    yield from records

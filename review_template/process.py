@@ -1,13 +1,15 @@
 #! /usr/bin/env python
 import logging
 import os
+from subprocess import check_call
+from subprocess import DEVNULL
+from subprocess import STDOUT
 
 import git
 from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import dedupe
 from review_template import importer
-from review_template import init
 from review_template import pdf_prepare
 from review_template import pdfs
 from review_template import prepare
@@ -51,8 +53,6 @@ def check_delay(bib_db: BibDatabase, min_status_requirement: str) -> bool:
     # ie. raise DelayRequirement if any record has a prior status
     # do not consider terminal states:
     # prescreen_excluded, not_available, excluded
-
-    # TODO: distingusih rev_status, md_status, pdf_status
 
     # Records should not be propagated/screened when the batch
     # has not yet been committed
@@ -124,7 +124,14 @@ def check_delay(bib_db: BibDatabase, min_status_requirement: str) -> bool:
 def main(reprocess: bool = None, keep_ids: bool = False) -> None:
 
     status.repository_validation()
-    repo = init.get_repo()
+
+    try:
+        repo = git.Repo()
+    except git.exc.InvalidGitRepositoryError:
+        logging.error("No git repository found. Use review_template init")
+        pass
+        return
+
     utils.require_clean_repo(repo, ignore_pattern="search/")
     utils.build_docker_images()
     reprocess_id(reprocess, repo)
@@ -140,13 +147,10 @@ def main(reprocess: bool = None, keep_ids: bool = False) -> None:
 
         bib_db = pdf_prepare.main(bib_db, repo)
 
-        # Note: the checks for delaying the screen
-        # are implemented in the screen.py
-
     except DelayRequirement:
         pass
 
     print()
-    os.system("pre-commit run -a")
+    check_call(["pre-commit", "run", "-a"], stdout=DEVNULL, stderr=STDOUT)
 
     return
