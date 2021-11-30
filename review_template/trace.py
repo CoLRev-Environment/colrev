@@ -5,25 +5,20 @@ import time
 
 import bibtexparser
 import dictdiffer
-import git
 
-from review_template import repo_setup
 from review_template import utils
 
 logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
 
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-DATA = repo_setup.paths["DATA"]
-
-
-def main(ID: str) -> None:
+def main(REVIEW_MANAGER, ID: str) -> None:
 
     logging.info(f"Trace record by ID: {ID}")
 
-    repo = git.Repo()
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    DATA = REVIEW_MANAGER.paths["DATA"]
 
-    revlist = repo.iter_commits()
+    revlist = REVIEW_MANAGER.git_repo.iter_commits()
 
     pp = pprint.PrettyPrinter(indent=4)
 

@@ -5,17 +5,13 @@ import logging
 import os
 
 import ansiwrap
-import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 from dictdiffer import diff
 
-from review_template import repo_setup
-from review_template import utils
-
 removed_tuples = []
 
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
+BATCH_SIZE = "NA"
 
 
 def get_combined_origin_list(record_a: dict, record_b: dict) -> str:
@@ -199,7 +195,7 @@ def merge_manual_dialogue(
 
 
 def merge_manual(
-    bib_db: BibDatabase, record_a_ID: str, record_b_ID: str, stat: str
+    REVIEW_MANAGER, bib_db, record_a_ID: str, record_b_ID: str, stat: str
 ) -> BibDatabase:
     global removed_tuples
 
@@ -210,8 +206,8 @@ def merge_manual(
         # due to prior merging operations
         return bib_db
 
-    a_propagated = utils.propagated_ID(record_a_ID)
-    b_propagated = utils.propagated_ID(record_b_ID)
+    a_propagated = REVIEW_MANAGER.propagated_ID(record_a_ID)
+    b_propagated = REVIEW_MANAGER.propagated_ID(record_b_ID)
 
     if not a_propagated and not b_propagated:
 
@@ -240,14 +236,14 @@ def merge_manual(
     return bib_db
 
 
-def main() -> None:
+def main(REVIEW_MANAGER) -> None:
     saved_args = locals()
     global removed_tuples
+    global BATCH_SIZE
 
-    repo = git.Repo("")
-    utils.require_clean_repo(repo)
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
 
-    bib_db = utils.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_main_refs()
 
     if not os.path.exists("potential_duplicate_tuples.csv"):
         logging.info("No potential duplicates found (potential_duplicate_tuples.csv)")
@@ -267,7 +263,7 @@ def main() -> None:
         record_b_ID = potential_duplicate.iloc[i, second_record_col]
 
         stat = str(i + 1) + "/" + str(potential_duplicate.shape[0])
-        bib_db = merge_manual(bib_db, record_a_ID, record_b_ID, stat)
+        bib_db = merge_manual(REVIEW_MANAGER, bib_db, record_a_ID, record_b_ID, stat)
         if quit_pressed:
             break
 
@@ -305,15 +301,16 @@ def main() -> None:
             "potential_duplicate_tuples.csv", index=False, quoting=csv.QUOTE_ALL
         )
 
-    utils.save_bib_file(bib_db, repo_setup.paths["MAIN_REFERENCES"])
-    repo.git.add(update=True)
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.git.add(update=True)
     # deletion of 'potential_duplicate_tuples.csv' may added to git staging
 
     # If there are remaining duplicates, ask whether to create a commit
     if not stat.split("/")[0] == stat.split("/")[1]:
         if "y" != input("Create commit (y/n)?"):
             return
-    utils.create_commit(
-        repo, "Process duplicates manually", saved_args, manual_author=True
+    REVIEW_MANAGER.create_commit(
+        "Process duplicates manually", saved_args, manual_author=True
     )
     return

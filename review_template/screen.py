@@ -3,14 +3,9 @@ import logging
 import pprint
 from collections import OrderedDict
 
-import git
 from bibtexparser.bibdatabase import BibDatabase
 
-from review_template import process
-from review_template import repo_setup
-from review_template import utils
-
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
+MAIN_REFERENCES = "NA"
 
 key_order = [
     "ENTRYTYPE",
@@ -60,14 +55,12 @@ def get_exclusion_criteria(bib_db: BibDatabase) -> list:
     return get_exclusion_criteria_from_str(ec_string)
 
 
-def screen() -> None:
+def screen(REVIEW_MANAGER) -> None:
     saved_args = locals()
-    bib_db = utils.load_main_refs(mod_check=False)
-    repo = git.Repo("")
-    utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
 
-    req = "prescreened_and_pdf_prepared"
-    process.check_delay(bib_db, min_status_requirement=req)
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    global MAIN_REFERENCES
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
     logging.info("Start screen")
 
@@ -171,7 +164,7 @@ def screen() -> None:
             logging.info("Stop screen")
             break
 
-        utils.save_bib_file(bib_db, MAIN_REFERENCES)
+        REVIEW_MANAGER.save_bib_file(bib_db)
 
     if stat_len == 0:
         logging.info("No records to screen")
@@ -180,7 +173,8 @@ def screen() -> None:
     if i < stat_len:  # if records remain for screening
         if "y" != input("Create commit (y/n)?"):
             return
-    repo.index.add([MAIN_REFERENCES])
-    utils.create_commit(repo, "Screening (manual)", saved_args, manual_author=True)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.create_commit("Screening (manual)", saved_args, manual_author=True)
 
     return

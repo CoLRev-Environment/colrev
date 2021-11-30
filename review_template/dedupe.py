@@ -6,24 +6,22 @@ import multiprocessing as mp
 import os
 import pprint
 import re
+import unicodedata
 
-import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bparser import BibTexParser
+from bibtexparser.customization import convert_to_unicode
 from thefuzz import fuzz
 
-from review_template import process
-from review_template import repo_setup
-from review_template import utils
+from review_template import prepare
 
 nr_records_added = 0
 nr_current_records = 0
 
+MERGING_NON_DUP_THRESHOLD, MERGING_DUP_THRESHOLD, BATCH_SIZE = -1, -1, -1
+MAIN_REFERENCES = "NA"
 
-MERGING_NON_DUP_THRESHOLD = repo_setup.config["MERGING_NON_DUP_THRESHOLD"]
-MERGING_DUP_THRESHOLD = repo_setup.config["MERGING_DUP_THRESHOLD"]
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -31,10 +29,37 @@ pd.options.mode.chained_assignment = None  # default='warn'
 current_batch_counter = mp.Value("i", 0)
 
 
+def remove_accents(input_str: str) -> str:
+    try:
+        nfkd_form = unicodedata.normalize("NFKD", input_str)
+        wo_ac = [rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)]
+        wo_ac = "".join(wo_ac)
+    except ValueError:
+        wo_ac = input_str
+        pass
+    return wo_ac
+
+
+def rmdiacritics(char: str) -> str:
+    """
+    Return the base character of char, by "removing" any
+    diacritics like accents or curls and strokes and the like.
+    """
+    desc = unicodedata.name(char)
+    cutoff = desc.find(" WITH ")
+    if cutoff != -1:
+        desc = desc[:cutoff]
+        try:
+            char = unicodedata.lookup(desc)
+        except KeyError:
+            pass  # removing "WITH ..." produced an invalid name
+    return char
+
+
 def format_authors_string(authors: str) -> str:
     authors = str(authors).lower()
     authors_string = ""
-    authors = utils.remove_accents(authors)
+    authors = remove_accents(authors)
 
     # abbreviate first names
     # "Webster, Jane" -> "Webster, J"
@@ -223,6 +248,13 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
             .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
             .str.lower()
         )
+        if "chapter" in references:
+            references.loc[references["title"].isnull(), "title"] = references[
+                "chapter"
+            ]
+        else:
+            references.loc[references["title"].isnull(), "title"] = "nan"
+
     if "journal" not in references:
         references["journal"] = ""
     else:
@@ -239,6 +271,10 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
             .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
             .str.lower()
         )
+        # possibly for @proceedings{ ... records
+        # if 'address' in references:
+        #     references['booktitle'] = references["booktitle"] + references["address"]
+        #     print(references['address'])
     if "series" not in references:
         references["series"] = ""
     else:
@@ -271,6 +307,9 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
         1,
         inplace=True,
     )
+    references[["author", "title", "journal", "container_title", "pages"]] = references[
+        ["author", "title", "journal", "container_title", "pages"]
+    ].astype(str)
 
     return references
 
@@ -316,7 +355,12 @@ def append_merges(record: dict) -> None:
         else:
             current_batch_counter.value += 1
 
-    bib_db = utils.load_main_refs(mod_check=False)
+    with open(MAIN_REFERENCES) as target_db:
+        bib_db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=False,
+            common_strings=True,
+        ).parse_file(target_db, partial=True)
 
     # add all processed records to the queue order before first (re)run
     if not os.path.exists("queue_order.csv"):
@@ -531,14 +575,37 @@ def apply_merges(bib_db: BibDatabase) -> BibDatabase:
     return bib_db
 
 
-def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
+def main(REVIEW_MANAGER) -> None:
 
     saved_args = locals()
+    global MERGING_NON_DUP_THRESHOLD
+    global MERGING_DUP_THRESHOLD
+    global MAIN_REFERENCES
+    global BATCH_SIZE
 
-    utils.reset_log()
-    process.check_delay(bib_db, min_status_requirement="md_prepared")
+    MERGING_NON_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_NON_DUP_THRESHOLD"]
+    MERGING_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_DUP_THRESHOLD"]
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    git_repo = REVIEW_MANAGER.get_repo()
 
     logging.info("Process duplicates")
+
+    for record in bib_db.entries:
+        if "crossref" in record:
+            crossref_rec = prepare.get_crossref_record(record)
+            if crossref_rec is None:
+                continue
+
+            if not os.path.exists("duplicate_tuples.csv"):
+                with open("duplicate_tuples.csv", "a") as fd:
+                    fd.write('"ID1","ID2"\n')
+            with open("duplicate_tuples.csv", "a") as fd:
+                fd.write('"' + record["ID"] + '","' + crossref_rec["ID"] + '"\n')
+            logging.info(
+                f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
+            )
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -549,10 +616,11 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
         if batch_start > 1:
             logging.info("Continuing batch duplicate processing started earlier")
 
-        pool = mp.Pool(repo_setup.config["CPUS"])
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         pool.map(append_merges, bib_db.entries)
         pool.close()
         pool.join()
+
         bib_db = apply_merges(bib_db)
 
         with current_batch_counter.get_lock():
@@ -564,12 +632,14 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                 f"(records {batch_start} to {batch_end})"
             )
 
-            utils.save_bib_file(bib_db, MAIN_REFERENCES)
+            REVIEW_MANAGER.save_bib_file(bib_db)
             if os.path.exists("potential_duplicate_tuples.csv"):
-                repo.index.add(["potential_duplicate_tuples.csv"])
-            repo.index.add([MAIN_REFERENCES])
+                git_repo.index.add(["potential_duplicate_tuples.csv"])
+            if os.path.exists("duplicate_tuples.csv"):
+                os.remove("duplicate_tuples.csv")
+            git_repo.index.add([MAIN_REFERENCES])
 
-            in_process = utils.create_commit(repo, "⚙️ Process duplicates", saved_args)
+            in_process = REVIEW_MANAGER.create_commit("Process duplicates", saved_args)
             if not in_process:
                 logging.info("No duplicates merged/potential duplicates identified")
 
@@ -578,4 +648,4 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                 logging.info("No records to check for duplicates")
             break
 
-    return bib_db
+    return

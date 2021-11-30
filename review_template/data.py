@@ -6,18 +6,15 @@ import os
 import re
 import sys
 
-import git
 import pandas as pd
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from yaml import safe_load
 
-from review_template import repo_setup
-from review_template import utils
+from review_template import review_manager
 
 PAD = 0
-MANUSCRIPT = "paper.md"
-DATA = repo_setup.paths["DATA"]
+MANUSCRIPT, DATA = "NA", "NA"
 
 
 def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
@@ -55,7 +52,7 @@ def get_synthesized_ids(bib_db: BibDatabase) -> list:
     records_for_synthesis = [
         x["ID"]
         for x in bib_db.entries
-        if x.get("rev_status", "NA") in ["included", "in_manuscript"]
+        if x.get("rev_status", "NA") in ["included", "synthesized"]
     ]
 
     in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(records_for_synthesis)
@@ -89,7 +86,7 @@ def get_structured_data_extracted(bib_db: BibDatabase) -> list:
     records_for_data_extraction = [
         x["ID"]
         for x in bib_db.entries
-        if x.get("rev_status", "NA") in ["included", "in_manuscript"]
+        if x.get("rev_status", "NA") in ["included", "synthesized"]
     ]
 
     data_extracted = get_data_extracted(records_for_data_extraction)
@@ -100,7 +97,7 @@ def get_structured_data_extracted(bib_db: BibDatabase) -> list:
 
 
 def update_manuscript(
-    bib_db: BibDatabase, repo: git.Repo, included: list
+    REVIEW_MANAGER, bib_db: BibDatabase, included: list
 ) -> BibDatabase:
 
     if os.path.exists(MANUSCRIPT):
@@ -111,11 +108,13 @@ def update_manuscript(
         missing_records = included
         logging.info("Creating manuscript")
 
+    bib_db = REVIEW_MANAGER.load_main_refs()
     if 0 == len(missing_records):
         logging.info(f"All records included in {MANUSCRIPT}")
         return bib_db
 
-    changedFiles = [item.a_path for item in repo.index.diff(None)]
+    git_repo = REVIEW_MANAGER.get_repo()
+    changedFiles = [item.a_path for item in git_repo.index.diff(None)]
     if MANUSCRIPT in changedFiles:
         logging.error(
             f"Changes in {MANUSCRIPT}. Use git add {MANUSCRIPT} and try again."
@@ -127,12 +126,12 @@ def update_manuscript(
         with open("readme.md") as f:
             title = f.readline()
             title = title.replace("# ", "").replace("\n", "")
-    author = repo_setup.config["GIT_ACTOR"]
+    author = REVIEW_MANAGER.config["GIT_ACTOR"]
 
     if not os.path.exists(MANUSCRIPT):
-        utils.retrieve_package_file("../template/" + MANUSCRIPT, MANUSCRIPT)
-        utils.inplace_change(MANUSCRIPT, "{{project_title}}", title)
-        utils.inplace_change(MANUSCRIPT, "{{author}}", author)
+        review_manager.retrieve_package_file("../template/" + MANUSCRIPT, MANUSCRIPT)
+        review_manager.inplace_change(MANUSCRIPT, "{{project_title}}", title)
+        review_manager.inplace_change(MANUSCRIPT, "{{author}}", author)
         logging.info(f"Please update title and authors in {MANUSCRIPT}")
 
     temp = f".tmp_{MANUSCRIPT}"
@@ -198,11 +197,15 @@ def update_manuscript(
 
 
 def update_structured_data(
-    bib_db: BibDatabase, repo: git.Repo, included: list
+    REVIEW_MANAGER, bib_db: BibDatabase, included: list
 ) -> BibDatabase:
 
     if not os.path.exists(DATA):
-        included = utils.get_included_IDs(bib_db)
+        included = [
+            x["ID"]
+            for x in bib_db.entries
+            if x.get("rev_status", "NA") in ["included", "synthesized"]
+        ]
 
         coding_dimensions = input("Enter columns for data extraction (comma-separted)")
         coding_dimensions = coding_dimensions.replace(" ", "_").split(",")
@@ -250,8 +253,14 @@ def update_structured_data(
     return bib_db
 
 
-def main(edit_csv: bool, load_csv: bool) -> None:
+def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
     saved_args = locals()
+
+    global MANUSCRIPT
+    global DATA
+
+    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
+    DATA = REVIEW_MANAGER.paths["DATA"]
 
     DATA_CSV = DATA.replace(".yaml", ".csv")
     if edit_csv:
@@ -273,24 +282,29 @@ def main(edit_csv: bool, load_csv: bool) -> None:
         return
 
     global PAD
-    repo = git.Repo()
-    utils.require_clean_repo(repo, ignore_pattern=MANUSCRIPT)
-    DATA_FORMAT = repo_setup.config["DATA_FORMAT"]
-    bib_db = utils.load_main_refs()
+
+    DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
+    bib_db = REVIEW_MANAGER.load_main_refs()
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
 
-    included = utils.get_included_IDs(bib_db)
+    included = [
+        x["ID"]
+        for x in bib_db.entries
+        if x.get("rev_status", "NA") in ["included", "synthesized"]
+    ]
 
     if 0 == len(included):
         logging.info("No records included yet (use review_template screen)")
         sys.exit()
 
     if "MANUSCRIPT" in DATA_FORMAT:
-        bib_db = update_manuscript(bib_db, repo, included)
-        repo.index.add([MANUSCRIPT])
+        bib_db = update_manuscript(REVIEW_MANAGER, bib_db, included)
+        git_repo = REVIEW_MANAGER.get_repo()
+        git_repo.index.add([MANUSCRIPT])
     if "STRUCTURED" in DATA_FORMAT:
-        bib_db = update_structured_data(bib_db, repo, included)
-        repo.index.add([DATA])
+        bib_db = update_structured_data(REVIEW_MANAGER, bib_db, included)
+        git_repo = REVIEW_MANAGER.get_repo()
+        git_repo.index.add([DATA])
 
     synthesized_in_manuscript = get_synthesized_ids(bib_db)
     structured_data_extracted = get_structured_data_extracted(bib_db)
@@ -310,10 +324,13 @@ def main(edit_csv: bool, load_csv: bool) -> None:
         record.update(rev_status="synthesized")
         logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
 
-    utils.save_bib_file(bib_db, repo_setup.paths["MAIN_REFERENCES"])
-    repo.index.add([repo_setup.paths["MAIN_REFERENCES"]])
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 
     if "y" == input("Create commit (y/n)?"):
-        utils.create_commit(repo, "Data and synthesis", saved_args, manual_author=True)
+        REVIEW_MANAGER.create_commit(
+            "Data and synthesis", saved_args, manual_author=True
+        )
 
     return

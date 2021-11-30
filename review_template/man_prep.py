@@ -4,15 +4,13 @@ import os
 import pprint
 
 import bibtexparser
-import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
 from review_template import prepare
-from review_template import repo_setup
-from review_template import utils
+from review_template import review_manager
 
 
 record_type_mapping = {
@@ -92,13 +90,11 @@ def man_fix_incomplete_fields(record: dict) -> dict:
     return record
 
 
-def man_prep_records() -> None:
+def man_prep_records(REVIEW_MANAGER) -> None:
     saved_args = locals()
     global ID_list
-    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-
-    repo = git.Repo("")
-    utils.require_clean_repo(repo, ignore_pattern=MAIN_REFERENCES)
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    git_repo = REVIEW_MANAGER.get_repo()
 
     print("TODO: include processing_reports")
 
@@ -106,7 +102,7 @@ def man_prep_records() -> None:
     stat_len = 0
     ID_list = []
     with open(MAIN_REFERENCES) as f:
-        for record_str in utils.read_next_record_str(f):
+        for record_str in REVIEW_MANAGER.read_next_record_str(f):
             ID_list.append(record_str[record_str.find("{") + 1 : record_str.find(",")])
             if "needs_manual_preparation" in record_str:
                 stat_len += 1
@@ -117,7 +113,7 @@ def man_prep_records() -> None:
     temp = MAIN_REFERENCES.replace(".bib", "_copy.bib")
     i = 1
     with open(MAIN_REFERENCES) as f, open(temp, "w") as m:
-        for record_str in utils.read_next_record_str(f):
+        for record_str in REVIEW_MANAGER.read_next_record_str(f):
             if "needs_manual_preparation" in record_str:
                 bib_database = bibtexparser.loads(record_str)
                 for record in bib_database.entries:
@@ -138,7 +134,7 @@ def man_prep_records() -> None:
 
                     record = prepare.drop_fields(record)
                     record.update(
-                        ID=utils.generate_ID_blacklist(
+                        ID=REVIEW_MANAGER.generate_ID_blacklist(
                             record, ID_list, record_in_bib_db=True, raise_error=False
                         )
                     )
@@ -146,27 +142,29 @@ def man_prep_records() -> None:
                     record.update(md_status="prepared")
                     record.update(metadata_source="MAN_PREP")
 
-                record_str = bibtexparser.dumps(bib_database, utils.get_bibtex_writer())
+                record_str = bibtexparser.dumps(
+                    bib_database, review_manager.get_bibtex_writer()
+                )
             else:
                 record_str += "\n"
             m.write(record_str)
 
     os.remove(MAIN_REFERENCES)
     os.rename(temp, MAIN_REFERENCES)
-    if stat_len > 0:
-        bib_db = utils.load_main_refs()
-        utils.save_bib_file(bib_db)
-        repo.index.add([MAIN_REFERENCES])
-        utils.create_commit(
-            repo, "Manual preparation of records", saved_args, manual_author=True
-        )
+    # if stat_len > 0:
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.create_commit(
+        "Manual preparation of records", saved_args, manual_author=True
+    )
 
     return
 
 
-def man_prep_stats() -> None:
+def man_prep_stats(REVIEW_MANAGER) -> None:
     logging.info("Load references.bib")
-    bib_db = utils.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_main_refs()
 
     logging.info("Calculate statistics")
     stats = {"ENTRYTYPE": {}}
@@ -232,9 +230,9 @@ def man_prep_stats() -> None:
     return
 
 
-def extract_needs_man_prep() -> None:
+def extract_needs_man_prep(REVIEW_MANAGER) -> None:
     logging.info("Load references")
-    bib_db = utils.load_main_refs(mod_check=False)
+    bib_db = REVIEW_MANAGER.load_main_refs()
 
     bib_db.entries = bib_db.entries[1:1000]
     print(len(bib_db.entries))

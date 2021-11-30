@@ -6,20 +6,17 @@ import os
 import urllib.parse
 import webbrowser
 
-import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import pdfs
-from review_template import repo_setup
-from review_template import utils
 
 existing_pdfs_linked = 0
 
 # https://github.com/ContentMine/getpapers
 
-PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
+PDF_DIRECTORY = "NA"
+BATCH_SIZE = -1
 
 current_batch_counter = mp.Value("i", 0)
 
@@ -79,15 +76,18 @@ def man_retrieve(record: dict) -> dict:
     return record
 
 
-def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
+def main(review_manager) -> BibDatabase:
     saved_args = locals()
 
-    utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
-    # process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
+    global PDF_DIRECTORY
+    global BATCH_SIZE
 
-    utils.reset_log()
+    PDF_DIRECTORY = review_manager.paths["PDF_DIRECTORY"]
+    BATCH_SIZE = review_manager.config["BATCH_SIZE"]
+
     logging.info("Get PDFs manually")
 
+    bib_db = review_manager.load_main_refs()
     bib_db = pdfs.check_existing_unlinked_pdfs(bib_db)
     for record in bib_db.entries:
         record = pdfs.link_pdf(record)
@@ -99,21 +99,22 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
         for record in bib_db.entries:
             record = man_retrieve(record)
 
-    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-    utils.save_bib_file(bib_db, MAIN_REFERENCES)
-    repo.index.add([MAIN_REFERENCES])
+    MAIN_REFERENCES = review_manager.paths["MAIN_REFERENCES"]
+    review_manager.save_bib_file(bib_db, MAIN_REFERENCES)
+    git_repo = review_manager.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
 
-    if "GIT" == repo_setup.config["PDF_HANDLING"]:
+    if "GIT" == review_manager.config["PDF_HANDLING"]:
         if os.path.exists(PDF_DIRECTORY):
             for record in bib_db.entries:
                 filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
                 if os.path.exists(filepath):
-                    repo.index.add([filepath])
+                    git_repo.index.add([filepath])
 
-    if repo.is_dirty():
+    if git_repo.is_dirty():
         if "y" == input("Create commit (y/n)?"):
-            utils.create_commit(
-                repo, "⚙️ Get PDFs manually", saved_args, manual_author=True
+            review_manager.create_commit(
+                "Get PDFs manually", saved_args, manual_author=True
             )
     else:
         logging.info(

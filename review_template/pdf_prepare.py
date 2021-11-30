@@ -20,13 +20,8 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 
-from review_template import process
-from review_template import repo_setup
-from review_template import utils
 
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
-PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
-CPUS = repo_setup.config["CPUS"]
+BATCH_SIZE, PDF_DIRECTORY, CPUS = -1, "NA", -1
 
 IPAD, EPAD = 0, 0
 current_batch_counter = mp.Value("i", 0)
@@ -299,7 +294,7 @@ def prepare_pdf(record: dict) -> dict:
         # Remove temporary PDFs when processing has succeeded
         fname = f'{PDF_DIRECTORY}{record["ID"]}.pdf'
         if fname != record.get("file", "NA"):
-            if "GIT" == repo_setup.config["PDF_HANDLING"]:
+            if "GIT" == PDF_HANDLING:
                 os.remove(fname)
             else:
                 # Create a copy of the original PDF if users cannot
@@ -309,7 +304,7 @@ def prepare_pdf(record: dict) -> dict:
             record["file"] = fname
         record.update(pdf_status="prepared")
     else:
-        if not repo_setup.config["DEBUG_MODE"]:
+        if not DEBUG_MODE:
             # Delete temporary PDFs for which processing has failed:
             orig_filepath = f'{PDF_DIRECTORY}{record["ID"]}.pdf'
             if os.path.exists(orig_filepath):
@@ -345,11 +340,23 @@ def cleanup_pdf_processing_fields(bib_db: BibDatabase) -> BibDatabase:
     return bib_db
 
 
-def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
+def main(review_manager) -> None:
 
     saved_args = locals()
 
-    process.check_delay(bib_db, min_status_requirement="pdf_imported")
+    global PDF_HANDLING
+    global DEBUG_MODE
+    global BATCH_SIZE
+    global PDF_DIRECTORY
+    global CPUS
+
+    PDF_HANDLING = review_manager.config["PDF_HANDLING"]
+    DEBUG_MODE = review_manager.config["DEBUG_MODE"]
+    BATCH_SIZE = review_manager.config["BATCH_SIZE"]
+    PDF_DIRECTORY = review_manager.paths["PDF_DIRECTORY"]
+    CPUS = review_manager.config["CPUS"]
+    bib_db = review_manager.load_main_refs()
+
     global IPAD
     global EPAD
     IPAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35) + 25
@@ -358,7 +365,6 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
     # TODO: temporary fix: remove all lines containint PDFType1Font from log.
     # https://github.com/pdfminer/pdfminer.six/issues/282
 
-    utils.reset_log()
     logging.info("Prepare PDFs")
 
     in_process = True
@@ -370,9 +376,9 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
         if batch_start > 1:
             logging.info("Continuing batch preparation started earlier")
 
-        bib_db = mark_committed_pdfs(bib_db, repo)
+        bib_db = mark_committed_pdfs(bib_db, review_manager.git_repo)
 
-        pool = mp.Pool(repo_setup.config["CPUS"])
+        pool = mp.Pool(review_manager.config["CPUS"])
         bib_db.entries = pool.map(prepare_pdf, bib_db.entries)
         pool.close()
         pool.join()
@@ -388,17 +394,18 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                 f"(entries {batch_start} to {batch_end})"
             )
 
-            MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-            utils.save_bib_file(bib_db, MAIN_REFERENCES)
-            repo.index.add([MAIN_REFERENCES])
+            MAIN_REFERENCES = review_manager.paths["MAIN_REFERENCES"]
+            review_manager.save_bib_file(bib_db)
+            git_repo = review_manager.get_repo()
+            git_repo.index.add([MAIN_REFERENCES])
 
             need_man_preps = [
                 r["ID"]
                 for r in bib_db.entries
                 if "needs_manual_preparation" == r.get("pdf_status", "NA")
             ]
-            if "GIT" == repo_setup.config["PDF_HANDLING"]:
-                dirname = repo_setup.paths["PDF_DIRECTORY"]
+            if "GIT" == review_manager.config["PDF_HANDLING"]:
+                dirname = review_manager.paths["PDF_DIRECTORY"]
                 if os.path.exists(dirname):
                     for filepath in os.listdir(dirname):
                         if any(ID in filepath for ID in need_man_preps):
@@ -406,13 +413,13 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                             continue
 
                         if filepath.endswith(".pdf"):
-                            repo.index.add([os.path.join(dirname, filepath)])
+                            git_repo.index.add([os.path.join(dirname, filepath)])
 
-            if not repo.is_dirty():
+            if not git_repo.is_dirty():
                 break
 
-            utils.reorder_log([x["ID"] for x in bib_db.entries])
-            in_process = utils.create_commit(repo, "⚙️ Prepare PDFs", saved_args)
+            review_manager.reorder_log([x["ID"] for x in bib_db.entries])
+            in_process = review_manager.create_commit("Prepare PDFs", saved_args)
             if not in_process:
                 logging.info("No PDFs prepared")
 
@@ -421,4 +428,4 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
                 logging.info("No additional pdfs to prepare")
             break
 
-    return bib_db
+    return

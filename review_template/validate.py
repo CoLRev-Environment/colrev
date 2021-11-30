@@ -16,9 +16,9 @@ from bibtexparser.customization import convert_to_unicode
 from pipeline_validation_hooks import check  # noqa: F401
 
 from review_template import dedupe
-from review_template import repo_setup
 from review_template import status
-from review_template import utils
+
+CPUS = -1
 
 
 def load_records(bib_file: str) -> list:
@@ -35,10 +35,10 @@ def load_records(bib_file: str) -> list:
     return individual_bib_db.entries
 
 
-def get_search_records() -> list:
+def get_search_records(REVIEW_MANAGER) -> list:
 
-    pool = mp.Pool(repo_setup.config["CPUS"])
-    records = pool.map(load_records, utils.get_bib_files())
+    pool = mp.Pool(CPUS)
+    records = pool.map(load_records, REVIEW_MANAGER.get_bib_files())
     records = list(chain(*records))
 
     return records
@@ -154,18 +154,18 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
     return
 
 
-def load_bib_db(target_commit: str) -> BibDatabase:
+def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
 
     if "none" == target_commit:
         logging.info("Loading data...")
-        bib_db = utils.load_main_refs(mod_check=False)
+        bib_db = REVIEW_MANAGER.load_main_refs()
         [x.update(changed_in_target_commit="True") for x in bib_db.entries]
 
     else:
         logging.info("Loading data from history...")
         repo = git.Repo()
 
-        MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
+        MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
         revlist = (
             (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
@@ -228,20 +228,23 @@ def validate_properties(target_commit: str) -> None:
     return
 
 
-def main(scope: str, properties: bool = False, target_commit: str = None) -> None:
+def main(
+    REVIEW_MANAGER, scope: str, properties: bool = False, target_commit: str = None
+) -> None:
+
+    global CPUS
+    CPUS = REVIEW_MANAGER.config["CPUS"]
 
     if properties:
         validate_properties(target_commit)
         return
 
-    #
     # TODO: extension: filter for changes of contributor (git author)
-
-    bib_db = load_bib_db(target_commit)
+    bib_db = load_bib_db(REVIEW_MANAGER, target_commit)
 
     # Note: search records are considered immutable
     # we therefore load the latest files
-    search_records = get_search_records()
+    search_records = get_search_records(REVIEW_MANAGER)
 
     if "prepare" == scope or "all" == scope:
         validate_preparation_changes(bib_db, search_records)

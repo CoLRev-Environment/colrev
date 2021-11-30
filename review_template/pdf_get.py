@@ -4,22 +4,17 @@ import logging
 import multiprocessing as mp
 import os
 
-import git
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
 
 from review_template import dedupe
 from review_template import grobid_client
-from review_template import importer
-from review_template import process
-from review_template import repo_setup
-from review_template import utils
+from review_template import load
 
 # https://github.com/ContentMine/getpapers
 
-PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
+PDF_DIRECTORY, BATCH_SIZE, EMAIL = "NA", -1, "NA"
 
 current_batch_counter = mp.Value("i", 0)
 linked_existing_files = False
@@ -29,7 +24,7 @@ def unpaywall(doi: str, retry: int = 0, pdfonly: bool = True) -> str:
 
     r = requests.get(
         "https://api.unpaywall.org/v2/{doi}",
-        params={"email": repo_setup.config["EMAIL"]},
+        params={"email": EMAIL},
     )
 
     if r.status_code == 404:
@@ -179,7 +174,7 @@ def check_existing_unlinked_pdfs(bib_db: BibDatabase) -> BibDatabase:
         if os.path.exists(os.path.basename(file).replace(".pdf", "")):
             continue
         if os.path.basename(file).replace(".pdf", "") not in IDs:
-            db = importer.pdf2bib(file)
+            db = load.pdf2bib(file)
             corresponding_bib_file = file.replace(".pdf", ".bib")
             if os.path.exists(corresponding_bib_file):
                 os.remove(corresponding_bib_file)
@@ -216,19 +211,25 @@ def check_existing_unlinked_pdfs(bib_db: BibDatabase) -> BibDatabase:
     return bib_db
 
 
-def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
+def main(REVIEW_MANAGER) -> None:
     global linked_existing_files
     saved_args = locals()
 
-    utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
-    process.check_delay(bib_db, min_status_requirement="pdf_needs_retrieval")
+    global PDF_DIRECTORY
+    global BATCH_SIZE
+    global EMAIL
+    EMAIL = REVIEW_MANAGER.config["EMAIL"]
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+
     global PAD
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
     print("TODO: download if there is a fulltext link in the record")
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
 
-    utils.reset_log()
     logging.info("Retrieve PDFs")
 
     bib_db = check_existing_unlinked_pdfs(bib_db)
@@ -242,7 +243,7 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
         if batch_start > 1:
             logging.info("Continuing batch preparation started earlier")
 
-        pool = mp.Pool(repo_setup.config["CPUS"])
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         bib_db.entries = pool.map(retrieve_pdf, bib_db.entries)
         pool.close()
         pool.join()
@@ -260,22 +261,23 @@ def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
 
             print_details(missing_records)
 
-            MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-            utils.save_bib_file(bib_db, MAIN_REFERENCES)
-            repo.index.add([MAIN_REFERENCES])
+            MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+            REVIEW_MANAGER.save_bib_file(bib_db)
+            git_repo = REVIEW_MANAGER.get_repo()
+            git_repo.index.add([MAIN_REFERENCES])
 
-            if "GIT" == repo_setup.config["PDF_HANDLING"]:
+            if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
                 if os.path.exists(PDF_DIRECTORY):
                     for record in bib_db.entries:
                         filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
                         if os.path.exists(filepath):
-                            repo.index.add([filepath])
+                            git_repo.index.add([filepath])
 
-            in_process = utils.create_commit(repo, "⚙️ Retrieve PDFs", saved_args)
+            in_process = REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args)
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
                 logging.info("No additional pdfs to retrieve")
             break
 
-    return bib_db
+    return

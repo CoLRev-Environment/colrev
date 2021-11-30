@@ -1,14 +1,9 @@
 #! /usr/bin/env python
 import logging
 
-import git
 from bibtexparser.bibdatabase import BibDatabase
 
 from review_template import pdf_prepare
-from review_template import repo_setup
-from review_template import utils
-
-PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
 
 
 def man_prep_pdf(record: dict) -> dict:
@@ -24,14 +19,13 @@ def man_prep_pdf(record: dict) -> dict:
     return record
 
 
-def main(bib_db: BibDatabase, repo: git.Repo) -> BibDatabase:
+def main(REVIEW_MANAGER) -> BibDatabase:
     saved_args = locals()
 
-    utils.require_clean_repo(repo, ignore_pattern=PDF_DIRECTORY)
-    # process.check_delay(bib_db, min_status_requirement='pdf_needs_retrieval')
+    global PDF_DIRECTORY
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
 
-    utils.reset_log()
-
+    bib_db = REVIEW_MANAGER.load_main_refs()
     for record in bib_db.entries:
         record = man_prep_pdf(record)
 

@@ -4,19 +4,16 @@ import logging
 import os
 
 import bibtexparser
-import git
 import pandas as pd
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
-from review_template import repo_setup
-from review_template import utils
-
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
+MAIN_REFERENCES = "NA"
 
 
-def export_table(bib_db: BibDatabase, export_table_format: str) -> None:
+def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
 
     tbl = []
     for record in bib_db.entries:
@@ -32,7 +29,7 @@ def export_table(bib_db: BibDatabase, export_table_format: str) -> None:
             inclusion_2 = "TODO"
             if "excluded" == record["rev_status"]:
                 inclusion_2 = "no"
-            if record["rev_status"] in ["included", "synthesized", "coded"]:
+            if record["rev_status"] in ["included", "synthesized"]:
                 inclusion_2 = "yes"
 
         excl_criteria = {}
@@ -72,7 +69,8 @@ def export_table(bib_db: BibDatabase, export_table_format: str) -> None:
     return
 
 
-def import_table(bib_db: BibDatabase, import_table_path: str) -> None:
+def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
+    bib_db = REVIEW_MANAGER.load_main_refs()
     if not os.path.exists(import_table_path):
         logging.error(f"Did not find {import_table_path} - exiting.")
         return
@@ -100,12 +98,14 @@ def import_table(bib_db: BibDatabase, import_table_path: str) -> None:
                 record["rev_status"] = "included"
             # TODO: exclusion-criteria
 
-    utils.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_file(bib_db)
 
     return
 
 
-def include_all_in_prescreen(bib_db: BibDatabase, repo: git.Repo) -> None:
+def include_all_in_prescreen(REVIEW_MANAGER) -> None:
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
 
     saved_args = locals()
     PAD = 50  # TODO
@@ -118,16 +118,19 @@ def include_all_in_prescreen(bib_db: BibDatabase, repo: git.Repo) -> None:
         record.update(rev_status="prescreen_included")
         record.update(pdf_status="needs_retrieval")
 
-    utils.save_bib_file(bib_db)
-    repo.index.add([MAIN_REFERENCES])
-    utils.create_commit(repo, "Pre-screening (manual)", saved_args, manual_author=False)
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.create_commit(
+        "Pre-screening (manual)", saved_args, manual_author=False
+    )
 
     return
 
 
-def get_next_prescreening_item():
+def get_next_prescreening_item(REVIEW_MANAGER):
     prescreening_items = []
-    for record_string in utils.read_next_record_str():
+    for record_string in REVIEW_MANAGER.read_next_record_str():
         rev_stat = "NA"
         for line in record_string.split("\n"):
             if "rev_status" == line.lstrip()[:10]:
@@ -140,11 +143,11 @@ def get_next_prescreening_item():
     yield from prescreening_items
 
 
-def replace_field(ID, key: str, val: str) -> None:
+def replace_field(REVIEW_MANAGER, ID, key: str, val: str) -> None:
 
     val = val.encode("utf-8")
     current_ID = "NA"
-    with open(MAIN_REFERENCES, "r+b") as fd:
+    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"], "r+b") as fd:
         seekpos = fd.tell()
         line = fd.readline()
         while line:
@@ -182,12 +185,13 @@ def replace_field(ID, key: str, val: str) -> None:
     return
 
 
-def set_prescreen_status(ID, prescreen_inclusion: bool) -> None:
+def set_prescreen_status(REVIEW_MANAGER, ID, prescreen_inclusion: bool) -> None:
 
     if prescreen_inclusion:
-        replace_field(ID, "rev_status", "prescreen_included")
-        replace_field(ID, "pdf_status", "needs_retrieval")
+        replace_field(REVIEW_MANAGER, ID, "rev_status", "prescreen_included")
+        # TODO : the pdf_needs_retrieval must be added, not replaced
+        replace_field(REVIEW_MANAGER, "pdf_status", "needs_retrieval")
     else:
-        replace_field(ID, "rev_status", "prescreen_excluded")
+        replace_field(REVIEW_MANAGER, ID, "rev_status", "prescreen_excluded")
 
     return

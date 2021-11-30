@@ -9,7 +9,15 @@ from subprocess import STDOUT
 import git
 import requests
 
-from review_template import utils
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[
+        logging.FileHandler("report.log", mode="a"),
+        logging.StreamHandler(),
+    ],
+)
 
 
 def get_name_mail_from_global_git_config() -> list:
@@ -79,13 +87,17 @@ def initialize_repo(
     repo = git.Repo.init()
     os.mkdir("search")
 
-    utils.retrieve_package_file("../template/readme.md", "readme.md")
-    utils.retrieve_package_file(
+    from review_template import review_manager
+
+    review_manager.retrieve_package_file("../template/readme.md", "readme.md")
+    review_manager.retrieve_package_file(
         "../template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
     )
-    utils.retrieve_package_file("../template/.gitattributes", ".gitattributes")
+    review_manager.retrieve_package_file("../template/.gitattributes", ".gitattributes")
 
-    utils.inplace_change("readme.md", "{{project_title}}", project_title.rstrip(" "))
+    review_manager.inplace_change(
+        "readme.md", "{{project_title}}", project_title.rstrip(" ")
+    )
 
     private_config = configparser.ConfigParser()
     private_config.add_section("general")
@@ -116,10 +128,8 @@ def initialize_repo(
     )
     f.close()
 
-    logging.info("Install pre-commmit hooks")
+    logging.info("Install latest pre-commmit hooks")
     check_call(["pre-commit", "install"], stdout=DEVNULL, stderr=STDOUT)
-
-    logging.info("Update pre-commmit hooks")
     check_call(
         ["pre-commit", "autoupdate", "--bleeding-edge"], stdout=DEVNULL, stderr=STDOUT
     )
@@ -134,7 +144,10 @@ def initialize_repo(
         ]
     )
 
-    utils.create_commit(repo, "Initial commit", saved_args, True)
+    from review_template.review_manager import ReviewManager
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.create_commit("Initial commit", saved_args, True)
 
     if remote_url is not None:
         connect_to_remote(repo, remote_url)

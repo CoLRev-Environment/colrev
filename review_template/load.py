@@ -10,7 +10,6 @@ from datetime import datetime
 from itertools import chain
 
 import bibtexparser
-import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -19,17 +18,22 @@ from bibtexparser.customization import convert_to_unicode
 
 import docker
 from review_template import grobid_client
-from review_template import repo_setup
-from review_template import utils
+from review_template.review_manager import ReviewManager
 
 logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
-SEARCH_DETAILS = repo_setup.paths["SEARCH_DETAILS"]
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
+BATCH_SIZE, SEARCH_DETAILS, MAIN_REFERENCES = -1, "NA", "NA"
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 search_type_opts = ["DB", "TOC", "BACK_CIT", "FORW_CIT", "LOCAL_PAPER_INDEX", "OTHER"]
+
+
+class NoSearchResultsAvailableError(Exception):
+    def __init__(self):
+        self.message = (
+            "no search results files of supported types in /search/ directory."
+        )
+        super().__init__(self.message)
 
 
 def get_search_files(restrict: list = None) -> None:
@@ -50,6 +54,8 @@ def get_search_files(restrict: list = None) -> None:
         supported_extensions = restrict
 
     files = []
+    if not os.path.exists("search"):
+        raise NoSearchResultsAvailableError()
     search_dir = os.path.join(os.getcwd(), "search/")
     files = [
         os.path.join(search_dir, x)
@@ -175,18 +181,18 @@ def source_heuristics(search_file: str) -> str:
     return None
 
 
-def append_search_details(new_record: dict) -> None:
-    search_details = utils.load_search_details()
+def append_search_details(review_manager, new_record: dict) -> None:
+    search_details = review_manager.load_search_details()
     search_details.append(new_record)
     logging.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
-    utils.save_search_details(search_details)
+    review_manager.save_search_details(search_details)
     return
 
 
-def rename_search_files(search_files: list) -> list:
+def rename_search_files(review_manager, search_files: list) -> list:
     ret_list = []
 
-    search_details = utils.load_search_details()
+    search_details = review_manager.load_search_details()
     search_dir = os.path.join(os.getcwd(), "search/")
     index_paths = [os.path.join(search_dir, x["filename"]) for x in search_details]
 
@@ -222,35 +228,35 @@ class SearchDetailsMissingError(Exception):
         super().__init__(self.message)
 
 
-def check_search_details(search_files: list):
-    search_details = utils.load_search_details()
+def check_search_details(review_manager, search_files: list):
+    search_details = review_manager.load_search_details()
     for search_file in search_files:
         if os.path.basename(search_file) not in [x["filename"] for x in search_details]:
             raise SearchDetailsMissingError(search_file)
     return
 
 
-def load_all_records() -> list:
+def load_all_records(review_manager) -> list:
 
-    bib_db = utils.load_main_refs(mod_check=True, init=True)
+    bib_db = review_manager.load_main_refs(init=True)
     save_imported_record_links(bib_db)
 
     search_files = get_search_files()
     if any(".pdf" in x for x in search_files) or any(".txt" in x for x in search_files):
         grobid_client.start_grobid()
-    search_files = rename_search_files(search_files)
+    search_files = rename_search_files(review_manager, search_files)
     # Note: after the search_result_file (non-bib formats) has been loaded
     # for the first time, we save a corresponding bib_file, which allows for
     # more efficient status checking, tracing, and validation.
     # This also applies to the pipeline_validation_hooks and is particularly
     # relevant for pdf sources that require long processing times.
-    convert_to_bib(search_files)
+    convert_to_bib(review_manager, search_files)
 
     search_files = get_search_files(restrict=["bib"])
     logging.debug(f"Search_files (bib, after conversion): {search_files}")
-    check_search_details(search_files)
+    check_search_details(review_manager, search_files)
 
-    load_pool = mp.Pool(repo_setup.config["CPUS"])
+    load_pool = mp.Pool(review_manager.config["CPUS"])
     additional_records = load_pool.map(load_records, search_files)
     len_lists = [len(additional_record) for additional_record in additional_records]
     logging.debug(f"Length of additional_records lists: {len_lists}")
@@ -284,8 +290,8 @@ def bibutils_convert(script: str, data: str) -> str:
         container = client.create_container("bibutils", script, stdin_open=True)
     except docker.errors.ImageNotFound:
         logging.info("Docker image not found")
-        return ""
         pass
+        return ""
 
     sock = client.attach_socket(
         container, params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
@@ -469,7 +475,7 @@ def xlsx2bib(file: str) -> BibDatabase:
 
 
 def move_to_pdf_dir(filepath: str) -> str:
-    PDF_DIRECTORY = repo_setup.paths["PDF_DIRECTORY"]
+    PDF_DIRECTORY = "pdfs"
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
@@ -570,7 +576,7 @@ def drop_empty_fields(db: BibDatabase) -> BibDatabase:
     return db
 
 
-def set_IDs(db: BibDatabase) -> BibDatabase:
+def set_incremental_IDs(db: BibDatabase) -> BibDatabase:
 
     if 0 == len([r for r in db.entries if "ID" not in r]):
         # IDs set for all records
@@ -629,7 +635,7 @@ def validate_file_formats() -> None:
     return None
 
 
-def convert_to_bib(search_files: list) -> None:
+def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
 
     for sfpath in search_files:
         search_file = os.path.basename(sfpath)
@@ -652,10 +658,11 @@ def convert_to_bib(search_files: list) -> None:
             db = conversion_scripts[filetype](sfpath)
 
             db = fix_keys(db)
-            db = set_IDs(db)
+            db = set_incremental_IDs(db)
             db = unify_field_names(db)
             db = drop_empty_fields(db)
 
+            git_repo = REVIEW_MANAGER.get_repo()
             if db is None:
                 logging.error("No records loaded")
                 continue
@@ -669,9 +676,8 @@ def convert_to_bib(search_files: list) -> None:
                     "search_parameters": "NA",
                     "comment": "Extracted with GROBID",
                 }
-                append_search_details(new_record)
-                repo = git.Repo()
-                repo.index.add([new_fp])
+                append_search_details(REVIEW_MANAGER, new_record)
+                git_repo.index.add([new_fp])
 
             elif "pdf_refs" == filetype:
                 new_fp = move_to_pdf_dir(sfpath)
@@ -683,9 +689,8 @@ def convert_to_bib(search_files: list) -> None:
                     "search_parameters": "NA",
                     "comment": "Extracted with GROBID",
                 }
-                append_search_details(new_record)
-                repo = git.Repo()
-                repo.index.add([new_fp])
+                append_search_details(REVIEW_MANAGER, new_record)
+                git_repo.index.add([new_fp])
 
             if corresponding_bib_file != sfpath and not ".bib" == sfpath[-4:]:
                 new_file_path = sfpath[: sfpath.rfind(".")] + ".bib"
@@ -746,7 +751,7 @@ def processing_condition(record: dict) -> bool:
     return False
 
 
-def save_imported_files(repo: git.Repo, bib_db: BibDatabase) -> bool:
+def save_imported_files(REVIEW_MANAGER, bib_db: BibDatabase) -> bool:
     if bib_db is None:
         logging.info("No records imported")
         return False
@@ -755,32 +760,39 @@ def save_imported_files(repo: git.Repo, bib_db: BibDatabase) -> bool:
         logging.info("No records imported")
         return False
 
-    utils.save_bib_file(bib_db, MAIN_REFERENCES)
-    repo.index.add([SEARCH_DETAILS])
-    repo.index.add(get_search_files())
-    repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.save_bib_file(bib_db, MAIN_REFERENCES)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([SEARCH_DETAILS])
+    git_repo.index.add(get_search_files())
+    git_repo.index.add([MAIN_REFERENCES])
 
-    if not repo.is_dirty():
+    if not git_repo.is_dirty():
         logging.info("No new records added to MAIN_REFERENCES")
         return False
 
     return True
 
 
-def main(repo: git.Repo, keep_ids: bool = False) -> BibDatabase:
+def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
 
     saved_args = locals()
     if not keep_ids:
         del saved_args["keep_ids"]
     global batch_start
     global batch_end
+    global SEARCH_DETAILS
+    global MAIN_REFERENCES
+    global BATCH_SIZE
 
-    utils.reset_log()
+    SEARCH_DETAILS = REVIEW_MANAGER.paths["SEARCH_DETAILS"]
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+
     logging.info("Import")
     logging.info(f"Batch size: {BATCH_SIZE}")
 
     bib_db = BibDatabase()
-    record_iterator = IteratorEx(load_all_records())
+    record_iterator = IteratorEx(load_all_records(REVIEW_MANAGER))
     for record in record_iterator:
         bib_db.entries.append(record)
         if record_iterator.hasNext:
@@ -799,17 +811,17 @@ def main(repo: git.Repo, keep_ids: bool = False) -> BibDatabase:
         if batch_end != 1:
             logging.info(f"Importing records {batch_start} to {batch_end}")
 
-        pool = mp.Pool(repo_setup.config["CPUS"])
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         bib_db.entries = pool.map(import_record, bib_db.entries)
         pool.close()
         pool.join()
 
         if not keep_ids:
-            bib_db = utils.set_IDs(bib_db)
+            bib_db = REVIEW_MANAGER.set_IDs(bib_db)
 
-        if save_imported_files(repo, bib_db):
-            utils.create_commit(repo, "⚙️ Import search results", saved_args)
+        if save_imported_files(REVIEW_MANAGER, bib_db):
+            REVIEW_MANAGER.create_commit("Import search results", saved_args)
 
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
 
-    return bib_db
+    return

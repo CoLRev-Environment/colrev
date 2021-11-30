@@ -67,9 +67,7 @@ Commands:
   screen       Screen based on exclusion criteria and fulltext documents
   pdfs         Retrieve PDFs (part of automated processing)
   pdf-prepare  Prepare PDFs (part of automated processing)
-  back-search  Backward search based on PDFs
   data         Extract data
-  profile      Generate a sample profile
   validate     Validate changes
   trace        Trace a record
   paper        Build the paper

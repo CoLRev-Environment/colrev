@@ -1,26 +1,25 @@
 #! /usr/bin/env python3
+import io
 import logging
 import os
 
 import git
 import yaml
 
-from review_template import repo_setup
 from review_template import screen
-from review_template import utils
 
 
-def get_nr_search() -> int:
+def get_nr_search(REVIEW_MANAGER) -> int:
     number_search = 0
-    for search_file in utils.get_bib_files():
-        number_search += utils.get_nr_in_bib(search_file)
+    for search_file in REVIEW_MANAGER.get_bib_files():
+        number_search += REVIEW_MANAGER.get_nr_in_bib(search_file)
     return number_search
 
 
-def get_completeness_condition() -> bool:
-    stat = get_status_freq()
+def get_completeness_condition(REVIEW_MANAGER) -> bool:
+    stat = get_status_freq(REVIEW_MANAGER)
     completeness_condition = True
-    if 0 != stat["metadata_status"]["currently"]["non_imported"]:
+    if 0 != stat["metadata_status"]["currently"]["retrieved"]:
         completeness_condition = False
     if 0 != stat["metadata_status"]["currently"]["imported"]:
         completeness_condition = False
@@ -47,8 +46,8 @@ def get_completeness_condition() -> bool:
     return completeness_condition
 
 
-def get_status_freq() -> dict:
-    MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
+def get_status_freq(REVIEW_MANAGER) -> dict:
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
     stat = {}
     stat["metadata_status"] = {}
@@ -155,9 +154,9 @@ def get_status_freq() -> dict:
     md_overall_imported = (
         md_overall_prepared + md_needs_manual_preparation + md_imported
     )
-    md_overall_retrieved = get_nr_search()
+    md_overall_retrieved = get_nr_search(REVIEW_MANAGER)
 
-    md_non_imported = md_overall_retrieved - record_links
+    md_retrieved = md_overall_retrieved - record_links
 
     # Reverse order (overall_x means x or later status)
     pdfs_overall_prepared = pdfs_prepared
@@ -188,7 +187,7 @@ def get_status_freq() -> dict:
     rev_overall_synthesis = rev_overall_included
     rev_needs_synthesis = rev_overall_included - rev_synthesized
 
-    # PDF_DIRECTORY = repo_setup.paths['PDF_DIRECTORY']
+    # PDF_DIRECTORY = REVIEW_MANAGER.paths['PDF_DIRECTORY']
     # if os.path.exists(PDF_DIRECTORY):
     #     pdf_files = [x for x in os.listdir(PDF_DIRECTORY)]
     #     search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
@@ -197,7 +196,7 @@ def get_status_freq() -> dict:
     #                            in search_files])
 
     md_cur_stat = stat["metadata_status"]["currently"]
-    md_cur_stat["non_imported"] = md_non_imported
+    md_cur_stat["retrieved"] = md_retrieved
     md_cur_stat["imported"] = md_imported
     md_cur_stat["prepared"] = md_prepared
     md_cur_stat["needs_manual_preparation"] = md_needs_manual_preparation
@@ -205,7 +204,7 @@ def get_status_freq() -> dict:
     md_cur_stat["processed"] = md_processed
     md_cur_stat["duplicates_removed"] = md_duplicates_removed
     md_cur_stat["non_processed"] = (
-        md_non_imported
+        md_retrieved
         + md_imported
         + md_prepared
         + md_needs_manual_preparation
@@ -399,126 +398,63 @@ def repository_validation() -> dict:
     return repo_report
 
 
-def get_review_instructions(stat: dict = None) -> dict:
-    if stat is None:
-        stat = get_status_freq()
-    instructions = []
+def get_priority_transition(current_states: set, active_processing_functions: list):
+    from review_template.review_manager import Record
 
-    metadata, review, pdfs = (
-        stat["metadata_status"],
-        stat["review_status"],
-        stat["pdf_status"],
-    )
+    # get "earliest" states (going backward)
+    earliest_state = []
+    search_states = ["rev_synthesized"]
+    while True:
+        if any(search_state in list(current_states) for search_state in search_states):
+            earliest_state = [
+                search_state
+                for search_state in search_states
+                if search_state in current_states
+            ]
+        search_states = [
+            x["source"] for x in Record.transitions if x["dest"] in search_states
+        ]
+        if [] == search_states:
+            break
+    # print(f'earliest_state: {earliest_state}')
 
-    if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
-        instruction = {
-            "msg": "To import, copy search results to the search directory.",
-            "cmd": "review_template importer",
-            # "high_level_cmd": "review_template metadata",
-        }
-        instructions.append(instruction)
+    # next: get the priority transition for the earliest states
+    priority_transitions = [
+        x for x in Record.transitions if x["source"] in earliest_state
+    ]
+    # print(f'priority_transitions (before following "automatically"):"
+    #   f" {priority_transitions}')
+    for priority_transition in priority_transitions:
+        if "automatically" == priority_transition["trigger"]:
+            priority_transitions.extend(
+                [
+                    x
+                    for x in Record.transitions
+                    if x["source"] == priority_transition["dest"]
+                ]
+            )
+    priority_transitions = [
+        x for x in priority_transitions if "automatically" != x["trigger"]
+    ]
+    # print(f'priority_transitions: {priority_transitions}')
+    return priority_transitions
 
-    if metadata["currently"]["non_imported"] > 0:
-        instruction = {
-            "msg": "Import search results",
-            "cmd": "review_template importer",
-            # "high_level_cmd": "review_template metadata",
-        }
-        instructions.append(instruction)
 
-    if metadata["currently"]["imported"] > 0:
-        instruction = {
-            "msg": "Continue with record preparation",
-            "cmd": "review_template prepare",
-            # "high_level_cmd": "review_template metadata",
-        }
-        instructions.append(instruction)
+def get_active_processing_functions(current_states_set):
+    from review_template.review_manager import Record
 
-    if metadata["currently"]["needs_manual_preparation"] > 0:
-        instruction = {
-            "msg": "Continue with manual preparation",
-            "cmd": "review_template man-prep",
-        }
-        instructions.append(instruction)
-
-    if metadata["currently"]["prepared"] > 0:
-        instruction = {
-            "msg": "Continue with record deduplication",
-            "cmd": "review_template dedupe",
-            # "high_level_cmd": "review_template metadata",
-        }
-        instructions.append(instruction)
-
-    if metadata["currently"]["needs_manual_merging"] > 0:
-        instruction = {
-            "msg": "To continue manual processing of duplicates",
-            "cmd": "review_template man-dedupe",
-        }
-        instructions.append(instruction)
-
-    if review["currently"]["needs_prescreen"] > 0:
-        instruction = {
-            "msg": "Continue with prescreen",
-            "cmd": "review_template prescreen",
-        }
-        instructions.append(instruction)
-
-    if pdfs["currently"]["needs_retrieval"] > 0:
-        instruction = {
-            "msg": "Continue with pdf retrieval",
-            "cmd": "review_template pdfs",
-        }
-        instructions.append(instruction)
-
-    if pdfs["currently"]["needs_manual_retrieval"] > 0:
-        instruction = {
-            "msg": "Continue with manual pdf retrieval",
-            "cmd": "review_template pdf-get-man",
-        }
-        instructions.append(instruction)
-
-    if pdfs["currently"]["imported"] > 0:
-        instruction = {
-            "msg": "Continue with pdf preparation",
-            "cmd": "review_template pdf-prepare",
-        }
-        instructions.append(instruction)
-
-    if review["currently"]["needs_screen"] > 0:
-        instruction = {
-            "msg": "Continue with screen",
-            "cmd": "review_template screen",
-        }
-        instructions.append(instruction)
-
-    if review["currently"]["needs_synthesis"] > 0:
-        instruction = {
-            "msg": "Continue with data extraction/analysis",
-            "cmd": "review_template data",
-        }
-        instructions.append(instruction)
-
-    if get_completeness_condition():
-        instruction = {
-            "info": "Iterationed completed.",
-            "msg": "To start the next iteration of the review, "
-            + "add records to search/ directory",
-            "cmd_after": "review_template importer",
-        }
-        instructions.append(instruction)
-
-    if "MANUSCRIPT" == repo_setup.config["DATA_FORMAT"]:
-        instruction = {
-            "msg": "Build the paper",
-            "cmd": "review_template paper",
-        }
-        instructions.append(instruction)
-
-    # Note : we can set the first in the list to priority
-    # because the instructions are appended in order
-    instructions[0]["priority"] = "yes"
-
-    return instructions
+    active_processing_functions = []
+    for state in current_states_set:
+        srec = Record("item", state)
+        t = srec.get_valid_transitions()
+        if "automatically" in t:
+            srec = Record(
+                "item",
+                [x["dest"] for x in Record.transitions if state == x["source"]][0],
+            )
+            t = srec.get_valid_transitions()
+        active_processing_functions.extend(t)
+    return active_processing_functions
 
 
 def get_remote_commit_differences(repo: git.Repo) -> list:
@@ -545,12 +481,183 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
     return nr_commits_behind, nr_commits_ahead
 
 
-def get_collaboration_instructions(stat: dict) -> dict:
+def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
 
-    instructions = {"items": []}
+    review_instructions = []
+
+    git_repo = git.Repo()
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+    non_staged = [
+        item.a_path for item in git_repo.index.diff(None) if ".bib" == item.a_path[-4:]
+    ]
+
+    if len(non_staged) > 0:
+        instruction = {
+            "msg": "Add non-staged changes.",
+            "cmd": f"git add {', '.join(non_staged)}",
+        }
+        if REVIEW_MANAGER.paths["MAIN_REFERENCES"] in non_staged:
+            instruction["priority"] = "yes"
+        review_instructions.append(instruction)
+
+    current_record_state_list = REVIEW_MANAGER.get_record_state_list()
+    current_states_set = REVIEW_MANAGER.get_states_set(current_record_state_list)
+    # temporarily override for testing
+    # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
+    # from review_template.review_manager import Record
+    # current_states_set = set([x['source'] for x in Record.transitions])
+
+    MAIN_REFS_CHANGED = MAIN_REFERENCES in [
+        item.a_path for item in git_repo.index.diff(None)
+    ] + [x.a_path for x in git_repo.head.commit.diff()]
+
+    # If changes in MAIN_REFERENCES are staged, we need to detect the process type
+    if MAIN_REFS_CHANGED:
+        from review_template.review_manager import Record
+
+        revlist = (
+            (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
+            for commit in git_repo.iter_commits(paths=MAIN_REFERENCES)
+        )
+        filecontents = list(revlist)[0][1]
+        committed_record_states_list = (
+            REVIEW_MANAGER.get_record_state_list_from_file_obj(
+                io.StringIO(filecontents.decode("utf-8"))
+            )
+        )
+
+        items = [
+            record_state
+            for record_state in current_record_state_list
+            if record_state not in committed_record_states_list
+        ]
+        transitioned_records = []
+        for item in items:
+            transitioned_record = {"ID": item[0], "dest": item[1]}
+
+            source_state = [
+                rec[1] for rec in committed_record_states_list if rec[0] == item[0]
+            ]
+            if len(source_state) != 1:
+                print(f"Error (no source_state): {transitioned_record}")
+                review_instructions.append(
+                    {
+                        "msg": f"Resolve commited status of {transitioned_record}",
+                        "priority": "yes",
+                    }
+                )
+                continue
+            transitioned_record["source"] = source_state[0]
+
+            process_type = [
+                x["trigger"]
+                for x in Record.transitions
+                if x["source"] == transitioned_record["source"]
+                and x["dest"] == transitioned_record["dest"]
+            ]
+            if len(process_type) == 0:
+                review_instructions.append(
+                    {
+                        "msg": "Resolve invalid transition of "
+                        + f"{transitioned_record['ID']} from "
+                        + f"{transitioned_record['source']} to "
+                        + " {transitioned_record['dest']}",
+                        "priority": "yes",
+                    }
+                )
+                continue
+            transitioned_record["process_type"] = process_type[0]
+            transitioned_records.append(transitioned_record)
+
+        in_progress_processes = list({x["process_type"] for x in transitioned_records})
+        if len(in_progress_processes) == 1:
+            instruction = {
+                "msg": f"Detected {in_progress_processes[0]} in progress. "
+                + "Complete this process",
+                "cmd": f"review_template {in_progress_processes[0]}",
+            }
+            instruction["priority"] = "yes"
+            review_instructions.append(instruction)
+        elif len(in_progress_processes) > 1:
+            instruction = {
+                "msg": "Detected multiple processes in progress "
+                + f"({', '.join(in_progress_processes)}). Complete one "
+                + "(save and revert the other) and commit before continuing!\n"
+                + f"  Records: {', '.join([x['ID'] for x in transitioned_records])}",
+                # "cmd": f"review_template {in_progress_processes}",
+            }
+            instruction["priority"] = "yes"
+            review_instructions.append(instruction)
+
+    logging.debug(f"current_states_set: {current_states_set}")
+    active_processing_functions = get_active_processing_functions(current_states_set)
+    logging.debug(f"active_processing_functions: {active_processing_functions}")
+    priority_processing_functions = get_priority_transition(
+        current_states_set, active_processing_functions
+    )
+    logging.debug(f"priority_processing_function: {priority_processing_functions}")
+
+    msgs = {
+        "load": "Import search results",
+        "prepare": "Prepare records",
+        "man_prep": "Prepare records (manually)",
+        "dedupe": "Deduplicate records",
+        "man_dedupe": "Deduplicate records (manually)",
+        "prescreen": "Prescreen records",
+        "pdf_get": "Retrieve pdfs",
+        "pdf_get_man": "Retrieve pdfs (manually)",
+        "pdf_prep": "Prepare pdfs",
+        "pdf_prep_man": "Prepare pdfs (manually)",
+        "screen": "Screen records",
+        "data": "Extract data/synthesize records",
+    }
+
+    for active_processing_function in active_processing_functions:
+        instruction = {
+            "msg": msgs[active_processing_function],
+            "cmd": f"review_template {active_processing_function}"
+            # "high_level_cmd": "review_template metadata",
+        }
+        if active_processing_function in [
+            x["trigger"] for x in priority_processing_functions
+        ]:
+            keylist = [list(x.keys()) for x in review_instructions]
+            keys = [item for sublist in keylist for item in sublist]
+            if "priority" not in keys:
+                instruction["priority"] = "yes"
+        else:
+            if REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+                continue
+
+        review_instructions.append(instruction)
+
+    if not os.path.exists(REVIEW_MANAGER.paths["MAIN_REFERENCES"]):
+        instruction = {
+            "msg": "To import, copy search results to the search directory.",
+            "cmd": "review_template load",
+        }
+        review_instructions.append(instruction)
+
+    if get_completeness_condition(REVIEW_MANAGER):
+        instruction = {
+            "info": "Iterationed completed.",
+            "msg": "To start the next iteration of the review, "
+            + "add records to search/ directory",
+            "cmd_after": "review_template load",
+        }
+        review_instructions.append(instruction)
+
+    if "MANUSCRIPT" == REVIEW_MANAGER.config["DATA_FORMAT"]:
+        instruction = {
+            "msg": "Build the paper",
+            "cmd": "review_template paper",
+        }
+        review_instructions.append(instruction)
+
+    collaboration_instructions = {"items": []}
 
     found_a_conflict = False
-    repo = git.Repo()
     unmerged_blobs = repo.index.unmerged_blobs()
     for path in unmerged_blobs:
         list_of_blobs = unmerged_blobs[path]
@@ -560,17 +667,19 @@ def get_collaboration_instructions(stat: dict) -> dict:
 
     nr_commits_behind, nr_commits_ahead = 0, 0
 
-    SHARE_STAT_REQ = repo_setup.config["SHARE_STAT_REQ"]
+    SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     CONNECTED_REMOTE = 0 != len(repo.remotes)
     if CONNECTED_REMOTE:
         origin = repo.remotes.origin
         if origin.exists():
             nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
     if CONNECTED_REMOTE:
-        instructions["title"] = "Versioning and collaboration"
-        instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
+        collaboration_instructions["title"] = "Versioning and collaboration"
+        collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
     else:
-        instructions["title"] = "Versioning (not connected to shared repository)"
+        collaboration_instructions[
+            "title"
+        ] = "Versioning (not connected to shared repository)"
 
     if found_a_conflict:
         item = {
@@ -581,123 +690,134 @@ def get_collaboration_instructions(stat: dict) -> dict:
             + "addressing-merge-conflicts/resolving-a-merge-conflict-"
             + "using-the-command-line",
         }
-        instructions["items"].append(item)
+        collaboration_instructions["items"].append(item)
 
     # Notify when changes in bib files are not staged
     # (this may raise unexpected errors)
-    non_tracked = [
-        item.a_path for item in repo.index.diff(None) if ".bib" == item.a_path[-4:]
-    ]
-    if len(non_tracked) > 0:
-        item = {
-            "title": "Non-tracked files that may "
-            + f"cause failing checks ({','.join(non_tracked)})",
-            "level": "WARNING",
-        }
-        instructions["items"].append(item)
 
-    if not found_a_conflict and repo.is_dirty():
+    if len(non_staged) > 0:
         item = {
-            "title": "Uncommitted changes",
+            "title": f"Non-staged files: {','.join(non_staged)}",
             "level": "WARNING",
         }
-        instructions["items"].append(item)
+        collaboration_instructions["items"].append(item)
+
+    # if not found_a_conflict and repo.is_dirty():
+    #     item = {
+    #         "title": "Uncommitted changes",
+    #         "level": "WARNING",
+    #     }
+    #     collaboration_instructions["items"].append(item)
 
     elif not found_a_conflict:
+        if CONNECTED_REMOTE:
+            if nr_commits_behind > 0:
+                item = {
+                    "title": "Remote changes available on the server",
+                    "msg": "Once you have committed your changes, get the latest "
+                    + "remote changes",
+                    "cmd_after": "git add FILENAME \n git commit -m 'MSG' \n "
+                    + "git pull --rebase",
+                }
+                collaboration_instructions["items"].append(item)
 
-        if nr_commits_behind > 0:
-            item = {
-                "title": "Remote changes available on the server",
-                "msg": "Once you have committed your changes, get the latest "
-                + "remote changes",
-                "cmd_after": "git add FILENAME \n git commit -m 'MSG' \n "
-                + "git pull --rebase",
-            }
-            instructions["items"].append(item)
+            if nr_commits_ahead > 0:
+                # TODO: suggest detailed commands
+                # (depending on the working directory/index)
+                item = {
+                    "title": "Local changes not yet on the server",
+                    "msg": "Once you have committed your changes, upload them "
+                    + "to the shared repository.",
+                    "cmd_after": "git push",
+                }
+                collaboration_instructions["items"].append(item)
 
-        if nr_commits_ahead > 0:
-            # TODO: suggest detailed commands (depending on the working directory/index)
-            item = {
-                "title": "Local changes not yet on the server",
-                "msg": "Once you have committed your changes, upload them "
-                + "to the shared repository.",
-                "cmd_after": "git push",
-            }
-            instructions["items"].append(item)
-
-        if SHARE_STAT_REQ == "NONE":
-            instructions["status"] = {
-                "title": "Sharing: currently ready for sharing",
-                "level": "SUCCESS",
-                "msg": "If consistency checks pass",
-            }
-
-        # TODO all the following: should all search results be imported?!
-        if SHARE_STAT_REQ == "PROCESSED":
-            if 0 == stat["metadata_status"]["currently"]["non_processed"]:
-                instructions["status"] = {
+            if SHARE_STAT_REQ == "NONE":
+                collaboration_instructions["status"] = {
                     "title": "Sharing: currently ready for sharing",
                     "level": "SUCCESS",
-                    "msg": "If consistency checks pass",
+                    "msg": "",
+                    # If consistency checks pass -
+                    # if they didn't pass, the message wouldn't be displayed
                 }
 
-            else:
-                instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
-                    "level": "WARNING",
-                    "msg": "All records should be processed before sharing "
-                    + "(see instructions above).",
-                }
+            # TODO all the following: should all search results be imported?!
+            if SHARE_STAT_REQ == "PROCESSED":
+                if 0 == stat["metadata_status"]["currently"]["non_processed"]:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently ready for sharing",
+                        "level": "SUCCESS",
+                        "msg": "",
+                        # If consistency checks pass -
+                        # if they didn't pass, the message wouldn't be displayed
+                    }
 
-        # Note: if we use all(...) in the following,
-        # we do not need to distinguish whether
-        # a PRE_SCREEN or INCLUSION_SCREEN is needed
-        if SHARE_STAT_REQ == "SCREENED":
-            if 0 == stat["review_status"]["currently"]["non_screened"]:
-                instructions["status"] = {
-                    "title": "Sharing: currently ready for sharing",
-                    "level": "SUCCESS",
-                    "msg": "If consistency checks pass",
-                }
+                else:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently not ready for sharing",
+                        "level": "WARNING",
+                        "msg": "All records should be processed before sharing "
+                        + "(see instructions above).",
+                    }
 
-            else:
-                instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
-                    "level": "WARNING",
-                    "msg": "All records should be screened before sharing "
-                    + "(see instructions above).",
-                }
+            # Note: if we use all(...) in the following,
+            # we do not need to distinguish whether
+            # a PRE_SCREEN or INCLUSION_SCREEN is needed
+            if SHARE_STAT_REQ == "SCREENED":
+                if 0 == stat["review_status"]["currently"]["non_screened"]:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently ready for sharing",
+                        "level": "SUCCESS",
+                        "msg": "",
+                        # If consistency checks pass -
+                        # if they didn't pass, the message wouldn't be displayed
+                    }
 
-        if SHARE_STAT_REQ == "COMPLETED":
-            if 0 == stat["review_status"]["currently"]["non_completed"]:
-                instructions["status"] = {
-                    "title": "Sharing: currently ready for sharing",
-                    "level": "SUCCESS",
-                    "msg": "If consistency checks pass",
-                }
-            else:
-                instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
-                    "level": "WARNING",
-                    "msg": "All records should be completed before sharing "
-                    + "(see instructions above).",
-                }
+                else:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently not ready for sharing",
+                        "level": "WARNING",
+                        "msg": "All records should be screened before sharing "
+                        + "(see instructions above).",
+                    }
+
+            if SHARE_STAT_REQ == "COMPLETED":
+                if 0 == stat["review_status"]["currently"]["non_completed"]:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently ready for sharing",
+                        "level": "SUCCESS",
+                        "msg": "",
+                        # If consistency checks pass -
+                        # if they didn't pass, the message wouldn't be displayed
+                    }
+                else:
+                    collaboration_instructions["status"] = {
+                        "title": "Sharing: currently not ready for sharing",
+                        "level": "WARNING",
+                        "msg": "All records should be completed before sharing "
+                        + "(see instructions above).",
+                    }
 
     else:
-        instructions["status"] = {
-            "title": "Sharing: currently not ready for sharing",
-            "level": "WARNING",
-            "msg": "Merge conflicts need to be resolved first.",
-        }
+        if CONNECTED_REMOTE:
+            collaboration_instructions["status"] = {
+                "title": "Sharing: currently not ready for sharing",
+                "level": "WARNING",
+                "msg": "Merge conflicts need to be resolved first.",
+            }
 
-    if 0 == len(instructions["items"]):
+    if 0 == len(collaboration_instructions["items"]):
         item = {
             "title": "Up-to-date",
             "level": "SUCCESS",
             "msg": "No versioning/collaboration tasks required at the moment.",
         }
-        instructions["items"].append(item)
+        collaboration_instructions["items"].append(item)
 
+    instructions = {
+        "review_instructions": review_instructions,
+        "collaboration_instructions": collaboration_instructions,
+    }
     return instructions
 
 
@@ -736,7 +856,7 @@ def stat_print(
     return
 
 
-def print_review_status(stat: dict) -> None:
+def print_review_status(REVIEW_MANAGER, stat: dict) -> None:
 
     # Principle: first column shows total records/PDFs in each stage
     # the second column shows
@@ -744,9 +864,8 @@ def print_review_status(stat: dict) -> None:
     #               -> the number of records excluded/merged
 
     print("\nStatus\n")
-    from review_template import repo_setup
 
-    if not os.path.exists(repo_setup.paths["MAIN_REFERENCES"]):
+    if not os.path.exists(REVIEW_MANAGER.paths["MAIN_REFERENCES"]):
         print(" | Search")
         print(" |  - No records added yet")
     else:
@@ -760,14 +879,14 @@ def print_review_status(stat: dict) -> None:
         stat_print(False, "Records retrieved", metadata["overall"]["retrieved"])
         print(" |")
         print("     | Metadata preparation")
-        if metadata["currently"]["non_imported"] > 0:
+        if metadata["currently"]["retrieved"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "record(s) not yet imported",
-                metadata["currently"]["non_imported"],
+                metadata["currently"]["retrieved"],
             )
         stat_print(True, "Records imported", metadata["overall"]["imported"])
         if metadata["currently"]["imported"] > 0:

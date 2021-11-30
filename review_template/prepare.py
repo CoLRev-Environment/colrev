@@ -16,19 +16,17 @@ import git
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
+from bibtexparser.bparser import BibTexParser
+from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 from thefuzz import fuzz
 
 from review_template import dedupe
-from review_template import process
-from review_template import repo_setup
-from review_template import utils
+from review_template.review_manager import ReviewManager
 
-MAIN_REFERENCES = repo_setup.paths["MAIN_REFERENCES"]
-BATCH_SIZE = repo_setup.config["BATCH_SIZE"]
-EMAIL = repo_setup.config["EMAIL"]
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
+BATCH_SIZE, EMAIL, MAIN_REFERENCES, DEBUG_MODE = -1, "NA", "NA", "NA"
 
 prepared, need_manual_prep = 0, 0
 
@@ -197,7 +195,12 @@ def format(record: dict) -> dict:
         stripped_btitle = stripped_btitle.replace("Proceedings of the", "").replace(
             "Proceedings", ""
         )
+        stripped_btitle = stripped_btitle.lstrip().rstrip()
         record.update(booktitle=stripped_btitle)
+
+    if "date" in record and "year" not in record:
+        year = re.search(r"\d{4}", record["date"]).group(0)
+        record["year"] = year
 
     if "journal" in record:
         if len(record["journal"]) > 10:
@@ -1013,6 +1016,7 @@ record_field_requirements = {
     "inproceedings": ["author", "title", "booktitle", "year"],
     "incollection": ["author", "title", "booktitle", "publisher", "year"],
     "inbook": ["author", "title", "chapter", "publisher", "year"],
+    "proceedings": ["booktitle", "editor"],
     "book": ["author", "title", "publisher", "year"],
     "phdthesis": ["author", "title", "school", "year"],
     "masterthesis": ["author", "title", "school", "year"],
@@ -1132,6 +1136,8 @@ fields_to_keep = [
     "address",
     "edition",
     "warning",
+    "crossref",
+    "date",
 ]
 fields_to_drop = [
     "type",
@@ -1169,7 +1175,6 @@ fields_to_drop = [
     "bibsource",
     "timestamp",
     "biburl",
-    "crossref",
     "man_prep_hints",
 ]
 
@@ -1189,6 +1194,55 @@ def drop_fields(record: dict) -> dict:
     if "article" == record["ENTRYTYPE"] or "inproceedings" == record["ENTRYTYPE"]:
         if "publisher" in record:
             del record["publisher"]
+    return record
+
+
+def read_next_record_str() -> str:
+    with open("references.bib") as f:
+        data = ""
+        first_entry_processed = False
+        while True:
+            line = f.readline()
+            if not line:
+                break
+            if line[:1] == "%" or line == "\n":
+                continue
+            if line[:1] != "@":
+                data += line
+            else:
+                if first_entry_processed:
+                    yield data
+                else:
+                    first_entry_processed = True
+                data = line
+        yield data
+
+
+def get_crossref_record(record) -> dict:
+    # Note : the ID of the crossrefed record may have changed.
+    # we need to trace based on the origin
+    crossref_origin = record["origin"]
+    crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
+    crossref_origin = crossref_origin + "/" + record["crossref"]
+    for record_string in read_next_record_str():
+        for line in record_string.split("\n"):
+            if crossref_origin in record_string:
+                parser = BibTexParser(customization=convert_to_unicode)
+                db = bibtexparser.loads(record_string, parser=parser)
+                record = db.entries[0]
+                if record["origin"] == crossref_origin:
+                    return record
+    return None
+
+
+def resolve_crossrefs(record: dict) -> dict:
+    if "crossref" in record:
+        crossref_record = get_crossref_record(record)
+        if crossref_record is not None:
+            for k, v in crossref_record.items():
+                if k not in record:
+                    record[k] = v
+        pass
     return record
 
 
@@ -1303,6 +1357,7 @@ def prepare(record: dict) -> dict:
     # # Cases with higher dissimilarity will be handled in the man_prep.py
     prep_scripts = {
         "drop_fields": drop_fields,
+        "resolve_crossrefs": resolve_crossrefs,
         "correct_recordtype": correct_recordtype,
         "format": format,
         "apply_local_rules": apply_local_rules,
@@ -1333,7 +1388,7 @@ def prepare(record: dict) -> dict:
             )
         else:
             logging.debug(f"{prep_script} changed: -")
-        if repo_setup.config["DEBUG_MODE"]:
+        if DEBUG_MODE:
             print("\n")
 
     if "needs_manual_preparation" == record.get("md_status", ""):
@@ -1407,30 +1462,31 @@ def reset(bib_db: BibDatabase, id: str) -> None:
     )
     for filecontents in list(revlist):
         prior_bib_db = bibtexparser.loads(filecontents)
-        for e in prior_bib_db.entries:
-            if "imported" == e["md_status"] and any(o in e["origin"] for o in origins):
-                e.update(md_status="needs_manual_preparation")
-                logging.info(f'reset({record["ID"]}) to\n{pp.pformat(e)}\n\n')
-                record.update(e)
+        for r in prior_bib_db.entries:
+            if "imported" == r["md_status"] and any(o in r["origin"] for o in origins):
+                r.update(md_status="needs_manual_preparation")
+                logging.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
+                record.update(r)
                 break
     return
 
 
-def reset_ids(bib_db: BibDatabase, repo: git.Repo, reset_ids: list) -> None:
+def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
+    bib_db = REVIEW_MANAGER.load_main_refs()
     for reset_id in reset_ids:
         reset(bib_db, reset_id)
-    utils.save_bib_file(bib_db, MAIN_REFERENCES)
-    repo.index.add([MAIN_REFERENCES])
-    utils.create_commit(repo, "⚙️ Reset metadata for manual preparation")
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
     return
 
 
 def main(
-    bib_db: BibDatabase,
-    repo: git.Repo,
+    REVIEW_MANAGER: ReviewManager,
     reprocess: bool = False,
     keep_ids: bool = False,
-) -> BibDatabase:
+) -> None:
 
     saved_args = locals()
     if not reprocess:
@@ -1440,11 +1496,18 @@ def main(
     global prepared
     global need_manual_prep
     global PAD
+    global EMAIL
+    global DEBUG_MODE
+    global BATCH_SIZE
+
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+    EMAIL = REVIEW_MANAGER.config["EMAIL"]
+    DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
+    bib_db = REVIEW_MANAGER.load_main_refs()
+
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
     prior_ids = [x["ID"] for x in bib_db.entries]
-
-    process.check_delay(bib_db, min_status_requirement="md_imported")
-    utils.reset_log()
 
     # Note: resetting needs_manual_preparation to imported would also be
     # consistent with the check7valid_transitions because it will either
@@ -1453,6 +1516,10 @@ def main(
         for record in bib_db.entries:
             if "needs_manual_preparation" == record["md_status"]:
                 record["md_status"] = "imported"
+            # Test the following:
+            # record['md_status'] = \
+            #   'imported' if "needs_manual_preparation" == record["md_status"] \
+            #  else record["md_status"]
 
     logging.info("Prepare")
     logging.info(f"Batch size: {BATCH_SIZE}")
@@ -1467,8 +1534,7 @@ def main(
             logging.info("Continuing batch preparation started earlier")
 
         set_stats_beginning(bib_db)
-
-        pool = mp.Pool(repo_setup.config["CPUS"])
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         bib_db.entries = pool.map(prepare, bib_db.entries)
         pool.close()
         pool.join()
@@ -1482,10 +1548,11 @@ def main(
             )
 
             if not keep_ids:
-                bib_db = utils.set_IDs(bib_db)
+                bib_db = REVIEW_MANAGER.set_IDs(bib_db)
 
-            utils.save_bib_file(bib_db, MAIN_REFERENCES)
-            repo.index.add([MAIN_REFERENCES])
+            REVIEW_MANAGER.save_bib_file(bib_db)
+            git_repo = REVIEW_MANAGER.get_repo()
+            git_repo.index.add([MAIN_REFERENCES])
 
             print_stats_end(bib_db)
             logging.info(
@@ -1499,9 +1566,9 @@ def main(
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            utils.reorder_log(prior_ids)
+            REVIEW_MANAGER.reorder_log(prior_ids)
 
-            in_process = utils.create_commit(repo, "⚙️ Prepare records", saved_args)
+            in_process = REVIEW_MANAGER.create_commit("Prepare records", saved_args)
 
         delta = batch_end % BATCH_SIZE
         if (delta < BATCH_SIZE and delta > 0) or batch_end == 0:
@@ -1510,4 +1577,11 @@ def main(
             break
 
     print()
-    return bib_db
+    return
+
+
+def prepare_test(REVIEW_MANAGER):
+
+    print("CALLED prepare")
+    # print(REVIEW_MANAGER.search_details)
+    return

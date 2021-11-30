@@ -8,8 +8,6 @@ import click
 import click_completion.core
 import git
 
-from review_template import repo_setup
-
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
@@ -63,17 +61,6 @@ class SpecialHelpOrder(click.Group):
         return decorator
 
 
-def get_repo() -> git.Repo:
-    try:
-        repo = git.Repo()
-    except git.exc.InvalidGitRepositoryError:
-        logging.error("No git repository found. Use review_template init")
-        pass
-        return None
-
-    return repo
-
-
 def get_value(msg: str, options: dict) -> str:
     valid_response = False
     user_input = ""
@@ -83,6 +70,14 @@ def get_value(msg: str, options: dict) -> str:
         if user_input in options:
             valid_response = True
     return user_input
+
+
+class colors:
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    ORANGE = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"
 
 
 @click.group(cls=SpecialHelpOrder)
@@ -95,7 +90,7 @@ def main(ctx):
 
 @main.command(help_priority=1)
 @click.pass_context
-def init(ctx):
+def init(ctx) -> bool:
     """Initialize repository"""
     from review_template import init
 
@@ -104,7 +99,7 @@ def init(ctx):
     # see an error at the end
     if 0 != len(os.listdir(os.getcwd())) and ["report.log"] != os.listdir(os.getcwd()):
         logging.error("Directory not empty.")
-        return 0
+        return False
 
     project_title = input("Project title: ")
 
@@ -132,18 +127,21 @@ def init(ctx):
     init.initialize_repo(
         project_title, SHARE_STAT_REQ, PDF_HANDLING, DATA_FORMAT, remote_url
     )
+    return True
 
 
 def print_review_instructions(review_instructions: dict) -> None:
 
     logging.debug(pp.pformat(review_instructions))
     print("\n\nNext steps\n")
+
+    keylist = [list(x.keys()) for x in review_instructions]
+    keys = [item for sublist in keylist for item in sublist]
+    priority_item_set = "priority" in keys
+
     for review_instruction in review_instructions:
-
-        if repo_setup.config["DELAY_AUTOMATED_PROCESSING"]:
-            if "priority" not in review_instruction:
-                continue
-
+        if priority_item_set and "priority" not in review_instruction.keys():
+            continue
         if "info" in review_instruction:
             print("  " + review_instruction["info"])
         if "msg" in review_instruction:
@@ -155,14 +153,6 @@ def print_review_instructions(review_instructions: dict) -> None:
         print()
 
     return
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
 
 
 def print_collaboration_instructions(collaboration_instructions: dict) -> None:
@@ -197,7 +187,7 @@ def print_collaboration_instructions(collaboration_instructions: dict) -> None:
         if "msg" in item:
             print("  " + item["msg"])
         if "cmd_after" in item:
-            print("  Then use \n   " + "\n  ".join(item["cmd_after"].split("\n")))
+            print("  Then use \n   \n  ".join(item["cmd_after"].split("\n")))
         print()
     return
 
@@ -234,12 +224,35 @@ def print_progress(stat: dict) -> None:
 
 @main.command(help_priority=2)
 @click.pass_context
-def status(ctx):
+def status(ctx) -> None:
     """Show status"""
     from review_template import status
-    from review_template import utils
+    from review_template.review_manager import ReviewManager
 
     status.repository_validation()
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.update_status_yaml()
+
+    # TODO: check whether it is a valid git repo
+
+    print("\nChecks\n")
+    ret = subprocess.call(["pre-commit", "run", "-a"])
+
+    if ret == 0:
+        stat = status.get_status_freq(REVIEW_MANAGER)
+        status.print_review_status(REVIEW_MANAGER, stat)
+        print_progress(stat)
+
+        instructions = status.get_instructions(REVIEW_MANAGER, stat)
+        logging.debug(pp.pformat(instructions))
+        print_review_instructions(instructions["review_instructions"])
+        print_collaboration_instructions(instructions["collaboration_instructions"])
+
+        print(
+            "Documentation\n\n   "
+            "See https://github.com/geritwagner/review_template/docs\n"
+        )
+
     # TODO: automatically update pre-commit hooks if necessary?
     # # Default: automatically update hooks
     # logging.info("Update pre-commmit hooks")
@@ -249,20 +262,19 @@ def status(ctx):
     #     stderr=STDOUT,
     # )
 
-    # utils.update_status_yaml()
+    # REVIEW_MANAGER.update_status_yaml()
 
     # repo.index.add([".pre-commit-config.yaml", "status.yaml"])
     # repo.index.commit(
     #     "Update pre-commit-config"
-    #     + utils.get_version_flag()
-    #     + utils.get_commit_report(),
+    #     + REVIEW_MANAGER.get_version_flag()
+    #     + REVIEW_MANAGER.get_commit_report(),
     #     author=git.Actor("script:" + os.path.basename(__file__), ""),
     #     committer=git.Actor(
-    #         repo_setup.config["GIT_ACTOR"], repo_setup.config["EMAIL"]
+    #         REVIEW_MANAGER.config["GIT_ACTOR"], REVIEW_MANAGER.config["EMAIL"]
     #     ),
     # )
     # logging.info("Commited updated pre-commit hooks")
-    # utils.reset_log()
 
     # we could offer a parameter to disable autoupdates (warn accordingly)
     #     ('  pipeline-validation-hooks version outdated.
@@ -272,7 +284,7 @@ def status(ctx):
     #     # pre-commit autoupdate --bleeding-edge
 
     # os.rename(".pre-commit-config.yaml", "bak_pre-commit-config.yaml")
-    # utils.retrieve_package_file(
+    # REVIEW_MANAGER.retrieve_package_file(
     #     "../template/.pre-commit-config.yaml",
     #     ".pre-commit-config.yaml",
     # )
@@ -289,27 +301,7 @@ def status(ctx):
     # logging.warning(
     #     "Updated pre-commit hook. Please check/remove bak_pre-commit-config.yaml"
     # )
-
-    utils.update_status_yaml()
-
-    # TODO: check whether it is a valid git repo
-
-    print("\nChecks\n")
-    ret = subprocess.call(["pre-commit", "run", "-a"])
-
-    if ret == 0:
-        stat = status.get_status_freq()
-        status.print_review_status(stat)
-        print_progress(stat)
-        review_instructions = status.get_review_instructions(stat)
-        print_review_instructions(review_instructions)
-        collaboration_instructions = status.get_collaboration_instructions(stat)
-        print_collaboration_instructions(collaboration_instructions)
-
-        print(
-            "Documentation\n\n   "
-            "See https://github.com/geritwagner/review_template/docs\n"
-        )
+    return
 
 
 @main.command(help_priority=3)
@@ -320,22 +312,30 @@ def status(ctx):
     "--keep_ids",
     is_flag=True,
     default=False,
-    help="Do not change the record IDs. Useful when importing " + "an existing sample.",
+    help="Do not change the record IDs. Useful when importing an existing sample.",
 )
-def process(ctx, reprocess, keep_ids):
+def process(ctx, reprocess_id, keep_ids) -> None:
     """Process records (automated steps)"""
     from review_template import process
+    from review_template.review_manager import ReviewManager
 
-    process.main(reprocess, keep_ids)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        process.main(REVIEW_MANAGER, reprocess_id, keep_ids)
+    except git.exc.InvalidGitRepositoryError:
+        logging.error("No git repository found. Use review_template init")
+        pass
+        return
+
+    return
 
 
-def check_update_search_details() -> None:
-    from review_template import utils
-    from review_template import importer
+def check_update_search_details(REVIEW_MANAGER) -> None:
+    from review_template import load
 
-    search_details = utils.load_search_details()
+    search_details = REVIEW_MANAGER.search_details
 
-    search_files = importer.get_search_files()
+    search_files = load.get_search_files()
     for sfp in search_files:
         # Note : for non-bib files, we check search_details for corresponding bib file
         # (which will be created later in the process)
@@ -343,11 +343,11 @@ def check_update_search_details() -> None:
             sfp = sfp[: sfp.rfind(".")] + ".bib"
         search_file = os.path.basename(sfp)
         if search_file not in [x["filename"] for x in search_details]:
-            source_name = importer.source_heuristics(sfp)
+            source_name = load.source_heuristics(sfp)
             print(f"Please provide details for {search_file}")
             search_type = "TODO"
-            while search_type not in importer.search_type_opts:
-                print(f"Search type options: {importer.search_type_opts}")
+            while search_type not in load.search_type_opts:
+                print(f"Search type options: {load.search_type_opts}")
                 search_type = input("Enter search type".ljust(40, " ") + ": ")
             if source_name is None:
                 source_name = input(
@@ -367,7 +367,7 @@ def check_update_search_details() -> None:
                 "search_parameters": search_parameters,
                 "comment": comment,
             }
-            importer.append_search_details(new_record)
+            load.append_search_details(REVIEW_MANAGER, new_record)
 
     return
 
@@ -378,25 +378,39 @@ def check_update_search_details() -> None:
     "--keep_ids",
     is_flag=True,
     default=False,
-    help="Do not change the record IDs. Useful when importing " + "an existing sample.",
+    help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.pass_context
-def importer(ctx, keep_ids):
+def load(ctx, keep_ids) -> None:
     """Import records (part of automated processing)"""
-    from review_template import importer
+    from review_template import load
+
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
     try:
-        importer.validate_file_formats()
-        check_update_search_details()
-        repo = get_repo()
-        importer.main(repo, keep_ids)
-    except importer.UnsupportedImportFormatError as e:
+
+        REVIEW_MANAGER = ReviewManager()
+        load.validate_file_formats()
+        check_update_search_details(REVIEW_MANAGER)
+        load_process = Process(ProcessType.load, load.main)
+        REVIEW_MANAGER.run_process(load_process, keep_ids)
+
+    except load.UnsupportedImportFormatError as e:
         logging.error(e)
-        logging.info("Remove file from repository and use review_template importer")
+        logging.info(
+            "UnsupportedImportFormatError: Remove file from repository and "
+            + "use review_template load"
+        )
         pass
-    except importer.SearchDetailsMissingError as e:
-        logging.error(e)
+    except load.SearchDetailsMissingError as e:
+        logging.error(f"SearchDetailsMissingError: {e}")
         pass
+    except load.NoSearchResultsAvailableError as e:
+        logging.error(f"NoSearchResultsAvailableError: {e}")
+        pass
+    return
 
 
 @main.command(help_priority=5)
@@ -419,37 +433,59 @@ def importer(ctx, keep_ids):
     "--keep_ids",
     is_flag=True,
     default=False,
-    help="Do not change the record IDs. Useful when importing " + "an existing sample.",
+    help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.pass_context
-def prepare(ctx, reset_id, reprocess, keep_ids):
+def prepare(ctx, reset_id, reprocess, keep_ids) -> None:
     """Prepare records (part of automated processing)"""
-    from review_template import prepare, utils
+    from review_template import prepare
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    repo = get_repo()
-    bib_db = utils.load_main_refs()
+    REVIEW_MANAGER = ReviewManager()
 
-    # parse to reset_ids list
     if reset_id:
         try:
             reset_id = str(reset_id)
         except ValueError:
             pass
         reset_id = reset_id.split(",")
-        prepare.reset_ids(bib_db, repo, reset_id)
+        prepare.reset_ids(REVIEW_MANAGER, reset_id)
     else:
-        prepare.main(bib_db, repo, reprocess, keep_ids)
+        prepare_process = Process(ProcessType.prepare, prepare.main)
+        REVIEW_MANAGER.run_process(prepare_process, reprocess, keep_ids)
+
+    return
 
 
 @main.command(help_priority=6)
 @click.pass_context
-def dedupe(ctx):
+def dedupe(ctx) -> None:
     """Deduplicate records (part of automated processing)"""
-    from review_template import dedupe, utils
+    from review_template import dedupe
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    repo = get_repo()
-    bib_db = utils.load_main_refs()
-    dedupe.main(bib_db, repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        dedupe_process = Process(ProcessType.dedupe, dedupe.main)
+        REVIEW_MANAGER.run_process(dedupe_process)
+        # dedupe.main(REVIEW_MANAGER)
+
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    except KeyboardInterrupt:
+        logging.error("KeyboardInterrupt")
+        if os.path.exists("non_duplicates.csv"):
+            os.remove("non_duplicates.csv")
+        if os.path.exists("queue_order.csv"):
+            os.remove("queue_order.csv")
+        pass
+    return
 
 
 @main.command(help_priority=7)
@@ -466,36 +502,62 @@ def dedupe(ctx):
     help="Extract records with md_status needs_manual_preparation",
 )
 @click.pass_context
-def man_prep(ctx, stats, extract):
+def man_prep(ctx, stats, extract) -> None:
     """Manual preparation of records"""
     from review_template import man_prep
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
+
+    REVIEW_MANAGER = ReviewManager()
 
     if stats:
-        man_prep.man_prep_stats()
+        man_prep.man_prep_stats(REVIEW_MANAGER)
     elif extract:
-        man_prep.extract_needs_man_prep()
+        man_prep.extract_needs_man_prep(REVIEW_MANAGER)
     else:
-        man_prep.man_prep_records()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.man_prep, man_prep.man_prep_records, interactive=True)
+        )
+        man_prep.man_prep_records(REVIEW_MANAGER)
+
+    return
 
 
 @main.command(help_priority=8)
 @click.pass_context
-def man_dedupe(ctx):
+def man_dedupe(ctx) -> None:
     """Manual processing of duplicates"""
     from review_template import man_dedupe
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    man_dedupe.main()
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.man_dedupe, man_dedupe.main, interactive=True)
+        )
+        man_dedupe.main(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    except review_manager.CleanRepoRequiredError as e:
+        logging.error(f"CleanRepoRequiredError: {e}")
+        pass
+    return
 
 
 def prescreen_cli(
-    repo,
+    REVIEW_MANAGER,
 ) -> None:
 
-    from review_template import prescreen, utils, screen
+    from review_template import prescreen, screen
 
     # Note : the get_next() (generator/yield ) pattern would be appropriate for GUIs...
 
-    saved_args = locals()
+    git_repo = REVIEW_MANAGER.get_repo()
 
     pp = pprint.PrettyPrinter(indent=4, width=140)
     i, quit_pressed = 1, False
@@ -509,7 +571,7 @@ def prescreen_cli(
     if 0 == stat_len:
         logging.info("No records to prescreen")
 
-    for record in prescreen.get_next_prescreening_item():
+    for record in prescreen.get_next_prescreening_item(REVIEW_MANAGER):
 
         print("\n\n")
         revrecord = screen.customsort(record)
@@ -531,20 +593,18 @@ def prescreen_cli(
             break
 
         if "no" == inclusion_decision:
-            prescreen.set_prescreen_status(record["ID"], False)
+            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], False)
             logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Excluded in prescreen")
         if "yes" == inclusion_decision:
-            prescreen.set_prescreen_status(record["ID"], True)
+            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], True)
             logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen")
 
     if i < stat_len:  # if records remain for pre-screening
         if "y" != input("Create commit (y/n)?"):
             return
     elif i == stat_len:
-        repo.index.add([repo_setup.paths["MAIN_REFERENCES"]])
-        utils.create_commit(
-            repo, "Pre-screening (manual)", saved_args, manual_author=True
-        )
+        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+        REVIEW_MANAGER.create_commit("Pre-screening (manual)", manual_author=True)
     return
 
 
@@ -561,112 +621,183 @@ def prescreen_cli(
     help="Import file with the screening decisions (csv supported)",
 )
 @click.pass_context
-def prescreen(ctx, include_all, export_format, import_table):
+def prescreen(ctx, include_all, export_format, import_table) -> None:
     """Pre-screen based on titles and abstracts"""
-    from review_template import prescreen, utils
+    from review_template import prescreen
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    repo = get_repo()
-    if export_format:
-        bib_db = utils.load_main_refs()
-        prescreen.export_table(bib_db, export_format)
-    elif import_table:
-        bib_db = utils.load_main_refs()
-        prescreen.import_table(bib_db, import_table)
-    elif include_all:
-        bib_db = utils.load_main_refs()
-        prescreen.include_all_in_prescreen(bib_db, repo)
-    else:
-        prescreen_cli(repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+
+        if export_format:
+            prescreen.export_table(REVIEW_MANAGER, export_format)
+        elif import_table:
+            prescreen.import_table(REVIEW_MANAGER, import_table)
+        elif include_all:
+            prescreen.include_all_in_prescreen(REVIEW_MANAGER)
+        else:
+            REVIEW_MANAGER.notify(
+                Process(ProcessType.prescreen, prescreen_cli, interactive=True)
+            )
+            prescreen_cli(REVIEW_MANAGER)
+
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    except review_manager.CleanRepoRequiredError as e:
+        logging.error(f"CleanRepoRequiredError: {e}")
+        pass
+
+    return
 
 
 @main.command(help_priority=10)
 @click.pass_context
-def screen(ctx):
+def screen(ctx) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
     from review_template import screen
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    screen.screen()
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.screen, screen.screen, interactive=True)
+        )
+        screen.screen(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+
+    return
 
 
 @main.command(help_priority=11)
 @click.pass_context
-def pdfs(ctx):
+def pdf_get(ctx) -> None:
     """Retrieve PDFs  (part of automated processing)"""
-    from review_template import pdfs, utils
+    from review_template import pdf_get
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    bib_db = utils.load_main_refs()
-    repo = get_repo()
-    pdfs.main(bib_db, repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.pdf_get, pdf_get.main, interactive=True)
+        )
+        pdf_get.main(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+
+    return
 
 
 @main.command(help_priority=12)
 @click.pass_context
-def pdf_prepare(ctx):
+def pdf_prepare(ctx) -> None:
     """Prepare PDFs  (part of automated processing)"""
-    from review_template import pdf_prepare, utils
+    from review_template import pdf_prepare
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    bib_db = utils.load_main_refs()
-    repo = get_repo()
-    pdf_prepare.main(bib_db, repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.pdf_prepare, pdf_prepare.main, interactive=True)
+        )
+        pdf_prepare.main(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+
+    return
 
 
 @main.command(help_priority=13)
 @click.pass_context
-def pdf_get_man(ctx):
+def pdf_get_man(ctx) -> None:
     """Get PDFs manually"""
-    from review_template import pdf_get_man, utils
+    from review_template import pdf_get_man
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    bib_db = utils.load_main_refs()
-    repo = get_repo()
-    pdf_get_man.main(bib_db, repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.pdf_get_man, pdf_get_man.main, interactive=True)
+        )
+        pdf_get_man.main(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    return
 
 
 @main.command(help_priority=14)
 @click.pass_context
-def pdf_prep_man(ctx):
+def pdf_prep_man(ctx) -> None:
     """Prepare PDFs manually"""
-    from review_template import pdf_prep_man, utils
+    from review_template import pdf_prep_man
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    bib_db = utils.load_main_refs()
-    repo = get_repo()
-    pdf_prep_man.main(bib_db, repo)
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.pdf_prep_man, pdf_prep_man.main, interactive=True)
+        )
+        pdf_prep_man.main(REVIEW_MANAGER)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    return
 
 
 @main.command(help_priority=15)
-@click.pass_context
-def back_search(ctx):
-    """Backward search based on PDFs"""
-    from review_template import back_search
-
-    back_search.main()
-
-
-@main.command(help_priority=16)
 @click.option("--edit_csv", is_flag=True, default=False)
 @click.option("--load_csv", is_flag=True, default=False)
 @click.pass_context
-def data(ctx, edit_csv, load_csv):
+def data(ctx, edit_csv, load_csv) -> None:
     """Extract data"""
     from review_template import data
+    from review_template import review_manager
+    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ProcessType
+    from review_template.review_manager import Process
 
-    data.main(edit_csv, load_csv)
-
-
-@main.command(help_priority=17)
-@click.pass_context
-def profile(ctx):
-    """Generate a sample profile"""
-    from review_template import profile
-
-    profile.main()
+    try:
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(Process(ProcessType.data, data.main, interactive=True))
+        data.main(REVIEW_MANAGER, edit_csv, load_csv)
+    except review_manager.ProcessOrderViolation as e:
+        logging.error(f"ProcessOrderViolation: {e}")
+        pass
+    return
 
 
 def validate_commit(ctx, param, value):
+    from review_template.review_manager import ReviewManager
+
     if "none" == value:
         return value
-    repo = git.Repo()
 
-    revlist = [commit for commit in repo.iter_commits()]
+    REVIEW_MANAGER = ReviewManager()
+    git_repo = REVIEW_MANAGER.get_repo()
+    revlist = [commit for commit in git_repo.iter_commits()]
 
     if value in [x.hexsha for x in revlist]:
         # TODO: allow short commit_ids as values!
@@ -687,9 +818,10 @@ def validate_commit(ctx, param, value):
             )
         print("\n")
         raise click.BadParameter("not a git commit id")
+    return
 
 
-@main.command(help_priority=18)
+@main.command(help_priority=16)
 @click.option(
     "--scope",
     type=click.Choice(["prepare", "merge", "all"], case_sensitive=False),
@@ -706,36 +838,46 @@ def validate_commit(ctx, param, value):
     callback=validate_commit,
 )
 @click.pass_context
-def validate(ctx, scope, properties, commit):
+def validate(ctx, scope, properties, commit) -> None:
     """Validate changes"""
     from review_template import validate
+    from review_template.review_manager import ReviewManager
 
-    validate.main(scope, properties, commit)
+    REVIEW_MANAGER = ReviewManager()
+    validate.main(REVIEW_MANAGER, scope, properties, commit)
+    return
 
 
-@main.command(help_priority=19)
+@main.command(help_priority=17)
 @click.pass_context
 @click.option("--id", help="Record ID to trace (citation_key).", required=True)
-def trace(ctx, id):
+def trace(ctx, id) -> None:
     """Trace a record"""
     from review_template import trace
+    from review_template.review_manager import ReviewManager
 
-    trace.main(id)
+    REVIEW_MANAGER = ReviewManager()
+    trace.main(REVIEW_MANAGER, id)
+    return
 
 
-@main.command(help_priority=20)
+@main.command(help_priority=18)
 @click.pass_context
-def paper(ctx):
+def paper(ctx) -> None:
     """Build the paper"""
     from review_template import paper
+    from review_template.review_manager import ReviewManager
 
-    paper.main()
+    REVIEW_MANAGER = ReviewManager()
+    paper.main(REVIEW_MANAGER)
+
+    return
 
 
 ccs = click_completion.core.shells
 
 
-@main.command(help_priority=21)
+@main.command(help_priority=19)
 @click.option("--activate", is_flag=True, default=False)
 @click.option("--deactivate", is_flag=True, default=False)
 @click.pass_context

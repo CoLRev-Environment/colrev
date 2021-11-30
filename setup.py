@@ -11,21 +11,27 @@ with open("CHANGELOG.md") as changelog_file:
     changelog = changelog_file.read()
 
 requirements = [
-    "Click==8.0.1",
     "ansiwrap==0.8.4",
+    "bashplotlib==0.6.5",
     "bibtexparser==1.2.0",
+    "Click==8.0.1",
+    "click_completion==0.5.2",
     "dictdiffer==0.8.1",
-    "thefuzz==0.19.0",
+    "docker_py==1.10.6",
+    "docker==2.1.0",
     "GitPython==3.1.24",
     "langdetect==1.0.9",
     "nameparser==1.0.6",
     "pandas==1.2.5",
     "pdfminer.six==20211012",
+    "PyYAML==6.0",
     "requests==2.22.0",
-    "docker_py==1.10.6",
-    "docker==2.1.0",
+    "thefuzz==0.19.0",
+    "tqdm==4.61.1",
+    "transitions==0.8.10",
 ]
 # 'configparser>=5.0'
+
 
 # Note: docker and docker-py seem to be similar/identical?!
 # https://pypi.org/project/docker-py/
@@ -38,22 +44,20 @@ entry_points = [
     "process=review_template.cli:process",
     "status=review_template.cli:status",
     "init=review_template.cli:init",
-    "import=review_template.cli:importer",
+    "load=review_template.cli:load",
     "prepare=review_template.cli:prepare",
     "dedupe=review_template.cli:dedupe",
     "man_prep=review_template.cli:man_prep",
     "man_dedupe=review_template.cli:man_dedupe",
     "prescreen=review_template.cli:prescreen",
     "screen=review_template.cli:screen",
-    "pdfs=review_template.cli:pdfs",
+    "pdf_get=review_template.cli:pdf_get",
     "pdf_prep=review_template.cli:pdf_prepare",
     "pdf_prep_man=review_template.cli:pdf_prep_man",
     "pdf_get_man=review_template.cli:pdf_get_man",
-    "back_search=review_template.cli:back_search",
     "data=review_template.cli:data",
     "validate=review_template.cli:validate",
     "paper=review_template.cli:paper",
-    "profile=review_template.cli:profile",
     "trace=review_template.cli:trace",
     "debug=review_template.cli:debug",
 ]

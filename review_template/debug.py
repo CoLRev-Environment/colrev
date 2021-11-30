@@ -7,13 +7,12 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
 
-def testing():
+def testing(review_manager):
     from review_template import prepare
-    from review_template import repo_setup
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    repo_setup.config["DEBUG_MODE"] = True
+    review_manager.config["DEBUG_MODE"] = True
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -83,11 +82,37 @@ def set_debug_mode(activate: bool) -> None:
         private_config["general"]["debug_mode"] = "no"
     with open(config_path, "w") as f:
         private_config.write(f)
+
     logging.info(f"Set debug mode to {activate}")
 
     return
 
 
 def main():
+
+    # from review_template.review_manager import ReviewManager
+    from review_template.review_manager import Record
+    from review_template.review_manager import ProcessType
+
+    # from review_template.review_manager import Process
+    from review_template import review_manager
+
+    # To check/validate the state model (TBD: when should we run this?)
+    process_type_str = [x for x in list(map(str, ProcessType))]
+    registered_transitions = [x["trigger"] for x in Record.transitions]
+    print(set(process_type_str).difference(set(registered_transitions)))
+    print(set(registered_transitions).difference(set(process_type_str)))
+
+    states = Record.states
+    registered_transitions = [x["source"] for x in Record.transitions] + [
+        x["dest"] for x in Record.transitions
+    ]
+    print(set(states).difference(set(registered_transitions)))
+    print(set(registered_transitions).difference(set(states)))
+
+    review_manager.create_state_machine_diagram()
+
+    # TODO : debug_mode is not yet activated properly...
+    # REVIEW_MANAGER = ReviewManager(debug_mode=True)
 
     return

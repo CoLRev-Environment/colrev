@@ -5,24 +5,22 @@ import os
 import requests
 
 import docker
-from review_template import repo_setup
-from review_template import utils
 
 
-def main() -> None:
+def main(REVIEW_MANAGER) -> None:
 
     if not os.path.exists("paper.md"):
         logging.error("File paper.md does not exist.")
         logging.info("Complete processing and use review_template data")
         return
 
-    utils.build_docker_images()
+    REVIEW_MANAGER.build_docker_images()
 
-    uid = os.stat(repo_setup.paths["MAIN_REFERENCES"]).st_uid
-    gid = os.stat(repo_setup.paths["MAIN_REFERENCES"]).st_gid
+    uid = os.stat(REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
+    gid = os.stat(REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
 
-    CSL_FILE = repo_setup.config["CSL"]
-    WORD_TEMPLATE_URL = repo_setup.config["WORD_TEMPLATE_URL"]
+    CSL_FILE = REVIEW_MANAGER.config["CSL"]
+    WORD_TEMPLATE_URL = REVIEW_MANAGER.config["WORD_TEMPLATE_URL"]
 
     # TODO: maybe update?
     if not os.path.exists(os.path.basename(WORD_TEMPLATE_URL)):
