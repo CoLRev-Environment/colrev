@@ -5,12 +5,12 @@ repos:
     rev: d4706982ee39f9a6d8660bdf4aeeb6f14fa0683b
     hooks:
     -   id: check
-        name: Check consistency of data
+        name: "ReviewManager: checks"
         entry: pipeline_validation_hooks/check.py
         language: script
         files: 'references.bib|paper.md'
     -   id: format
-        name: Format references
+        name: "ReviewManager: format"
         entry: pipeline_validation_hooks/format.py
         language: script
         files: 'references.bib|paper.md'
