@@ -25,8 +25,6 @@ logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 BATCH_SIZE, SEARCH_DETAILS, MAIN_REFERENCES = -1, "NA", "NA"
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
-search_type_opts = ["DB", "TOC", "BACK_CIT", "FORW_CIT", "LOCAL_PAPER_INDEX", "OTHER"]
-
 
 class NoSearchResultsAvailableError(Exception):
     def __init__(self):
@@ -181,18 +179,18 @@ def source_heuristics(search_file: str) -> str:
     return None
 
 
-def append_search_details(review_manager, new_record: dict) -> None:
-    search_details = review_manager.load_search_details()
+def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
+    search_details = REVIEW_MANAGER.load_search_details()
     search_details.append(new_record)
     logging.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
-    review_manager.save_search_details(search_details)
+    REVIEW_MANAGER.save_search_details(search_details)
     return
 
 
-def rename_search_files(review_manager, search_files: list) -> list:
+def rename_search_files(REVIEW_MANAGER, search_files: list) -> list:
     ret_list = []
 
-    search_details = review_manager.load_search_details()
+    search_details = REVIEW_MANAGER.load_search_details()
     search_dir = os.path.join(os.getcwd(), "search/")
     index_paths = [os.path.join(search_dir, x["filename"]) for x in search_details]
 
@@ -214,49 +212,32 @@ def rename_search_files(review_manager, search_files: list) -> list:
     return ret_list
 
 
-class SearchDetailsMissingError(Exception):
-    def __init__(
-        self,
-        search_results_path,
-    ):
-        self.search_results_path = search_results_path
-        self.message = (
-            "Search results path "
-            + f"({os.path.basename(self.search_results_path)}) "
-            + "is not in search_details.yaml"
-        )
-        super().__init__(self.message)
+def load_all_records(REVIEW_MANAGER) -> list:
 
-
-def check_search_details(review_manager, search_files: list):
-    search_details = review_manager.load_search_details()
-    for search_file in search_files:
-        if os.path.basename(search_file) not in [x["filename"] for x in search_details]:
-            raise SearchDetailsMissingError(search_file)
-    return
-
-
-def load_all_records(review_manager) -> list:
-
-    bib_db = review_manager.load_main_refs(init=True)
+    bib_db = REVIEW_MANAGER.load_main_refs(init=True)
     save_imported_record_links(bib_db)
 
     search_files = get_search_files()
     if any(".pdf" in x for x in search_files) or any(".txt" in x for x in search_files):
         grobid_client.start_grobid()
-    search_files = rename_search_files(review_manager, search_files)
+    search_files = rename_search_files(REVIEW_MANAGER, search_files)
     # Note: after the search_result_file (non-bib formats) has been loaded
     # for the first time, we save a corresponding bib_file, which allows for
     # more efficient status checking, tracing, and validation.
     # This also applies to the pipeline_validation_hooks and is particularly
     # relevant for pdf sources that require long processing times.
-    convert_to_bib(review_manager, search_files)
+    convert_to_bib(REVIEW_MANAGER, search_files)
 
     search_files = get_search_files(restrict=["bib"])
     logging.debug(f"Search_files (bib, after conversion): {search_files}")
-    check_search_details(review_manager, search_files)
 
-    load_pool = mp.Pool(review_manager.config["CPUS"])
+    from review_template import review_manager
+
+    review_manager.check_search_details(
+        REVIEW_MANAGER.paths["SEARCH_DETAILS"], REVIEW_MANAGER.search_type_opts
+    )
+
+    load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
     additional_records = load_pool.map(load_records, search_files)
     len_lists = [len(additional_record) for additional_record in additional_records]
     logging.debug(f"Length of additional_records lists: {len_lists}")

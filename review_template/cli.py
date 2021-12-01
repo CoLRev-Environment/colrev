@@ -346,8 +346,8 @@ def check_update_search_details(REVIEW_MANAGER) -> None:
             source_name = load.source_heuristics(sfp)
             print(f"Please provide details for {search_file}")
             search_type = "TODO"
-            while search_type not in load.search_type_opts:
-                print(f"Search type options: {load.search_type_opts}")
+            while search_type not in REVIEW_MANAGER.search_type_opts:
+                print(f"Search type options: {REVIEW_MANAGER.search_type_opts}")
                 search_type = input("Enter search type".ljust(40, " ") + ": ")
             if source_name is None:
                 source_name = input(
@@ -384,7 +384,7 @@ def check_update_search_details(REVIEW_MANAGER) -> None:
 def load(ctx, keep_ids) -> None:
     """Import records (part of automated processing)"""
     from review_template import load
-
+    from review_template.review_manager import SearchDetailsMissingError
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
     from review_template.review_manager import Process
@@ -404,7 +404,7 @@ def load(ctx, keep_ids) -> None:
             + "use review_template load"
         )
         pass
-    except load.SearchDetailsMissingError as e:
+    except SearchDetailsMissingError as e:
         logging.error(f"SearchDetailsMissingError: {e}")
         pass
     except load.NoSearchResultsAvailableError as e:
