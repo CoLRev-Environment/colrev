@@ -10,10 +10,12 @@ from review_template import utils
 
 logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
+logger = logging.getLogger("review_template")
+
 
 def main(REVIEW_MANAGER, ID: str) -> None:
 
-    logging.info(f"Trace record by ID: {ID}")
+    logger.info(f"Trace record by ID: {ID}")
 
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     DATA = REVIEW_MANAGER.paths["DATA"]

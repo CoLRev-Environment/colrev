@@ -2,137 +2,69 @@
 import io
 import logging
 import os
+import pprint
+from collections import Counter
 
 import git
-import yaml
 
 from review_template import screen
 
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-def get_nr_search(REVIEW_MANAGER) -> int:
+
+logger = logging.getLogger("review_template")
+
+
+def get_nr_in_bib(file_path: str) -> int:
+
+    number_in_bib = 0
+    with open(file_path) as f:
+        line = f.readline()
+        while line:
+            # Note: the '﻿' occured in some bibtex files
+            # (e.g., Publish or Perish exports)
+            if line.replace("﻿", "").lstrip()[:1] == "@":
+                if not "@comment" == line.replace("﻿", "").lstrip()[:8].lower():
+                    number_in_bib += 1
+            line = f.readline()
+
+    return number_in_bib
+
+
+def get_nr_search() -> int:
+    search_dir = os.path.join(os.getcwd(), "search/")
+    if not os.path.exists(search_dir):
+        return 0
+    bib_files = [
+        os.path.join(search_dir, x)
+        for x in os.listdir(search_dir)
+        if x.endswith(".bib")
+    ]
     number_search = 0
-    for search_file in REVIEW_MANAGER.get_bib_files():
-        number_search += REVIEW_MANAGER.get_nr_in_bib(search_file)
+    for search_file in bib_files:
+        number_search += get_nr_in_bib(search_file)
     return number_search
 
 
 def get_completeness_condition(REVIEW_MANAGER) -> bool:
     stat = get_status_freq(REVIEW_MANAGER)
-    completeness_condition = True
-    if 0 != stat["metadata_status"]["currently"]["retrieved"]:
-        completeness_condition = False
-    if 0 != stat["metadata_status"]["currently"]["imported"]:
-        completeness_condition = False
-    if 0 != stat["metadata_status"]["currently"]["prepared"]:
-        completeness_condition = False
-    if 0 != stat["metadata_status"]["currently"]["needs_manual_preparation"]:
-        completeness_condition = False
-    if 0 != stat["metadata_status"]["currently"]["needs_manual_merging"]:
-        completeness_condition = False
-    if 0 != stat["pdf_status"]["currently"]["needs_retrieval"]:
-        completeness_condition = False
-    if 0 != stat["pdf_status"]["currently"]["needs_manual_retrieval"]:
-        completeness_condition = False
-    if 0 != stat["pdf_status"]["currently"]["imported"]:
-        completeness_condition = False
-    if 0 != stat["pdf_status"]["currently"]["needs_manual_preparation"]:
-        completeness_condition = False
-    if 0 != stat["review_status"]["currently"]["needs_prescreen"]:
-        completeness_condition = False
-    if 0 != stat["review_status"]["currently"]["needs_screen"]:
-        completeness_condition = False
-    if 0 != stat["review_status"]["currently"]["needs_synthesis"]:
-        completeness_condition = False
-    return completeness_condition
+    return stat["completeness_condition"]
 
 
 def get_status_freq(REVIEW_MANAGER) -> dict:
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    from review_template.review_manager import RecordState
+    from review_template.review_manager import Record
 
-    stat = {}
-    stat["metadata_status"] = {}
-    stat["metadata_status"]["overall"] = {}
-    stat["metadata_status"]["currently"] = {}
-    stat["pdf_status"] = {}
-    stat["pdf_status"]["overall"] = {}
-    stat["pdf_status"]["currently"] = {}
-    stat["review_status"] = {}
-    stat["review_status"]["overall"] = {}
-    stat["review_status"]["currently"] = {}
+    record_header_list = REVIEW_MANAGER.get_record_header_list()
+    status_list = [x[2] for x in record_header_list]
+    excl_criteria = [x[3] for x in record_header_list if x[3] != ""]
+    md_duplicates_removed = sum((x[1].count(";")) for x in record_header_list)
 
-    md_imported = 0
-    md_prepared = 0
-    md_needs_manual_preparation = 0
-    md_needs_manual_merging = 0
-    md_duplicates_removed = 0
-    md_processed = 0
-
-    pdfs_needs_retrieval = 0
-    pdfs_imported = 0
-    pdfs_needs_manual_retrieval = 0
-    pdfs_needs_manual_preparation = 0
-    pdfs_prepared = 0
-    pdfs_not_available = 0
-
-    rev_retrieved = 0
-    rev_prescreen_included = 0
-    rev_prescreen_excluded = 0
-    rev_screen_included = 0
-    rev_screen_excluded = 0
-    rev_synthesized = 0
-
+    origin_list = [x[1] for x in record_header_list]
     record_links = 0
-    excl_criteria = []
-
-    if os.path.exists(MAIN_REFERENCES):
-        with open(MAIN_REFERENCES) as f:
-            line = f.readline()
-            while line:
-                if " rev_status " in line:
-                    if "{retrieved}" in line:
-                        rev_retrieved += 1
-                    if "{prescreen_included}" in line:
-                        rev_prescreen_included += 1
-                    if "{prescreen_excluded}" in line:
-                        rev_prescreen_excluded += 1
-                    if "{included}" in line:
-                        rev_screen_included += 1
-                    if "{excluded}" in line:
-                        rev_screen_excluded += 1
-                    if "{synthesized}" in line:
-                        rev_synthesized += 1
-                if " md_status " in line:
-                    if "{imported}" in line:
-                        md_imported += 1
-                    if "{needs_manual_preparation}" in line:
-                        md_needs_manual_preparation += 1
-                    if "{prepared}" in line:
-                        md_prepared += 1
-                    if "{needs_manual_merging}" in line:
-                        md_needs_manual_merging += 1
-                    if "{processed}" in line:
-                        md_processed += 1
-                if " pdf_status " in line:
-                    if "{needs_retrieval}" in line:
-                        pdfs_needs_retrieval += 1
-                    if "{imported}" in line:
-                        pdfs_imported += 1
-                    if "{needs_manual_retrieval}" in line:
-                        pdfs_needs_manual_retrieval += 1
-                    if "{needs_manual_preparation}" in line:
-                        pdfs_needs_manual_preparation += 1
-                    if "{prepared}" in line:
-                        pdfs_prepared += 1
-                    if "{not_available}" in line:
-                        pdfs_not_available += 1
-                if "origin" == line.lstrip()[:6]:
-                    nr_record_links = line.count(";")
-                    record_links += nr_record_links + 1
-                    md_duplicates_removed += nr_record_links
-                if " excl_criteria " in line:
-                    excl_criteria_field = line[line.find("{") + 1 : line.find("}")]
-                    excl_criteria.append(excl_criteria_field)
-                line = f.readline()
+    for origin in origin_list:
+        nr_record_links = origin.count(";")
+        record_links += nr_record_links + 1
 
     exclusion_statistics = {}
     if excl_criteria:
@@ -143,50 +75,6 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 if crit + "=yes" in exclusion_case:
                     exclusion_statistics[crit] += 1
 
-    # Reverse order (overall_x means x or later status)
-    md_overall_processed = md_processed
-    md_overall_prepared = (
-        md_overall_processed
-        + md_needs_manual_merging
-        + md_duplicates_removed
-        + md_prepared
-    )
-    md_overall_imported = (
-        md_overall_prepared + md_needs_manual_preparation + md_imported
-    )
-    md_overall_retrieved = get_nr_search(REVIEW_MANAGER)
-
-    md_retrieved = md_overall_retrieved - record_links
-
-    # Reverse order (overall_x means x or later status)
-    pdfs_overall_prepared = pdfs_prepared
-    pdfs_overall_retrieved = (
-        pdfs_overall_prepared + pdfs_needs_manual_preparation + pdfs_imported
-    )
-    pdfs_overall_needs_retrieval = (
-        pdfs_overall_retrieved
-        + pdfs_needs_retrieval
-        + pdfs_not_available
-        + pdfs_needs_manual_retrieval
-    )
-
-    # Reverse order (overall_x means x or later status)
-    # rev_overall_synthesized = rev_synthesized
-    rev_overall_included = rev_screen_included + rev_synthesized
-    rev_overall_excluded = rev_screen_excluded
-    rev_overall_prescreen_included = (
-        rev_prescreen_included + rev_overall_excluded + rev_overall_included
-    )
-    rev_overall_screen = rev_overall_prescreen_included
-    rev_overall_prescreen = md_processed
-
-    rev_needs_prescreen = (
-        rev_overall_prescreen - rev_overall_prescreen_included - rev_prescreen_excluded
-    )
-    rev_needs_screen = rev_overall_screen - rev_overall_included - rev_screen_excluded
-    rev_overall_synthesis = rev_overall_included
-    rev_needs_synthesis = rev_overall_included - rev_synthesized
-
     # PDF_DIRECTORY = REVIEW_MANAGER.paths['PDF_DIRECTORY']
     # if os.path.exists(PDF_DIRECTORY):
     #     pdf_files = [x for x in os.listdir(PDF_DIRECTORY)]
@@ -195,210 +83,94 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
     #                            if not x.replace('.pdf', 'bw_search.bib')
     #                            in search_files])
 
-    md_cur_stat = stat["metadata_status"]["currently"]
-    md_cur_stat["retrieved"] = md_retrieved
-    md_cur_stat["imported"] = md_imported
-    md_cur_stat["prepared"] = md_prepared
-    md_cur_stat["needs_manual_preparation"] = md_needs_manual_preparation
-    md_cur_stat["needs_manual_merging"] = md_needs_manual_merging
-    md_cur_stat["processed"] = md_processed
-    md_cur_stat["duplicates_removed"] = md_duplicates_removed
-    md_cur_stat["non_processed"] = (
-        md_retrieved
-        + md_imported
-        + md_prepared
-        + md_needs_manual_preparation
-        + md_duplicates_removed
-        + md_needs_manual_merging
+    stat = {"status": {}}
+    stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
+    stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
+
+    currently_stats = dict(Counter(status_list))
+    for currently_stat, val in currently_stats.items():
+        stat["status"]["currently"][currently_stat] = val
+        stat["status"]["overall"][currently_stat] = val
+
+    atomic_step_number = 0
+    completed_atomic_steps = 0
+
+    logger.debug("Set overall status statistics (going backwards)")
+    st_o = stat["status"]["overall"]
+    non_completed = 0
+    current_state = RecordState.rev_included  # strat with the last
+    visited_states = []
+    nr_incomplete = 0
+    while True:
+        logger.debug(f"current_state: {current_state} with {st_o[str(current_state)]}")
+        if RecordState.md_prepared == current_state:
+            st_o[str(current_state)] += md_duplicates_removed
+
+        states_to_consider = [current_state]
+        predecessors = ["init"]
+        while predecessors:
+            predecessors = [
+                t
+                for t in Record.transitions
+                if t["source"] in states_to_consider and t["dest"] not in visited_states
+            ]
+            for predecessor in predecessors:
+                logger.debug(
+                    f' add {st_o[str(predecessor["dest"])]} '
+                    f'from {str(predecessor["dest"])} '
+                    f'(predecessor transition: {predecessor["trigger"]})'
+                )
+                st_o[str(current_state)] = (
+                    st_o[str(current_state)] + st_o[str(predecessor["dest"])]
+                )
+                visited_states.append(predecessor["dest"])
+                if predecessor["dest"] not in states_to_consider:
+                    states_to_consider.append(predecessor["dest"])
+
+        completed_atomic_steps += st_o[str(predecessor["dest"])]
+        atomic_step_number += 1
+        # Note : the following does not consider multiple parallel steps.
+        for trans_for_completeness in [
+            t for t in Record.transitions if current_state == t["dest"]
+        ]:
+            nr_incomplete += stat["status"]["currently"][
+                str(trans_for_completeness["source"])
+            ]
+
+        t = [t for t in Record.transitions if current_state == t["dest"]][0]
+        if current_state == RecordState.md_imported:
+            break
+        current_state = t["source"]  # go a step back
+        non_completed += stat["status"]["currently"][str(current_state)]
+
+    stat["status"]["currently"]["non_completed"] = non_completed
+    stat["atomic_steps"] = atomic_step_number * st_o[str(RecordState.md_imported)]
+    stat["completed_atomic_steps"] = completed_atomic_steps
+
+    stat["status"]["currently"]["md_duplicates_removed"] = md_duplicates_removed
+    stat["status"]["overall"]["md_retrieved"] = get_nr_search()
+    stat["status"]["currently"]["md_retrieved"] = (
+        stat["status"]["overall"]["md_retrieved"] - record_links
+    )
+    stat["completeness_condition"] = (0 == nr_incomplete) and (
+        0 == stat["status"]["currently"]["md_retrieved"]
     )
 
-    md_overall_stat = stat["metadata_status"]["overall"]
-    md_overall_stat["retrieved"] = md_overall_retrieved
-    md_overall_stat["imported"] = md_overall_imported
-    md_overall_stat["prepared"] = md_overall_prepared
-    md_overall_stat["processed"] = md_overall_processed
+    stat["status"]["currently"]["exclusion"] = exclusion_statistics
 
-    pdf_cur_stat = stat["pdf_status"]["currently"]
-    pdf_cur_stat["needs_retrieval"] = pdfs_needs_retrieval
-    pdf_cur_stat["imported"] = pdfs_imported
-    pdf_cur_stat["needs_manual_retrieval"] = pdfs_needs_manual_retrieval
-    pdf_cur_stat["needs_manual_preparation"] = pdfs_needs_manual_preparation
-    pdf_cur_stat["not_available"] = pdfs_not_available
-    pdf_cur_stat["prepared"] = pdfs_prepared
+    stat["status"]["overall"]["rev_screen"] = stat["status"]["overall"]["pdf_prepared"]
+    stat["status"]["overall"]["rev_prescreen"] = stat["status"]["overall"][
+        "md_processed"
+    ]
+    stat["status"]["currently"]["pdf_needs_retrieval"] = stat["status"]["currently"][
+        "rev_prescreen_included"
+    ]
 
-    pdf_overall_stat = stat["pdf_status"]["overall"]
-    pdf_overall_stat["needs_retrieval"] = pdfs_overall_needs_retrieval
-    pdf_overall_stat["retrieved"] = pdfs_overall_retrieved
-    pdf_overall_stat["prepared"] = pdfs_overall_prepared
-
-    rev_cur_stat = stat["review_status"]["currently"]
-    rev_cur_stat["retrieved"] = rev_retrieved
-    rev_cur_stat["prescreen_included"] = rev_prescreen_included
-    rev_cur_stat["prescreen_excluded"] = rev_prescreen_excluded
-    rev_cur_stat["screen_included"] = rev_screen_included
-    rev_cur_stat["screen_excluded"] = rev_screen_excluded
-    rev_cur_stat["non_screened"] = (
-        rev_retrieved + rev_needs_prescreen + rev_needs_screen
-    )
-    rev_cur_stat["synthesized"] = rev_synthesized
-    rev_cur_stat["needs_prescreen"] = rev_needs_prescreen
-    rev_cur_stat["needs_screen"] = rev_needs_screen
-    rev_cur_stat["needs_synthesis"] = rev_needs_synthesis
-
-    stat["review_status"]["currently"]["exclusion"] = exclusion_statistics
-
-    rev_overall_stat = stat["review_status"]["overall"]
-    rev_overall_stat["prescreen"] = rev_overall_prescreen
-    rev_overall_stat["prescreen_included"] = rev_overall_prescreen_included
-    rev_overall_stat["screen"] = rev_overall_screen
-    rev_overall_stat["included"] = rev_overall_included
-    rev_overall_stat["synthesized"] = rev_synthesized
-    rev_overall_stat["synthesis"] = rev_overall_synthesis
-    rev_overall_stat["non_completed"] = (
-        rev_retrieved + rev_needs_prescreen + rev_needs_screen + rev_overall_included
-    )
-
-    # Note: prepare, dedupe, prescreen, pdfs, pdf_prepare, screen, data
-    nr_steps = 7
-    total_atomic_steps = nr_steps * stat["metadata_status"]["overall"]["retrieved"]
-    # Remove record steps no longer required
-    # (multiplied by number of following steps no longer required)
-    total_atomic_steps = (
-        total_atomic_steps
-        - 5 * stat["metadata_status"]["currently"]["duplicates_removed"]
-    )
-    total_atomic_steps = (
-        total_atomic_steps
-        - 4 * stat["review_status"]["currently"]["prescreen_excluded"]
-    )
-    total_atomic_steps = (
-        total_atomic_steps - 2 * stat["pdf_status"]["currently"]["not_available"]
-    )
-    total_atomic_steps = (
-        total_atomic_steps - 1 * stat["review_status"]["currently"]["screen_excluded"]
-    )
-    rev_overall_stat["atomic_steps"] = total_atomic_steps
-
-    completed_steps = (
-        7 * stat["review_status"]["overall"]["synthesized"]
-        + 6 * stat["review_status"]["overall"]["screen"]
-        + 5 * stat["pdf_status"]["overall"]["prepared"]
-        + 4 * stat["pdf_status"]["overall"]["retrieved"]
-        + 3 * stat["review_status"]["overall"]["prescreen"]
-        + 2 * stat["metadata_status"]["overall"]["processed"]
-        + 1 * stat["metadata_status"]["overall"]["prepared"]
-    )
-    rev_cur_stat["completed_atomic_steps"] = completed_steps
-
+    logger.debug(f"stat: {pp.pformat(stat)}")
     return stat
 
 
-def is_git_repo(path: str) -> bool:
-    try:
-        _ = git.Repo(path).git_dir
-        return True
-    except git.exc.InvalidGitRepositoryError:
-        return False
-
-
-def is_review_template_project() -> bool:
-    # Note : 'private_config.ini', 'shared_config.ini' are optional
-    required_paths = ["search", ".pre-commit-config.yaml", ".gitignore"]
-    if not all(os.path.exists(x) for x in required_paths):
-        return False
-    return True
-
-
-def get_installed_hooks() -> dict:
-    installed_hooks = {}
-    with open(".pre-commit-config.yaml") as pre_commit_y:
-        pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
-    installed_hooks[
-        "remote_pv_hooks_repo"
-    ] = "https://github.com/geritwagner/pipeline-validation-hooks"
-    for repository in pre_commit_config["repos"]:
-        if repository["repo"] == installed_hooks["remote_pv_hooks_repo"]:
-            installed_hooks["local_hooks_version"] = repository["rev"]
-            installed_hooks["hooks"] = [hook["id"] for hook in repository["hooks"]]
-    return installed_hooks
-
-
-def lsremote(url: str) -> str:
-    remote_refs = {}
-    g = git.cmd.Git()
-    for ref in g.ls_remote(url).split("\n"):
-        hash_ref_list = ref.split("\t")
-        remote_refs[hash_ref_list[1]] = hash_ref_list[0]
-    return remote_refs
-
-
-def hooks_up_to_date(installed_hooks: dict) -> bool:
-    refs = lsremote(installed_hooks["remote_pv_hooks_repo"])
-    remote_sha = refs["HEAD"]
-    if remote_sha == installed_hooks["local_hooks_version"]:
-        return True
-    return False
-
-
-def required_hooks_installed(installed_hooks: dict) -> bool:
-    return installed_hooks["hooks"] == ["check", "format"]
-
-
-def repository_validation() -> dict:
-    global repo
-
-    repo_report = {}
-
-    # 1. git repository?
-    if not is_git_repo(os.getcwd()):
-        repo_report["msg"] = "No git repository. Use review_template init"
-        repo_report["level"] = "ERROR"
-        return repo_report
-    repo = git.Repo("")
-
-    # 2. review_template project?
-    if not is_review_template_project():
-        repo_report["msg"] = (
-            "No review_template repository"
-            + "\n  To retrieve a shared repository, use review_template init."
-            + "\n  To initalize a new repository, execute the "
-            + "command in an empty directory.\nExit."
-        )
-        repo_report["level"] = "ERROR"
-        return repo_report
-
-    # 3. Pre-commit hooks installed?
-    installed_hooks = get_installed_hooks()
-    if not required_hooks_installed(installed_hooks):
-        repo_report["msg"] = (
-            "Pre-commit hooks not installed. See"
-            + " https://github.com/geritwagner/pipeline-validation-hooks for details"
-        )
-        repo_report["level"] = "ERROR"
-        return repo_report
-
-    # 4. Pre-commit hooks up-to-date?
-    try:
-        if not hooks_up_to_date(installed_hooks):
-            repo_report["msg"] = (
-                "Pre-commit hooks not up-to-date. "
-                + "Use pre-commit autoupdate (--bleeding-edge)"
-            )
-            repo_report["level"] = "WARNING"
-
-    except git.exc.GitCommandError as e:
-        repo_report["msg"] = (
-            "No Internet connection, cannot check remote "
-            "pipeline-validation-hooks repository for updates."
-        )
-        repo_report["level"] = "WARNING"
-        logging.error(e)
-        pass
-
-    return repo_report
-
-
-def get_priority_transition(current_states: set, active_processing_functions: list):
+def get_priority_transition(current_states: set) -> list:
     from review_template.review_manager import Record
 
     # get "earliest" states (going backward)
@@ -412,7 +184,9 @@ def get_priority_transition(current_states: set, active_processing_functions: li
                 if search_state in current_states
             ]
         search_states = [
-            x["source"] for x in Record.transitions if x["dest"] in search_states
+            str(x["source"])
+            for x in Record.transitions
+            if str(x["dest"]) in search_states
         ]
         if [] == search_states:
             break
@@ -420,24 +194,10 @@ def get_priority_transition(current_states: set, active_processing_functions: li
 
     # next: get the priority transition for the earliest states
     priority_transitions = [
-        x for x in Record.transitions if x["source"] in earliest_state
-    ]
-    # print(f'priority_transitions (before following "automatically"):"
-    #   f" {priority_transitions}')
-    for priority_transition in priority_transitions:
-        if "automatically" == priority_transition["trigger"]:
-            priority_transitions.extend(
-                [
-                    x
-                    for x in Record.transitions
-                    if x["source"] == priority_transition["dest"]
-                ]
-            )
-    priority_transitions = [
-        x for x in priority_transitions if "automatically" != x["trigger"]
+        x["trigger"] for x in Record.transitions if str(x["source"]) in earliest_state
     ]
     # print(f'priority_transitions: {priority_transitions}')
-    return priority_transitions
+    return list(set(priority_transitions))
 
 
 def get_active_processing_functions(current_states_set):
@@ -447,12 +207,6 @@ def get_active_processing_functions(current_states_set):
     for state in current_states_set:
         srec = Record("item", state)
         t = srec.get_valid_transitions()
-        if "automatically" in t:
-            srec = Record(
-                "item",
-                [x["dest"] for x in Record.transitions if state == x["source"]][0],
-            )
-            t = srec.get_valid_transitions()
         active_processing_functions.extend(t)
     return active_processing_functions
 
@@ -468,7 +222,7 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
 
         branch_name = str(repo.active_branch)
         tracking_branch_name = str(repo.active_branch.tracking_branch())
-        logging.debug(f"{branch_name} - {tracking_branch_name}")
+        logger.debug(f"{branch_name} - {tracking_branch_name}")
 
         behind_operation = branch_name + ".." + tracking_branch_name
         commits_behind = repo.iter_commits(behind_operation)
@@ -485,6 +239,7 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
 
     review_instructions = []
 
+    # git_repo = REVIEW_MANAGER.get_repo()
     git_repo = git.Repo()
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
@@ -514,6 +269,10 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
 
     # If changes in MAIN_REFERENCES are staged, we need to detect the process type
     if MAIN_REFS_CHANGED:
+        # Detect and validate transitions
+
+        # TODO : we may need to trace records based on their origins (IDs can change)
+
         from review_template.review_manager import Record
 
         revlist = (
@@ -527,13 +286,13 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
             )
         )
 
-        items = [
+        record_state_items = [
             record_state
             for record_state in current_record_state_list
             if record_state not in committed_record_states_list
         ]
         transitioned_records = []
-        for item in items:
+        for item in record_state_items:
             transitioned_record = {"ID": item[0], "dest": item[1]}
 
             source_state = [
@@ -553,8 +312,8 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
             process_type = [
                 x["trigger"]
                 for x in Record.transitions
-                if x["source"] == transitioned_record["source"]
-                and x["dest"] == transitioned_record["dest"]
+                if str(x["source"]) == transitioned_record["source"]
+                and str(x["dest"]) == transitioned_record["dest"]
             ]
             if len(process_type) == 0:
                 review_instructions.append(
@@ -590,24 +349,22 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
             instruction["priority"] = "yes"
             review_instructions.append(instruction)
 
-    logging.debug(f"current_states_set: {current_states_set}")
+    logger.debug(f"current_states_set: {current_states_set}")
     active_processing_functions = get_active_processing_functions(current_states_set)
-    logging.debug(f"active_processing_functions: {active_processing_functions}")
-    priority_processing_functions = get_priority_transition(
-        current_states_set, active_processing_functions
-    )
-    logging.debug(f"priority_processing_function: {priority_processing_functions}")
+    logger.debug(f"active_processing_functions: {active_processing_functions}")
+    priority_processing_functions = get_priority_transition(current_states_set)
+    logger.debug(f"priority_processing_function: {priority_processing_functions}")
 
     msgs = {
         "load": "Import search results",
         "prepare": "Prepare records",
-        "man_prep": "Prepare records (manually)",
+        "prep_man": "Prepare records (manually)",
         "dedupe": "Deduplicate records",
-        "man_dedupe": "Deduplicate records (manually)",
+        "dedupe_man": "Deduplicate records (manually)",
         "prescreen": "Prescreen records",
         "pdf_get": "Retrieve pdfs",
         "pdf_get_man": "Retrieve pdfs (manually)",
-        "pdf_prep": "Prepare pdfs",
+        "pdf_prepare": "Prepare pdfs",
         "pdf_prep_man": "Prepare pdfs (manually)",
         "screen": "Screen records",
         "data": "Extract data/synthesize records",
@@ -616,12 +373,10 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
     for active_processing_function in active_processing_functions:
         instruction = {
             "msg": msgs[active_processing_function],
-            "cmd": f"review_template {active_processing_function}"
+            "cmd": f"review_template {active_processing_function.replace('_', '-')}"
             # "high_level_cmd": "review_template metadata",
         }
-        if active_processing_function in [
-            x["trigger"] for x in priority_processing_functions
-        ]:
+        if active_processing_function in priority_processing_functions:
             keylist = [list(x.keys()) for x in review_instructions]
             keys = [item for sublist in keylist for item in sublist]
             if "priority" not in keys:
@@ -639,7 +394,7 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
         }
         review_instructions.append(instruction)
 
-    if get_completeness_condition(REVIEW_MANAGER):
+    if stat["completeness_condition"]:
         instruction = {
             "info": "Iterationed completed.",
             "msg": "To start the next iteration of the review, "
@@ -658,7 +413,9 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
     collaboration_instructions = {"items": []}
 
     found_a_conflict = False
-    unmerged_blobs = repo.index.unmerged_blobs()
+    # git_repo = REVIEW_MANAGER.get_repo()
+    git_repo = git.Repo()
+    unmerged_blobs = git_repo.index.unmerged_blobs()
     for path in unmerged_blobs:
         list_of_blobs = unmerged_blobs[path]
         for (stage, blob) in list_of_blobs:
@@ -668,11 +425,13 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
     nr_commits_behind, nr_commits_ahead = 0, 0
 
     SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
-    CONNECTED_REMOTE = 0 != len(repo.remotes)
+    CONNECTED_REMOTE = 0 != len(git_repo.remotes)
     if CONNECTED_REMOTE:
-        origin = repo.remotes.origin
+        origin = git_repo.remotes.origin
         if origin.exists():
-            nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(repo)
+            nr_commits_behind, nr_commits_ahead = get_remote_commit_differences(
+                git_repo
+            )
     if CONNECTED_REMOTE:
         collaboration_instructions["title"] = "Versioning and collaboration"
         collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
@@ -701,13 +460,6 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
             "level": "WARNING",
         }
         collaboration_instructions["items"].append(item)
-
-    # if not found_a_conflict and repo.is_dirty():
-    #     item = {
-    #         "title": "Uncommitted changes",
-    #         "level": "WARNING",
-    #     }
-    #     collaboration_instructions["items"].append(item)
 
     elif not found_a_conflict:
         if CONNECTED_REMOTE:
@@ -764,7 +516,8 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
             # we do not need to distinguish whether
             # a PRE_SCREEN or INCLUSION_SCREEN is needed
             if SHARE_STAT_REQ == "SCREENED":
-                if 0 == stat["review_status"]["currently"]["non_screened"]:
+                # TODO : the following condition is probably not sufficient
+                if 0 == stat["review_status"]["currently"]["pdf_prepared"]:
                     collaboration_instructions["status"] = {
                         "title": "Sharing: currently ready for sharing",
                         "level": "SUCCESS",
@@ -818,6 +571,7 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
         "review_instructions": review_instructions,
         "collaboration_instructions": collaboration_instructions,
     }
+    logger.debug(f"instructions: {pp.pformat(instructions)}")
     return instructions
 
 
@@ -856,7 +610,7 @@ def stat_print(
     return
 
 
-def print_review_status(REVIEW_MANAGER, stat: dict) -> None:
+def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
 
     # Principle: first column shows total records/PDFs in each stage
     # the second column shows
@@ -869,186 +623,182 @@ def print_review_status(REVIEW_MANAGER, stat: dict) -> None:
         print(" | Search")
         print(" |  - No records added yet")
     else:
-        metadata, review, pdfs = (
-            stat["metadata_status"],
-            stat["review_status"],
-            stat["pdf_status"],
-        )
+
+        stat = statuts_info["status"]
 
         print(" | Search")
-        stat_print(False, "Records retrieved", metadata["overall"]["retrieved"])
+        stat_print(False, "Records retrieved", stat["overall"]["md_retrieved"])
         print(" |")
         print("     | Metadata preparation")
-        if metadata["currently"]["retrieved"] > 0:
+        if stat["currently"]["md_retrieved"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "record(s) not yet imported",
-                metadata["currently"]["retrieved"],
+                stat["currently"]["md_retrieved"],
             )
-        stat_print(True, "Records imported", metadata["overall"]["imported"])
-        if metadata["currently"]["imported"] > 0:
+        stat_print(True, "Records imported", stat["overall"]["md_imported"])
+        if stat["currently"]["md_imported"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "record(s) need preparation",
-                metadata["currently"]["imported"],
+                stat["currently"]["md_imported"],
             )
-        if metadata["currently"]["needs_manual_preparation"] > 0:
+        if stat["currently"]["md_needs_manual_preparation"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "record(s) need manual preparation",
-                metadata["currently"]["needs_manual_preparation"],
+                stat["currently"]["md_needs_manual_preparation"],
             )
-        stat_print(True, "Records prepared", metadata["overall"]["prepared"])
-        if metadata["currently"]["prepared"] > 0:
+        stat_print(True, "Records prepared", stat["overall"]["md_prepared"])
+        if stat["currently"]["md_prepared"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
-                "record(s) need merging",
-                metadata["currently"]["prepared"],
+                "record(s) need deduplication",
+                stat["currently"]["md_prepared"],
             )
-        if metadata["currently"]["needs_manual_merging"] > 0:
+        if stat["currently"]["md_needs_manual_deduplication"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
-                "record(s) need manual merging",
-                metadata["currently"]["needs_manual_merging"],
+                "record(s) need manual deduplication",
+                stat["currently"]["md_needs_manual_deduplication"],
             )
         stat_print(
             True,
             "Records processed",
-            metadata["overall"]["processed"],
+            stat["overall"]["md_processed"],
             "->",
             "duplicates removed",
-            metadata["currently"]["duplicates_removed"],
+            stat["currently"]["md_duplicates_removed"],
         )
 
         print(" |")
         print(" | Prescreen")
-        if review["overall"]["prescreen"] == 0:
+        if stat["overall"]["rev_prescreen"] == 0:
             stat_print(False, "Not initiated", "")
         else:
-            stat_print(False, "Prescreen size", review["overall"]["prescreen"])
-            if 0 != review["currently"]["needs_prescreen"]:
+            stat_print(False, "Prescreen size", stat["overall"]["rev_prescreen"])
+            if 0 != stat["currently"]["md_processed"]:
                 stat_print(
                     False,
                     "",
                     "",
                     "*",
                     "records to prescreen",
-                    review["currently"]["needs_prescreen"],
+                    stat["currently"]["md_processed"],
                 )
             stat_print(
                 False,
                 "Included",
-                review["overall"]["prescreen_included"],
+                stat["overall"]["rev_prescreen_included"],
                 "->",
                 "records excluded",
-                review["currently"]["prescreen_excluded"],
+                stat["currently"]["rev_prescreen_excluded"],
             )
 
         print(" |")
         print("     | PDF preparation")
-        stat_print(True, "PDFs to retrieve", pdfs["overall"]["needs_retrieval"])
-        if 0 != pdfs["currently"]["needs_retrieval"]:
+        if 0 != stat["currently"]["rev_prescreen_included"]:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "PDFs to retrieve",
-                pdfs["currently"]["needs_retrieval"],
+                stat["currently"]["rev_prescreen_included"],
             )
-        if 0 != pdfs["currently"]["needs_manual_retrieval"]:
+        if 0 != stat["currently"]["pdf_needs_manual_retrieval"]:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "PDFs to retrieve manually",
-                pdfs["currently"]["needs_manual_retrieval"],
+                stat["currently"]["pdf_needs_manual_retrieval"],
             )
-        if pdfs["currently"]["not_available"] > 0:
+        if stat["currently"]["pdf_not_available"] > 0:
             stat_print(
                 True,
-                "PDFs retrieved",
-                pdfs["overall"]["retrieved"],
+                "PDFs imported",
+                stat["overall"]["pdf_imported"],
                 "*",
                 "PDFs not available",
-                pdfs["currently"]["not_available"],
+                stat["currently"]["pdf_not_available"],
             )
         else:
-            stat_print(True, "PDFs retrieved", pdfs["overall"]["retrieved"])
-        if pdfs["currently"]["needs_manual_preparation"] > 0:
+            stat_print(True, "PDFs imported", stat["overall"]["pdf_imported"])
+        if stat["currently"]["pdf_needs_manual_preparation"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
                 "PDFs need manual preparation",
-                pdfs["currently"]["needs_manual_preparation"],
+                stat["currently"]["pdf_needs_manual_preparation"],
             )
-        if 0 != pdfs["currently"]["imported"]:
+        if 0 != stat["currently"]["pdf_imported"]:
             stat_print(
-                True, "", "", "*", "PDFs to prepare", pdfs["currently"]["imported"]
+                True, "", "", "*", "PDFs to prepare", stat["currently"]["pdf_imported"]
             )
-        stat_print(True, "PDFs prepared", pdfs["overall"]["prepared"])
+        stat_print(True, "PDFs prepared", stat["overall"]["pdf_prepared"])
 
         print(" |")
         print(" | Screen")
-        if review["overall"]["screen"] == 0:
+        if stat["overall"]["rev_screen"] == 0:
             stat_print(False, "Not initiated", "")
         else:
-            stat_print(False, "Screen size", review["overall"]["screen"])
-            if 0 != review["currently"]["needs_screen"]:
+            stat_print(False, "Screen size", stat["overall"]["rev_screen"])
+            if 0 != stat["currently"]["pdf_prepared"]:
                 stat_print(
                     False,
                     "",
                     "",
                     "*",
                     "records to screen",
-                    review["currently"]["needs_screen"],
+                    stat["currently"]["pdf_prepared"],
                 )
             stat_print(
                 False,
                 "Included",
-                review["overall"]["included"],
+                stat["overall"]["rev_included"],
                 "->",
                 "records excluded",
-                review["currently"]["screen_excluded"],
+                stat["currently"]["rev_excluded"],
             )
-            if "exclusion" in review["currently"]:
-                for crit, nr in review["currently"]["exclusion"].items():
+            if "exclusion" in stat["currently"]:
+                for crit, nr in stat["currently"]["exclusion"].items():
                     stat_print(False, "", "", "->", f"reason: {crit}", nr)
 
         print(" |")
         print(" | Data and synthesis")
-        if review["overall"]["synthesis"] == 0:
+        if stat["overall"]["rev_included"] == 0:
             stat_print(False, "Not initiated", "")
         else:
-            stat_print(False, "Total", review["overall"]["synthesis"])
-            if 0 != review["currently"]["needs_synthesis"]:
+            stat_print(False, "Total", stat["overall"]["rev_included"])
+            if 0 != stat["currently"]["rev_included"]:
                 stat_print(
                     False,
                     "Synthesized",
-                    review["overall"]["synthesized"],
+                    stat["overall"]["rev_synthesized"],
                     "*",
                     "need synthesis",
-                    review["currently"]["needs_synthesis"],
+                    stat["currently"]["rev_included"],
                 )
             else:
-                stat_print(False, "Synthesized", review["overall"]["synthesized"])
+                stat_print(False, "Synthesized", stat["overall"]["rev_synthesized"])
 
     return

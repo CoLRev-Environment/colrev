@@ -5,6 +5,7 @@ import logging
 import os
 import re
 import sys
+from collections import Counter
 
 import pandas as pd
 import yaml
@@ -12,9 +13,20 @@ from bibtexparser.bibdatabase import BibDatabase
 from yaml import safe_load
 
 from review_template import review_manager
+from review_template.review_manager import RecordState
+
+logger = logging.getLogger("review_template")
 
 PAD = 0
 MANUSCRIPT, DATA = "NA", "NA"
+
+
+def get_records_for_synthesis(bib_db) -> list:
+    return [
+        x["ID"]
+        for x in bib_db.entries
+        if x["status"] in [RecordState.rev_included, RecordState.rev_synthesized]
+    ]
 
 
 def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
@@ -28,7 +40,7 @@ def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
     return list(set(records) - set(available))
 
 
-def get_to_synthesize_in_manuscript(records_for_synthesis: list) -> list:
+def get_to_synthesize_in_manuscript(MANUSCRIPT, records_for_synthesis: list) -> list:
     in_manuscript_to_synthesize = []
     with open(MANUSCRIPT) as f:
         for line in f:
@@ -47,15 +59,13 @@ def get_to_synthesize_in_manuscript(records_for_synthesis: list) -> list:
     return in_manuscript_to_synthesize
 
 
-def get_synthesized_ids(bib_db: BibDatabase) -> list:
+def get_synthesized_ids(bib_db: BibDatabase, MANUSCRIPT) -> list:
 
-    records_for_synthesis = [
-        x["ID"]
-        for x in bib_db.entries
-        if x.get("rev_status", "NA") in ["included", "synthesized"]
-    ]
+    records_for_synthesis = get_records_for_synthesis(bib_db)
 
-    in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(records_for_synthesis)
+    in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(
+        MANUSCRIPT, records_for_synthesis
+    )
     # Assuming that all records have been added to the MANUSCRIPT before
     synthesized = [
         x for x in records_for_synthesis if x not in in_manuscript_to_synthesize
@@ -86,7 +96,7 @@ def get_structured_data_extracted(bib_db: BibDatabase) -> list:
     records_for_data_extraction = [
         x["ID"]
         for x in bib_db.entries
-        if x.get("rev_status", "NA") in ["included", "synthesized"]
+        if x["status"] in [RecordState.rev_included, RecordState.rev_synthesized]
     ]
 
     data_extracted = get_data_extracted(records_for_data_extraction)
@@ -101,22 +111,22 @@ def update_manuscript(
 ) -> BibDatabase:
 
     if os.path.exists(MANUSCRIPT):
-        logging.info("Updating manuscript")
+        logger.info("Updating manuscript")
         missing_records = get_data_page_missing(MANUSCRIPT, included)
         missing_records = sorted(missing_records)
     else:
         missing_records = included
-        logging.info("Creating manuscript")
+        logger.info("Creating manuscript")
 
     bib_db = REVIEW_MANAGER.load_main_refs()
     if 0 == len(missing_records):
-        logging.info(f"All records included in {MANUSCRIPT}")
+        logger.info(f"All records included in {MANUSCRIPT}")
         return bib_db
 
     git_repo = REVIEW_MANAGER.get_repo()
     changedFiles = [item.a_path for item in git_repo.index.diff(None)]
     if MANUSCRIPT in changedFiles:
-        logging.error(
+        logger.error(
             f"Changes in {MANUSCRIPT}. Use git add {MANUSCRIPT} and try again."
         )
         sys.exit()
@@ -126,13 +136,23 @@ def update_manuscript(
         with open("readme.md") as f:
             title = f.readline()
             title = title.replace("# ", "").replace("\n", "")
-    author = REVIEW_MANAGER.config["GIT_ACTOR"]
+
+    commits_list = list(git_repo.iter_commits())
+    commits_auhtors = []
+    for commit in commits_list:
+        committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
+        if "GitHub" == committer:
+            continue
+        commits_auhtors.append(committer)
+        # author = repo.git.show("-s", "--format=%an", commit.hexsha)
+        # mail = repo.git.show("-s", "--format=%ae", commit.hexsha)
+    author = ", ".join(dict(Counter(commits_auhtors)))
 
     if not os.path.exists(MANUSCRIPT):
         review_manager.retrieve_package_file("../template/" + MANUSCRIPT, MANUSCRIPT)
         review_manager.inplace_change(MANUSCRIPT, "{{project_title}}", title)
         review_manager.inplace_change(MANUSCRIPT, "{{author}}", author)
-        logging.info(f"Please update title and authors in {MANUSCRIPT}")
+        logger.info(f"Please update title and authors in {MANUSCRIPT}")
 
     temp = f".tmp_{MANUSCRIPT}"
     os.rename(MANUSCRIPT, temp)
@@ -151,7 +171,7 @@ def update_manuscript(
 
                 for missing_record in missing_records:
                     writer.write("- @" + missing_record + "\n")
-                    logging.info(
+                    logger.info(
                         f" {missing_record}".ljust(PAD, " ") + f" added to {MANUSCRIPT}"
                     )
 
@@ -175,7 +195,7 @@ def update_manuscript(
             line = reader.readline()
 
         if not appended:
-            logging.warning(
+            logger.warning(
                 "Marker <!-- NEW_RECORD_SOURCE --> not found in "
                 f"{MANUSCRIPT}. Adding records at the end of "
                 "the document."
@@ -186,12 +206,12 @@ def update_manuscript(
             writer.write(marker)
             for missing_record in missing_records:
                 writer.write("- @" + missing_record + "\n")
-                logging.info(f" {missing_record}".ljust(PAD, " ") + " added")
+                logger.info(f" {missing_record}".ljust(PAD, " ") + " added")
 
     os.remove(temp)
 
     nr_records_added = len(missing_records)
-    logging.info(f"{nr_records_added} records added to {MANUSCRIPT}")
+    logger.info(f"{nr_records_added} records added to {MANUSCRIPT}")
 
     return bib_db
 
@@ -201,11 +221,7 @@ def update_structured_data(
 ) -> BibDatabase:
 
     if not os.path.exists(DATA):
-        included = [
-            x["ID"]
-            for x in bib_db.entries
-            if x.get("rev_status", "NA") in ["included", "synthesized"]
-        ]
+        included = get_records_for_synthesis(bib_db)
 
         coding_dimensions = input("Enter columns for data extraction (comma-separted)")
         coding_dimensions = coding_dimensions.replace(" ", "_").split(",")
@@ -248,8 +264,34 @@ def update_structured_data(
                 json.loads(data.to_json(orient="records")), f, default_flow_style=False
             )
 
-        logging.info(f"{nr_records_added} records added ({DATA})")
+        logger.info(f"{nr_records_added} records added ({DATA})")
 
+    return bib_db
+
+
+def update_synthesized_status(REVIEW_MANAGER, bib_db):
+    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
+    synthesized_in_manuscript = get_synthesized_ids(bib_db, MANUSCRIPT)
+    structured_data_extracted = get_structured_data_extracted(bib_db)
+
+    DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
+    for record in bib_db.entries:
+        if (
+            "MANUSCRIPT" in DATA_FORMAT
+            and record["ID"] not in synthesized_in_manuscript
+        ):
+            continue
+        if (
+            "STRUCTURED" in DATA_FORMAT
+            and record["ID"] not in structured_data_extracted
+        ):
+            continue
+
+        record.update(status=RecordState.rev_synthesized)
+        logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     return bib_db
 
 
@@ -267,7 +309,7 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
         with open(DATA) as f:
             data_df = pd.json_normalize(safe_load(f))
             data_df.to_csv(DATA.replace(".yaml", ".csv"), index=False)
-            logging.info(f"Created {DATA_CSV} based on {DATA}")
+            logger.info(f"Created {DATA_CSV} based on {DATA}")
         return
 
     if load_csv:
@@ -278,7 +320,7 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
                 f,
                 default_flow_style=False,
             )
-        logging.info(f"Loaded {DATA_CSV} into {DATA}")
+        logger.info(f"Loaded {DATA_CSV} into {DATA}")
         return
 
     global PAD
@@ -287,14 +329,10 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
     bib_db = REVIEW_MANAGER.load_main_refs()
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
 
-    included = [
-        x["ID"]
-        for x in bib_db.entries
-        if x.get("rev_status", "NA") in ["included", "synthesized"]
-    ]
+    included = get_records_for_synthesis(bib_db)
 
     if 0 == len(included):
-        logging.info("No records included yet (use review_template screen)")
+        logger.info("No records included yet (use review_template screen)")
         sys.exit()
 
     if "MANUSCRIPT" in DATA_FORMAT:
@@ -306,27 +344,7 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
         git_repo = REVIEW_MANAGER.get_repo()
         git_repo.index.add([DATA])
 
-    synthesized_in_manuscript = get_synthesized_ids(bib_db)
-    structured_data_extracted = get_structured_data_extracted(bib_db)
-
-    for record in bib_db.entries:
-        if (
-            "MANUSCRIPT" in DATA_FORMAT
-            and record["ID"] not in synthesized_in_manuscript
-        ):
-            continue
-        if (
-            "STRUCTURED" in DATA_FORMAT
-            and record["ID"] not in structured_data_extracted
-        ):
-            continue
-
-        record.update(rev_status="synthesized")
-        logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
-
-    REVIEW_MANAGER.save_bib_file(bib_db)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    bib_db = update_synthesized_status(REVIEW_MANAGER, bib_db)
 
     if "y" == input("Create commit (y/n)?"):
         REVIEW_MANAGER.create_commit(

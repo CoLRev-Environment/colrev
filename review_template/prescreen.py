@@ -3,12 +3,13 @@ import csv
 import logging
 import os
 
-import bibtexparser
 import pandas as pd
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
+
+from review_template.review_manager import RecordState
 
 MAIN_REFERENCES = "NA"
+
+logger = logging.getLogger("review_template")
 
 
 def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
@@ -20,16 +21,19 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
         inclusion_1, inclusion_2 = "NA", "NA"
 
-        if "retrieved" == record["rev_status"]:
+        if RecordState.md_retrieved == record["status"]:
             inclusion_1 = "TODO"
-        if "prescreen_excluded" == record["rev_status"]:
+        if RecordState.rev_prescreen_excluded == record["status"]:
             inclusion_1 = "no"
         else:
             inclusion_1 = "yes"
             inclusion_2 = "TODO"
-            if "excluded" == record["rev_status"]:
+            if RecordState.rev_excluded == record["status"]:
                 inclusion_2 = "no"
-            if record["rev_status"] in ["included", "synthesized"]:
+            if record["status"] in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
                 inclusion_2 = "yes"
 
         excl_criteria = {}
@@ -59,12 +63,12 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
     if "csv" == export_table_format.lower():
         screen_df = pd.DataFrame(tbl)
         screen_df.to_csv("screen_table.csv", index=False, quoting=csv.QUOTE_ALL)
-        logging.info("Created screen_table (csv)")
+        logger.info("Created screen_table (csv)")
 
     if "xlsx" == export_table_format.lower():
         screen_df = pd.DataFrame(tbl)
         screen_df.to_excel("screen_table.xlsx", index=False, sheet_name="screen")
-        logging.info("Created screen_table (xlsx)")
+        logger.info("Created screen_table (xlsx)")
 
     return
 
@@ -72,13 +76,13 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
     bib_db = REVIEW_MANAGER.load_main_refs()
     if not os.path.exists(import_table_path):
-        logging.error(f"Did not find {import_table_path} - exiting.")
+        logger.error(f"Did not find {import_table_path} - exiting.")
         return
     screen_df = pd.read_csv(import_table_path)
     screen_df.fillna("", inplace=True)
     records = screen_df.to_dict("records")
 
-    logging.warning(
+    logger.warning(
         "import_table not yet completed " "(exclusion_criteria are not yet imported)"
     )
     for x in [
@@ -89,13 +93,13 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
         if len(record) == 1:
             record = record[0]
             if x[1] == "no":
-                record["rev_status"] = "prescreen_excluded"
+                record["status"] = RecordState.rev_prescreen_excluded
             if x[1] == "yes":
-                record["rev_status"] = "prescreen_inclued"
+                record["status"] = RecordState.rev_prescreen_included
             if x[2] == "no":
-                record["rev_status"] = "excluded"
+                record["status"] = RecordState.rev_excluded
             if x[2] == "yes":
-                record["rev_status"] = "included"
+                record["status"] = RecordState.rev_included
             # TODO: exclusion-criteria
 
     REVIEW_MANAGER.save_bib_file(bib_db)
@@ -110,13 +114,12 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     saved_args = locals()
     PAD = 50  # TODO
     for record in bib_db.entries:
-        if record.get("rev_status", "NA") in ["retrieved", "processed"]:
+        if record["status"] in [RecordState.md_retrieved, RecordState.md_processed]:
             continue
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen (automatically)"
         )
-        record.update(rev_status="prescreen_included")
-        record.update(pdf_status="needs_retrieval")
+        record.update(status=RecordState.rev_prescreen_included)
 
     REVIEW_MANAGER.save_bib_file(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
@@ -128,70 +131,32 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     return
 
 
-def get_next_prescreening_item(REVIEW_MANAGER):
-    prescreening_items = []
-    for record_string in REVIEW_MANAGER.read_next_record_str():
-        rev_stat = "NA"
-        for line in record_string.split("\n"):
-            if "rev_status" == line.lstrip()[:10]:
-                rev_stat = line[line.find("{") + 1 : line.rfind("}")]
-                if "retrieved" == rev_stat:
-                    parser = BibTexParser(customization=convert_to_unicode)
-                    db = bibtexparser.loads(record_string, parser=parser)
-                    record = db.entries[0]
-                    prescreening_items.append(record)
-    yield from prescreening_items
+def get_data(REVIEW_MANAGER):
+    record_state_list = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len(
+        [x for x in record_state_list if str(RecordState.md_processed) == x[1]]
+    )
+    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
+    items = REVIEW_MANAGER.read_next_record(
+        conditions={"status": str(RecordState.md_processed)}
+    )
+    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
 
 
-def replace_field(REVIEW_MANAGER, ID, key: str, val: str) -> None:
+def set_prescreen_status(REVIEW_MANAGER, ID, PAD, prescreen_inclusion: bool) -> None:
 
-    val = val.encode("utf-8")
-    current_ID = "NA"
-    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"], "r+b") as fd:
-        seekpos = fd.tell()
-        line = fd.readline()
-        while line:
-            if b"@" in line[:3]:
-                current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
-                current_ID = current_ID.decode("utf-8")
-
-            replacement = None
-            if current_ID == ID:
-                if line.lstrip()[: len(key)].decode("utf-8") == key:
-                    replacement = line[: line.find(b"{") + 1] + val + b"},\n"
-
-            if replacement == ":q":
-                break
-            if replacement:
-                if len(replacement) == len(line):
-                    fd.seek(seekpos)
-                    fd.write(replacement)
-                    fd.flush()
-                    os.fsync(fd)
-                else:
-                    remaining = fd.read()
-                    fd.seek(seekpos)
-                    fd.write(replacement)
-                    seekpos = fd.tell()
-                    fd.flush()
-                    os.fsync(fd)
-                    fd.write(remaining)
-                    fd.truncate()  # if the replacement is shorter...
-                    fd.seek(seekpos)
-                    line = fd.readline()
-                return  # We only need to replace once
-            seekpos = fd.tell()
-            line = fd.readline()
-    return
-
-
-def set_prescreen_status(REVIEW_MANAGER, ID, prescreen_inclusion: bool) -> None:
-
+    git_repo = REVIEW_MANAGER.get_repo()
     if prescreen_inclusion:
-        replace_field(REVIEW_MANAGER, ID, "rev_status", "prescreen_included")
-        # TODO : the pdf_needs_retrieval must be added, not replaced
-        replace_field(REVIEW_MANAGER, "pdf_status", "needs_retrieval")
+        logger.info(f" {ID}".ljust(PAD, " ") + "Included in prescreen")
+        REVIEW_MANAGER.replace_field(
+            ID, "status", str(RecordState.rev_prescreen_included)
+        )
+        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     else:
-        replace_field(REVIEW_MANAGER, ID, "rev_status", "prescreen_excluded")
+        logger.info(f" {ID}".ljust(PAD, " ") + "Excluded in prescreen")
+        REVIEW_MANAGER.replace_field(
+            ID, "status", str(RecordState.rev_prescreen_excluded)
+        )
+        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 
     return

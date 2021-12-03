@@ -2,6 +2,7 @@
 import ast
 import configparser
 import errno
+import importlib
 import inspect
 import io
 import json
@@ -37,6 +38,423 @@ from review_template import screen
 logging.getLogger("transitions").setLevel(logging.WARNING)
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+
+
+###############################################################################
+
+
+class RecordState(Enum):
+    # without the md_retrieved state, we could not display the load transition
+    md_retrieved = auto()
+    md_imported = auto()
+    md_needs_manual_preparation = auto()
+    md_prepared = auto()
+    md_needs_manual_deduplication = auto()
+    md_processed = auto()
+    rev_prescreen_excluded = auto()
+    rev_prescreen_included = auto()
+    pdf_needs_manual_retrieval = auto()
+    pdf_imported = auto()
+    pdf_not_available = auto()
+    pdf_needs_manual_preparation = auto()
+    pdf_prepared = auto()
+    rev_excluded = auto()
+    rev_included = auto()
+    rev_synthesized = auto()
+    # Note : TBD: rev_coded
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+class ProcessType(Enum):
+    load = auto()
+    prepare = auto()
+    prep_man = auto()
+    dedupe = auto()
+    dedupe_man = auto()
+    prescreen = auto()
+    pdf_get = auto()
+    pdf_get_man = auto()
+    pdf_prepare = auto()
+    pdf_prep_man = auto()
+    screen = auto()
+    data = auto()
+    format = auto()
+
+    def __str__(self):
+        return f"{self.name}"
+
+
+# Note : conditions are defined in Record class
+processing_transitions = [
+    {
+        "trigger": "load",
+        "source": RecordState.md_retrieved,
+        "dest": RecordState.md_imported,
+        "conditions": ["clean_repo_except_search"],
+    },
+    {
+        "trigger": "prepare",
+        "source": RecordState.md_imported,
+        "dest": RecordState.md_needs_manual_preparation,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "prepare",
+        "source": RecordState.md_imported,
+        "dest": RecordState.md_prepared,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "prep_man",
+        "source": RecordState.md_needs_manual_preparation,
+        "dest": RecordState.md_prepared,
+        "conditions": [
+            "clean_repo_except_main_references",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "dedupe",
+        "source": RecordState.md_prepared,
+        "dest": RecordState.md_needs_manual_deduplication,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "dedupe",
+        "source": RecordState.md_prepared,
+        "dest": RecordState.md_processed,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "dedupe_man",
+        "source": RecordState.md_needs_manual_deduplication,
+        "dest": RecordState.md_processed,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "prescreen",
+        "source": RecordState.md_processed,
+        "dest": RecordState.rev_prescreen_excluded,
+        "conditions": [
+            "clean_repo_except_main_references",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "prescreen",
+        "source": RecordState.md_processed,
+        "dest": RecordState.rev_prescreen_included,
+        "conditions": [
+            "clean_repo_except_main_references",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "pdf_get",
+        "source": RecordState.rev_prescreen_included,
+        "dest": RecordState.pdf_imported,
+        "conditions": [
+            "clean_repo_except_pdf_dir",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "pdf_get",
+        "source": RecordState.rev_prescreen_included,
+        "dest": RecordState.pdf_needs_manual_retrieval,
+        "conditions": [
+            "clean_repo_except_pdf_dir",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "pdf_get_man",
+        "source": RecordState.pdf_needs_manual_retrieval,
+        "dest": RecordState.pdf_not_available,
+        "conditions": [
+            "clean_repo_except_pdf_dir_and_main_refs",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "pdf_get_man",
+        "source": RecordState.pdf_needs_manual_retrieval,
+        "dest": RecordState.pdf_imported,
+        "conditions": [
+            "clean_repo_except_pdf_dir_and_main_refs",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "pdf_prepare",
+        "source": RecordState.pdf_imported,
+        "dest": RecordState.pdf_needs_manual_preparation,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "pdf_prepare",
+        "source": RecordState.pdf_imported,
+        "dest": RecordState.pdf_prepared,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "pdf_prep_man",
+        "source": RecordState.pdf_needs_manual_preparation,
+        "dest": RecordState.pdf_prepared,
+        "conditions": [
+            "clean_repo_except_pdf_dir",
+            "check_records_state_precondition",
+        ],
+    },
+    {
+        "trigger": "screen",
+        "source": RecordState.pdf_prepared,
+        "dest": RecordState.rev_excluded,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "screen",
+        "source": RecordState.pdf_prepared,
+        "dest": RecordState.rev_included,
+        "conditions": ["clean_repo", "check_records_state_precondition"],
+    },
+    {
+        "trigger": "data",
+        "source": RecordState.rev_included,
+        "dest": RecordState.rev_synthesized,
+        "conditions": [
+            "clean_repo_except_manuscript",
+            "check_records_state_precondition",
+        ],
+    },
+]
+
+
+def get_bibtex_writer():
+
+    writer = BibTexWriter()
+
+    writer.contents = ["entries", "comments"]
+    # Note: IDs should be at the beginning to facilitate git versioning
+    # order: hard-coded in get_record_status_item()
+    writer.display_order = [
+        "origin",  # must be in second line
+        "status",  # must be in third line
+        "metadata_source",
+        "excl_criteria",
+        "prep_man_hints",
+        "pdf_processed",
+        "file",  # Note : do not change this order (parsers rely on it)
+        "doi",
+        "grobid-version",
+        "dblp_key",
+        "author",
+        "booktitle",
+        "journal",
+        "title",
+        "year",
+        "editor",
+        "number",
+        "pages",
+        "series",
+        "volume",
+        "abstract",
+        "book-author",
+        "book-group-author",
+    ]
+
+    writer.order_entries_by = "ID"
+    writer.add_trailing_comma = True
+    writer.align_values = True
+    writer.indent = "  "
+    return writer
+
+
+file_paths = dict(
+    MAIN_REFERENCES="references.bib",
+    DATA="data.yaml",
+    PDF_DIRECTORY="pdfs/",
+    SEARCH_DETAILS="search_details.yaml",
+    MANUSCRIPT="paper.md",
+    SHARED_CONFIG="shared_config.ini",
+    PRIVATE_CONFIG="private_config.ini",
+)
+
+
+def setup_logger(level=logging.INFO):
+
+    logger = logging.getLogger("review_template")
+
+    if not logger.handlers:
+        logger.setLevel(level)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+
+        report_file_handler = logging.FileHandler("report.log", mode="a")
+        report_file_handler.setFormatter(formatter)
+
+        logger.addHandler(report_file_handler)
+        logger.addHandler(handler)
+        logger.propagate = False
+    return logger
+
+
+###############################################################################
+
+
+class MissingDependencyError(Exception):
+    def __init__(self, dep):
+        self.message = f"please install {dep}"
+        super().__init__(self.message)
+
+
+class GitConflictError(Exception):
+    def __init__(self, path):
+        self.message = f"please resolve git conflict in {path}"
+        super().__init__(self.message)
+
+
+class StatusFieldValueError(Exception):
+    def __init__(self, record: str, status_type: str, status_value: str):
+        self.message = f"{status_type} set to '{status_value}' in {record}."
+        super().__init__(self.message)
+
+
+class CitationKeyPropagationError(Exception):
+    pass
+
+
+class DirtyRepoAfterProcessingError(Exception):
+    pass
+
+
+class ReviewManagerNotNofiedError(Exception):
+    def __init__(self):
+        self.message = (
+            "inform the review manager about the next process in advance"
+            + " to avoid conflicts (run review_manager.notify(processing_function))"
+        )
+        super().__init__(self.message)
+
+
+class CleanRepoRequiredError(Exception):
+    def __init__(self, changedFiles, ignore_pattern):
+        self.message = (
+            "clean repository required (use git commit, discard or stash "
+            + f"{changedFiles}; ignore_pattern={ignore_pattern})."
+        )
+        super().__init__(self.message)
+
+
+class ProcessOrderViolation(Exception):
+    def __init__(self, process, required_states: set, violating_records: list):
+        self.message = (
+            f" {process.type.name}() requires all records to have at least "
+            + f"'{required_states}', but there are records with {violating_records}."
+        )
+        super().__init__(self.message)
+
+
+class NoRecordsError(Exception):
+    def __init__(self):
+        self.message = "no records imported yet"
+        super().__init__(self.message)
+
+
+class UnstagedGitChangesError(Exception):
+    def __init__(self, changedFiles):
+        self.message = (
+            f"changes not yet staged: {changedFiles} (use git add . or stash)"
+        )
+        super().__init__(self.message)
+
+
+class ConsistencyError(Exception):
+    pass
+
+
+class RepoSetupError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class DuplicatesError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class RecordFormatError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class OriginError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class FieldError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class StatusTransitionError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class ManuscriptRecordSourceTagError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class PropagatedIDChange(Exception):
+    def __init__(self, notifications):
+        self.message = "\n".join(notifications)
+        super().__init__(self.message)
+
+
+class SearchDetailsMissingError(Exception):
+    def __init__(
+        self,
+        search_results_path,
+    ):
+        self.message = (
+            "Search results path "
+            + f"({os.path.basename(search_results_path)}) "
+            + "is not in search_details.yaml"
+        )
+        super().__init__(self.message)
+
+
+class SearchDetailsError(Exception):
+    def __init__(
+        self,
+        msg,
+    ):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class RawSearchChangedError(Exception):
+    def __init__(self, path):
+        self.message = f"revert changes to raw search results: {path}"
+        super().__init__(self.message)
+
+
+###############################################################################
 
 
 def rmdiacritics(char: str) -> str:
@@ -86,6 +504,135 @@ def retrieve_package_file(template_file: str, target: str) -> None:
     return
 
 
+def check_git_installed() -> None:
+    try:
+        null = open("/dev/null", "w")
+        subprocess.Popen("git", stdout=null, stderr=null)
+        null.close()
+    except OSError:
+        pass
+        raise MissingDependencyError("git")
+    return
+
+
+def check_docker_installed() -> None:
+    try:
+        null = open("/dev/null", "w")
+        subprocess.Popen("docker", stdout=null, stderr=null)
+        null.close()
+    except OSError:
+        pass
+        raise MissingDependencyError("docker")
+    return
+
+
+def check_git_conflicts() -> None:
+    # Note: when check is called directly from the command line.
+    # pre-commit hooks automatically notify on merge conflicts
+
+    repo = git.Repo()
+    unmerged_blobs = repo.index.unmerged_blobs()
+
+    for path in unmerged_blobs:
+        list_of_blobs = unmerged_blobs[path]
+        for (stage, blob) in list_of_blobs:
+            if stage != 0:
+                raise GitConflictError(path)
+    return
+
+
+def is_git_repo(path: str) -> bool:
+    try:
+        _ = git.Repo(path).git_dir
+        return True
+    except git.exc.InvalidGitRepositoryError:
+        return False
+
+
+def is_review_template_project() -> bool:
+    # Note : 'private_config.ini', 'shared_config.ini' are optional
+    # "search",
+    required_paths = [".pre-commit-config.yaml", ".gitignore"]
+    if not all(os.path.exists(x) for x in required_paths):
+        return False
+    return True
+
+
+def get_installed_hooks() -> dict:
+    installed_hooks = {}
+    with open(".pre-commit-config.yaml") as pre_commit_y:
+        pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
+    installed_hooks[
+        "remote_pv_hooks_repo"
+    ] = "https://github.com/geritwagner/pipeline-validation-hooks"
+    for repository in pre_commit_config["repos"]:
+        if repository["repo"] == installed_hooks["remote_pv_hooks_repo"]:
+            installed_hooks["local_hooks_version"] = repository["rev"]
+            installed_hooks["hooks"] = [hook["id"] for hook in repository["hooks"]]
+    return installed_hooks
+
+
+def lsremote(url: str) -> str:
+    remote_refs = {}
+    g = git.cmd.Git()
+    for ref in g.ls_remote(url).split("\n"):
+        hash_ref_list = ref.split("\t")
+        remote_refs[hash_ref_list[1]] = hash_ref_list[0]
+    return remote_refs
+
+
+def hooks_up_to_date(installed_hooks: dict) -> bool:
+    refs = lsremote(installed_hooks["remote_pv_hooks_repo"])
+    remote_sha = refs["HEAD"]
+    if remote_sha == installed_hooks["local_hooks_version"]:
+        return True
+    return False
+
+
+def required_hooks_installed(installed_hooks: dict) -> bool:
+    return installed_hooks["hooks"] == ["check", "format", "report"]
+
+
+def check_repository_setup(REVIEW_MANAGER):
+
+    # 1. git repository?
+    if not is_git_repo(os.getcwd()):
+        raise RepoSetupError("no git repository. Use review_template init")
+
+    # 2. review_template project?
+    if not is_review_template_project():
+        raise RepoSetupError(
+            "No review_template repository."
+            + "To retrieve a shared repository, use review_template init."
+            + "To initalize a new repository, "
+            + "execute the command in an empty directory."
+        )
+
+    # 3. Pre-commit hooks installed?
+    installed_hooks = get_installed_hooks()
+    if not required_hooks_installed(installed_hooks):
+        raise RepoSetupError(
+            "Pre-commit hooks not installed. See"
+            + " https://github.com/geritwagner/pipeline-validation-hooks for details"
+        )
+
+    # 4. Pre-commit hooks up-to-date?
+    try:
+        if not hooks_up_to_date(installed_hooks):
+            raise RepoSetupError(
+                "Pre-commit hooks not up-to-date. "
+                + "Use pre-commit autoupdate (--bleeding-edge)"
+            )
+            # This could also be a warning, but hooks should not change often.
+
+    except git.exc.GitCommandError:
+        REVIEW_MANAGER.logger.warning(
+            "No Internet connection, cannot check remote "
+            "pipeline-validation-hooks repository for updates."
+        )
+    return
+
+
 def create_state_machine_diagram():
     from transitions.extensions import GraphMachine
 
@@ -103,177 +650,7 @@ def create_state_machine_diagram():
 
 class Record:
 
-    # Note : TBD: rev_coded
-    states = [
-        "md_retrieved",  # without this state, we could not display the load transition
-        "md_imported",
-        "md_needs_manual_preparation",
-        "md_prepared",
-        "md_needs_manual_merging",
-        "md_processed",
-        "rev_retrieved",
-        "rev_prescreen_excluded",
-        "rev_prescreen_included",
-        "pdf_needs_retrieval",
-        "pdf_needs_manual_retrieval",
-        "pdf_imported",
-        "pdf_not_available",
-        "pdf_needs_manual_preparation",
-        "pdf_prepared",
-        "rev_excluded",
-        "rev_included",
-        "rev_synthesized",
-    ]
-
-    transitions = [
-        {
-            "trigger": "load",
-            "source": "md_retrieved",
-            "dest": "md_imported",
-            "conditions": ["clean_repo_except_search"],
-        },
-        {
-            "trigger": "prepare",
-            "source": "md_imported",
-            "dest": "md_needs_manual_preparation",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "prepare",
-            "source": "md_imported",
-            "dest": "md_prepared",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "man_prep",
-            "source": "md_needs_manual_preparation",
-            "dest": "md_prepared",
-            "conditions": [
-                "clean_repo_except_main_references",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "dedupe",
-            "source": "md_prepared",
-            "dest": "md_needs_manual_merging",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "dedupe",
-            "source": "md_prepared",
-            "dest": "md_processed",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "man_dedupe",
-            "source": "md_needs_manual_merging",
-            "dest": "md_processed",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "automatically",
-            "source": "md_processed",
-            "dest": "rev_retrieved",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "prescreen",
-            "source": "rev_retrieved",
-            "dest": "rev_prescreen_excluded",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "prescreen",
-            "source": "rev_retrieved",
-            "dest": "rev_prescreen_included",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "automatically",
-            "source": "rev_prescreen_included",
-            "dest": "pdf_needs_retrieval",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "pdf_get",
-            "source": "pdf_needs_retrieval",
-            "dest": "pdf_imported",
-            "conditions": [
-                "clean_repo_except_pdf_dir",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "pdf_get",
-            "source": "pdf_needs_retrieval",
-            "dest": "pdf_needs_manual_retrieval",
-            "conditions": [
-                "clean_repo_except_pdf_dir",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "pdf_get_man",
-            "source": "pdf_needs_manual_retrieval",
-            "dest": "pdf_not_available",
-            "conditions": [
-                "clean_repo_except_pdf_dir",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "pdf_get_man",
-            "source": "pdf_needs_manual_retrieval",
-            "dest": "pdf_imported",
-            "conditions": [
-                "clean_repo_except_pdf_dir",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "pdf_prep",
-            "source": "pdf_imported",
-            "dest": "pdf_needs_manual_preparation",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "pdf_prep",
-            "source": "pdf_imported",
-            "dest": "pdf_prepared",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "pdf_prep_man",
-            "source": "pdf_needs_manual_preparation",
-            "dest": "pdf_prepared",
-            "conditions": [
-                "clean_repo_except_pdf_dir",
-                "check_records_state_precondition",
-            ],
-        },
-        {
-            "trigger": "screen",
-            "source": "pdf_prepared",
-            "dest": "rev_excluded",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "screen",
-            "source": "pdf_prepared",
-            "dest": "rev_included",
-            "conditions": ["clean_repo", "check_records_state_precondition"],
-        },
-        {
-            "trigger": "data",
-            "source": "rev_included",
-            "dest": "rev_synthesized",
-            "conditions": [
-                "clean_repo_except_manuscript",
-                "check_records_state_precondition",
-            ],
-        },
-    ]
+    transitions = processing_transitions
 
     def __init__(self, ID, start_state, REVIEW_MANAGER=None):
         print(
@@ -286,7 +663,7 @@ class Record:
 
         self.machine = Machine(
             model=self,
-            states=Record.states,
+            states=RecordState,
             transitions=self.transitions,
             initial=start_state,
         )
@@ -335,29 +712,16 @@ class Record:
         return require_clean_repo_general(ignore_pattern=PDF_DIRECTORY)
 
     @property
+    def clean_repo_except_pdf_dir_and_main_refs(self):
+        # TODO
+        # PDF_DIRECTORY = "pdfs/"  # TODO : this is a temporary fix
+        # return require_clean_repo_general(ignore_pattern=PDF_DIRECTORY)
+        return True
+
+    @property
     def clean_repo_except_manuscript(self):
         MANUSCRIPT = "paper.md"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=MANUSCRIPT)
-
-
-class ProcessType(Enum):
-    load = auto()
-    prepare = auto()
-    man_prep = auto()
-    dedupe = auto()
-    man_dedupe = auto()
-    prescreen = auto()
-    pdf_get = auto()
-    pdf_get_man = auto()
-    pdf_prep = auto()
-    pdf_prep_man = auto()
-    screen = auto()
-    data = auto()
-    format = auto()
-    automatically = auto()
-
-    def __str__(self):
-        return f"{self.name}"
 
 
 class Process:
@@ -400,72 +764,49 @@ class Process:
 
 
 def get_record_status_item(r_header: str) -> list:
-
-    r_header_lines = r_header.split("\n")
-    ID = r_header_lines[0]
-    ID = ID[ID.find("{") + 1 : ID.rfind(",")]
-
-    status = "NA"
-    if "rev_status" not in r_header_lines[2]:
-        raise StatusFieldValueError(r_header_lines[0], "rev_status", "NA")
-
-    rev_status = r_header_lines[2]
-    rev_status = rev_status[rev_status.find("{") + 1 : rev_status.rfind("}")]
-    if "md_status" not in r_header_lines[3]:
-        raise StatusFieldValueError(r_header_lines[0], "md_status", "NA")
-
-    md_status = r_header_lines[3]
-    md_status = md_status[md_status.find("{") + 1 : md_status.rfind("}")]
-
-    if "retrieved" == rev_status:
-        if "retrieved" == md_status:
-            status = "md_retrieved"
-        elif "imported" == md_status:
-            status = "md_imported"
-        elif "needs_manual_preparation" == md_status:
-            status = "md_needs_manual_preparation"
-        elif "prepared" == md_status:
-            status = "md_prepared"
-        elif "needs_manual_merging" == md_status:
-            status = "md_needs_manual_merging"
-        elif "processed" == md_status:
-            status = "md_processed"
-        else:
-            raise StatusFieldValueError(r_header_lines[0], "md_status", md_status)
-
-    elif "prescreen_excluded" == rev_status:
-        status = "rev_prescreen_excluded"
-
-    elif "prescreen_included" == rev_status:
-
-        status = "rev_prescreen_included"
-
-        # if "pdf_status" not in r_header_lines[4]:
-        #     raise StatusFieldValueError(r_header_lines[0], "pdf_status", "NA")
-
-        pdf_status = r_header_lines[4]
-        pdf_status = pdf_status[pdf_status.find("{") + 1 : pdf_status.rfind("}")]
-
-        if "needs_retrieval" == pdf_status:
-            status = "pdf_needs_retrieval"
-        if "needs_manual_retrieval" == pdf_status:
-            status = "pdf_needs_manual_retrieval"
-        elif "imported" == pdf_status:
-            status = "pdf_imported"
-        elif "needs_manual_preparation" == pdf_status:
-            status = "pdf_needs_manual_preparation"
-        elif "prepared" == pdf_status:
-            status = "pdf_prepared"
-    elif "excluded" == rev_status:
-        status = "rev_excluded"
-    elif "included" == rev_status:
-        status = "rev_included"
-    elif "synthesized" == rev_status:
-        status = "rev_synthesized"
-    else:
-        raise StatusFieldValueError(r_header_lines[0], "rev_status", rev_status)
-
+    rhlines = r_header.split("\n")
+    rhl0, rhl1, rhl2 = (
+        line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:3]
+    )
+    ID = rhl0
+    if "status" not in rhlines[2]:
+        raise StatusFieldValueError(ID, "status", "NA")
+    status = rhl2[:-1]  # to replace the trailing }
     return [ID, status]
+
+
+def get_record_header_item(r_header: str) -> list:
+    rhlines = r_header.split("\n")
+    rhl0, rhl1, rhl2, rhl3, rhl4, rhl5, rhl6, rhl7, rhl8 = (
+        line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:9]
+    )
+    ID = rhl0
+
+    if "origin" not in rhlines[1]:
+        raise RecordFormatError(ID, "status", "NA")
+    origin = rhl1[:-1]  # to replace the trailing }
+
+    if "status" not in rhlines[2]:
+        raise StatusFieldValueError(ID, "status", "NA")
+    status = rhl2[:-1]  # to replace the trailing }
+
+    # excl_criteria can only be in line 4 (but it is optional)
+    excl_criteria = ""
+    if "excl_criteria" in rhlines[4]:
+        excl_criteria = rhl4[:-1]  # to replace the trailing }
+
+    # file is optional and could be in lines 4-7
+    file = ""
+    if "file" in rhlines[4]:
+        file = rhl4[:-1]  # to replace the trailing }
+    if "file" in rhlines[5]:
+        file = rhl5[:-1]  # to replace the trailing }
+    if "file" in rhlines[6]:
+        file = rhl6[:-1]  # to replace the trailing }
+    if "file" in rhlines[7]:
+        file = rhl7[:-1]  # to replace the trailing }
+
+    return [ID, origin, status, excl_criteria, file]
 
 
 def get_name_mail_from_global_git_config() -> list:
@@ -480,121 +821,14 @@ def get_name_mail_from_global_git_config() -> list:
     return global_conf_details
 
 
-def get_bibtex_writer():
-
-    writer = BibTexWriter()
-
-    writer.contents = ["entries", "comments"]
-    # Note: IDs should be at the beginning to facilitate git versioning
-    writer.display_order = [
-        "origin",  # must be in second line
-        "rev_status",  # must be in third line
-        "md_status",  # must be in fourthline
-        "pdf_status",  # must be in fifth line (if available)
-        "excl_criteria",
-        "man_prep_hints",
-        "metadata_source",
-        "pdf_processed",
-        "file",  # Note : do not change this order (parsers rely on it)
-        "doi",
-        "dblp_key",
-        "author",
-        "booktitle",
-        "journal",
-        "title",
-        "year",
-        "editor",
-        "number",
-        "pages",
-        "series",
-        "volume",
-        "abstract",
-        "book-author",
-        "book-group-author",
-    ]
-
-    writer.order_entries_by = "ID"
-    writer.add_trailing_comma = True
-    writer.align_values = True
-    writer.indent = "  "
-    return writer
-
-
-def email_fallback() -> str:
-    name, email = get_name_mail_from_global_git_config()
-    return email
-
-
 def actor_fallback() -> str:
-    name, email = get_name_mail_from_global_git_config()
+    name = get_name_mail_from_global_git_config()[0]
     return name
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("report.log", mode="a"),
-        logging.StreamHandler(),
-    ],
-)
-
-
-class CitationKeyPropagationError(Exception):
-    pass
-
-
-class DirtyRepoAfterProcessingError(Exception):
-    pass
-
-
-class ReviewManagerNotNofiedError(Exception):
-    def __init__(self):
-        self.message = (
-            "inform the review manager about the next process in advance"
-            + " to avoid conflicts (run review_manager.notify(processing_function))"
-        )
-        super().__init__(self.message)
-
-
-class CleanRepoRequiredError(Exception):
-    def __init__(self, changedFiles, ignore_pattern):
-        self.message = (
-            "clean repository required (use git commit, discard or stash "
-            + f"{changedFiles}; ignore_pattern={ignore_pattern})."
-        )
-        super().__init__(self.message)
-
-
-class StatusFieldValueError(Exception):
-    def __init__(self, record: str, status_type: str, status_value: str):
-        self.message = f"{status_type} set to {status_value} in {record}."
-        super().__init__(self.message)
-
-
-class ProcessOrderViolation(Exception):
-    def __init__(self, process: Process, required_states: set, violating_records: list):
-        # self.search_results_path = search_results_path
-        self.message = (
-            f" {process.type.name}() requires all records to have at least "
-            + f"'{required_states}', but there are records with {violating_records}."
-        )
-        super().__init__(self.message)
-
-
-class NoRecordsError(Exception):
-    def __init__(self):
-        self.message = "no records imported yet"
-        super().__init__(self.message)
-
-
-class UnstagedGitChangesError(Exception):
-    def __init__(self, changedFiles):
-        self.message = (
-            f"changes not yet staged: {changedFiles} (use git add . or stash)"
-        )
-        super().__init__(self.message)
+def email_fallback() -> str:
+    email = get_name_mail_from_global_git_config()[1]
+    return email
 
 
 def require_clean_repo_general(
@@ -642,43 +876,6 @@ def require_clean_repo_general(
     return True
 
 
-# Note: dicts are unordered.
-# To improve readability, we can put the transition at the beginning.
-valid_transitions = [
-    {"metadata": "-", "review": "-", "pdf": "-"},
-    {"metadata": "NA>non_imported", "review": "NA>retrieved", "pdf": "-"},
-    # For local_paper_index: PDFs can be available from the start:
-    {"metadata": "NA>non_imported", "review": "NA>retrieved", "pdf": "NA>imported"},
-    {"metadata": "non_imported>imported", "review": "-", "pdf": "-"},
-    # For prepare --reset-ID:
-    {"metadata": "prepared>needs_manual_preparation", "review": "-", "pdf": "-"},
-    {"metadata": "imported>prepared", "review": "-", "pdf": "-"},
-    {"metadata": "imported>needs_manual_preparation", "review": "-", "pdf": "-"},
-    {"metadata": "needs_manual_preparation>prepared", "review": "-", "pdf": "-"},
-    {"metadata": "prepared>needs_manual_merging", "review": "-", "pdf": "-"},
-    {"metadata": "needs_manual_merging>processed", "review": "-", "pdf": "-"},
-    {"metadata": "prepared>processed", "review": "-", "pdf": "-"},
-    {"review": "retrieved>prescreen_excluded", "metadata": "-", "pdf": "-"},
-    {"review": "retrieved>prescreen_included", "metadata": "-", "pdf": "-"},
-    {"pdf": "NA>needs_retrieval", "metadata": "-", "review": "-"},
-    {"pdf": "needs_retrieval>needs_manual_retrieval", "metadata": "-", "review": "-"},
-    {"pdf": "needs_manual_retrieval>imported", "metadata": "-", "review": "-"},
-    {"pdf": "needs_retrieval>imported", "metadata": "-", "review": "-"},
-    {"pdf": "imported>needs_manual_preparation", "metadata": "-", "review": "-"},
-    {"pdf": "needs_manual_preparation>prepared", "metadata": "-", "review": "-"},
-    {"pdf": "imported>prepared", "metadata": "-", "review": "-"},
-    {"review": "prescreen_included>excluded", "metadata": "-", "pdf": "-"},
-    {"review": "prescreen_included>included", "metadata": "-", "pdf": "-"},
-    {"review": "included>synthesized", "metadata": "-", "pdf": "-"},
-    {"review": "prescreen_included>coded", "metadata": "-", "pdf": "-"},
-    {"review": "coded>synthesized", "metadata": "-", "pdf": "-"},
-]
-
-
-class ConsistencyError(Exception):
-    pass
-
-
 def retrieve_IDs_from_bib(file_path: str) -> list:
     assert file_path.endswith(".bib")
     IDs = []
@@ -690,15 +887,6 @@ def retrieve_IDs_from_bib(file_path: str) -> list:
                 IDs.append(ID)
             line = f.readline()
     return IDs
-
-
-def get_bib_files() -> list:
-    search_dir = os.path.join(os.getcwd(), "search/")
-    return [
-        os.path.join(search_dir, x)
-        for x in os.listdir(search_dir)
-        if x.endswith(".bib")
-    ]
 
 
 def read_next_record(file_object) -> str:
@@ -734,28 +922,22 @@ def retrieve_prior(MAIN_REFERENCES: str) -> dict:
         (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
         for commit in repo.iter_commits(paths=MAIN_REFERENCES)
     )
-    prior = {"rev_status": [], "md_status": [], "pdf_status": [], "persisted_IDs": []}
+    prior = {"status": [], "persisted_IDs": []}
     filecontents = list(revlist)[0][1]
     for record_string in read_next_record(io.StringIO(filecontents.decode("utf-8"))):
 
-        ID, rev_stat, md_stat, pdf_stat, origin = "NA", "NA", "NA", "NA", "NA"
+        ID, status, origin = "NA", "NA", "NA"
         for line in record_string.split("\n"):
             if "@" in line[:3]:
                 ID = line[line.find("{") + 1 : line.rfind(",")]
-            if "rev_status" == line.lstrip()[:10]:
-                rev_stat = line[line.find("{") + 1 : line.rfind("}")]
-            if "md_status" == line.lstrip()[:9]:
-                md_stat = line[line.find("{") + 1 : line.rfind("}")]
-            if "pdf_status" == line.lstrip()[:10]:
-                pdf_stat = line[line.find("{") + 1 : line.rfind("}")]
+            if "status" == line.lstrip()[:6]:
+                status = line[line.find("{") + 1 : line.rfind("}")]
             if "origin" == line.strip()[:6]:
                 origin = line[line.find("{") + 1 : line.rfind("}")]
         if "NA" != ID:
             for orig in origin.split(";"):
-                prior["rev_status"].append([orig, rev_stat])
-                prior["md_status"].append([orig, md_stat])
-                prior["pdf_status"].append([orig, pdf_stat])
-                if "processed" == md_stat:
+                prior["status"].append([orig, status])
+                if str(RecordState.md_processed) == status:
                     prior["persisted_IDs"].append([orig, ID])
 
         else:
@@ -766,45 +948,37 @@ def retrieve_prior(MAIN_REFERENCES: str) -> dict:
 def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
 
     data = {
-        "missing_pdf_status": [],
         "missing_file": [],
         "pdf_not_exists": [],
-        "metadata_status_fields": [],
-        "review_status_fields": [],
-        "pdf_status_fields": [],
+        "status_fields": [],
         "status_transitions": [],
         "start_states": [],
         "exclusion_criteria_list": [],
         "IDs": [],
         "entries_without_origin": [],
         "record_links_in_bib": [],
-        "status_inconsistencies": [],
         "persisted_IDs": [],
         "origin_list": [],
     }
 
     with open(MAIN_REFERENCES) as f:
         for record_string in read_next_record(f):
-            ID, file, rev_status, md_status, pdf_status, excl_crit, origin = (
-                "NA",
-                "NA",
+            ID, file, status, excl_crit, origin = (
                 "NA",
                 "NA",
                 "NA",
                 "not_set",
                 "NA",
             )
+            # TODO: this can be done more efficiently
+            # because we fixed the order of the first rows.
             for line in record_string.split("\n"):
                 if "@" in line[:3]:
                     ID = line[line.find("{") + 1 : line.rfind(",")]
                 if "file" == line.lstrip()[:4]:
                     file = line[line.find("{") + 1 : line.rfind("}")]
-                if "rev_status" == line.lstrip()[:10]:
-                    rev_status = line[line.find("{") + 1 : line.rfind("}")]
-                if "md_status" == line.lstrip()[:9]:
-                    md_status = line[line.find("{") + 1 : line.rfind("}")]
-                if "pdf_status" == line.lstrip()[:10]:
-                    pdf_status = line[line.find("{") + 1 : line.rfind("}")]
+                if "status" == line.lstrip()[:6]:
+                    status = line[line.find("{") + 1 : line.rfind("}")]
                 if "excl_criteria" == line.lstrip()[:13]:
                     excl_crit = line[line.find("{") + 1 : line.rfind("}")]
                 if "origin" == line.strip()[:6]:
@@ -819,7 +993,20 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
             for org in origin.split(";"):
                 data["origin_list"].append([ID, org])
 
-            if "processed" == md_status:
+            # TODO: determine succeeding states from state machine
+            if status in [
+                str(RecordState.md_processed),
+                str(RecordState.rev_prescreen_excluded),
+                str(RecordState.rev_prescreen_included),
+                str(RecordState.pdf_needs_manual_retrieval),
+                str(RecordState.pdf_imported),
+                str(RecordState.pdf_not_available),
+                str(RecordState.pdf_needs_manual_preparation),
+                str(RecordState.pdf_prepared),
+                str(RecordState.rev_excluded),
+                str(RecordState.rev_included),
+                str(RecordState.rev_synthesized),
+            ]:
                 for origin_part in origin.split(";"):
                     data["persisted_IDs"].append([origin_part, ID])
 
@@ -833,71 +1020,60 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
             else:
                 data["entries_without_origin"].append(ID)
 
-            state_tuple = [ID, rev_status, md_status, pdf_status]
-            if md_status != "processed" and rev_status != "retrieved":
-                data["status_inconsistencies"].append(state_tuple)
-            if pdf_status != "prepared" and rev_status in [
-                "included",
-                "excluded",
-                "coded",
-                "synthesized",
-            ]:
-                data["status_inconsistencies"].append(state_tuple)
+            data["status_fields"].append(status)
 
-            data["review_status_fields"].append(rev_status)
-            data["metadata_status_fields"].append(md_status)
-            data["pdf_status_fields"].append(pdf_status)
+            # TODO: determine succeeding states from state machine
+            # excluding pdf_not_available
+            file_required_status = [
+                str(RecordState.pdf_imported),
+                str(RecordState.pdf_needs_manual_preparation),
+                str(RecordState.pdf_prepared),
+                str(RecordState.rev_excluded),
+                str(RecordState.rev_included),
+                str(RecordState.rev_synthesized),
+            ]
 
-            if (" file  " in record_string) and (" pdf_status " not in record_string):
-                data["missing_pdf_status"].append(ID)
-            if (
-                (" file  " not in record_string)
-                and (" pdf_status " in record_string)
-                and not (
-                    "{needs_retrieval}" in record_string
-                    or "{needs_manual_retrieval}" in record_string
-                )
-            ):
+            if (" file  " not in record_string) and (status in file_required_status):
                 data["missing_file"].append(ID)
 
             if "not_set" != excl_crit:
-                ec_case = [ID, rev_status, excl_crit]
+                ec_case = [ID, status, excl_crit]
                 data["exclusion_criteria_list"].append(ec_case)
 
-            prior_rev_status = [
-                stat for (org, stat) in prior["rev_status"] if org in origin.split(";")
-            ]
-            # TODO: the origins of an record could be in multiple md_status
-            prior_md_status = [
-                stat for (org, stat) in prior["md_status"] if org in origin.split(";")
-            ]
-            prior_pdf_status = [
-                stat for (org, stat) in prior["pdf_status"] if org in origin.split(";")
-            ]
+            # TODO: the origins of an record could be in multiple status
+            if "status" in prior:
+                prior_status = [
+                    stat for (org, stat) in prior["status"] if org in origin.split(";")
+                ]
+            else:
+                prior_status = []
 
             status_transition = {}
-            status_transition[ID] = {}
-            st = status_transition[ID]
-            st["review"] = format_transition(prior_rev_status[0], rev_status)
-            st["metadata"] = format_transition(prior_md_status[0], md_status)
-            st["pdf"] = format_transition(prior_pdf_status[0], pdf_status)
+            if len(prior_status) == 0:
+                status_transition[ID] = "load"
+            else:
+                proc_transition = [
+                    x["trigger"]
+                    for x in Record.transitions
+                    if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
+                ]
+                if len(proc_transition) == 0 and prior_status[0] != status:
+                    data["start_states"].append(prior_status[0])
+                    if prior_status[0] not in [str(x) for x in RecordState]:
+                        raise StatusFieldValueError(ID, "status", prior_status[0])
+                    if status not in [str(x) for x in RecordState]:
+                        raise StatusFieldValueError(ID, "status", status)
 
-            if not (st["metadata"] == "-" and st["review"] == "-" and st["pdf"] == "-"):
-                start_state = (
-                    f"{ID}:{prior_md_status[0]}/"
-                    + f"{prior_rev_status[0]}/{prior_pdf_status[0]}"
-                )
-                data["start_states"].append(start_state)
+                    raise StatusTransitionError(
+                        f"invalid state transition ({ID}):"
+                        + f" {prior_status[0]} to {status}"
+                    )
+                status_transition[ID] = proc_transition
 
             data["status_transitions"].append(status_transition)
+            data["status_transitions"].append({"test_id": "dedupe"})
 
     return data
-
-
-class DuplicatesError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
 
 
 def check_main_references_duplicates(data: dict) -> None:
@@ -915,13 +1091,7 @@ def check_main_references_duplicates(data: dict) -> None:
     return
 
 
-class OriginError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-def check_main_references_origin(data: dict) -> None:
+def check_main_references_origin(prior: dict, data: dict) -> None:
     # Check whether each record has an origin
     if not len(data["entries_without_origin"]) == 0:
         raise OriginError(
@@ -929,14 +1099,20 @@ def check_main_references_origin(data: dict) -> None:
         )
 
     # Check for broken origins
+    search_dir = os.path.join(os.getcwd(), "search/")
+    bib_files = [
+        os.path.join(search_dir, x)
+        for x in os.listdir(search_dir)
+        if x.endswith(".bib")
+    ]
     all_record_links = []
-    for bib_file in get_bib_files():
+    for bib_file in bib_files:
         search_IDs = retrieve_IDs_from_bib(bib_file)
         bib_file = os.path.basename(bib_file)
         [all_record_links.append(bib_file + "/" + x) for x in search_IDs]
     delta = set(data["record_links_in_bib"]) - set(all_record_links)
     if len(delta) > 0:
-        raise OriginError(f"Broken origins: {delta}")
+        raise OriginError(f"broken origins: {delta}")
 
     # Check for non-unique origins
     origins = [x[1] for x in data["origin_list"]]
@@ -950,87 +1126,45 @@ def check_main_references_origin(data: dict) -> None:
                 raise OriginError(
                     f'Non-unique origin: origin="{org}" in record with ID={ID}'
                 )
+
+    # Check for removed origins
+    # TODO !!!!
+    # Raise an exception if origins were removed
+    # prior_origins = [x[0] for x in prior['status']]
+    # current_origins = [x[1] for x in data['origin_list']]
+    # print(len(prior_origins))
+    # print(len(current_origins))
+    # print(set(prior_origins).difference(set(current_origins)))
+    # print(set(current_origins).difference(set(prior_origins)))
+    # print(pp.pformat(prior))
+    # # print(pp.pformat(data))
+    # input('stop')
+    # for prior_origin, prior_id in prior["persisted_IDs"]:
+    #     # TBD: notify if the origin no longer exists?
+    #     for new_origin, new_id in data["persisted_IDs"]:
+    #         if new_origin == prior_origin:
+    #             if new_id != prior_id:
+    #                 logging.error(
+    #                     f"ID of processed record changed from {prior_id} to {new_id}"
+    #                 )
+    #                 check_propagated_IDs(prior_id, new_id)
+    #                 STATUS = FAIL
     return
-
-
-class FieldError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
 
 
 def check_main_references_status_fields(data: dict) -> None:
-
     # Check status fields
-    md_stat_schema = [
-        "non_imported",
-        "imported",
-        "needs_manual_preparation",
-        "prepared",
-        "needs_manual_merging",
-        "processed",
-    ]
-    md_stat_diff = set(data["metadata_status_fields"]).difference(md_stat_schema)
-    if md_stat_diff:
-        raise FieldError(f"md_status field(s) {md_stat_diff} not in {md_stat_schema}")
-
-    rev_stat_schema = [
-        "retrieved",
-        "prescreen_excluded",
-        "prescreen_included",
-        "excluded",
-        "included",
-        "coded",
-        "synthesized",
-    ]
-    rev_stat_diff = set(data["review_status_fields"]).difference(rev_stat_schema)
-    if rev_stat_diff:
-        raise FieldError(
-            f"rev_status field(s) {rev_stat_diff} not in {rev_stat_schema}"
-        )
-
-    pdf_stat_schema = [
-        "NA",
-        "needs_retrieval",
-        "needs_manual_retrieval",
-        "imported",
-        "not_available",
-        "needs_manual_preparation",
-        "prepared",
-    ]
-    pdf_stat_diff = set(data["pdf_status_fields"]).difference(pdf_stat_schema)
-    if pdf_stat_diff:
-        raise FieldError(
-            f"pdf_status field(s) {pdf_stat_diff} not in {pdf_stat_schema}"
-        )
-
-    if data["status_inconsistencies"]:
-        for status_inconsistency in data["status_inconsistencies"]:
-            raise FieldError(f"Inconsistent status fields: {status_inconsistency}")
-
+    status_schema = [str(x) for x in RecordState]
+    stat_diff = set(data["status_fields"]).difference(status_schema)
+    if stat_diff:
+        raise FieldError(f"status field(s) {stat_diff} not in {status_schema}")
     return
 
 
-class StatusTransitionError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
 def check_main_references_status_transitions(data: dict) -> None:
-
-    # Check transitions
-    for status_transition in data["status_transitions"]:
-        for id, transition in status_transition.items():
-            if transition not in valid_transitions:
-                raise StatusTransitionError(
-                    f"Invalid state transition for {id}: {transition}"
-                )
-
-    start_states = [x.split(":")[1] for x in data["start_states"]]
-    if len(set(start_states)) > 1:
+    if len(set(data["start_states"])) > 1:
         raise StatusTransitionError(
-            "Problem: multiple transitions from different "
+            "multiple transitions from different "
             f'start states ({set(data["start_states"])})'
         )
     return
@@ -1040,7 +1174,7 @@ def check_main_references_screen(data: dict) -> None:
 
     # Check screen
     # Note: consistency of inclusion_2=yes -> inclusion_1=yes
-    # is implicitly ensured through rev_status
+    # is implicitly ensured through status
     # (screen2-included/excluded implies prescreen included!)
 
     if data["exclusion_criteria_list"]:
@@ -1053,8 +1187,8 @@ def check_main_references_screen(data: dict) -> None:
             criteria = "NA"
             pattern = "^NA$"
             pattern_inclusion = "^NA$"
-        for [ID, rev_status, excl_crit] in data["exclusion_criteria_list"]:
-            # print([ID, rev_status, excl_crit])
+        for [ID, status, excl_crit] in data["exclusion_criteria_list"]:
+            # print([ID, status, excl_crit])
             if not re.match(pattern, excl_crit):
                 # Note: this should also catch cases of missing
                 # exclusion criteria
@@ -1063,7 +1197,7 @@ def check_main_references_screen(data: dict) -> None:
                     f"pattern: {excl_crit} ({ID}; criteria: {criteria})"
                 )
 
-            elif "excluded" == rev_status:
+            elif str(RecordState.rev_excluded) == status:
                 if "NA" == criteria:
                     if "NA" == excl_crit:
                         continue
@@ -1074,111 +1208,83 @@ def check_main_references_screen(data: dict) -> None:
                     logging.error(f"criteria: {criteria}")
                     raise FieldError(
                         "Excluded record with no exclusion_criterion violated: "
-                        f"{ID}, {rev_status}, {excl_crit}"
+                        f"{ID}, {status}, {excl_crit}"
                     )
 
             # Note: we don't have to consider the cases of
-            # rev_status=retrieved/prescreen_included/prescreen_excluded
+            # status=retrieved/prescreen_included/prescreen_excluded
             # because they would not have exclusion_criteria.
             else:
                 if not re.match(pattern_inclusion, excl_crit):
                     raise FieldError(
                         "Included record with exclusion_criterion satisfied: "
-                        f"{ID}, {rev_status}, {excl_crit}"
+                        f"{ID}, {status}, {excl_crit}"
                     )
     return
 
 
-def check_main_references_files(data: dict, MAIN_REFERENCES: str) -> None:
+def check_main_references_files(data: dict) -> None:
 
     # Check pdf files
-    if len(data["missing_pdf_status"]) > 0:
-        logging.error(f'Entries with missing pdf_status: {data["missing_pdf_status"]}')
-        temp = MAIN_REFERENCES.replace(".bib", "_temp.bib")
-        os.rename(MAIN_REFERENCES, temp)
-        with open(temp) as f, open(MAIN_REFERENCES, "w") as m:
-            for record_string in read_next_record(f):
-                for line in record_string.split("\n"):
-                    if " file  " in line:
-                        line = line + "\n  pdf_status = {imported},\n"
-                    m.write(line)
-        os.remove(temp)
-        raise FieldError(
-            "Added pdf_status information. Use git add and commit changes."
-        )
-
     if len(data["missing_file"]) > 0:
         raise FieldError(
-            f'Entries with pdf_status but missing file: {data["missing_file"]}'
+            "record with status requiring a PDF file but missing "
+            + f'the path (file = ...): {data["missing_file"]}'
         )
 
     if len(data["pdf_not_exists"]) > 0:
-        raise FieldError(f'Entries with broken file link: {data["pdf_not_exists"]}')
+        raise FieldError(f'record with broken file link: {data["pdf_not_exists"]}')
 
     return
 
 
-class RecordSourceTagError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
 def check_new_record_source_tag(MANUSCRIPT: str) -> None:
-
-    tag_found = False
     with open(MANUSCRIPT) as f:
         for line in f:
             if "<!-- NEW_RECORD_SOURCE -->" in line:
-                tag_found = True
-    if not tag_found:
-        raise RecordSourceTagError(
-            "Did not find <!-- NEW_RECORD_SOURCE --> tag in {MANUSCRIPT}"
-        )
+                return
+    raise ManuscriptRecordSourceTagError(
+        "Did not find <!-- NEW_RECORD_SOURCE --> tag in {MANUSCRIPT}"
+    )
+
+
+def check_update_synthesized_status(REVIEW_MANAGER) -> None:
+    from review_template import data
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    data.update_synthesized_status(REVIEW_MANAGER, bib_db)
 
     return
 
 
 # def check_screen_data(screen, data):
 #     # Check consistency: data -> inclusion_2
-
-#     global STATUS
 #     data_IDs = data['ID'].tolist()
 #     screen_IDs = \
 #         screen['ID'][screen['inclusion_2'] == 'yes'].tolist()
-
 #     violations = [ID for ID in set(
 #         data_IDs) if ID not in set(screen_IDs)]
 #     if len(violations) != 0:
-#         print('IDs in DATA not coded as inclusion_2=yes: ' +
+#         raise some error ('IDs in DATA not coded as inclusion_2=yes: ' +
 #               f'{violations}')
-#         STATUS = FAIL
-
 #     return
 
 
 # def check_duplicates_data(data):
 #     # Check whether there are duplicate IDs in data.csv
-
-#     global STATUS
 #     if not data['ID'].is_unique:
-#         print(data[data.duplicated(['ID'])].ID.tolist())
-#         STATUS = FAIL
-
+#         raise some error (data[data.duplicated(['ID'])].ID.tolist())
 #     return
 
 
 # def check_id_integrity_data(data, IDs):
 #     # Check consistency: all IDs in data.csv in references.bib
-
-#     global STATUS
 #     missing_IDs = [ID for
-#                              ID in data['ID'].tolist()
-#                              if ID not in IDs]
+#                    ID in data['ID'].tolist()
+#                    if ID not in IDs]
 #     if not len(missing_IDs) == 0:
-#         print('IDs in data.csv not in MAIN_REFERENCES: ' +
+#         raise some error ('IDs in data.csv not in MAIN_REFERENCES: ' +
 #               str(set(missing_IDs)))
-#         STATUS = FAIL
 #     return
 
 
@@ -1232,15 +1338,11 @@ def check_propagated_IDs(prior_id: str, new_id: str) -> None:
     return notifications
 
 
-class PropagatedIDChange(Exception):
-    def __init__(self, notifications):
-        self.message = "\n".join(notifications)
-        super().__init__(self.message)
-
-
 def check_persisted_ID_changes(prior: dict, data: dict) -> None:
     for prior_origin, prior_id in prior["persisted_IDs"]:
-        # TBD: notify if the origin no longer exists?
+        if prior_origin not in [x[0] for x in data["persisted_IDs"]]:
+            # Note: this does not catch origins removed before md_processed
+            raise OriginError(f"origin removed: {prior_origin}")
         for new_origin, new_id in data["persisted_IDs"]:
             if new_origin == prior_origin:
                 if new_id != prior_id:
@@ -1252,55 +1354,10 @@ def check_persisted_ID_changes(prior: dict, data: dict) -> None:
     return
 
 
-def check_origin_removed(prior: dict, data: dict) -> None:
-    # TODO !!!!
-    # Raise an exception if origins were removed
-    # prior_origins = [x[0] for x in prior['md_status']]
-    # current_origins = [x[1] for x in data['origin_list']]
-    # print(len(prior_origins))
-    # print(len(current_origins))
-    # print(set(prior_origins).difference(set(current_origins)))
-    # print(set(current_origins).difference(set(prior_origins)))
-    # print(pp.pformat(prior))
-    # # print(pp.pformat(data))
-    # input('stop')
-    # for prior_origin, prior_id in prior["persisted_IDs"]:
-    #     # TBD: notify if the origin no longer exists?
-    #     for new_origin, new_id in data["persisted_IDs"]:
-    #         if new_origin == prior_origin:
-    #             if new_id != prior_id:
-    #                 logging.error(
-    #                     f"ID of processed record changed from {prior_id} to {new_id}"
-    #                 )
-    #                 check_propagated_IDs(prior_id, new_id)
-    #                 STATUS = FAIL
-    return
+def check_search_details(REVIEW_MANAGER) -> None:
+    SEARCH_DETAILS = REVIEW_MANAGER.paths["SEARCH_DETAILS"]
+    search_type_opts = REVIEW_MANAGER.search_type_opts
 
-
-class SearchDetailsMissingError(Exception):
-    def __init__(
-        self,
-        search_results_path,
-    ):
-        self.search_results_path = search_results_path
-        self.message = (
-            "Search results path "
-            + f"({os.path.basename(self.search_results_path)}) "
-            + "is not in search_details.yaml"
-        )
-        super().__init__(self.message)
-
-
-class SearchDetailsError(Exception):
-    def __init__(
-        self,
-        msg,
-    ):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-def check_search_details(SEARCH_DETAILS: str, search_type_opts: list) -> None:
     if not os.path.exists(SEARCH_DETAILS):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), SEARCH_DETAILS)
 
@@ -1368,13 +1425,9 @@ def check_search_details(SEARCH_DETAILS: str, search_type_opts: list) -> None:
     return
 
 
-class RawSearchChangedError(Exception):
-    def __init__(self, path):
-        self.message = f"revert changes to raw search results: {path}"
-        super().__init__(self.message)
-
-
 def check_raw_search_unchanged() -> None:
+    if not os.path.exists("search"):
+        return
     search_files = [os.path.join("search", x) for x in os.listdir("search")]
     repo = git.Repo()
     revlist = (commit.tree for commit in repo.iter_commits())
@@ -1389,55 +1442,6 @@ def check_raw_search_unchanged() -> None:
             search_file in changedFiles or search_file in changedFilesWTree
         ):
             raise RawSearchChangedError(search_file)
-    return
-
-
-class MissingDependencyError(Exception):
-    def __init__(self, dep):
-        self.message = f"please install {dep}"
-        super().__init__(self.message)
-
-
-def check_git_installed() -> None:
-    try:
-        null = open("/dev/null", "w")
-        subprocess.Popen("git", stdout=null, stderr=null)
-        null.close()
-    except OSError:
-        pass
-        raise MissingDependencyError("git")
-    return
-
-
-def check_docker_installed() -> None:
-    try:
-        null = open("/dev/null", "w")
-        subprocess.Popen("docker", stdout=null, stderr=null)
-        null.close()
-    except OSError:
-        pass
-        raise MissingDependencyError("docker")
-    return
-
-
-class GitConflictError(Exception):
-    def __init__(self, path):
-        self.message = f"please resolve git conflict in {path}"
-        super().__init__(self.message)
-
-
-def check_git_conflicts() -> None:
-    # Note: when check is called directly from the command line.
-    # pre-commit hooks automatically notify on merge conflicts
-
-    repo = git.Repo()
-    unmerged_blobs = repo.index.unmerged_blobs()
-
-    for path in unmerged_blobs:
-        list_of_blobs = unmerged_blobs[path]
-        for (stage, blob) in list_of_blobs:
-            if stage != 0:
-                raise GitConflictError(path)
     return
 
 
@@ -1463,31 +1467,25 @@ class ReviewManager:
 
     notified_next_process = None
 
-    def __init__(self, path: str = None, debug_mode: bool = False):
+    def __init__(self, path: str = None):
         if path is not None:
             self.path = path
         else:
             self.path = os.getcwd()
 
         self.__git_repo = git.Repo()
-        self.config = self.load_config()
-        self.paths = dict(
-            MAIN_REFERENCES="references.bib",
-            DATA="data.yaml",
-            PDF_DIRECTORY="pdfs/",
-            SEARCH_DETAILS="search_details.yaml",
-            MANUSCRIPT="paper.md",
-        )
+        self.paths = file_paths
+        self.config = self.__load_config()
+        # self.config["DEBUG_MODE"] = debug_mode
         self.search_details = self.load_search_details()
 
-        if debug_mode is not None:
-            self.config["DEBUG_MODE"] = debug_mode
-
-        self.logger = logging.getLogger("review_manager")
+        # self.logger = logging.getLogger("review_manager")
         if self.config["DEBUG_MODE"]:
-            self.logger.setLevel(logging.DEBUG)
+            self.logger = setup_logger(logging.DEBUG)
+            # self.logger.setLevel(logging.DEBUG)
         else:
-            self.logger.setLevel(logging.INFO)
+            self.logger = setup_logger(logging.INFO)
+            # self.logger.setLevel(logging.INFO)
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
@@ -1502,13 +1500,13 @@ class ReviewManager:
         self.logger.debug(f"config: {pp.pformat(self.config)}")
         self.logger.debug(f"paths: {pp.pformat(self.paths)}")
 
-    def load_config(self):
+    def __load_config(self):
         local_config = configparser.ConfigParser()
         confs = []
-        if os.path.exists("shared_config.ini"):
-            confs.append("shared_config.ini")
-        if os.path.exists("private_config.ini"):
-            confs.append("private_config.ini")
+        if os.path.exists(self.paths["SHARED_CONFIG"]):
+            confs.append(self.paths["SHARED_CONFIG"])
+        if os.path.exists(self.paths["PRIVATE_CONFIG"]):
+            confs.append(self.paths["PRIVATE_CONFIG"])
         local_config.read(confs)
         config = dict(
             REPO_SETUP_VERSION=local_config.get(
@@ -1547,73 +1545,93 @@ class ReviewManager:
         )
         return config
 
-    def format_main_references(self):
-        bib_db = self.load_main_refs()
-        self.update_status_yaml()
-        self.save_bib_file(bib_db)
-        return
-
-    def format_references(self):
-
-        from review_template.review_manager import ProcessType
-        from review_template.review_manager import Process
-
-        MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
-        if not os.path.exists(MAIN_REFERENCES):
-            return False
-
-        format = Process(ProcessType.format, self.format_main_references)
-        self.notify(format)
-        self.format_main_references()
-
-        if MAIN_REFERENCES in [
-            entry.a_path for entry in self.__git_repo.index.diff(None)
-        ]:
-            return True
-        else:
-            return False
-
+    # Entrypoint for the pre-commit hooks
     def check_repo(self):
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.
 
         # We work with exceptions because each issue may be raised in different checks.
-
+        self.notified_next_process = "check"
         PASS, FAIL = 0, 1
+        check_scripts = [
+            {"script": check_git_installed, "params": []},
+            {"script": check_docker_installed, "params": []},
+            {"script": check_git_conflicts, "params": []},
+            {"script": check_repository_setup, "params": self},
+            {"script": check_raw_search_unchanged, "params": []},
+        ]
+
+        if not os.path.exists(self.paths["MAIN_REFERENCES"]):
+            self.logger.debug("Checks for MAIN_REFERENCES not activated")
+        else:
+            # Note : retrieving data once is more efficient than
+            # reading the MAIN_REFERENCES multiple times (for each check)
+            prior = retrieve_prior(self.paths["MAIN_REFERENCES"])
+            self.logger.debug("prior")
+            self.logger.debug(pp.pformat(prior))
+            data = retrieve_data(prior, self.paths["MAIN_REFERENCES"])
+            self.logger.debug("data")
+            self.logger.debug(pp.pformat(data))
+
+            main_refs_checks = [
+                {"script": check_persisted_ID_changes, "params": [prior, data]},
+                {"script": check_search_details, "params": self},
+                {"script": check_main_references_duplicates, "params": data},
+                {"script": check_main_references_origin, "params": [prior, data]},
+                {"script": check_main_references_status_fields, "params": data},
+                {"script": check_main_references_status_transitions, "params": data},
+                {"script": check_main_references_screen, "params": data},
+                {"script": check_main_references_files, "params": data},
+            ]
+            check_scripts += main_refs_checks
+            self.logger.debug("Checks for MAIN_REFERENCES activated")
+
+            MANUSCRIPT = self.paths["MANUSCRIPT"]
+            if not os.path.exists(MANUSCRIPT):
+                self.logger.debug("Checks for MANUSCRIPT not activated\n")
+            else:
+                manuscript_checks = [
+                    {
+                        "script": check_new_record_source_tag,
+                        "params": MANUSCRIPT,
+                    },
+                    {
+                        "script": check_update_synthesized_status,
+                        "params": [self],
+                    },
+                ]
+                check_scripts += manuscript_checks
+                self.logger.debug("Checks for MANUSCRIPT activated\n")
+
+            # TODO: checks for structured data
+            # See functions in comments
+            # if os.path.exists(DATA):
+            #     data = pd.read_csv(DATA, dtype=str)
+            #     check_duplicates_data(data)
+            # check_screen_data(screen, data)
+            # DATA = repo_setup.paths['DATA']
 
         try:
-            check_git_installed()
-            check_docker_installed()
-            check_git_conflicts()
 
-            check_raw_search_unchanged()
-            if os.path.exists(self.paths["MAIN_REFERENCES"]):
-                prior = retrieve_prior(self.paths["MAIN_REFERENCES"])
-                data = retrieve_data(prior, self.paths["MAIN_REFERENCES"])
-                check_persisted_ID_changes(prior, data)
-                check_origin_removed(prior, data)
+            for check_script in check_scripts:
+                if [] == check_script["params"]:
+                    self.logger.debug(f'{check_script["script"].__name__}() called')
+                    check_script["script"]()
+                else:
+                    # TODO
+                    # if type(check_script["params"]) != list:
+                    #     param_names = check_script["params"]
+                    # else:
+                    #     param_names = [x.__name__ for x in check_script["params"]]
+                    self.logger.debug(
+                        f'{check_script["script"].__name__}(params) called'
+                    )
+                    if type(check_script["params"]) == list:
+                        check_script["script"](*check_script["params"])
+                    else:
+                        check_script["script"](check_script["params"])
+                self.logger.debug(f'{check_script["script"].__name__}: passed\n')
 
-                check_search_details(
-                    self.paths["SEARCH_DETAILS"], self.search_type_opts
-                )
-                check_main_references_duplicates(data)
-                check_main_references_origin(data)
-                check_main_references_status_fields(data)
-                check_main_references_status_transitions(data)
-                check_main_references_screen(data)
-                check_main_references_files(data, self.paths["MAIN_REFERENCES"])
-
-                MANUSCRIPT = self.paths["MANUSCRIPT"]
-                if os.path.exists(MANUSCRIPT):
-                    check_new_record_source_tag(MANUSCRIPT)
-
-                # TODO: checks for structured data
-                # See functions in comments
-                # if os.path.exists(DATA):
-                #     data = pd.read_csv(DATA, dtype=str)
-                #     check_duplicates_data(data)
-                # check_screen_data(screen, data)
-                # DATA = repo_setup.paths['DATA']
         except (
             MissingDependencyError,
             GitConflictError,
@@ -1623,21 +1641,67 @@ class ReviewManager:
             OriginError,
             FieldError,
             StatusTransitionError,
-            RecordSourceTagError,
+            ManuscriptRecordSourceTagError,
+            UnstagedGitChangesError,
+            StatusFieldValueError,
         ) as e:
             pass
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
         return {"status": PASS, "msg": "Everything ok."}
 
+    def report(self, msg_file):
+        update = False
+        with open(msg_file) as f:
+            contents = f.read()
+            if "Command" not in contents:
+                update = True
+        with open(msg_file, "w") as f:
+            f.write(contents)
+            # Don't append if it's already there
+            if update:
+                report = self.__get_commit_report("MANUAL", saved_args=None)
+                f.write(report)
+
+        return {"msg": "TODO", "status": 0}
+
+    def __format_main_references(self):
+        bib_db = self.load_main_refs()
+        self.update_status_yaml()
+        self.save_bib_file(bib_db)
+        return
+
+    # Entrypoint for the pre-commit hooks
+    def format_references(self):
+        from review_template.review_manager import ProcessType
+        from review_template.review_manager import Process
+
+        PASS, FAIL = 0, 1
+        MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
+        if not os.path.exists(MAIN_REFERENCES):
+            return {"status": PASS, "msg": "Everything ok."}
+
+        try:
+            format = Process(ProcessType.format, self.__format_main_references)
+            self.notify(format)
+            self.__format_main_references()
+        except (UnstagedGitChangesError, StatusFieldValueError) as e:
+            pass
+            return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
+
+        if MAIN_REFERENCES in [r.a_path for r in self.__git_repo.index.diff(None)]:
+            return {"status": FAIL, "msg": "references formatted"}
+        else:
+            return {"status": PASS, "msg": "Everything ok."}
+
     def notify(self, process: Process):
-        self.check_precondition(process)
+        self.__check_precondition(process)
 
     def get_repo(self):
         if self.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
         return self.__git_repo
 
-    def load_main_refs(self, init: bool = None) -> BibDatabase:
+    def load_main_refs(self, init: bool = False) -> BibDatabase:
 
         if self.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
@@ -1645,9 +1709,6 @@ class ReviewManager:
         from bibtexparser.bibdatabase import BibDatabase
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
-
-        if init is None:
-            init = False
 
         MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
 
@@ -1658,6 +1719,13 @@ class ReviewManager:
                     ignore_nonstandard_types=False,
                     common_strings=True,
                 ).parse_file(target_db, partial=True)
+
+                # Cast status to Enum
+                bib_db.entries = [
+                    {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
+                    for r in bib_db.entries
+                ]
+
         else:
             if init:
                 bib_db = BibDatabase()
@@ -1682,6 +1750,14 @@ class ReviewManager:
             for record_header_str in self.read_next_record_header_str()
         ]
 
+    def get_record_header_list(self):
+        if not os.path.exists(self.paths["MAIN_REFERENCES"]):
+            return []
+        return [
+            get_record_header_item(record_header_str)
+            for record_header_str in self.read_next_record_header_str()
+        ]
+
     def get_states_set(self, record_state_list: list = None):
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
             return set()
@@ -1689,10 +1765,12 @@ class ReviewManager:
             record_state_list = self.get_record_state_list()
         return {el[1] for el in record_state_list}
 
-    def check_precondition(self, process):
-        # Special case (not in state model):
+    def __check_precondition(self, process):
+        # TODO : currently a special case (not in state model):
         if process.type.name in ["format"]:
-            require_clean_repo_general(ignore_pattern=self.paths["MAIN_REFERENCES"])
+            # require_clean_repo_general(ignore_pattern=self.paths["MAIN_REFERENCES"])
+            # PDFs etc. can be modified!
+            pass
         else:
             # perform a transition in the Record (state model)
             # to call the corresponding condition check
@@ -1714,14 +1792,12 @@ class ReviewManager:
             f"ReviewManager: check_precondition({function_name}, "
             + f"a {process.type.name} process)"
         )
-        self.check_precondition(process)
+        self.__check_precondition(process)
         self.logger.info(f"ReviewManager: run {function_name}()")
         process.run(self, *args)
-        if self.__git_repo.is_dirty():
-            raise DirtyRepoAfterProcessingError
         self.notified_next_process = None
 
-    def get_commit_report(
+    def __get_commit_report(
         self, script_name: str = None, saved_args: dict = None
     ) -> str:
         from review_template import status
@@ -1729,12 +1805,16 @@ class ReviewManager:
         report = "\n\nReport\n\n"
 
         if script_name is not None:
-            script_name = (
-                script_name.split(" ")[0]
-                + " "
-                + script_name.split(" ")[1].replace("_", "-")
-            )
-            report = report + f"Command\n   {script_name}\n"
+            if "MANUAL" == script_name:
+                report = report + "Commit created manually or by external script\n\n"
+            elif " " in script_name:
+                script_name = (
+                    script_name.split(" ")[0]
+                    + " "
+                    + script_name.split(" ")[1].replace("_", "-")
+                )
+
+                report = report + f"Command\n   {script_name}\n"
         if saved_args is not None:
             repo = None
             for k, v in saved_args.items():
@@ -1748,7 +1828,7 @@ class ReviewManager:
                 # TODO: should we do anything with the bib_db?
             if not repo:
                 try:
-                    repo = git.Repo("").head.commit.hexsha
+                    repo = self.__git_repo.head.commit.hexsha
                 except ValueError:
                     pass
             # Note: this allows users to see whether the commit was changed!
@@ -1775,9 +1855,15 @@ class ReviewManager:
             + "version "
             + sys_v[: sys_v.find(" ")]
         )
-        gitv = git.Repo().git
-        git_v = gitv.execute(["git", "--version"])
-        report = report + "\n   - Git:".ljust(33, " ") + git_v.replace("git ", "")
+
+        stream = os.popen("git --version")
+        git_v = stream.read()
+        # git_v = git.Git.execute(["git", "--version"])
+        report = (
+            report
+            + "\n   - Git:".ljust(33, " ")
+            + git_v.replace("git ", "").replace("\n", "")
+        )
         stream = os.popen("docker --version")
         docker_v = stream.read()
         report = (
@@ -1788,20 +1874,23 @@ class ReviewManager:
         if script_name is not None:
             ext_script = script_name.split(" ")[0]
             if ext_script != "review_template":
-                script_version = version(ext_script)
-                report = (
-                    report
-                    + f"\n   - {ext_script}:".ljust(33, " ")
-                    + "version "
-                    + script_version
-                )
+                try:
+                    script_version = version(ext_script)
+                    report = (
+                        report
+                        + f"\n   - {ext_script}:".ljust(33, " ")
+                        + "version "
+                        + script_version
+                    )
+                except importlib.metadata.PackageNotFoundError:
+                    pass
 
         if "dirty" in report:
             report = (
                 report + "\n    * created with a modified version (not reproducible)"
             )
 
-        repo = git.Repo("")
+        repo = self.__git_repo
         tree_hash = repo.git.execute(["git", "write-tree"])
         if os.path.exists(self.paths["MAIN_REFERENCES"]):
             report = report + f"\n\nCertified properties for tree {tree_hash}\n"
@@ -1853,7 +1942,7 @@ class ReviewManager:
 
         return report
 
-    def get_version_flag(self) -> str:
+    def __get_version_flag(self) -> str:
         flag = ""
         if "dirty" in version("review_template"):
             flag = "*"
@@ -1898,6 +1987,7 @@ class ReviewManager:
                         "[INFO] Continuing batch ",
                         "[INFO] Load references.bib",
                         "[INFO] Calculate statistics",
+                        "[INFO] ReviewManager: run ",
                     ]
                 ):
                     firsts.append(line)
@@ -1985,15 +2075,14 @@ class ReviewManager:
 
             self.__git_repo.index.commit(
                 msg
-                + self.get_version_flag()
-                + self.get_commit_report(f"{script}", saved_args)
+                + self.__get_version_flag()
+                + self.__get_commit_report(f"{script}", saved_args)
                 + processing_report,
                 author=git_author,
                 committer=git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"]),
                 skip_hooks=hook_skipping,
             )
             self.logger.info("Created commit")
-            self.notified_next_process = None
             self.reset_log()
             if self.__git_repo.is_dirty():
                 raise DirtyRepoAfterProcessingError
@@ -2004,7 +2093,7 @@ class ReviewManager:
     def set_IDs(self, bib_db: BibDatabase) -> BibDatabase:
         ID_list = [record["ID"] for record in bib_db.entries]
         for record in bib_db.entries:
-            if record["md_status"] in ["imported", "prepared"]:
+            if record["status"] in [RecordState.md_imported, RecordState.md_prepared]:
                 old_id = record["ID"]
                 new_id = self.generate_ID_blacklist(
                     record, ID_list, record_in_bib_db=True, raise_error=False
@@ -2173,29 +2262,6 @@ class ReviewManager:
             )
         return
 
-    def get_bib_files(self) -> None:
-        search_dir = os.path.join(os.getcwd(), "search/")
-        return [
-            os.path.join(search_dir, x)
-            for x in os.listdir(search_dir)
-            if x.endswith(".bib")
-        ]
-
-    def get_nr_in_bib(self, file_path: str) -> int:
-
-        number_in_bib = 0
-        with open(file_path) as f:
-            line = f.readline()
-            while line:
-                # Note: the '﻿' occured in some bibtex files
-                # (e.g., Publish or Perish exports)
-                if line.replace("﻿", "").lstrip()[:1] == "@":
-                    if not "@comment" == line.replace("﻿", "").lstrip()[:8].lower():
-                        number_in_bib += 1
-                line = f.readline()
-
-        return number_in_bib
-
     def save_bib_file(self, bib_db: BibDatabase, target_file: str = None) -> None:
 
         if target_file is None:
@@ -2206,15 +2272,15 @@ class ReviewManager:
         except ValueError:
             pass
 
+        # Casting to string (in particular the RecordState Enum)
+        bib_db.entries = [{k: str(v) for k, v in r.items()} for r in bib_db.entries]
+
         bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
         with open(target_file, "w") as out:
             out.write(bibtex_str)
 
         return
-
-    def require_clean_repo(self, ignore_pattern: str = None) -> bool:
-        return require_clean_repo_general(self.__git_repo, ignore_pattern)
 
     def build_docker_images(self) -> None:
 
@@ -2225,11 +2291,11 @@ class ReviewManager:
             item[: item.find(":")] for sublist in repo_tags for item in sublist
         ]
 
-        if "bibself" not in repo_tags:
-            self.logger.info("Building bibself Docker image...")
-            filedata = pkgutil.get_data(__name__, "../docker/bibself/Dockerfile")
+        if "bibutils" not in repo_tags:
+            self.logger.info("Building bibutils Docker image...")
+            filedata = pkgutil.get_data(__name__, "../docker/bibutils/Dockerfile")
             fileobj = io.BytesIO(filedata)
-            client.images.build(fileobj=fileobj, tag="bibself:latest")
+            client.images.build(fileobj=fileobj, tag="bibutils:latest")
 
         if "lfoppiano/grobid" not in repo_tags:
             self.logger.info("Pulling grobid Docker image...")
@@ -2244,10 +2310,8 @@ class ReviewManager:
         return
 
     def read_next_record_header_str(
-        self, file_object=None, HEADER_LENGTH: int = None
+        self, file_object=None, HEADER_LENGTH: int = 9
     ) -> str:
-        if HEADER_LENGTH is None:
-            HEADER_LENGTH = 9
         if file_object is None:
             file_object = open(self.paths["MAIN_REFERENCES"])
         data = ""
@@ -2293,12 +2357,95 @@ class ReviewManager:
                 data = line
         yield data
 
-    def read_next_record(self) -> dict:
+    def read_next_record(self, conditions: dict = None) -> dict:
         records = []
         with open(self.paths["MAIN_REFERENCES"]) as f:
             for record_string in self.read_next_record_str(f):
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 record = db.entries[0]
-                records.append(record)
+                if conditions is not None:
+                    for key, value in conditions.items():
+                        if str(value) == str(record[key]):
+                            records.append(record)
+                else:
+                    records.append(record)
         yield from records
+
+    def replace_field(self, ID, key: str, val: str) -> None:
+
+        val = val.encode("utf-8")
+        current_ID = "NA"
+        with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
+            seekpos = fd.tell()
+            line = fd.readline()
+            while line:
+                if b"@" in line[:3]:
+                    current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
+                    current_ID = current_ID.decode("utf-8")
+
+                replacement = None
+                if current_ID == ID:
+                    if line.lstrip()[: len(key)].decode("utf-8") == key:
+                        replacement = line[: line.find(b"{") + 1] + val + b"},\n"
+
+                # if replacement == ":q": # for manual replacing
+                #     break
+                if replacement:
+                    if len(replacement) == len(line):
+                        fd.seek(seekpos)
+                        fd.write(replacement)
+                        fd.flush()
+                        os.fsync(fd)
+                    else:
+                        remaining = fd.read()
+                        fd.seek(seekpos)
+                        fd.write(replacement)
+                        seekpos = fd.tell()
+                        fd.flush()
+                        os.fsync(fd)
+                        fd.write(remaining)
+                        fd.truncate()  # if the replacement is shorter...
+                        fd.seek(seekpos)
+                        line = fd.readline()
+                    return  # We only need to replace once
+                seekpos = fd.tell()
+                line = fd.readline()
+        return
+
+    def replace_record_by_ID(self, new_record: dict) -> None:
+
+        ID = new_record["ID"]
+        new_record["status"] = str(new_record["status"])
+        bib_db = BibDatabase()
+        bib_db.entries = [new_record]
+        replacement = bibtexparser.dumps(bib_db, get_bibtex_writer())
+
+        current_ID = "NA"
+        with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
+            seekpos = fd.tell()
+            line = fd.readline()
+            while line:
+                if b"@" in line[:3]:
+                    current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
+                    current_ID = current_ID.decode("utf-8")
+
+                if current_ID == ID:
+                    line = fd.readline()
+                    while b"@" not in line[:3]:  # replace: drop the current record
+                        line = fd.readline()
+                    remaining = line + fd.read()
+                    fd.seek(seekpos)
+                    fd.write(replacement.encode("utf-8"))
+                    seekpos = fd.tell()
+                    fd.flush()
+                    os.fsync(fd)
+                    fd.write(remaining)
+                    fd.truncate()  # if the replacement is shorter...
+                    fd.seek(seekpos)
+                    line = fd.readline()
+                    return
+
+                seekpos = fd.tell()
+                line = fd.readline()
+        return

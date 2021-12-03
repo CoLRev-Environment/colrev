@@ -6,12 +6,14 @@ import requests
 
 import docker
 
+logger = logging.getLogger("review_template")
+
 
 def main(REVIEW_MANAGER) -> None:
 
     if not os.path.exists("paper.md"):
-        logging.error("File paper.md does not exist.")
-        logging.info("Complete processing and use review_template data")
+        logger.error("File paper.md does not exist.")
+        logger.info("Complete processing and use review_template data")
         return
 
     REVIEW_MANAGER.build_docker_images()
@@ -48,7 +50,7 @@ def main(REVIEW_MANAGER) -> None:
     client = docker.from_env()
     try:
         pandoc_u_latex_image = "pandoc/ubuntu-latex:2.14"
-        logging.info(
+        logger.info(
             "Running docker container created from " f"image {pandoc_u_latex_image}"
         )
 
@@ -59,7 +61,7 @@ def main(REVIEW_MANAGER) -> None:
             volumes=[os.getcwd() + ":/data"],
         )
     except docker.errors.ImageNotFound:
-        logging.error("Docker image not found")
+        logger.error("Docker image not found")
         return
         pass
 

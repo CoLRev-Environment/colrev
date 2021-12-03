@@ -10,7 +10,10 @@ from pdfminer.high_level import extract_text
 
 from review_template import dedupe
 from review_template import grobid_client
-from review_template import load
+from review_template import tei_tools
+from review_template.review_manager import RecordState
+
+logger = logging.getLogger("review_template")
 
 # https://github.com/ContentMine/getpapers
 
@@ -80,30 +83,33 @@ def get_pdf_from_unpaywall(record: dict) -> dict:
                 with open(pdf_filepath, "wb") as f:
                     f.write(res.content)
                 if is_pdf(pdf_filepath):
-                    logging.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
+                    logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
                 else:
                     os.remove(pdf_filepath)
             else:
-                logging.info("Unpaywall retrieval error " f"{res.status_code}/{url}")
+                logger.info("Unpaywall retrieval error " f"{res.status_code}/{url}")
     return record
 
 
-def link_pdf(record: dict) -> dict:
+def link_pdf(
+    record: dict, PDF_DIRECTORY: str, set_needs_man_retrieval: bool = True
+) -> dict:
     global PAD
     if "PAD" not in globals():
         PAD = 40
     pdf_filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
-    if os.path.exists(pdf_filepath):
-        record.update(pdf_status="imported")
+    if os.path.exists(pdf_filepath) and pdf_filepath != record.get("file", "NA"):
+        record.update(status=RecordState.pdf_imported)
         record.update(file=pdf_filepath)
-        logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
+        logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
     else:
-        record.update(pdf_status="needs_manual_retrieval")
+        if set_needs_man_retrieval:
+            record.update(status=RecordState.pdf_needs_manual_retrieval)
     return record
 
 
 def retrieve_pdf(record: dict) -> dict:
-    if "needs_retrieval" != record.get("pdf_status", "NA"):
+    if RecordState.rev_prescreen_included != record["status"]:
         return record
 
     with current_batch_counter.get_lock():
@@ -115,12 +121,12 @@ def retrieve_pdf(record: dict) -> dict:
     retrieval_scripts = {"get_pdf_from_unpaywall": get_pdf_from_unpaywall}
 
     for retrieval_script in retrieval_scripts:
-        logging.debug(f'{retrieval_script}({record["ID"]}) called')
+        logger.debug(f'{retrieval_script}({record["ID"]}) called')
         record = retrieval_scripts[retrieval_script](record)
 
     record = get_pdf_from_unpaywall(record)
 
-    record = link_pdf(record)
+    record = link_pdf(record, PDF_DIRECTORY)
 
     return record
 
@@ -128,9 +134,9 @@ def retrieve_pdf(record: dict) -> dict:
 def get_missing_records(bib_db: BibDatabase) -> BibDatabase:
     missing_records = BibDatabase()
     for record in bib_db.entries:
-        if record.get("pdf_status", "NA") in [
-            "needs_retrieval",
-            "needs_manual_retrieval",
+        if record["status"] in [
+            RecordState.rev_prescreen_included,
+            RecordState.pdf_needs_manual_retrieval,
         ]:
             missing_records.entries.append(record)
     return missing_records
@@ -141,11 +147,11 @@ def print_details(missing_records: BibDatabase) -> None:
     # like prepare/set_stats_beginning, print_stats_end
     # global pdfs_retrieved
     # if pdfs_retrieved > 0:
-    #     logging.info(f'{pdfs_retrieved} PDFs retrieved')
+    #     logger.info(f'{pdfs_retrieved} PDFs retrieved')
     # else:
-    #     logging.info('No PDFs retrieved')
+    #     logger.info('No PDFs retrieved')
     if len(missing_records.entries) > 0:
-        logging.info(f"{len(missing_records.entries)} PDFs missing ")
+        logger.info(f"{len(missing_records.entries)} PDFs missing ")
     return
 
 
@@ -158,54 +164,50 @@ def get_pdfs_from_dir(directory: str) -> list:
     return list_of_files
 
 
-def check_existing_unlinked_pdfs(bib_db: BibDatabase) -> BibDatabase:
+def check_existing_unlinked_pdfs(
+    bib_db: BibDatabase, PDF_DIRECTORY: str
+) -> BibDatabase:
     global linked_existing_files
     pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
-
     if not pdf_files:
         return bib_db
 
-    logging.info("Starting GROBID service to extract metadata from PDFs")
+    logger.info("Starting GROBID service to extract metadata from PDFs")
     grobid_client.start_grobid()
 
     IDs = [x["ID"] for x in bib_db.entries]
 
     for file in pdf_files:
-        if os.path.exists(os.path.basename(file).replace(".pdf", "")):
-            continue
         if os.path.basename(file).replace(".pdf", "") not in IDs:
-            db = load.pdf2bib(file)
-            corresponding_bib_file = file.replace(".pdf", ".bib")
-            if os.path.exists(corresponding_bib_file):
-                os.remove(corresponding_bib_file)
 
-            if not db:
+            pdf_record = tei_tools.get_record_from_pdf_tei(file)
+
+            if "error" in pdf_record:
                 continue
 
-            record = db.entries[0]
             max_similarity = 0
             max_sim_record = None
-            for bib_record in bib_db.entries:
-                sim = dedupe.get_record_similarity(record, bib_record.copy())
+            for record in bib_db.entries:
+                sim = dedupe.get_record_similarity(pdf_record, record.copy())
                 if sim > max_similarity:
                     max_similarity = sim
-                    max_sim_record = bib_record
+                    max_sim_record = record
 
             if max_similarity > 0.5:
-                if "prepared" == max_sim_record.get("pdf_status", "NA"):
+                if RecordState.pdf_prepared == max_sim_record["status"]:
                     continue
                 new_filename = os.path.join(
                     os.path.dirname(file), max_sim_record["ID"] + ".pdf"
                 )
                 max_sim_record.update(file=new_filename)
-                max_sim_record.update(pdf_status="imported")
+                max_sim_record.update(status=RecordState.pdf_imported)
                 linked_existing_files = True
                 os.rename(file, new_filename)
-                logging.info("checked and renamed pdf:" f" {file} > {new_filename}")
+                logger.info("checked and renamed pdf:" f" {file} > {new_filename}")
                 # max_sim_record = \
                 #     pdf_prepare.validate_pdf_metadata(max_sim_record)
-                # pdf_status = max_sim_record.get('pdf_status', 'NA')
-                # if 'needs_manual_preparation' == pdf_status:
+                # status = max_sim_record['status']
+                # if RecordState.pdf_needs_manual_preparation == status:
                 #     # revert?
 
     return bib_db
@@ -230,9 +232,9 @@ def main(REVIEW_MANAGER) -> None:
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
 
-    logging.info("Retrieve PDFs")
+    logger.info("Retrieve PDFs")
 
-    bib_db = check_existing_unlinked_pdfs(bib_db)
+    bib_db = check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -241,7 +243,7 @@ def main(REVIEW_MANAGER) -> None:
             batch_start += current_batch_counter.value
             current_batch_counter.value = 0  # start new batch
         if batch_start > 1:
-            logging.info("Continuing batch preparation started earlier")
+            logger.info("Continuing batch preparation started earlier")
 
         pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         bib_db.entries = pool.map(retrieve_pdf, bib_db.entries)
@@ -254,7 +256,7 @@ def main(REVIEW_MANAGER) -> None:
         missing_records = get_missing_records(bib_db)
 
         if batch_end > 0 or linked_existing_files:
-            logging.info(
+            logger.info(
                 "Completed pdf retrieval batch "
                 f"(records {batch_start} to {batch_end})"
             )
@@ -277,7 +279,7 @@ def main(REVIEW_MANAGER) -> None:
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
-                logging.info("No additional pdfs to retrieve")
+                logger.info("No additional pdfs to retrieve")
             break
 
     return

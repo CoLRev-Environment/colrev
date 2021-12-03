@@ -1,35 +1,14 @@
 #! /usr/bin/env python
 import logging
 import pprint
-from collections import OrderedDict
 
 from bibtexparser.bibdatabase import BibDatabase
 
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+
+logger = logging.getLogger("review_template")
+
 MAIN_REFERENCES = "NA"
-
-key_order = [
-    "ENTRYTYPE",
-    "ID",
-    "year",
-    "author",
-    "title",
-    "journal",
-    "booktitle",
-    "volume",
-    "number",
-    "doi",
-    "link",
-    "url",
-    "fulltext",
-]
-
-
-def customsort(dict1: dict) -> OrderedDict:
-    items = [dict1[k] if k in dict1.keys() else "" for k in key_order]
-    sorted_dict = OrderedDict()
-    for i in range(len(key_order)):
-        sorted_dict[key_order[i]] = items[i]
-    return sorted_dict
 
 
 def get_excl_criteria(ec_string: str) -> list:
@@ -55,126 +34,31 @@ def get_exclusion_criteria(bib_db: BibDatabase) -> list:
     return get_exclusion_criteria_from_str(ec_string)
 
 
-def screen(REVIEW_MANAGER) -> None:
-    saved_args = locals()
+def get_data(REVIEW_MANAGER):
+    from review_template.review_manager import RecordState
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
-    global MAIN_REFERENCES
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-
-    logging.info("Start screen")
-
-    pp = pprint.PrettyPrinter(indent=4, width=140)
-
-    excl_criteria = get_exclusion_criteria(bib_db)
-    if excl_criteria:
-        excl_criteria_available = True
-    else:
-        excl_criteria_available = False
-        excl_criteria = ["NA"]
-
-    PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
-    i, quit_pressed = 0, False
-    stat_len = len(
-        [x for x in bib_db.entries if "prescreen_included" == x.get("rev_status", "NA")]
+    record_state_list = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len(
+        [x for x in record_state_list if str(RecordState.pdf_prepared) == x[1]]
     )
+    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+    items = REVIEW_MANAGER.read_next_record(
+        conditions={"status": str(RecordState.pdf_prepared)}
+    )
+    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
 
-    for record in bib_db.entries:
-        if "prepared" != record.get(
-            "pdf_status", "NA"
-        ) or "prescreen_included" != record.get("rev_status", "NA"):
-            continue
 
-        print("\n\n")
-        i += 1
-        skip_pressed = False
-        revrecord = customsort(record)
-        pp.pprint(revrecord)
+def set_screen_status(REVIEW_MANAGER, record, PAD) -> None:
+    from review_template.review_manager import RecordState
 
-        if excl_criteria_available:
-            decisions = []
-
-            for exclusion_criterion in excl_criteria:
-
-                decision, ret = "NA", "NA"
-                while ret not in ["y", "n", "q", "s"]:
-                    ret = input(
-                        f"({i}/{stat_len}) Violates"
-                        f" {exclusion_criterion} [y,n,q,s]? "
-                    )
-                    if "q" == ret:
-                        quit_pressed = True
-                    elif "s" == ret:
-                        skip_pressed = True
-                        continue
-                    elif ret in ["y", "n"]:
-                        decision = ret
-
-                if quit_pressed or skip_pressed:
-                    break
-
-                decisions.append([exclusion_criterion, decision])
-
-            if skip_pressed:
-                continue
-            if quit_pressed:
-                break
-
-            if all([decision == "n" for ec, decision in decisions]):
-                logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Included")
-                record.update(rev_status="included")
-            else:
-                logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Excluded")
-                record.update(rev_status="excluded")
-
-            ec_field = ""
-            for exclusion_criterion, decision in decisions:
-                if ec_field != "":
-                    ec_field = f"{ec_field};"
-                decision = decision.replace("y", "yes").replace("n", "no")
-                ec_field = f"{ec_field}{exclusion_criterion}={decision}"
-            record["excl_criteria"] = ec_field.replace(" ", "")
-
-        else:
-
-            decision, ret = "NA", "NA"
-            while ret not in ["y", "n", "q", "s"]:
-                ret = input(f"({i}/{stat_len}) Include [y,n,q,s]? ")
-                if "q" == ret:
-                    quit_pressed = True
-                elif "s" == ret:
-                    skip_pressed = True
-                    continue
-                elif ret in ["y", "n"]:
-                    decision = ret
-
-            if quit_pressed:
-                break
-
-            if decision == "y":
-                logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Included")
-                record.update(rev_status="included")
-            if decision == "n":
-                logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Excluded")
-                record.update(rev_status="excluded")
-
-            record["excl_criteria"] = "NA"
-
-        if quit_pressed:
-            logging.info("Stop screen")
-            break
-
-        REVIEW_MANAGER.save_bib_file(bib_db)
-
-    if stat_len == 0:
-        logging.info("No records to screen")
-        return
-
-    if i < stat_len:  # if records remain for screening
-        if "y" != input("Create commit (y/n)?"):
-            return
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
-    REVIEW_MANAGER.create_commit("Screening (manual)", saved_args, manual_author=True)
+    if RecordState.rev_included == record["status"]:
+        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
+        REVIEW_MANAGER.replace_record_by_ID(record)
+        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    else:
+        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
+        REVIEW_MANAGER.replace_record_by_ID(record)
+        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 
     return

@@ -20,11 +20,14 @@ from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 
+from review_template.review_manager import RecordState
 
 BATCH_SIZE, PDF_DIRECTORY, CPUS = -1, "NA", -1
 
 IPAD, EPAD = 0, 0
 current_batch_counter = mp.Value("i", 0)
+
+logger = logging.getLogger("review_template")
 
 
 def extract_text_by_page(record: dict, pages: list = None) -> str:
@@ -68,17 +71,17 @@ def get_text_from_pdf(record: dict) -> dict:
         record["text_from_pdf"] = text
 
     except PDFSyntaxError:
-        logging.error(
+        logger.error(
             f'{record["file"]}'.ljust(EPAD, " ")
             + "PDF reader error: check whether is a pdf"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
         pass
     except PDFTextExtractionNotAllowed:
-        logging.error(
+        logger.error(
             f'{record["file"]}'.ljust(EPAD, " ") + "PDF reader error: protection"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.md_needs_manual_preparation)
         pass
 
     return record
@@ -129,28 +132,28 @@ def apply_ocr(record: dict) -> dict:
 
 def pdf_check_ocr(record: dict) -> dict:
 
-    if "imported" != record.get("pdf_status", "NA"):
+    if RecordState.pdf_imported != record["status"]:
         return record
 
     record = get_text_from_pdf(record)
 
     if 0 == probability_english(record["text_from_pdf"]):
-        logging.info(f'apply_ocr({record["ID"]})')
+        logger.info(f'apply_ocr({record["ID"]})')
         record = apply_ocr(record)
 
     if probability_english(record["text_from_pdf"]) < 0.9:
-        logging.error(
+        logger.error(
             f'{record["ID"]}'.ljust(EPAD, " ")
             + "Validation error (OCR or language problems)"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
 
     return record
 
 
 def validate_pdf_metadata(record: dict) -> dict:
 
-    if "imported" != record.get("pdf_status", "NA"):
+    if RecordState.pdf_imported != record["status"]:
         return record
 
     if "text_from_pdf" not in record:
@@ -168,10 +171,10 @@ def validate_pdf_metadata(record: dict) -> dict:
             match_count += 1
 
     if match_count / len(title_words) < 0.9:
-        logging.error(
+        logger.error(
             f'{record["file"]}'.ljust(EPAD, " ") + "Title not found in first pages"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
 
     match_count = 0
     for author_name in record["author"].split(" and "):
@@ -180,37 +183,37 @@ def validate_pdf_metadata(record: dict) -> dict:
             match_count += 1
 
     if match_count / len(record["author"].split(" and ")) < 0.8:
-        logging.error(
+        logger.error(
             f'{record["file"]}'.ljust(EPAD, " ") + "author not found in first pages"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
 
     return record
 
 
 def validate_completeness(record: dict) -> dict:
 
-    if "imported" != record.get("pdf_status", "NA"):
+    if RecordState.pdf_imported != record["status"]:
         return record
 
     full_version_purchase_notice = (
         "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
     )
     if full_version_purchase_notice in extract_text_by_page(record).replace(" ", ""):
-        logging.error(
+        logger.error(
             f'{record["ID"]}'.ljust(EPAD - 1, " ")
             + " Not the full version of the paper"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
         return record
 
     pages_metadata = record.get("pages", "NA")
     if "NA" == pages_metadata or not re.match(r"^\d*--\d*$", pages_metadata):
-        logging.error(
+        logger.error(
             f'{record["ID"]}'.ljust(EPAD - 1, " ")
             + "Could not validate completeness: no pages in metadata"
         )
-        record.update(pdf_status="needs_manual_preparation")
+        record.update(status=RecordState.pdf_needs_manual_preparation)
         return record
 
     nr_pages_metadata = (
@@ -219,20 +222,20 @@ def validate_completeness(record: dict) -> dict:
 
     if nr_pages_metadata != record["pages_in_file"]:
         if nr_pages_metadata == int(record["pages_in_file"]) - 1:
-            logging.warning(
+            logger.warning(
                 f'{record["ID"]}'.ljust(EPAD - 3, " ")
                 + "File has one more page "
                 + f'({record["pages_in_file"]}) compared to '
                 + f"metadata ({nr_pages_metadata} pages)"
             )
         else:
-            logging.error(
+            logger.error(
                 f'{record["ID"]}'.ljust(EPAD, " ")
                 + f'Nr of pages in file ({record["pages_in_file"]}) '
                 + "not identical with record "
                 + f"({nr_pages_metadata} pages)"
             )
-            record.update(pdf_status="needs_manual_preparation")
+            record.update(status=RecordState.pdf_needs_manual_preparation)
     return record
 
 
@@ -245,7 +248,7 @@ prep_scripts = {
 
 def prepare_pdf(record: dict) -> dict:
 
-    if "imported" != record.get("pdf_status", "NA") or "file" not in record:
+    if RecordState.pdf_imported != record["status"] or "file" not in record:
         return record
 
     with current_batch_counter.get_lock():
@@ -256,13 +259,13 @@ def prepare_pdf(record: dict) -> dict:
 
     pdf = record["file"].replace(":", "").replace(".pdfPDF", ".pdf")
     if not os.path.exists(pdf):
-        logging.error(
+        logger.error(
             f'{record["ID"]}'.ljust(EPAD, " ") + "Linked file/pdf does not exist"
         )
         return record
 
     if "pdf_versioned_tag" not in record:
-        logging.error(f'{record["ID"]} - PDF not versioned/skip preparation')
+        logger.error(f'{record["ID"]} - PDF not versioned/skip preparation')
         return record
 
     # TODO
@@ -277,20 +280,20 @@ def prepare_pdf(record: dict) -> dict:
     # pdf_tools.remove_coverpage(filepath)
     # pdf_tools.remove_last_page_info(filepath)
 
-    # Note: if there are problems pdf_status is set to needs_manual_preparation
+    # Note: if there are problems status is set to pdf_needs_manual_preparation
     # if it remains 'imported', all preparation checks have passed
-    logging.info(f'prepare({record["ID"]})')  # / {record["file"]}
+    logger.info(f'prepare({record["ID"]})')  # / {record["file"]}
     for prep_script in prep_scripts:
         record = prep_scripts[prep_script](record)
 
-        failed = "needs_manual_preparation" == record.get("pdf_status")
+        failed = RecordState.pdf_needs_manual_preparation == record["status"]
         msg = f'{prep_script}({record["ID"]}):'.ljust(IPAD, " ") + " "
         msg += "fail" if failed else "pass"
-        logging.info(msg)
+        logger.info(msg)
         if failed:
             break
 
-    if "imported" == record.get("pdf_status", "NA"):
+    if RecordState.pdf_imported == record["status"]:
         # Remove temporary PDFs when processing has succeeded
         fname = f'{PDF_DIRECTORY}{record["ID"]}.pdf'
         if fname != record.get("file", "NA"):
@@ -302,7 +305,7 @@ def prepare_pdf(record: dict) -> dict:
                 os.rename(fname, fname.replace(".pdf", "_backup.pdf"))
             os.rename(record["file"], fname)
             record["file"] = fname
-        record.update(pdf_status="prepared")
+        record.update(status=RecordState.pdf_prepared)
     else:
         if not DEBUG_MODE:
             # Delete temporary PDFs for which processing has failed:
@@ -365,7 +368,7 @@ def main(review_manager) -> None:
     # TODO: temporary fix: remove all lines containint PDFType1Font from log.
     # https://github.com/pdfminer/pdfminer.six/issues/282
 
-    logging.info("Prepare PDFs")
+    logger.info("Prepare PDFs")
 
     in_process = True
     batch_start, batch_end = 1, 0
@@ -374,9 +377,9 @@ def main(review_manager) -> None:
             batch_start += current_batch_counter.value
             current_batch_counter.value = 0  # start new batch
         if batch_start > 1:
-            logging.info("Continuing batch preparation started earlier")
+            logger.info("Continuing batch preparation started earlier")
 
-        bib_db = mark_committed_pdfs(bib_db, review_manager.git_repo)
+        bib_db = mark_committed_pdfs(bib_db, review_manager.get_repo())
 
         pool = mp.Pool(review_manager.config["CPUS"])
         bib_db.entries = pool.map(prepare_pdf, bib_db.entries)
@@ -389,7 +392,7 @@ def main(review_manager) -> None:
             batch_end = current_batch_counter.value + batch_start - 1
 
         if batch_end > 0:
-            logging.info(
+            logger.info(
                 "Completed pdf preparation batch "
                 f"(entries {batch_start} to {batch_end})"
             )
@@ -400,16 +403,16 @@ def main(review_manager) -> None:
             git_repo.index.add([MAIN_REFERENCES])
 
             need_man_preps = [
-                r["ID"]
-                for r in bib_db.entries
-                if "needs_manual_preparation" == r.get("pdf_status", "NA")
+                record["ID"]
+                for record in bib_db.entries
+                if RecordState.pdf_needs_manual_preparation == record["status"]
             ]
             if "GIT" == review_manager.config["PDF_HANDLING"]:
                 dirname = review_manager.paths["PDF_DIRECTORY"]
                 if os.path.exists(dirname):
                     for filepath in os.listdir(dirname):
                         if any(ID in filepath for ID in need_man_preps):
-                            logging.info("skipping " + filepath)
+                            logger.info("skipping " + filepath)
                             continue
 
                         if filepath.endswith(".pdf"):
@@ -421,11 +424,11 @@ def main(review_manager) -> None:
             review_manager.reorder_log([x["ID"] for x in bib_db.entries])
             in_process = review_manager.create_commit("Prepare PDFs", saved_args)
             if not in_process:
-                logging.info("No PDFs prepared")
+                logger.info("No PDFs prepared")
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:
-                logging.info("No additional pdfs to prepare")
+                logger.info("No additional pdfs to prepare")
             break
 
     return

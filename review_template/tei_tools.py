@@ -5,6 +5,7 @@ import subprocess
 import time
 
 import requests
+from lxml import etree
 
 ns = {
     "tei": "{http://www.tei-c.org/ns/1.0}",
@@ -234,3 +235,48 @@ def get_paper_doi(root):
     for res in dois:
         doi = res.text
     return doi
+
+
+def get_record_from_pdf_tei(filepath: str) -> dict:
+
+    # Note: we have more control and transparency over the consolidation
+    # if we do it in the review_template process
+    header_data = {"consolidateHeader": "0"}
+
+    r = requests.post(
+        GROBID_URL + "/api/processHeaderDocument",
+        files=dict(input=open(filepath, "rb")),
+        data=header_data,
+    )
+
+    status = r.status_code
+    if status != 200:
+        print(f"error: {r.text}")
+        record = {
+            "ENTRYTYPE": "misc",
+            "error": "GROBID-Extraction failed",
+            "error-msg": r.text,
+        }
+
+    if status == 200:
+        root = etree.fromstring(r.text.encode("utf-8"))
+        # print(etree.tostring(root, pretty_print=True).decode("utf-8"))
+        record = {
+            "ENTRYTYPE": "article",
+            "title": get_paper_title(root),
+            "author": get_paper_authors(root),
+            "journal": get_paper_journal(root),
+            "year": get_paper_year(root),
+            "volume": get_paper_journal_volume(root),
+            "number": get_paper_journal_issue(root),
+            "pages": get_paper_journal_pages(root),
+            "doi": get_paper_doi(root),
+        }
+
+    for k, v in record.items():
+        if "file" != k:
+            v = v.replace("}", "").replace("{", "")
+        else:
+            print(f"problem in filename: {k}")
+
+    return record

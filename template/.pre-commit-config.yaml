@@ -14,6 +14,11 @@ repos:
         entry: pipeline_validation_hooks/format.py
         language: script
         files: 'references.bib|paper.md'
+    -   id: report
+        name: "ReviewManager: report"
+        entry: pipeline_validation_hooks/report.py
+        language: script
+        stages: [prepare-commit-msg]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:

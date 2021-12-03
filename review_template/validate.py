@@ -20,6 +20,8 @@ from review_template import status
 
 CPUS = -1
 
+logger = logging.getLogger("review_template")
+
 
 def load_records(bib_file: str) -> list:
 
@@ -46,15 +48,13 @@ def get_search_records(REVIEW_MANAGER) -> list:
 
 def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> None:
 
-    logging.info("Calculating preparation differences...")
+    logger.info("Calculating preparation differences...")
     change_diff = []
     for record in bib_db.entries:
         if "changed_in_target_commit" not in record:
             continue
         del record["changed_in_target_commit"]
-        del record["rev_status"]
-        del record["md_status"]
-        del record["pdf_status"]
+        del record["status"]
         # del record['origin']
         for cur_record_link in record["origin"].split(";"):
             prior_records = [
@@ -69,7 +69,7 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
     change_diff.sort(key=lambda x: x[2], reverse=True)
 
     if 0 == len(change_diff):
-        logging.info("No substantial differences found.")
+        logger.info("No substantial differences found.")
 
     plot_hist(
         [sim for [e1, e2, sim] in change_diff],
@@ -83,9 +83,9 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
     for eid, record_link, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system("cls" if os.name == "nt" else "clear")
-        logging.info("Record with ID: " + eid)
+        logger.info("Record with ID: " + eid)
 
-        logging.info("Difference: " + str(round(difference, 4)) + "\n\n")
+        logger.info("Difference: " + str(round(difference, 4)) + "\n\n")
         record_1 = [x for x in search_records if record_link == x["origin"]]
         pp.pprint(record_1[0])
         record_2 = [x for x in bib_db.entries if eid == x["ID"]]
@@ -106,7 +106,7 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
 def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
 
     os.system("cls" if os.name == "nt" else "clear")
-    logging.info("Calculating differences between merged records...")
+    logger.info("Calculating differences between merged records...")
     change_diff = []
     merged_records = False
     for record in bib_db.entries:
@@ -131,9 +131,9 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
 
     if 0 == len(change_diff):
         if merged_records:
-            logging.info("No substantial differences found.")
+            logger.info("No substantial differences found.")
         else:
-            logging.info("No merged records")
+            logger.info("No merged records")
 
     pp = pprint.PrettyPrinter(indent=4)
 
@@ -157,12 +157,12 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
 def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
 
     if "none" == target_commit:
-        logging.info("Loading data...")
+        logger.info("Loading data...")
         bib_db = REVIEW_MANAGER.load_main_refs()
         [x.update(changed_in_target_commit="True") for x in bib_db.entries]
 
     else:
-        logging.info("Loading data from history...")
+        logger.info("Loading data from history...")
         repo = git.Repo()
 
         MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
@@ -198,30 +198,32 @@ def validate_properties(target_commit: str) -> None:
     repo = git.Repo()
     cur_sha = repo.head.commit.hexsha
     cur_branch = repo.active_branch.name
-    logging.info(f"Current commit: {cur_sha} (branch {cur_branch})")
+    logger.info(f"Current commit: {cur_sha} (branch {cur_branch})")
 
     if not target_commit:
         target_commit = cur_sha
     if repo.is_dirty() and not target_commit == cur_sha:
-        logging.error(
+        logger.error(
             "Error: Need a clean repository to validate properties " "of prior commit"
         )
         return
     if not target_commit == cur_sha:
-        logging.info(f"Check out target_commit = {target_commit}")
+        logger.info(f"Check out target_commit = {target_commit}")
         repo.git.checkout(target_commit)
+    from review_template.review_manager import ReviewManager
 
-    completeness_condition = status.get_completeness_condition()
+    REVIEW_MANAGER = ReviewManager()
+    completeness_condition = status.get_completeness_condition(REVIEW_MANAGER)
     if completeness_condition:
-        logging.info("Completeness of iteration".ljust(32, " ") + "YES (validated)")
+        logger.info("Completeness of iteration".ljust(32, " ") + "YES (validated)")
     else:
-        logging.error("Completeness of iteration".ljust(32, " ") + "NO")
+        logger.error("Completeness of iteration".ljust(32, " ") + "NO")
     if 0 == pipeline_validation_hooks.check.main():
-        logging.info("Traceability of records".ljust(32, " ") + "YES (validated)")
-        logging.info("Consistency (based on hooks)".ljust(32, " ") + "YES (validated)")
+        logger.info("Traceability of records".ljust(32, " ") + "YES (validated)")
+        logger.info("Consistency (based on hooks)".ljust(32, " ") + "YES (validated)")
     else:
-        logging.error("Traceability of records".ljust(32, " ") + "NO")
-        logging.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
+        logger.error("Traceability of records".ljust(32, " ") + "NO")
+        logger.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
 
     repo.git.checkout(cur_branch, force=True)
 

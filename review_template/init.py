@@ -9,16 +9,6 @@ from subprocess import STDOUT
 import git
 import requests
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    handlers=[
-        logging.FileHandler("report.log", mode="a"),
-        logging.StreamHandler(),
-    ],
-)
-
 
 def get_name_mail_from_global_git_config() -> list:
     ggit_conf_path = os.path.normpath(os.path.expanduser("~/.gitconfig"))
@@ -78,12 +68,6 @@ def initialize_repo(
     # REPO_SETUP_VERSION = repo_setup.paths.keys()[-1]
     REPO_SETUP_VERSION = "v_0.1"
 
-    logging.info("Initialize review repository")
-    logging.info("Set project title:".ljust(30, " ") + f"{project_title}")
-    logging.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
-    logging.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
-    logging.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
-
     repo = git.Repo.init()
     os.mkdir("search")
 
@@ -131,6 +115,11 @@ def initialize_repo(
     logging.info("Install latest pre-commmit hooks")
     check_call(["pre-commit", "install"], stdout=DEVNULL, stderr=STDOUT)
     check_call(
+        ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
+        stdout=DEVNULL,
+        stderr=STDOUT,
+    )
+    check_call(
         ["pre-commit", "autoupdate", "--bleeding-edge"], stdout=DEVNULL, stderr=STDOUT
     )
 
@@ -147,6 +136,14 @@ def initialize_repo(
     from review_template.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
+
+    logger = logging.getLogger("review_template")
+    logger.info("Initialize review repository")
+    logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
+    logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
+    logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
+    logger.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
+
     REVIEW_MANAGER.create_commit("Initial commit", saved_args, True)
 
     if remote_url is not None:

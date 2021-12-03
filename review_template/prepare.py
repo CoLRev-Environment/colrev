@@ -22,11 +22,14 @@ from nameparser import HumanName
 from thefuzz import fuzz
 
 from review_template import dedupe
+from review_template.review_manager import RecordState
 from review_template.review_manager import ReviewManager
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 BATCH_SIZE, EMAIL, MAIN_REFERENCES, DEBUG_MODE = -1, "NA", "NA", "NA"
+
+logger = logging.getLogger("review_template")
 
 prepared, need_manual_prep = 0, 0
 
@@ -95,7 +98,7 @@ def correct_recordtype(record: dict) -> dict:
     ):
         prior_e_type = record["ENTRYTYPE"]
         record.update(ENTRYTYPE="phdthesis")
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Set from {prior_e_type} to phdthesis "
             '("dissertation" in fulltext link)'
@@ -107,7 +110,7 @@ def correct_recordtype(record: dict) -> dict:
     ):
         prior_e_type = record["ENTRYTYPE"]
         record.update(ENTRYTYPE="phdthesis")
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Set from {prior_e_type} to phdthesis "
             '("thesis" in fulltext link)'
@@ -142,6 +145,35 @@ def correct_recordtype(record: dict) -> dict:
                 record.update(journal=journal_string)
                 del record["series"]
 
+    return record
+
+
+def format_minor(record: dict) -> dict:
+
+    fields_to_process = [
+        "author",
+        "year",
+        "title",
+        "journal",
+        "booktitle",
+        "series",
+        "volume",
+        "number",
+        "pages",
+        "doi",
+        "abstract",
+    ]
+    for field in fields_to_process:
+        if field in record:
+            record[field] = (
+                record[field]
+                .replace("\n", " ")
+                .rstrip()
+                .lstrip()
+                .replace("{", "")
+                .replace("}", "")
+            )
+            record[field] = re.sub(r"\s+", " ", record[field])
     return record
 
 
@@ -213,7 +245,7 @@ def format(record: dict) -> dict:
             and not re.match(r"^\d*--\d*$", record["pages"])
             and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
         ):
-            logging.info(
+            logger.info(
                 f' {record["ID"]}:'.ljust(PAD, " ")
                 + f'Unusual pages: {record["pages"]}'
             )
@@ -447,10 +479,10 @@ def crossref_query(record: dict) -> dict:
     url = api_url + urllib.parse.urlencode(params)
     headers = {"user-agent": f"{__name__} (mailto:{EMAIL})"}
     try:
-        logging.debug(url)
+        logger.debug(url)
         ret = requests.get(url, headers=headers)
         if ret.status_code != 200:
-            logging.debug(f"crossref_query failed with status {ret.status_code}")
+            logger.debug(f"crossref_query failed with status {ret.status_code}")
             return None
 
         data = json.loads(ret.text)
@@ -477,15 +509,15 @@ def crossref_query(record: dict) -> dict:
             similarity = sum(
                 similarities[g] * weights[g] for g in range(len(similarities))
             )
-            # logging.debug(f'record: {pp.pformat(record)}')
-            # logging.debug(f'similarities: {similarities}')
-            # logging.debug(f'similarity: {similarity}')
+            # logger.debug(f'record: {pp.pformat(record)}')
+            # logger.debug(f'similarities: {similarities}')
+            # logger.debug(f'similarity: {similarity}')
 
             if most_similar < similarity:
                 most_similar = similarity
                 most_similar_record = retrieved_record
     except requests.exceptions.ConnectionError:
-        logging.error("requests.exceptions.ConnectionError in crossref_query")
+        logger.error("requests.exceptions.ConnectionError in crossref_query")
         return None
 
     return most_similar_record
@@ -582,7 +614,7 @@ def get_md_from_crossref(record: dict) -> dict:
     # To test the metadata provided for a particular DOI use:
     # https://api.crossref.org/works/DOI
 
-    logging.debug(f'get_md_from_crossref({record["ID"]})')
+    logger.debug(f'get_md_from_crossref({record["ID"]})')
     MAX_RETRIES_ON_ERROR = 3
     # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
     if len(record["title"]) > 35:
@@ -600,7 +632,7 @@ def get_md_from_crossref(record: dict) -> dict:
             similarity = get_retrieval_similarity(
                 record.copy(), retrieved_record.copy()
             )
-            logging.debug(f"crossref similarity: {similarity}")
+            logger.debug(f"crossref similarity: {similarity}")
             if similarity > 0.9:
                 for key, val in retrieved_record.items():
                     # Note: no abstracts in crossref?
@@ -661,7 +693,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
     try:
         search_api_url = "https://api.semanticscholar.org/graph/v1/paper/search?query="
         url = search_api_url + record.get("title", "").replace(" ", "+")
-        logging.debug(url)
+        logger.debug(url)
         headers = {"user-agent": f"{__name__} (mailto:{EMAIL})"}
         ret = requests.get(url, headers=headers)
 
@@ -674,7 +706,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
 
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
-        logging.debug(record_retrieval_url)
+        logger.debug(record_retrieval_url)
         ret_ent = requests.get(record_retrieval_url, headers=headers)
         item = json.loads(ret_ent.text)
         retrieved_record = sem_scholar_json_to_record(item, record)
@@ -685,7 +717,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
                 del red_record_copy[key]
 
         similarity = get_retrieval_similarity(red_record_copy, retrieved_record.copy())
-        logging.debug(f"scholar similarity: {similarity}")
+        logger.debug(f"scholar similarity: {similarity}")
         if similarity > 0.9:
             for key, val in retrieved_record.items():
                 if enrich_only and "abstract" != key:
@@ -698,10 +730,10 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         pass
 
     except UnicodeEncodeError:
-        logging.error("UnicodeEncodeError - this needs to be fixed at some time")
+        logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
     except requests.exceptions.ConnectionError:
-        logging.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
+        logger.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
         pass
     return record
 
@@ -758,7 +790,7 @@ def get_md_from_open_library(record: dict) -> dict:
             title = title[: title.find(":")]  # To catch sub-titles
         url = url + "&title=" + title.replace(" ", "+")
         ret = requests.get(url)
-        logging.debug(url)
+        logger.debug(url)
 
         # if we have an exact match, we don't need to check the similarity
         if '"numFoundExact": true,' not in ret.text:
@@ -777,10 +809,10 @@ def get_md_from_open_library(record: dict) -> dict:
             del record["booktitle"]
 
     except UnicodeEncodeError:
-        logging.error("UnicodeEncodeError - this needs to be fixed at some time")
+        logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
     except requests.exceptions.ConnectionError:
-        logging.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
+        logger.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
         pass
     return record
 
@@ -803,7 +835,7 @@ def get_dblp_venue(venue_string: str) -> str:
 
         venue = re.sub(r" \(.*?\)", "", venue)
     except requests.exceptions.ConnectionError:
-        logging.info("requests.exceptions.ConnectionError in get_dblp_venue()")
+        logger.info("requests.exceptions.ConnectionError in get_dblp_venue()")
         pass
     return venue
 
@@ -880,10 +912,10 @@ def get_md_from_dblp(record: dict) -> dict:
         query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
         url = api_url + query.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__}  (mailto:{EMAIL})"}
-        logging.debug(url)
+        logger.debug(url)
         ret = requests.get(url, headers=headers)
         if ret.status_code == 500:
-            logging.info("DBLP server error")
+            logger.info("DBLP server error")
             return record
 
         data = json.loads(ret.text)
@@ -901,7 +933,7 @@ def get_md_from_dblp(record: dict) -> dict:
                 record.copy(), retrieved_record.copy()
             )
 
-            logging.debug(f"dblp similarity: {similarity}")
+            logger.debug(f"dblp similarity: {similarity}")
             if similarity > 0.9:
                 for key, val in retrieved_record.items():
                     record[key] = val
@@ -912,10 +944,10 @@ def get_md_from_dblp(record: dict) -> dict:
     # except json.decoder.JSONDecodeError:
     #     pass
     except UnicodeEncodeError:
-        logging.error("UnicodeEncodeError - this needs to be fixed at some time")
+        logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
     except requests.exceptions.ConnectionError:
-        logging.error("requests.exceptions.ConnectionError in crossref_query")
+        logger.error("requests.exceptions.ConnectionError in crossref_query")
         return record
     return record
 
@@ -934,11 +966,11 @@ def retrieve_doi_metadata(record: dict) -> dict:
 
     try:
         url = "http://dx.doi.org/" + record["doi"]
-        logging.debug(url)
+        logger.debug(url)
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            logging.info(
+            logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "metadata for "
                 + f'doi  {record["doi"]} not (yet) available'
@@ -958,7 +990,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
     # except json.decoder.JSONDecodeError:
     # except TypeError:
     except requests.exceptions.ConnectionError:
-        logging.error(f'ConnectionError: {record["ID"]}')
+        logger.error(f'ConnectionError: {record["ID"]}')
         return orig_record
         pass
     return record
@@ -971,7 +1003,7 @@ def get_md_from_urls(record: dict) -> dict:
     url = record.get("url", record.get("fulltext", "NA"))
     if "NA" != url:
         try:
-            logging.debug(url)
+            logger.debug(url)
             headers = {"user-agent": f"{__name__}  (mailto:{EMAIL})"}
             ret = requests.get(url, headers=headers)
             res = re.findall(doi_regex, ret.text)
@@ -994,7 +1026,7 @@ def get_md_from_urls(record: dict) -> dict:
                         for key, val in retrieved_record.items():
                             record[key] = val
 
-                        logging.info(
+                        logger.info(
                             "Retrieved metadata based on doi from"
                             f' website: {record["doi"]}'
                         )
@@ -1049,7 +1081,7 @@ def is_complete(record: dict) -> bool:
 def is_complete_metadata_source(record: dict) -> bool:
     # Note: metadata_source is set at the end of each procedure
     # that completes/corrects metadata based on an external source
-    return "metadata_source" in record
+    return "ORIGINAL" != record["metadata_source"]
 
 
 record_field_inconsistencies = {
@@ -1122,9 +1154,7 @@ fields_to_keep = [
     "book-author",
     "keywords",
     "file",
-    "rev_status",
-    "md_status",
-    "pdf_status",
+    "status",
     "fulltext",
     "origin",
     "publisher",
@@ -1187,7 +1217,7 @@ def drop_fields(record: dict) -> dict:
             record.pop(key)
             # warn if fields are dropped that are not in fields_to_drop
             if key not in fields_to_drop:
-                logging.info(f"Dropped {key} field")
+                logger.info(f"Dropped {key} field")
     for key in list(record):
         if "" == record[key]:
             del record[key]
@@ -1252,19 +1282,19 @@ def log_notifications(record: dict, unprepared_record: dict) -> None:
 
     change = 1 - dedupe.get_record_similarity(record.copy(), unprepared_record)
     if change > 0.1:
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f"Change score: {round(change, 2)}"
         )
 
     if not (is_complete(record) or is_complete_metadata_source(record)):
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f'{str(record["ENTRYTYPE"]).title()} '
             f"missing {missing_fields(record)}"
         )
         msg += f"missing: {missing_fields(record)}"
 
     if has_inconsistent_fields(record):
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f'{str(record["ENTRYTYPE"]).title()} '
             f"with {get_inconsistencies(record)} field(s)"
             " (inconsistent"
@@ -1272,7 +1302,7 @@ def log_notifications(record: dict, unprepared_record: dict) -> None:
         msg += f'; {record["ENTRYTYPE"]} but {get_inconsistencies(record)}'
 
     if has_incomplete_fields(record):
-        logging.info(
+        logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Incomplete fields {get_incomplete_fields(record)}"
         )
@@ -1317,16 +1347,16 @@ def remove_redundant_fields(record: dict) -> dict:
     return record
 
 
-def update_md_status(record: dict) -> dict:
-    logging.debug(f'is_complete({record["ID"]}): {is_complete(record)}')
-    logging.debug(
+def update_metadata_status(record: dict) -> dict:
+    logger.debug(f'is_complete({record["ID"]}): {is_complete(record)}')
+    logger.debug(
         f'is_complete_metadata_source({record["ID"]}): '
         f"{is_complete_metadata_source(record)}"
     )
-    logging.debug(
+    logger.debug(
         f'has_inconsistent_fields({record["ID"]}): {has_inconsistent_fields(record)}'
     )
-    logging.debug(
+    logger.debug(
         f'has_incomplete_fields({record["ID"]}): {has_incomplete_fields(record)}'
     )
 
@@ -1335,16 +1365,16 @@ def update_md_status(record: dict) -> dict:
         or is_complete_metadata_source(record)
     ) and not has_inconsistent_fields(record):
         record = drop_fields(record)
-        record.update(md_status="prepared")
+        record.update(status=RecordState.md_prepared)
     else:
-        record.update(md_status="needs_manual_preparation")
+        record.update(status=RecordState.md_needs_manual_preparation)
     return record
 
 
 def prepare(record: dict) -> dict:
     global current_batch_counter
 
-    if "imported" != record["md_status"]:
+    if RecordState.md_imported != record["status"]:
         return record
 
     with current_batch_counter.get_lock():
@@ -1354,7 +1384,7 @@ def prepare(record: dict) -> dict:
             current_batch_counter.value += 1
 
     # # Note: we require (almost) perfect matches for the scripts.
-    # # Cases with higher dissimilarity will be handled in the man_prep.py
+    # # Cases with higher dissimilarity will be handled in the prep_man.py
     prep_scripts = {
         "drop_fields": drop_fields,
         "resolve_crossrefs": resolve_crossrefs,
@@ -1369,29 +1399,30 @@ def prepare(record: dict) -> dict:
         "get_md_from_urls": get_md_from_urls,
         "remove_nicknames": remove_nicknames,
         "remove_redundant_fields": remove_redundant_fields,
-        "update_md_status": update_md_status,
+        "format_minor": format_minor,
+        "update_metadata_status": update_metadata_status,
     }
 
     unprepared_record = record.copy()
     short_form = drop_fields(record.copy())
-    logging.info(
+    logger.info(
         f'prepare({record["ID"]})' + f" started with: \n{pp.pformat(short_form)}\n\n"
     )
     for prep_script in prep_scripts:
         prior = record.copy()
-        logging.debug(f'{prep_script}({record["ID"]}) called')
+        logger.debug(f'{prep_script}({record["ID"]}) called')
         record = prep_scripts[prep_script](record)
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
-            logging.info(
+            logger.info(
                 f'{prep_script}({record["ID"]}) changed:' f" \n{pp.pformat(diffs)}\n"
             )
         else:
-            logging.debug(f"{prep_script} changed: -")
+            logger.debug(f"{prep_script} changed: -")
         if DEBUG_MODE:
             print("\n")
 
-    if "needs_manual_preparation" == record.get("md_status", ""):
+    if RecordState.md_needs_manual_preparation == record["status"]:
         record = log_notifications(record, unprepared_record)
 
     return record
@@ -1401,13 +1432,13 @@ def set_stats_beginning(bib_db: BibDatabase) -> None:
     global prepared
     global need_manual_prep
     prepared = len(
-        [x for x in bib_db.entries if "prepared" == x.get("md_status", "NA")]
+        [x for x in bib_db.entries if RecordState.md_prepared == x["status"]]
     )
     need_manual_prep = len(
         [
             x
             for x in bib_db.entries
-            if "needs_manual_preparation" == x.get("md_status", "NA")
+            if RecordState.md_needs_manual_preparation == x["status"]
         ]
     )
     return
@@ -1417,7 +1448,7 @@ def print_stats_end(bib_db: BibDatabase) -> None:
     global prepared
     global need_manual_prep
     prepared = (
-        len([x for x in bib_db.entries if "prepared" == x.get("md_status", "NA")])
+        len([x for x in bib_db.entries if RecordState.md_prepared == x["status"]])
         - prepared
     )
     need_manual_prep = (
@@ -1425,15 +1456,15 @@ def print_stats_end(bib_db: BibDatabase) -> None:
             [
                 x
                 for x in bib_db.entries
-                if "needs_manual_preparation" == x.get("md_status", "NA")
+                if RecordState.md_needs_manual_preparation == x["status"]
             ]
         )
         - need_manual_prep
     )
     if prepared > 0:
-        logging.info(f"Summary: Prepared {prepared} records")
+        logger.info(f"Summary: Prepared {prepared} records")
     if need_manual_prep > 0:
-        logging.info(
+        logger.info(
             f"Summary: Marked {need_manual_prep} records " + "for manual preparation"
         )
     return
@@ -1443,14 +1474,12 @@ def reset(bib_db: BibDatabase, id: str) -> None:
 
     record = [x for x in bib_db.entries if x["ID"] == id]
     if len(record) == 0:
-        logging.info(f'record with ID {record["ID"]} not found')
+        logger.info(f'record with ID {record["ID"]} not found')
         return
     # Note: the case len(record) > 1 should not occur.
     record = record[0]
-    if "prepared" != record["md_status"]:
-        logging.error(
-            f"{id}: md_status must be prepared " f'(is {record["md_status"]})'
-        )
+    if RecordState.md_prepared != record["status"]:
+        logger.error(f'{id}: status must be md_prepared (is {record["status"]})')
         return
 
     origins = record["origin"].split(";")
@@ -1463,9 +1492,11 @@ def reset(bib_db: BibDatabase, id: str) -> None:
     for filecontents in list(revlist):
         prior_bib_db = bibtexparser.loads(filecontents)
         for r in prior_bib_db.entries:
-            if "imported" == r["md_status"] and any(o in r["origin"] for o in origins):
-                r.update(md_status="needs_manual_preparation")
-                logging.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
+            if RecordState.md_imported == r["status"] and any(
+                o in r["origin"] for o in origins
+            ):
+                r.update(status=RecordState.md_needs_manual_preparation)
+                logger.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
                 record.update(r)
                 break
     return
@@ -1480,6 +1511,24 @@ def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
     git_repo.index.add([MAIN_REFERENCES])
     REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
     return
+
+
+def get_data(REVIEW_MANAGER):
+    from review_template.review_manager import RecordState
+
+    record_state_list = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len(
+        [x for x in record_state_list if str(RecordState.md_imported) == x[1]]
+    )
+    prior_ids = [
+        x[0] for x in record_state_list if str(RecordState.md_imported) == x[1]
+    ]
+
+    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+    items = REVIEW_MANAGER.read_next_record(
+        conditions={"status": str(RecordState.md_imported)},
+    )
+    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items, "prior_ids": prior_ids}
 
 
 def main(
@@ -1500,30 +1549,40 @@ def main(
     global DEBUG_MODE
     global BATCH_SIZE
 
+    # REVIEW_MANAGER.config["BATCH_SIZE"] = 5
+
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     EMAIL = REVIEW_MANAGER.config["EMAIL"]
     DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
+
+    prepare_data = get_data(REVIEW_MANAGER)
+    logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
     bib_db = REVIEW_MANAGER.load_main_refs()
 
-    PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
-    prior_ids = [x["ID"] for x in bib_db.entries]
+    PAD = prepare_data["PAD"]
+    prior_ids = prepare_data["prior_ids"]
 
     # Note: resetting needs_manual_preparation to imported would also be
     # consistent with the check7valid_transitions because it will either
     # transition to prepared or to needs_manual_preparation
     if reprocess:
+        # TODO: use REVIEW_MANAGER.replace_field
         for record in bib_db.entries:
-            if "needs_manual_preparation" == record["md_status"]:
-                record["md_status"] = "imported"
+            if RecordState.md_needs_manual_preparation == record["status"]:
+                record["status"] = RecordState.md_imported
             # Test the following:
-            # record['md_status'] = \
-            #   'imported' if "needs_manual_preparation" == record["md_status"] \
-            #  else record["md_status"]
+            # record['status'] = \
+            #   RecordState.md_imported
+            #   if RecordState.md_needs_manual_preparation == record["status"] \
+            #  else record["status"]
 
-    logging.info("Prepare")
-    logging.info(f"Batch size: {BATCH_SIZE}")
+    logger.info("Prepare")
+    logger.info(f"Batch size: {BATCH_SIZE}")
 
+    # Note: one of the challenges for batch-processing is that the IDs may change
+    # This makes independent preparation (and saving) difficult
+    # TODO: we may be able to tackle this by setting a "previous_id" field?
     in_process = True
     batch_start, batch_end = 1, 0
     while in_process:
@@ -1531,7 +1590,7 @@ def main(
             batch_start += current_batch_counter.value
             current_batch_counter.value = 0  # start new batch
         if batch_start > 1:
-            logging.info("Continuing batch preparation started earlier")
+            logger.info("Continuing batch preparation started earlier")
 
         set_stats_beginning(bib_db)
         pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
@@ -1543,7 +1602,7 @@ def main(
             batch_end = current_batch_counter.value + batch_start - 1
 
         if batch_end > 0:
-            logging.info(
+            logger.info(
                 f"Completed preparation batch (records {batch_start} to {batch_end})"
             )
 
@@ -1555,11 +1614,11 @@ def main(
             git_repo.index.add([MAIN_REFERENCES])
 
             print_stats_end(bib_db)
-            logging.info(
+            logger.info(
                 "To reset the metdatata of records, use "
                 "review_template prepare --reset-ID [ID1,ID2]"
             )
-            logging.info(
+            logger.info(
                 "Further instructions are available in the "
                 "documentation (TODO: link)"
             )
@@ -1573,15 +1632,8 @@ def main(
         delta = batch_end % BATCH_SIZE
         if (delta < BATCH_SIZE and delta > 0) or batch_end == 0:
             if batch_end == 0:
-                logging.info("No records to prepare")
+                logger.info("No records to prepare")
             break
 
     print()
-    return
-
-
-def prepare_test(REVIEW_MANAGER):
-
-    print("CALLED prepare")
-    # print(REVIEW_MANAGER.search_details)
     return

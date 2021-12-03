@@ -18,12 +18,14 @@ from bibtexparser.customization import convert_to_unicode
 
 import docker
 from review_template import grobid_client
+from review_template.review_manager import RecordState
 from review_template.review_manager import ReviewManager
 
-logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
+# logger.getLogger("bibtexparser").setLevel(logger.CRITICAL)
 
 BATCH_SIZE, SEARCH_DETAILS, MAIN_REFERENCES = -1, "NA", "NA"
 pp = pprint.PrettyPrinter(indent=4, width=140)
+logger = logging.getLogger("review_template")
 
 
 class NoSearchResultsAvailableError(Exception):
@@ -79,13 +81,37 @@ def get_imported_record_links() -> list:
     return imported_record_links
 
 
+def getbib(file: str) -> BibDatabase:
+    with open(file) as bibtex_file:
+        contents = bibtex_file.read()
+        bib_r = re.compile(r"^@.*{.*,", re.M)
+        if len(re.findall(bib_r, contents)) == 0:
+            logger.error(f"Not a bib file? {os.path.basename(file)}")
+            db = None
+        if "Early Access Date" in contents:
+            logger.error(
+                "Replace Early Access Date in bibfile before "
+                f"loading! {os.path.basename(file)}"
+            )
+            return None
+
+    with open(file) as bibtex_file:
+        db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=True,
+            common_strings=True,
+        ).parse_file(bibtex_file, partial=True)
+
+    return db
+
+
 def load_records(filepath: str) -> list:
 
     imported_record_links = get_imported_record_links()
 
     search_db = getbib(filepath)
 
-    logging.debug(f"Loaded {filepath} with {len(search_db.entries)} records")
+    logger.debug(f"Loaded {filepath} with {len(search_db.entries)} records")
 
     if search_db is None:
         return []
@@ -93,20 +119,19 @@ def load_records(filepath: str) -> list:
     search_file = os.path.basename(filepath)
     record_list = []
     for record in search_db.entries:
-        record["origin"] = search_file + "/" + record["ID"]
+        record.update(origin=search_file + "/" + record["ID"])
         if record["origin"] in imported_record_links:
-            logging.debug(f'skipped record {record["ID"]} (already imported)')
+            logger.debug(f'skipped record {record["ID"]} (already imported)')
             continue
 
         # Drop empty fields
         record = {k: v for k, v in record.items() if v}
 
-        record.update(rev_status="retrieved")
-        record.update(md_status="retrieved")
-        logging.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
+        record.update(status=RecordState.md_retrieved)
+        logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
 
-    logging.debug(f"Thereof {len(record_list)} new records (not yet imported)")
+    logger.debug(f"Thereof {len(record_list)} new records (not yet imported)")
 
     return record_list
 
@@ -125,9 +150,9 @@ def save_imported_record_links(bib_db: BibDatabase) -> None:
 
 def import_record(record: dict) -> dict:
 
-    logging.debug(f'import_record {record["ID"]}: \n{pp.pformat(record)}\n\n')
+    logger.debug(f'import_record {record["ID"]}: \n{pp.pformat(record)}\n\n')
 
-    if "retrieved" != record["md_status"]:
+    if RecordState.md_retrieved != record["status"]:
         return record
 
     # For better readability of the git diff:
@@ -155,7 +180,8 @@ def import_record(record: dict) -> dict:
                 .replace("}", "")
             )
 
-    record.update(md_status="imported")
+    record.update(metadata_source="ORIGINAL")
+    record.update(status=RecordState.md_imported)
 
     return record
 
@@ -182,7 +208,7 @@ def source_heuristics(search_file: str) -> str:
 def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
     search_details = REVIEW_MANAGER.load_search_details()
     search_details.append(new_record)
-    logging.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
+    logger.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
     REVIEW_MANAGER.save_search_details(search_details)
     return
 
@@ -229,18 +255,16 @@ def load_all_records(REVIEW_MANAGER) -> list:
     convert_to_bib(REVIEW_MANAGER, search_files)
 
     search_files = get_search_files(restrict=["bib"])
-    logging.debug(f"Search_files (bib, after conversion): {search_files}")
+    logger.debug(f"Search_files (bib, after conversion): {search_files}")
 
     from review_template import review_manager
 
-    review_manager.check_search_details(
-        REVIEW_MANAGER.paths["SEARCH_DETAILS"], REVIEW_MANAGER.search_type_opts
-    )
+    review_manager.check_search_details(REVIEW_MANAGER)
 
     load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
     additional_records = load_pool.map(load_records, search_files)
     len_lists = [len(additional_record) for additional_record in additional_records]
-    logging.debug(f"Length of additional_records lists: {len_lists}")
+    logger.debug(f"Length of additional_records lists: {len_lists}")
     load_pool.close()
     load_pool.join()
 
@@ -267,10 +291,10 @@ def bibutils_convert(script: str, data: str) -> str:
     client = docker.APIClient()
     try:
         cur_tag = docker.from_env().images.get("bibutils").tags[0]
-        logging.info(f"Running docker container created from {cur_tag}")
+        logger.info(f"Running docker container created from {cur_tag}")
         container = client.create_container("bibutils", script, stdin_open=True)
     except docker.errors.ImageNotFound:
-        logging.info("Docker image not found")
+        logger.info("Docker image not found")
         pass
         return ""
 
@@ -291,44 +315,20 @@ def bibutils_convert(script: str, data: str) -> str:
 
     client.remove_container(container)
 
-    # logging.debug('Exit: {}'.format(status_code))
-    # logging.debug('log stdout: {}'.format(stdout))
-    # logging.debug('log stderr: {}'.format(stderr))
+    # logger.debug('Exit: {}'.format(status_code))
+    # logger.debug('log stdout: {}'.format(stdout))
+    # logger.debug('log stderr: {}'.format(stderr))
 
     # TODO: else: raise error!
 
     return stdout
 
 
-def getbib(file: str) -> BibDatabase:
-    with open(file) as bibtex_file:
-        contents = bibtex_file.read()
-        bib_r = re.compile(r"^@.*{.*,", re.M)
-        if len(re.findall(bib_r, contents)) == 0:
-            logging.error(f"Not a bib file? {os.path.basename(file)}")
-            db = None
-        if "Early Access Date" in contents:
-            logging.error(
-                "Replace Early Access Date in bibfile before "
-                f"loading! {os.path.basename(file)}"
-            )
-            return None
-
-    with open(file) as bibtex_file:
-        db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=True,
-            common_strings=True,
-        ).parse_file(bibtex_file, partial=True)
-
-    return db
-
-
 def ris2bib(file: str) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if "TY  - " not in data:
-        logging.error("Error: Not a ris file? " + os.path.basename(file))
+        logger.error("Error: Not a ris file? " + os.path.basename(file))
         return None
 
     with open(file) as reader:
@@ -345,7 +345,7 @@ def end2bib(file: str) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if "%T " not in data:
-        logging.error("Error: Not an end file? " + os.path.basename(file))
+        logger.error("Error: Not an end file? " + os.path.basename(file))
         return None
 
     with open(file) as reader:
@@ -425,7 +425,7 @@ def csv2bib(file: str) -> BibDatabase:
     try:
         data = pd.read_csv(file)
     except pd.errors.ParserError:
-        logging.error("Error: Not a csv file? " + os.path.basename(file))
+        logger.error("Error: Not a csv file? " + os.path.basename(file))
         pass
         return None
     data.columns = data.columns.str.replace(" ", "_")
@@ -442,7 +442,7 @@ def xlsx2bib(file: str) -> BibDatabase:
     try:
         data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
     except pd.errors.ParserError:
-        logging.error("Error: Not an xlsx file: " + os.path.basename(file))
+        logger.error("Error: Not an xlsx file: " + os.path.basename(file))
         pass
         return None
     data.columns = data.columns.str.replace(" ", "_")
@@ -484,12 +484,12 @@ def pdf2bib(file: str) -> BibDatabase:
         db = bibtexparser.loads(r.text, parser=parser)
         return db
     if 500 == r.status_code:
-        logging.error(f"Not a readable pdf file: {os.path.basename(file)}")
-        logging.debug(f"Grobid: {r.text}")
+        logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        logger.debug(f"Grobid: {r.text}")
         return None
 
-    logging.debug(f"Status: {r.status_code}")
-    logging.debug(f"Response: {r.text}")
+    logger.debug(f"Status: {r.status_code}")
+    logger.debug(f"Response: {r.text}")
     return None
 
 
@@ -510,12 +510,12 @@ def pdfRefs2bib(file: str) -> BibDatabase:
             r["ID"] = r["ID"].rjust(3, "0")
         return db
     if 500 == r.status_code:
-        logging.error(f"Not a readable pdf file? {os.path.basename(file)}")
-        logging.debug(f"Grobid: {r.text}")
+        logger.error(f"Not a readable pdf file? {os.path.basename(file)}")
+        logger.debug(f"Grobid: {r.text}")
         return None
 
-    logging.debug(f"Status: {r.status_code}")
-    logging.debug(f"Response: {r.text}")
+    logger.debug(f"Status: {r.status_code}")
+    logger.debug(f"Response: {r.text}")
     return None
 
 
@@ -634,8 +634,8 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                 filetype = "pdf_refs"
 
         if filetype in conversion_scripts.keys():
-            logging.info(f"Loading {filetype}: {search_file}")
-            logging.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
+            logger.info(f"Loading {filetype}: {search_file}")
+            logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
             db = conversion_scripts[filetype](sfpath)
 
             db = fix_keys(db)
@@ -645,7 +645,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
 
             git_repo = REVIEW_MANAGER.get_repo()
             if db is None:
-                logging.error("No records loaded")
+                logger.error("No records loaded")
                 continue
             elif "pdf" == filetype:
                 new_fp = move_to_pdf_dir(sfpath)
@@ -676,13 +676,13 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
             if corresponding_bib_file != sfpath and not ".bib" == sfpath[-4:]:
                 new_file_path = sfpath[: sfpath.rfind(".")] + ".bib"
                 if not os.path.exists(new_file_path):
-                    logging.info(
+                    logger.info(
                         f"Loaded {len(db.entries)} " f"records from {search_file}"
                     )
                     with open(new_file_path, "w") as fi:
                         fi.write(bibtexparser.dumps(db))
         else:
-            logging.info("Filetype not recognized: " + search_file)
+            logger.info("Filetype not recognized: " + search_file)
             continue
 
     return
@@ -716,7 +716,8 @@ def processing_condition(record: dict) -> bool:
     global batch_end
 
     # Do not count records that have already been imported
-    if "retrieved" != record.get("md_status", "NA"):
+
+    if RecordState.md_retrieved != record["status"]:
         return False
 
     if 0 == current_batch_counter:
@@ -734,11 +735,11 @@ def processing_condition(record: dict) -> bool:
 
 def save_imported_files(REVIEW_MANAGER, bib_db: BibDatabase) -> bool:
     if bib_db is None:
-        logging.info("No records imported")
+        logger.info("No records imported")
         return False
 
     if 0 == len(bib_db.entries):
-        logging.info("No records imported")
+        logger.info("No records imported")
         return False
 
     REVIEW_MANAGER.save_bib_file(bib_db, MAIN_REFERENCES)
@@ -748,7 +749,7 @@ def save_imported_files(REVIEW_MANAGER, bib_db: BibDatabase) -> bool:
     git_repo.index.add([MAIN_REFERENCES])
 
     if not git_repo.is_dirty():
-        logging.info("No new records added to MAIN_REFERENCES")
+        logger.info("No new records added to MAIN_REFERENCES")
         return False
 
     return True
@@ -764,13 +765,14 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     global SEARCH_DETAILS
     global MAIN_REFERENCES
     global BATCH_SIZE
+    global logger
 
     SEARCH_DETAILS = REVIEW_MANAGER.paths["SEARCH_DETAILS"]
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
 
-    logging.info("Import")
-    logging.info(f"Batch size: {BATCH_SIZE}")
+    logger.info("Import")
+    logger.info(f"Batch size: {BATCH_SIZE}")
 
     bib_db = BibDatabase()
     record_iterator = IteratorEx(load_all_records(REVIEW_MANAGER))
@@ -783,20 +785,19 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
             processing_condition(record)  # updates counters
 
         if batch_start > 1:
-            logging.info("Continuing batch import started earlier")
+            logger.info("Continuing batch import started earlier")
         if 0 == batch_end:
-            logging.info("No new records")
+            logger.info("No new records")
             break
         if 1 == batch_end:
-            logging.info("Importing one record")
+            logger.info("Importing one record")
         if batch_end != 1:
-            logging.info(f"Importing records {batch_start} to {batch_end}")
+            logger.info(f"Importing records {batch_start} to {batch_end}")
 
         pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
         bib_db.entries = pool.map(import_record, bib_db.entries)
         pool.close()
         pool.join()
-
         if not keep_ids:
             bib_db = REVIEW_MANAGER.set_IDs(bib_db)
 

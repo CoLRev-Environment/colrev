@@ -1,14 +1,47 @@
 import datetime
+import difflib
 import logging
 import os
 import pprint
-import subprocess
+from collections import OrderedDict
 
+import ansiwrap
 import click
 import click_completion.core
 import git
+from bibtexparser.bibdatabase import BibDatabase
+from dictdiffer import diff
+
+from review_template.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+
+logger = logging.getLogger("review_template")
+
+key_order = [
+    "ENTRYTYPE",
+    "ID",
+    "year",
+    "author",
+    "title",
+    "journal",
+    "booktitle",
+    "volume",
+    "number",
+    "doi",
+    "link",
+    "url",
+    "fulltext",
+    "status",
+]
+
+
+def customsort(dict1: dict) -> OrderedDict:
+    items = [dict1[k] if k in dict1.keys() else "" for k in key_order]
+    sorted_dict = OrderedDict()
+    for i in range(len(key_order)):
+        sorted_dict[key_order[i]] = items[i]
+    return sorted_dict
 
 
 def custom_startswith(string, incomplete):
@@ -132,7 +165,6 @@ def init(ctx) -> bool:
 
 def print_review_instructions(review_instructions: dict) -> None:
 
-    logging.debug(pp.pformat(review_instructions))
     print("\n\nNext steps\n")
 
     keylist = [list(x.keys()) for x in review_instructions]
@@ -157,7 +189,6 @@ def print_review_instructions(review_instructions: dict) -> None:
 
 def print_collaboration_instructions(collaboration_instructions: dict) -> None:
 
-    logging.debug(pp.pformat(collaboration_instructions))
     print(collaboration_instructions["title"] + "\n")
 
     if "status" in collaboration_instructions:
@@ -197,8 +228,8 @@ def print_progress(stat: dict) -> None:
     # possible extension: estimate the number of manual tasks (making assumptions on
     # frequencies of man-prep, ...)?
 
-    total_atomic_steps = stat["review_status"]["overall"]["atomic_steps"]
-    completed_steps = stat["review_status"]["currently"]["completed_atomic_steps"]
+    total_atomic_steps = stat["atomic_steps"]
+    completed_steps = stat["completed_atomic_steps"]
 
     if total_atomic_steps != 0:
         current = int((completed_steps / total_atomic_steps) * 100)
@@ -229,22 +260,38 @@ def status(ctx) -> None:
     from review_template import status
     from review_template.review_manager import ReviewManager
 
-    status.repository_validation()
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.update_status_yaml()
-
-    # TODO: check whether it is a valid git repo
 
     print("\nChecks\n")
-    ret = subprocess.call(["pre-commit", "run", "-a"])
 
-    if ret == 0:
+    ret_check = REVIEW_MANAGER.check_repo()
+    if 0 == ret_check["status"]:
+        print(
+            "  ReviewManager.check_repo() ...... "
+            f'{colors.GREEN}{ret_check["msg"]}{colors.END}'
+        )
+    if 1 == ret_check["status"]:
+        print(f"  ReviewManager.check_repo() ...... {colors.RED}FAIL{colors.END}")
+        print(f'\n    {ret_check["msg"]}\n')
+
+    ret_f = REVIEW_MANAGER.format_references()
+    if 0 == ret_f["status"]:
+        print(
+            "  ReviewManager.format()     ...... "
+            f'{colors.GREEN}{ret_f["msg"]}{colors.END}'
+        )
+    if 1 == ret_f["status"]:
+        print(f"  ReviewManager.format()     ...... {colors.RED}FAIL{colors.END}")
+        print(f'\n    {ret_f["msg"]}\n')
+
+    REVIEW_MANAGER.update_status_yaml()
+
+    if ret_check["status"] + ret_f["status"] == 0:
         stat = status.get_status_freq(REVIEW_MANAGER)
         status.print_review_status(REVIEW_MANAGER, stat)
         print_progress(stat)
 
         instructions = status.get_instructions(REVIEW_MANAGER, stat)
-        logging.debug(pp.pformat(instructions))
         print_review_instructions(instructions["review_instructions"])
         print_collaboration_instructions(instructions["collaboration_instructions"])
 
@@ -463,8 +510,8 @@ def load(ctx, keep_ids) -> None:
     "--reprocess",
     is_flag=True,
     default=False,
-    help="Prepare all records set to md_status="
-    + "needs_manual_preparation again. Useful if "
+    help="Prepare all records set to status="
+    + "md_needs_manual_preparation again. Useful if "
     + "network/databases were not available",
 )
 @click.option(
@@ -527,23 +574,173 @@ def dedupe(ctx) -> None:
     return
 
 
+record_type_mapping = {
+    "a": "article",
+    "p": "inproceedings",
+    "b": "book",
+    "ib": "inbook",
+    "pt": "phdthesis",
+    "mt": "masterthesis",
+    "o": "other",
+    "unp": "unpublished",
+}
+
+
+def print_record(record: dict) -> None:
+    # Escape sequence to clear terminal output for each new comparison
+    os.system("cls" if os.name == "nt" else "clear")
+    pp.pprint(record)
+    if "title" in record:
+        print(
+            "https://scholar.google.de/scholar?hl=de&as_sdt=0%2C5&q="
+            + record["title"].replace(" ", "+")
+        )
+    return
+
+
+def man_correct_recordtype(record: dict) -> dict:
+
+    if "n" == input("ENTRYTYPE=" + record["ENTRYTYPE"] + " correct?"):
+        choice = input(
+            "Correct type: "
+            + "a (article), p (inproceedings), "
+            + "b (book), ib (inbook), "
+            + "pt (phdthesis), mt (masterthesis), "
+            "unp (unpublished), o (other), "
+        )
+        assert choice in record_type_mapping.keys()
+        correct_record_type = [
+            value for (key, value) in record_type_mapping.items() if key == choice
+        ]
+        record["ENTRYTYPE"] = correct_record_type[0]
+    return record
+
+
+def man_provide_required_fields(record: dict) -> dict:
+    from review_template import prepare
+
+    if prepare.is_complete(record):
+        return record
+
+    reqs = prepare.record_field_requirements[record["ENTRYTYPE"]]
+    for field in reqs:
+        if field not in record:
+            value = input("Please provide the " + field + " (or NA)")
+            record[field] = value
+    return record
+
+
+def man_fix_field_inconsistencies(record: dict) -> dict:
+    from review_template import prepare
+
+    if not prepare.has_inconsistent_fields(record):
+        return record
+
+    print("TODO: ask whether the inconsistent fields can be dropped?")
+
+    return record
+
+
+def man_fix_incomplete_fields(record: dict) -> dict:
+    from review_template import prepare
+
+    if not prepare.has_incomplete_fields(record):
+        return record
+
+    print("TODO: ask for completion of fields")
+    # organize has_incomplete_fields() values in a dict?
+
+    return record
+
+
+def prep_man_records_cli(REVIEW_MANAGER):
+    from review_template import prep_man
+
+    saved_args = locals()
+
+    md_prep_man_data = prep_man.get_data(REVIEW_MANAGER)
+    stat_len = md_prep_man_data["nr_tasks"]
+    PAD = md_prep_man_data["PAD"]
+    all_ids = md_prep_man_data["all_ids"]
+    # TODO: log details for processing_report
+
+    logger.debug(pp.pformat(md_prep_man_data))
+
+    if 0 == stat_len:
+        logger.info("No records to prepare manually")
+
+    input("Man-prep not fully implemented (yet).")
+
+    i = 0
+    for record in md_prep_man_data["items"]:
+
+        print("\n\n")
+        revrecord = customsort(record)
+        pp.pprint(revrecord)
+
+        ret = "NA"
+        i += 1
+        while ret not in ["u", "s", "q"]:
+            ret = input(f"({i}/{stat_len}) Update this record [u,q,s]? ")
+            if "q" == ret:
+                quit_pressed = True
+            elif "s" == ret:
+                continue
+            elif "u":
+
+                # os.system("cls" if os.name == "nt" else "clear")
+                # print(f"{i}/{stat_len}")
+                # i += 1
+                # print_record(record)
+
+                man_correct_recordtype(record)
+                man_provide_required_fields(record)
+                man_fix_field_inconsistencies(record)
+                man_fix_incomplete_fields(record)
+
+                # Note: for complete_based_on_doi field:
+                # record = prepare.retrieve_doi_metadata(record)
+
+                # TODO : maybe update the IDs when we have a replace_record procedure
+                # that can handle changes in IDs
+                # record.update(
+                #     ID=REVIEW_MANAGER.generate_ID_blacklist(
+                #         record, all_ids, record_in_bib_db=True, raise_error=False
+                #     )
+                # )
+                # all_ids.append(record["ID"])
+
+                prep_man.update_record(REVIEW_MANAGER, record, PAD)
+
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
+    REVIEW_MANAGER.create_commit(
+        "Manual preparation of records", saved_args, manual_author=True
+    )
+
+    return
+
+
 @main.command(help_priority=7)
 @click.option(
     "--stats",
     is_flag=True,
     default=False,
-    help="Print statistics of records with md_status needs_manual_preparation",
+    help="Print statistics of records with status md_needs_manual_preparation",
 )
 @click.option(
     "--extract",
     is_flag=True,
     default=False,
-    help="Extract records with md_status needs_manual_preparation",
+    help="Extract records with status md_needs_manual_preparation",
 )
 @click.pass_context
-def man_prep(ctx, stats, extract) -> None:
+def prep_man(ctx, stats, extract) -> None:
     """Manual preparation of records"""
-    from review_template import man_prep
+    from review_template import prep_man
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
     from review_template.review_manager import Process
@@ -551,23 +748,193 @@ def man_prep(ctx, stats, extract) -> None:
     REVIEW_MANAGER = ReviewManager()
 
     if stats:
-        man_prep.man_prep_stats(REVIEW_MANAGER)
+        prep_man.prep_man_stats(REVIEW_MANAGER)
     elif extract:
-        man_prep.extract_needs_man_prep(REVIEW_MANAGER)
+        prep_man.extract_needs_prep_man(REVIEW_MANAGER)
     else:
         REVIEW_MANAGER.notify(
-            Process(ProcessType.man_prep, man_prep.man_prep_records, interactive=True)
+            Process(ProcessType.prep_man, prep_man_records_cli, interactive=True)
         )
-        man_prep.man_prep_records(REVIEW_MANAGER)
+        prep_man_records_cli(REVIEW_MANAGER)
 
+    return
+
+
+def print_diff(change: dict, prefix_len: int) -> None:
+
+    d = difflib.Differ()
+
+    if change[0] == "change":
+        if change[1] not in ["ID", "status"]:
+            letters = list(d.compare(change[2][0], change[2][1]))
+            for i in range(len(letters)):
+                if letters[i].startswith("  "):
+                    letters[i] = letters[i][-1]
+                elif letters[i].startswith("+ "):
+                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                elif letters[i].startswith("- "):
+                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+            prefix = change[1] + ": "
+            print(
+                ansiwrap.fill(
+                    "".join(letters),
+                    initial_indent=prefix.ljust(prefix_len),
+                    subsequent_indent=" " * prefix_len,
+                )
+            )
+    elif change[0] == "add":
+        prefix = change[1] + ": "
+        print(
+            ansiwrap.fill(
+                f"{colors.RED}{change[2]}{colors.END}",
+                initial_indent=prefix.ljust(prefix_len),
+                subsequent_indent=" " * prefix_len,
+            )
+        )
+    elif change[0] == "remove":
+        prefix = change[1] + ": "
+        print(
+            ansiwrap.fill(
+                f"{colors.GREEN}{change[2]}{colors.END}",
+                initial_indent=prefix.ljust(prefix_len),
+                subsequent_indent=" " * prefix_len,
+            )
+        )
+    return
+
+
+def merge_manual_dialogue(bib_db: BibDatabase, item: dict, stat: str) -> dict:
+    if "decision" in item:
+        return item
+
+    # Note: all changes must be made to the main_record (i.e., if we display
+    # the main_record on the left side and if the user selects "1", this
+    # means "no changes to the main record".)
+    # We effectively have to consider only cases in which the user
+    # wants to merge fields from the duplicate record into the main record
+
+    main_record = [x for x in bib_db.entries if item["main_ID"] == x["ID"]][0]
+    duplicate_record = [x for x in bib_db.entries if item["duplicate_ID"] == x["ID"]][0]
+
+    # Escape sequence to clear terminal output for each new comparison
+    # os.system("cls" if os.name == "nt" else "clear")
+    print(
+        f"Merge {colors.GREEN}{main_record['ID']}{colors.END} < "
+        + f"{colors.RED}{duplicate_record['ID']}{colors.END}?\n"
+    )
+
+    keys = set(list(main_record) + list(duplicate_record))
+    differences = list(diff(main_record, duplicate_record))
+
+    if len([x[2] for x in differences if "add" == x[0]]) > 0:
+        added_fields = [y[0] for y in [x[2] for x in differences if "add" == x[0]][0]]
+    else:
+        added_fields = []
+    if len([x[2] for x in differences if "remove" == x[0]]) > 0:
+        removed_fields = [
+            y[0] for y in [x[2] for x in differences if "remove" == x[0]][0]
+        ]
+    else:
+        removed_fields = []
+    prefix_len = len(max(keys, key=len) + ": ")
+    for key in [
+        "author",
+        "title",
+        "journal",
+        "booktitle",
+        "year",
+        "volume",
+        "number",
+        "pages",
+        "doi",
+        "ENTRYTYPE",
+    ]:
+        if key in added_fields:
+            change = [
+                y
+                for y in [x[2] for x in differences if "add" == x[0]][0]
+                if key == y[0]
+            ]
+            print_diff(("add", *change[0]), prefix_len)
+        elif key in removed_fields:
+            change = [
+                y
+                for y in [x[2] for x in differences if "remove" == x[0]][0]
+                if key == y[0]
+            ]
+            print_diff(("remove", *change[0]), prefix_len)
+        elif key in [x[1] for x in differences]:
+            change = [x for x in differences if x[1] == key]
+            print_diff(change[0], prefix_len)
+        elif key in keys:
+            prefix = key + ": "
+            print(
+                ansiwrap.fill(
+                    main_record[key],
+                    initial_indent=prefix.ljust(prefix_len),
+                    subsequent_indent=" " * prefix_len,
+                )
+            )
+
+    response_string = "(" + stat + ") Merge records [y,n,d,q,?]? "
+    response = input("\n" + response_string)
+    while response not in ["y", "n", "d", "q"]:
+        print(
+            f"y - merge the {colors.RED}red record{colors.END} into the "
+            + f"{colors.GREEN}green record{colors.END}"
+        )
+        print("n - keep both records (not duplicates)")
+        print("d - detailed merge: decide for each field (to be implemented)")
+        print("q - stop processing duplicate records")
+        print("? - print help")
+        response = input(response_string)
+
+    if "y" == response:
+        item["decision"] = "duplicate"
+
+    if "n" == response:
+        item["decision"] = "no_duplicate"
+
+    if "q" == response:
+        item["decision"] = "quit"
+
+    return item
+
+
+def dedupe_man_cli(REVIEW_MANAGER):
+    from review_template import dedupe_man
+
+    saved_args = locals()
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    dedupe_man_data = dedupe_man.get_data(REVIEW_MANAGER, bib_db)
+    if 0 == dedupe_man_data["nr_tasks"]:
+        return
+
+    for i, dedupe_man_item in enumerate(dedupe_man_data["items"]):
+        stat = str(i) + "/" + str(dedupe_man_data["nr_tasks"])
+
+        dedupe_man_item = merge_manual_dialogue(bib_db, dedupe_man_item, stat)
+        bib_db = dedupe_man.apply_manual_dedupe_decision(
+            REVIEW_MANAGER, bib_db, dedupe_man_item
+        )
+
+        if "quit" == dedupe_man_item["decision"]:
+            if "y" == input("Create commit (y/n)?"):
+                break
+            else:
+                return
+
+    REVIEW_MANAGER.create_commit(
+        "Process duplicates manually", saved_args, manual_author=True
+    )
     return
 
 
 @main.command(help_priority=8)
 @click.pass_context
-def man_dedupe(ctx) -> None:
+def dedupe_man(ctx) -> None:
     """Manual processing of duplicates"""
-    from review_template import man_dedupe
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
@@ -576,9 +943,10 @@ def man_dedupe(ctx) -> None:
     try:
         REVIEW_MANAGER = ReviewManager()
         REVIEW_MANAGER.notify(
-            Process(ProcessType.man_dedupe, man_dedupe.main, interactive=True)
+            Process(ProcessType.dedupe_man, merge_manual_dialogue, interactive=True)
         )
-        man_dedupe.main(REVIEW_MANAGER)
+        dedupe_man_cli(REVIEW_MANAGER)
+
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -592,34 +960,32 @@ def prescreen_cli(
     REVIEW_MANAGER,
 ) -> None:
 
-    from review_template import prescreen, screen
+    from review_template import prescreen
 
-    # Note : the get_next() (generator/yield ) pattern would be appropriate for GUIs...
+    logger = logging.getLogger("review_template")
 
-    git_repo = REVIEW_MANAGER.get_repo()
+    prescreen_data = prescreen.get_data(REVIEW_MANAGER)
+    stat_len = prescreen_data["nr_tasks"]
+    PAD = prescreen_data["PAD"]
 
     pp = pprint.PrettyPrinter(indent=4, width=140)
-    i, quit_pressed = 1, False
-    PAD = 50
-    # PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
-    # logging.info("Start prescreen")
-    # stat_len = len(
-    #     [x for x in bib_db.entries if "retrieved" == x.get("rev_status", "NA")]
-    # )
-    stat_len = 100  # TODO
-    if 0 == stat_len:
-        logging.info("No records to prescreen")
+    i, quit_pressed = 0, False
 
-    for record in prescreen.get_next_prescreening_item(REVIEW_MANAGER):
+    logging.info("Start prescreen")
+
+    if 0 == stat_len:
+        logger.info("No records to prescreen")
+
+    for record in prescreen_data["items"]:
 
         print("\n\n")
-        revrecord = screen.customsort(record)
+        revrecord = customsort(record)
         pp.pprint(revrecord)
 
         ret, inclusion_decision = "NA", "NA"
+        i += 1
         while ret not in ["y", "n", "s", "q"]:
-            # ret = input(f"({i+1}/{stat_len}) Include this record [y,n,q,s]? ")
-            ret = input("Include this record [y,n,q,s]? ")
+            ret = input(f"({i}/{stat_len}) Include this record [y,n,q,s]? ")
             if "q" == ret:
                 quit_pressed = True
             elif "s" == ret:
@@ -628,22 +994,23 @@ def prescreen_cli(
                 inclusion_decision = ret.replace("y", "yes").replace("n", "no")
 
         if quit_pressed:
-            logging.info("Stop prescreen")
+            logger.info("Stop prescreen")
             break
 
         if "no" == inclusion_decision:
-            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], False)
-            logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Excluded in prescreen")
+            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], PAD, False)
         if "yes" == inclusion_decision:
-            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], True)
-            logging.info(f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen")
+            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], PAD, True)
 
     if i < stat_len:  # if records remain for pre-screening
         if "y" != input("Create commit (y/n)?"):
             return
-    elif i == stat_len:
-        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
-        REVIEW_MANAGER.create_commit("Pre-screening (manual)", manual_author=True)
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    REVIEW_MANAGER.create_commit(
+        "Pre-screening (manual)", manual_author=True, saved_args=None
+    )
     return
 
 
@@ -693,11 +1060,137 @@ def prescreen(ctx, include_all, export_format, import_table) -> None:
     return
 
 
+def screen_cli(
+    REVIEW_MANAGER,
+) -> None:
+
+    from review_template import screen
+
+    logger = logging.getLogger("review_template")
+
+    screen_data = screen.get_data(REVIEW_MANAGER)
+    stat_len = screen_data["nr_tasks"]
+    PAD = screen_data["PAD"]
+
+    pp = pprint.PrettyPrinter(indent=4, width=140)
+    i, quit_pressed = 0, False
+
+    logging.info("Start screen")
+
+    if 0 == stat_len:
+        logger.info("No records to prescreen")
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    excl_criteria = screen.get_exclusion_criteria(bib_db)
+    if excl_criteria:
+        excl_criteria_available = True
+    else:
+        excl_criteria_available = False
+        excl_criteria = ["NA"]
+
+    for record in screen_data["items"]:
+
+        print("\n\n")
+        i += 1
+        skip_pressed = False
+
+        revrecord = customsort(record.copy())
+        pp.pprint(revrecord)
+
+        if excl_criteria_available:
+            decisions = []
+
+            for exclusion_criterion in excl_criteria:
+
+                decision, ret = "NA", "NA"
+                while ret not in ["y", "n", "q", "s"]:
+                    ret = input(
+                        f"({i}/{stat_len}) Violates"
+                        f" {exclusion_criterion} [y,n,q,s]? "
+                    )
+                    if "q" == ret:
+                        quit_pressed = True
+                    elif "s" == ret:
+                        skip_pressed = True
+                        continue
+                    elif ret in ["y", "n"]:
+                        decision = ret
+
+                if quit_pressed or skip_pressed:
+                    break
+
+                decisions.append([exclusion_criterion, decision])
+
+            if skip_pressed:
+                continue
+            if quit_pressed:
+                logger.info("Stop screen")
+                break
+
+            ec_field = ""
+            for exclusion_criterion, decision in decisions:
+                if ec_field != "":
+                    ec_field = f"{ec_field};"
+                decision = decision.replace("y", "yes").replace("n", "no")
+                ec_field = f"{ec_field}{exclusion_criterion}={decision}"
+            record["excl_criteria"] = ec_field.replace(" ", "")
+
+            if all([decision == "n" for ec, decision in decisions]):
+                record.update(status=RecordState.rev_included)
+                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+            else:
+                record.update(status=RecordState.rev_excluded)
+                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+
+        else:
+
+            decision, ret = "NA", "NA"
+            while ret not in ["y", "n", "q", "s"]:
+                ret = input(f"({i}/{stat_len}) Include [y,n,q,s]? ")
+                if "q" == ret:
+                    quit_pressed = True
+                elif "s" == ret:
+                    skip_pressed = True
+                    continue
+                elif ret in ["y", "n"]:
+                    decision = ret
+
+            if quit_pressed:
+                logger.info("Stop screen")
+                break
+
+            if decision == "y":
+                record.update(status=RecordState.rev_included)
+                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+            if decision == "n":
+                record.update(status=RecordState.rev_excluded)
+                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+
+            record["excl_criteria"] = "NA"
+
+        if quit_pressed:
+            logger.info("Stop screen")
+            break
+
+    if stat_len == 0:
+        logger.info("No records to screen")
+        return
+
+    if i < stat_len:  # if records remain for screening
+        if "y" != input("Create commit (y/n)?"):
+            return
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    REVIEW_MANAGER.create_commit(
+        "Screening (manual)", manual_author=True, saved_args=None
+    )
+    return
+
+
 @main.command(help_priority=10)
 @click.pass_context
 def screen(ctx) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
-    from review_template import screen
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
@@ -705,10 +1198,8 @@ def screen(ctx) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.screen, screen.screen, interactive=True)
-        )
-        screen.screen(REVIEW_MANAGER)
+        REVIEW_MANAGER.notify(Process(ProcessType.screen, screen_cli, interactive=True))
+        screen_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -762,11 +1253,110 @@ def pdf_prepare(ctx) -> None:
     return
 
 
+def get_pdf_from_google(record: dict) -> dict:
+    import urllib.parse
+
+    # import webbrowser
+
+    title = record["title"]
+    title = urllib.parse.quote_plus(title)
+    url = f"https://www.google.com/search?q={title}+filetype%3Apdf"
+    # webbrowser.open_new_tab(url)
+    print(url)
+    return record
+
+
+def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
+
+    logger.debug(f"called man_retrieve for {pp.pformat(item)}")
+    print(stat)
+    pp.pprint(item)
+
+    record = [x for x in bib_db.entries if item["ID"] == x["ID"]][0]
+    if RecordState.pdf_needs_manual_retrieval != record["status"]:
+        return record
+
+    retrieval_scripts = {
+        "get_pdf_from_google": get_pdf_from_google,
+        #  'get_pdf_from_researchgate': get_pdf_from_researchgate,
+    }
+
+    for retrieval_script in retrieval_scripts:
+        logger.debug(f'{retrieval_script}({record["ID"]}) called')
+        record = retrieval_scripts[retrieval_script](record)
+        if "y" == input("Retrieved (y/n)?"):
+            # TODO : some of the following should be moved
+            # to the pdf_get_man script ("apply changes")
+            filepath = os.path.join(
+                REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
+            )
+            if not os.path.exists(filepath):
+                print(f'File does not exist: {record["ID"]}.pdf')
+            else:
+                record.update(status=RecordState.pdf_imported)
+                git_repo = REVIEW_MANAGER.get_repo()
+                if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+                    record.update(file=filepath)
+                    git_repo.index.add([filepath])
+                REVIEW_MANAGER.replace_record_by_ID(record)
+                MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+                git_repo.index.add([MAIN_REFERENCES])
+                break
+    if "y" == input("Set to pdf_not_available (y/n)?"):
+        record.update(status=RecordState.pdf_not_available)
+        git_repo = REVIEW_MANAGER.get_repo()
+        REVIEW_MANAGER.replace_record_by_ID(record)
+        MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        git_repo.index.add([MAIN_REFERENCES])
+
+    return record
+
+
+def pdf_get_man_cli(REVIEW_MANAGER):
+    from review_template import pdf_get
+    from review_template import pdf_get_man
+
+    saved_args = locals()
+    logger.info("Retrieve PDFs manually")
+
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = pdf_get.check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
+
+    for record in bib_db.entries:
+        record = pdf_get.link_pdf(record, PDF_DIRECTORY, set_needs_man_retrieval=False)
+
+    pdf_get_man.export_retrieval_table(bib_db)
+
+    pdf_get_man_data = pdf_get_man.get_data(REVIEW_MANAGER)
+
+    input("Get the pdfs, rename them (ID.pdf) and store them in the pdfs directory.")
+
+    for i, item in enumerate(pdf_get_man_data["items"]):
+        stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
+        man_retrieve(REVIEW_MANAGER, bib_db, item, stat)
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    if git_repo.is_dirty():
+        if "y" == input("Create commit (y/n)?"):
+            REVIEW_MANAGER.create_commit(
+                "Retrieve PDFs manually", saved_args, manual_author=True
+            )
+    else:
+        logger.info(
+            "Retrieve PDFs manually and copy the files to "
+            f"the {PDF_DIRECTORY}. Afterwards, use "
+            "review_template pdf-get-man"
+        )
+
+    return
+
+
 @main.command(help_priority=13)
 @click.pass_context
 def pdf_get_man(ctx) -> None:
     """Get PDFs manually"""
-    from review_template import pdf_get_man
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
@@ -775,12 +1365,73 @@ def pdf_get_man(ctx) -> None:
     try:
         REVIEW_MANAGER = ReviewManager()
         REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_get_man, pdf_get_man.main, interactive=True)
+            Process(ProcessType.pdf_get_man, pdf_get_man_cli, interactive=True)
         )
-        pdf_get_man.main(REVIEW_MANAGER)
+        pdf_get_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
+    return
+
+
+def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
+    logger.debug(f"called man_pdf_prep for {pp.pformat(item)}")
+    print(stat)
+    pp.pprint(item)
+
+    record = [x for x in bib_db.entries if item["ID"] == x["ID"]][0]
+    if RecordState.pdf_needs_manual_preparation != record["status"]:
+        return record
+
+    print("Manual preparation needed (TODO: include details)")
+
+    if "y" == input("Prepared? (y/n)?"):
+
+        filepath = os.path.join(
+            REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
+        )
+        if not os.path.exists(filepath):
+            print(f'File does not exist: {record["ID"]}.pdf')
+        else:
+            record.update(status=RecordState.pdf_prepared)
+            git_repo = REVIEW_MANAGER.get_repo()
+            if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+                record.update(file=filepath)
+                git_repo.index.add([filepath])
+            REVIEW_MANAGER.replace_record_by_ID(record)
+            MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+            git_repo.index.add([MAIN_REFERENCES])
+    return
+
+
+def pdf_prep_man_cli(REVIEW_MANAGER):
+    from review_template import pdf_prep_man
+
+    saved_args = locals()
+    input(
+        "TODO: check /print problems for each PDF with status = "
+        "pdf_needs_manual_preparation and suggest how it could be fixed"
+    )
+
+    pdf_prep_man_data = pdf_prep_man.get_data(REVIEW_MANAGER)
+    bib_db = REVIEW_MANAGER.load_main_refs()
+
+    for i, item in enumerate(pdf_prep_man_data["items"]):
+        stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
+        man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat)
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
+    if git_repo.is_dirty():
+        if "y" == input("Create commit (y/n)?"):
+            REVIEW_MANAGER.create_commit(
+                "Prepare PDFs manually", saved_args, manual_author=True
+            )
+    else:
+        logger.info(
+            "Prepare PDFs manually. Afterwards, use review_template pdf-get-man"
+        )
+
     return
 
 
@@ -788,7 +1439,6 @@ def pdf_get_man(ctx) -> None:
 @click.pass_context
 def pdf_prep_man(ctx) -> None:
     """Prepare PDFs manually"""
-    from review_template import pdf_prep_man
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
@@ -797,9 +1447,9 @@ def pdf_prep_man(ctx) -> None:
     try:
         REVIEW_MANAGER = ReviewManager()
         REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_prep_man, pdf_prep_man.main, interactive=True)
+            Process(ProcessType.pdf_prep_man, pdf_prep_man_cli, interactive=True)
         )
-        pdf_prep_man.main(REVIEW_MANAGER)
+        pdf_prep_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -923,11 +1573,17 @@ ccs = click_completion.core.shells
 def debug(ctx, activate, deactivate):
     """Debug"""
     from review_template import debug
+    from review_template import review_manager
+
+    review_manager.setup_logger()
+    logger = logging.getLogger("review_template")
 
     if activate:
+        logger.info("Debugging activated")
         debug.set_debug_mode(True)
 
     elif deactivate:
+        logger.info("Debugging deactivated")
         debug.set_debug_mode(False)
     else:
         debug.main()
