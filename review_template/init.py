@@ -39,6 +39,24 @@ def connect_to_remote(repo: git.Repo, remote_url: str) -> None:
     return
 
 
+class NonEmptyDirectoryError(Exception):
+    def __init__(self):
+        self.message = "please change to an empty directory to initialize a project"
+        super().__init__(self.message)
+
+
+def require_empty_directory():
+
+    cur_content = os.listdir(os.getcwd())
+    if "venv" in cur_content:
+        cur_content.remove("venv")
+    if "report.log" in cur_content:
+        cur_content.remove("report.log")
+
+    if 0 != len(cur_content):
+        raise NonEmptyDirectoryError()
+
+
 def initialize_repo(
     project_title: str,
     SHARE_STAT_REQ: str,
@@ -49,9 +67,7 @@ def initialize_repo(
 
     saved_args = locals()
 
-    if 0 != len(os.listdir(os.getcwd())) and ["report.log"] != os.listdir(os.getcwd()):
-        logging.error("Directory not empty.")
-        return 0
+    require_empty_directory()
 
     assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
     assert PDF_HANDLING in ["EXT", "GIT"]
@@ -65,19 +81,20 @@ def initialize_repo(
         return 0
     committer_name, committer_email = global_git_vars
 
-    # REPO_SETUP_VERSION = repo_setup.paths.keys()[-1]
-    REPO_SETUP_VERSION = "v_0.1"
-
     repo = git.Repo.init()
     os.mkdir("search")
 
     from review_template import review_manager
 
-    review_manager.retrieve_package_file("../template/readme.md", "readme.md")
     review_manager.retrieve_package_file(
-        "../template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
+        "review_template/template/readme.md", "readme.md"
     )
-    review_manager.retrieve_package_file("../template/.gitattributes", ".gitattributes")
+    review_manager.retrieve_package_file(
+        "review_template/template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
+    )
+    review_manager.retrieve_package_file(
+        "review_template/template/.gitattributes", ".gitattributes"
+    )
 
     review_manager.inplace_change(
         "readme.md", "{{project_title}}", project_title.rstrip(" ")
@@ -94,7 +111,6 @@ def initialize_repo(
 
     shared_config = configparser.ConfigParser()
     shared_config.add_section("general")
-    shared_config["general"]["REPO_SETUP_VERSION"] = REPO_SETUP_VERSION
     shared_config["general"]["SHARE_STAT_REQ"] = SHARE_STAT_REQ
     shared_config["general"]["PDF_HANDLING"] = PDF_HANDLING
     with open("shared_config.ini", "w") as configfile:
@@ -108,7 +124,8 @@ def initialize_repo(
         + "private_config.ini\n"
         + "missing_pdf_files.csv\n"
         + "manual_cleansing_statistics.csv\n"
-        + "data.csv"
+        + "data.csv\n"
+        + "venv"
     )
     f.close()
 
@@ -141,7 +158,6 @@ def initialize_repo(
     logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
     logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
     logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
-    logger.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
 
     REVIEW_MANAGER.create_commit(
         "Initial commit", manual_author=True, saved_args=saved_args

@@ -296,7 +296,11 @@ def update_synthesized_status(REVIEW_MANAGER, bib_db):
 
 
 def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
+    from review_template.review_manager import Process, ProcessType
+
     saved_args = locals()
+
+    REVIEW_MANAGER.notify(Process(ProcessType.data))
 
     global MANUSCRIPT
     global DATA

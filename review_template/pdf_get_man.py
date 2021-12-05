@@ -50,6 +50,9 @@ def export_retrieval_table(bib_db: BibDatabase) -> None:
 
 
 def get_data(REVIEW_MANAGER):
+    from review_template.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_get_man))
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(
         [

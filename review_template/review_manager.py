@@ -334,6 +334,14 @@ class MissingDependencyError(Exception):
         super().__init__(self.message)
 
 
+class SoftwareUpgradeError(Exception):
+    def __init__(self, old, new):
+        self.message = (
+            f"Detected upgrade from {old} to {new}. Please use XXX to upgreade."
+        )
+        super().__init__(self.message)
+
+
 class GitConflictError(Exception):
     def __init__(self, path):
         self.message = f"please resolve git conflict in {path}"
@@ -547,6 +555,19 @@ def check_docker_installed() -> None:
     return
 
 
+def get_base_prefix_compat():
+    """Get base/real prefix, or sys.prefix if there is none."""
+    return (
+        getattr(sys, "base_prefix", None)
+        or getattr(sys, "real_prefix", None)
+        or sys.prefix
+    )
+
+
+def in_virtualenv():
+    return get_base_prefix_compat() != sys.prefix
+
+
 def check_git_conflicts() -> None:
     # Note: when check is called directly from the command line.
     # pre-commit hooks automatically notify on merge conflicts
@@ -666,6 +687,23 @@ def require_hooks_installed(installed_hooks: dict) -> bool:
     return
 
 
+def check_software(REVIEW_MANAGER):
+    git_repo = REVIEW_MANAGER.get_repo()
+    # git_repo = git.Repo()
+    master = git_repo.head.reference
+    cmsg_lines = master.commit.message.split("\n")
+    for cmsg_line in cmsg_lines[0:20]:
+        if "- review_template:" in cmsg_line:
+            last_review_template_version = cmsg_line[cmsg_line.find("version ") + 8 :]
+            current_review_template_version = version("review_template")
+            if last_review_template_version != current_review_template_version:
+                raise SoftwareUpgradeError(
+                    last_review_template_version, last_review_template_version
+                )
+
+    return
+
+
 def check_repository_setup(REVIEW_MANAGER):
 
     # 1. git repository?
@@ -735,7 +773,7 @@ class Record:
         for possible_transition in possible_transitions:
             if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
                 logging.debug(f"precondition: {self.state}")
-                process = Process(ProcessType[possible_transition], str)
+                process = Process(ProcessType[possible_transition])
                 required_absent = process.get_preceding_states(self.state)
                 logging.debug(f"required_absent: {required_absent}")
                 cur_state_list = self.REVIEW_MANAGER.get_states_set()
@@ -784,12 +822,11 @@ class Process:
     def __init__(
         self,
         type: ProcessType,
-        fun,
-        interactive: bool = None,
+        fun=None,
     ):
         self.type = type
-        if interactive is not None:
-            self.interactive = interactive
+        if fun is None:
+            self.interactive = True
         else:
             self.interactive = False
         self.processing_function = fun
@@ -1571,9 +1608,6 @@ class ReviewManager:
             confs.append(self.paths["PRIVATE_CONFIG"])
         local_config.read(confs)
         config = dict(
-            REPO_SETUP_VERSION=local_config.get(
-                "general", "REPO_SETUP_VERSION", fallback="v_0.1"
-            ),
             DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
                 "general", "DELAY_AUTOMATED_PROCESSING", fallback=True
             ),
@@ -1620,6 +1654,7 @@ class ReviewManager:
             {"script": check_docker_installed, "params": []},
             {"script": check_git_conflicts, "params": []},
             {"script": check_repository_setup, "params": self},
+            {"script": check_software, "params": self},
             {"script": check_raw_search_unchanged, "params": []},
         ]
 
@@ -1759,8 +1794,7 @@ class ReviewManager:
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
-            format = Process(ProcessType.format, self.__format_main_references)
-            self.notify(format)
+            self.notify(Process(ProcessType.format))
             self.__format_main_references()
         except (UnstagedGitChangesError, StatusFieldValueError) as e:
             pass

@@ -28,6 +28,14 @@ Requirements: [git](https://git-scm.com/downloads), [Docker](https://www.docker.
 ```
 # Installation (currently, while not yet available via pip)
 git clone https://github.com/geritwagner/review_template
+# optional: checkout version
+mkdir review_project & cd review_project
+# currently: run review_template init before starting the virtualenv (the data files are not retrieved correctly/stored in the virtualenv at installation)
+virtualenv venv
+source venv/bin/activate
+pip3 install ../review_template
+
+# for editing mode:
 cd review_template
 pip3 install --user -e .
 # Once the project is available on PyPI:

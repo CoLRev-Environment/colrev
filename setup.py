@@ -79,7 +79,12 @@ setup(
     tests_require=test_requirements,
     include_package_data=True,
     package_data={
-        "": ["template*"],
+        "review_template": [
+            "review_template/template/paper.md",
+            "review_template/template/readme.md",
+            "review_template/template/.gitattributes",
+            "review_template/template/.pre-commit-config.yaml",
+        ],
     },
     packages=find_packages(include=["review_template", "review_template.*"]),
     keywords="review_template",

@@ -132,6 +132,10 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
 
 
 def get_data(REVIEW_MANAGER):
+    from review_template.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
+
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(
         [x for x in record_state_list if str(RecordState.md_processed) == x[1]]

@@ -95,7 +95,9 @@ def apply_manual_dedupe_decision(REVIEW_MANAGER, bib_db, dedupe_man_item):
 
 
 def get_data(REVIEW_MANAGER, bib_db):
-    from review_template.review_manager import RecordState
+    from review_template.review_manager import RecordState, Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.dedupe_man))
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = (

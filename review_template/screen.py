@@ -36,6 +36,9 @@ def get_exclusion_criteria(bib_db: BibDatabase) -> list:
 
 def get_data(REVIEW_MANAGER):
     from review_template.review_manager import RecordState
+    from review_template.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.screen))
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(

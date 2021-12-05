@@ -130,9 +130,8 @@ def init(ctx) -> bool:
     # We check this again when calling init.initialize_repo()
     # but at this point, we want to avoid that users enter a lot of data and
     # see an error at the end
-    if 0 != len(os.listdir(os.getcwd())) and ["report.log"] != os.listdir(os.getcwd()):
-        logging.error("Directory not empty.")
-        return False
+
+    init.require_empty_directory()
 
     project_title = input("Project title: ")
 
@@ -257,7 +256,7 @@ def print_progress(stat: dict) -> None:
 @click.pass_context
 def status(ctx) -> None:
     """Show status"""
-    from review_template import status
+    from review_template import status, review_manager
     from review_template.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
@@ -283,6 +282,10 @@ def status(ctx) -> None:
     if 1 == ret_f["status"]:
         print(f"  ReviewManager.format()     ...... {colors.RED}FAIL{colors.END}")
         print(f'\n    {ret_f["msg"]}\n')
+    if not review_manager.in_virtualenv():
+        print(
+            f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
+        )
 
     REVIEW_MANAGER.update_status_yaml()
 
@@ -471,9 +474,7 @@ def load(ctx, keep_ids) -> None:
     """Import records (part of automated processing)"""
     from review_template import load
     from review_template.review_manager import SearchDetailsMissingError
-    from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
+    from review_template.review_manager import ReviewManager, ProcessType, Process
 
     try:
 
@@ -525,9 +526,7 @@ def load(ctx, keep_ids) -> None:
 def prepare(ctx, reset_id, reprocess, keep_ids) -> None:
     """Prepare records (part of automated processing)"""
     from review_template import prepare
-    from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
+    from review_template.review_manager import ReviewManager, ProcessType, Process
 
     REVIEW_MANAGER = ReviewManager()
 
@@ -551,15 +550,12 @@ def dedupe(ctx) -> None:
     """Deduplicate records (part of automated processing)"""
     from review_template import dedupe
     from review_template import review_manager
-    from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
+    from review_template.review_manager import ReviewManager, ProcessType, Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
         dedupe_process = Process(ProcessType.dedupe, dedupe.main)
         REVIEW_MANAGER.run_process(dedupe_process)
-        # dedupe.main(REVIEW_MANAGER)
 
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -738,28 +734,14 @@ def prep_man(ctx, stats, extract) -> None:
     """Manual preparation of records"""
     from review_template import prep_man
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     REVIEW_MANAGER = ReviewManager()
 
     if stats:
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.explore, prep_man.prep_man_stats, interactive=True)
-        )
-
         prep_man.prep_man_stats(REVIEW_MANAGER)
     elif extract:
-        REVIEW_MANAGER.notify(
-            Process(
-                ProcessType.explore, prep_man.extract_needs_prep_man, interactive=True
-            )
-        )
         prep_man.extract_needs_prep_man(REVIEW_MANAGER)
     else:
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.prep_man, prep_man_records_cli, interactive=True)
-        )
         prep_man_records_cli(REVIEW_MANAGER)
 
     return
@@ -942,14 +924,9 @@ def dedupe_man(ctx) -> None:
     """Manual processing of duplicates"""
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.dedupe_man, merge_manual_dialogue, interactive=True)
-        )
         dedupe_man_cli(REVIEW_MANAGER)
 
     except review_manager.ProcessOrderViolation as e:
@@ -1037,8 +1014,6 @@ def prescreen(ctx, include_all, export_format, import_table) -> None:
     from review_template import prescreen
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1050,9 +1025,6 @@ def prescreen(ctx, include_all, export_format, import_table) -> None:
         elif include_all:
             prescreen.include_all_in_prescreen(REVIEW_MANAGER)
         else:
-            REVIEW_MANAGER.notify(
-                Process(ProcessType.prescreen, prescreen_cli, interactive=True)
-            )
             prescreen_cli(REVIEW_MANAGER)
 
     except review_manager.ProcessOrderViolation as e:
@@ -1198,12 +1170,9 @@ def screen(ctx) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(Process(ProcessType.screen, screen_cli, interactive=True))
         screen_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -1224,10 +1193,9 @@ def pdf_get(ctx) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_get, pdf_get.main, interactive=True)
-        )
-        pdf_get.main(REVIEW_MANAGER)
+        pdf_get_process = Process(ProcessType.pdf_get, pdf_get.main)
+        REVIEW_MANAGER.run_process(pdf_get_process)
+
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -1247,10 +1215,9 @@ def pdf_prepare(ctx) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_prepare, pdf_prepare.main, interactive=True)
-        )
-        pdf_prepare.main(REVIEW_MANAGER)
+        pdf_prepare_process = Process(ProcessType.pdf_prepare, pdf_prepare.main)
+        REVIEW_MANAGER.run_process(pdf_prepare_process)
+
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -1364,14 +1331,9 @@ def pdf_get_man(ctx) -> None:
     """Get PDFs manually"""
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_get_man, pdf_get_man_cli, interactive=True)
-        )
         pdf_get_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -1446,14 +1408,9 @@ def pdf_prep_man(ctx) -> None:
     """Prepare PDFs manually"""
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(
-            Process(ProcessType.pdf_prep_man, pdf_prep_man_cli, interactive=True)
-        )
         pdf_prep_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -1470,12 +1427,9 @@ def data(ctx, edit_csv, load_csv) -> None:
     from review_template import data
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(Process(ProcessType.data, data.main, interactive=True))
         data.main(REVIEW_MANAGER, edit_csv, load_csv)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")

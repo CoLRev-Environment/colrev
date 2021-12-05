@@ -18,6 +18,9 @@ pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
 def prep_man_stats(REVIEW_MANAGER) -> None:
+    from review_template.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
     # TODO : this function mixes return values and saving to files.
     logger.info("Load references.bib")
     bib_db = REVIEW_MANAGER.load_main_refs()
@@ -91,6 +94,9 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
 
 
 def extract_needs_prep_man(REVIEW_MANAGER) -> None:
+    from review_template.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
     logger.info("Load references")
     bib_db = REVIEW_MANAGER.load_main_refs()
 
@@ -143,7 +149,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
 def get_data(REVIEW_MANAGER):
     from review_template.review_manager import RecordState, ProcessType, Process
 
-    REVIEW_MANAGER.notify(Process(ProcessType.prep_man, get_data, interactive=True))
+    REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(
