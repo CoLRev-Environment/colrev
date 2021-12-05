@@ -3,8 +3,11 @@ import logging
 import os
 import pprint
 
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
+from review_template import review_manager
+
+review_manager.setup_logger(level=logging.DEBUG)
+logger = logging.getLogger("review_template")
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
 def set_debug_mode(activate: bool) -> None:
@@ -22,68 +25,92 @@ def set_debug_mode(activate: bool) -> None:
     with open(config_path, "w") as f:
         private_config.write(f)
 
-    logging.info(f"Set debug mode to {activate}")
+    return
 
+
+def debug_load() -> None:
+
+    # Records that are not imported (after running load)
+    # Debugging: get all imported records, their origins
+    # then compare them to the original search_files
+
+    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from review_template import load
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.explore, str, interactive=True))
+    rec_header_lis = REVIEW_MANAGER.get_record_header_list()
+    origin_list = [x[1] for x in rec_header_lis]
+
+    search_files = load.get_search_files(restrict=["bib"])
+
+    for search_file in search_files:
+        print(search_file)
+        sfn = os.path.basename(search_file)
+        search_file_origins = [x for x in origin_list if sfn in x]
+        with open(search_file) as f:
+            line = f.readline()
+            while line:
+                if "@" in line[:3]:
+                    current_ID = line[line.find("{") + 1 : line.rfind(",")]
+                    corresponding_origin = f"{sfn}/{current_ID}"
+                    if corresponding_origin not in search_file_origins:
+                        print(corresponding_origin)
+
+                line = f.readline()
+    return
+
+
+def debug_prepare() -> None:
+
+    from review_template import prepare
+    from review_template.review_manager import RecordState
+
+    record = {
+        "ENTRYTYPE": "article",
+        "ID": "NewmanRobeyNoYear",
+        "author": "Newman, Michael and Robey, Daniel",
+        "journal": "MIS Quarterly",
+        "metadata_source": "ORIGINAL",
+        "number": "2",
+        "origin": "MISQ.bib/0000000826",
+        "status": RecordState.md_imported,
+        "title": "A Social Process Model of User-Analyst Relationships",
+        "volume": "16",
+    }
+
+    pp.pprint(record)
+    res = prepare.get_md_from_crossref(record)
+    pp.pprint(res)
+
+    return
+
+
+def debug_tei_tools() -> None:
+    from review_template import tei_tools, grobid_client
+
+    logger.debug("Start grobid")
+    grobid_client.start_grobid()
+    logger.debug("Started grobid")
+
+    filepath = (
+        "/home/gerit/ownCloud/data/journals/ISJ/7_3/Janson_Colruyt An Organization.pdf"
+    )
+    res = tei_tools.get_record_from_pdf_tei(filepath)
+    print(res)
     return
 
 
 def main():
 
-    # insert test code
+    # code for debugging ...
 
-    from review_template import prepare, review_manager
+    # TODO : helper-function to load entries from any bib-file (based on ID or origin)
 
-    # from review_template.review_manager import RecordState
+    # debug_load()
 
-    logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
-    review_manager.config["DEBUG_MODE"] = True
+    # debug_prepare()
 
-    pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-
-    origin = "2021-11-17-dblp_journals_jmis.bib/0000000533"
-    filepath = origin.split("/")[0]
-    with open("INSERT_PATH" + filepath) as target_db:
-
-        bib_db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=False,
-            common_strings=True,
-        ).parse_file(target_db, partial=True)
-
-    record = [r for r in bib_db.entries if origin.split("/")[1] == r["ID"]][0]
-
-    # with open('bibtex.bib') as bibtex_file:
-    #     bibtex_str = bibtex_file.read()
-    # status = {md_imported},
-
-    # bibtex_str = """
-    # @inbook{034,
-    #  status = {md_imported},
-    #  author = {Tedeschi, J and Norman, N},
-    #  booktitle = {The Self and Social Life},
-    #  date = {1985},
-    #  editor = {B.R.},
-    #  pages = {293--322},
-    #  title = {Social power, selfpresentation, and the self},
-    #  year = {1985}
-    # }
-    # """
-
-    # bib_db = bibtexparser.loads(bibtex_str)
-    # record = bib_db.entries[0]
-
-    record = prepare.prepare(record)
-
-    pp.pprint(record)
-
-    # {   'ENTRYTYPE': 'inbook',
-    #     'ID': '080',
-    #     'address': 'Oxford, UK',
-    #     'author': 'Zuboff, S',
-    #     'booktitle': 'Heinemann Professional',
-    #     'status': 'imported',
-    #     'title': 'In the age of the smart machine: The future of work and power',
-    #     'year': '1988'}
+    debug_tei_tools()
 
     return

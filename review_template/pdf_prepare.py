@@ -422,7 +422,9 @@ def main(review_manager) -> None:
                 break
 
             review_manager.reorder_log([x["ID"] for x in bib_db.entries])
-            in_process = review_manager.create_commit("Prepare PDFs", saved_args)
+            in_process = review_manager.create_commit(
+                "Prepare PDFs", saved_args=saved_args
+            )
             if not in_process:
                 logger.info("No PDFs prepared")
 

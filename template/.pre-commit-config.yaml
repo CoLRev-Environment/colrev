@@ -2,7 +2,7 @@ default_language_version:
     python: python3
 repos:
 -   repo: https://github.com/geritwagner/pipeline-validation-hooks
-    rev: d4706982ee39f9a6d8660bdf4aeeb6f14fa0683b
+    rev: d0e509fc0fec01167afafe252ef756fef86d7678
     hooks:
     -   id: check
         name: "ReviewManager: checks"
@@ -19,6 +19,11 @@ repos:
         entry: pipeline_validation_hooks/report.py
         language: script
         stages: [prepare-commit-msg]
+    -   id: sharing
+        name: "ReviewManager: sharing"
+        entry: pipeline_validation_hooks/sharing.py
+        language: script
+        stages: [push]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.0.1
     hooks:

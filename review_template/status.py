@@ -235,8 +235,7 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
     return nr_commits_behind, nr_commits_ahead
 
 
-def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
-
+def get_review_instructions(REVIEW_MANAGER, stat):
     review_instructions = []
 
     # git_repo = REVIEW_MANAGER.get_repo()
@@ -369,23 +368,31 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
         "screen": "Screen records",
         "data": "Extract data/synthesize records",
     }
-
-    for active_processing_function in active_processing_functions:
+    if stat["status"]["currently"]["md_retrieved"] > 0:
         instruction = {
-            "msg": msgs[active_processing_function],
-            "cmd": f"review_template {active_processing_function.replace('_', '-')}"
+            "msg": msgs["load"],
+            "cmd": "review_template load",
+            "priority": "yes",
             # "high_level_cmd": "review_template metadata",
         }
-        if active_processing_function in priority_processing_functions:
-            keylist = [list(x.keys()) for x in review_instructions]
-            keys = [item for sublist in keylist for item in sublist]
-            if "priority" not in keys:
-                instruction["priority"] = "yes"
-        else:
-            if REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
-                continue
-
         review_instructions.append(instruction)
+
+    else:
+        for active_processing_function in active_processing_functions:
+            instruction = {
+                "msg": msgs[active_processing_function],
+                "cmd": f"review_template {active_processing_function.replace('_', '-')}"
+                # "high_level_cmd": "review_template metadata",
+            }
+            if active_processing_function in priority_processing_functions:
+                keylist = [list(x.keys()) for x in review_instructions]
+                keys = [item for sublist in keylist for item in sublist]
+                if "priority" not in keys:
+                    instruction["priority"] = "yes"
+            else:
+                if REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+                    continue
+            review_instructions.append(instruction)
 
     if not os.path.exists(REVIEW_MANAGER.paths["MAIN_REFERENCES"]):
         instruction = {
@@ -410,8 +417,11 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
         }
         review_instructions.append(instruction)
 
-    collaboration_instructions = {"items": []}
+    return review_instructions
 
+
+def get_collaboration_instructions(REVIEW_MANAGER, stat):
+    SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     found_a_conflict = False
     # git_repo = REVIEW_MANAGER.get_repo()
     git_repo = git.Repo()
@@ -424,7 +434,7 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
 
     nr_commits_behind, nr_commits_ahead = 0, 0
 
-    SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
+    collaboration_instructions = {"items": []}
     CONNECTED_REMOTE = 0 != len(git_repo.remotes)
     if CONNECTED_REMOTE:
         origin = git_repo.remotes.origin
@@ -454,6 +464,9 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
     # Notify when changes in bib files are not staged
     # (this may raise unexpected errors)
 
+    non_staged = [
+        item.a_path for item in git_repo.index.diff(None) if ".bib" == item.a_path[-4:]
+    ]
     if len(non_staged) > 0:
         item = {
             "title": f"Non-staged files: {','.join(non_staged)}",
@@ -567,9 +580,15 @@ def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
         }
         collaboration_instructions["items"].append(item)
 
+    return collaboration_instructions
+
+
+def get_instructions(REVIEW_MANAGER, stat: dict) -> dict:
     instructions = {
-        "review_instructions": review_instructions,
-        "collaboration_instructions": collaboration_instructions,
+        "review_instructions": get_review_instructions(REVIEW_MANAGER, stat),
+        "collaboration_instructions": get_collaboration_instructions(
+            REVIEW_MANAGER, stat
+        ),
     }
     logger.debug(f"instructions: {pp.pformat(instructions)}")
     return instructions

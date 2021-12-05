@@ -275,7 +275,9 @@ def main(REVIEW_MANAGER) -> None:
                         if os.path.exists(filepath):
                             git_repo.index.add([filepath])
 
-            in_process = REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args)
+            in_process = REVIEW_MANAGER.create_commit(
+                "Retrieve PDFs", saved_args=saved_args
+            )
 
         if batch_end < BATCH_SIZE or batch_end == 0:
             if batch_end == 0:

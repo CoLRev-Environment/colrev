@@ -366,7 +366,7 @@ def reprocess_id(REVIEW_MANAGER, id: str, git_repo: git.Repo) -> None:
         REVIEW_MANAGER.save_bib_file(bib_db)
         git_repo.index.add([MAIN_REFERENCES])
 
-    REVIEW_MANAGER.create_commit("Reprocess", saved_args)
+    REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
 
     return
 
@@ -702,6 +702,7 @@ def prep_man_records_cli(REVIEW_MANAGER):
                 # record = prepare.retrieve_doi_metadata(record)
 
                 # TODO : maybe update the IDs when we have a replace_record procedure
+                # set_IDs
                 # that can handle changes in IDs
                 # record.update(
                 #     ID=REVIEW_MANAGER.generate_ID_blacklist(
@@ -712,13 +713,8 @@ def prep_man_records_cli(REVIEW_MANAGER):
 
                 prep_man.update_record(REVIEW_MANAGER, record, PAD)
 
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    bib_db = REVIEW_MANAGER.load_main_refs()
-    REVIEW_MANAGER.save_bib_file(bib_db)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
     REVIEW_MANAGER.create_commit(
-        "Manual preparation of records", saved_args, manual_author=True
+        "Manual preparation of records", manual_author=True, saved_args=saved_args
     )
 
     return
@@ -748,8 +744,17 @@ def prep_man(ctx, stats, extract) -> None:
     REVIEW_MANAGER = ReviewManager()
 
     if stats:
+        REVIEW_MANAGER.notify(
+            Process(ProcessType.explore, prep_man.prep_man_stats, interactive=True)
+        )
+
         prep_man.prep_man_stats(REVIEW_MANAGER)
     elif extract:
+        REVIEW_MANAGER.notify(
+            Process(
+                ProcessType.explore, prep_man.extract_needs_prep_man, interactive=True
+            )
+        )
         prep_man.extract_needs_prep_man(REVIEW_MANAGER)
     else:
         REVIEW_MANAGER.notify(
@@ -926,7 +931,7 @@ def dedupe_man_cli(REVIEW_MANAGER):
                 return
 
     REVIEW_MANAGER.create_commit(
-        "Process duplicates manually", saved_args, manual_author=True
+        "Process duplicates manually", manual_author=True, saved_args=saved_args
     )
     return
 
@@ -1341,7 +1346,7 @@ def pdf_get_man_cli(REVIEW_MANAGER):
     if git_repo.is_dirty():
         if "y" == input("Create commit (y/n)?"):
             REVIEW_MANAGER.create_commit(
-                "Retrieve PDFs manually", saved_args, manual_author=True
+                "Retrieve PDFs manually", manual_author=True, saved_args=saved_args
             )
     else:
         logger.info(
@@ -1425,7 +1430,7 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
     if git_repo.is_dirty():
         if "y" == input("Create commit (y/n)?"):
             REVIEW_MANAGER.create_commit(
-                "Prepare PDFs manually", saved_args, manual_author=True
+                "Prepare PDFs manually", manual_author=True, saved_args=saved_args
             )
     else:
         logger.info(
@@ -1567,8 +1572,8 @@ ccs = click_completion.core.shells
 
 
 @main.command(help_priority=19)
-@click.option("--activate", is_flag=True, default=False)
-@click.option("--deactivate", is_flag=True, default=False)
+@click.option("-a", "--activate", is_flag=True, default=False)
+@click.option("-d", "--deactivate", is_flag=True, default=False)
 @click.pass_context
 def debug(ctx, activate, deactivate):
     """Debug"""

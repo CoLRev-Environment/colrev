@@ -348,7 +348,7 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
 
     if "y" == input("Create commit (y/n)?"):
         REVIEW_MANAGER.create_commit(
-            "Data and synthesis", saved_args, manual_author=True
+            "Data and synthesis", manual_author=True, saved_args=saved_args
         )
 
     return

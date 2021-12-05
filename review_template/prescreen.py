@@ -125,7 +125,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([MAIN_REFERENCES])
     REVIEW_MANAGER.create_commit(
-        "Pre-screening (manual)", saved_args, manual_author=False
+        "Pre-screening (manual)", manual_author=False, saved_args=saved_args
     )
 
     return

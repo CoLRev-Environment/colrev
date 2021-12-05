@@ -74,15 +74,17 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     )
     # .sort_index(axis='columns')
     tabulated.sort_values(by=["All"], ascending=False, inplace=True)
+    # Transpose because we tend to have more error categories than search files.
+    tabulated = tabulated.transpose()
     print(tabulated)
-    logger.info("Writing data to file: manual_cleansing_statistics.csv")
-    tabulated.to_csv("manual_cleansing_statistics.csv")
+    logger.info("Writing data to file: manual_preparation_statistics.csv")
+    tabulated.to_csv("manual_preparation_statistics.csv")
 
     # TODO : these should be combined in one dict and returned:
     print("Entry type statistics overall:")
     pp.pprint(overall_types["ENTRYTYPE"])
 
-    print("Entry type statistics (needs_manual_cleansing):")
+    print("Entry type statistics (needs_manual_preparation):")
     pp.pprint(stats["ENTRYTYPE"])
 
     return
@@ -139,7 +141,9 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
 
 
 def get_data(REVIEW_MANAGER):
-    from review_template.review_manager import RecordState
+    from review_template.review_manager import RecordState, ProcessType, Process
+
+    REVIEW_MANAGER.notify(Process(ProcessType.prep_man, get_data, interactive=True))
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(
@@ -156,10 +160,10 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_needs_manual_preparation)}
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items, "all_ids": all_ids}
+    return {"nr_tasks": nr_tasks, "items": items, "all_ids": all_ids, "PAD": PAD}
 
 
-def update_record(REVIEW_MANAGER, record, PAD):
+def update_record(REVIEW_MANAGER, record, PAD: int = 40):
     from review_template.review_manager import RecordState
 
     record.update(status=RecordState.md_prepared)
@@ -168,5 +172,11 @@ def update_record(REVIEW_MANAGER, record, PAD):
 
     logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
     REVIEW_MANAGER.replace_record_by_ID(record)
+
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    # bib_db = REVIEW_MANAGER.load_main_refs()
+    # REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
 
     return

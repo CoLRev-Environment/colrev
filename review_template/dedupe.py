@@ -249,6 +249,7 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
         + ",".join([str(weights[g]) for g in range(len(similarities))])
         + "]^T"
     )
+    logger.debug(details)
 
     return {"score": round(weighted_average, 4), "details": details}
 
@@ -688,7 +689,9 @@ def main(REVIEW_MANAGER) -> None:
                 os.remove("duplicate_tuples.csv")
             git_repo.index.add([MAIN_REFERENCES])
 
-            in_process = REVIEW_MANAGER.create_commit("Process duplicates", saved_args)
+            in_process = REVIEW_MANAGER.create_commit(
+                "Process duplicates", saved_args=saved_args
+            )
             if not in_process:
                 logger.info("No duplicates merged/potential duplicates identified")
 

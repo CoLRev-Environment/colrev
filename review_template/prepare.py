@@ -28,6 +28,7 @@ from review_template.review_manager import ReviewManager
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 BATCH_SIZE, EMAIL, MAIN_REFERENCES, DEBUG_MODE = -1, "NA", "NA", "NA"
+RETRIEVAL_SIMILARITY = 0.84
 
 logger = logging.getLogger("review_template")
 
@@ -454,30 +455,39 @@ def crossref_json_to_record(item: dict) -> dict:
     return record
 
 
-def crossref_query(record: dict) -> dict:
+def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
     # https://github.com/CrossRef/rest-api-doc
     api_url = "https://api.crossref.org/works?"
 
-    params = {"rows": "15"}
-    bibl = record["title"].replace("-", "_") + " " + record.get("year", "")
-    bibl = re.sub(r"[\W]+", "", bibl.replace(" ", "_"))
-    params["query.bibliographic"] = bibl.replace("_", " ")
+    if not jour_vol_iss_list:
+        params = {"rows": "15"}
+        bibl = record["title"].replace("-", "_") + " " + record.get("year", "")
+        bibl = re.sub(r"[\W]+", "", bibl.replace(" ", "_"))
+        params["query.bibliographic"] = bibl.replace("_", " ")
 
-    container_title = get_container_title(record)
-    if "." not in container_title:
-        container_title = container_title.replace(" ", "_")
-        container_title = re.sub(r"[\W]+", "", container_title)
+        container_title = get_container_title(record)
+        if "." not in container_title:
+            container_title = container_title.replace(" ", "_")
+            container_title = re.sub(r"[\W]+", "", container_title)
+            params["query.container-title"] = container_title.replace("_", " ")
+
+        author_last_names = [
+            x.split(",")[0] for x in record.get("author", "").split(" and ")
+        ]
+        author_string = " ".join(author_last_names)
+        author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
+        params["query.author"] = author_string.replace("_", " ")
+    else:
+        params = {"rows": "25"}
+        container_title = re.sub(r"[\W]+", " ", record["journal"])
         params["query.container-title"] = container_title.replace("_", " ")
 
-    author_last_names = [
-        x.split(",")[0] for x in record.get("author", "").split(" and ")
-    ]
-    author_string = " ".join(author_last_names)
-    author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
-    params["query.author"] = author_string.replace("_", " ")
+        query_field = record["volume"] + "+" + record["number"]
+        params["query"] = query_field
 
     url = api_url + urllib.parse.urlencode(params)
     headers = {"user-agent": f"{__name__} (mailto:{EMAIL})"}
+    record_list = []
     try:
         logger.debug(url)
         ret = requests.get(url, headers=headers)
@@ -486,6 +496,7 @@ def crossref_query(record: dict) -> dict:
             return None
 
         data = json.loads(ret.text)
+
         items = data["message"]["items"]
         most_similar = 0
         most_similar_record = None
@@ -497,7 +508,7 @@ def crossref_query(record: dict) -> dict:
 
             title_similarity = fuzz.partial_ratio(
                 retrieved_record["title"].lower(),
-                record["title"].lower(),
+                record.get("title", "").lower(),
             )
             container_similarity = fuzz.partial_ratio(
                 get_container_title(retrieved_record).lower(),
@@ -512,7 +523,10 @@ def crossref_query(record: dict) -> dict:
             # logger.debug(f'record: {pp.pformat(record)}')
             # logger.debug(f'similarities: {similarities}')
             # logger.debug(f'similarity: {similarity}')
+            # pp.pprint(retrieved_record)
 
+            if jour_vol_iss_list:
+                record_list.append(retrieved_record)
             if most_similar < similarity:
                 most_similar = similarity
                 most_similar_record = retrieved_record
@@ -520,7 +534,10 @@ def crossref_query(record: dict) -> dict:
         logger.error("requests.exceptions.ConnectionError in crossref_query")
         return None
 
-    return most_similar_record
+    if jour_vol_iss_list:
+        return record_list
+    else:
+        return most_similar_record
 
 
 def container_is_abbreviated(record: dict) -> bool:
@@ -633,7 +650,7 @@ def get_md_from_crossref(record: dict) -> dict:
                 record.copy(), retrieved_record.copy()
             )
             logger.debug(f"crossref similarity: {similarity}")
-            if similarity > 0.9:
+            if similarity > RETRIEVAL_SIMILARITY:
                 for key, val in retrieved_record.items():
                     # Note: no abstracts in crossref?
                     # if enrich_only and 'abstract' != key:
@@ -644,6 +661,57 @@ def get_md_from_crossref(record: dict) -> dict:
 
         except KeyboardInterrupt:
             sys.exit()
+    return record
+
+
+def get_year_from_vol_iss_jour_crossref(record: dict) -> dict:
+    # The year depends on journal x volume x issue
+    if not (
+        ("journal" in record and "volume" in record and "number")
+        and "year" not in record
+    ):
+        return record
+
+    logger.debug(f'get_md_from_crossref({record["ID"]})')
+    MAX_RETRIES_ON_ERROR = 3
+    try:
+        modified_record = record.copy()
+        modified_record = [
+            (k, v)
+            for k, v in modified_record.items()
+            if k in ["journal", "volume", "number"]
+        ]
+
+        # http://api.crossref.org/works?
+        # query.container-title=%22MIS+Quarterly%22&query=%2216+2%22
+
+        retrieved_records = crossref_query(record, jour_vol_iss_list=True)
+        retries = 0
+        while not retrieved_records and retries < MAX_RETRIES_ON_ERROR:
+            retries += 1
+            retrieved_records = crossref_query(record, jour_vol_iss_list=True)
+        if retrieved_records is None:
+            return record
+
+        retrieved_records = [
+            r
+            for r in retrieved_records
+            if r.get("volume", "NA") == record["volume"]
+            and r.get("journal", "NA") == record["journal"]
+            and r.get("number", "NA") == record["number"]
+        ]
+        years = [r["year"] for r in retrieved_records]
+        if len(years) == 0:
+            return record
+        most_common = max(years, key=years.count)
+        logger.debug(most_common)
+        logger.debug(years.count(most_common))
+        if years.count(most_common) > 3:
+            record["year"] = most_common
+
+    except KeyboardInterrupt:
+        sys.exit()
+
     return record
 
 
@@ -718,7 +786,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
 
         similarity = get_retrieval_similarity(red_record_copy, retrieved_record.copy())
         logger.debug(f"scholar similarity: {similarity}")
-        if similarity > 0.9:
+        if similarity > RETRIEVAL_SIMILARITY:
             for key, val in retrieved_record.items():
                 if enrich_only and "abstract" != key:
                     continue
@@ -934,7 +1002,7 @@ def get_md_from_dblp(record: dict) -> dict:
             )
 
             logger.debug(f"dblp similarity: {similarity}")
-            if similarity > 0.9:
+            if similarity > RETRIEVAL_SIMILARITY:
                 for key, val in retrieved_record.items():
                     record[key] = val
                 record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
@@ -1022,7 +1090,7 @@ def get_md_from_urls(record: dict) -> dict:
                     similarity = get_retrieval_similarity(
                         record.copy(), retrieved_record.copy()
                     )
-                    if similarity > 0.9:
+                    if similarity > RETRIEVAL_SIMILARITY:
                         for key, val in retrieved_record.items():
                             record[key] = val
 
@@ -1168,6 +1236,7 @@ fields_to_keep = [
     "warning",
     "crossref",
     "date",
+    "grobid-version",
 ]
 fields_to_drop = [
     "type",
@@ -1397,6 +1466,7 @@ def prepare(record: dict) -> dict:
         "get_md_from_sem_scholar": get_md_from_sem_scholar,
         "get_md_from_open_library": get_md_from_open_library,
         "get_md_from_urls": get_md_from_urls,
+        "get_year_from_vol_iss_jour_crossref": get_year_from_vol_iss_jour_crossref,
         "remove_nicknames": remove_nicknames,
         "remove_redundant_fields": remove_redundant_fields,
         "format_minor": format_minor,
@@ -1555,14 +1625,12 @@ def main(
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     EMAIL = REVIEW_MANAGER.config["EMAIL"]
     DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
-
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
-    bib_db = REVIEW_MANAGER.load_main_refs()
-
     PAD = prepare_data["PAD"]
     prior_ids = prepare_data["prior_ids"]
 
+    bib_db = REVIEW_MANAGER.load_main_refs()
     # Note: resetting needs_manual_preparation to imported would also be
     # consistent with the check7valid_transitions because it will either
     # transition to prepared or to needs_manual_preparation
@@ -1583,6 +1651,7 @@ def main(
     # Note: one of the challenges for batch-processing is that the IDs may change
     # This makes independent preparation (and saving) difficult
     # TODO: we may be able to tackle this by setting a "previous_id" field?
+
     in_process = True
     batch_start, batch_end = 1, 0
     while in_process:
@@ -1593,7 +1662,8 @@ def main(
             logger.info("Continuing batch preparation started earlier")
 
         set_stats_beginning(bib_db)
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
+        # Note : the network is the main limitation (not CPUs)
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"] * 5)
         bib_db.entries = pool.map(prepare, bib_db.entries)
         pool.close()
         pool.join()
@@ -1607,6 +1677,7 @@ def main(
             )
 
             if not keep_ids:
+                # TODO : provide selected_IDs argument
                 bib_db = REVIEW_MANAGER.set_IDs(bib_db)
 
             REVIEW_MANAGER.save_bib_file(bib_db)
@@ -1627,7 +1698,9 @@ def main(
             # For better readability:
             REVIEW_MANAGER.reorder_log(prior_ids)
 
-            in_process = REVIEW_MANAGER.create_commit("Prepare records", saved_args)
+            in_process = REVIEW_MANAGER.create_commit(
+                "Prepare records", saved_args=saved_args
+            )
 
         delta = batch_end % BATCH_SIZE
         if (delta < BATCH_SIZE and delta > 0) or batch_end == 0:
@@ -1635,5 +1708,4 @@ def main(
                 logger.info("No records to prepare")
             break
 
-    print()
     return

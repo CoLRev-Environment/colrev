@@ -113,15 +113,14 @@ def initialize_repo(
     f.close()
 
     logging.info("Install latest pre-commmit hooks")
-    check_call(["pre-commit", "install"], stdout=DEVNULL, stderr=STDOUT)
-    check_call(
+    scripts_to_call = [
+        ["pre-commit", "install"],
         ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
-        stdout=DEVNULL,
-        stderr=STDOUT,
-    )
-    check_call(
-        ["pre-commit", "autoupdate", "--bleeding-edge"], stdout=DEVNULL, stderr=STDOUT
-    )
+        ["pre-commit", "install", "--hook-type", "pre-push"],
+        ["pre-commit", "autoupdate", "--bleeding-edge"],
+    ]
+    for script_to_call in scripts_to_call:
+        check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
 
     repo.index.add(
         [
@@ -144,7 +143,9 @@ def initialize_repo(
     logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
     logger.info("Set REPO_SETUP_VERSION:".ljust(30, " ") + f"{REPO_SETUP_VERSION}")
 
-    REVIEW_MANAGER.create_commit("Initial commit", saved_args, True)
+    REVIEW_MANAGER.create_commit(
+        "Initial commit", manual_author=True, saved_args=saved_args
+    )
 
     if remote_url is not None:
         connect_to_remote(repo, remote_url)

@@ -775,9 +775,11 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     logger.info(f"Batch size: {BATCH_SIZE}")
 
     bib_db = BibDatabase()
+    selected_IDs = []
     record_iterator = IteratorEx(load_all_records(REVIEW_MANAGER))
     for record in record_iterator:
         bib_db.entries.append(record)
+        selected_IDs.append(record["ID"])
         if record_iterator.hasNext:
             if not processing_condition(record):
                 continue  # keep appending records
@@ -798,11 +800,13 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         bib_db.entries = pool.map(import_record, bib_db.entries)
         pool.close()
         pool.join()
-        if not keep_ids:
-            bib_db = REVIEW_MANAGER.set_IDs(bib_db)
 
         if save_imported_files(REVIEW_MANAGER, bib_db):
-            REVIEW_MANAGER.create_commit("Import search results", saved_args)
+            if not keep_ids:
+                bib_db = REVIEW_MANAGER.set_IDs(bib_db, selected_IDs)
+                selected_IDs = []
+
+            REVIEW_MANAGER.create_commit("Import search results", saved_args=saved_args)
 
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
 

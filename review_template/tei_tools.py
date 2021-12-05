@@ -275,7 +275,7 @@ def get_record_from_pdf_tei(filepath: str) -> dict:
 
     for k, v in record.items():
         if "file" != k:
-            v = v.replace("}", "").replace("{", "")
+            record[k] = v.replace("}", "").replace("{", "")
         else:
             print(f"problem in filename: {k}")
 
