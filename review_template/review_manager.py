@@ -2073,6 +2073,25 @@ class ReviewManager:
 
         return
 
+    def reprocess_id(self, id: str) -> None:
+        saved_args = locals()
+
+        MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
+        git_repo = self.get_repo()
+        if "all" == id:
+            logging.info("Removing/reprocessing all records")
+            os.remove(MAIN_REFERENCES)
+            git_repo.index.remove([MAIN_REFERENCES], working_tree=True)
+        else:
+            bib_db = self.load_main_refs()
+            bib_db.entries = [x for x in bib_db.entries if id != x["ID"]]
+            self.save_bib_file(bib_db)
+            git_repo.index.add([MAIN_REFERENCES])
+
+        self.create_commit("Reprocess", saved_args=saved_args)
+
+        return
+
     def reset_log(self) -> None:
         with open("report.log", "r+") as f:
             f.truncate(0)

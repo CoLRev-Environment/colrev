@@ -147,20 +147,23 @@ def get_data(REVIEW_MANAGER):
     return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
 
 
-def set_prescreen_status(REVIEW_MANAGER, ID, PAD, prescreen_inclusion: bool) -> None:
+def set_data(
+    REVIEW_MANAGER, record: dict, prescreen_inclusion: bool, PAD: int = 40
+) -> None:
 
     git_repo = REVIEW_MANAGER.get_repo()
+
     if prescreen_inclusion:
-        logger.info(f" {ID}".ljust(PAD, " ") + "Included in prescreen")
+        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen")
         REVIEW_MANAGER.replace_field(
-            ID, "status", str(RecordState.rev_prescreen_included)
+            record["ID"], "status", str(RecordState.rev_prescreen_included)
         )
-        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     else:
-        logger.info(f" {ID}".ljust(PAD, " ") + "Excluded in prescreen")
+        logger.info(f" {record['record']}".ljust(PAD, " ") + "Excluded in prescreen")
         REVIEW_MANAGER.replace_field(
-            ID, "status", str(RecordState.rev_prescreen_excluded)
+            record["ID"], "status", str(RecordState.rev_prescreen_excluded)
         )
-        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 
     return

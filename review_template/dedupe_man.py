@@ -44,7 +44,7 @@ def remove_from_potential_duplicates_csv(ID1, ID2):
     return
 
 
-def apply_manual_dedupe_decision(REVIEW_MANAGER, bib_db, dedupe_man_item):
+def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
 
     main_ID = dedupe_man_item["main_ID"]
     duplicate_ID = dedupe_man_item["duplicate_ID"]

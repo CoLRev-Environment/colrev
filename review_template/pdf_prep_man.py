@@ -25,3 +25,23 @@ def get_data(REVIEW_MANAGER):
         conditions={"status": str(RecordState.pdf_needs_manual_preparation)}
     )
     return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+
+
+def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+    record.update(status=RecordState.pdf_prepared)
+    if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+        git_repo.index.add([record["filepath"]])
+
+    REVIEW_MANAGER.replace_record_by_ID(record)
+    git_repo.index.add([MAIN_REFERENCES])
+
+    return
+
+
+def pdfs_prepared_manually(REVIEW_MANAGER) -> bool:
+    git_repo = REVIEW_MANAGER.get_repo()
+    return git_repo.is_dirty()

@@ -51,17 +51,18 @@ def get_data(REVIEW_MANAGER):
     return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
 
 
-def set_screen_status(REVIEW_MANAGER, record, PAD) -> None:
+def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
     from review_template.review_manager import RecordState
 
     git_repo = REVIEW_MANAGER.get_repo()
+
     if RecordState.rev_included == record["status"]:
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
         REVIEW_MANAGER.replace_record_by_ID(record)
-        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     else:
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
         REVIEW_MANAGER.replace_record_by_ID(record)
-        git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 
     return

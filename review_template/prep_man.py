@@ -169,7 +169,7 @@ def get_data(REVIEW_MANAGER):
     return {"nr_tasks": nr_tasks, "items": items, "all_ids": all_ids, "PAD": PAD}
 
 
-def update_record(REVIEW_MANAGER, record, PAD: int = 40):
+def set_data(REVIEW_MANAGER, record, PAD: int = 40):
     from review_template.review_manager import RecordState
 
     record.update(status=RecordState.md_prepared)

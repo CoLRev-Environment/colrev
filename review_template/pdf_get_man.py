@@ -66,3 +66,30 @@ def get_data(REVIEW_MANAGER):
         conditions={"status": str(RecordState.pdf_needs_manual_retrieval)}
     )
     return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+
+
+def pdfs_retrieved_maually(REVIEW_MANAGER) -> bool:
+    git_repo = REVIEW_MANAGER.get_repo()
+    return git_repo.is_dirty()
+
+
+def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+    if filepath is None:
+        record.update(status=RecordState.pdf_not_available)
+        logger.info(f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available")
+
+    else:
+        record.update(status=RecordState.pdf_imported)
+        record.update(file=filepath)
+        if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+            git_repo.index.add([filepath])
+        logger.info(f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF")
+
+    REVIEW_MANAGER.replace_record_by_ID(record)
+    git_repo.index.add([MAIN_REFERENCES])
+
+    return

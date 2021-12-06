@@ -354,26 +354,6 @@ def status(ctx) -> None:
     return
 
 
-def reprocess_id(REVIEW_MANAGER, id: str, git_repo: git.Repo) -> None:
-    saved_args = locals()
-
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    if "all" == id:
-        logging.info("Removing/reprocessing all records")
-        os.remove(MAIN_REFERENCES)
-        git_repo.index.remove([MAIN_REFERENCES], working_tree=True)
-
-    else:
-        bib_db = REVIEW_MANAGER.load_main_refs()
-        bib_db.entries = [x for x in bib_db.entries if id != x["ID"]]
-        REVIEW_MANAGER.save_bib_file(bib_db)
-        git_repo.index.add([MAIN_REFERENCES])
-
-    REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
-
-    return
-
-
 @main.command(help_priority=3)
 @click.pass_context
 @click.option("--reprocess", help='Record ID to reprocess ("all" to reprocess all).')
@@ -395,12 +375,9 @@ def process(ctx, reprocess_id, keep_ids) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        # process.main(REVIEW_MANAGER, reprocess_id, keep_ids)
-        REVIEW_MANAGER.build_docker_images()
-        git_repo = REVIEW_MANAGER.get_repo()
 
         if id is not None:
-            reprocess_id(reprocess_id, git_repo)
+            REVIEW_MANAGER.reprocess_id(reprocess_id)
 
         load.main(REVIEW_MANAGER, keep_ids)
 
@@ -707,7 +684,7 @@ def prep_man_records_cli(REVIEW_MANAGER):
                 # )
                 # all_ids.append(record["ID"])
 
-                prep_man.update_record(REVIEW_MANAGER, record, PAD)
+                prep_man.set_data(REVIEW_MANAGER, record, PAD)
 
     REVIEW_MANAGER.create_commit(
         "Manual preparation of records", manual_author=True, saved_args=saved_args
@@ -902,9 +879,7 @@ def dedupe_man_cli(REVIEW_MANAGER):
         stat = str(i) + "/" + str(dedupe_man_data["nr_tasks"])
 
         dedupe_man_item = merge_manual_dialogue(bib_db, dedupe_man_item, stat)
-        bib_db = dedupe_man.apply_manual_dedupe_decision(
-            REVIEW_MANAGER, bib_db, dedupe_man_item
-        )
+        bib_db = dedupe_man.set_data(REVIEW_MANAGER, bib_db, dedupe_man_item)
 
         if "quit" == dedupe_man_item["decision"]:
             if "y" == input("Create commit (y/n)?"):
@@ -979,17 +954,13 @@ def prescreen_cli(
             logger.info("Stop prescreen")
             break
 
-        if "no" == inclusion_decision:
-            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], PAD, False)
-        if "yes" == inclusion_decision:
-            prescreen.set_prescreen_status(REVIEW_MANAGER, record["ID"], PAD, True)
+        inclusion_decision = "yes" == inclusion_decision
+        prescreen.set_data(REVIEW_MANAGER, record, inclusion_decision, PAD)
 
     if i < stat_len:  # if records remain for pre-screening
         if "y" != input("Create commit (y/n)?"):
             return
 
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     REVIEW_MANAGER.create_commit(
         "Pre-screening (manual)", manual_author=True, saved_args=None
     )
@@ -1114,10 +1085,10 @@ def screen_cli(
 
             if all([decision == "n" for ec, decision in decisions]):
                 record.update(status=RecordState.rev_included)
-                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+                screen.set_data(REVIEW_MANAGER, record, PAD)
             else:
                 record.update(status=RecordState.rev_excluded)
-                screen.set_screen_status(REVIEW_MANAGER, record, PAD)
+                screen.set_data(REVIEW_MANAGER, record, PAD)
 
         else:
 
@@ -1156,8 +1127,7 @@ def screen_cli(
     if i < stat_len:  # if records remain for screening
         if "y" != input("Create commit (y/n)?"):
             return
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+
     REVIEW_MANAGER.create_commit(
         "Screening (manual)", manual_author=True, saved_args=None
     )
@@ -1239,6 +1209,7 @@ def get_pdf_from_google(record: dict) -> dict:
 
 
 def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
+    from review_template import pdf_get_man
 
     logger.debug(f"called man_retrieve for {pp.pformat(item)}")
     print(stat)
@@ -1265,23 +1236,12 @@ def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
             if not os.path.exists(filepath):
                 print(f'File does not exist: {record["ID"]}.pdf')
             else:
-                record.update(status=RecordState.pdf_imported)
-                git_repo = REVIEW_MANAGER.get_repo()
-                if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-                    record.update(file=filepath)
-                    git_repo.index.add([filepath])
-                REVIEW_MANAGER.replace_record_by_ID(record)
-                MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-                git_repo.index.add([MAIN_REFERENCES])
+                pdf_get_man.set_data(REVIEW_MANAGER, record, filepath)
                 break
     if "y" == input("Set to pdf_not_available (y/n)?"):
-        record.update(status=RecordState.pdf_not_available)
-        git_repo = REVIEW_MANAGER.get_repo()
-        REVIEW_MANAGER.replace_record_by_ID(record)
-        MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-        git_repo.index.add([MAIN_REFERENCES])
+        pdf_get_man.set_data(REVIEW_MANAGER, record, None)
 
-    return record
+    return
 
 
 def pdf_get_man_cli(REVIEW_MANAGER):
@@ -1309,8 +1269,7 @@ def pdf_get_man_cli(REVIEW_MANAGER):
         stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
         man_retrieve(REVIEW_MANAGER, bib_db, item, stat)
 
-    git_repo = REVIEW_MANAGER.get_repo()
-    if git_repo.is_dirty():
+    if pdf_get_man.pdfs_retrieved_maually(REVIEW_MANAGER):
         if "y" == input("Create commit (y/n)?"):
             REVIEW_MANAGER.create_commit(
                 "Retrieve PDFs manually", manual_author=True, saved_args=saved_args
@@ -1342,6 +1301,8 @@ def pdf_get_man(ctx) -> None:
 
 
 def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
+    from review_template import pdf_prep_man
+
     logger.debug(f"called man_pdf_prep for {pp.pformat(item)}")
     print(stat)
     pp.pprint(item)
@@ -1352,22 +1313,16 @@ def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
 
     print("Manual preparation needed (TODO: include details)")
 
-    if "y" == input("Prepared? (y/n)?"):
+    filepath = os.path.join(
+        REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
+    )
+    if not os.path.exists(filepath):
+        print(f'File does not exist: {record["ID"]}.pdf')
+    else:
+        if "y" == input("Prepared? (y/n)?"):
 
-        filepath = os.path.join(
-            REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
-        )
-        if not os.path.exists(filepath):
-            print(f'File does not exist: {record["ID"]}.pdf')
-        else:
-            record.update(status=RecordState.pdf_prepared)
-            git_repo = REVIEW_MANAGER.get_repo()
-            if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-                record.update(file=filepath)
-                git_repo.index.add([filepath])
-            REVIEW_MANAGER.replace_record_by_ID(record)
-            MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-            git_repo.index.add([MAIN_REFERENCES])
+            pdf_prep_man.set_data(REVIEW_MANAGER, record)
+
     return
 
 
@@ -1387,9 +1342,7 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
         stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
         man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat)
 
-    git_repo = REVIEW_MANAGER.get_repo()
-    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-    if git_repo.is_dirty():
+    if pdf_prep_man.pdfs_prepared_manually(REVIEW_MANAGER):
         if "y" == input("Create commit (y/n)?"):
             REVIEW_MANAGER.create_commit(
                 "Prepare PDFs manually", manual_author=True, saved_args=saved_args
@@ -1438,14 +1391,12 @@ def data(ctx, edit_csv, load_csv) -> None:
 
 
 def validate_commit(ctx, param, value):
-    from review_template.review_manager import ReviewManager
 
     if "none" == value:
         return value
 
-    REVIEW_MANAGER = ReviewManager()
-    git_repo = REVIEW_MANAGER.get_repo()
-    revlist = [commit for commit in git_repo.iter_commits()]
+    lgrepo = git.Repo()
+    revlist = [commit for commit in lgrepo.iter_commits()]
 
     if value in [x.hexsha for x in revlist]:
         # TODO: allow short commit_ids as values!
