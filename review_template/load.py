@@ -21,10 +21,8 @@ from review_template import grobid_client
 from review_template.review_manager import RecordState
 from review_template.review_manager import ReviewManager
 
-# logger.getLogger("bibtexparser").setLevel(logger.CRITICAL)
-
-BATCH_SIZE, SEARCH_DETAILS, MAIN_REFERENCES = -1, "NA", "NA"
 pp = pprint.PrettyPrinter(indent=4, width=140)
+
 logger = logging.getLogger("review_template")
 
 
@@ -65,22 +63,6 @@ def get_search_files(restrict: list = None) -> None:
     return files
 
 
-def get_imported_record_links() -> list:
-
-    imported_record_links = []
-    try:
-        imported_record_links = pd.read_csv("imported_record_links.csv", header=None)
-        imported_record_links = imported_record_links[
-            imported_record_links.columns[0]
-        ].tolist()
-    except pd.errors.EmptyDataError:
-        # ok if no search results have been imported before
-        if not os.path.exists(MAIN_REFERENCES):
-            pass
-
-    return imported_record_links
-
-
 def getbib(file: str) -> BibDatabase:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
@@ -107,8 +89,6 @@ def getbib(file: str) -> BibDatabase:
 
 def load_records(filepath: str) -> list:
 
-    imported_record_links = get_imported_record_links()
-
     search_db = getbib(filepath)
 
     logger.debug(f"Loaded {filepath} with {len(search_db.entries)} records")
@@ -120,9 +100,6 @@ def load_records(filepath: str) -> list:
     record_list = []
     for record in search_db.entries:
         record.update(origin=search_file + "/" + record["ID"])
-        if record["origin"] in imported_record_links:
-            logger.debug(f'skipped record {record["ID"]} (already imported)')
-            continue
 
         # Drop empty fields
         record = {k: v for k, v in record.items() if v}
@@ -134,18 +111,6 @@ def load_records(filepath: str) -> list:
     logger.debug(f"Thereof {len(record_list)} new records (not yet imported)")
 
     return record_list
-
-
-def save_imported_record_links(bib_db: BibDatabase) -> None:
-    imported_record_links = [
-        x["origin"].split(";") for x in bib_db.entries if "origin" in x
-    ]
-    imported_record_links = list(itertools.chain(*imported_record_links))
-
-    with open("imported_record_links.csv", "a") as fd:
-        for el in imported_record_links:
-            fd.write(el + "\n")
-    return
 
 
 def import_record(record: dict) -> dict:
@@ -208,7 +173,10 @@ def source_heuristics(search_file: str) -> str:
 def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
     search_details = REVIEW_MANAGER.load_search_details()
     search_details.append(new_record)
-    logger.debug(f"Added infos to {SEARCH_DETAILS}:" f" \n{pp.pformat(new_record)}")
+    logger.debug(
+        f"Added infos to {REVIEW_MANAGER.paths['SEARCH_DETAILS']}:"
+        f" \n{pp.pformat(new_record)}"
+    )
     REVIEW_MANAGER.save_search_details(search_details)
     return
 
@@ -236,44 +204,6 @@ def rename_search_files(REVIEW_MANAGER, search_files: list) -> list:
             os.rename(search_file, new_filename)
             ret_list.append(new_filename)
     return ret_list
-
-
-def load_all_records(REVIEW_MANAGER) -> list:
-
-    bib_db = REVIEW_MANAGER.load_main_refs(init=True)
-    save_imported_record_links(bib_db)
-
-    search_files = get_search_files()
-    if any(".pdf" in x for x in search_files) or any(".txt" in x for x in search_files):
-        grobid_client.start_grobid()
-    search_files = rename_search_files(REVIEW_MANAGER, search_files)
-    # Note: after the search_result_file (non-bib formats) has been loaded
-    # for the first time, we save a corresponding bib_file, which allows for
-    # more efficient status checking, tracing, and validation.
-    # This also applies to the pipeline_validation_hooks and is particularly
-    # relevant for pdf sources that require long processing times.
-    convert_to_bib(REVIEW_MANAGER, search_files)
-
-    search_files = get_search_files(restrict=["bib"])
-    logger.debug(f"Search_files (bib, after conversion): {search_files}")
-
-    from review_template import review_manager
-
-    review_manager.check_search_details(REVIEW_MANAGER)
-
-    load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-    additional_records = load_pool.map(load_records, search_files)
-    len_lists = [len(additional_record) for additional_record in additional_records]
-    logger.debug(f"Length of additional_records lists: {len_lists}")
-    load_pool.close()
-    load_pool.join()
-
-    additional_records = list(chain(bib_db.entries, *additional_records))
-
-    if os.path.exists("imported_record_links.csv"):
-        os.remove("imported_record_links.csv")
-
-    return additional_records
 
 
 def bibutils_convert(script: str, data: str) -> str:
@@ -688,71 +618,65 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
     return
 
 
-class IteratorEx:
-    def __init__(self, it):
-        self.it = iter(it)
-        self.sentinel = object()
-        self.nextItem = next(self.it, self.sentinel)
-        self.hasNext = self.nextItem is not self.sentinel
-
-    def next(self):
-        ret, self.nextItem = self.nextItem, next(self.it, self.sentinel)
-        self.hasNext = self.nextItem is not self.sentinel
-        return ret
-
-    def __iter__(self):
-        while self.hasNext:
-            yield self.next()
-
-
-current_batch_counter = 0
-batch_start = 1
-batch_end = 0
-
-
-def processing_condition(record: dict) -> bool:
-    global current_batch_counter
-    global batch_start
-    global batch_end
-
-    # Do not count records that have already been imported
-
-    if RecordState.md_retrieved != record["status"]:
-        return False
-
-    if 0 == current_batch_counter:
-        batch_start = batch_end + 1
-
-    current_batch_counter += 1
-    batch_end += 1
-
-    if current_batch_counter >= BATCH_SIZE:
-        current_batch_counter = 0
-        return True
-
-    return False
-
-
-def save_imported_files(REVIEW_MANAGER, bib_db: BibDatabase) -> bool:
-    if bib_db is None:
-        logger.info("No records imported")
-        return False
-
-    if 0 == len(bib_db.entries):
-        logger.info("No records imported")
-        return False
-
-    REVIEW_MANAGER.save_bib_file(bib_db, MAIN_REFERENCES)
+def convert_non_bib_search_files(REVIEW_MANAGER):
+    search_files = get_search_files()
+    if any(".pdf" in x for x in search_files) or any(".txt" in x for x in search_files):
+        grobid_client.start_grobid()
+    search_files = rename_search_files(REVIEW_MANAGER, search_files)
+    # Note: after the search_result_file (non-bib formats) has been loaded
+    # for the first time, we save a corresponding bib_file, which allows for
+    # more efficient status checking, tracing, and validation.
+    # This also applies to the pipeline_validation_hooks and is particularly
+    # relevant for pdf sources that require long processing times.
+    convert_to_bib(REVIEW_MANAGER, search_files)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([SEARCH_DETAILS])
-    git_repo.index.add(get_search_files())
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add(search_files)
+    return
 
-    if not git_repo.is_dirty():
-        logger.info("No new records added to MAIN_REFERENCES")
-        return False
 
-    return True
+def order_bib_file(REVIEW_MANAGER):
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    return
+
+
+def check_search_details(REVIEW_MANAGER):
+    from review_template import review_manager
+
+    review_manager.check_search_details(REVIEW_MANAGER)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([REVIEW_MANAGER.paths["SEARCH_DETAILS"]])
+    return
+
+
+def get_data(REVIEW_MANAGER):
+
+    record_header_list = REVIEW_MANAGER.get_record_header_list()
+    imported_origins = [x[1].split(";") for x in record_header_list]
+    imported_origins = list(itertools.chain(*imported_origins))
+
+    search_files = get_search_files(restrict=["bib"])
+    load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
+    additional_records = load_pool.map(load_records, search_files)
+    load_pool.close()
+    load_pool.join()
+
+    additional_records = list(chain(*additional_records))
+
+    additional_records = [
+        x for x in additional_records if x["origin"] not in imported_origins
+    ]
+
+    return {"nr_tasks": len(additional_records), "items": additional_records}
+
+
+def batch(iterable, n=1):
+    it_len = len(iterable)
+    for ndx in range(0, it_len, n):
+        yield iterable[ndx : min(ndx + n, it_len)]
 
 
 def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
@@ -760,54 +684,39 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     saved_args = locals()
     if not keep_ids:
         del saved_args["keep_ids"]
-    global batch_start
-    global batch_end
-    global SEARCH_DETAILS
-    global MAIN_REFERENCES
-    global BATCH_SIZE
-    global logger
 
-    SEARCH_DETAILS = REVIEW_MANAGER.paths["SEARCH_DETAILS"]
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+    check_search_details(REVIEW_MANAGER)
+
+    convert_non_bib_search_files(REVIEW_MANAGER)
 
     logger.info("Import")
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     logger.info(f"Batch size: {BATCH_SIZE}")
 
-    bib_db = BibDatabase()
-    selected_IDs = []
-    record_iterator = IteratorEx(load_all_records(REVIEW_MANAGER))
-    for record in record_iterator:
-        bib_db.entries.append(record)
-        selected_IDs.append(record["ID"])
-        if record_iterator.hasNext:
-            if not processing_condition(record):
-                continue  # keep appending records
-        else:
-            processing_condition(record)  # updates counters
+    load_data = get_data(REVIEW_MANAGER)
 
-        if batch_start > 1:
-            logger.info("Continuing batch import started earlier")
-        if 0 == batch_end:
-            logger.info("No new records")
-            break
-        if 1 == batch_end:
-            logger.info("Importing one record")
-        if batch_end != 1:
-            logger.info(f"Importing records {batch_start} to {batch_end}")
+    i = 1
+    for load_batch in batch(load_data["items"], BATCH_SIZE):
+
+        print(f"Batch {i}")
+        i += 1
 
         pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-        bib_db.entries = pool.map(import_record, bib_db.entries)
+        load_batch = pool.map(import_record, load_batch)
         pool.close()
         pool.join()
 
-        if save_imported_files(REVIEW_MANAGER, bib_db):
-            if not keep_ids:
-                bib_db = REVIEW_MANAGER.set_IDs(bib_db, selected_IDs)
-                selected_IDs = []
+        REVIEW_MANAGER.save_record_list_by_ID(load_batch, append_new=True)
 
-            REVIEW_MANAGER.create_commit("Import search results", saved_args=saved_args)
+        load_batch_IDs = [x["ID"] for x in load_batch]
+        if not keep_ids:
+            REVIEW_MANAGER.set_IDs(selected_IDs=load_batch_IDs)
 
-    bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+        order_bib_file(REVIEW_MANAGER)
+
+        REVIEW_MANAGER.create_commit("Import search results", saved_args=saved_args)
+
+    if 1 == i:
+        logger.info("No records to load")
 
     return

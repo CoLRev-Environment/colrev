@@ -2604,7 +2604,9 @@ class ReviewManager:
                 line = fd.readline()
         return
 
-    def save_record_list_by_ID(self, record_list: list) -> None:
+    def save_record_list_by_ID(
+        self, record_list: list, append_new: bool = False
+    ) -> None:
 
         if record_list == []:
             return
@@ -2616,48 +2618,51 @@ class ReviewManager:
         bib_db.entries = record_list
         parsed = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
-        prepared_record_list = [
+        record_list = [
             {"ID": item[item.find("{") + 1 : item.find(",")], "record": "\n@" + item}
             for item in parsed.split("\n@")
         ]
         # Correct the first item
-        prepared_record_list[0]["record"] = prepared_record_list[0]["record"][2:]
-
-        with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
-            seekpos = fd.tell()
-            line = fd.readline()
-            while line:
-                if b"@" in line[:3]:
-                    current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
-                    current_ID = current_ID.decode("utf-8")
-                if current_ID in [x["ID"] for x in prepared_record_list]:
-                    replacement = [x["record"] for x in prepared_record_list][0]
-                    prepared_record_list = [
-                        x for x in prepared_record_list if x["ID"] != current_ID
-                    ]
-                    line = fd.readline()
-                    while (
-                        b"@" not in line[:3] and line
-                    ):  # replace: drop the current record
-                        line = fd.readline()
-                    remaining = line + fd.read()
-                    fd.seek(seekpos)
-                    fd.write(replacement.encode("utf-8"))
-                    seekpos = fd.tell()
-                    fd.flush()
-                    os.fsync(fd)
-                    fd.write(remaining)
-                    fd.truncate()  # if the replacement is shorter...
-                    fd.seek(seekpos)
-
+        record_list[0]["record"] = record_list[0]["record"][2:]
+        if os.path.exists(self.paths["MAIN_REFERENCES"]):
+            with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
                 seekpos = fd.tell()
                 line = fd.readline()
+                while line:
+                    if b"@" in line[:3]:
+                        current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
+                        current_ID = current_ID.decode("utf-8")
+                    if current_ID in [x["ID"] for x in record_list]:
+                        replacement = [x["record"] for x in record_list][0]
+                        record_list = [x for x in record_list if x["ID"] != current_ID]
+                        line = fd.readline()
+                        while (
+                            b"@" not in line[:3] and line
+                        ):  # replace: drop the current record
+                            line = fd.readline()
+                        remaining = line + fd.read()
+                        fd.seek(seekpos)
+                        fd.write(replacement.encode("utf-8"))
+                        seekpos = fd.tell()
+                        fd.flush()
+                        os.fsync(fd)
+                        fd.write(remaining)
+                        fd.truncate()  # if the replacement is shorter...
+                        fd.seek(seekpos)
 
-        if len(prepared_record_list) > 0:
-            self.logger.error(
-                "records not written to file: "
-                f'{[x["ID"] for x in prepared_record_list]}'
-            )
+                    seekpos = fd.tell()
+                    line = fd.readline()
+
+        if len(record_list) > 0:
+            if append_new:
+                with open(self.paths["MAIN_REFERENCES"], "a") as fd:
+                    for replacement in record_list:
+                        fd.write(replacement["record"])
+
+            else:
+                self.logger.error(
+                    "records not written to file: " f'{[x["ID"] for x in record_list]}'
+                )
 
         git_repo = self.get_repo()
         git_repo.index.add([self.paths["MAIN_REFERENCES"]])
