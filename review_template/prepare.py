@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import collections
 import html
+import itertools
 import json
 import logging
 import multiprocessing as mp
@@ -27,14 +28,10 @@ from review_template.review_manager import ReviewManager
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
-BATCH_SIZE, EMAIL, MAIN_REFERENCES, DEBUG_MODE = -1, "NA", "NA", "NA"
+EMAIL, DEBUG_MODE = "NA", "NA"
 RETRIEVAL_SIMILARITY = 0.84
 
 logger = logging.getLogger("review_template")
-
-prepared, need_manual_prep = 0, 0
-
-current_batch_counter = mp.Value("i", 0)
 
 
 def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
@@ -708,6 +705,7 @@ def get_year_from_vol_iss_jour_crossref(record: dict) -> dict:
         logger.debug(years.count(most_common))
         if years.count(most_common) > 3:
             record["year"] = most_common
+            record["metadata_source"] = "CROSSREF"
 
     except KeyboardInterrupt:
         sys.exit()
@@ -1441,16 +1439,9 @@ def update_metadata_status(record: dict) -> dict:
 
 
 def prepare(record: dict) -> dict:
-    global current_batch_counter
 
-    if RecordState.md_imported != record["status"]:
+    if str(RecordState.md_imported) != str(record["status"]):
         return record
-
-    with current_batch_counter.get_lock():
-        if current_batch_counter.value >= BATCH_SIZE:
-            return record
-        else:
-            current_batch_counter.value += 1
 
     # # Note: we require (almost) perfect matches for the scripts.
     # # Cases with higher dissimilarity will be handled in the prep_man.py
@@ -1498,50 +1489,43 @@ def prepare(record: dict) -> dict:
     return record
 
 
-def set_stats_beginning(bib_db: BibDatabase) -> None:
-    global prepared
-    global need_manual_prep
-    prepared = len(
-        [x for x in bib_db.entries if RecordState.md_prepared == x["status"]]
+def print_stats(record_list, BATCH_SIZE) -> None:
+
+    logger.info(
+        "Completed preparation batch "
+        f"(records {i*BATCH_SIZE} to {i*BATCH_SIZE+len(record_list)})"
     )
+
+    prepared = len([x for x in record_list if RecordState.md_prepared == x["status"]])
+
     need_manual_prep = len(
         [
             x
-            for x in bib_db.entries
+            for x in record_list
             if RecordState.md_needs_manual_preparation == x["status"]
         ]
     )
-    return
 
-
-def print_stats_end(bib_db: BibDatabase) -> None:
-    global prepared
-    global need_manual_prep
-    prepared = (
-        len([x for x in bib_db.entries if RecordState.md_prepared == x["status"]])
-        - prepared
-    )
-    need_manual_prep = (
-        len(
-            [
-                x
-                for x in bib_db.entries
-                if RecordState.md_needs_manual_preparation == x["status"]
-            ]
-        )
-        - need_manual_prep
-    )
     if prepared > 0:
         logger.info(f"Summary: Prepared {prepared} records")
     if need_manual_prep > 0:
         logger.info(
             f"Summary: Marked {need_manual_prep} records " + "for manual preparation"
         )
+
+    logger.info(
+        "To reset the metdatata of records, use "
+        "review_template prepare --reset-ID [ID1,ID2]"
+    )
+    logger.info(
+        "Further instructions are available in the " "documentation (TODO: link)"
+    )
+
     return
 
 
-def reset(bib_db: BibDatabase, id: str) -> None:
-
+def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     record = [x for x in bib_db.entries if x["ID"] == id]
     if len(record) == 0:
         logger.info(f'record with ID {record["ID"]} not found')
@@ -1575,10 +1559,10 @@ def reset(bib_db: BibDatabase, id: str) -> None:
 def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
     bib_db = REVIEW_MANAGER.load_main_refs()
     for reset_id in reset_ids:
-        reset(bib_db, reset_id)
+        reset(REVIEW_MANAGER, bib_db, reset_id)
     REVIEW_MANAGER.save_bib_file(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
     REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
     return
 
@@ -1601,6 +1585,21 @@ def get_data(REVIEW_MANAGER):
     return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items, "prior_ids": prior_ids}
 
 
+def set_to_reprocess(REVIEW_MANAGER):
+    # Note: resetting needs_manual_preparation to imported would also be
+    # consistent with the check_valid_transitions because it will either
+    # transition to prepared or to needs_manual_preparation
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+    [
+        r.update(status=RecordState.md_imported)
+        for r in bib_db.entries
+        if RecordState.md_needs_manual_preparation == r["status"]
+    ]
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    return
+
+
 def main(
     REVIEW_MANAGER: ReviewManager,
     reprocess: bool = False,
@@ -1608,104 +1607,60 @@ def main(
 ) -> None:
 
     saved_args = locals()
-    if not reprocess:
-        del saved_args["reprocess"]
     if not keep_ids:
         del saved_args["keep_ids"]
-    global prepared
-    global need_manual_prep
-    global PAD
+    if not reprocess:
+        del saved_args["reprocess"]
+
     global EMAIL
-    global DEBUG_MODE
-    global BATCH_SIZE
-
-    # REVIEW_MANAGER.config["BATCH_SIZE"] = 5
-
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     EMAIL = REVIEW_MANAGER.config["EMAIL"]
-    DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
-    prepare_data = get_data(REVIEW_MANAGER)
-    logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
-    PAD = prepare_data["PAD"]
-    prior_ids = prepare_data["prior_ids"]
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
-    # Note: resetting needs_manual_preparation to imported would also be
-    # consistent with the check7valid_transitions because it will either
-    # transition to prepared or to needs_manual_preparation
+    global DEBUG_MODE
+    DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
+
+    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+
     if reprocess:
-        # TODO: use REVIEW_MANAGER.replace_field
-        for record in bib_db.entries:
-            if RecordState.md_needs_manual_preparation == record["status"]:
-                record["status"] = RecordState.md_imported
-            # Test the following:
-            # record['status'] = \
-            #   RecordState.md_imported
-            #   if RecordState.md_needs_manual_preparation == record["status"] \
-            #  else record["status"]
+        set_to_reprocess(REVIEW_MANAGER)
 
     logger.info("Prepare")
     logger.info(f"Batch size: {BATCH_SIZE}")
 
-    # Note: one of the challenges for batch-processing is that the IDs may change
-    # This makes independent preparation (and saving) difficult
-    # TODO: we may be able to tackle this by setting a "previous_id" field?
+    prepare_data = get_data(REVIEW_MANAGER)
+    logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
 
-    in_process = True
-    batch_start, batch_end = 1, 0
-    while in_process:
-        with current_batch_counter.get_lock():
-            batch_start += current_batch_counter.value
-            current_batch_counter.value = 0  # start new batch
-        if batch_start > 1:
-            logger.info("Continuing batch preparation started earlier")
+    global PAD
+    PAD = prepare_data["PAD"]
 
-        set_stats_beginning(bib_db)
-        # Note : the network is the main limitation (not CPUs)
+    i = 1
+    while True:
+
+        preparation_batch = list(itertools.islice(prepare_data["items"], 0, BATCH_SIZE))
+        if len(preparation_batch) == 0:
+            if 1 == i:
+                logger.info("No records to prepare")
+            break
+
+        print(f"Batch {i}")
+        i += 1
+
         pool = mp.Pool(REVIEW_MANAGER.config["CPUS"] * 5)
-        bib_db.entries = pool.map(prepare, bib_db.entries)
+        preparation_batch = pool.map(prepare, preparation_batch)
         pool.close()
         pool.join()
 
-        with current_batch_counter.get_lock():
-            batch_end = current_batch_counter.value + batch_start - 1
+        REVIEW_MANAGER.save_record_list_by_ID(preparation_batch)
 
-        if batch_end > 0:
-            logger.info(
-                f"Completed preparation batch (records {batch_start} to {batch_end})"
-            )
+        preparation_batch_IDs = [x["ID"] for x in preparation_batch]
+        if not keep_ids:
+            REVIEW_MANAGER.set_IDs(selected_IDs=preparation_batch_IDs)
 
-            if not keep_ids:
-                # TODO : provide selected_IDs argument
-                bib_db = REVIEW_MANAGER.set_IDs(bib_db)
+        print_stats(preparation_batch, BATCH_SIZE)
 
-            REVIEW_MANAGER.save_bib_file(bib_db)
-            git_repo = REVIEW_MANAGER.get_repo()
-            git_repo.index.add([MAIN_REFERENCES])
+        # Multiprocessing mixes logs of different records.
+        # For better readability:
+        REVIEW_MANAGER.reorder_log(preparation_batch_IDs)
 
-            print_stats_end(bib_db)
-            logger.info(
-                "To reset the metdatata of records, use "
-                "review_template prepare --reset-ID [ID1,ID2]"
-            )
-            logger.info(
-                "Further instructions are available in the "
-                "documentation (TODO: link)"
-            )
-
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            REVIEW_MANAGER.reorder_log(prior_ids)
-
-            in_process = REVIEW_MANAGER.create_commit(
-                "Prepare records", saved_args=saved_args
-            )
-
-        delta = batch_end % BATCH_SIZE
-        if (delta < BATCH_SIZE and delta > 0) or batch_end == 0:
-            if batch_end == 0:
-                logger.info("No records to prepare")
-            break
+        REVIEW_MANAGER.create_commit("Prepare records", saved_args=saved_args)
 
     return

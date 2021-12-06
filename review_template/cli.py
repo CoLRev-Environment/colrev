@@ -376,7 +376,7 @@ def process(ctx, reprocess_id, keep_ids) -> None:
     try:
         REVIEW_MANAGER = ReviewManager()
 
-        if id is not None:
+        if reprocess_id is not None:
             REVIEW_MANAGER.reprocess_id(reprocess_id)
 
         load.main(REVIEW_MANAGER, keep_ids)
