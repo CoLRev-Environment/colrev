@@ -635,60 +635,51 @@ def prep_man_records_cli(REVIEW_MANAGER):
     stat_len = md_prep_man_data["nr_tasks"]
     PAD = md_prep_man_data["PAD"]
     all_ids = md_prep_man_data["all_ids"]
-    # TODO: log details for processing_report
-
-    logger.debug(pp.pformat(md_prep_man_data))
 
     if 0 == stat_len:
         logger.info("No records to prepare manually")
 
-    input("Man-prep not fully implemented (yet).")
+    print("Man-prep is not fully implemented (yet).")
+    print("\n\n")
+    print("Edit the references.bib directly and create commit.")
 
-    i = 0
-    for record in md_prep_man_data["items"]:
+    input("Press Enter to exit.")
 
-        print("\n\n")
-        revrecord = customsort(record)
-        pp.pprint(revrecord)
+    # i = 0
+    # for record in md_prep_man_data["items"]:
 
-        ret = "NA"
-        i += 1
-        while ret not in ["u", "s", "q"]:
-            ret = input(f"({i}/{stat_len}) Update this record [u,q,s]? ")
-            if "q" == ret:
-                quit_pressed = True
-            elif "s" == ret:
-                continue
-            elif "u":
+    #     print("\n\n")
+    #     revrecord = customsort(record)
+    #     pp.pprint(revrecord)
 
-                # os.system("cls" if os.name == "nt" else "clear")
-                # print(f"{i}/{stat_len}")
-                # i += 1
-                # print_record(record)
+    #     ret = "NA"
+    #     i += 1
+    #     while ret not in ["u", "s", "q"]:
+    #         ret = input(f"({i}/{stat_len}) Update this record [u,q,s]? ")
+    #         if "q" == ret:
+    #             quit_pressed = True
+    #         elif "s" == ret:
+    #             continue
+    #         elif "u":
 
-                man_correct_recordtype(record)
-                man_provide_required_fields(record)
-                man_fix_field_inconsistencies(record)
-                man_fix_incomplete_fields(record)
+    #             # os.system("cls" if os.name == "nt" else "clear")
+    #             # print(f"{i}/{stat_len}")
+    #             # i += 1
+    #             # print_record(record)
 
-                # Note: for complete_based_on_doi field:
-                # record = prepare.retrieve_doi_metadata(record)
+    #             man_correct_recordtype(record)
+    #             man_provide_required_fields(record)
+    #             man_fix_field_inconsistencies(record)
+    #             man_fix_incomplete_fields(record)
 
-                # TODO : maybe update the IDs when we have a replace_record procedure
-                # set_IDs
-                # that can handle changes in IDs
-                # record.update(
-                #     ID=REVIEW_MANAGER.generate_ID_blacklist(
-                #         record, all_ids, record_in_bib_db=True, raise_error=False
-                #     )
-                # )
-                # all_ids.append(record["ID"])
+    #             # Note: for complete_based_on_doi field:
+    #             # record = prepare.retrieve_doi_metadata(record)
 
-                prep_man.set_data(REVIEW_MANAGER, record, PAD)
+    #             prep_man.set_data(REVIEW_MANAGER, record, PAD)
 
-    REVIEW_MANAGER.create_commit(
-        "Manual preparation of records", manual_author=True, saved_args=saved_args
-    )
+    # REVIEW_MANAGER.create_commit(
+    #     "Manual preparation of records", manual_author=True, saved_args=saved_args
+    # )
 
     return
 

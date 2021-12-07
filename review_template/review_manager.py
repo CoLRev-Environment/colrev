@@ -1179,7 +1179,6 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
                 status_transition[ID] = proc_transition
 
             data["status_transitions"].append(status_transition)
-            data["status_transitions"].append({"test_id": "dedupe"})
 
     return data
 

@@ -544,7 +544,7 @@ def append_merges(record: dict) -> None:
     return
 
 
-def apply_merges(bib_db: BibDatabase) -> BibDatabase:
+def apply_merges(REVIEW_MANAGER, bib_db: BibDatabase) -> BibDatabase:
 
     # The merging also needs to consider whether IDs are propagated
     # Completeness of comparisons should be ensured by the
@@ -622,6 +622,14 @@ def apply_merges(bib_db: BibDatabase) -> BibDatabase:
             na_rep="NA",
         )
 
+    REVIEW_MANAGER.save_bib_file(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    if os.path.exists("potential_duplicate_tuples.csv"):
+        git_repo.index.add(["potential_duplicate_tuples.csv"])
+    if os.path.exists("duplicate_tuples.csv"):
+        os.remove("duplicate_tuples.csv")
+    git_repo.index.add([MAIN_REFERENCES])
+
     return bib_db
 
 
@@ -671,7 +679,7 @@ def main(REVIEW_MANAGER) -> None:
         pool.close()
         pool.join()
 
-        bib_db = apply_merges(bib_db)
+        bib_db = apply_merges(REVIEW_MANAGER, bib_db)
 
         with current_batch_counter.get_lock():
             batch_end = current_batch_counter.value + batch_start - 1
@@ -681,13 +689,6 @@ def main(REVIEW_MANAGER) -> None:
                 "Completed duplicate processing batch "
                 f"(records {batch_start} to {batch_end})"
             )
-
-            REVIEW_MANAGER.save_bib_file(bib_db)
-            if os.path.exists("potential_duplicate_tuples.csv"):
-                git_repo.index.add(["potential_duplicate_tuples.csv"])
-            if os.path.exists("duplicate_tuples.csv"):
-                os.remove("duplicate_tuples.csv")
-            git_repo.index.add([MAIN_REFERENCES])
 
             in_process = REVIEW_MANAGER.create_commit(
                 "Process duplicates", saved_args=saved_args

@@ -166,17 +166,25 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_needs_manual_preparation)}
     )
-    return {"nr_tasks": nr_tasks, "items": items, "all_ids": all_ids, "PAD": PAD}
+    md_prep_man_data = {
+        "nr_tasks": nr_tasks,
+        "items": items,
+        "all_ids": all_ids,
+        "PAD": PAD,
+    }
+    logger.debug(pp.pformat(md_prep_man_data))
+    return md_prep_man_data
 
 
 def set_data(REVIEW_MANAGER, record, PAD: int = 40):
     from review_template.review_manager import RecordState
 
+    # TODO: log details for processing_report
+
     record.update(status=RecordState.md_prepared)
     record.update(metadata_source="MAN_PREP")
     record = prepare.drop_fields(record)
 
-    logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
     REVIEW_MANAGER.replace_record_by_ID(record)
 
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
@@ -184,5 +192,15 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40):
     # REVIEW_MANAGER.save_bib_file(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([MAIN_REFERENCES])
+
+    # TODO : maybe update the IDs when we have a replace_record procedure
+    # set_IDs
+    # that can handle changes in IDs
+    # record.update(
+    #     ID=REVIEW_MANAGER.generate_ID_blacklist(
+    #         record, all_ids, record_in_bib_db=True, raise_error=False
+    #     )
+    # )
+    # all_ids.append(record["ID"])
 
     return
