@@ -36,7 +36,7 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
     if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
         git_repo.index.add([record["filepath"]])
 
-    REVIEW_MANAGER.replace_record_by_ID(record)
+    REVIEW_MANAGER.update_record_by_ID(record)
     git_repo.index.add([MAIN_REFERENCES])
 
     return

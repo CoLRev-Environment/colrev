@@ -185,7 +185,7 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40):
     record.update(metadata_source="MAN_PREP")
     record = prepare.drop_fields(record)
 
-    REVIEW_MANAGER.replace_record_by_ID(record)
+    REVIEW_MANAGER.update_record_by_ID(record)
 
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     # bib_db = REVIEW_MANAGER.load_main_refs()

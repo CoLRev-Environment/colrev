@@ -58,10 +58,10 @@ def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
 
     if RecordState.rev_included == record["status"]:
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
-        REVIEW_MANAGER.replace_record_by_ID(record)
+        REVIEW_MANAGER.update_record_by_ID(record)
     else:
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
-        REVIEW_MANAGER.replace_record_by_ID(record)
+        REVIEW_MANAGER.update_record_by_ID(record)
 
     git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
 

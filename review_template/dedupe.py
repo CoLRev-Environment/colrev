@@ -1,9 +1,6 @@
 #! /usr/bin/env python
-import csv
 import itertools
 import logging
-import multiprocessing as mp
-import os
 import pprint
 import re
 import unicodedata
@@ -13,22 +10,18 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from thefuzz import fuzz
+from tqdm.contrib.concurrent import process_map
 
-from review_template import prepare
 from review_template.review_manager import RecordState
-
-nr_records_added, nr_current_records = 0, 0
 
 logger = logging.getLogger("review_template")
 
-MERGING_NON_DUP_THRESHOLD, MERGING_DUP_THRESHOLD, BATCH_SIZE = -1, -1, -1
+MERGING_NON_DUP_THRESHOLD, MERGING_DUP_THRESHOLD = -1, -1
 MAIN_REFERENCES = "NA"
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 pd.options.mode.chained_assignment = None  # default='warn'
-
-current_batch_counter = mp.Value("i", 0)
 
 
 def remove_accents(input_str: str) -> str:
@@ -147,17 +140,15 @@ def get_record_similarity(record_a: dict, record_b: dict) -> float:
 
 def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
 
-    author_similarity = fuzz.partial_ratio(df_a["author"], df_b["author"]) / 100
+    author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
-    title_similarity = (
-        fuzz.partial_ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
-    )
+    title_similarity = fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
 
     # partial ratio (catching 2010-10 or 2001-2002)
-    year_similarity = fuzz.partial_ratio(df_a["year"], df_b["year"]) / 100
+    year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
 
     outlet_similarity = (
-        fuzz.partial_ratio(df_a["container_title"], df_b["container_title"]) / 100
+        fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
     )
 
     if str(df_a["journal"]) != "nan":
@@ -193,6 +184,7 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
             ["editor's comments", "editor's comments"],
             ["book reviews", "book reviews"],
             ["editorial note", "editorial note"],
+            ["reviewer ackowledgment", "reviewer ackowledgment"],
         ]:
             weights = [0.175, 0, 0.175, 0.175, 0.175, 0.175, 0.125]
         else:
@@ -259,6 +251,197 @@ def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
     return details["score"]
 
 
+def calculate_similarities_record(references: pd.DataFrame) -> list:
+    # Note: per definition, similarities are needed relative to the last row.
+    references["similarity"] = 0
+    references["details"] = 0
+    sim_col = references.columns.get_loc("similarity")
+    details_col = references.columns.get_loc("details")
+    for base_record_i in range(0, references.shape[0] - 1):
+        sim_details = get_similarity_detailed(
+            references.iloc[base_record_i], references.iloc[-1]
+        )
+        references.iloc[base_record_i, sim_col] = sim_details["score"]
+        references.iloc[base_record_i, details_col] = sim_details["details"]
+    # Note: return all other records (not the comparison record/first row)
+    # and restrict it to the ID, similarity and details
+    ck_col = references.columns.get_loc("ID")
+    sim_col = references.columns.get_loc("similarity")
+    details_col = references.columns.get_loc("details")
+    return references.iloc[:-1, [ck_col, sim_col, details_col]]
+
+
+def append_merges(batch_item: dict) -> list:
+
+    logger.debug(f'append_merges {batch_item["record"]}')
+
+    references = batch_item["queue"]
+
+    # if the record is the first one added to the bib_db
+    # (in a preceding processing step), it can be propagated
+    # if len(batch_item["queue"]) < 2:
+    if len(references.index) < 2:
+        return [
+            {
+                "ID1": batch_item["record"],
+                "ID2": "NA",
+                "similarity": 1,
+                "decision": "no_duplicate",
+            }
+        ]
+
+    # df to get_similarities for each other record
+    references = calculate_similarities_record(references)
+    # if batch_item['record'] == 'AdamsNelsonTodd1992':
+    #     references.to_csv('last_similarities.csv')
+
+    max_similarity = references.similarity.max()
+
+    # TODO: it may not be sufficient to consider the record with the highest similarity
+
+    if max_similarity <= MERGING_NON_DUP_THRESHOLD:
+        # Note: if no other record has a similarity exceeding the threshold,
+        # it is considered a non-duplicate (in relation to all other records)
+        logger.debug(f"max_similarity ({max_similarity})")
+        return [
+            {
+                "ID1": batch_item["record"],
+                "ID2": "NA",
+                "similarity": max_similarity,
+                "decision": "no_duplicate",
+            }
+        ]
+
+    ID = references.loc[references["similarity"].idxmax()]["ID"]
+    logger.debug(f"max_similarity ({max_similarity}): {batch_item['record']} {ID}")
+    details = references.loc[references["similarity"].idxmax()]["details"]
+    logger.debug(details)
+    if (
+        max_similarity > MERGING_NON_DUP_THRESHOLD
+        and max_similarity < MERGING_DUP_THRESHOLD
+    ):
+
+        # record_a, record_b = sorted([ID, record["ID"]])
+        logger.info(
+            f'{batch_item["record"]} - {ID}'.ljust(35, " ")
+            + f"  - potential duplicate (similarity: {max_similarity})"
+        )
+        return [
+            {
+                "ID1": batch_item["record"],
+                "ID2": ID,
+                "similarity": max_similarity,
+                "decision": "potential_duplicate",
+            }
+        ]
+
+    if max_similarity >= MERGING_DUP_THRESHOLD:
+        # note: the following status will not be saved in the bib file but
+        # in the duplicate_tuples.csv (which will be applied to the bib file
+        # in the end)
+
+        logger.info(
+            f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
+            f" (similarity: {max_similarity})\nDetails: {details}"
+        )
+        return [
+            {
+                "ID1": batch_item["record"],
+                "ID2": ID,
+                "similarity": max_similarity,
+                "decision": "duplicate",
+            }
+        ]
+
+
+def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
+
+    # The merging also needs to consider whether IDs are propagated
+    # Completeness of comparisons should be ensured by the
+    # append_merges procedure (which ensures that all prior records
+    # in global queue_order are considered before completing
+    # the comparison/adding records ot the csvs)
+
+    results = list(itertools.chain(*results))
+
+    non_dupes = [x["ID1"] for x in results if "no_duplicate" == x["decision"]]
+    REVIEW_MANAGER.replace_field(
+        non_dupes,
+        "status",
+        str(RecordState.md_processed),
+    )
+
+    bib_db = REVIEW_MANAGER.load_main_refs()
+
+    for dupe in [x for x in results if "duplicate" == x["decision"]]:
+        try:
+            main_record = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
+            if len(main_record) == 0:
+                continue
+            main_record = main_record[0]
+            dupe_record = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
+            if len(dupe_record) == 0:
+                continue
+            dupe_record = dupe_record[0]
+            origins = main_record["origin"].split(";") + dupe_record["origin"].split(
+                ";"
+            )
+            main_record["origin"] = ";".join(list(set(origins)))
+            if "file" in main_record:
+                main_record["file"] = (
+                    main_record["file"] + ";" + dupe_record.get("file", "")
+                )
+                main_record["file"].rstrip(";")
+            main_record["status"] = str(RecordState.md_processed)
+            bib_db.entries = [x for x in bib_db.entries if x["ID"] != dupe_record["ID"]]
+            # REVIEW_MANAGER.update_record_by_ID(main_record)
+            # REVIEW_MANAGER.update_record_by_ID(dupe_record, delete=True)
+        except StopIteration:
+            # TODO : check whether this is valid.
+            pass
+    REVIEW_MANAGER.save_bib_file(bib_db)
+
+    potential_duplicate_ids = []
+    for item in [x for x in results if "potential_duplicate" == x["decision"]]:
+        # Note: set set needs_manual_dedupliation without IDs of the potential duplicate
+        # because new papers may be added to md_processed
+        # (becoming additional potential duplicates)
+        potential_duplicate_ids.append(item["ID1"])
+
+    REVIEW_MANAGER.replace_field(
+        potential_duplicate_ids,
+        "status",
+        str(RecordState.md_needs_manual_deduplication),
+    )
+
+    # pd_record = next(
+    #     REVIEW_MANAGER.read_next_record(conditions={"ID": item["ID1"]})
+    # )
+    # pd_record["potential_dupes"] = (
+    #     pd_record.get("potential_dupes", "") + ";" + item["ID2"]
+    # )
+    # pd_record["potential_dupes"] = pd_record["potential_dupes"].lstrip(";")
+    # pd_record["status"] = str(RecordState.md_needs_manual_deduplication)
+    # REVIEW_MANAGER.update_record_by_ID(pd_record)
+
+    # pd_record = next(
+    #     REVIEW_MANAGER.read_next_record(conditions={"ID": item["ID2"]})
+    # )
+    # pd_record["potential_dupes"] = (
+    #     pd_record.get("potential_dupes", "") + ";" + item["ID1"]
+    # )
+    # pd_record["potential_dupes"] = pd_record["potential_dupes"].lstrip(";")
+    # pd_record["status"] = str(RecordState.md_needs_manual_deduplication)
+    # REVIEW_MANAGER.update_record_by_ID(pd_record)
+
+    # REVIEW_MANAGER.save_record_list_by_ID
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([MAIN_REFERENCES])
+
+    return
+
+
 def prep_references(references: pd.DataFrame) -> pd.DataFrame:
     if "volume" not in references:
         references["volume"] = "nan"
@@ -281,7 +464,7 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
     else:
         references["title"] = (
             references["title"]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+            .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
             .str.lower()
         )
         if "chapter" in references:
@@ -350,51 +533,43 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
     return references
 
 
-def calculate_similarities_record(references: pd.DataFrame) -> list:
-    # Note: per definition, similarities are needed relative to the first row.
-    references = prep_references(references)
-    # references.to_csv('preped_references.csv')
-    references["similarity"] = 0
-    references["details"] = 0
-    sim_col = references.columns.get_loc("similarity")
-    details_col = references.columns.get_loc("details")
-    for base_record_i in range(1, references.shape[0]):
-        sim_details = get_similarity_detailed(
-            references.iloc[base_record_i], references.iloc[0]
-        )
-        references.iloc[base_record_i, sim_col] = sim_details["score"]
-        references.iloc[base_record_i, details_col] = sim_details["details"]
-    # Note: return all other records (not the comparison record/first row)
-    # and restrict it to the ID, similarity and details
-    ck_col = references.columns.get_loc("ID")
-    sim_col = references.columns.get_loc("similarity")
-    details_col = references.columns.get_loc("details")
-    return references.iloc[1:, [ck_col, sim_col, details_col]]
+def get_data(REVIEW_MANAGER):
+    from review_template.review_manager import RecordState
+
+    # Note: this would also be a place to set records as "no-duplicate" by definition
+    # (e.g., for non-duplicated sources marked in the search_details)
+
+    get_record_state_list = REVIEW_MANAGER.get_record_state_list()
+    IDs_to_dedupe = [
+        x[0] for x in get_record_state_list if x[1] == str(RecordState.md_prepared)
+    ]
+    processed_IDs = [
+        x[0]
+        for x in get_record_state_list
+        if x[1]
+        not in [
+            str(RecordState.md_imported),
+            str(RecordState.md_prepared),
+            str(RecordState.md_needs_manual_preparation),
+            str(RecordState.md_needs_manual_deduplication),
+        ]
+    ]
+
+    nr_tasks = len(IDs_to_dedupe)
+    dedupe_data = {
+        "nr_tasks": nr_tasks,
+        "queue": processed_IDs + IDs_to_dedupe,
+        "items_start": len(processed_IDs),
+    }
+    logger.debug(pp.pformat(dedupe_data))
+
+    return dedupe_data
 
 
-def get_prev_queue(queue_order: list, origin: str) -> list:
-    # Note: Because we only introduce individual (non-merged records),
-    # there should be no semicolons in origin!
-    prev_records = []
-    for idx, el in enumerate(queue_order):
-        if origin == el:
-            prev_records = queue_order[:idx]
-            break
-    return prev_records
-
-
-def append_merges(record: dict) -> None:
-    global current_batch_counter
-    logger.debug(f'append_merges {record["ID"]}: \n{pp.pformat(record)}\n\n')
-
-    if RecordState.md_prepared != record["status"]:
-        return
-
-    with current_batch_counter.get_lock():
-        if current_batch_counter.value >= BATCH_SIZE:
-            return
-        else:
-            current_batch_counter.value += 1
+def batch(data, n=1):
+    # the queue (order) matters for the incremental merging (make sure that each
+    # additional record is compared to/merged with all prior records in
+    # the queue)
 
     with open(MAIN_REFERENCES) as target_db:
         bib_db = BibTexParser(
@@ -402,303 +577,95 @@ def append_merges(record: dict) -> None:
             ignore_nonstandard_types=False,
             common_strings=True,
         ).parse_file(target_db, partial=True)
+    # Note: Because we only introduce individual (non-merged records),
+    # there should be no semicolons in origin!
+    records_queue = [x for x in bib_db.entries if x["ID"] in data["queue"]]
 
-    # add all processed records to the queue order before first (re)run
-    if not os.path.exists("queue_order.csv"):
-        with open("queue_order.csv", "a") as fd:
-            for x in bib_db.entries:
-                if RecordState.md_processed == x["status"]:
-                    fd.write(x["origin"] + "\n")
+    references = pd.DataFrame.from_dict(records_queue)
+    references["author"] = references["author"].str[:60]
+    references = prep_references(references)
 
-    # the order matters for the incremental merging (make sure that each
-    # additional record is compared to/merged with all prior records in
-    # the queue)
-    with open("queue_order.csv", "a") as fd:
-        fd.write(record["origin"] + "\n")
-    queue_order = pd.read_csv("queue_order.csv", header=None)
-    queue_order = queue_order[queue_order.columns[0]].tolist()
-    required_prior_record_links = get_prev_queue(queue_order, record["origin"])
-
-    record_links_in_prepared_file = []
-    # note: no need to wait for completion of preparation
-    record_links_in_prepared_file = [
-        record["origin"].split(";") for record in bib_db.entries if "origin" in record
-    ]
-    record_links_in_prepared_file = list(
-        itertools.chain(*record_links_in_prepared_file)
-    )
-
-    # if the record is the first one added to the bib_db
-    # (in a preceding processing step), it can be propagated
-    if len(required_prior_record_links) < 2:
-        if not os.path.exists("non_duplicates.csv"):
-            with open("non_duplicates.csv", "a") as fd:
-                fd.write('"ID"\n')
-        with open("non_duplicates.csv", "a") as fd:
-            fd.write('"' + record["ID"] + '"\n')
-        return
-
-    merge_ignore_status = [
-        RecordState.md_needs_manual_preparation,
-        RecordState.md_needs_manual_deduplication,
-    ]
-
-    prior_records = [
-        x for x in bib_db.entries if x["status"] not in merge_ignore_status
-    ]
-
-    prior_records = [
-        x
-        for x in prior_records
-        if any(
-            record_link in x["origin"].split(",")
-            for record_link in required_prior_record_links
-        )
-    ]
-
-    if len(prior_records) < 1:
-        # Note: the first record is a non_duplicate (by definition)
-        if not os.path.exists("non_duplicates.csv"):
-            with open("non_duplicates.csv", "a") as fd:
-                fd.write('"ID"\n')
-        with open("non_duplicates.csv", "a") as fd:
-            fd.write('"' + record["ID"] + '"\n')
-        return
-
-    # df to get_similarities for each other record
-    record["status"] = str(record["status"])
-    for pr in prior_records:
-        pr["status"] = str(pr["status"])
-    references = pd.DataFrame.from_dict([record] + prior_records)
-
-    # drop the same ID record
-    # Note: the record is simply added as the first row.
-    # references = references[~(references['ID'] == record['ID'])]
-    # dropping them before calculating similarities prevents errors
-    # caused by unavailable fields!
-    # Note: ignore records that need manual preparation in the merging
-    # (until they have been prepared!)
-    references = references[
-        ~references["status"].str.contains(
-            "|".join([str(x) for x in merge_ignore_status]), na=False
-        )
-    ]
-
-    # means that all prior records are tagged as md_needs_manual_preparation
-    if references.shape[0] == 0:
-        if not os.path.exists("non_duplicates.csv"):
-            with open("non_duplicates.csv", "a") as fd:
-                fd.write('"ID"\n')
-        with open("non_duplicates.csv", "a") as fd:
-            fd.write('"' + record["ID"] + '"\n')
-        return
-    references = calculate_similarities_record(references)
-
-    max_similarity = references.similarity.max()
-    ID = references.loc[references["similarity"].idxmax()]["ID"]
-    details = references.loc[references["similarity"].idxmax()]["details"]
-    logger.debug(f"max_similarity ({max_similarity}): {ID}")
-    if max_similarity <= MERGING_NON_DUP_THRESHOLD:
-        # Note: if no other record has a similarity exceeding the threshold,
-        # it is considered a non-duplicate (in relation to all other records)
-        if not os.path.exists("non_duplicates.csv"):
-            with open("non_duplicates.csv", "a") as fd:
-                fd.write('"ID"\n')
-        with open("non_duplicates.csv", "a") as fd:
-            fd.write('"' + record["ID"] + '"\n')
-    if (
-        max_similarity > MERGING_NON_DUP_THRESHOLD
-        and max_similarity < MERGING_DUP_THRESHOLD
-    ):
-        # The md_needs_manual_deduplication status is only set
-        # for one element of the tuple!
-        if not os.path.exists("potential_duplicate_tuples.csv"):
-            with open("potential_duplicate_tuples.csv", "a") as fd:
-                fd.write('"ID1","ID2","max_similarity"\n')
-        with open("potential_duplicate_tuples.csv", "a") as fd:
-            # to ensure a consistent order
-            record_a, record_b = sorted([ID, record["ID"]])
-            line = (
-                '"' + record_a + '","' + record_b + '","' + str(max_similarity) + '"\n'
+    items_start = data["items_start"]
+    it_len = len(data["queue"])
+    batch_data = []
+    for ndx in range(items_start // n, it_len, n):
+        for i in range(ndx, min(ndx + n, it_len)):
+            batch_data.append(
+                {
+                    "record": data["queue"][i],
+                    "queue": references.iloc[: i + 1],
+                }
             )
-            fd.write(line)
-        logger.info(
-            f'{ID} - {record["ID"]}'.ljust(35, " ")
-            + f"  - potential duplicate (similarity: {max_similarity})"
-        )
 
-    if max_similarity >= MERGING_DUP_THRESHOLD:
-        # note: the following status will not be saved in the bib file but
-        # in the duplicate_tuples.csv (which will be applied to the bib file
-        # in the end)
-        if not os.path.exists("duplicate_tuples.csv"):
-            with open("duplicate_tuples.csv", "a") as fd:
-                fd.write('"ID1","ID2"\n')
-        with open("duplicate_tuples.csv", "a") as fd:
-            fd.write('"' + ID + '","' + record["ID"] + '"\n')
-        logger.info(
-            f'Dropped duplicate: {ID} <- {record["ID"]}'
-            f" (similarity: {max_similarity})\nDetails: {details}"
-        )
-
-    return
+    for ndx in range(0, it_len, n):
+        yield batch_data[ndx : min(ndx + n, it_len)]
 
 
-def apply_merges(REVIEW_MANAGER, bib_db: BibDatabase) -> BibDatabase:
+def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
+    from review_template import prepare
 
-    # The merging also needs to consider whether IDs are propagated
-    # Completeness of comparisons should be ensured by the
-    # append_merges procedure (which ensures that all prior records
-    # in global queue_order are considered before completing
-    # the comparison/adding records ot the csvs)
-
-    try:
-        os.remove("queue_order.csv")
-    except FileNotFoundError:
-        pass
-
-    merge_details = ""
-    # Always merge clear duplicates: row[0] <- row[1]
-    if os.path.exists("duplicate_tuples.csv"):
-        with open("duplicate_tuples.csv") as read_obj:
-            csv_reader = csv.reader(read_obj)
-            for row in csv_reader:
-                el_to_merge = []
-                file_to_merge = "NA"
-                for record in bib_db.entries:
-                    if record["ID"] == row[1]:
-                        el_to_merge = record["origin"].split(";")
-                        file_to_merge = record.get("file", "NA")
-                        # Drop the duplicated record
-                        bib_db.entries = [
-                            i for i in bib_db.entries if not (i["ID"] == record["ID"])
-                        ]
-                        break
-                for record in bib_db.entries:
-                    if record["ID"] == row[0]:
-                        els = el_to_merge + record["origin"].split(";")
-                        els = list(set(els))
-                        if "NA" != file_to_merge:
-                            if "file" in record:
-                                record["file"] = (
-                                    record.get("file", "") + ";" + file_to_merge
-                                )
-                            else:
-                                record["file"] = file_to_merge
-                        record.update(origin=str(";".join(els)))
-                        if RecordState.md_prepared == record["status"]:
-                            record.update(status=RecordState.md_processed)
-                        merge_details += row[0] + " < " + row[1] + "\n"
-                        break
-
-    # Set clear non-duplicates to completely processed
-    if os.path.exists("non_duplicates.csv"):
-        with open("non_duplicates.csv") as read_obj:
-            csv_reader = csv.reader(read_obj)
-            for row in csv_reader:
-                for record in bib_db.entries:
-                    if record["ID"] == row[0]:
-                        if RecordState.md_prepared == record["status"]:
-                            record.update(status=RecordState.md_processed)
-        os.remove("non_duplicates.csv")
-
-    # note: potential_duplicate_tuples need to be processed manually but we
-    # tag the second record (row[1]) as "md_needs_mual_deduplication"
-    if os.path.exists("potential_duplicate_tuples.csv"):
-        with open("potential_duplicate_tuples.csv") as read_obj:
-            csv_reader = csv.reader(read_obj)
-            for row in csv_reader:
-                for record in bib_db.entries:
-                    if (record["ID"] == row[0]) or (record["ID"] == row[1]):
-                        record.update(status=RecordState.md_needs_manual_deduplication)
-        potential_duplicates = pd.read_csv("potential_duplicate_tuples.csv", dtype=str)
-        potential_duplicates.sort_values(
-            by=["max_similarity", "ID1", "ID2"], ascending=False, inplace=True
-        )
-        potential_duplicates.to_csv(
-            "potential_duplicate_tuples.csv",
-            index=False,
-            quoting=csv.QUOTE_ALL,
-            na_rep="NA",
-        )
-
-    REVIEW_MANAGER.save_bib_file(bib_db)
-    git_repo = REVIEW_MANAGER.get_repo()
-    if os.path.exists("potential_duplicate_tuples.csv"):
-        git_repo.index.add(["potential_duplicate_tuples.csv"])
-    if os.path.exists("duplicate_tuples.csv"):
-        os.remove("duplicate_tuples.csv")
-    git_repo.index.add([MAIN_REFERENCES])
-
-    return bib_db
-
-
-def main(REVIEW_MANAGER) -> None:
-
-    saved_args = locals()
-    global MERGING_NON_DUP_THRESHOLD
-    global MERGING_DUP_THRESHOLD
-    global MAIN_REFERENCES
-    global BATCH_SIZE
-
-    MERGING_NON_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_NON_DUP_THRESHOLD"]
-    MERGING_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_DUP_THRESHOLD"]
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     bib_db = REVIEW_MANAGER.load_main_refs()
     git_repo = REVIEW_MANAGER.get_repo()
-
-    logger.info("Process duplicates")
-
     for record in bib_db.entries:
         if "crossref" in record:
             crossref_rec = prepare.get_crossref_record(record)
             if crossref_rec is None:
                 continue
 
-            if not os.path.exists("duplicate_tuples.csv"):
-                with open("duplicate_tuples.csv", "a") as fd:
-                    fd.write('"ID1","ID2"\n')
-            with open("duplicate_tuples.csv", "a") as fd:
-                fd.write('"' + record["ID"] + '","' + crossref_rec["ID"] + '"\n')
             logger.info(
                 f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
             )
-
-    in_process = True
-    batch_start, batch_end = 1, 0
-    while in_process:
-        with current_batch_counter.get_lock():
-            batch_start += current_batch_counter.value
-            current_batch_counter.value = 0  # start new batch
-        if batch_start > 1:
-            logger.info("Continuing batch duplicate processing started earlier")
-
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-        pool.map(append_merges, bib_db.entries)
-        pool.close()
-        pool.join()
-
-        bib_db = apply_merges(REVIEW_MANAGER, bib_db)
-
-        with current_batch_counter.get_lock():
-            batch_end = current_batch_counter.value + batch_start - 1
-
-        if batch_end > 0:
-            logger.info(
-                "Completed duplicate processing batch "
-                f"(records {batch_start} to {batch_end})"
+            apply_merges(
+                REVIEW_MANAGER,
+                [
+                    {
+                        "ID1": record["ID"],
+                        "ID2": crossref_rec["ID"],
+                        "similarity": 1,
+                        "decision": "duplicate",
+                    }
+                ],
             )
+            git_repo.index.add([MAIN_REFERENCES])
+    return
 
-            in_process = REVIEW_MANAGER.create_commit(
-                "Process duplicates", saved_args=saved_args
-            )
-            if not in_process:
-                logger.info("No duplicates merged/potential duplicates identified")
 
-        if batch_end < BATCH_SIZE or batch_end == 0:
-            if batch_end == 0:
-                logger.info("No records to check for duplicates")
-            break
+def main(REVIEW_MANAGER) -> None:
+
+    saved_args = locals()
+
+    global MERGING_NON_DUP_THRESHOLD
+    MERGING_NON_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_NON_DUP_THRESHOLD"]
+
+    global MERGING_DUP_THRESHOLD
+    MERGING_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_DUP_THRESHOLD"]
+
+    global MAIN_REFERENCES
+    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+    logger.info("Process duplicates")
+
+    merge_crossref_linked_records(REVIEW_MANAGER)
+
+    dedupe_data = get_data(REVIEW_MANAGER)
+
+    i = 1
+    for dedupe_batch in batch(dedupe_data, REVIEW_MANAGER.config["BATCH_SIZE"]):
+
+        print(f"Batch {i}")
+        i += 1
+
+        dedupe_batch_results = process_map(
+            append_merges, dedupe_batch, max_workers=REVIEW_MANAGER.config["CPUS"]
+        )
+
+        # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
+
+        apply_merges(REVIEW_MANAGER, dedupe_batch_results)
+
+        REVIEW_MANAGER.create_commit("Process duplicates", saved_args=saved_args)
+
+    if 1 == i:
+        logger.info("No records to check for duplicates")
 
     return

@@ -1489,7 +1489,7 @@ def prepare(record: dict) -> dict:
     return record
 
 
-def print_stats(record_list, BATCH_SIZE) -> None:
+def print_stats(record_list, BATCH_SIZE, i) -> None:
 
     logger.info(
         "Completed preparation batch "
@@ -1582,7 +1582,15 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_imported)},
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items, "prior_ids": prior_ids}
+
+    prep_data = {
+        "nr_tasks": nr_tasks,
+        "PAD": PAD,
+        "items": items,
+        "prior_ids": prior_ids,
+    }
+    logger.debug(pp.pformat(prep_data))
+    return prep_data
 
 
 def set_to_reprocess(REVIEW_MANAGER):
@@ -1598,6 +1606,10 @@ def set_to_reprocess(REVIEW_MANAGER):
     ]
     REVIEW_MANAGER.save_bib_file(bib_db)
     return
+
+
+def batch(items, n):
+    yield list(itertools.islice(items, 0, n))
 
 
 def main(
@@ -1633,18 +1645,12 @@ def main(
     PAD = prepare_data["PAD"]
 
     i = 1
-    while True:
-
-        preparation_batch = list(itertools.islice(prepare_data["items"], 0, BATCH_SIZE))
-        if len(preparation_batch) == 0:
-            if 1 == i:
-                logger.info("No records to prepare")
-            break
+    for preparation_batch in batch(prepare_data["items"], BATCH_SIZE):
 
         print(f"Batch {i}")
         i += 1
 
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"] * 5)
+        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"] * 15)
         preparation_batch = pool.map(prepare, preparation_batch)
         pool.close()
         pool.join()
@@ -1655,7 +1661,7 @@ def main(
         if not keep_ids:
             REVIEW_MANAGER.set_IDs(selected_IDs=preparation_batch_IDs)
 
-        print_stats(preparation_batch, BATCH_SIZE)
+        print_stats(preparation_batch, BATCH_SIZE, i)
 
         # Multiprocessing mixes logs of different records.
         # For better readability:
@@ -1663,4 +1669,6 @@ def main(
 
         REVIEW_MANAGER.create_commit("Prepare records", saved_args=saved_args)
 
+    if 1 == i:
+        logger.info("No records to prepare")
     return

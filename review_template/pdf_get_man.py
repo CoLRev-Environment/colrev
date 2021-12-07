@@ -89,7 +89,7 @@ def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
             git_repo.index.add([filepath])
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF")
 
-    REVIEW_MANAGER.replace_record_by_ID(record)
+    REVIEW_MANAGER.update_record_by_ID(record)
     git_repo.index.add([MAIN_REFERENCES])
 
     return

@@ -156,12 +156,12 @@ def set_data(
     if prescreen_inclusion:
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen")
         REVIEW_MANAGER.replace_field(
-            record["ID"], "status", str(RecordState.rev_prescreen_included)
+            [record["ID"]], "status", str(RecordState.rev_prescreen_included)
         )
     else:
         logger.info(f" {record['record']}".ljust(PAD, " ") + "Excluded in prescreen")
         REVIEW_MANAGER.replace_field(
-            record["ID"], "status", str(RecordState.rev_prescreen_excluded)
+            [record["ID"]], "status", str(RecordState.rev_prescreen_excluded)
         )
 
     git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])

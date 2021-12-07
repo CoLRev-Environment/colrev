@@ -268,6 +268,7 @@ def get_bibtex_writer():
         "man_prep_hints",
         "pdf_processed",
         "file",  # Note : do not change this order (parsers rely on it)
+        "potential_dupes",
         "doi",
         "grobid-version",
         "dblp_key",
@@ -1119,7 +1120,7 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
                     data["persisted_IDs"].append([origin_part, ID])
 
             if file != "NA":
-                if not os.path.exists(file):
+                if not all(os.path.exists(f) for f in file.split(";")):
                     data["pdf_not_exists"].append(ID)
 
             if origin != "NA":
@@ -2247,11 +2248,11 @@ class ReviewManager:
                 record, ID_list, record_in_bib_db=True, raise_error=False
             )
             record.update(ID=new_id)
+            ID_list.append(new_id)
             if old_id != new_id:
                 self.logger.info(f"set_ID({old_id}) to {new_id}")
-            ID_list.append(record["ID"])
-            if old_id in ID_list:
-                ID_list.remove(old_id)
+                if old_id in ID_list:
+                    ID_list.remove(old_id)
         self.save_bib_file(bib_db)
         git_repo = self.get_repo()
         git_repo.index.add([self.paths["MAIN_REFERENCES"]])
@@ -2525,7 +2526,7 @@ class ReviewManager:
                     records.append(record)
         yield from records
 
-    def replace_field(self, ID, key: str, val: str) -> None:
+    def replace_field(self, IDs: list, key: str, val: str) -> None:
 
         val = val.encode("utf-8")
         current_ID = "NA"
@@ -2538,7 +2539,7 @@ class ReviewManager:
                     current_ID = current_ID.decode("utf-8")
 
                 replacement = None
-                if current_ID == ID:
+                if current_ID in IDs:
                     if line.lstrip()[: len(key)].decode("utf-8") == key:
                         replacement = line[: line.find(b"{") + 1] + val + b"},\n"
 
@@ -2561,12 +2562,14 @@ class ReviewManager:
                         fd.truncate()  # if the replacement is shorter...
                         fd.seek(seekpos)
                         line = fd.readline()
-                    return  # We only need to replace once
+                    IDs.remove(current_ID)
+                    if 0 == len(IDs):
+                        return
                 seekpos = fd.tell()
                 line = fd.readline()
         return
 
-    def replace_record_by_ID(self, new_record: dict) -> None:
+    def update_record_by_ID(self, new_record: dict, delete: bool = False) -> None:
 
         ID = new_record["ID"]
         new_record["status"] = str(new_record["status"])
@@ -2589,7 +2592,8 @@ class ReviewManager:
                         line = fd.readline()
                     remaining = line + fd.read()
                     fd.seek(seekpos)
-                    fd.write(replacement.encode("utf-8"))
+                    if not delete:
+                        fd.write(replacement.encode("utf-8"))
                     seekpos = fd.tell()
                     fd.flush()
                     os.fsync(fd)
@@ -2623,6 +2627,7 @@ class ReviewManager:
         ]
         # Correct the first item
         record_list[0]["record"] = record_list[0]["record"][2:]
+        current_ID = "NOTSET"
         if os.path.exists(self.paths["MAIN_REFERENCES"]):
             with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
                 seekpos = fd.tell()
