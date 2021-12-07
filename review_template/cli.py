@@ -335,7 +335,7 @@ def status(ctx) -> None:
 
     # os.rename(".pre-commit-config.yaml", "bak_pre-commit-config.yaml")
     # REVIEW_MANAGER.retrieve_package_file(
-    #     "../template/.pre-commit-config.yaml",
+    #     "template/.pre-commit-config.yaml",
     #     ".pre-commit-config.yaml",
     # )
     # logging.info("Install pre-commmit hooks")

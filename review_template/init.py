@@ -86,15 +86,11 @@ def initialize_repo(
 
     from review_template import review_manager
 
+    review_manager.retrieve_package_file("template/readme.md", "readme.md")
     review_manager.retrieve_package_file(
-        "review_template/template/readme.md", "readme.md"
+        "template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
     )
-    review_manager.retrieve_package_file(
-        "review_template/template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
-    )
-    review_manager.retrieve_package_file(
-        "review_template/template/.gitattributes", ".gitattributes"
-    )
+    review_manager.retrieve_package_file("template/.gitattributes", ".gitattributes")
 
     review_manager.inplace_change(
         "readme.md", "{{project_title}}", project_title.rstrip(" ")

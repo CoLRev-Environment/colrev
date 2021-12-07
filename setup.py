@@ -80,10 +80,8 @@ setup(
     include_package_data=True,
     package_data={
         "review_template": [
-            "review_template/template/paper.md",
-            "review_template/template/readme.md",
-            "review_template/template/.gitattributes",
-            "review_template/template/.pre-commit-config.yaml",
+            "template/*",
+            "template/.*",
         ],
     },
     packages=find_packages(include=["review_template", "review_template.*"]),

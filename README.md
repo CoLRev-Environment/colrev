@@ -34,6 +34,7 @@ mkdir review_project & cd review_project
 virtualenv venv
 source venv/bin/activate
 pip3 install ../review_template
+pip3 install ../pipeline_validation_hooks
 
 # for editing mode:
 cd review_template

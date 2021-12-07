@@ -149,7 +149,7 @@ def update_manuscript(
     author = ", ".join(dict(Counter(commits_auhtors)))
 
     if not os.path.exists(MANUSCRIPT):
-        review_manager.retrieve_package_file("../template/" + MANUSCRIPT, MANUSCRIPT)
+        review_manager.retrieve_package_file("template/" + MANUSCRIPT, MANUSCRIPT)
         review_manager.inplace_change(MANUSCRIPT, "{{project_title}}", title)
         review_manager.inplace_change(MANUSCRIPT, "{{author}}", author)
         logger.info(f"Please update title and authors in {MANUSCRIPT}")
