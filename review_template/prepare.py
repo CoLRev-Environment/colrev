@@ -4,7 +4,6 @@ import html
 import itertools
 import json
 import logging
-import multiprocessing as mp
 import os
 import pprint
 import re
@@ -21,6 +20,7 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 from thefuzz import fuzz
+from tqdm.contrib.concurrent import process_map
 
 from review_template import dedupe
 from review_template.review_manager import RecordState
@@ -1650,10 +1650,9 @@ def main(
         print(f"Batch {i}")
         i += 1
 
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"] * 15)
-        preparation_batch = pool.map(prepare, preparation_batch)
-        pool.close()
-        pool.join()
+        preparation_batch = process_map(
+            prepare, preparation_batch, max_workers=REVIEW_MANAGER.config["CPUS"] * 15
+        )
 
         REVIEW_MANAGER.save_record_list_by_ID(preparation_batch)
 

@@ -364,14 +364,14 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
 
     results = list(itertools.chain(*results))
 
-    non_dupes = [x["ID1"] for x in results if "no_duplicate" == x["decision"]]
-    REVIEW_MANAGER.replace_field(
-        non_dupes,
-        "status",
-        str(RecordState.md_processed),
-    )
-
     bib_db = REVIEW_MANAGER.load_main_refs()
+
+    for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
+        non_dupe_record = [x for x in bib_db.entries if x["ID"] == non_dupe]
+        if len(non_dupe_record) == 0:
+            continue
+        non_dupe_record = non_dupe_record[0]
+        non_dupe_record.update(status=RecordState.md_processed)
 
     for dupe in [x for x in results if "duplicate" == x["decision"]]:
         try:
@@ -399,42 +399,21 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
         except StopIteration:
             # TODO : check whether this is valid.
             pass
-    REVIEW_MANAGER.save_bib_file(bib_db)
 
-    potential_duplicate_ids = []
-    for item in [x for x in results if "potential_duplicate" == x["decision"]]:
+    for pot_dupe_item in [
+        x["ID1"] for x in results if "potential_duplicate" == x["decision"]
+    ]:
         # Note: set set needs_manual_dedupliation without IDs of the potential duplicate
         # because new papers may be added to md_processed
         # (becoming additional potential duplicates)
-        potential_duplicate_ids.append(item["ID1"])
 
-    REVIEW_MANAGER.replace_field(
-        potential_duplicate_ids,
-        "status",
-        str(RecordState.md_needs_manual_deduplication),
-    )
+        pot_dupe_record = [x for x in bib_db.entries if x["ID"] == pot_dupe_item]
+        if len(pot_dupe_record) == 0:
+            continue
+        pot_dupe_record = pot_dupe_record[0]
+        pot_dupe_record.update(status=RecordState.md_needs_manual_deduplication)
 
-    # pd_record = next(
-    #     REVIEW_MANAGER.read_next_record(conditions={"ID": item["ID1"]})
-    # )
-    # pd_record["potential_dupes"] = (
-    #     pd_record.get("potential_dupes", "") + ";" + item["ID2"]
-    # )
-    # pd_record["potential_dupes"] = pd_record["potential_dupes"].lstrip(";")
-    # pd_record["status"] = str(RecordState.md_needs_manual_deduplication)
-    # REVIEW_MANAGER.update_record_by_ID(pd_record)
-
-    # pd_record = next(
-    #     REVIEW_MANAGER.read_next_record(conditions={"ID": item["ID2"]})
-    # )
-    # pd_record["potential_dupes"] = (
-    #     pd_record.get("potential_dupes", "") + ";" + item["ID1"]
-    # )
-    # pd_record["potential_dupes"] = pd_record["potential_dupes"].lstrip(";")
-    # pd_record["status"] = str(RecordState.md_needs_manual_deduplication)
-    # REVIEW_MANAGER.update_record_by_ID(pd_record)
-
-    # REVIEW_MANAGER.save_record_list_by_ID
+    REVIEW_MANAGER.save_bib_file(bib_db)
 
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([MAIN_REFERENCES])

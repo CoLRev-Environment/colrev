@@ -321,7 +321,8 @@ def setup_logger(level=logging.INFO):
         report_file_handler.setFormatter(formatter)
 
         logger.addHandler(report_file_handler)
-        logger.addHandler(handler)
+        if logging.DEBUG == level:
+            logger.addHandler(handler)
         logger.propagate = False
     return logger
 
@@ -697,10 +698,10 @@ def check_software(REVIEW_MANAGER):
         if "- review_template:" in cmsg_line:
             last_review_template_version = cmsg_line[cmsg_line.find("version ") + 8 :]
             current_review_template_version = version("review_template")
-            if last_review_template_version != current_review_template_version:
-                raise SoftwareUpgradeError(
-                    last_review_template_version, last_review_template_version
-                )
+            # if last_review_template_version != current_review_template_version:
+            #     raise SoftwareUpgradeError(
+            #         last_review_template_version, last_review_template_version
+            #     )
 
     return
 
@@ -1562,6 +1563,7 @@ class ReviewManager:
         "FORW_CIT",
         "LOCAL_PAPER_INDEX",
         "OTHER",
+        "FEED"
     ]
 
     notified_next_process = None
@@ -1655,7 +1657,7 @@ class ReviewManager:
             {"script": check_git_conflicts, "params": []},
             {"script": check_repository_setup, "params": self},
             {"script": check_software, "params": self},
-            {"script": check_raw_search_unchanged, "params": []},
+            # {"script": check_raw_search_unchanged, "params": []},
         ]
 
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
@@ -2414,6 +2416,8 @@ class ReviewManager:
                 default_flow_style=False,
                 sort_keys=False,
             )
+        git_repo = self.get_repo()
+        git_repo.index.add([self.paths["SEARCH_DETAILS"]])
         return
 
     def save_bib_file(self, bib_db: BibDatabase, target_file: str = None) -> None:

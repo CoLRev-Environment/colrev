@@ -282,10 +282,10 @@ def status(ctx) -> None:
     if 1 == ret_f["status"]:
         print(f"  ReviewManager.format()     ...... {colors.RED}FAIL{colors.END}")
         print(f'\n    {ret_f["msg"]}\n')
-    if not review_manager.in_virtualenv():
-        print(
-            f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
-        )
+    # if not review_manager.in_virtualenv():
+    #     print(
+    #         f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
+    #     )
 
     REVIEW_MANAGER.update_status_yaml()
 
@@ -457,6 +457,7 @@ def load(ctx, keep_ids) -> None:
 
         REVIEW_MANAGER = ReviewManager()
         load.validate_file_formats()
+        REVIEW_MANAGER.notify(Process(ProcessType.load))
         check_update_search_details(REVIEW_MANAGER)
         load_process = Process(ProcessType.load, load.main)
         REVIEW_MANAGER.run_process(load_process, keep_ids)
