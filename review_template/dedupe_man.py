@@ -7,6 +7,7 @@ import pandas as pd
 
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -53,9 +54,10 @@ def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
     duplicate_record = [x for x in bib_db.entries if duplicate_ID == x["ID"]][0]
 
     if "no_duplicate" == dedupe_man_item["decision"]:
-        logger.info(
-            f"{main_ID}/{duplicate_ID}".ljust(40, " ") + "recorded: no duplicate"
-        )
+        msg = f"{main_ID}/{duplicate_ID}".ljust(40, " ") + "recorded: no duplicate"
+        report_logger.info(msg)
+        logger.info(msg)
+
         # do not merge records
         remove_from_potential_duplicates_csv(main_ID, duplicate_ID)
         # if ID is in no other potential duplicate pairs, set status to md_processed
@@ -67,7 +69,10 @@ def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
                 duplicate_record.update(status=RecordState.md_processed)
 
     if "duplicate" == dedupe_man_item["decision"]:
-        logger.info(f"{main_ID}/{duplicate_ID}".ljust(40, " ") + "recorded: duplicate")
+        msg = f"{main_ID}/{duplicate_ID}".ljust(40, " ") + "recorded: duplicate"
+        report_logger.info(msg)
+        logger.info(msg)
+
         # Note: update status and remove the other record
         combined_el_list = get_combined_origin_list(main_record, duplicate_record)
         # Delete the other record (record_a_ID or record_b_ID)
@@ -87,7 +92,7 @@ def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
     if potential_duplicate_tuples_empty:
         os.remove("potential_duplicate_tuples.csv")
 
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.git.add(update=True)
 
@@ -147,6 +152,9 @@ def get_data(REVIEW_MANAGER, bib_db):
 
             if a_propagated and b_propagated:
                 item["decision"] = "both_IDs_propagated"
+                report_logger.error(
+                    f"Both IDs propagated: {record_a_ID}, {record_b_ID}"
+                )
                 logger.error(f"Both IDs propagated: {record_a_ID}, {record_b_ID}")
                 # return bib_db
                 continue

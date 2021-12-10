@@ -16,7 +16,7 @@ from review_template.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-logger = logging.getLogger("review_template")
+logger = logging.getLogger("review_template_report")
 
 key_order = [
     "ENTRYTYPE",
@@ -256,7 +256,7 @@ def print_progress(stat: dict) -> None:
 @click.pass_context
 def status(ctx) -> None:
     """Show status"""
-    from review_template import status, review_manager
+    from review_template import status
     from review_template.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
@@ -287,8 +287,6 @@ def status(ctx) -> None:
     #         f"  {colors.RED}WARNING{colors.END} running scripts outside of virtualenv"
     #     )
 
-    REVIEW_MANAGER.update_status_yaml()
-
     if ret_check["status"] + ret_f["status"] == 0:
         stat = status.get_status_freq(REVIEW_MANAGER)
         status.print_review_status(REVIEW_MANAGER, stat)
@@ -311,8 +309,6 @@ def status(ctx) -> None:
     #     stdout=DEVNULL,
     #     stderr=STDOUT,
     # )
-
-    # REVIEW_MANAGER.update_status_yaml()
 
     # repo.index.add([".pre-commit-config.yaml", "status.yaml"])
     # repo.index.commit(
@@ -636,15 +632,16 @@ def prep_man_records_cli(REVIEW_MANAGER):
     stat_len = md_prep_man_data["nr_tasks"]
     PAD = md_prep_man_data["PAD"]
     all_ids = md_prep_man_data["all_ids"]
+    logger = logging.getLogger("review_template")
 
     if 0 == stat_len:
         logger.info("No records to prepare manually")
 
-    print("Man-prep is not fully implemented (yet).")
-    print("\n\n")
-    print("Edit the references.bib directly and create commit.")
-
-    input("Press Enter to exit.")
+    print("Man-prep is not fully implemented (yet).\n")
+    print(
+        "Edit the references.bib directly, set the status to 'md_prepared' and "
+        "call this script again to create a commit.\n"
+    )
 
     # i = 0
     # for record in md_prep_man_data["items"]:
@@ -677,10 +674,18 @@ def prep_man_records_cli(REVIEW_MANAGER):
     #             # record = prepare.retrieve_doi_metadata(record)
 
     #             prep_man.set_data(REVIEW_MANAGER, record, PAD)
-
-    # REVIEW_MANAGER.create_commit(
-    #     "Manual preparation of records", manual_author=True, saved_args=saved_args
-    # )
+    git_repo = REVIEW_MANAGER.get_repo()
+    if git_repo.is_dirty():
+        if "y" == input("Create commit (y/n)?"):
+            REVIEW_MANAGER.create_commit(
+                "Manual preparation of records",
+                manual_author=True,
+                saved_args=saved_args,
+            )
+        else:
+            input("Press Enter to exit.")
+    else:
+        input("Press Enter to exit.")
 
     return
 
@@ -862,7 +867,7 @@ def dedupe_man_cli(REVIEW_MANAGER):
 
     saved_args = locals()
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     dedupe_man_data = dedupe_man.get_data(REVIEW_MANAGER, bib_db)
     if 0 == dedupe_man_data["nr_tasks"]:
         return
@@ -911,7 +916,7 @@ def prescreen_cli(
 
     from review_template import prescreen
 
-    logger = logging.getLogger("review_template")
+    logger = logging.getLogger("review_template_report")
 
     prescreen_data = prescreen.get_data(REVIEW_MANAGER)
     stat_len = prescreen_data["nr_tasks"]
@@ -1006,7 +1011,7 @@ def screen_cli(
 
     from review_template import screen
 
-    logger = logging.getLogger("review_template")
+    logger = logging.getLogger("review_template_report")
 
     screen_data = screen.get_data(REVIEW_MANAGER)
     stat_len = screen_data["nr_tasks"]
@@ -1020,7 +1025,7 @@ def screen_cli(
     if 0 == stat_len:
         logger.info("No records to prescreen")
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     excl_criteria = screen.get_exclusion_criteria(bib_db)
     if excl_criteria:
         excl_criteria_available = True
@@ -1216,22 +1221,27 @@ def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
         #  'get_pdf_from_researchgate': get_pdf_from_researchgate,
     }
 
+    filepath = os.path.join(
+        REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
+    )
     for retrieval_script in retrieval_scripts:
         logger.debug(f'{retrieval_script}({record["ID"]}) called')
         record = retrieval_scripts[retrieval_script](record)
         if "y" == input("Retrieved (y/n)?"):
             # TODO : some of the following should be moved
             # to the pdf_get_man script ("apply changes")
-            filepath = os.path.join(
-                REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
-            )
             if not os.path.exists(filepath):
                 print(f'File does not exist: {record["ID"]}.pdf')
             else:
+                filepath = os.path.join(
+                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"],
+                    record["ID"] + ".pdf",
+                )
                 pdf_get_man.set_data(REVIEW_MANAGER, record, filepath)
                 break
-    if "y" == input("Set to pdf_not_available (y/n)?"):
-        pdf_get_man.set_data(REVIEW_MANAGER, record, None)
+    if not os.path.exists(filepath):
+        if "y" == input("Set to pdf_not_available (y/n)?"):
+            pdf_get_man.set_data(REVIEW_MANAGER, record, None)
 
     return
 
@@ -1245,7 +1255,7 @@ def pdf_get_man_cli(REVIEW_MANAGER):
 
     PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     bib_db = pdf_get.check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
 
     for record in bib_db.entries:
@@ -1255,7 +1265,12 @@ def pdf_get_man_cli(REVIEW_MANAGER):
 
     pdf_get_man_data = pdf_get_man.get_data(REVIEW_MANAGER)
 
-    input("Get the pdfs, rename them (ID.pdf) and store them in the pdfs directory.")
+    print(
+        "\nInstructions\n\n      "
+        "Get the pdfs, rename them (ID.pdf) and store them in the pdfs directory.\n"
+    )
+
+    input("Enter to start.")
 
     for i, item in enumerate(pdf_get_man_data["items"]):
         stat = str(i + 1) + "/" + str(pdf_get_man_data["nr_tasks"])
@@ -1281,10 +1296,11 @@ def pdf_get_man_cli(REVIEW_MANAGER):
 def pdf_get_man(ctx) -> None:
     """Get PDFs manually"""
     from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ReviewManager, Process, ProcessType
 
     try:
         REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(Process(ProcessType.pdf_get_man))
         pdf_get_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -1328,7 +1344,7 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
     )
 
     pdf_prep_man_data = pdf_prep_man.get_data(REVIEW_MANAGER)
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     for i, item in enumerate(pdf_prep_man_data["items"]):
         stat = str(i + 1) + "/" + str(pdf_prep_man_data["nr_tasks"])
@@ -1352,10 +1368,11 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
 def pdf_prep_man(ctx) -> None:
     """Prepare PDFs manually"""
     from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from review_template.review_manager import ReviewManager, Process, ProcessType
 
     try:
         REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep_man))
         pdf_prep_man_cli(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
@@ -1375,7 +1392,12 @@ def data(ctx, edit_csv, load_csv) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        data.main(REVIEW_MANAGER, edit_csv, load_csv)
+        if edit_csv:
+            data.edit_csv(REVIEW_MANAGER)
+        elif load_csv:
+            data.load_csv(REVIEW_MANAGER)
+        else:
+            data.main(REVIEW_MANAGER)
     except review_manager.ProcessOrderViolation as e:
         logging.error(f"ProcessOrderViolation: {e}")
         pass
@@ -1478,7 +1500,7 @@ def debug(ctx, activate, deactivate):
     from review_template import review_manager
 
     review_manager.setup_logger()
-    logger = logging.getLogger("review_template")
+    logger = logging.getLogger("review_template_report")
 
     if activate:
         logger.info("Debugging activated")

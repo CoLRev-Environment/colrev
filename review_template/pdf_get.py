@@ -13,6 +13,7 @@ from review_template import grobid_client
 from review_template import tei_tools
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 # https://github.com/ContentMine/getpapers
@@ -83,6 +84,7 @@ def get_pdf_from_unpaywall(record: dict) -> dict:
                 with open(pdf_filepath, "wb") as f:
                     f.write(res.content)
                 if is_pdf(pdf_filepath):
+                    report_logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
                     logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
                 else:
                     os.remove(pdf_filepath)
@@ -101,6 +103,7 @@ def link_pdf(
     if os.path.exists(pdf_filepath) and pdf_filepath != record.get("file", "NA"):
         record.update(status=RecordState.pdf_imported)
         record.update(file=pdf_filepath)
+        report_logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
         logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
     else:
         if set_needs_man_retrieval:
@@ -151,6 +154,7 @@ def print_details(missing_records: BibDatabase) -> None:
     # else:
     #     logger.info('No PDFs retrieved')
     if len(missing_records.entries) > 0:
+        report_logger.info(f"{len(missing_records.entries)} PDFs missing ")
         logger.info(f"{len(missing_records.entries)} PDFs missing ")
     return
 
@@ -172,6 +176,7 @@ def check_existing_unlinked_pdfs(
     if not pdf_files:
         return bib_db
 
+    report_logger.info("Starting GROBID service to extract metadata from PDFs")
     logger.info("Starting GROBID service to extract metadata from PDFs")
     grobid_client.start_grobid()
 
@@ -203,6 +208,9 @@ def check_existing_unlinked_pdfs(
                 max_sim_record.update(status=RecordState.pdf_imported)
                 linked_existing_files = True
                 os.rename(file, new_filename)
+                report_logger.info(
+                    "checked and renamed pdf:" f" {file} > {new_filename}"
+                )
                 logger.info("checked and renamed pdf:" f" {file} > {new_filename}")
                 # max_sim_record = \
                 #     pdf_prepare.validate_pdf_metadata(max_sim_record)
@@ -224,7 +232,7 @@ def main(REVIEW_MANAGER) -> None:
     PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     global PAD
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
@@ -232,6 +240,7 @@ def main(REVIEW_MANAGER) -> None:
     if not os.path.exists(PDF_DIRECTORY):
         os.mkdir(PDF_DIRECTORY)
 
+    report_logger.info("Retrieve PDFs")
     logger.info("Retrieve PDFs")
 
     bib_db = check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
@@ -256,17 +265,17 @@ def main(REVIEW_MANAGER) -> None:
         missing_records = get_missing_records(bib_db)
 
         if batch_end > 0 or linked_existing_files:
-            logger.info(
-                "Completed pdf retrieval batch "
-                f"(records {batch_start} to {batch_end})"
+            msg = (
+                f"Completed pdf retrieval batch (records {batch_start} to {batch_end})"
             )
+            report_logger.info(msg)
+            logger.info(msg)
 
             print_details(missing_records)
 
-            MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-            REVIEW_MANAGER.save_bib_file(bib_db)
+            REVIEW_MANAGER.save_bib_db(bib_db)
             git_repo = REVIEW_MANAGER.get_repo()
-            git_repo.index.add([MAIN_REFERENCES])
+            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
             if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
                 if os.path.exists(PDF_DIRECTORY):

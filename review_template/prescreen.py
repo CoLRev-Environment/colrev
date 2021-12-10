@@ -7,14 +7,13 @@ import pandas as pd
 
 from review_template.review_manager import RecordState
 
-MAIN_REFERENCES = "NA"
-
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
 def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     tbl = []
     for record in bib_db.entries:
@@ -74,7 +73,7 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
 
 def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     if not os.path.exists(import_table_path):
         logger.error(f"Did not find {import_table_path} - exiting.")
         return
@@ -102,28 +101,28 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
                 record["status"] = RecordState.rev_included
             # TODO: exclusion-criteria
 
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
 
     return
 
 
 def include_all_in_prescreen(REVIEW_MANAGER) -> None:
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     saved_args = locals()
     PAD = 50  # TODO
     for record in bib_db.entries:
         if record["status"] in [RecordState.md_retrieved, RecordState.md_processed]:
             continue
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen (automatically)"
         )
         record.update(status=RecordState.rev_prescreen_included)
 
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit(
         "Pre-screening (manual)", manual_author=False, saved_args=saved_args
     )
@@ -154,16 +153,16 @@ def set_data(
     git_repo = REVIEW_MANAGER.get_repo()
 
     if prescreen_inclusion:
-        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen")
+        report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen")
         REVIEW_MANAGER.replace_field(
             [record["ID"]], "status", str(RecordState.rev_prescreen_included)
         )
     else:
-        logger.info(f" {record['record']}".ljust(PAD, " ") + "Excluded in prescreen")
+        report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen")
         REVIEW_MANAGER.replace_field(
             [record["ID"]], "status", str(RecordState.rev_prescreen_excluded)
         )
 
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return

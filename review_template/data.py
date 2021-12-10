@@ -15,10 +15,11 @@ from yaml import safe_load
 from review_template import review_manager
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 PAD = 0
-MANUSCRIPT, DATA = "NA", "NA"
+MANUSCRIPT, MANUSCRIPT_RELATIVE, DATA = "NA", "NA", "NA"
 
 
 def get_records_for_synthesis(bib_db) -> list:
@@ -111,16 +112,19 @@ def update_manuscript(
 ) -> BibDatabase:
 
     if os.path.exists(MANUSCRIPT):
+        report_logger.info("Updating manuscript")
         logger.info("Updating manuscript")
         missing_records = get_data_page_missing(MANUSCRIPT, included)
         missing_records = sorted(missing_records)
     else:
         missing_records = included
+        report_logger.info("Creating manuscript")
         logger.info("Creating manuscript")
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     if 0 == len(missing_records):
-        logger.info(f"All records included in {MANUSCRIPT}")
+        report_logger.info(f"All records included in {MANUSCRIPT_RELATIVE}")
+        logger.info(f"All records included in {MANUSCRIPT_RELATIVE}")
         return bib_db
 
     git_repo = REVIEW_MANAGER.get_repo()
@@ -149,12 +153,14 @@ def update_manuscript(
     author = ", ".join(dict(Counter(commits_auhtors)))
 
     if not os.path.exists(MANUSCRIPT):
-        review_manager.retrieve_package_file("template/" + MANUSCRIPT, MANUSCRIPT)
+        review_manager.retrieve_package_file(
+            "template/" + MANUSCRIPT_RELATIVE, str(MANUSCRIPT)
+        )
         review_manager.inplace_change(MANUSCRIPT, "{{project_title}}", title)
         review_manager.inplace_change(MANUSCRIPT, "{{author}}", author)
-        logger.info(f"Please update title and authors in {MANUSCRIPT}")
+        logger.info(f"Please update title and authors in {MANUSCRIPT_RELATIVE}")
 
-    temp = f".tmp_{MANUSCRIPT}"
+    temp = str(MANUSCRIPT).replace(".md", "_temp.md")
     os.rename(MANUSCRIPT, temp)
     with open(temp) as reader, open(MANUSCRIPT, "w") as writer:
         appended = False
@@ -171,8 +177,14 @@ def update_manuscript(
 
                 for missing_record in missing_records:
                     writer.write("- @" + missing_record + "\n")
+                    report_logger.info(
+                        f" {missing_record}".ljust(PAD, " ")
+                        + f" added to {MANUSCRIPT_RELATIVE}"
+                    )
+
                     logger.info(
-                        f" {missing_record}".ljust(PAD, " ") + f" added to {MANUSCRIPT}"
+                        f" {missing_record}".ljust(PAD, " ")
+                        + f" added to {MANUSCRIPT_RELATIVE}"
                     )
 
                 # skip empty lines between to connect lists
@@ -195,23 +207,28 @@ def update_manuscript(
             line = reader.readline()
 
         if not appended:
-            logger.warning(
+            msg = (
                 "Marker <!-- NEW_RECORD_SOURCE --> not found in "
-                f"{MANUSCRIPT}. Adding records at the end of "
-                "the document."
+                + f"{MANUSCRIPT}. Adding records at the end of "
+                + "the document."
             )
+            report_logger.warning(msg)
+            logger.warning(msg)
+
             if line != "\n":
                 writer.write("\n")
             marker = "<!-- NEW_RECORD_SOURCE -->_Records to synthesize_:\n\n"
             writer.write(marker)
             for missing_record in missing_records:
                 writer.write("- @" + missing_record + "\n")
+                report_logger.info(f" {missing_record}".ljust(PAD, " ") + " added")
                 logger.info(f" {missing_record}".ljust(PAD, " ") + " added")
 
     os.remove(temp)
 
     nr_records_added = len(missing_records)
-    logger.info(f"{nr_records_added} records added to {MANUSCRIPT}")
+    report_logger.info(f"{nr_records_added} records added to {MANUSCRIPT_RELATIVE}")
+    logger.info(f"{nr_records_added} records added to {MANUSCRIPT_RELATIVE}")
 
     return bib_db
 
@@ -264,6 +281,7 @@ def update_structured_data(
                 json.loads(data.to_json(orient="records")), f, default_flow_style=False
             )
 
+        report_logger.info(f"{nr_records_added} records added ({DATA})")
         logger.info(f"{nr_records_added} records added ({DATA})")
 
     return bib_db
@@ -288,34 +306,31 @@ def update_synthesized_status(REVIEW_MANAGER, bib_db):
             continue
 
         record.update(status=RecordState.rev_synthesized)
+        report_logger.info(
+            f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized"
+        )
         logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
     REVIEW_MANAGER.save_bib_file(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     return bib_db
 
 
-def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
-    from review_template.review_manager import Process, ProcessType
-
-    saved_args = locals()
-
-    REVIEW_MANAGER.notify(Process(ProcessType.data))
-
-    global MANUSCRIPT
-    global DATA
-
-    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
+def edit_csv(REVIEW_MANAGER) -> None:
     DATA = REVIEW_MANAGER.paths["DATA"]
-
-    DATA_CSV = DATA.replace(".yaml", ".csv")
+    DATA_CSV = str(DATA).replace(".yaml", ".csv")
     if edit_csv:
         with open(DATA) as f:
             data_df = pd.json_normalize(safe_load(f))
-            data_df.to_csv(DATA.replace(".yaml", ".csv"), index=False)
+            data_df.to_csv(DATA_CSV, index=False)
+            report_logger.info(f"Created {DATA_CSV} based on {DATA}")
             logger.info(f"Created {DATA_CSV} based on {DATA}")
-        return
+    return
 
+
+def load_csv(REVIEW_MANAGER) -> None:
+    DATA = REVIEW_MANAGER.paths["DATA"]
+    DATA_CSV = str(DATA).replace(".yaml", ".csv")
     if load_csv:
         data_df = pd.read_csv(DATA_CSV)
         with open(DATA, "w") as f:
@@ -324,29 +339,48 @@ def main(REVIEW_MANAGER, edit_csv: bool, load_csv: bool) -> None:
                 f,
                 default_flow_style=False,
             )
+        report_logger.info(f"Loaded {DATA_CSV} into {DATA}")
         logger.info(f"Loaded {DATA_CSV} into {DATA}")
-        return
+    return
+
+
+def main(REVIEW_MANAGER) -> None:
+    from review_template.review_manager import Process, ProcessType
+
+    saved_args = locals()
+
+    REVIEW_MANAGER.notify(Process(ProcessType.data))
+
+    global MANUSCRIPT
+    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
+
+    global MANUSCRIPT_RELATIVE
+    MANUSCRIPT_RELATIVE = str(REVIEW_MANAGER.paths["MANUSCRIPT_RELATIVE"])
+
+    global DATA
+    DATA = REVIEW_MANAGER.paths["DATA"]
 
     global PAD
 
     DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
 
     included = get_records_for_synthesis(bib_db)
 
     if 0 == len(included):
+        report_logger.info("No records included yet (use review_template screen)")
         logger.info("No records included yet (use review_template screen)")
         sys.exit()
 
     if "MANUSCRIPT" in DATA_FORMAT:
         bib_db = update_manuscript(REVIEW_MANAGER, bib_db, included)
         git_repo = REVIEW_MANAGER.get_repo()
-        git_repo.index.add([MANUSCRIPT])
+        git_repo.index.add([str(REVIEW_MANAGER.paths["MANUSCRIPT_RELATIVE"])])
     if "STRUCTURED" in DATA_FORMAT:
         bib_db = update_structured_data(REVIEW_MANAGER, bib_db, included)
         git_repo = REVIEW_MANAGER.get_repo()
-        git_repo.index.add([DATA])
+        git_repo.index.add([str(REVIEW_MANAGER.paths["DATA_RELATIVE"])])
 
     bib_db = update_synthesized_status(REVIEW_MANAGER, bib_db)
 

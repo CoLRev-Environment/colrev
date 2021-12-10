@@ -7,6 +7,7 @@ from bibtexparser.bibdatabase import BibDatabase
 
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
@@ -52,6 +53,8 @@ def export_retrieval_table(bib_db: BibDatabase) -> None:
 def get_data(REVIEW_MANAGER):
     from review_template.review_manager import Process, ProcessType
 
+    REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(parents=True, exist_ok=True)
+
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_get_man))
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(
@@ -76,10 +79,12 @@ def pdfs_retrieved_maually(REVIEW_MANAGER) -> bool:
 def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
 
     git_repo = REVIEW_MANAGER.get_repo()
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
     if filepath is None:
         record.update(status=RecordState.pdf_not_available)
+        report_logger.info(
+            f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
+        )
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available")
 
     else:
@@ -87,9 +92,12 @@ def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
         record.update(file=filepath)
         if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
             git_repo.index.add([filepath])
+        report_logger.info(
+            f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+        )
         logger.info(f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF")
 
     REVIEW_MANAGER.update_record_by_ID(record)
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return

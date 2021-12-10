@@ -14,6 +14,7 @@ from tqdm.contrib.concurrent import process_map
 
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 MERGING_NON_DUP_THRESHOLD, MERGING_DUP_THRESHOLD = -1, -1
@@ -241,7 +242,7 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
         + ",".join([str(weights[g]) for g in range(len(similarities))])
         + "]^T"
     )
-    logger.debug(details)
+    report_logger.debug(details)
 
     return {"score": round(weighted_average, 4), "details": details}
 
@@ -257,7 +258,7 @@ def calculate_similarities_record(references: pd.DataFrame) -> list:
     references["details"] = 0
     sim_col = references.columns.get_loc("similarity")
     details_col = references.columns.get_loc("details")
-    for base_record_i in range(0, references.shape[0] - 1):
+    for base_record_i in range(0, references.shape[0]):
         sim_details = get_similarity_detailed(
             references.iloc[base_record_i], references.iloc[-1]
         )
@@ -268,7 +269,7 @@ def calculate_similarities_record(references: pd.DataFrame) -> list:
     ck_col = references.columns.get_loc("ID")
     sim_col = references.columns.get_loc("similarity")
     details_col = references.columns.get_loc("details")
-    return references.iloc[:-1, [ck_col, sim_col, details_col]]
+    return references.iloc[:, [ck_col, sim_col, details_col]]
 
 
 def append_merges(batch_item: dict) -> list:
@@ -292,6 +293,8 @@ def append_merges(batch_item: dict) -> list:
 
     # df to get_similarities for each other record
     references = calculate_similarities_record(references)
+    # drop the first row (similarities are calculated relative to the last row)
+    references = references.iloc[:-1, :]
     # if batch_item['record'] == 'AdamsNelsonTodd1992':
     #     references.to_csv('last_similarities.csv')
 
@@ -322,10 +325,12 @@ def append_merges(batch_item: dict) -> list:
     ):
 
         # record_a, record_b = sorted([ID, record["ID"]])
-        logger.info(
+        msg = (
             f'{batch_item["record"]} - {ID}'.ljust(35, " ")
-            + f"  - potential duplicate (similarity: {max_similarity})"
+            + +f"  - potential duplicate (similarity: {max_similarity})"
         )
+        report_logger.info(msg)
+        logger.info(msg)
         return [
             {
                 "ID1": batch_item["record"],
@@ -339,11 +344,12 @@ def append_merges(batch_item: dict) -> list:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
-
-        logger.info(
+        msg = (
             f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
-            f" (similarity: {max_similarity})\nDetails: {details}"
+            + f" (similarity: {max_similarity})\nDetails: {details}"
         )
+        report_logger.info(msg)
+        logger.info(msg)
         return [
             {
                 "ID1": batch_item["record"],
@@ -364,7 +370,7 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
 
     results = list(itertools.chain(*results))
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
         non_dupe_record = [x for x in bib_db.entries if x["ID"] == non_dupe]
@@ -413,15 +419,18 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
         pot_dupe_record = pot_dupe_record[0]
         pot_dupe_record.update(status=RecordState.md_needs_manual_deduplication)
 
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
 
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return
 
 
 def prep_references(references: pd.DataFrame) -> pd.DataFrame:
+
+    references["author"] = references["author"].str[:60]
+
     if "volume" not in references:
         references["volume"] = "nan"
     if "number" not in references:
@@ -561,7 +570,6 @@ def batch(data, n=1):
     records_queue = [x for x in bib_db.entries if x["ID"] in data["queue"]]
 
     references = pd.DataFrame.from_dict(records_queue)
-    references["author"] = references["author"].str[:60]
     references = prep_references(references)
 
     items_start = data["items_start"]
@@ -583,7 +591,7 @@ def batch(data, n=1):
 def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
     from review_template import prepare
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     git_repo = REVIEW_MANAGER.get_repo()
     for record in bib_db.entries:
         if "crossref" in record:
@@ -591,7 +599,7 @@ def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
             if crossref_rec is None:
                 continue
 
-            logger.info(
+            report_logger.info(
                 f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
             )
             apply_merges(
@@ -605,7 +613,7 @@ def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
                     }
                 ],
             )
-            git_repo.index.add([MAIN_REFERENCES])
+            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     return
 
 

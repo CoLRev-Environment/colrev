@@ -12,6 +12,7 @@ from bibtexparser.customization import convert_to_unicode
 from review_template import prepare
 from review_template.review_manager import RecordState
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
@@ -23,7 +24,7 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     # TODO : this function mixes return values and saving to files.
     logger.info("Load references.bib")
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     logger.info("Calculate statistics")
     stats = {"ENTRYTYPE": {}}
@@ -98,7 +99,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     logger.info("Load references")
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     bib_db.entries = [
         record
@@ -187,11 +188,10 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40):
 
     REVIEW_MANAGER.update_record_by_ID(record)
 
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    # bib_db = REVIEW_MANAGER.load_main_refs()
-    # REVIEW_MANAGER.save_bib_file(bib_db)
+    # bib_db = REVIEW_MANAGER.load_bib_db()
+    # REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     # TODO : maybe update the IDs when we have a replace_record procedure
     # set_IDs

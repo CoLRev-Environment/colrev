@@ -21,6 +21,7 @@ from contextlib import redirect_stdout
 from enum import auto
 from enum import Enum
 from importlib.metadata import version
+from pathlib import Path
 
 import bibtexparser
 import git
@@ -294,23 +295,57 @@ def get_bibtex_writer():
     return writer
 
 
-file_paths = dict(
-    MAIN_REFERENCES="references.bib",
-    DATA="data.yaml",
-    PDF_DIRECTORY="pdfs/",
-    SEARCH_DETAILS="search_details.yaml",
-    MANUSCRIPT="paper.md",
-    SHARED_CONFIG="shared_config.ini",
-    PRIVATE_CONFIG="private_config.ini",
-)
+def get_file_paths(repository_dir: str) -> dict:
+    repository_dir = Path(repository_dir)
+    main_refs = "references.bib"
+    data = "data.yaml"
+    pdf_dir = "pdfs"
+    search_details = "search_details.yaml"
+    manuscript = "paper.md"
+    shared_config = "shared_config.ini"
+    private_config = "private_config.ini"
+    return {
+        "REPO_DIR": repository_dir,
+        "MAIN_REFERENCES_RELATIVE": Path(main_refs),
+        "MAIN_REFERENCES": repository_dir.joinpath(main_refs),
+        "DATA_RELATIVE": Path(data),
+        "DATA": repository_dir.joinpath(data),
+        "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
+        "PDF_DIRECTORY": repository_dir.joinpath(pdf_dir),
+        "SEARCH_DETAILS_RELATIVE": Path(search_details),
+        "SEARCH_DETAILS": repository_dir.joinpath(search_details),
+        "MANUSCRIPT_RELATIVE": Path(manuscript),
+        "MANUSCRIPT": repository_dir.joinpath(manuscript),
+        "SHARED_CONFIG_RELATIVE": Path(shared_config),
+        "SHARED_CONFIG": repository_dir.joinpath(shared_config),
+        "PRIVATE_CONFIG_RELATIVE": Path(private_config),
+        "PRIVATE_CONFIG": repository_dir.joinpath(private_config),
+    }
 
 
 def setup_logger(level=logging.INFO):
-
     logger = logging.getLogger("review_template")
 
     if not logger.handlers:
         logger.setLevel(level)
+
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+
+        logger.addHandler(handler)
+        logger.propagate = False
+    return logger
+
+
+def setup_report_logger(level=logging.INFO):
+
+    report_logger = logging.getLogger("review_template_report")
+
+    if not report_logger.handlers:
+        report_logger.setLevel(level)
         formatter = logging.Formatter(
             fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
         )
@@ -320,11 +355,12 @@ def setup_logger(level=logging.INFO):
         report_file_handler = logging.FileHandler("report.log", mode="a")
         report_file_handler.setFormatter(formatter)
 
-        logger.addHandler(report_file_handler)
+        report_logger.addHandler(report_file_handler)
         if logging.DEBUG == level:
-            logger.addHandler(handler)
-        logger.propagate = False
-    return logger
+            report_logger.addHandler(handler)
+        report_logger.propagate = False
+
+    return report_logger
 
 
 ###############################################################################
@@ -557,8 +593,33 @@ def check_docker_installed() -> None:
     return
 
 
+def build_docker_images(self) -> None:
+
+    client = docker.from_env()
+
+    repo_tags = [x.attrs.get("RepoTags", "") for x in client.images.list()]
+    repo_tags = [item[: item.find(":")] for sublist in repo_tags for item in sublist]
+
+    if "bibutils" not in repo_tags:
+        self.logger.info("Building bibutils Docker image...")
+        filedata = pkgutil.get_data(__name__, "../docker/bibutils/Dockerfile")
+        fileobj = io.BytesIO(filedata)
+        client.images.build(fileobj=fileobj, tag="bibutils:latest")
+
+    if "lfoppiano/grobid" not in repo_tags:
+        self.logger.info("Pulling grobid Docker image...")
+        client.images.pull("lfoppiano/grobid:0.7.0")
+    if "pandoc/ubuntu-latex" not in repo_tags:
+        self.logger.info("Pulling pandoc/ubuntu-latex image...")
+        client.images.pull("pandoc/ubuntu-latex:2.14")
+    if "jbarlow83/ocrmypdf" not in repo_tags:
+        self.logger.info("Pulling jbarlow83/ocrmypdf image...")
+        client.images.pull("pandoc/ubuntu-latex:latest")
+
+    return
+
+
 def get_base_prefix_compat():
-    """Get base/real prefix, or sys.prefix if there is none."""
     return (
         getattr(sys, "base_prefix", None)
         or getattr(sys, "real_prefix", None)
@@ -570,11 +631,11 @@ def in_virtualenv():
     return get_base_prefix_compat() != sys.prefix
 
 
-def check_git_conflicts() -> None:
+def check_git_conflicts(REVIEW_MANAGER) -> None:
     # Note: when check is called directly from the command line.
     # pre-commit hooks automatically notify on merge conflicts
 
-    repo = git.Repo()
+    repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     unmerged_blobs = repo.index.unmerged_blobs()
 
     for path in unmerged_blobs:
@@ -691,13 +752,14 @@ def require_hooks_installed(installed_hooks: dict) -> bool:
 
 def check_software(REVIEW_MANAGER):
     git_repo = REVIEW_MANAGER.get_repo()
-    # git_repo = git.Repo()
+    # git_repo = git.Repo(str(REVIEW_MANAGER.paths['REPO_DIR']))
     master = git_repo.head.reference
     cmsg_lines = master.commit.message.split("\n")
     for cmsg_line in cmsg_lines[0:20]:
         if "- review_template:" in cmsg_line:
             last_review_template_version = cmsg_line[cmsg_line.find("version ") + 8 :]
             current_review_template_version = version("review_template")
+            last_review_template_version == current_review_template_version
             # if last_review_template_version != current_review_template_version:
             #     raise SoftwareUpgradeError(
             #         last_review_template_version, last_review_template_version
@@ -887,8 +949,8 @@ def get_record_status_item(r_header: str) -> list:
 
 def get_record_header_item(r_header: str) -> list:
     rhlines = r_header.split("\n")
-    rhl0, rhl1, rhl2, rhl3, rhl4, rhl5, rhl6, rhl7, rhl8 = (
-        line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:9]
+    rhl0, rhl1, rhl2, rhl3, rhl4, rhl5, rhl6, rhl7 = (
+        line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:8]
     )
     ID = rhl0
 
@@ -954,6 +1016,13 @@ def require_clean_repo_general(
 
     # Note : not considering untracked files.
 
+    if len(git_repo.index.diff("HEAD")) == 0:
+        unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
+        if "references.bib" in unstaged_changes:
+            git_repo.index.add(["references.bib"])
+        if "paper.md" in unstaged_changes:
+            git_repo.index.add(["paper.md"])
+
     # Principle: working tree always has to be clean
     # because processing functions may change content
     if git_repo.is_dirty(index=False):
@@ -963,12 +1032,12 @@ def require_clean_repo_general(
     if git_repo.is_dirty():
         if ignore_pattern is None:
             changedFiles = [item.a_path for item in git_repo.index.diff(None)] + [
-                x.a_path for x in git_repo.head.commit.diff()
+                x.a_path
+                for x in git_repo.head.commit.diff()
+                if x.a_path not in ["status.yaml"]
             ]
-            if "status.yaml" in changedFiles:
-                changedFiles.remove("status.yaml")
-
-            raise CleanRepoRequiredError(changedFiles, ",".join(ignore_pattern))
+            if len(changedFiles) > 0:
+                raise CleanRepoRequiredError(changedFiles, "")
         else:
             changedFiles = [
                 item.a_path
@@ -1026,11 +1095,12 @@ def format_transition(start_state: str, end_state: str) -> str:
     return transition
 
 
-def retrieve_prior(MAIN_REFERENCES: str) -> dict:
-    repo = git.Repo()
+def retrieve_prior(REVIEW_MANAGER) -> dict:
+    MAIN_REFERENCES_RELATIVE = str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+    repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (
-        (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
-        for commit in repo.iter_commits(paths=MAIN_REFERENCES)
+        (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
+        for commit in repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
     )
     prior = {"status": [], "persisted_IDs": []}
     filecontents = list(revlist)[0][1]
@@ -1360,7 +1430,7 @@ def check_new_record_source_tag(MANUSCRIPT: str) -> None:
 def check_update_synthesized_status(REVIEW_MANAGER) -> None:
     from review_template import data
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     data.update_synthesized_status(REVIEW_MANAGER, bib_db)
 
     return
@@ -1525,11 +1595,11 @@ def check_search_details(REVIEW_MANAGER) -> None:
     return
 
 
-def check_raw_search_unchanged() -> None:
+def check_raw_search_unchanged(REVIEW_MANAGER) -> None:
     if not os.path.exists("search"):
         return
     search_files = [os.path.join("search", x) for x in os.listdir("search")]
-    repo = git.Repo()
+    repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (commit.tree for commit in repo.iter_commits())
     last_tree = list(revlist)[0]
     files_in_prev_commit = [el.path for el in list(last_tree.traverse())]
@@ -1563,7 +1633,7 @@ class ReviewManager:
         "FORW_CIT",
         "LOCAL_PAPER_INDEX",
         "OTHER",
-        "FEED"
+        "FEED",
     ]
 
     notified_next_process = None
@@ -1574,19 +1644,17 @@ class ReviewManager:
         else:
             self.path = os.getcwd()
 
-        self.__git_repo = git.Repo()
-        self.paths = file_paths
+        self.__git_repo = git.Repo(path)
+        self.paths = get_file_paths(self.path)
         self.config = self.__load_config()
-        # self.config["DEBUG_MODE"] = debug_mode
         self.search_details = self.load_search_details()
 
-        # self.logger = logging.getLogger("review_manager")
         if self.config["DEBUG_MODE"]:
+            self.report_logger = setup_report_logger(logging.DEBUG)
             self.logger = setup_logger(logging.DEBUG)
-            # self.logger.setLevel(logging.DEBUG)
         else:
+            self.report_logger = setup_report_logger(logging.INFO)
             self.logger = setup_logger(logging.INFO)
-            # self.logger.setLevel(logging.INFO)
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
@@ -1643,8 +1711,10 @@ class ReviewManager:
         )
         return config
 
-    # Entrypoint for the pre-commit hooks
     def check_repo(self):
+        """Check whether the repository is in a consistent state
+        Entrypoint for pre-commit hooks)
+        """
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.
 
@@ -1654,10 +1724,11 @@ class ReviewManager:
         check_scripts = [
             {"script": check_git_installed, "params": []},
             {"script": check_docker_installed, "params": []},
-            {"script": check_git_conflicts, "params": []},
+            {"script": check_git_conflicts, "params": self},
+            {"script": build_docker_images, "params": self},
             {"script": check_repository_setup, "params": self},
             {"script": check_software, "params": self},
-            # {"script": check_raw_search_unchanged, "params": []},
+            # {"script": check_raw_search_unchanged, "params": self},
         ]
 
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
@@ -1665,7 +1736,7 @@ class ReviewManager:
         else:
             # Note : retrieving data once is more efficient than
             # reading the MAIN_REFERENCES multiple times (for each check)
-            prior = retrieve_prior(self.paths["MAIN_REFERENCES"])
+            prior = retrieve_prior(self)
             self.logger.debug("prior")
             self.logger.debug(pp.pformat(prior))
             data = retrieve_data(prior, self.paths["MAIN_REFERENCES"])
@@ -1708,7 +1779,7 @@ class ReviewManager:
             #     data = pd.read_csv(DATA, dtype=str)
             #     check_duplicates_data(data)
             # check_screen_data(screen, data)
-            # DATA = repo_setup.paths['DATA']
+            # DATA = REVIEW_MANAGER.paths['DATA']
 
         try:
 
@@ -1749,11 +1820,16 @@ class ReviewManager:
         return {"status": PASS, "msg": "Everything ok."}
 
     def report(self, msg_file):
+        """Append commit-message report if not already available
+        Entrypoint for pre-commit hooks)
+        """
         update = False
         with open(msg_file) as f:
             contents = f.read()
             if "Command" not in contents:
                 update = True
+            if "Certified properties" in contents:
+                update = False
         with open(msg_file, "w") as f:
             f.write(contents)
             # Don't append if it's already there
@@ -1764,6 +1840,10 @@ class ReviewManager:
         return {"msg": "TODO", "status": 0}
 
     def sharing(self):
+        """Check whether sharing requirements are met
+        Entrypoint for pre-commit hooks)
+        """
+
         from review_template import status
 
         stat = status.get_status_freq(self)
@@ -1780,13 +1860,16 @@ class ReviewManager:
         return {"msg": msgs, "status": status_code}
 
     def __format_main_references(self):
-        bib_db = self.load_main_refs()
-        self.update_status_yaml()
-        self.save_bib_file(bib_db)
+        bib_db = self.load_bib_db()
+        self.__update_status_yaml()
+        self.save_bib_db(bib_db)
         return
 
-    # Entrypoint for the pre-commit hooks
     def format_references(self):
+        """Format the references
+        Entrypoint for pre-commit hooks)
+        """
+
         from review_template.review_manager import ProcessType
         from review_template.review_manager import Process
 
@@ -1808,11 +1891,14 @@ class ReviewManager:
             return {"status": PASS, "msg": "Everything ok."}
 
     def get_repo(self):
+        """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
+
         if self.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
         return self.__git_repo
 
-    def load_main_refs(self, init: bool = False) -> BibDatabase:
+    def load_bib_db(self, init: bool = False) -> BibDatabase:
+        """Get the bib_db object (requires REVIEW_MANAGER.notify(...))"""
 
         if self.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
@@ -1847,13 +1933,38 @@ class ReviewManager:
 
         return bib_db
 
+    def save_bib_db(self, bib_db: BibDatabase, target_file: str = None) -> None:
+        """Save the bib_db object"""
+
+        if target_file is None:
+            target_file = self.paths["MAIN_REFERENCES"]
+
+        try:
+            bib_db.comments.remove("% Encoding: UTF-8")
+        except ValueError:
+            pass
+
+        # Casting to string (in particular the RecordState Enum)
+        bib_db.entries = [{k: str(v) for k, v in r.items()} for r in bib_db.entries]
+
+        bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
+
+        with open(target_file, "w") as out:
+            out.write(bibtex_str)
+
+        return
+
     def get_record_state_list_from_file_obj(self, file_object):
+        """Get the record_state_list"""
+
         return [
             get_record_status_item(record_header_str)
             for record_header_str in self.read_next_record_header_str(file_object)
         ]
 
     def get_record_state_list(self):
+        """Get the record_state_list"""
+
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
             return []
         return [
@@ -1862,6 +1973,8 @@ class ReviewManager:
         ]
 
     def get_record_header_list(self):
+        """Get the record_header_list"""
+
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
             return []
         return [
@@ -1870,6 +1983,8 @@ class ReviewManager:
         ]
 
     def get_states_set(self, record_state_list: list = None):
+        """Get the record_states_set"""
+
         if not os.path.exists(self.paths["MAIN_REFERENCES"]):
             return set()
         if record_state_list is None:
@@ -1877,12 +1992,13 @@ class ReviewManager:
         return {el[1] for el in record_state_list}
 
     def notify(self, process: Process):
+        """Notify the REVIEW_MANAGER about the next process"""
         self.__check_precondition(process)
 
     def __check_precondition(self, process):
         # TODO : currently a special case (not in state model):
         if process.type.name in ["format"]:
-            # require_clean_repo_general(ignore_pattern=[self.paths["MAIN_REFERENCES"]])
+            # require_clean_repo_general(ignore_pattern=[self.paths["MAIN_REFERENCES_RELATIVE"]])
             # PDFs etc. can be modified!
             pass
         else:
@@ -1895,19 +2011,22 @@ class ReviewManager:
             class_method(condition_check_record)
 
         self.notified_next_process = process.type
-        self.reset_log()
+        if not self.__git_repo.is_dirty():
+            self.__reset_log()
 
     def run_process(self, process: Process, *args):
+        """Pass a process to the REVIEW_MANAGER for execution"""
+
         function_name = (
             f"{inspect.getmodule(process.processing_function).__name__}."
             + f"{process.processing_function.__name__}"
         )
-        self.logger.info(
+        self.report_logger.info(
             f"ReviewManager: check_precondition({function_name}, "
             + f"a {process.type.name} process)"
         )
         self.__check_precondition(process)
-        self.logger.info(f"ReviewManager: run {function_name}()")
+        self.report_logger.info(f"ReviewManager: run {function_name}()")
         process.run(self, *args)
         self.notified_next_process = None
 
@@ -2062,7 +2181,7 @@ class ReviewManager:
             flag = "*"
         return flag
 
-    def update_status_yaml(self) -> None:
+    def __update_status_yaml(self) -> None:
         from review_template import status
 
         status_freq = status.get_status_freq(self)
@@ -2070,36 +2189,41 @@ class ReviewManager:
         with open("status.yaml", "w") as f:
             yaml.dump(status_freq, f, allow_unicode=True)
 
-        repo = git.Repo()
+        repo = git.Repo(str(self.paths["REPO_DIR"]))
         repo.index.add(["status.yaml"])
 
         return
 
     def reprocess_id(self, id: str) -> None:
+        """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
+
         saved_args = locals()
 
-        MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
         git_repo = self.get_repo()
         if "all" == id:
             logging.info("Removing/reprocessing all records")
-            os.remove(MAIN_REFERENCES)
-            git_repo.index.remove([MAIN_REFERENCES], working_tree=True)
+            os.remove(self.paths["MAIN_REFERENCES"])
+            git_repo.index.remove(
+                [str(self.paths["MAIN_REFERENCES_RELATIVE"])], working_tree=True
+            )
         else:
-            bib_db = self.load_main_refs()
+            bib_db = self.load_bib_db()
             bib_db.entries = [x for x in bib_db.entries if id != x["ID"]]
-            self.save_bib_file(bib_db)
-            git_repo.index.add([MAIN_REFERENCES])
+            self.save_bib_db(bib_db)
+            git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
 
         self.create_commit("Reprocess", saved_args=saved_args)
 
         return
 
-    def reset_log(self) -> None:
+    def __reset_log(self) -> None:
         with open("report.log", "r+") as f:
             f.truncate(0)
         return
 
     def reorder_log(self, IDs: list) -> None:
+        """Reorder the report.log according to an ID list (after multiprocessing)"""
+
         # https://docs.python.org/3/howto/logging-cookbook.html
         # #logging-to-a-single-file-from-multiple-processes
         firsts = []
@@ -2165,10 +2289,11 @@ class ReviewManager:
     def create_commit(
         self, msg: str, manual_author: bool = False, saved_args: dict = None
     ) -> bool:
+        """Create a commit (including a commit report)"""
 
         if self.__git_repo.is_dirty():
 
-            self.update_status_yaml()
+            self.__update_status_yaml()
             self.__git_repo.index.add(["status.yaml"])
 
             hook_skipping = "false"
@@ -2220,7 +2345,7 @@ class ReviewManager:
                 skip_hooks=hook_skipping,
             )
             self.logger.info("Created commit")
-            self.reset_log()
+            self.__reset_log()
             if self.__git_repo.is_dirty():
                 raise DirtyRepoAfterProcessingError
             return True
@@ -2228,10 +2353,12 @@ class ReviewManager:
             return False
 
     def set_IDs(self, bib_db: BibDatabase = None, selected_IDs: list = None) -> None:
+        """Set the IDs of records according to predefined formats"""
+
         # TODO : this could be done more efficiently
         # (using a get_record_status_list or similar)
         if bib_db is None:
-            bib_db = self.load_main_refs()
+            bib_db = self.load_bib_db()
 
         ID_list = [record["ID"] for record in bib_db.entries]
 
@@ -2252,16 +2379,17 @@ class ReviewManager:
             record.update(ID=new_id)
             ID_list.append(new_id)
             if old_id != new_id:
-                self.logger.info(f"set_ID({old_id}) to {new_id}")
+                self.report_logger.info(f"set_ID({old_id}) to {new_id}")
                 if old_id in ID_list:
                     ID_list.remove(old_id)
-        self.save_bib_file(bib_db)
+        self.save_bib_db(bib_db)
         git_repo = self.get_repo()
-        git_repo.index.add([self.paths["MAIN_REFERENCES"]])
+        git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
 
         return bib_db
 
     def propagated_ID(self, ID: str) -> bool:
+        """Check whether an ID has been propagated"""
 
         propagated = False
 
@@ -2282,6 +2410,7 @@ class ReviewManager:
         record_in_bib_db: bool = False,
         raise_error: bool = True,
     ) -> str:
+        """Generate a record ID according to the predefined format"""
 
         if bib_db is not None:
             ID_blacklist = [record["ID"] for record in bib_db.entries]
@@ -2292,10 +2421,6 @@ class ReviewManager:
         )
         return ID
 
-    def lpad_multiline(self, s: str, lpad: int) -> str:
-        lines = s.splitlines()
-        return "\n".join(["".join([" " * lpad]) + line for line in lines])
-
     def generate_ID_blacklist(
         self,
         record: dict,
@@ -2303,6 +2428,8 @@ class ReviewManager:
         record_in_bib_db: bool = False,
         raise_error: bool = True,
     ) -> str:
+        """Generate a blacklist to avoid setting duplicate IDs"""
+
         from review_template import prepare
 
         # Make sure that IDs that have been propagated to the
@@ -2385,6 +2512,7 @@ class ReviewManager:
         return temp_ID
 
     def load_search_details(self) -> list:
+        """Load the search details"""
 
         if os.path.exists(self.paths["SEARCH_DETAILS"]):
             with open(self.paths["SEARCH_DETAILS"]) as f:
@@ -2395,6 +2523,8 @@ class ReviewManager:
         return search_details
 
     def save_search_details(self, search_details: list) -> None:
+        """Save the search details"""
+
         search_details_df = pd.DataFrame(search_details)
         orderedCols = [
             "filename",
@@ -2417,54 +2547,7 @@ class ReviewManager:
                 sort_keys=False,
             )
         git_repo = self.get_repo()
-        git_repo.index.add([self.paths["SEARCH_DETAILS"]])
-        return
-
-    def save_bib_file(self, bib_db: BibDatabase, target_file: str = None) -> None:
-
-        if target_file is None:
-            target_file = self.paths["MAIN_REFERENCES"]
-
-        try:
-            bib_db.comments.remove("% Encoding: UTF-8")
-        except ValueError:
-            pass
-
-        # Casting to string (in particular the RecordState Enum)
-        bib_db.entries = [{k: str(v) for k, v in r.items()} for r in bib_db.entries]
-
-        bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
-
-        with open(target_file, "w") as out:
-            out.write(bibtex_str)
-
-        return
-
-    def build_docker_images(self) -> None:
-
-        client = docker.from_env()
-
-        repo_tags = [x.attrs.get("RepoTags", "") for x in client.images.list()]
-        repo_tags = [
-            item[: item.find(":")] for sublist in repo_tags for item in sublist
-        ]
-
-        if "bibutils" not in repo_tags:
-            self.logger.info("Building bibutils Docker image...")
-            filedata = pkgutil.get_data(__name__, "../docker/bibutils/Dockerfile")
-            fileobj = io.BytesIO(filedata)
-            client.images.build(fileobj=fileobj, tag="bibutils:latest")
-
-        if "lfoppiano/grobid" not in repo_tags:
-            self.logger.info("Pulling grobid Docker image...")
-            client.images.pull("lfoppiano/grobid:0.7.0")
-        if "pandoc/ubuntu-latex" not in repo_tags:
-            self.logger.info("Pulling pandoc/ubuntu-latex image...")
-            client.images.pull("pandoc/ubuntu-latex:2.14")
-        if "jbarlow83/ocrmypdf" not in repo_tags:
-            self.logger.info("Pulling jbarlow83/ocrmypdf image...")
-            client.images.pull("pandoc/ubuntu-latex:latest")
-
+        git_repo.index.add([str(self.paths["SEARCH_DETAILS_RELATIVE"])])
         return
 
     def read_next_record_header_str(
@@ -2592,7 +2675,9 @@ class ReviewManager:
 
                 if current_ID == ID:
                     line = fd.readline()
-                    while b"@" not in line[:3]:  # replace: drop the current record
+                    while (
+                        b"@" not in line[:3] and line
+                    ):  # replace: drop the current record
                         line = fd.readline()
                     remaining = line + fd.read()
                     fd.seek(seekpos)
@@ -2668,10 +2753,10 @@ class ReviewManager:
                         fd.write(replacement["record"])
 
             else:
-                self.logger.error(
+                self.report_logger.error(
                     "records not written to file: " f'{[x["ID"] for x in record_list]}'
                 )
 
         git_repo = self.get_repo()
-        git_repo.index.add([self.paths["MAIN_REFERENCES"]])
+        git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
         return

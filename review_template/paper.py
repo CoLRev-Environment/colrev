@@ -6,6 +6,7 @@ import requests
 
 import docker
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
@@ -50,10 +51,9 @@ def main(REVIEW_MANAGER) -> None:
     client = docker.from_env()
     try:
         pandoc_u_latex_image = "pandoc/ubuntu-latex:2.14"
-        logger.info(
-            "Running docker container created from " f"image {pandoc_u_latex_image}"
-        )
-
+        msg = "Running docker container created from " f"image {pandoc_u_latex_image}"
+        report_logger.info(msg)
+        logger.info(msg)
         client.containers.run(
             image=pandoc_u_latex_image,
             command=script,

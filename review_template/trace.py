@@ -6,11 +6,14 @@ import time
 import bibtexparser
 import dictdiffer
 
-from review_template import utils
-
 logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
 logger = logging.getLogger("review_template")
+
+
+def lpad_multiline(self, s: str, lpad: int) -> str:
+    lines = s.splitlines()
+    return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
 
 def main(REVIEW_MANAGER, ID: str) -> None:
@@ -50,7 +53,7 @@ def main(REVIEW_MANAGER, ID: str) -> None:
                 diffs = list(dictdiffer.diff(prev_record, record))
                 if len(diffs) > 0:
                     for diff in diffs:
-                        print(utils.lpad_multiline(pp.pformat(diff), 5))
+                        print(lpad_multiline(pp.pformat(diff), 5))
                 prev_record = record
 
         if DATA in commit.tree:

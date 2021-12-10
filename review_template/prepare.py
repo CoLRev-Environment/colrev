@@ -31,6 +31,7 @@ PAD = 0
 EMAIL, DEBUG_MODE = "NA", "NA"
 RETRIEVAL_SIMILARITY = 0.84
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
@@ -96,7 +97,7 @@ def correct_recordtype(record: dict) -> dict:
     ):
         prior_e_type = record["ENTRYTYPE"]
         record.update(ENTRYTYPE="phdthesis")
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Set from {prior_e_type} to phdthesis "
             '("dissertation" in fulltext link)'
@@ -108,7 +109,7 @@ def correct_recordtype(record: dict) -> dict:
     ):
         prior_e_type = record["ENTRYTYPE"]
         record.update(ENTRYTYPE="phdthesis")
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Set from {prior_e_type} to phdthesis "
             '("thesis" in fulltext link)'
@@ -243,7 +244,7 @@ def format(record: dict) -> dict:
             and not re.match(r"^\d*--\d*$", record["pages"])
             and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
         ):
-            logger.info(
+            report_logger.info(
                 f' {record["ID"]}:'.ljust(PAD, " ")
                 + f'Unusual pages: {record["pages"]}'
             )
@@ -278,7 +279,6 @@ def apply_local_rules(record: dict) -> dict:
 
 
 def mostly_upper_case(input_string: str) -> bool:
-    # also in repo_setup.py - consider updating it separately
     if not re.match(r"[a-zA-Z]+", input_string):
         return input_string
     input_string = input_string.replace(".", "").replace(",", "")
@@ -345,7 +345,6 @@ def get_container_title(record: dict) -> str:
 
 
 def unify_pages_field(input_string: str) -> str:
-    # also in repo_setup.py - consider updating it separately
     if not isinstance(input_string, str):
         return input_string
     if not re.match(r"^\d*--\d*$", input_string) and "--" not in input_string:
@@ -901,7 +900,7 @@ def get_dblp_venue(venue_string: str) -> str:
 
         venue = re.sub(r" \(.*?\)", "", venue)
     except requests.exceptions.ConnectionError:
-        logger.info("requests.exceptions.ConnectionError in get_dblp_venue()")
+        logger.error("requests.exceptions.ConnectionError in get_dblp_venue()")
         pass
     return venue
 
@@ -981,7 +980,7 @@ def get_md_from_dblp(record: dict) -> dict:
         logger.debug(url)
         ret = requests.get(url, headers=headers)
         if ret.status_code == 500:
-            logger.info("DBLP server error")
+            logger.error("DBLP server error")
             return record
 
         data = json.loads(ret.text)
@@ -1036,7 +1035,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
         r = requests.get(url, headers=headers)
         if r.status_code != 200:
-            logger.info(
+            report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "metadata for "
                 + f'doi  {record["doi"]} not (yet) available'
@@ -1092,7 +1091,7 @@ def get_md_from_urls(record: dict) -> dict:
                         for key, val in retrieved_record.items():
                             record[key] = val
 
-                        logger.info(
+                        report_logger.info(
                             "Retrieved metadata based on doi from"
                             f' website: {record["doi"]}'
                         )
@@ -1284,7 +1283,7 @@ def drop_fields(record: dict) -> dict:
             record.pop(key)
             # warn if fields are dropped that are not in fields_to_drop
             if key not in fields_to_drop:
-                logger.info(f"Dropped {key} field")
+                report_logger.info(f"Dropped {key} field")
     for key in list(record):
         if "" == record[key]:
             del record[key]
@@ -1349,19 +1348,19 @@ def log_notifications(record: dict, unprepared_record: dict) -> None:
 
     change = 1 - dedupe.get_record_similarity(record.copy(), unprepared_record)
     if change > 0.1:
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f"Change score: {round(change, 2)}"
         )
 
     if not (is_complete(record) or is_complete_metadata_source(record)):
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f'{str(record["ENTRYTYPE"]).title()} '
             f"missing {missing_fields(record)}"
         )
         msg += f"missing: {missing_fields(record)}"
 
     if has_inconsistent_fields(record):
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + f'{str(record["ENTRYTYPE"]).title()} '
             f"with {get_inconsistencies(record)} field(s)"
             " (inconsistent"
@@ -1369,7 +1368,7 @@ def log_notifications(record: dict, unprepared_record: dict) -> None:
         msg += f'; {record["ENTRYTYPE"]} but {get_inconsistencies(record)}'
 
     if has_incomplete_fields(record):
-        logger.info(
+        report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ")
             + f"Incomplete fields {get_incomplete_fields(record)}"
         )
@@ -1466,20 +1465,20 @@ def prepare(record: dict) -> dict:
 
     unprepared_record = record.copy()
     short_form = drop_fields(record.copy())
-    logger.info(
+    report_logger.info(
         f'prepare({record["ID"]})' + f" started with: \n{pp.pformat(short_form)}\n\n"
     )
     for prep_script in prep_scripts:
         prior = record.copy()
-        logger.debug(f'{prep_script}({record["ID"]}) called')
+        report_logger.debug(f'{prep_script}({record["ID"]}) called')
         record = prep_scripts[prep_script](record)
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
-            logger.info(
+            report_logger.info(
                 f'{prep_script}({record["ID"]}) changed:' f" \n{pp.pformat(diffs)}\n"
             )
         else:
-            logger.debug(f"{prep_script} changed: -")
+            report_logger.debug(f"{prep_script} changed: -")
         if DEBUG_MODE:
             print("\n")
 
@@ -1507,17 +1506,17 @@ def print_stats(record_list, BATCH_SIZE, i) -> None:
     )
 
     if prepared > 0:
-        logger.info(f"Summary: Prepared {prepared} records")
+        report_logger.info(f"Summary: Prepared {prepared} records")
     if need_manual_prep > 0:
-        logger.info(
+        report_logger.info(
             f"Summary: Marked {need_manual_prep} records " + "for manual preparation"
         )
 
-    logger.info(
+    report_logger.info(
         "To reset the metdatata of records, use "
         "review_template prepare --reset-ID [ID1,ID2]"
     )
-    logger.info(
+    report_logger.info(
         "Further instructions are available in the " "documentation (TODO: link)"
     )
 
@@ -1528,17 +1527,17 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     record = [x for x in bib_db.entries if x["ID"] == id]
     if len(record) == 0:
-        logger.info(f'record with ID {record["ID"]} not found')
+        report_logger.info(f'record with ID {record["ID"]} not found')
         return
     # Note: the case len(record) > 1 should not occur.
     record = record[0]
     if RecordState.md_prepared != record["status"]:
-        logger.error(f'{id}: status must be md_prepared (is {record["status"]})')
+        report_logger.error(f'{id}: status must be md_prepared (is {record["status"]})')
         return
 
     origins = record["origin"].split(";")
 
-    repo = git.Repo()
+    repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (
         ((commit.tree / MAIN_REFERENCES).data_stream.read())
         for commit in repo.iter_commits(paths=MAIN_REFERENCES)
@@ -1550,19 +1549,19 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
                 o in r["origin"] for o in origins
             ):
                 r.update(status=RecordState.md_needs_manual_preparation)
-                logger.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
+                report_logger.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
                 record.update(r)
                 break
     return
 
 
 def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     for reset_id in reset_ids:
         reset(REVIEW_MANAGER, bib_db, reset_id)
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
     return
 
@@ -1598,13 +1597,13 @@ def set_to_reprocess(REVIEW_MANAGER):
     # consistent with the check_valid_transitions because it will either
     # transition to prepared or to needs_manual_preparation
 
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     [
         r.update(status=RecordState.md_imported)
         for r in bib_db.entries
         if RecordState.md_needs_manual_preparation == r["status"]
     ]
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
     return
 
 
@@ -1651,7 +1650,7 @@ def main(
         i += 1
 
         preparation_batch = process_map(
-            prepare, preparation_batch, max_workers=REVIEW_MANAGER.config["CPUS"] * 15
+            prepare, preparation_batch, max_workers=REVIEW_MANAGER.config["CPUS"] * 5
         )
 
         REVIEW_MANAGER.save_record_list_by_ID(preparation_batch)

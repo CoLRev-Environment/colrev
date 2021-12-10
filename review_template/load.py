@@ -15,6 +15,7 @@ import requests
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
+from tqdm.contrib.concurrent import process_map
 
 import docker
 from review_template import grobid_client
@@ -23,6 +24,7 @@ from review_template.review_manager import ReviewManager
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
@@ -221,6 +223,7 @@ def bibutils_convert(script: str, data: str) -> str:
     client = docker.APIClient()
     try:
         cur_tag = docker.from_env().images.get("bibutils").tags[0]
+        report_logger.info(f"Running docker container created from {cur_tag}")
         logger.info(f"Running docker container created from {cur_tag}")
         container = client.create_container("bibutils", script, stdin_open=True)
     except docker.errors.ImageNotFound:
@@ -414,11 +417,15 @@ def pdf2bib(file: str) -> BibDatabase:
         db = bibtexparser.loads(r.text, parser=parser)
         return db
     if 500 == r.status_code:
+        report_logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
         logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
         return None
 
+    report_logger.debug(f"Status: {r.status_code}")
     logger.debug(f"Status: {r.status_code}")
+    report_logger.debug(f"Response: {r.text}")
     logger.debug(f"Response: {r.text}")
     return None
 
@@ -440,11 +447,15 @@ def pdfRefs2bib(file: str) -> BibDatabase:
             r["ID"] = r["ID"].rjust(3, "0")
         return db
     if 500 == r.status_code:
-        logger.error(f"Not a readable pdf file? {os.path.basename(file)}")
+        report_logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
         return None
 
+    report_logger.debug(f"Status: {r.status_code}")
     logger.debug(f"Status: {r.status_code}")
+    report_logger.debug(f"Response: {r.text}")
     logger.debug(f"Response: {r.text}")
     return None
 
@@ -564,6 +575,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                 filetype = "pdf_refs"
 
         if filetype in conversion_scripts.keys():
+            report_logger.info(f"Loading {filetype}: {search_file}")
             logger.info(f"Loading {filetype}: {search_file}")
             logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
             db = conversion_scripts[filetype](sfpath)
@@ -575,6 +587,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
 
             git_repo = REVIEW_MANAGER.get_repo()
             if db is None:
+                report_logger.error("No records loaded")
                 logger.error("No records loaded")
                 continue
             elif "pdf" == filetype:
@@ -612,6 +625,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                     with open(new_file_path, "w") as fi:
                         fi.write(bibtexparser.dumps(db))
         else:
+            report_logger.info("Filetype not recognized: " + search_file)
             logger.info("Filetype not recognized: " + search_file)
             continue
 
@@ -635,11 +649,11 @@ def convert_non_bib_search_files(REVIEW_MANAGER):
 
 
 def order_bib_file(REVIEW_MANAGER):
-    bib_db = REVIEW_MANAGER.load_main_refs()
+    bib_db = REVIEW_MANAGER.load_bib_db()
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
-    REVIEW_MANAGER.save_bib_file(bib_db)
+    REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     return
 
 
@@ -648,7 +662,7 @@ def check_search_details(REVIEW_MANAGER):
 
     review_manager.check_search_details(REVIEW_MANAGER)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([REVIEW_MANAGER.paths["SEARCH_DETAILS"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["SEARCH_DETAILS_RELATIVE"])])
     return
 
 
@@ -698,13 +712,12 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     i = 1
     for load_batch in batch(load_data["items"], BATCH_SIZE):
 
-        print(f"Batch {i}")
+        logger.info(f"Batch {i}")
         i += 1
 
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-        load_batch = pool.map(import_record, load_batch)
-        pool.close()
-        pool.join()
+        load_batch = process_map(
+            import_record, load_batch, max_workers=REVIEW_MANAGER.config["CPUS"]
+        )
 
         REVIEW_MANAGER.save_record_list_by_ID(load_batch, append_new=True)
 

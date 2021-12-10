@@ -149,11 +149,11 @@ def initialize_repo(
 
     REVIEW_MANAGER = ReviewManager()
 
-    logger = logging.getLogger("review_template")
-    logger.info("Initialize review repository")
-    logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
-    logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
-    logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
+    report_logger = logging.getLogger("review_template_report")
+    report_logger.info("Initialize review repository")
+    report_logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
+    report_logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
+    report_logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
 
     REVIEW_MANAGER.create_commit(
         "Initial commit", manual_author=True, saved_args=saved_args

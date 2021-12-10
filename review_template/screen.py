@@ -6,6 +6,7 @@ from bibtexparser.bibdatabase import BibDatabase
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 MAIN_REFERENCES = "NA"
@@ -57,12 +58,12 @@ def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
     git_repo = REVIEW_MANAGER.get_repo()
 
     if RecordState.rev_included == record["status"]:
-        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
+        report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
         REVIEW_MANAGER.update_record_by_ID(record)
     else:
-        logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
+        report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
         REVIEW_MANAGER.update_record_by_ID(record)
 
-    git_repo.index.add([REVIEW_MANAGER.paths["MAIN_REFERENCES"]])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return

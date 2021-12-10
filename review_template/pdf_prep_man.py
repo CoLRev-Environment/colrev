@@ -4,7 +4,7 @@ import logging
 from review_template.review_manager import RecordState
 
 
-logger = logging.getLogger("review_template")
+logger = logging.getLogger("review_template_report")
 
 
 def get_data(REVIEW_MANAGER):
@@ -30,14 +30,13 @@ def get_data(REVIEW_MANAGER):
 def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
 
     git_repo = REVIEW_MANAGER.get_repo()
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
     record.update(status=RecordState.pdf_prepared)
     if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-        git_repo.index.add([record["filepath"]])
+        git_repo.index.add([record["file"]])
 
     REVIEW_MANAGER.update_record_by_ID(record)
-    git_repo.index.add([MAIN_REFERENCES])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return
 

@@ -158,7 +158,7 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
 
     if "none" == target_commit:
         logger.info("Loading data...")
-        bib_db = REVIEW_MANAGER.load_main_refs()
+        bib_db = REVIEW_MANAGER.load_bib_db()
         [x.update(changed_in_target_commit="True") for x in bib_db.entries]
 
     else:

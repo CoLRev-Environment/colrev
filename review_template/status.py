@@ -12,6 +12,7 @@ from review_template import screen
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
+report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
@@ -98,7 +99,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
     logger.debug("Set overall status statistics (going backwards)")
     st_o = stat["status"]["overall"]
     non_completed = 0
-    current_state = RecordState.rev_included  # strat with the last
+    current_state = RecordState.rev_synthesized  # start with the last
     visited_states = []
     nr_incomplete = 0
     while True:
@@ -126,8 +127,9 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 visited_states.append(predecessor["dest"])
                 if predecessor["dest"] not in states_to_consider:
                     states_to_consider.append(predecessor["dest"])
-
-        completed_atomic_steps += st_o[str(predecessor["dest"])]
+        if len(predecessors) > 0:
+            if predecessors[0] != "init":
+                completed_atomic_steps += st_o[str(predecessor["dest"])]
         atomic_step_number += 1
         # Note : the following does not consider multiple parallel steps.
         for trans_for_completeness in [
@@ -239,8 +241,8 @@ def get_review_instructions(REVIEW_MANAGER, stat):
     review_instructions = []
 
     # git_repo = REVIEW_MANAGER.get_repo()
-    git_repo = git.Repo()
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
+    MAIN_REFERENCES = str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
 
     non_staged = [
         item.a_path for item in git_repo.index.diff(None) if ".bib" == item.a_path[-4:]
@@ -329,6 +331,7 @@ def get_review_instructions(REVIEW_MANAGER, stat):
             transitioned_records.append(transitioned_record)
 
         in_progress_processes = list({x["process_type"] for x in transitioned_records})
+        logger.debug(f"in_progress_processes: {in_progress_processes}")
         if len(in_progress_processes) == 1:
             instruction = {
                 "msg": f"Detected {in_progress_processes[0]} in progress. "
@@ -424,7 +427,7 @@ def get_collaboration_instructions(REVIEW_MANAGER, stat):
     SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     found_a_conflict = False
     # git_repo = REVIEW_MANAGER.get_repo()
-    git_repo = git.Repo()
+    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     unmerged_blobs = git_repo.index.unmerged_blobs()
     for path in unmerged_blobs:
         list_of_blobs = unmerged_blobs[path]
