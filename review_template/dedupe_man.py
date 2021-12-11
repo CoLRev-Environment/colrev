@@ -4,6 +4,7 @@ import os
 import pprint
 
 import pandas as pd
+from bibtexparser import BibDatabase
 
 from review_template.review_manager import RecordState
 
@@ -23,7 +24,7 @@ def get_combined_origin_list(record_a: dict, record_b: dict) -> str:
     return ";".join(combined_origin_list)
 
 
-def remove_from_potential_duplicates_csv(ID1, ID2):
+def remove_from_potential_duplicates_csv(ID1: str, ID2: str) -> None:
     with open("potential_duplicate_tuples.csv", "r+b") as fd:
         seekpos = fd.tell()
         line = fd.readline()
@@ -45,7 +46,7 @@ def remove_from_potential_duplicates_csv(ID1, ID2):
     return
 
 
-def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
+def set_data(REVIEW_MANAGER, bib_db: BibDatabase, dedupe_man_item: dict) -> BibDatabase:
 
     main_ID = dedupe_man_item["main_ID"]
     duplicate_ID = dedupe_man_item["duplicate_ID"]
@@ -99,7 +100,7 @@ def set_data(REVIEW_MANAGER, bib_db, dedupe_man_item):
     return bib_db
 
 
-def get_data(REVIEW_MANAGER, bib_db):
+def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> None:
     from review_template.review_manager import RecordState, Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.dedupe_man))

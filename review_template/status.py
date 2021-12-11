@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 import io
 import logging
-import os
 import pprint
 from collections import Counter
+from pathlib import Path
 
 import git
 
@@ -16,7 +16,7 @@ report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
-def get_nr_in_bib(file_path: str) -> int:
+def get_nr_in_bib(file_path: Path) -> int:
 
     number_in_bib = 0
     with open(file_path) as f:
@@ -32,15 +32,12 @@ def get_nr_in_bib(file_path: str) -> int:
     return number_in_bib
 
 
-def get_nr_search() -> int:
-    search_dir = os.path.join(os.getcwd(), "search/")
-    if not os.path.exists(search_dir):
+def get_nr_search(REVIEW_MANAGER) -> int:
+
+    search_dir = REVIEW_MANAGER.paths["SEARCHDIR"]
+    if not search_dir.is_dir():
         return 0
-    bib_files = [
-        os.path.join(search_dir, x)
-        for x in os.listdir(search_dir)
-        if x.endswith(".bib")
-    ]
+    bib_files = search_dir.glob("*.bib")
     number_search = 0
     for search_file in bib_files:
         number_search += get_nr_in_bib(search_file)
@@ -77,7 +74,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                     exclusion_statistics[crit] += 1
 
     # PDF_DIRECTORY = REVIEW_MANAGER.paths['PDF_DIRECTORY']
-    # if os.path.exists(PDF_DIRECTORY):
+    # if PDF_DIRECTORY.is_dir():
     #     pdf_files = [x for x in os.listdir(PDF_DIRECTORY)]
     #     search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
     #     non_bw_searched = len([x for x in pdf_files
@@ -150,7 +147,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
     stat["completed_atomic_steps"] = completed_atomic_steps
 
     stat["status"]["currently"]["md_duplicates_removed"] = md_duplicates_removed
-    stat["status"]["overall"]["md_retrieved"] = get_nr_search()
+    stat["status"]["overall"]["md_retrieved"] = get_nr_search(REVIEW_MANAGER)
     stat["status"]["currently"]["md_retrieved"] = (
         stat["status"]["overall"]["md_retrieved"] - record_links
     )
@@ -202,7 +199,7 @@ def get_priority_transition(current_states: set) -> list:
     return list(set(priority_transitions))
 
 
-def get_active_processing_functions(current_states_set):
+def get_active_processing_functions(current_states_set) -> list:
     from review_template.review_manager import Record
 
     active_processing_functions = []
@@ -237,12 +234,12 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
     return nr_commits_behind, nr_commits_ahead
 
 
-def get_review_instructions(REVIEW_MANAGER, stat):
+def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     review_instructions = []
 
     # git_repo = REVIEW_MANAGER.get_repo()
     git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
-    MAIN_REFERENCES = str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+    MAIN_REFERENCES_RELATIVE = str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
 
     non_staged = [
         item.a_path for item in git_repo.index.diff(None) if ".bib" == item.a_path[-4:]
@@ -253,7 +250,7 @@ def get_review_instructions(REVIEW_MANAGER, stat):
             "msg": "Add non-staged changes.",
             "cmd": f"git add {', '.join(non_staged)}",
         }
-        if REVIEW_MANAGER.paths["MAIN_REFERENCES"] in non_staged:
+        if str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]) in non_staged:
             instruction["priority"] = "yes"
         review_instructions.append(instruction)
 
@@ -264,7 +261,7 @@ def get_review_instructions(REVIEW_MANAGER, stat):
     # from review_template.review_manager import Record
     # current_states_set = set([x['source'] for x in Record.transitions])
 
-    MAIN_REFS_CHANGED = MAIN_REFERENCES in [
+    MAIN_REFS_CHANGED = MAIN_REFERENCES_RELATIVE in [
         item.a_path for item in git_repo.index.diff(None)
     ] + [x.a_path for x in git_repo.head.commit.diff()]
 
@@ -277,8 +274,8 @@ def get_review_instructions(REVIEW_MANAGER, stat):
         from review_template.review_manager import Record
 
         revlist = (
-            (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
-            for commit in git_repo.iter_commits(paths=MAIN_REFERENCES)
+            (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
+            for commit in git_repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
         )
         filecontents = list(revlist)[0][1]
         committed_record_states_list = (
@@ -397,7 +394,7 @@ def get_review_instructions(REVIEW_MANAGER, stat):
                     continue
             review_instructions.append(instruction)
 
-    if not os.path.exists(REVIEW_MANAGER.paths["MAIN_REFERENCES"]):
+    if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
         instruction = {
             "msg": "To import, copy search results to the search directory.",
             "cmd": "review_template load",
@@ -423,7 +420,7 @@ def get_review_instructions(REVIEW_MANAGER, stat):
     return review_instructions
 
 
-def get_collaboration_instructions(REVIEW_MANAGER, stat):
+def get_collaboration_instructions(REVIEW_MANAGER, stat) -> list:
     SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     found_a_conflict = False
     # git_repo = REVIEW_MANAGER.get_repo()
@@ -641,7 +638,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
 
     print("\nStatus\n")
 
-    if not os.path.exists(REVIEW_MANAGER.paths["MAIN_REFERENCES"]):
+    if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
         print(" | Search")
         print(" |  - No records added yet")
     else:

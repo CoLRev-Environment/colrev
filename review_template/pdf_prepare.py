@@ -1,13 +1,12 @@
 #! /usr/bin/env python
 import io
 import logging
-import multiprocessing as mp
 import os
 import pprint
 import re
 import subprocess
+from pathlib import Path
 
-import git
 import langdetect
 from bibtexparser.bibdatabase import BibDatabase
 from langdetect import detect_langs
@@ -27,10 +26,9 @@ from review_template.review_manager import RecordState
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
-BATCH_SIZE, PDF_DIRECTORY, CPUS, REPO_DIR = -1, "NA", -1, "NA"
+PDF_DIRECTORY, CPUS, REPO_DIR = "NA", -1, "NA"
 
-IPAD, EPAD = 0, 0
-current_batch_counter = mp.Value("i", 0)
+PAD = 0
 
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
@@ -39,8 +37,7 @@ logger = logging.getLogger("review_template")
 def extract_text_by_page(record: dict, pages: list = None) -> str:
 
     text_list = []
-    pdf_path = record["file"].replace(":", "").replace(".pdfPDF", ".pdf")
-    with open(pdf_path, "rb") as fh:
+    with open(record["file"], "rb") as fh:
         for page in PDFPage.get_pages(
             fh,
             pagenos=pages,  # note: maybe skip potential cover pages?
@@ -64,12 +61,11 @@ def extract_text_by_page(record: dict, pages: list = None) -> str:
 
 def get_text_from_pdf(record: dict) -> dict:
 
-    pdf_path = record["file"].replace(":", "").replace(".pdfPDF", ".pdf")
-    file = open(pdf_path, "rb")
-    parser = PDFParser(file)
-    document = PDFDocument(parser)
+    with open(record["file"], "rb") as file:
+        parser = PDFParser(file)
+        document = PDFDocument(parser)
 
-    pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+        pages_in_file = resolve1(document.catalog["Pages"])["Count"]
     record["pages_in_file"] = pages_in_file
 
     try:
@@ -78,7 +74,7 @@ def get_text_from_pdf(record: dict) -> dict:
 
     except PDFSyntaxError:
         msg = (
-            f'{record["file"]}'.ljust(EPAD, " ")
+            f'{record["file"]}'.ljust(PAD, " ")
             + "PDF reader error: check whether is a pdf"
         )
         report_logger.error(msg)
@@ -86,7 +82,7 @@ def get_text_from_pdf(record: dict) -> dict:
         record.update(status=RecordState.pdf_needs_manual_preparation)
         pass
     except PDFTextExtractionNotAllowed:
-        msg = f'{record["file"]}'.ljust(EPAD, " ") + "PDF reader error: protection"
+        msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
         report_logger.error(msg)
         logger.error(msg)
         record.update(status=RecordState.md_needs_manual_preparation)
@@ -109,30 +105,31 @@ def probability_english(text: str) -> float:
 
 
 def apply_ocr(record: dict) -> dict:
-    pdf = record["file"]
-    ocred_filename = pdf[:-4] + "_ocr.pdf"
+    pdf = Path(record["file"])
+    ocred_filename = Path(record["file"].replace(".pdf", "_ocr.pdf"))
 
     options = f"--jobs {CPUS}"
     # if rotate:
     #     options = options + '--rotate-pages '
     # if deskew:
     #     options = options + '--deskew '
+    docker_home_path = Path("/home/docker")
     command = (
         'docker run --rm --user "$(id -u):$(id -g)" -v "'
-        + os.path.join(os.getcwd(), "pdfs")
+        + PDF_DIRECTORY
         + ':/home/docker" jbarlow83/ocrmypdf --force-ocr '
         + options
         + ' -l eng+deu "'
-        + os.path.join("/home/docker", os.path.basename(pdf))
+        + docker_home_path / pdf.name
         + '"  "'
-        + os.path.join("/home/docker", os.path.basename(ocred_filename))
+        + docker_home_path / ocred_filename.name
         + '"'
     )
     subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
 
     record["pdf_processed"] = "OCRMYPDF"
 
-    record["file"] = ocred_filename
+    record["file"] = str(ocred_filename)
     record = get_text_from_pdf(record)
 
     return record
@@ -140,7 +137,7 @@ def apply_ocr(record: dict) -> dict:
 
 def pdf_check_ocr(record: dict) -> dict:
 
-    if RecordState.pdf_imported != record["status"]:
+    if str(RecordState.pdf_imported) != str(record["status"]):
         return record
 
     record = get_text_from_pdf(record)
@@ -151,7 +148,7 @@ def pdf_check_ocr(record: dict) -> dict:
 
     if probability_english(record["text_from_pdf"]) < 0.9:
         msg = (
-            f'{record["ID"]}'.ljust(EPAD, " ")
+            f'{record["ID"]}'.ljust(PAD, " ")
             + "Validation error (OCR or language problems)"
         )
         report_logger.error(msg)
@@ -181,7 +178,7 @@ def validate_pdf_metadata(record: dict) -> dict:
             match_count += 1
 
     if match_count / len(title_words) < 0.9:
-        msg = f'{record["file"]}'.ljust(EPAD, " ") + "Title not found in first pages"
+        msg = f'{record["file"]}'.ljust(PAD, " ") + "Title not found in first pages"
         report_logger.error(msg)
         logger.error(msg)
         record.update(status=RecordState.pdf_needs_manual_preparation)
@@ -193,7 +190,7 @@ def validate_pdf_metadata(record: dict) -> dict:
             match_count += 1
 
     if match_count / len(record.get("author", "").split(" and ")) < 0.8:
-        msg = f'{record["file"]}'.ljust(EPAD, " ") + "author not found in first pages"
+        msg = f'{record["file"]}'.ljust(PAD, " ") + "author not found in first pages"
         report_logger.error(msg)
         logger.error(msg)
         record.update(status=RecordState.pdf_needs_manual_preparation)
@@ -211,8 +208,7 @@ def validate_completeness(record: dict) -> dict:
     )
     if full_version_purchase_notice in extract_text_by_page(record).replace(" ", ""):
         msg = (
-            f'{record["ID"]}'.ljust(EPAD - 1, " ")
-            + " Not the full version of the paper"
+            f'{record["ID"]}'.ljust(PAD - 1, " ") + " Not the full version of the paper"
         )
         report_logger.error(msg)
         record.update(status=RecordState.pdf_needs_manual_preparation)
@@ -221,7 +217,7 @@ def validate_completeness(record: dict) -> dict:
     pages_metadata = record.get("pages", "NA")
     if "NA" == pages_metadata or not re.match(r"^\d*--\d*$", pages_metadata):
         msg = (
-            f'{record["ID"]}'.ljust(EPAD - 1, " ")
+            f'{record["ID"]}'.ljust(PAD - 1, " ")
             + "Could not validate completeness: no pages in metadata"
         )
         report_logger.error(msg)
@@ -235,14 +231,14 @@ def validate_completeness(record: dict) -> dict:
     if nr_pages_metadata != record["pages_in_file"]:
         if nr_pages_metadata == int(record["pages_in_file"]) - 1:
             report_logger.warning(
-                f'{record["ID"]}'.ljust(EPAD - 3, " ")
+                f'{record["ID"]}'.ljust(PAD - 3, " ")
                 + "File has one more page "
                 + f'({record["pages_in_file"]}) compared to '
                 + f"metadata ({nr_pages_metadata} pages)"
             )
         else:
             msg = (
-                f'{record["ID"]}'.ljust(EPAD, " ")
+                f'{record["ID"]}'.ljust(PAD, " ")
                 + f'Nr of pages in file ({record["pages_in_file"]}) '
                 + "not identical with record "
                 + f"({nr_pages_metadata} pages)"
@@ -259,26 +255,16 @@ prep_scripts = {
 }
 
 
-def prepare_pdf(record: dict) -> dict:
+def prepare_pdf(item: dict) -> dict:
 
-    if RecordState.pdf_imported != record["status"] or "file" not in record:
+    record = item["record"]
+    if str(RecordState.pdf_imported) != str(record["status"]) or "file" not in record:
         return record
 
-    with current_batch_counter.get_lock():
-        if current_batch_counter.value >= BATCH_SIZE:
-            return record
-        else:
-            current_batch_counter.value += 1
-
-    if not os.path.exists(record["file"]):
-        msg = f'{record["ID"]}'.ljust(EPAD, " ") + "Linked file/pdf does not exist"
+    if not Path(record["file"]).is_file():
+        msg = f'{record["ID"]}'.ljust(PAD, " ") + "Linked file/pdf does not exist"
         report_logger.error(msg)
         logger.error(msg)
-        return record
-
-    if "pdf_versioned_tag" not in record:
-        report_logger.error(f'{record["ID"]} - PDF not versioned/skip preparation')
-        logger.error(f'{record["ID"]} - PDF not versioned/skip preparation')
         return record
 
     # TODO
@@ -299,169 +285,159 @@ def prepare_pdf(record: dict) -> dict:
     for prep_script in prep_scripts:
         record = prep_scripts[prep_script](record)
 
-        failed = RecordState.pdf_needs_manual_preparation == record["status"]
-        msg = f'{prep_script}({record["ID"]}):'.ljust(IPAD, " ") + " "
+        failed = str(RecordState.pdf_needs_manual_preparation) == str(record["status"])
+        msg = f'{prep_script}({record["ID"]}):'.ljust(PAD, " ") + " "
         msg += "fail" if failed else "pass"
         report_logger.info(msg)
         if failed:
             break
 
-    if RecordState.pdf_imported == record["status"]:
+    # Each prep_scripts can create a new file
+    # (previous/temporary pdfs are deleted when the process is successful)
+
+    if str(RecordState.pdf_imported) == str(record["status"]):
         # Remove temporary PDFs when processing has succeeded
-        fname = os.path.join(REPO_DIR, f'{record["ID"]}.pdf')
-        # TODO : we may have to consider different subdirectories?
-        if os.path.basename(fname) != os.path.basename(record.get("file", "NA")):
-            if "GIT" == PDF_HANDLING:
-                if os.path.exists(fname):
-                    os.remove(fname)
-            else:
-                # Create a copy of the original PDF if users cannot
-                # restore it from git
-                os.rename(fname, fname.replace(".pdf", "_backup.pdf"))
-            os.rename(os.path.join(REPO_DIR, record["file"]), fname)
-            record["file"] = fname
-        record.update(status=RecordState.pdf_prepared)
+        target_fname = REPO_DIR / f'{record["ID"]}.pdf'
+        linked_file = REPO_DIR / record["file"]
+        if "file" in record:
+            # TODO : we may have to consider different subdirectories?
+            if target_fname.name != Path(record["file"]).name:
+                if "GIT" == PDF_HANDLING:
+                    if target_fname.is_file():
+                        os.remove(target_fname)
+                else:
+                    # Create a copy of the original PDF if users cannot
+                    # restore it from git
+                    linked_file.rename(str(linked_file).replace(".pdf", "_backup.pdf"))
+                linked_file.rename(target_fname)
+                record["file"] = target_fname
+            record.update(status=RecordState.pdf_prepared)
     else:
         if not DEBUG_MODE:
             # Delete temporary PDFs for which processing has failed:
-            orig_filepath = f'{PDF_DIRECTORY}{record["ID"]}.pdf'
-            if os.path.exists(orig_filepath):
-                for fpath in os.listdir(PDF_DIRECTORY):
-                    print(fpath)
-                    if record["ID"] in fpath and fpath not in orig_filepath:
+            orig_filepath = PDF_DIRECTORY / f'{record["ID"]}.pdf'
+            if orig_filepath.is_file():
+                for fpath in PDF_DIRECTORY.glob("*.pdf"):
+                    if record["ID"] in str(fpath) and fpath != orig_filepath:
                         os.remove(fpath)
+
+    record = cleanup_pdf_processing_fields(record)
 
     return record
 
 
-def mark_committed_pdfs(
-    REVIEW_MANAGER, bib_db: BibDatabase, repo: git.Repo
-) -> BibDatabase:
+def cleanup_pdf_processing_fields(record: dict) -> BibDatabase:
 
-    revlist = (commit.tree for commit in repo.iter_commits())
-    last_tree = list(revlist)[0]
-    files_in_prev_commit = [el.path for el in list(last_tree.traverse())]
-    for record in bib_db.entries:
-        if record["file"] in files_in_prev_commit:
-            record["pdf_versioned_tag"] = "yes"
+    if "text_from_pdf" in record:
+        del record["text_from_pdf"]
+    if "pages_in_file" in record:
+        del record["pages_in_file"]
 
-    return bib_db
+    return record
 
 
-def cleanup_pdf_processing_fields(bib_db: BibDatabase) -> BibDatabase:
+def add_to_git(REVIEW_MANAGER, retrieval_batch) -> None:
+    git_repo = REVIEW_MANAGER.get_repo()
+    if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+        if REVIEW_MANAGER.paths["PDF_DIRECTORY"].is_dir():
+            for record in retrieval_batch:
+                if "file" in record:
+                    if Path(record["file"]).is_file():
+                        git_repo.index.add([record["file"]])
 
-    for record in bib_db.entries:
-        if "text_from_pdf" in record:
-            del record["text_from_pdf"]
-        if "pages_in_file" in record:
-            del record["pages_in_file"]
-        if "pdf_versioned_tag" in record:
-            del record["pdf_versioned_tag"]
+    return
 
-    return bib_db
+
+def get_data(REVIEW_MANAGER) -> dict:
+    from review_template.review_manager import RecordState
+
+    record_state_list = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len(
+        [x for x in record_state_list if str(RecordState.pdf_imported) == x[1]]
+    )
+
+    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+    items = REVIEW_MANAGER.read_next_record(
+        conditions={"status": str(RecordState.pdf_imported)},
+    )
+
+    prep_data = {
+        "nr_tasks": nr_tasks,
+        "PAD": PAD,
+        "items": items,
+    }
+    logger.debug(pp.pformat(prep_data))
+    return prep_data
+
+
+def batch(items: dict, REVIEW_MANAGER):
+    n = REVIEW_MANAGER.config["BATCH_SIZE"]
+    batch = []
+    for item in items:
+        batch.append(
+            {
+                "record": item,
+                "REVIEW_MANAGER": REVIEW_MANAGER,
+            }
+        )
+        if len(batch) == n:
+            yield batch
+            batch = []
+    yield batch
 
 
 def main(REVIEW_MANAGER) -> None:
 
     saved_args = locals()
 
-    global PDF_HANDLING
-    global DEBUG_MODE
-    global BATCH_SIZE
-    global PDF_DIRECTORY
-    global REPO_DIR
-    global CPUS
-
-    logger.info("Prepare PDFs")
-    PDF_HANDLING = REVIEW_MANAGER.config["PDF_HANDLING"]
-    DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
-    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-    REPO_DIR = REVIEW_MANAGER.paths["REPO_DIR"]
-    CPUS = REVIEW_MANAGER.config["CPUS"]
-    bib_db = REVIEW_MANAGER.load_bib_db()
-
-    global IPAD
-    global EPAD
-    IPAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35) + 25
-    EPAD = IPAD + 1
-
     # TODO: temporary fix: remove all lines containint PDFType1Font from log.
     # https://github.com/pdfminer/pdfminer.six/issues/282
 
-    in_process = True
-    batch_start, batch_end = 1, 0
-    while in_process:
-        with current_batch_counter.get_lock():
-            batch_start += current_batch_counter.value
-            current_batch_counter.value = 0  # start new batch
-        if batch_start > 1:
-            logger.info("Continuing batch preparation started earlier")
+    logger.info("Prepare PDFs")
 
-        bib_db = mark_committed_pdfs(REVIEW_MANAGER, bib_db, REVIEW_MANAGER.get_repo())
+    global PDF_HANDLING
+    PDF_HANDLING = REVIEW_MANAGER.config["PDF_HANDLING"]
 
-        bib_db.entries = process_map(
-            prepare_pdf, bib_db.entries, max_workers=REVIEW_MANAGER.config["CPUS"] * 5
-        )
+    global DEBUG_MODE
+    DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
 
-        bib_db = cleanup_pdf_processing_fields(bib_db)
+    global PDF_DIRECTORY
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
 
-        with current_batch_counter.get_lock():
-            batch_end = current_batch_counter.value + batch_start - 1
+    global REPO_DIR
+    REPO_DIR = REVIEW_MANAGER.paths["REPO_DIR"]
 
-        if batch_end > 0:
-            msg = (
-                "Completed pdf preparation batch "
-                + f"(entries {batch_start} to {batch_end})"
-            )
-            report_logger.info(msg)
-            logger.info(msg)
+    global CPUS
+    CPUS = REVIEW_MANAGER.config["CPUS"]
 
-            REVIEW_MANAGER.save_bib_db(bib_db)
-            git_repo = REVIEW_MANAGER.get_repo()
-            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    if "GIT" != PDF_HANDLING:
+        print("PDFs not versioned - exit.")
+        return
 
-            need_man_preps = [
-                record["ID"]
-                for record in bib_db.entries
-                if RecordState.pdf_needs_manual_preparation == record["status"]
-            ]
-            if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-                dirname = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-                if os.path.exists(dirname):
-                    for filepath in os.listdir(dirname):
-                        if any(ID in filepath for ID in need_man_preps):
-                            report_logger.info("skipping " + filepath)
-                            logger.info("skipping " + filepath)
-                            continue
+    pdf_prep_data = get_data(REVIEW_MANAGER)
 
-                        if filepath.endswith(".pdf"):
-                            git_repo.index.add(
-                                [
-                                    os.path.join(
-                                        str(
-                                            REVIEW_MANAGER.paths[
-                                                "PDF_DIRECTORY_RELATIVE"
-                                            ]
-                                        ),
-                                        filepath,
-                                    )
-                                ]
-                            )
+    global PAD
+    PAD = pdf_prep_data["PAD"]
 
-            if not git_repo.is_dirty():
-                break
+    i = 1
+    for pdf_prep_batch in batch(pdf_prep_data["items"], REVIEW_MANAGER):
 
-            REVIEW_MANAGER.reorder_log([x["ID"] for x in bib_db.entries])
-            in_process = REVIEW_MANAGER.create_commit(
-                "Prepare PDFs", saved_args=saved_args
-            )
-            if not in_process:
-                logger.info("No PDFs prepared")
+        print(f"Batch {i}")
+        i += 1
 
-        if batch_end < BATCH_SIZE or batch_end == 0:
-            if batch_end == 0:
-                logger.info("No additional pdfs to prepare")
-            break
+        pdf_prep_batch = process_map(prepare_pdf, pdf_prep_batch, max_workers=CPUS)
+
+        REVIEW_MANAGER.save_record_list_by_ID(pdf_prep_batch)
+
+        # Multiprocessing mixes logs of different records.
+        # For better readability:
+        REVIEW_MANAGER.reorder_log([x["ID"] for x in pdf_prep_batch])
+
+        add_to_git(REVIEW_MANAGER, pdf_prep_batch)
+
+        REVIEW_MANAGER.create_commit("Prepare PDFs", saved_args=saved_args)
+
+    if i == 1:
+        logger.info("No additional pdfs to prepare")
 
     return

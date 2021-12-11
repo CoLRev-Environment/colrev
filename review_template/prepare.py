@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 import collections
 import html
-import itertools
 import json
 import logging
-import os
 import pprint
 import re
 import sys
 import urllib
+from pathlib import Path
 
 import bibtexparser
 import dictdiffer
@@ -36,7 +35,8 @@ logger = logging.getLogger("review_template")
 
 
 def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
-    if os.path.exists("lexicon/JOURNAL_ABBREVIATIONS.csv"):
+    j_abbrev = Path("lexicon/JOURNAL_ABBREVIATIONS.csv")
+    if j_abbrev.is_file():
         JOURNAL_ABBREVIATIONS = pd.read_csv("lexicon/JOURNAL_ABBREVIATIONS.csv")
     else:
         JOURNAL_ABBREVIATIONS = pd.DataFrame([], columns=["journal", "abbreviation"])
@@ -44,7 +44,8 @@ def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
 
 
 def retrieve_local_JOURNAL_VARIATIONS() -> list:
-    if os.path.exists("lexicon/JOURNAL_VARIATIONS.csv"):
+    j_var = Path("lexicon/JOURNAL_VARIATIONS.csv")
+    if j_var.is_file():
         JOURNAL_VARIATIONS = pd.read_csv("lexicon/JOURNAL_VARIATIONS.csv")
     else:
         JOURNAL_VARIATIONS = pd.DataFrame([], columns=["journal", "variation"])
@@ -52,7 +53,8 @@ def retrieve_local_JOURNAL_VARIATIONS() -> list:
 
 
 def retrieve_local_CONFERENCE_ABBREVIATIONS() -> list:
-    if os.path.exists("lexicon/CONFERENCE_ABBREVIATIONS.csv"):
+    c_abbrev = Path("lexicon/CONFERENCE_ABBREVIATIONS.csv")
+    if c_abbrev.is_file():
         CONFERENCE_ABBREVIATIONS = pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
     else:
         CONFERENCE_ABBREVIATIONS = pd.DataFrame(
@@ -1488,41 +1490,6 @@ def prepare(record: dict) -> dict:
     return record
 
 
-def print_stats(record_list, BATCH_SIZE, i) -> None:
-
-    logger.info(
-        "Completed preparation batch "
-        f"(records {i*BATCH_SIZE} to {i*BATCH_SIZE+len(record_list)})"
-    )
-
-    prepared = len([x for x in record_list if RecordState.md_prepared == x["status"]])
-
-    need_manual_prep = len(
-        [
-            x
-            for x in record_list
-            if RecordState.md_needs_manual_preparation == x["status"]
-        ]
-    )
-
-    if prepared > 0:
-        report_logger.info(f"Summary: Prepared {prepared} records")
-    if need_manual_prep > 0:
-        report_logger.info(
-            f"Summary: Marked {need_manual_prep} records " + "for manual preparation"
-        )
-
-    report_logger.info(
-        "To reset the metdatata of records, use "
-        "review_template prepare --reset-ID [ID1,ID2]"
-    )
-    report_logger.info(
-        "Further instructions are available in the " "documentation (TODO: link)"
-    )
-
-    return
-
-
 def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
     record = [x for x in bib_db.entries if x["ID"] == id]
@@ -1569,18 +1536,16 @@ def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
 def get_data(REVIEW_MANAGER):
     from review_template.review_manager import RecordState
 
-    record_state_list = REVIEW_MANAGER.get_record_state_list()
-    nr_tasks = len(
-        [x for x in record_state_list if str(RecordState.md_imported) == x[1]]
-    )
-    prior_ids = [
-        x[0] for x in record_state_list if str(RecordState.md_imported) == x[1]
-    ]
+    rsl = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])
 
-    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+    PAD = min((max(len(x[0]) for x in rsl) + 2), 35)
+
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_imported)},
     )
+
+    prior_ids = [x[0] for x in rsl if str(RecordState.md_imported) == x[1]]
 
     prep_data = {
         "nr_tasks": nr_tasks,
@@ -1608,7 +1573,13 @@ def set_to_reprocess(REVIEW_MANAGER):
 
 
 def batch(items, n):
-    yield list(itertools.islice(items, 0, n))
+    batch = []
+    for item in items:
+        batch.append(item)
+        if len(batch) == n:
+            yield batch
+            batch = []
+    yield batch
 
 
 def main(
@@ -1630,6 +1601,7 @@ def main(
     DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
 
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
+    CPUS = REVIEW_MANAGER.config["CPUS"] * 5
 
     if reprocess:
         set_to_reprocess(REVIEW_MANAGER)
@@ -1649,9 +1621,7 @@ def main(
         print(f"Batch {i}")
         i += 1
 
-        preparation_batch = process_map(
-            prepare, preparation_batch, max_workers=REVIEW_MANAGER.config["CPUS"] * 5
-        )
+        preparation_batch = process_map(prepare, preparation_batch, max_workers=CPUS)
 
         REVIEW_MANAGER.save_record_list_by_ID(preparation_batch)
 
@@ -1659,7 +1629,13 @@ def main(
         if not keep_ids:
             REVIEW_MANAGER.set_IDs(selected_IDs=preparation_batch_IDs)
 
-        print_stats(preparation_batch, BATCH_SIZE, i)
+        report_logger.info(
+            "To reset the metdatata of records, use "
+            "review_template prepare --reset-ID [ID1,ID2]"
+        )
+        report_logger.info(
+            "Further instructions are available in the " "documentation (TODO: link)"
+        )
 
         # Multiprocessing mixes logs of different records.
         # For better readability:

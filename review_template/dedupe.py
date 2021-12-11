@@ -17,8 +17,6 @@ from review_template.review_manager import RecordState
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
-MERGING_NON_DUP_THRESHOLD, MERGING_DUP_THRESHOLD = -1, -1
-MAIN_REFERENCES = "NA"
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
@@ -302,7 +300,7 @@ def append_merges(batch_item: dict) -> list:
 
     # TODO: it may not be sufficient to consider the record with the highest similarity
 
-    if max_similarity <= MERGING_NON_DUP_THRESHOLD:
+    if max_similarity <= batch_item["MERGING_NON_DUP_THRESHOLD"]:
         # Note: if no other record has a similarity exceeding the threshold,
         # it is considered a non-duplicate (in relation to all other records)
         logger.debug(f"max_similarity ({max_similarity})")
@@ -320,8 +318,8 @@ def append_merges(batch_item: dict) -> list:
     details = references.loc[references["similarity"].idxmax()]["details"]
     logger.debug(details)
     if (
-        max_similarity > MERGING_NON_DUP_THRESHOLD
-        and max_similarity < MERGING_DUP_THRESHOLD
+        max_similarity > batch_item["MERGING_NON_DUP_THRESHOLD"]
+        and max_similarity < batch_item["MERGING_DUP_THRESHOLD"]
     ):
 
         # record_a, record_b = sorted([ID, record["ID"]])
@@ -340,7 +338,7 @@ def append_merges(batch_item: dict) -> list:
             }
         ]
 
-    if max_similarity >= MERGING_DUP_THRESHOLD:
+    if max_similarity >= batch_item["MERGING_DUP_THRESHOLD"]:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
@@ -554,40 +552,6 @@ def get_data(REVIEW_MANAGER):
     return dedupe_data
 
 
-def batch(data, n=1):
-    # the queue (order) matters for the incremental merging (make sure that each
-    # additional record is compared to/merged with all prior records in
-    # the queue)
-
-    with open(MAIN_REFERENCES) as target_db:
-        bib_db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=False,
-            common_strings=True,
-        ).parse_file(target_db, partial=True)
-    # Note: Because we only introduce individual (non-merged records),
-    # there should be no semicolons in origin!
-    records_queue = [x for x in bib_db.entries if x["ID"] in data["queue"]]
-
-    references = pd.DataFrame.from_dict(records_queue)
-    references = prep_references(references)
-
-    items_start = data["items_start"]
-    it_len = len(data["queue"])
-    batch_data = []
-    for ndx in range(items_start // n, it_len, n):
-        for i in range(ndx, min(ndx + n, it_len)):
-            batch_data.append(
-                {
-                    "record": data["queue"][i],
-                    "queue": references.iloc[: i + 1],
-                }
-            )
-
-    for ndx in range(0, it_len, n):
-        yield batch_data[ndx : min(ndx + n, it_len)]
-
-
 def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
     from review_template import prepare
 
@@ -617,18 +581,51 @@ def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
     return
 
 
+def batch(data, REVIEW_MANAGER):
+    # the queue (order) matters for the incremental merging (make sure that each
+    # additional record is compared to/merged with all prior records in
+    # the queue)
+
+    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
+        bib_db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=False,
+            common_strings=True,
+        ).parse_file(target_db, partial=True)
+
+    # Note: Because we only introduce individual (non-merged records),
+    # there should be no semicolons in origin!
+    records_queue = [x for x in bib_db.entries if x["ID"] in data["queue"]]
+
+    references = pd.DataFrame.from_dict(records_queue)
+    references = prep_references(references)
+
+    n = REVIEW_MANAGER.config["BATCH_SIZE"]
+    items_start = data["items_start"]
+    it_len = len(data["queue"])
+    batch_data = []
+    for ndx in range(items_start // n, it_len, n):
+        for i in range(ndx, min(ndx + n, it_len)):
+            batch_data.append(
+                {
+                    "record": data["queue"][i],
+                    "queue": references.iloc[: i + 1],
+                    "MERGING_NON_DUP_THRESHOLD": REVIEW_MANAGER.config[
+                        "MERGING_NON_DUP_THRESHOLD"
+                    ],
+                    "MERGING_DUP_THRESHOLD": REVIEW_MANAGER.config[
+                        "MERGING_DUP_THRESHOLD"
+                    ],
+                }
+            )
+
+    for ndx in range(0, it_len, n):
+        yield batch_data[ndx : min(ndx + n, it_len)]
+
+
 def main(REVIEW_MANAGER) -> None:
 
     saved_args = locals()
-
-    global MERGING_NON_DUP_THRESHOLD
-    MERGING_NON_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_NON_DUP_THRESHOLD"]
-
-    global MERGING_DUP_THRESHOLD
-    MERGING_DUP_THRESHOLD = REVIEW_MANAGER.config["MERGING_DUP_THRESHOLD"]
-
-    global MAIN_REFERENCES
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
     logger.info("Process duplicates")
 
@@ -637,7 +634,7 @@ def main(REVIEW_MANAGER) -> None:
     dedupe_data = get_data(REVIEW_MANAGER)
 
     i = 1
-    for dedupe_batch in batch(dedupe_data, REVIEW_MANAGER.config["BATCH_SIZE"]):
+    for dedupe_batch in batch(dedupe_data, REVIEW_MANAGER):
 
         print(f"Batch {i}")
         i += 1

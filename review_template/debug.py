@@ -1,7 +1,7 @@
 import configparser
 import logging
-import os
 import pprint
+from pathlib import Path  # noqa F401
 
 from review_template import review_manager
 
@@ -12,9 +12,9 @@ pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 def set_debug_mode(activate: bool) -> None:
 
-    config_path = "private_config.ini"
+    config_path = Path("private_config.ini")
     private_config = configparser.ConfigParser()
-    if os.path.exists(config_path):
+    if config_path.is_file():
         private_config.read(config_path)
     if "general" not in private_config.sections():
         private_config.add_section("general")
@@ -38,7 +38,7 @@ def debug_load() -> None:
     from review_template import load
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.explore, str, interactive=True))
+    REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
     rec_header_lis = REVIEW_MANAGER.get_record_header_list()
     origin_list = [x[1] for x in rec_header_lis]
 
@@ -46,7 +46,7 @@ def debug_load() -> None:
 
     for search_file in search_files:
         print(search_file)
-        sfn = os.path.basename(search_file)
+        sfn = search_file.stem
         search_file_origins = [x for x in origin_list if sfn in x]
         with open(search_file) as f:
             line = f.readline()
@@ -86,6 +86,55 @@ def debug_prepare() -> None:
     return
 
 
+def debug_pdf_get():
+    from review_template.review_manager import (
+        ReviewManager,
+        ProcessType,
+        Process,
+        RecordState,
+    )
+    from review_template import pdf_get
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_get, str))
+
+    record = {
+        "ENTRYTYPE": "article",
+        "ID": "GuoLiuNault2021",
+        "author": "Guo, Hong and Liu, Yipeng and Nault, Barrie R.",
+        "file": "pdfs/GuoLiuNault2021.pdf",
+        "journal": "MIS Quarterly",
+        "metadata_source": "ORIGINAL",
+        "number": "1",
+        "origin": "MISQ.bib/0000000826",
+        "status": RecordState.md_imported,
+        "title": "Provisioning Interoperable Disaster Management Systems",
+        "volume": "45",
+        "year": "2021",
+        "doi": " 10.25300/MISQ/2020/14947",
+    }
+
+    pdf_get.get_pdf_from_unpaywall(record, REVIEW_MANAGER)
+
+    return
+
+
+def debug_data():
+
+    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from review_template import data
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.data, str))
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+    included = data.get_records_for_synthesis(bib_db)
+
+    data.update_manuscript(REVIEW_MANAGER, bib_db, included)
+
+    return
+
+
 def debug_tei_tools() -> None:
     from review_template import tei_tools, grobid_client
 
@@ -111,6 +160,10 @@ def main():
 
     # debug_prepare()
 
-    debug_tei_tools()
+    debug_pdf_get()
+
+    # debug_data()
+
+    # debug_tei_tools()
 
     return

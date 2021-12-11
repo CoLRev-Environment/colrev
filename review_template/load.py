@@ -2,12 +2,11 @@
 import itertools
 import logging
 import multiprocessing as mp
-import os
 import pprint
 import re
 import shutil
-from datetime import datetime
 from itertools import chain
+from pathlib import Path
 
 import bibtexparser
 import pandas as pd
@@ -53,29 +52,31 @@ def get_search_files(restrict: list = None) -> None:
     if restrict:
         supported_extensions = restrict
 
-    files = []
-    if not os.path.exists("search"):
+    # TODO: replace by REVIEW_MANAGER.paths['SEARCHDIR']
+    search_dir = Path("search")
+
+    if not search_dir.is_dir():
         raise NoSearchResultsAvailableError()
-    search_dir = os.path.join(os.getcwd(), "search/")
+
     files = [
-        os.path.join(search_dir, x)
-        for x in os.listdir(search_dir)
-        if any(x.endswith(ext) for ext in supported_extensions)
+        f
+        for f_ in [search_dir.glob(f"*.{e}") for e in supported_extensions]
+        for f in f_
     ]
+
     return files
 
 
-def getbib(file: str) -> BibDatabase:
+def getbib(file: Path) -> BibDatabase:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
         bib_r = re.compile(r"^@.*{.*,", re.M)
         if len(re.findall(bib_r, contents)) == 0:
-            logger.error(f"Not a bib file? {os.path.basename(file)}")
+            logger.error(f"Not a bib file? {file.name}")
             db = None
         if "Early Access Date" in contents:
             logger.error(
-                "Replace Early Access Date in bibfile before "
-                f"loading! {os.path.basename(file)}"
+                "Replace Early Access Date in bibfile before " f"loading! {file.name}"
             )
             return None
 
@@ -89,19 +90,18 @@ def getbib(file: str) -> BibDatabase:
     return db
 
 
-def load_records(filepath: str) -> list:
+def load_records(filepath: Path) -> list:
 
     search_db = getbib(filepath)
 
-    logger.debug(f"Loaded {filepath} with {len(search_db.entries)} records")
+    logger.debug(f"Loaded {filepath.name} with {len(search_db.entries)} records")
 
     if search_db is None:
         return []
 
-    search_file = os.path.basename(filepath)
     record_list = []
     for record in search_db.entries:
-        record.update(origin=search_file + "/" + record["ID"])
+        record.update(origin=f"{filepath.name}/{record['ID']}")
 
         # Drop empty fields
         record = {k: v for k, v in record.items() if v}
@@ -153,10 +153,10 @@ def import_record(record: dict) -> dict:
     return record
 
 
-def source_heuristics(search_file: str) -> str:
-    if search_file.endswith("_ref_list.bib"):
+def source_heuristics(search_file: Path) -> str:
+    if str(search_file).endswith("_ref_list.bib"):
         return "PDF reference section"
-    if search_file.endswith(".pdf"):
+    if search_file.suffix == ".pdf":
         return "PDF"
     with open(search_file) as f:
         for line in f.readlines():
@@ -181,31 +181,6 @@ def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
     )
     REVIEW_MANAGER.save_search_details(search_details)
     return
-
-
-def rename_search_files(REVIEW_MANAGER, search_files: list) -> list:
-    ret_list = []
-
-    search_details = REVIEW_MANAGER.load_search_details()
-    search_dir = os.path.join(os.getcwd(), "search/")
-    index_paths = [os.path.join(search_dir, x["filename"]) for x in search_details]
-
-    date_regex = r"^\d{4}-\d{2}-\d{2}"
-    for search_file in search_files:
-        if (
-            re.search(date_regex, os.path.basename(search_file))
-            or search_file in index_paths
-        ):
-            ret_list.append(search_file)
-        else:
-            new_filename = os.path.join(
-                os.path.dirname(search_file),
-                datetime.today().strftime("%Y-%m-%d-")
-                + os.path.basename(search_file).replace(" ", "_"),
-            )
-            os.rename(search_file, new_filename)
-            ret_list.append(new_filename)
-    return ret_list
 
 
 def bibutils_convert(script: str, data: str) -> str:
@@ -257,11 +232,11 @@ def bibutils_convert(script: str, data: str) -> str:
     return stdout
 
 
-def ris2bib(file: str) -> BibDatabase:
+def ris2bib(file: Path) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if "TY  - " not in data:
-        logger.error("Error: Not a ris file? " + os.path.basename(file))
+        logger.error(f"Error: Not a ris file? {file.name}")
         return None
 
     with open(file) as reader:
@@ -274,11 +249,11 @@ def ris2bib(file: str) -> BibDatabase:
     return db
 
 
-def end2bib(file: str) -> BibDatabase:
+def end2bib(file: Path) -> BibDatabase:
     with open(file) as reader:
         data = reader.read(4096)
     if "%T " not in data:
-        logger.error("Error: Not an end file? " + os.path.basename(file))
+        logger.error(f"Error: Not an end file? {file.name}")
         return None
 
     with open(file) as reader:
@@ -291,7 +266,7 @@ def end2bib(file: str) -> BibDatabase:
     return db
 
 
-def txt2bib(file: str) -> BibDatabase:
+def txt2bib(file: Path) -> BibDatabase:
     grobid_client.check_grobid_availability()
     with open(file) as f:
         references = [line.rstrip() for line in f]
@@ -354,11 +329,11 @@ def preprocess_records(data: list) -> list:
     return data
 
 
-def csv2bib(file: str) -> BibDatabase:
+def csv2bib(file: Path) -> BibDatabase:
     try:
         data = pd.read_csv(file)
     except pd.errors.ParserError:
-        logger.error("Error: Not a csv file? " + os.path.basename(file))
+        logger.error(f"Error: Not a csv file? {file.name}")
         pass
         return None
     data.columns = data.columns.str.replace(" ", "_")
@@ -371,11 +346,11 @@ def csv2bib(file: str) -> BibDatabase:
     return db
 
 
-def xlsx2bib(file: str) -> BibDatabase:
+def xlsx2bib(file: Path) -> BibDatabase:
     try:
         data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
     except pd.errors.ParserError:
-        logger.error("Error: Not an xlsx file: " + os.path.basename(file))
+        logger.error(f"Error: Not an xlsx file: {file.name}")
         pass
         return None
     data.columns = data.columns.str.replace(" ", "_")
@@ -388,12 +363,12 @@ def xlsx2bib(file: str) -> BibDatabase:
     return db
 
 
-def move_to_pdf_dir(filepath: str) -> str:
+def move_to_pdf_dir(filepath: Path) -> str:
+    # TODO: replace by REVIEW_MANAGER.paths['PDF_DIRECTORY']
     PDF_DIRECTORY = "pdfs"
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
-    if not os.path.exists(PDF_DIRECTORY):
-        os.mkdir(PDF_DIRECTORY)
-    new_fp = os.path.join(PDF_DIRECTORY, os.path.basename(filepath))
+    Path(PDF_DIRECTORY).mkdir(exist_ok=True)
+    new_fp = Path(PDF_DIRECTORY) / filepath.name
     shutil.move(filepath, new_fp)
     return new_fp
 
@@ -401,7 +376,7 @@ def move_to_pdf_dir(filepath: str) -> str:
 # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
 # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
 # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-def pdf2bib(file: str) -> BibDatabase:
+def pdf2bib(file: Path) -> BibDatabase:
     grobid_client.check_grobid_availability()
 
     # https://github.com/kermitt2/grobid/issues/837
@@ -417,8 +392,8 @@ def pdf2bib(file: str) -> BibDatabase:
         db = bibtexparser.loads(r.text, parser=parser)
         return db
     if 500 == r.status_code:
-        report_logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
-        logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        report_logger.error(f"Not a readable pdf file: {file.name}")
+        logger.error(f"Not a readable pdf file: {file.name}")
         report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
         return None
@@ -430,7 +405,7 @@ def pdf2bib(file: str) -> BibDatabase:
     return None
 
 
-def pdfRefs2bib(file: str) -> BibDatabase:
+def pdfRefs2bib(file: Path) -> BibDatabase:
     grobid_client.check_grobid_availability()
 
     r = requests.post(
@@ -447,8 +422,8 @@ def pdfRefs2bib(file: str) -> BibDatabase:
             r["ID"] = r["ID"].rjust(3, "0")
         return db
     if 500 == r.status_code:
-        report_logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
-        logger.error(f"Not a readable pdf file: {os.path.basename(file)}")
+        report_logger.error(f"Not a readable pdf file: {file.name}")
+        logger.error(f"Not a readable pdf file: {file.name}")
         report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
         return None
@@ -543,7 +518,7 @@ class UnsupportedImportFormatError(Exception):
         self.import_path = import_path
         self.message = (
             "Format of search result file not (yet) supported "
-            + f"({os.path.basename(self.import_path)}) "
+            + f"({self.import_path.name}) "
         )
         super().__init__(self.message)
 
@@ -551,8 +526,8 @@ class UnsupportedImportFormatError(Exception):
 def validate_file_formats() -> None:
     search_files = get_search_files()
     for sfp in search_files:
-        if not any(sfp.endswith(ext) for ext in conversion_scripts.keys()):
-            if not sfp.endswith(".bib"):
+        if not any(sfp.suffix == f".{ext}" for ext in conversion_scripts.keys()):
+            if not sfp.suffix == ".bib":
                 raise UnsupportedImportFormatError(sfp)
     return None
 
@@ -560,25 +535,24 @@ def validate_file_formats() -> None:
 def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
 
     for sfpath in search_files:
-        search_file = os.path.basename(sfpath)
-        corresponding_bib_file = sfpath[: sfpath.rfind(".")] + ".bib"
+        corresponding_bib_file = sfpath.with_suffix(".bib")
 
-        if os.path.exists(corresponding_bib_file):
+        if corresponding_bib_file.is_file():
             continue
 
-        if not any(sfpath.endswith(ext) for ext in conversion_scripts.keys()):
+        if not any(sfpath.suffix == f".{ext}" for ext in conversion_scripts.keys()):
             raise UnsupportedImportFormatError(sfpath)
 
-        filetype = sfpath[sfpath.rfind(".") + 1 :]
+        filetype = sfpath.suffix.replace(".", "")
         if "pdf" == filetype:
-            if sfpath.endswith("_ref_list.pdf"):
+            if str(sfpath).endswith("_ref_list.pdf"):
                 filetype = "pdf_refs"
 
         if filetype in conversion_scripts.keys():
-            report_logger.info(f"Loading {filetype}: {search_file}")
-            logger.info(f"Loading {filetype}: {search_file}")
+            report_logger.info(f"Loading {filetype}: {sfpath.name}")
+            logger.info(f"Loading {filetype}: {sfpath.name}")
             logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
-            db = conversion_scripts[filetype](sfpath)
+            db = conversion_scripts[filetype](str(sfpath))
 
             db = fix_keys(db)
             db = set_incremental_IDs(db)
@@ -593,7 +567,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
             elif "pdf" == filetype:
                 new_fp = move_to_pdf_dir(sfpath)
                 new_record = {
-                    "filename": os.path.basename(corresponding_bib_file),
+                    "filename": corresponding_bib_file.name,
                     "search_type": "OTHER",
                     "source_name": "PDF (metadata)",
                     "source_url": new_fp,
@@ -606,7 +580,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
             elif "pdf_refs" == filetype:
                 new_fp = move_to_pdf_dir(sfpath)
                 new_record = {
-                    "filename": os.path.basename(corresponding_bib_file),
+                    "filename": corresponding_bib_file.name,
                     "search_type": "BACK_CIT",
                     "source_name": "PDF backward search",
                     "source_url": new_fp,
@@ -615,28 +589,30 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                 }
                 append_search_details(REVIEW_MANAGER, new_record)
                 git_repo.index.add([new_fp])
-
-            if corresponding_bib_file != sfpath and not ".bib" == sfpath[-4:]:
-                new_file_path = sfpath[: sfpath.rfind(".")] + ".bib"
-                if not os.path.exists(new_file_path):
+            # print(corresponding_bib_file)
+            # print(str(sfpath))
+            if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
+                if not corresponding_bib_file.is_file():
                     logger.info(
-                        f"Loaded {len(db.entries)} " f"records from {search_file}"
+                        f"Loaded {len(db.entries)} " f"records from {sfpath.name}"
                     )
-                    with open(new_file_path, "w") as fi:
+                    with open(corresponding_bib_file, "w") as fi:
                         fi.write(bibtexparser.dumps(db))
         else:
-            report_logger.info("Filetype not recognized: " + search_file)
-            logger.info("Filetype not recognized: " + search_file)
+            report_logger.info(f"Filetype not recognized: {sfpath.name}")
+            logger.info(f"Filetype not recognized: {sfpath.name}")
             continue
 
     return
 
 
-def convert_non_bib_search_files(REVIEW_MANAGER):
+def convert_non_bib_search_files(REVIEW_MANAGER) -> None:
     search_files = get_search_files()
-    if any(".pdf" in x for x in search_files) or any(".txt" in x for x in search_files):
+    if any(".pdf" in x.suffix for x in search_files) or any(
+        ".txt" in x.suffix for x in search_files
+    ):
         grobid_client.start_grobid()
-    search_files = rename_search_files(REVIEW_MANAGER, search_files)
+
     # Note: after the search_result_file (non-bib formats) has been loaded
     # for the first time, we save a corresponding bib_file, which allows for
     # more efficient status checking, tracing, and validation.
@@ -644,11 +620,12 @@ def convert_non_bib_search_files(REVIEW_MANAGER):
     # relevant for pdf sources that require long processing times.
     convert_to_bib(REVIEW_MANAGER, search_files)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add(search_files)
+    search_files = get_search_files()
+    git_repo.index.add([str(x) for x in search_files])
     return
 
 
-def order_bib_file(REVIEW_MANAGER):
+def order_bib_file(REVIEW_MANAGER) -> None:
     bib_db = REVIEW_MANAGER.load_bib_db()
     bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
     REVIEW_MANAGER.save_bib_db(bib_db)
@@ -657,7 +634,7 @@ def order_bib_file(REVIEW_MANAGER):
     return
 
 
-def check_search_details(REVIEW_MANAGER):
+def check_search_details(REVIEW_MANAGER) -> None:
     from review_template import review_manager
 
     review_manager.check_search_details(REVIEW_MANAGER)
@@ -666,7 +643,7 @@ def check_search_details(REVIEW_MANAGER):
     return
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
 
     record_header_list = REVIEW_MANAGER.get_record_header_list()
     imported_origins = [x[1].split(";") for x in record_header_list]
@@ -684,7 +661,10 @@ def get_data(REVIEW_MANAGER):
         x for x in additional_records if x["origin"] not in imported_origins
     ]
 
-    return {"nr_tasks": len(additional_records), "items": additional_records}
+    load_data = {"nr_tasks": len(additional_records), "items": additional_records}
+    logger.debug(pp.pformat(load_data))
+
+    return load_data
 
 
 def batch(iterable, n=1):
@@ -699,9 +679,8 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     if not keep_ids:
         del saved_args["keep_ids"]
 
-    check_search_details(REVIEW_MANAGER)
-
     convert_non_bib_search_files(REVIEW_MANAGER)
+    check_search_details(REVIEW_MANAGER)
 
     logger.info("Import")
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
@@ -721,9 +700,8 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
 
         REVIEW_MANAGER.save_record_list_by_ID(load_batch, append_new=True)
 
-        load_batch_IDs = [x["ID"] for x in load_batch]
         if not keep_ids:
-            REVIEW_MANAGER.set_IDs(selected_IDs=load_batch_IDs)
+            REVIEW_MANAGER.set_IDs(selected_IDs=[x["ID"] for x in load_batch])
 
         order_bib_file(REVIEW_MANAGER)
 

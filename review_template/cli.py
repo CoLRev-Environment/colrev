@@ -4,6 +4,7 @@ import logging
 import os
 import pprint
 from collections import OrderedDict
+from pathlib import Path
 
 import ansiwrap
 import click
@@ -401,12 +402,12 @@ def check_update_search_details(REVIEW_MANAGER) -> None:
     for sfp in search_files:
         # Note : for non-bib files, we check search_details for corresponding bib file
         # (which will be created later in the process)
-        if not sfp.endswith("bib"):
-            sfp = sfp[: sfp.rfind(".")] + ".bib"
-        search_file = os.path.basename(sfp)
-        if search_file not in [x["filename"] for x in search_details]:
-            source_name = load.source_heuristics(sfp)
-            print(f"Please provide details for {search_file}")
+        original = sfp
+        if sfp.suffix != ".bib":
+            sfp = sfp.with_suffix(".bib")
+        if sfp.name not in [x["filename"] for x in search_details]:
+            source_name = load.source_heuristics(original)
+            print(f"Please provide details for {sfp.name}")
             search_type = "TODO"
             while search_type not in REVIEW_MANAGER.search_type_opts:
                 print(f"Search type options: {REVIEW_MANAGER.search_type_opts}")
@@ -422,7 +423,7 @@ def check_update_search_details(REVIEW_MANAGER) -> None:
             comment = input("Enter a comment (or NA)".ljust(40, " ") + ": ")
 
             new_record = {
-                "filename": search_file,
+                "filename": sfp.name,
                 "search_type": search_type,
                 "source_name": source_name,
                 "source_url": source_url,
@@ -536,10 +537,12 @@ def dedupe(ctx) -> None:
         pass
     except KeyboardInterrupt:
         logging.error("KeyboardInterrupt")
-        if os.path.exists("non_duplicates.csv"):
-            os.remove("non_duplicates.csv")
-        if os.path.exists("queue_order.csv"):
-            os.remove("queue_order.csv")
+        n_dupe_file = Path("non_duplicates.csv")
+        if n_dupe_file.is_file():
+            os.remove(n_dupe_file)
+        queue_order_file = Path("queue_order.csv")
+        if queue_order_file.is_file():
+            os.remove(queue_order_file)
         pass
     return
 
@@ -1221,25 +1224,24 @@ def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
         #  'get_pdf_from_researchgate': get_pdf_from_researchgate,
     }
 
-    filepath = os.path.join(
-        REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
-    )
+    filepath = REVIEW_MANAGER.paths["PDF_DIRECTORY"] / f"{record['ID']}.pdf"
+
     for retrieval_script in retrieval_scripts:
         logger.debug(f'{retrieval_script}({record["ID"]}) called')
         record = retrieval_scripts[retrieval_script](record)
         if "y" == input("Retrieved (y/n)?"):
             # TODO : some of the following should be moved
             # to the pdf_get_man script ("apply changes")
-            if not os.path.exists(filepath):
+            if not filepath.is_file():
                 print(f'File does not exist: {record["ID"]}.pdf')
             else:
-                filepath = os.path.join(
-                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"],
-                    record["ID"] + ".pdf",
+                filepath = (
+                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                    / f"{record['ID']}.pdf"
                 )
                 pdf_get_man.set_data(REVIEW_MANAGER, record, filepath)
                 break
-    if not os.path.exists(filepath):
+    if not filepath.is_file():
         if "y" == input("Set to pdf_not_available (y/n)?"):
             pdf_get_man.set_data(REVIEW_MANAGER, record, None)
 
@@ -1256,10 +1258,10 @@ def pdf_get_man_cli(REVIEW_MANAGER):
     PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
 
     bib_db = REVIEW_MANAGER.load_bib_db()
-    bib_db = pdf_get.check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
+    bib_db = pdf_get.check_existing_unlinked_pdfs(REVIEW_MANAGER, bib_db)
 
     for record in bib_db.entries:
-        record = pdf_get.link_pdf(record, PDF_DIRECTORY, set_needs_man_retrieval=False)
+        record = pdf_get.link_pdf(record, REVIEW_MANAGER)
 
     pdf_get_man.export_retrieval_table(bib_db)
 
@@ -1321,10 +1323,8 @@ def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
 
     print("Manual preparation needed (TODO: include details)")
 
-    filepath = os.path.join(
-        REVIEW_MANAGER.paths["PDF_DIRECTORY"], record["ID"] + ".pdf"
-    )
-    if not os.path.exists(filepath):
+    filepath = REVIEW_MANAGER.paths["PDF_DIRECTORY"] / f"{record['ID']}.pdf"
+    if not filepath.is_file():
         print(f'File does not exist: {record["ID"]}.pdf')
     else:
         if "y" == input("Prepared? (y/n)?"):

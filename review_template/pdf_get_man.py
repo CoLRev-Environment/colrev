@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 import csv
 import logging
+import pprint
+from pathlib import Path
 
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
@@ -9,11 +11,10 @@ from review_template.review_manager import RecordState
 
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
 # https://github.com/ContentMine/getpapers
-
-existing_pdfs_linked = 0
 
 
 def get_pdf_get_man(bib_db: BibDatabase) -> list:
@@ -26,6 +27,7 @@ def get_pdf_get_man(bib_db: BibDatabase) -> list:
 
 def export_retrieval_table(bib_db: BibDatabase) -> None:
     missing_records = get_pdf_get_man(bib_db)
+    missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
     if len(missing_records) > 0:
         missing_records_df = pd.DataFrame.from_records(missing_records)
@@ -43,14 +45,14 @@ def export_retrieval_table(bib_db: BibDatabase) -> None:
         ]
         missing_records_df = missing_records_df.reindex(col_order, axis=1)
         missing_records_df.to_csv(
-            "missing_pdf_files.csv", index=False, quoting=csv.QUOTE_ALL
+            missing_pdf_files_csv, index=False, quoting=csv.QUOTE_ALL
         )
 
         logger.info("Created missing_pdf_files.csv with paper details")
     return
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
     from review_template.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(parents=True, exist_ok=True)
@@ -68,7 +70,9 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.pdf_needs_manual_retrieval)}
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    logger.debug(pp.pformat(pdf_get_man_data))
+    return pdf_get_man_data
 
 
 def pdfs_retrieved_maually(REVIEW_MANAGER) -> bool:
@@ -76,7 +80,7 @@ def pdfs_retrieved_maually(REVIEW_MANAGER) -> bool:
     return git_repo.is_dirty()
 
 
-def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
+def set_data(REVIEW_MANAGER, record, filepath: Path, PAD: int = 40) -> None:
 
     git_repo = REVIEW_MANAGER.get_repo()
 
@@ -89,9 +93,9 @@ def set_data(REVIEW_MANAGER, record, filepath: str, PAD: int = 40) -> None:
 
     else:
         record.update(status=RecordState.pdf_imported)
-        record.update(file=filepath)
+        record.update(file=str(filepath))
         if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-            git_repo.index.add([filepath])
+            git_repo.index.add([str(filepath)])
         report_logger.info(
             f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
         )

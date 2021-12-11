@@ -1,7 +1,8 @@
 #! /usr/bin/env python
 import csv
 import logging
-import os
+import pprint
+from pathlib import Path
 
 import pandas as pd
 
@@ -9,6 +10,7 @@ from review_template.review_manager import RecordState
 
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
+pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
 def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
@@ -73,17 +75,17 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
 
 def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
+
     bib_db = REVIEW_MANAGER.load_bib_db()
-    if not os.path.exists(import_table_path):
+    if not Path(import_table_path).is_file():
         logger.error(f"Did not find {import_table_path} - exiting.")
         return
     screen_df = pd.read_csv(import_table_path)
     screen_df.fillna("", inplace=True)
     records = screen_df.to_dict("records")
 
-    logger.warning(
-        "import_table not yet completed " "(exclusion_criteria are not yet imported)"
-    )
+    logger.warning("import_table not completed (exclusion_criteria not yet imported)")
+
     for x in [
         [x.get("ID", ""), x.get("inclusion_1", ""), x.get("inclusion_2", "")]
         for x in records
@@ -130,7 +132,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     return
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
     from review_template.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
@@ -143,7 +145,9 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_processed)}
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    logger.debug(pp.pformat(prescreen_data))
+    return prescreen_data
 
 
 def set_data(

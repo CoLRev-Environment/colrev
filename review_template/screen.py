@@ -8,8 +8,7 @@ pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
-
-MAIN_REFERENCES = "NA"
+pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
 def get_excl_criteria(ec_string: str) -> list:
@@ -49,7 +48,9 @@ def get_data(REVIEW_MANAGER):
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.pdf_prepared)}
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    logger.debug(pp.pformat(screen_data))
+    return screen_data
 
 
 def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:

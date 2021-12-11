@@ -5,6 +5,7 @@ import multiprocessing as mp
 import os
 import pprint
 from itertools import chain
+from pathlib import Path
 
 import bibtexparser
 import dictdiffer
@@ -23,24 +24,25 @@ CPUS = -1
 logger = logging.getLogger("review_template")
 
 
-def load_records(bib_file: str) -> list:
+def load_records(bib_file: Path) -> list:
 
     with open(bib_file) as bibtex_file:
         individual_bib_db = bibtexparser.bparser.BibTexParser(
             customization=convert_to_unicode,
             common_strings=True,
         ).parse_file(bibtex_file, partial=True)
-        search_file = os.path.basename(bib_file)
         for record in individual_bib_db.entries:
-            record["origin"] = search_file + "/" + record["ID"]
+            record["origin"] = bib_file.stem + "/" + record["ID"]
 
     return individual_bib_db.entries
 
 
 def get_search_records(REVIEW_MANAGER) -> list:
 
+    search_dir = REVIEW_MANAGER.paths["SEARCHDIR"]
+
     pool = mp.Pool(CPUS)
-    records = pool.map(load_records, REVIEW_MANAGER.get_bib_files())
+    records = pool.map(load_records, search_dir.glob("*.bib"))
     records = list(chain(*records))
 
     return records
@@ -165,15 +167,15 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
         logger.info("Loading data from history...")
         repo = git.Repo()
 
-        MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
 
         revlist = (
-            (commit.hexsha, (commit.tree / MAIN_REFERENCES).data_stream.read())
-            for commit in repo.iter_commits(paths=MAIN_REFERENCES)
+            (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
+            for commit in repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
         )
         found = False
         for commit, filecontents in list(revlist):
-            if found:  # load the MAIN_REFERENCES in the following commit
+            if found:  # load the MAIN_REFERENCES_RELATIVE in the following commit
                 prior_bib_db = bibtexparser.loads(filecontents)
                 break
             if commit == target_commit:
@@ -195,7 +197,13 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
 
 def validate_properties(target_commit: str) -> None:
     # TODO: option: --history: check all preceding commits (create a list...)
-    repo = git.Repo()
+
+    from review_template.review_manager import ReviewManager, ProcessType, Process
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
+    repo = REVIEW_MANAGER.get_repo()
+
     cur_sha = repo.head.commit.hexsha
     cur_branch = repo.active_branch.name
     logger.info(f"Current commit: {cur_sha} (branch {cur_branch})")
@@ -210,9 +218,7 @@ def validate_properties(target_commit: str) -> None:
     if not target_commit == cur_sha:
         logger.info(f"Check out target_commit = {target_commit}")
         repo.git.checkout(target_commit)
-    from review_template.review_manager import ReviewManager
 
-    REVIEW_MANAGER = ReviewManager()
     completeness_condition = status.get_completeness_condition(REVIEW_MANAGER)
     if completeness_condition:
         logger.info("Completeness of iteration".ljust(32, " ") + "YES (validated)")

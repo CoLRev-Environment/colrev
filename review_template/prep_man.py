@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import logging
-import os
 import pprint
+from pathlib import Path
 
 import bibtexparser
 import pandas as pd
@@ -14,7 +14,6 @@ from review_template.review_manager import RecordState
 
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
-
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -23,7 +22,7 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     # TODO : this function mixes return values and saving to files.
-    logger.info("Load references.bib")
+    logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
     bib_db = REVIEW_MANAGER.load_bib_db()
 
     logger.info("Calculate statistics")
@@ -98,7 +97,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     from review_template.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
-    logger.info("Load references")
+    logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
     bib_db = REVIEW_MANAGER.load_bib_db()
 
     bib_db.entries = [
@@ -107,8 +106,8 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
         if RecordState.md_needs_manual_preparation == record["status"]
     ]
 
-    os.mkdir("prep_man")
-    os.mkdir("prep_man/search")
+    Path("prep_man").mkdir(exist_ok=True)
+    Path("prep_man/search").mkdir(exist_ok=True)
 
     with open("prep_man/references_need_prep_man_export.bib", "w") as fi:
         fi.write(bibtexparser.dumps(bib_db))
@@ -130,7 +129,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     for file, id_list in search_results_list.items():
         search_db = BibDatabase()
         print(file)
-        with open("search/" + file) as sr_db_path:
+        with open(REVIEW_MANAGER.paths["SEARCHDIR"] / file) as sr_db_path:
             sr_db = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=False,
@@ -147,7 +146,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     return
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
     from review_template.review_manager import RecordState, ProcessType, Process
 
     REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
@@ -164,9 +163,11 @@ def get_data(REVIEW_MANAGER):
     all_ids = [x[0] for x in record_state_list]
 
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.md_needs_manual_preparation)}
     )
+
     md_prep_man_data = {
         "nr_tasks": nr_tasks,
         "items": items,
@@ -177,7 +178,7 @@ def get_data(REVIEW_MANAGER):
     return md_prep_man_data
 
 
-def set_data(REVIEW_MANAGER, record, PAD: int = 40):
+def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
     from review_template.review_manager import RecordState
 
     # TODO: log details for processing_report

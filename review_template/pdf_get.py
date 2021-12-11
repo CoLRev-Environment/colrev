@@ -1,35 +1,36 @@
 #! /usr/bin/env python
 import json
 import logging
-import multiprocessing as mp
 import os
+import pprint
+from pathlib import Path
 
 import requests
 from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
+from tqdm.contrib.concurrent import process_map
 
 from review_template import dedupe
 from review_template import grobid_client
 from review_template import tei_tools
 from review_template.review_manager import RecordState
 
+pp = pprint.PrettyPrinter(indent=4, width=140)
+
+
 report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 # https://github.com/ContentMine/getpapers
 
-PDF_DIRECTORY, BATCH_SIZE, EMAIL = "NA", -1, "NA"
-
-current_batch_counter = mp.Value("i", 0)
-linked_existing_files = False
+EMAIL = "NA"
 
 
 def unpaywall(doi: str, retry: int = 0, pdfonly: bool = True) -> str:
 
-    r = requests.get(
-        "https://api.unpaywall.org/v2/{doi}",
-        params={"email": EMAIL},
-    )
+    url = "https://api.unpaywall.org/v2/{doi}"
+
+    r = requests.get(url, params={"email": EMAIL})
 
     if r.status_code == 404:
         return None
@@ -65,11 +66,14 @@ def is_pdf(path_to_file: str) -> bool:
         return False
 
 
-def get_pdf_from_unpaywall(record: dict) -> dict:
+def get_pdf_from_unpaywall(record: dict, REVIEW_MANAGER) -> dict:
+
     if "doi" not in record:
         return record
 
-    pdf_filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
+    pdf_filepath = (
+        REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / f"{record['ID']}.pdf"
+    )
     url = unpaywall(record["doi"])
     if url is not None:
         if "Invalid/unknown DOI" not in url:
@@ -84,8 +88,12 @@ def get_pdf_from_unpaywall(record: dict) -> dict:
                 with open(pdf_filepath, "wb") as f:
                     f.write(res.content)
                 if is_pdf(pdf_filepath):
-                    report_logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
-                    logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath}")
+                    report_logger.info(
+                        "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
+                    )
+                    logger.info("Retrieved pdf (unpaywall):" f" {pdf_filepath.name}")
+                    record.update(file=str(pdf_filepath))
+                    record.update(status=RecordState.rev_prescreen_included)
                 else:
                     os.remove(pdf_filepath)
             else:
@@ -93,88 +101,62 @@ def get_pdf_from_unpaywall(record: dict) -> dict:
     return record
 
 
-def link_pdf(
-    record: dict, PDF_DIRECTORY: str, set_needs_man_retrieval: bool = True
-) -> dict:
+def link_pdf(record: dict, REVIEW_MANAGER) -> dict:
+    PDF_DIRECTORY_RELATIVE = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
     global PAD
     if "PAD" not in globals():
         PAD = 40
-    pdf_filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
-    if os.path.exists(pdf_filepath) and pdf_filepath != record.get("file", "NA"):
-        record.update(status=RecordState.pdf_imported)
-        record.update(file=pdf_filepath)
-        report_logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
-        logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "linked pdf")
-    else:
-        if set_needs_man_retrieval:
-            record.update(status=RecordState.pdf_needs_manual_retrieval)
+    pdf_filepath = PDF_DIRECTORY_RELATIVE / f"{record['ID']}.pdf"
+    if pdf_filepath.is_file() and str(pdf_filepath) != record.get("file", "NA"):
+        record.update(file=str(pdf_filepath))
+
     return record
 
 
-def retrieve_pdf(record: dict) -> dict:
-    if RecordState.rev_prescreen_included != record["status"]:
+retrieval_scripts = {
+    "get_pdf_from_unpaywall": get_pdf_from_unpaywall,
+    "link_pdf": link_pdf,
+}
+
+
+def retrieve_pdf(item: dict) -> dict:
+    record = item["record"]
+
+    if str(RecordState.rev_prescreen_included) != str(record["status"]):
         return record
 
-    with current_batch_counter.get_lock():
-        if current_batch_counter.value >= BATCH_SIZE:
-            return record
-        else:
-            current_batch_counter.value += 1
-
-    retrieval_scripts = {"get_pdf_from_unpaywall": get_pdf_from_unpaywall}
+    REVIEW_MANAGER = item["REVIEW_MANAGER"]
 
     for retrieval_script in retrieval_scripts:
-        logger.debug(f'{retrieval_script}({record["ID"]}) called')
-        record = retrieval_scripts[retrieval_script](record)
-
-    record = get_pdf_from_unpaywall(record)
-
-    record = link_pdf(record, PDF_DIRECTORY)
+        report_logger.info(f'{retrieval_script}({record["ID"]}) called')
+        record = retrieval_scripts[retrieval_script](record, REVIEW_MANAGER)
+        if "file" in record:
+            report_logger.info(
+                f'{retrieval_script}({record["ID"]}): retrieved {record["file"]}'
+            )
+            record.update(status=RecordState.pdf_imported)
+        else:
+            record.update(status=RecordState.pdf_needs_manual_retrieval)
 
     return record
 
 
-def get_missing_records(bib_db: BibDatabase) -> BibDatabase:
-    missing_records = BibDatabase()
-    for record in bib_db.entries:
-        if record["status"] in [
-            RecordState.rev_prescreen_included,
-            RecordState.pdf_needs_manual_retrieval,
-        ]:
-            missing_records.entries.append(record)
-    return missing_records
+def add_to_git(REVIEW_MANAGER, retrieval_batch) -> None:
+    git_repo = REVIEW_MANAGER.get_repo()
+    if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
+        if REVIEW_MANAGER.paths["PDF_DIRECTORY"].is_dir():
+            for record in retrieval_batch:
+                if "file" in record:
+                    if Path(record["file"]).is_file():
+                        git_repo.index.add([record["file"]])
 
-
-def print_details(missing_records: BibDatabase) -> None:
-    # TODO: instead of a global counter, compare prior/latter stats
-    # like prepare/set_stats_beginning, print_stats_end
-    # global pdfs_retrieved
-    # if pdfs_retrieved > 0:
-    #     logger.info(f'{pdfs_retrieved} PDFs retrieved')
-    # else:
-    #     logger.info('No PDFs retrieved')
-    if len(missing_records.entries) > 0:
-        report_logger.info(f"{len(missing_records.entries)} PDFs missing ")
-        logger.info(f"{len(missing_records.entries)} PDFs missing ")
     return
 
 
-def get_pdfs_from_dir(directory: str) -> list:
-    list_of_files = []
-    for (dirpath, dirnames, filenames) in os.walk(directory):
-        for filename in filenames:
-            if filename.endswith(".pdf"):
-                list_of_files.append(os.path.join(dirpath, filename))
-    return list_of_files
-
-
 def check_existing_unlinked_pdfs(
-    bib_db: BibDatabase, PDF_DIRECTORY: str
+    REVIEW_MANAGER,
+    bib_db: BibDatabase,
 ) -> BibDatabase:
-    global linked_existing_files
-    pdf_files = get_pdfs_from_dir(PDF_DIRECTORY)
-    if not pdf_files:
-        return bib_db
 
     report_logger.info("Starting GROBID service to extract metadata from PDFs")
     logger.info("Starting GROBID service to extract metadata from PDFs")
@@ -182,8 +164,9 @@ def check_existing_unlinked_pdfs(
 
     IDs = [x["ID"] for x in bib_db.entries]
 
+    pdf_files = Path(REVIEW_MANAGER.paths["PDF_DIRECTORY"]).glob("*.pdf")
     for file in pdf_files:
-        if os.path.basename(file).replace(".pdf", "") not in IDs:
+        if file.stem not in IDs:
 
             pdf_record = tei_tools.get_record_from_pdf_tei(file)
 
@@ -201,17 +184,20 @@ def check_existing_unlinked_pdfs(
             if max_similarity > 0.5:
                 if RecordState.pdf_prepared == max_sim_record["status"]:
                     continue
-                new_filename = os.path.join(
-                    os.path.dirname(file), max_sim_record["ID"] + ".pdf"
+                new_filename = (
+                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                    / f"{max_sim_record['ID']}.pdf"
                 )
-                max_sim_record.update(file=new_filename)
+
+                max_sim_record.update(file=str(new_filename))
                 max_sim_record.update(status=RecordState.pdf_imported)
-                linked_existing_files = True
-                os.rename(file, new_filename)
+                file.rename(new_filename)
                 report_logger.info(
-                    "checked and renamed pdf:" f" {file} > {new_filename}"
+                    "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
                 )
-                logger.info("checked and renamed pdf:" f" {file} > {new_filename}")
+                logger.info(
+                    "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
+                )
                 # max_sim_record = \
                 #     pdf_prepare.validate_pdf_metadata(max_sim_record)
                 # status = max_sim_record['status']
@@ -221,76 +207,102 @@ def check_existing_unlinked_pdfs(
     return bib_db
 
 
+def get_data(REVIEW_MANAGER) -> dict:
+    from review_template.review_manager import RecordState
+
+    record_state_list = REVIEW_MANAGER.get_record_state_list()
+    nr_tasks = len(
+        [
+            x
+            for x in record_state_list
+            if str(RecordState.rev_prescreen_included) == x[1]
+        ]
+    )
+
+    PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+    items = REVIEW_MANAGER.read_next_record(
+        conditions={"status": str(RecordState.rev_prescreen_included)},
+    )
+
+    prep_data = {
+        "nr_tasks": nr_tasks,
+        "PAD": PAD,
+        "items": items,
+    }
+    logger.debug(pp.pformat(prep_data))
+    return prep_data
+
+
+def batch(items, REVIEW_MANAGER):
+    n = REVIEW_MANAGER.config["BATCH_SIZE"]
+    batch = []
+    for item in items:
+        batch.append(
+            {
+                "record": item,
+                "REVIEW_MANAGER": REVIEW_MANAGER,
+            }
+        )
+        if len(batch) == n:
+            yield batch
+            batch = []
+    yield batch
+
+
 def main(REVIEW_MANAGER) -> None:
-    global linked_existing_files
+
     saved_args = locals()
 
-    global PDF_DIRECTORY
-    global BATCH_SIZE
+    print("TODO: download if there is a fulltext link in the record")
+
     global EMAIL
     EMAIL = REVIEW_MANAGER.config["EMAIL"]
+    CPUS = REVIEW_MANAGER.config["CPUS"]
+
     PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
-
-    bib_db = REVIEW_MANAGER.load_bib_db()
-
-    global PAD
-    PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
-    print("TODO: download if there is a fulltext link in the record")
-    if not os.path.exists(PDF_DIRECTORY):
-        os.mkdir(PDF_DIRECTORY)
+    PDF_DIRECTORY.mkdir(exist_ok=True)
 
     report_logger.info("Retrieve PDFs")
     logger.info("Retrieve PDFs")
 
-    bib_db = check_existing_unlinked_pdfs(bib_db, PDF_DIRECTORY)
+    bib_db = REVIEW_MANAGER.load_bib_db()
+    bib_db = check_existing_unlinked_pdfs(REVIEW_MANAGER, bib_db)
 
-    in_process = True
-    batch_start, batch_end = 1, 0
-    while in_process:
-        with current_batch_counter.get_lock():
-            batch_start += current_batch_counter.value
-            current_batch_counter.value = 0  # start new batch
-        if batch_start > 1:
-            logger.info("Continuing batch preparation started earlier")
+    pdf_get_data = get_data(REVIEW_MANAGER)
+    logger.debug(f"pdf_get_data: {pp.pformat(pdf_get_data)}")
 
-        pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-        bib_db.entries = pool.map(retrieve_pdf, bib_db.entries)
-        pool.close()
-        pool.join()
+    global PAD
+    PAD = pdf_get_data["PAD"]
 
-        with current_batch_counter.get_lock():
-            batch_end = current_batch_counter.value + batch_start - 1
+    logger.debug(pp.pformat(pdf_get_data["items"]))
 
-        missing_records = get_missing_records(bib_db)
+    try:
+        from local_paper_index import retrieve
 
-        if batch_end > 0 or linked_existing_files:
-            msg = (
-                f"Completed pdf retrieval batch (records {batch_start} to {batch_end})"
-            )
-            report_logger.info(msg)
-            logger.info(msg)
+        retrieval_scripts["get_pdf_from_local_index"] = retrieve.individual_record
+    except ImportError as e:
+        logger.debug(e)
+        pass
 
-            print_details(missing_records)
+    i = 1
+    for retrieval_batch in batch(pdf_get_data["items"], REVIEW_MANAGER):
 
-            REVIEW_MANAGER.save_bib_db(bib_db)
-            git_repo = REVIEW_MANAGER.get_repo()
-            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+        print(f"Batch {i}")
+        i += 1
 
-            if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-                if os.path.exists(PDF_DIRECTORY):
-                    for record in bib_db.entries:
-                        filepath = os.path.join(PDF_DIRECTORY, record["ID"] + ".pdf")
-                        if os.path.exists(filepath):
-                            git_repo.index.add([filepath])
+        retrieval_batch = process_map(retrieve_pdf, retrieval_batch, max_workers=CPUS)
 
-            in_process = REVIEW_MANAGER.create_commit(
-                "Retrieve PDFs", saved_args=saved_args
-            )
+        REVIEW_MANAGER.save_record_list_by_ID(retrieval_batch)
 
-        if batch_end < BATCH_SIZE or batch_end == 0:
-            if batch_end == 0:
-                logger.info("No additional pdfs to retrieve")
-            break
+        # Multiprocessing mixes logs of different records.
+        # For better readability:
+        REVIEW_MANAGER.reorder_log([x["ID"] for x in retrieval_batch])
+
+        add_to_git(REVIEW_MANAGER, retrieval_batch)
+
+        REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args=saved_args)
+
+    if i == 1:
+        logger.info("No additional pdfs to retrieve")
 
     return

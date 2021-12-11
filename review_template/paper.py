@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import logging
 import os
+from pathlib import Path
 
 import requests
 
@@ -12,7 +13,7 @@ logger = logging.getLogger("review_template")
 
 def main(REVIEW_MANAGER) -> None:
 
-    if not os.path.exists("paper.md"):
+    if not REVIEW_MANAGER.paths["PAPER"].is_file():
         logger.error("File paper.md does not exist.")
         logger.info("Complete processing and use review_template data")
         return
@@ -23,17 +24,17 @@ def main(REVIEW_MANAGER) -> None:
     gid = os.stat(REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
 
     CSL_FILE = REVIEW_MANAGER.config["CSL"]
-    WORD_TEMPLATE_URL = REVIEW_MANAGER.config["WORD_TEMPLATE_URL"]
+    WORD_TEMPLATE_URL = Path(REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])
+    WORD_TEMPLATE_FILENAME = WORD_TEMPLATE_URL.name
 
     # TODO: maybe update?
-    if not os.path.exists(os.path.basename(WORD_TEMPLATE_URL)):
-        # try:
+    if not WORD_TEMPLATE_FILENAME.is_file():
+
         url = WORD_TEMPLATE_URL
         r = requests.get(url)
-        with open(os.path.basename(WORD_TEMPLATE_URL), "wb") as output:
+        with open(WORD_TEMPLATE_FILENAME, "wb") as output:
             output.write(r.content)
-        # except:
-        #     pass
+
     if "github.com" not in CSL_FILE and not os.path.exists(CSL_FILE):
         CSL_FILE = (
             "https://raw.githubusercontent.com/citation-style-"
@@ -44,7 +45,7 @@ def main(REVIEW_MANAGER) -> None:
     script = (
         "paper.md --citeproc --bibliography references.bib "
         + f"--csl {CSL_FILE} "
-        + f"--reference-doc {os.path.basename(WORD_TEMPLATE_URL)} "
+        + f"--reference-doc {WORD_TEMPLATE_FILENAME} "
         + "--output paper.docx"
     )
 
@@ -62,7 +63,6 @@ def main(REVIEW_MANAGER) -> None:
         )
     except docker.errors.ImageNotFound:
         logger.error("Docker image not found")
-        return
         pass
 
     return

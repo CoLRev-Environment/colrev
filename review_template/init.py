@@ -50,6 +50,7 @@ def require_empty_directory():
     cur_content = os.listdir(os.getcwd())
     if "venv" in cur_content:
         cur_content.remove("venv")
+        # Note: we can use paths directly when initiating the project
     if "report.log" in cur_content:
         cur_content.remove("report.log")
 

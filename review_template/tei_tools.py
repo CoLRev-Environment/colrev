@@ -19,7 +19,7 @@ nsmap = {
 GROBID_URL = "http://localhost:8070"
 
 
-def start_grobid():
+def start_grobid() -> bool:
     r = requests.get(GROBID_URL + "/api/isalive")
     if r.text == "true":
         # print('Docker running')
@@ -51,7 +51,7 @@ def start_grobid():
     return False
 
 
-def get_paper_title(root):
+def get_paper_title(root) -> str:
     title_text = "NA"
     file_description = root.find(".//" + ns["tei"] + "fileDesc")
     if file_description is not None:
@@ -69,7 +69,7 @@ def get_paper_title(root):
     return title_text
 
 
-def get_paper_journal(root):
+def get_paper_journal(root) -> str:
     journal_name = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     if file_description.find(".//" + ns["tei"] + "monogr") is not None:
@@ -85,7 +85,7 @@ def get_paper_journal(root):
     return journal_name
 
 
-def get_paper_journal_volume(root):
+def get_paper_journal_volume(root) -> str:
     volume = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     if file_description.find(".//" + ns["tei"] + "monogr") is not None:
@@ -101,7 +101,7 @@ def get_paper_journal_volume(root):
     return volume
 
 
-def get_paper_journal_issue(root):
+def get_paper_journal_issue(root) -> str:
     issue = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     if file_description.find(".//" + ns["tei"] + "monogr") is not None:
@@ -117,7 +117,7 @@ def get_paper_journal_issue(root):
     return issue
 
 
-def get_paper_journal_pages(root):
+def get_paper_journal_pages(root) -> str:
     pages = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     if file_description is not None:
@@ -137,7 +137,7 @@ def get_paper_journal_pages(root):
     return pages
 
 
-def get_paper_year(root):
+def get_paper_year(root) -> str:
     year = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     if file_description.find(".//" + ns["tei"] + "monogr") is not None:
@@ -153,7 +153,7 @@ def get_paper_year(root):
     return year
 
 
-def get_paper_authors(root):
+def get_paper_authors(root) -> str:
     author_string = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     author_list = []
@@ -224,10 +224,8 @@ def get_paper_authors(root):
         author_string = "NA"
     return author_string
 
-    return "NA"
 
-
-def get_paper_doi(root):
+def get_paper_doi(root) -> str:
     doi = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     bibl_struct = file_description.find(".//" + ns["tei"] + "biblStruct")

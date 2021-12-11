@@ -1,13 +1,16 @@
 #! /usr/bin/env python
 import logging
+import pprint
 
 from review_template.review_manager import RecordState
 
 
-logger = logging.getLogger("review_template_report")
+report_logger = logging.getLogger("review_template_report")
+logger = logging.getLogger("review_template")
+pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
     from review_template.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep_man))
@@ -21,10 +24,13 @@ def get_data(REVIEW_MANAGER):
         ]
     )
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
+
     items = REVIEW_MANAGER.read_next_record(
         conditions={"status": str(RecordState.pdf_needs_manual_preparation)}
     )
-    return {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
+    logger.debug(pp.pformat(pdf_prep_man_data))
+    return pdf_prep_man_data
 
 
 def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:

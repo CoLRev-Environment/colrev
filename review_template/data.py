@@ -2,10 +2,10 @@
 import itertools
 import json
 import logging
-import os
 import re
-import sys
+import tempfile
 from collections import Counter
+from pathlib import Path
 
 import pandas as pd
 import yaml
@@ -19,10 +19,9 @@ report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 PAD = 0
-MANUSCRIPT, MANUSCRIPT_RELATIVE, DATA = "NA", "NA", "NA"
 
 
-def get_records_for_synthesis(bib_db) -> list:
+def get_records_for_synthesis(bib_db: BibDatabase) -> list:
     return [
         x["ID"]
         for x in bib_db.entries
@@ -30,9 +29,9 @@ def get_records_for_synthesis(bib_db) -> list:
     ]
 
 
-def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
+def get_data_page_missing(PAPER: Path, records: dict) -> list:
     available = []
-    with open(MANUSCRIPT) as f:
+    with open(PAPER) as f:
         line = f.read()
         for record in records:
             if record in line:
@@ -41,9 +40,9 @@ def get_data_page_missing(MANUSCRIPT: str, records: dict) -> list:
     return list(set(records) - set(available))
 
 
-def get_to_synthesize_in_manuscript(MANUSCRIPT, records_for_synthesis: list) -> list:
+def get_to_synthesize_in_manuscript(PAPER: Path, records_for_synthesis: list) -> list:
     in_manuscript_to_synthesize = []
-    with open(MANUSCRIPT) as f:
+    with open(PAPER) as f:
         for line in f:
             if "<!-- NEW_RECORD_SOURCE -->" in line:
                 while line != "":
@@ -60,14 +59,14 @@ def get_to_synthesize_in_manuscript(MANUSCRIPT, records_for_synthesis: list) -> 
     return in_manuscript_to_synthesize
 
 
-def get_synthesized_ids(bib_db: BibDatabase, MANUSCRIPT) -> list:
+def get_synthesized_ids(bib_db: BibDatabase, PAPER: Path) -> list:
 
     records_for_synthesis = get_records_for_synthesis(bib_db)
 
     in_manuscript_to_synthesize = get_to_synthesize_in_manuscript(
-        MANUSCRIPT, records_for_synthesis
+        PAPER, records_for_synthesis
     )
-    # Assuming that all records have been added to the MANUSCRIPT before
+    # Assuming that all records have been added to the PAPER before
     synthesized = [
         x for x in records_for_synthesis if x not in in_manuscript_to_synthesize
     ]
@@ -75,7 +74,7 @@ def get_synthesized_ids(bib_db: BibDatabase, MANUSCRIPT) -> list:
     return synthesized
 
 
-def get_data_extracted(records_for_data_extraction: list) -> list:
+def get_data_extracted(DATA: Path, records_for_data_extraction: list) -> list:
     data_extracted = []
     with open(DATA) as f:
         data_df = pd.json_normalize(safe_load(f))
@@ -90,8 +89,9 @@ def get_data_extracted(records_for_data_extraction: list) -> list:
     return data_extracted
 
 
-def get_structured_data_extracted(bib_db: BibDatabase) -> list:
-    if not os.path.exists(DATA):
+def get_structured_data_extracted(bib_db: BibDatabase, DATA: Path) -> list:
+
+    if not DATA.is_dir():
         return []
 
     records_for_data_extraction = [
@@ -100,71 +100,18 @@ def get_structured_data_extracted(bib_db: BibDatabase) -> list:
         if x["status"] in [RecordState.rev_included, RecordState.rev_synthesized]
     ]
 
-    data_extracted = get_data_extracted(records_for_data_extraction)
+    data_extracted = get_data_extracted(DATA, records_for_data_extraction)
 
     data_extracted = [x for x in data_extracted if x in records_for_data_extraction]
 
     return data_extracted
 
 
-def update_manuscript(
-    REVIEW_MANAGER, bib_db: BibDatabase, included: list
-) -> BibDatabase:
-
-    if os.path.exists(MANUSCRIPT):
-        report_logger.info("Updating manuscript")
-        logger.info("Updating manuscript")
-        missing_records = get_data_page_missing(MANUSCRIPT, included)
-        missing_records = sorted(missing_records)
-    else:
-        missing_records = included
-        report_logger.info("Creating manuscript")
-        logger.info("Creating manuscript")
-
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    if 0 == len(missing_records):
-        report_logger.info(f"All records included in {MANUSCRIPT_RELATIVE}")
-        logger.info(f"All records included in {MANUSCRIPT_RELATIVE}")
-        return bib_db
-
-    git_repo = REVIEW_MANAGER.get_repo()
-    changedFiles = [item.a_path for item in git_repo.index.diff(None)]
-    if MANUSCRIPT in changedFiles:
-        logger.error(
-            f"Changes in {MANUSCRIPT}. Use git add {MANUSCRIPT} and try again."
-        )
-        sys.exit()
-
-    title = "Manuscript template"
-    if os.path.exists("readme.md"):
-        with open("readme.md") as f:
-            title = f.readline()
-            title = title.replace("# ", "").replace("\n", "")
-
-    commits_list = list(git_repo.iter_commits())
-    commits_auhtors = []
-    for commit in commits_list:
-        committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
-        if "GitHub" == committer:
-            continue
-        commits_auhtors.append(committer)
-        # author = repo.git.show("-s", "--format=%an", commit.hexsha)
-        # mail = repo.git.show("-s", "--format=%ae", commit.hexsha)
-    author = ", ".join(dict(Counter(commits_auhtors)))
-
-    if not os.path.exists(MANUSCRIPT):
-        review_manager.retrieve_package_file(
-            "template/" + MANUSCRIPT_RELATIVE, str(MANUSCRIPT)
-        )
-        review_manager.inplace_change(MANUSCRIPT, "{{project_title}}", title)
-        review_manager.inplace_change(MANUSCRIPT, "{{author}}", author)
-        logger.info(f"Please update title and authors in {MANUSCRIPT_RELATIVE}")
-
-    temp = str(MANUSCRIPT).replace(".md", "_temp.md")
-    os.rename(MANUSCRIPT, temp)
-    with open(temp) as reader, open(MANUSCRIPT, "w") as writer:
-        appended = False
-        completed = False
+def add_missing_records_to_manuscript(PAPER: Path, missing_records: list) -> None:
+    temp = tempfile.NamedTemporaryFile()
+    PAPER.rename(temp.name)
+    with open(temp.name) as reader, open(PAPER, "w") as writer:
+        appended, completed = False, False
         line = reader.readline()
         while line != "":
             if "<!-- NEW_RECORD_SOURCE -->" in line:
@@ -178,13 +125,11 @@ def update_manuscript(
                 for missing_record in missing_records:
                     writer.write("- @" + missing_record + "\n")
                     report_logger.info(
-                        f" {missing_record}".ljust(PAD, " ")
-                        + f" added to {MANUSCRIPT_RELATIVE}"
+                        f" {missing_record}".ljust(PAD, " ") + f" added to {PAPER.name}"
                     )
 
                     logger.info(
-                        f" {missing_record}".ljust(PAD, " ")
-                        + f" added to {MANUSCRIPT_RELATIVE}"
+                        f" {missing_record}".ljust(PAD, " ") + f" added to {PAPER.name}"
                     )
 
                 # skip empty lines between to connect lists
@@ -209,7 +154,7 @@ def update_manuscript(
         if not appended:
             msg = (
                 "Marker <!-- NEW_RECORD_SOURCE --> not found in "
-                + f"{MANUSCRIPT}. Adding records at the end of "
+                + f"{PAPER.name}. Adding records at the end of "
                 + "the document."
             )
             report_logger.warning(msg)
@@ -224,11 +169,67 @@ def update_manuscript(
                 report_logger.info(f" {missing_record}".ljust(PAD, " ") + " added")
                 logger.info(f" {missing_record}".ljust(PAD, " ") + " added")
 
-    os.remove(temp)
+    return
 
-    nr_records_added = len(missing_records)
-    report_logger.info(f"{nr_records_added} records added to {MANUSCRIPT_RELATIVE}")
-    logger.info(f"{nr_records_added} records added to {MANUSCRIPT_RELATIVE}")
+
+def authorship_heuristic(REVIEW_MANAGER) -> str:
+    git_repo = REVIEW_MANAGER.get_repo()
+    commits_list = list(git_repo.iter_commits())
+    commits_authors = []
+    for commit in commits_list:
+        committer = git_repo.git.show("-s", "--format=%cn", commit.hexsha)
+        if "GitHub" == committer:
+            continue
+        commits_authors.append(committer)
+        # author = repo.git.show("-s", "--format=%an", commit.hexsha)
+        # mail = repo.git.show("-s", "--format=%ae", commit.hexsha)
+    author = ", ".join(dict(Counter(commits_authors)))
+    return author
+
+
+def update_manuscript(
+    REVIEW_MANAGER, bib_db: BibDatabase, included: list
+) -> BibDatabase:
+
+    PAPER = REVIEW_MANAGER.paths["PAPER"]
+    PAPER_RELATIVE = REVIEW_MANAGER.paths["PAPER_RELATIVE"]
+
+    if not PAPER.is_file():
+        missing_records = included
+
+        report_logger.info("Creating manuscript")
+        logger.info("Creating manuscript")
+
+        title = "Manuscript template"
+        readme_file = REVIEW_MANAGER.paths["README"]
+        if readme_file.is_file():
+            with open(readme_file) as f:
+                title = f.readline()
+                title = title.replace("# ", "").replace("\n", "")
+
+        author = authorship_heuristic(REVIEW_MANAGER)
+
+        review_manager.retrieve_package_file(
+            "template/" + str(PAPER_RELATIVE), str(PAPER)
+        )
+        review_manager.inplace_change(PAPER, "{{project_title}}", title)
+        review_manager.inplace_change(PAPER, "{{author}}", author)
+        logger.info(f"Please update title and authors in {PAPER.name}")
+
+    report_logger.info("Updating manuscript")
+    logger.info("Updating manuscript")
+    missing_records = get_data_page_missing(PAPER, included)
+    missing_records = sorted(missing_records)
+    logger.debug(f"missing_records: {missing_records}")
+
+    if 0 == len(missing_records):
+        report_logger.info(f"All records included in {PAPER.name}")
+        logger.info(f"All records included in {PAPER.name}")
+    else:
+        add_missing_records_to_manuscript(PAPER, missing_records)
+        nr_records_added = len(missing_records)
+        report_logger.info(f"{nr_records_added} records added to {PAPER.name}")
+        logger.info(f"{nr_records_added} records added to {PAPER.name}")
 
     return bib_db
 
@@ -237,7 +238,9 @@ def update_structured_data(
     REVIEW_MANAGER, bib_db: BibDatabase, included: list
 ) -> BibDatabase:
 
-    if not os.path.exists(DATA):
+    DATA = REVIEW_MANAGER.paths["DATA"]
+
+    if not DATA.is_file():
         included = get_records_for_synthesis(bib_db)
 
         coding_dimensions = input("Enter columns for data extraction (comma-separted)")
@@ -288,9 +291,12 @@ def update_structured_data(
 
 
 def update_synthesized_status(REVIEW_MANAGER, bib_db):
-    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
-    synthesized_in_manuscript = get_synthesized_ids(bib_db, MANUSCRIPT)
-    structured_data_extracted = get_structured_data_extracted(bib_db)
+
+    PAPER = REVIEW_MANAGER.paths["PAPER"]
+    DATA = REVIEW_MANAGER.paths["DATA"]
+
+    synthesized_in_manuscript = get_synthesized_ids(bib_db, PAPER)
+    structured_data_extracted = get_structured_data_extracted(bib_db, DATA)
 
     DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
     for record in bib_db.entries:
@@ -310,9 +316,11 @@ def update_synthesized_status(REVIEW_MANAGER, bib_db):
             f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized"
         )
         logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
-    REVIEW_MANAGER.save_bib_file(bib_db)
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+
     return bib_db
 
 
@@ -351,19 +359,9 @@ def main(REVIEW_MANAGER) -> None:
 
     REVIEW_MANAGER.notify(Process(ProcessType.data))
 
-    global MANUSCRIPT
-    MANUSCRIPT = REVIEW_MANAGER.paths["MANUSCRIPT"]
-
-    global MANUSCRIPT_RELATIVE
-    MANUSCRIPT_RELATIVE = str(REVIEW_MANAGER.paths["MANUSCRIPT_RELATIVE"])
-
-    global DATA
-    DATA = REVIEW_MANAGER.paths["DATA"]
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     global PAD
-
-    DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
-    bib_db = REVIEW_MANAGER.load_bib_db()
     PAD = min((max(len(x["ID"]) for x in bib_db.entries) + 2), 35)
 
     included = get_records_for_synthesis(bib_db)
@@ -371,22 +369,23 @@ def main(REVIEW_MANAGER) -> None:
     if 0 == len(included):
         report_logger.info("No records included yet (use review_template screen)")
         logger.info("No records included yet (use review_template screen)")
-        sys.exit()
 
-    if "MANUSCRIPT" in DATA_FORMAT:
-        bib_db = update_manuscript(REVIEW_MANAGER, bib_db, included)
+    else:
+
+        DATA_FORMAT = REVIEW_MANAGER.config["DATA_FORMAT"]
         git_repo = REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(REVIEW_MANAGER.paths["MANUSCRIPT_RELATIVE"])])
-    if "STRUCTURED" in DATA_FORMAT:
-        bib_db = update_structured_data(REVIEW_MANAGER, bib_db, included)
-        git_repo = REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(REVIEW_MANAGER.paths["DATA_RELATIVE"])])
+        if "MANUSCRIPT" in DATA_FORMAT:
+            bib_db = update_manuscript(REVIEW_MANAGER, bib_db, included)
+            git_repo.index.add([str(REVIEW_MANAGER.paths["PAPER_RELATIVE"])])
+        if "STRUCTURED" in DATA_FORMAT:
+            bib_db = update_structured_data(REVIEW_MANAGER, bib_db, included)
+            git_repo.index.add([str(REVIEW_MANAGER.paths["DATA_RELATIVE"])])
 
-    bib_db = update_synthesized_status(REVIEW_MANAGER, bib_db)
+        bib_db = update_synthesized_status(REVIEW_MANAGER, bib_db)
 
-    if "y" == input("Create commit (y/n)?"):
-        REVIEW_MANAGER.create_commit(
-            "Data and synthesis", manual_author=True, saved_args=saved_args
-        )
+        if "y" == input("Create commit (y/n)?"):
+            REVIEW_MANAGER.create_commit(
+                "Data and synthesis", manual_author=True, saved_args=saved_args
+            )
 
     return

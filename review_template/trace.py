@@ -11,7 +11,7 @@ logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 logger = logging.getLogger("review_template")
 
 
-def lpad_multiline(self, s: str, lpad: int) -> str:
+def lpad_multiline(s: str, lpad: int) -> str:
     lines = s.splitlines()
     return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
@@ -20,7 +20,7 @@ def main(REVIEW_MANAGER, ID: str) -> None:
 
     logger.info(f"Trace record by ID: {ID}")
 
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
     DATA = REVIEW_MANAGER.paths["DATA"]
 
     revlist = REVIEW_MANAGER.git_repo.iter_commits()
@@ -40,8 +40,8 @@ def main(REVIEW_MANAGER, ID: str) -> None:
             + f" {commit_message_first_line} (by {commit.author.name})"
         )
 
-        if MAIN_REFERENCES in commit.tree:
-            filecontents = (commit.tree / MAIN_REFERENCES).data_stream.read()
+        if MAIN_REFERENCES_RELATIVE in commit.tree:
+            filecontents = (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read()
             individual_bib_db = bibtexparser.loads(filecontents)
             record = [
                 record for record in individual_bib_db.entries if record["ID"] == ID
