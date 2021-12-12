@@ -562,7 +562,7 @@ def abbreviate_container(record: dict, min_len: int) -> dict:
     return record
 
 
-def get_abbrev_container_min_lin(record: dict) -> int:
+def get_abbrev_container_min_len(record: dict) -> int:
     min_len = -1
     if "journal" in record:
         min_len = min(len(x) for x in record["journal"].replace(".", "").split(" "))
@@ -576,11 +576,11 @@ def get_retrieval_similarity(record: dict, retrieved_record: dict) -> float:
     # TODO: also replace speicla characters (e.g., &amp;)
 
     if container_is_abbreviated(record):
-        min_len = get_abbrev_container_min_lin(record)
+        min_len = get_abbrev_container_min_len(record)
         abbreviate_container(retrieved_record, min_len)
         abbreviate_container(record, min_len)
     if container_is_abbreviated(retrieved_record):
-        min_len = get_abbrev_container_min_lin(retrieved_record)
+        min_len = get_abbrev_container_min_len(retrieved_record)
         abbreviate_container(record, min_len)
         abbreviate_container(retrieved_record, min_len)
 
@@ -1296,6 +1296,7 @@ def drop_fields(record: dict) -> dict:
 
 
 def read_next_record_str() -> str:
+    # TODO : we should use the REVIEW_MANAGER.pahts[...] here
     with open("references.bib") as f:
         data = ""
         first_entry_processed = False
@@ -1439,41 +1440,110 @@ def update_metadata_status(record: dict) -> dict:
     return record
 
 
-def prepare(record: dict) -> dict:
+def update_local_paper_index_fields(
+    record: dict, LOCAL_PAPER_INDEX_FORMAT: dict
+) -> dict:
+
+    if len(LOCAL_PAPER_INDEX_FORMAT) == 0:
+        return record
+
+    if "outlet" in LOCAL_PAPER_INDEX_FORMAT:
+        outlet, container_name = LOCAL_PAPER_INDEX_FORMAT["outlet"].split("=")
+        if "journal" == outlet:
+            record["journal"] = container_name
+            record["ENTRYTYPE"] = "article"
+        if "conference" == outlet:
+            record["booktitle"] = container_name
+            record["ENTRYTYPE"] = "inproceedings"
+
+    sub_dir_pattern = LOCAL_PAPER_INDEX_FORMAT["sub_dir_pattern"]
+
+    r_sub_dir_pattern = ""
+    partial_path = Path(record["file"]).parents[0].stem
+    if "year" == sub_dir_pattern:
+        r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
+        partial_path = Path(record["file"]).parents[0].stem
+        # Note: for year-patterns, we allow subfolders (eg., conference tracks)
+        partial_path = str(Path(record["file"]).parents[0]).replace(
+            LOCAL_PAPER_INDEX_FORMAT["source_url"], ""
+        )
+    if "volume_number" == sub_dir_pattern:
+        r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
+
+    volume, number, year = None, None, None
+    if "volume_number" == sub_dir_pattern:
+        match = r_sub_dir_pattern.search(str(partial_path))
+        if match is not None:
+            volume = match.group(1)
+            number = match.group(2)
+            record["volume"] = volume
+            record["number"] = number
+    if "year" == sub_dir_pattern:
+        match = r_sub_dir_pattern.search(str(partial_path))
+        if match is not None:
+            year = match.group(1)
+            record["year"] = year
+
+    return record
+
+
+def prepare(item: dict) -> dict:
+
+    record = item["record"]
 
     if str(RecordState.md_imported) != str(record["status"]):
         return record
 
     # # Note: we require (almost) perfect matches for the scripts.
     # # Cases with higher dissimilarity will be handled in the prep_man.py
-    prep_scripts = {
-        "drop_fields": drop_fields,
-        "resolve_crossrefs": resolve_crossrefs,
-        "correct_recordtype": correct_recordtype,
-        "format": format,
-        "apply_local_rules": apply_local_rules,
-        "get_md_from_doi": get_md_from_doi,
-        "get_md_from_crossref": get_md_from_crossref,
-        "get_md_from_dblp": get_md_from_dblp,
-        "get_md_from_sem_scholar": get_md_from_sem_scholar,
-        "get_md_from_open_library": get_md_from_open_library,
-        "get_md_from_urls": get_md_from_urls,
-        "get_year_from_vol_iss_jour_crossref": get_year_from_vol_iss_jour_crossref,
-        "remove_nicknames": remove_nicknames,
-        "remove_redundant_fields": remove_redundant_fields,
-        "format_minor": format_minor,
-        "update_metadata_status": update_metadata_status,
-    }
+    prep_scripts = [
+        {"script": drop_fields, "params": record},
+        {
+            "script": update_local_paper_index_fields,
+            "params": [record, item["LOCAL_PAPER_INDEX_FORMAT"]],
+        },
+        {"script": resolve_crossrefs, "params": record},
+        {"script": correct_recordtype, "params": record},
+        {"script": format, "params": record},
+        {"script": apply_local_rules, "params": record},
+        {"script": get_md_from_doi, "params": record},
+        {"script": get_md_from_crossref, "params": record},
+        {"script": get_md_from_dblp, "params": record},
+        {"script": get_md_from_sem_scholar, "params": record},
+        {"script": get_md_from_open_library, "params": record},
+        {"script": get_md_from_urls, "params": record},
+        {"script": get_year_from_vol_iss_jour_crossref, "params": record},
+        {"script": remove_nicknames, "params": record},
+        {"script": remove_redundant_fields, "params": record},
+        {"script": format_minor, "params": record},
+        {"script": update_metadata_status, "params": record},
+    ]
 
     unprepared_record = record.copy()
     short_form = drop_fields(record.copy())
     report_logger.info(
         f'prepare({record["ID"]})' + f" started with: \n{pp.pformat(short_form)}\n\n"
     )
+
     for prep_script in prep_scripts:
+
         prior = record.copy()
-        report_logger.debug(f'{prep_script}({record["ID"]}) called')
-        record = prep_scripts[prep_script](record)
+
+        if [] == prep_script["params"]:
+            report_logger.debug(f'{prep_script["script"].__name__}() called')
+            prep_script["script"]()
+        else:
+            # TODO
+            # if type(prep_script["params"]) != list:
+            #     param_names = prep_script["params"]
+            # else:
+            #     param_names = [x.__name__ for x in prep_script["params"]]
+            report_logger.debug(f'{prep_script["script"].__name__}(params) called')
+            if type(prep_script["params"]) == list:
+                prep_script["script"](*prep_script["params"])
+            else:
+                prep_script["script"](prep_script["params"])
+
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
             report_logger.info(
@@ -1572,10 +1642,38 @@ def set_to_reprocess(REVIEW_MANAGER):
     return
 
 
-def batch(items, n):
+def get_lpi_data(LPI_INDICES, item):
+
+    for LPI_INDDEX in LPI_INDICES:
+        if LPI_INDDEX["filename"] in item["origin"]:
+            return LPI_INDDEX
+    return {}
+
+
+def batch(items, REVIEW_MANAGER):
+    n = REVIEW_MANAGER.config["BATCH_SIZE"]
+
+    search_details = REVIEW_MANAGER.load_search_details()
+
+    LPI_INDICES = [
+        {
+            key: value
+            for key, value in search_detail.items()
+            if "LOCAL_PAPER_INDEX" == search_detail["search_type"]
+            and key
+            in ["filename", "search_type", "source_url", "outlet", "sub_dir_pattern"]
+        }
+        for search_detail in search_details
+    ]
+
     batch = []
     for item in items:
-        batch.append(item)
+        batch.append(
+            {
+                "record": item,
+                "LOCAL_PAPER_INDEX_FORMAT": get_lpi_data(LPI_INDICES, item),
+            }
+        )
         if len(batch) == n:
             yield batch
             batch = []
@@ -1600,14 +1698,12 @@ def main(
     global DEBUG_MODE
     DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
 
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
     CPUS = REVIEW_MANAGER.config["CPUS"] * 5
 
     if reprocess:
         set_to_reprocess(REVIEW_MANAGER)
 
     logger.info("Prepare")
-    logger.info(f"Batch size: {BATCH_SIZE}")
 
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
@@ -1616,7 +1712,7 @@ def main(
     PAD = prepare_data["PAD"]
 
     i = 1
-    for preparation_batch in batch(prepare_data["items"], BATCH_SIZE):
+    for preparation_batch in batch(prepare_data["items"], REVIEW_MANAGER):
 
         print(f"Batch {i}")
         i += 1

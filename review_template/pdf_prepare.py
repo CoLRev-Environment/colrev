@@ -7,9 +7,11 @@ import re
 import subprocess
 from pathlib import Path
 
+import imagehash
 import langdetect
 from bibtexparser.bibdatabase import BibDatabase
 from langdetect import detect_langs
+from pdf2image import convert_from_bytes
 from pdfminer.converter import TextConverter
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
@@ -248,6 +250,16 @@ def validate_completeness(record: dict) -> dict:
     return record
 
 
+def cleanup_pdf_processing_fields(record: dict) -> BibDatabase:
+
+    if "text_from_pdf" in record:
+        del record["text_from_pdf"]
+    if "pages_in_file" in record:
+        del record["pages_in_file"]
+
+    return record
+
+
 prep_scripts = {
     "pdf_check_ocr": pdf_check_ocr,
     "validate_pdf_metadata": validate_pdf_metadata,
@@ -299,6 +311,11 @@ def prepare_pdf(item: dict) -> dict:
         # Remove temporary PDFs when processing has succeeded
         target_fname = REPO_DIR / f'{record["ID"]}.pdf'
         linked_file = REPO_DIR / record["file"]
+        record.update(
+            pdf_hash=imagehash.average_hash(
+                convert_from_bytes(open(linked_file, "rb").read())[0], hash_size=16
+            )
+        )
         if "file" in record:
             # TODO : we may have to consider different subdirectories?
             if target_fname.name != Path(record["file"]).name:
@@ -322,16 +339,6 @@ def prepare_pdf(item: dict) -> dict:
                         os.remove(fpath)
 
     record = cleanup_pdf_processing_fields(record)
-
-    return record
-
-
-def cleanup_pdf_processing_fields(record: dict) -> BibDatabase:
-
-    if "text_from_pdf" in record:
-        del record["text_from_pdf"]
-    if "pages_in_file" in record:
-        del record["pages_in_file"]
 
     return record
 

@@ -64,7 +64,15 @@ def debug_load() -> None:
 def debug_prepare() -> None:
 
     from review_template import prepare
-    from review_template.review_manager import RecordState
+    from review_template.review_manager import (
+        ReviewManager,
+        ProcessType,
+        Process,
+        RecordState,
+    )
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.prepare, str))
 
     record = {
         "ENTRYTYPE": "article",
@@ -160,7 +168,7 @@ def main():
 
     # debug_prepare()
 
-    debug_pdf_get()
+    # debug_pdf_get()
 
     # debug_data()
 
