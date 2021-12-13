@@ -16,7 +16,7 @@ Report
         On git version x
 
     Software
-       - review_template:           version x
+       - colrev_core:               version x
        - pre-commit hooks:          version x
        - Python:                    version x
        - Git:                       version x
@@ -27,7 +27,7 @@ Report
        - Consistency (based on hooks)     YES/NO?
        - Completeness of iteration        YES/NO?
        To check tree_hash use             git log --pretty=raw -1
-       To validate use                    review_template validate --properties --commit INSERT_COMMIT_HASH
+       To validate use                    colrev_core validate --properties --commit INSERT_COMMIT_HASH
 
     Status
      | Search

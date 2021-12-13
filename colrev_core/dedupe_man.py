@@ -6,10 +6,10 @@ import pprint
 import pandas as pd
 from bibtexparser import BibDatabase
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -101,7 +101,7 @@ def set_data(REVIEW_MANAGER, bib_db: BibDatabase, dedupe_man_item: dict) -> BibD
 
 
 def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> dict:
-    from review_template.review_manager import RecordState, Process, ProcessType
+    from colrev_core.review_manager import RecordState, Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.dedupe_man))
 

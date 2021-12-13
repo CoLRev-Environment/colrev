@@ -6,8 +6,8 @@ from bibtexparser.bibdatabase import BibDatabase
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -35,8 +35,8 @@ def get_exclusion_criteria(bib_db: BibDatabase) -> list:
 
 
 def get_data(REVIEW_MANAGER):
-    from review_template.review_manager import RecordState
-    from review_template.review_manager import Process, ProcessType
+    from colrev_core.review_manager import RecordState
+    from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.screen))
 
@@ -54,7 +54,7 @@ def get_data(REVIEW_MANAGER):
 
 
 def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     git_repo = REVIEW_MANAGER.get_repo()
 

@@ -7,10 +7,10 @@ from pathlib import Path
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
@@ -53,7 +53,7 @@ def export_retrieval_table(bib_db: BibDatabase) -> None:
 
 
 def get_data(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import Process, ProcessType
+    from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(parents=True, exist_ok=True)
 

@@ -22,17 +22,17 @@ from nameparser import HumanName
 from thefuzz import fuzz
 from tqdm.contrib.concurrent import process_map
 
-from review_template import dedupe
-from review_template.review_manager import RecordState
-from review_template.review_manager import ReviewManager
+from colrev_core import dedupe
+from colrev_core.review_manager import RecordState
+from colrev_core.review_manager import ReviewManager
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 EMAIL, DEBUG_MODE = "NA", "NA"
 RETRIEVAL_SIMILARITY = 0.84
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 def retrieve_local_JOURNAL_ABBREVIATIONS() -> pd.DataFrame:
@@ -1604,7 +1604,7 @@ def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
 
 
 def get_data(REVIEW_MANAGER):
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     rsl = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])
@@ -1727,7 +1727,7 @@ def main(
 
         report_logger.info(
             "To reset the metdatata of records, use "
-            "review_template prepare --reset-ID [ID1,ID2]"
+            "colrev_core prepare --reset-ID [ID1,ID2]"
         )
         report_logger.info(
             "Further instructions are available in the " "documentation (TODO: link)"

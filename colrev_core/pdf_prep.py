@@ -23,7 +23,7 @@ from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfparser import PDFSyntaxError
 from tqdm.contrib.concurrent import process_map
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -34,8 +34,8 @@ CPUS, REPO_DIR = -1, "NA"
 
 PAD = 0
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 def extract_text_by_page(record: dict, pages: list = None) -> str:
@@ -358,7 +358,7 @@ def add_to_git(REVIEW_MANAGER, retrieval_batch) -> None:
 
 
 def get_data(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(

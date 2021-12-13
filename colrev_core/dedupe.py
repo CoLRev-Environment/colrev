@@ -12,10 +12,10 @@ from bibtexparser.customization import convert_to_unicode
 from thefuzz import fuzz
 from tqdm.contrib.concurrent import process_map
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
@@ -525,7 +525,7 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
 
 
 def get_data(REVIEW_MANAGER):
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     # Note: this would also be a place to set records as "no-duplicate" by definition
     # (e.g., for non-duplicated sources marked in the search_details)
@@ -558,7 +558,7 @@ def get_data(REVIEW_MANAGER):
 
 
 def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
-    from review_template import prep
+    from colrev_core import prep
 
     bib_db = REVIEW_MANAGER.load_bib_db()
     git_repo = REVIEW_MANAGER.get_repo()

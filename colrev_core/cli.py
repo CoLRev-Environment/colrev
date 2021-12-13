@@ -13,11 +13,11 @@ import git
 from bibtexparser.bibdatabase import BibDatabase
 from dictdiffer import diff
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-logger = logging.getLogger("review_template_report")
+logger = logging.getLogger("colrev_core_report")
 
 key_order = [
     "ENTRYTYPE",
@@ -126,7 +126,7 @@ def main(ctx):
 @click.pass_context
 def init(ctx) -> bool:
     """Initialize repository"""
-    from review_template import init
+    from colrev_core import init
 
     # We check this again when calling init.initialize_repo()
     # but at this point, we want to avoid that users enter a lot of data and
@@ -257,8 +257,8 @@ def print_progress(stat: dict) -> None:
 @click.pass_context
 def status(ctx) -> None:
     """Show status"""
-    from review_template import status
-    from review_template.review_manager import ReviewManager
+    from colrev_core import status
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
 
@@ -299,7 +299,7 @@ def status(ctx) -> None:
 
         print(
             "Documentation\n\n   "
-            "See https://github.com/geritwagner/review_template/docs\n"
+            "See https://github.com/geritwagner/colrev_core/docs\n"
         )
 
     # TODO: automatically update pre-commit hooks if necessary?
@@ -363,12 +363,12 @@ def status(ctx) -> None:
 )
 def process(ctx, reprocess_id, keep_ids) -> None:
     """Process records (automated steps)"""
-    from review_template.review_manager import ReviewManager
-    from review_template import dedupe
-    from review_template import load
-    from review_template import pdf_prep
-    from review_template import pdf_get
-    from review_template import prep
+    from colrev_core.review_manager import ReviewManager
+    from colrev_core import dedupe
+    from colrev_core import load
+    from colrev_core import pdf_prep
+    from colrev_core import pdf_get
+    from colrev_core import prep
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -386,7 +386,7 @@ def process(ctx, reprocess_id, keep_ids) -> None:
 
         pdf_prep.main(REVIEW_MANAGER)
     except git.exc.InvalidGitRepositoryError:
-        logging.error("No git repository found. Use review_template init")
+        logging.error("No git repository found. Use colrev_core init")
         pass
         return
 
@@ -394,7 +394,7 @@ def process(ctx, reprocess_id, keep_ids) -> None:
 
 
 def check_update_search_details(REVIEW_MANAGER) -> None:
-    from review_template import load
+    from colrev_core import load
 
     search_details = REVIEW_MANAGER.search_details
 
@@ -446,9 +446,9 @@ def check_update_search_details(REVIEW_MANAGER) -> None:
 @click.pass_context
 def load(ctx, keep_ids) -> None:
     """Import records (part of automated processing)"""
-    from review_template import load
-    from review_template.review_manager import SearchDetailsMissingError
-    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core import load
+    from colrev_core.review_manager import SearchDetailsMissingError
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
 
     try:
 
@@ -463,7 +463,7 @@ def load(ctx, keep_ids) -> None:
         logging.error(e)
         logging.info(
             "UnsupportedImportFormatError: Remove file from repository and "
-            + "use review_template load"
+            + "use colrev_core load"
         )
         pass
     except SearchDetailsMissingError as e:
@@ -500,8 +500,8 @@ def load(ctx, keep_ids) -> None:
 @click.pass_context
 def prep(ctx, reset_id, reprocess, keep_ids) -> None:
     """Prepare records (part of automated processing)"""
-    from review_template import prep
-    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core import prep
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
 
     REVIEW_MANAGER = ReviewManager()
 
@@ -523,9 +523,9 @@ def prep(ctx, reset_id, reprocess, keep_ids) -> None:
 @click.pass_context
 def dedupe(ctx) -> None:
     """Deduplicate records (part of automated processing)"""
-    from review_template import dedupe
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core import dedupe
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -590,7 +590,7 @@ def man_correct_recordtype(record: dict) -> dict:
 
 
 def man_provide_required_fields(record: dict) -> dict:
-    from review_template import prep
+    from colrev_core import prep
 
     if prep.is_complete(record):
         return record
@@ -604,7 +604,7 @@ def man_provide_required_fields(record: dict) -> dict:
 
 
 def man_fix_field_inconsistencies(record: dict) -> dict:
-    from review_template import prep
+    from colrev_core import prep
 
     if not prep.has_inconsistent_fields(record):
         return record
@@ -615,7 +615,7 @@ def man_fix_field_inconsistencies(record: dict) -> dict:
 
 
 def man_fix_incomplete_fields(record: dict) -> dict:
-    from review_template import prep
+    from colrev_core import prep
 
     if not prep.has_incomplete_fields(record):
         return record
@@ -627,7 +627,7 @@ def man_fix_incomplete_fields(record: dict) -> dict:
 
 
 def prep_man_records_cli(REVIEW_MANAGER):
-    from review_template import prep_man
+    from colrev_core import prep_man
 
     saved_args = locals()
 
@@ -635,7 +635,7 @@ def prep_man_records_cli(REVIEW_MANAGER):
     stat_len = md_prep_man_data["nr_tasks"]
     PAD = md_prep_man_data["PAD"]
     all_ids = md_prep_man_data["all_ids"]
-    logger = logging.getLogger("review_template")
+    logger = logging.getLogger("colrev_core")
 
     if 0 == stat_len:
         logger.info("No records to prepare manually")
@@ -709,8 +709,8 @@ def prep_man_records_cli(REVIEW_MANAGER):
 @click.pass_context
 def prep_man(ctx, stats, extract) -> None:
     """Manual preparation of records"""
-    from review_template import prep_man
-    from review_template.review_manager import ReviewManager
+    from colrev_core import prep_man
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
 
@@ -866,7 +866,7 @@ def merge_manual_dialogue(bib_db: BibDatabase, item: dict, stat: str) -> dict:
 
 
 def dedupe_man_cli(REVIEW_MANAGER):
-    from review_template import dedupe_man
+    from colrev_core import dedupe_man
 
     saved_args = locals()
 
@@ -897,8 +897,8 @@ def dedupe_man_cli(REVIEW_MANAGER):
 @click.pass_context
 def dedupe_man(ctx) -> None:
     """Manual processing of duplicates"""
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -917,9 +917,9 @@ def prescreen_cli(
     REVIEW_MANAGER,
 ) -> None:
 
-    from review_template import prescreen
+    from colrev_core import prescreen
 
-    logger = logging.getLogger("review_template_report")
+    logger = logging.getLogger("colrev_core_report")
 
     prescreen_data = prescreen.get_data(REVIEW_MANAGER)
     stat_len = prescreen_data["nr_tasks"]
@@ -982,9 +982,9 @@ def prescreen_cli(
 @click.pass_context
 def prescreen(ctx, include_all, export_format, import_table) -> None:
     """Pre-screen based on titles and abstracts"""
-    from review_template import prescreen
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from colrev_core import prescreen
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1012,9 +1012,9 @@ def screen_cli(
     REVIEW_MANAGER,
 ) -> None:
 
-    from review_template import screen
+    from colrev_core import screen
 
-    logger = logging.getLogger("review_template_report")
+    logger = logging.getLogger("colrev_core_report")
 
     screen_data = screen.get_data(REVIEW_MANAGER)
     stat_len = screen_data["nr_tasks"]
@@ -1138,8 +1138,8 @@ def screen_cli(
 @click.pass_context
 def screen(ctx) -> None:
     """Screen based on exclusion criteria and fulltext documents"""
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1155,11 +1155,11 @@ def screen(ctx) -> None:
 @click.pass_context
 def pdf_get(ctx) -> None:
     """Retrieve PDFs  (part of automated processing)"""
-    from review_template import pdf_get
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
+    from colrev_core import pdf_get
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
+    from colrev_core.review_manager import ProcessType
+    from colrev_core.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1177,11 +1177,11 @@ def pdf_get(ctx) -> None:
 @click.pass_context
 def pdf_prep(ctx) -> None:
     """Prepare PDFs  (part of automated processing)"""
-    from review_template import pdf_prep
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
-    from review_template.review_manager import ProcessType
-    from review_template.review_manager import Process
+    from colrev_core import pdf_prep
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
+    from colrev_core.review_manager import ProcessType
+    from colrev_core.review_manager import Process
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1209,7 +1209,7 @@ def get_pdf_from_google(record: dict) -> dict:
 
 
 def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str):
-    from review_template import pdf_get_man
+    from colrev_core import pdf_get_man
 
     logger.debug(f"called man_retrieve for {pp.pformat(item)}")
     print(stat)
@@ -1249,8 +1249,8 @@ def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str):
 
 
 def pdf_get_man_cli(REVIEW_MANAGER):
-    from review_template import pdf_get
-    from review_template import pdf_get_man
+    from colrev_core import pdf_get
+    from colrev_core import pdf_get_man
 
     saved_args = locals()
     logger.info("Retrieve PDFs manually")
@@ -1287,7 +1287,7 @@ def pdf_get_man_cli(REVIEW_MANAGER):
         logger.info(
             "Retrieve PDFs manually and copy the files to "
             f"the {PDF_DIRECTORY}. Afterwards, use "
-            "review_template pdf-get-man"
+            "colrev_core pdf-get-man"
         )
 
     return
@@ -1297,8 +1297,8 @@ def pdf_get_man_cli(REVIEW_MANAGER):
 @click.pass_context
 def pdf_get_man(ctx) -> None:
     """Get PDFs manually"""
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager, Process, ProcessType
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager, Process, ProcessType
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1311,7 +1311,7 @@ def pdf_get_man(ctx) -> None:
 
 
 def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
-    from review_template import pdf_prep_man
+    from colrev_core import pdf_prep_man
 
     logger.debug(f"called man_pdf_prep for {pp.pformat(item)}")
     print(stat)
@@ -1335,7 +1335,7 @@ def man_pdf_prep(REVIEW_MANAGER, bib_db, item, stat):
 
 
 def pdf_prep_man_cli(REVIEW_MANAGER):
-    from review_template import pdf_prep_man
+    from colrev_core import pdf_prep_man
 
     saved_args = locals()
     input(
@@ -1356,9 +1356,7 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
                 "Prepare PDFs manually", manual_author=True, saved_args=saved_args
             )
     else:
-        logger.info(
-            "Prepare PDFs manually. Afterwards, use review_template pdf-get-man"
-        )
+        logger.info("Prepare PDFs manually. Afterwards, use colrev_core pdf-get-man")
 
     return
 
@@ -1367,8 +1365,8 @@ def pdf_prep_man_cli(REVIEW_MANAGER):
 @click.pass_context
 def pdf_prep_man(ctx) -> None:
     """Prepare PDFs manually"""
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager, Process, ProcessType
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager, Process, ProcessType
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1386,9 +1384,9 @@ def pdf_prep_man(ctx) -> None:
 @click.pass_context
 def data(ctx, edit_csv, load_csv) -> None:
     """Extract data"""
-    from review_template import data
-    from review_template import review_manager
-    from review_template.review_manager import ReviewManager
+    from colrev_core import data
+    from colrev_core import review_manager
+    from colrev_core.review_manager import ReviewManager
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -1453,8 +1451,8 @@ def validate_commit(ctx, param, value):
 @click.pass_context
 def validate(ctx, scope, properties, commit) -> None:
     """Validate changes"""
-    from review_template import validate
-    from review_template.review_manager import ReviewManager
+    from colrev_core import validate
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
     validate.main(REVIEW_MANAGER, scope, properties, commit)
@@ -1466,8 +1464,8 @@ def validate(ctx, scope, properties, commit) -> None:
 @click.option("--id", help="Record ID to trace (citation_key).", required=True)
 def trace(ctx, id) -> None:
     """Trace a record"""
-    from review_template import trace
-    from review_template.review_manager import ReviewManager
+    from colrev_core import trace
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
     trace.main(REVIEW_MANAGER, id)
@@ -1478,8 +1476,8 @@ def trace(ctx, id) -> None:
 @click.pass_context
 def paper(ctx) -> None:
     """Build the paper"""
-    from review_template import paper
-    from review_template.review_manager import ReviewManager
+    from colrev_core import paper
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
     paper.main(REVIEW_MANAGER)
@@ -1496,11 +1494,11 @@ ccs = click_completion.core.shells
 @click.pass_context
 def debug(ctx, activate, deactivate):
     """Debug"""
-    from review_template import debug
-    from review_template import review_manager
+    from colrev_core import debug
+    from colrev_core import review_manager
 
     review_manager.setup_logger()
-    logger = logging.getLogger("review_template_report")
+    logger = logging.getLogger("colrev_core_report")
 
     if activate:
         logger.info("Debugging activated")

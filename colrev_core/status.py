@@ -7,13 +7,13 @@ from pathlib import Path
 
 import git
 
-from review_template import screen
+from colrev_core import screen
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 def get_nr_in_bib(file_path: Path) -> int:
@@ -50,8 +50,8 @@ def get_completeness_condition(REVIEW_MANAGER) -> bool:
 
 
 def get_status_freq(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import RecordState
-    from review_template.review_manager import Record
+    from colrev_core.review_manager import RecordState
+    from colrev_core.review_manager import Record
 
     record_header_list = REVIEW_MANAGER.get_record_header_list()
     status_list = [x[2] for x in record_header_list]
@@ -170,7 +170,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
 
 
 def get_priority_transition(current_states: set) -> list:
-    from review_template.review_manager import Record
+    from colrev_core.review_manager import Record
 
     # get "earliest" states (going backward)
     earliest_state = []
@@ -200,7 +200,7 @@ def get_priority_transition(current_states: set) -> list:
 
 
 def get_active_processing_functions(current_states_set) -> list:
-    from review_template.review_manager import Record
+    from colrev_core.review_manager import Record
 
     active_processing_functions = []
     for state in current_states_set:
@@ -258,7 +258,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     current_states_set = REVIEW_MANAGER.get_states_set(current_record_state_list)
     # temporarily override for testing
     # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
-    # from review_template.review_manager import Record
+    # from colrev_core.review_manager import Record
     # current_states_set = set([x['source'] for x in Record.transitions])
 
     MAIN_REFS_CHANGED = MAIN_REFERENCES_RELATIVE in [
@@ -271,7 +271,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
 
         # TODO : we may need to trace records based on their origins (IDs can change)
 
-        from review_template.review_manager import Record
+        from colrev_core.review_manager import Record
 
         revlist = (
             (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
@@ -333,7 +333,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
             instruction = {
                 "msg": f"Detected {in_progress_processes[0]} in progress. "
                 + "Complete this process",
-                "cmd": f"review_template {in_progress_processes[0]}",
+                "cmd": f"colrev_core {in_progress_processes[0]}",
             }
             instruction["priority"] = "yes"
             review_instructions.append(instruction)
@@ -343,7 +343,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
                 + f"({', '.join(in_progress_processes)}). Complete one "
                 + "(save and revert the other) and commit before continuing!\n"
                 + f"  Records: {', '.join([x['ID'] for x in transitioned_records])}",
-                # "cmd": f"review_template {in_progress_processes}",
+                # "cmd": f"colrev_core {in_progress_processes}",
             }
             instruction["priority"] = "yes"
             review_instructions.append(instruction)
@@ -371,9 +371,9 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     if stat["status"]["currently"]["md_retrieved"] > 0:
         instruction = {
             "msg": msgs["load"],
-            "cmd": "review_template load",
+            "cmd": "colrev_core load",
             "priority": "yes",
-            # "high_level_cmd": "review_template metadata",
+            # "high_level_cmd": "colrev_core metadata",
         }
         review_instructions.append(instruction)
 
@@ -381,8 +381,8 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
         for active_processing_function in active_processing_functions:
             instruction = {
                 "msg": msgs[active_processing_function],
-                "cmd": f"review_template {active_processing_function.replace('_', '-')}"
-                # "high_level_cmd": "review_template metadata",
+                "cmd": f"colrev_core {active_processing_function.replace('_', '-')}"
+                # "high_level_cmd": "colrev_core metadata",
             }
             if active_processing_function in priority_processing_functions:
                 keylist = [list(x.keys()) for x in review_instructions]
@@ -397,7 +397,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
         instruction = {
             "msg": "To import, copy search results to the search directory.",
-            "cmd": "review_template load",
+            "cmd": "colrev_core load",
         }
         review_instructions.append(instruction)
 
@@ -406,14 +406,14 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
             "info": "Iterationed completed.",
             "msg": "To start the next iteration of the review, "
             + "add records to search/ directory",
-            "cmd_after": "review_template load",
+            "cmd_after": "colrev_core load",
         }
         review_instructions.append(instruction)
 
     if "MANUSCRIPT" == REVIEW_MANAGER.config["DATA_FORMAT"]:
         instruction = {
             "msg": "Build the paper",
-            "cmd": "review_template paper",
+            "cmd": "colrev_core paper",
         }
         review_instructions.append(instruction)
 

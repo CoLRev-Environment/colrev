@@ -36,7 +36,7 @@ from transitions import Machine
 from yaml import safe_load
 
 import docker
-from review_template import screen
+from colrev_core import screen
 
 logging.getLogger("transitions").setLevel(logging.WARNING)
 
@@ -335,7 +335,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
 
 
 def setup_logger(level=logging.INFO):
-    logger = logging.getLogger("review_template")
+    logger = logging.getLogger("colrev_core")
 
     if not logger.handlers:
         logger.setLevel(level)
@@ -353,7 +353,7 @@ def setup_logger(level=logging.INFO):
 
 def setup_report_logger(level=logging.INFO):
 
-    report_logger = logging.getLogger("review_template_report")
+    report_logger = logging.getLogger("colrev_core_report")
 
     if not report_logger.handlers:
         report_logger.setLevel(level)
@@ -673,7 +673,7 @@ def is_git_repo(path: str) -> bool:
         return False
 
 
-def is_review_template_project() -> bool:
+def is_colrev_core_project() -> bool:
     # Note : 'private_config.ini', 'shared_config.ini' are optional
     # "search",
     required_paths = [Path(".pre-commit-config.yaml"), Path(".gitignore")]
@@ -775,13 +775,13 @@ def check_software(REVIEW_MANAGER):
     master = git_repo.head.reference
     cmsg_lines = master.commit.message.split("\n")
     for cmsg_line in cmsg_lines[0:20]:
-        if "- review_template:" in cmsg_line:
-            last_review_template_version = cmsg_line[cmsg_line.find("version ") + 8 :]
-            current_review_template_version = version("review_template")
-            last_review_template_version == current_review_template_version
-            # if last_review_template_version != current_review_template_version:
+        if "- colrev_core:" in cmsg_line:
+            last_colrev_core_version = cmsg_line[cmsg_line.find("version ") + 8 :]
+            current_colrev_core_version = version("colrev_core")
+            last_colrev_core_version == current_colrev_core_version
+            # if last_colrev_core_version != current_colrev_core_version:
             #     raise SoftwareUpgradeError(
-            #         last_review_template_version, last_review_template_version
+            #         last_colrev_core_version, last_colrev_core_version
             #     )
 
     return
@@ -791,13 +791,13 @@ def check_repository_setup(REVIEW_MANAGER):
 
     # 1. git repository?
     if not is_git_repo(os.getcwd()):
-        raise RepoSetupError("no git repository. Use review_template init")
+        raise RepoSetupError("no git repository. Use colrev_core init")
 
-    # 2. review_template project?
-    if not is_review_template_project():
+    # 2. colrev_core project?
+    if not is_colrev_core_project():
         raise RepoSetupError(
-            "No review_template repository."
-            + "To retrieve a shared repository, use review_template init."
+            "No colrev_core repository."
+            + "To retrieve a shared repository, use colrev_core init."
             + "To initalize a new repository, "
             + "execute the command in an empty directory."
         )
@@ -1442,7 +1442,7 @@ def check_new_record_source_tag(PAPER: str) -> None:
 
 
 def check_update_synthesized_status(REVIEW_MANAGER) -> None:
-    from review_template import data
+    from colrev_core import data
 
     bib_db = REVIEW_MANAGER.load_bib_db()
     data.update_synthesized_status(REVIEW_MANAGER, bib_db)
@@ -1863,7 +1863,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        from review_template import status
+        from colrev_core import status
 
         stat = status.get_status_freq(self)
         collaboration_instructions = status.get_collaboration_instructions(self, stat)
@@ -1889,8 +1889,8 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        from review_template.review_manager import ProcessType
-        from review_template.review_manager import Process
+        from colrev_core.review_manager import ProcessType
+        from colrev_core.review_manager import Process
 
         PASS, FAIL = 0, 1
         MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
@@ -2053,7 +2053,7 @@ class ReviewManager:
     def __get_commit_report(
         self, script_name: str = None, saved_args: dict = None
     ) -> str:
-        from review_template import status
+        from colrev_core import status
 
         report = "\n\nReport\n\n"
 
@@ -2090,10 +2090,8 @@ class ReviewManager:
             report = report + "\n"
 
         report = report + "Software"
-        rt_version = version("review_template")
-        report = (
-            report + "\n   - review_template:".ljust(33, " ") + "version " + rt_version
-        )
+        rt_version = version("colrev_core")
+        report = report + "\n   - colrev_core:".ljust(33, " ") + "version " + rt_version
         version("pipeline_validation_hooks")
         report = (
             report
@@ -2126,7 +2124,7 @@ class ReviewManager:
         )
         if script_name is not None:
             ext_script = script_name.split(" ")[0]
-            if ext_script != "review_template":
+            if ext_script != "colrev_core":
                 try:
                     script_version = version(ext_script)
                     report = (
@@ -2168,7 +2166,7 @@ class ReviewManager:
             report = (
                 report
                 + "   To validate use".ljust(38, " ")
-                + "review_template validate --properties "
+                + "colrev_core validate --properties "
                 + "--commit INSERT_COMMIT_HASH"
             )
         report = report + "\n"
@@ -2197,12 +2195,12 @@ class ReviewManager:
 
     def __get_version_flag(self) -> str:
         flag = ""
-        if "dirty" in version("review_template"):
+        if "dirty" in version("colrev_core"):
             flag = "*"
         return flag
 
     def __update_status_yaml(self) -> None:
-        from review_template import status
+        from colrev_core import status
 
         status_freq = status.get_status_freq(self)
 
@@ -2451,7 +2449,7 @@ class ReviewManager:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        from review_template import prep
+        from colrev_core import prep
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced

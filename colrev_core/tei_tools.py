@@ -238,7 +238,7 @@ def get_paper_doi(root) -> str:
 def get_record_from_pdf_tei(filepath: Path) -> dict:
 
     # Note: we have more control and transparency over the consolidation
-    # if we do it in the review_template process
+    # if we do it in the colrev_core process
     header_data = {"consolidateHeader": "0"}
 
     r = requests.post(

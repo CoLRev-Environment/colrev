@@ -10,16 +10,16 @@ from bibtexparser.bibdatabase import BibDatabase
 from pdfminer.high_level import extract_text
 from tqdm.contrib.concurrent import process_map
 
-from review_template import dedupe
-from review_template import grobid_client
-from review_template import tei_tools
-from review_template.review_manager import RecordState
+from colrev_core import dedupe
+from colrev_core import grobid_client
+from colrev_core import tei_tools
+from colrev_core.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 # https://github.com/ContentMine/getpapers
 
@@ -207,7 +207,7 @@ def check_existing_unlinked_pdfs(
 
 
 def get_data(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     record_state_list = REVIEW_MANAGER.get_record_state_list()
     nr_tasks = len(

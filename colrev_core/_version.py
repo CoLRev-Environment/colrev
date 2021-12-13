@@ -38,8 +38,8 @@ def get_config():
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "review_template-"
-    cfg.versionfile_source = "review_template/_version.py"
+    cfg.parentdir_prefix = "colrev_core-"
+    cfg.versionfile_source = "colrev_core/_version.py"
     cfg.verbose = False
     return cfg
 

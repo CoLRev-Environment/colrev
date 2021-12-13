@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-"""Tests for `review_template` package."""
+"""Tests for `colrev_core` package."""
 import bibtexparser
 import pandas as pd
 import pytest
 from click.testing import CliRunner
 
-from review_template import cli
+from colrev_core import cli
 
 
 @pytest.fixture
@@ -29,14 +29,14 @@ def test_command_line_interface():
     runner = CliRunner()
     result = runner.invoke(cli.main)
     assert result.exit_code == 0
-    assert "review_template.cli.main" in result.output
+    assert "colrev_core.cli.main" in result.output
     help_result = runner.invoke(cli.main, ["--help"])
     assert help_result.exit_code == 0
     assert "--help  Show this message and exit." in help_result.output
 
 
 def test_merge():
-    from review_template import process_duplicates
+    from colrev_core import process_duplicates
 
     bibtex_str = """@article{Appan2012,
                     author    = {Appan, and Browne,},

@@ -3,10 +3,10 @@ import logging
 import pprint
 from pathlib import Path  # noqa F401
 
-from review_template import review_manager
+from colrev_core import review_manager
 
 review_manager.setup_logger(level=logging.DEBUG)
-logger = logging.getLogger("review_template")
+logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
@@ -34,8 +34,8 @@ def debug_load() -> None:
     # Debugging: get all imported records, their origins
     # then compare them to the original search_files
 
-    from review_template.review_manager import ReviewManager, ProcessType, Process
-    from review_template import load
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core import load
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
@@ -63,8 +63,8 @@ def debug_load() -> None:
 
 def debug_prep() -> None:
 
-    from review_template import prep
-    from review_template.review_manager import (
+    from colrev_core import prep
+    from colrev_core.review_manager import (
         ReviewManager,
         ProcessType,
         Process,
@@ -95,13 +95,13 @@ def debug_prep() -> None:
 
 
 def debug_pdf_get():
-    from review_template.review_manager import (
+    from colrev_core.review_manager import (
         ReviewManager,
         ProcessType,
         Process,
         RecordState,
     )
-    from review_template import pdf_get
+    from colrev_core import pdf_get
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_get, str))
@@ -129,8 +129,8 @@ def debug_pdf_get():
 
 def debug_data():
 
-    from review_template.review_manager import ReviewManager, ProcessType, Process
-    from review_template import data
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core import data
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.data, str))
@@ -144,7 +144,7 @@ def debug_data():
 
 
 def debug_tei_tools() -> None:
-    from review_template import tei_tools, grobid_client
+    from colrev_core import tei_tools, grobid_client
 
     logger.debug("Start grobid")
     grobid_client.start_grobid()

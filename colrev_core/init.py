@@ -85,7 +85,7 @@ def initialize_repo(
     repo = git.Repo.init()
     os.mkdir("search")
 
-    from review_template import review_manager
+    from colrev_core import review_manager
 
     review_manager.retrieve_package_file("template/readme.md", "readme.md")
     review_manager.retrieve_package_file(
@@ -146,11 +146,11 @@ def initialize_repo(
         ]
     )
 
-    from review_template.review_manager import ReviewManager
+    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
 
-    report_logger = logging.getLogger("review_template_report")
+    report_logger = logging.getLogger("colrev_core_report")
     report_logger.info("Initialize review repository")
     report_logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
     report_logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")

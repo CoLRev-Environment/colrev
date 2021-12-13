@@ -8,7 +8,7 @@ import dictdiffer
 
 logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
-logger = logging.getLogger("review_template")
+logger = logging.getLogger("colrev_core")
 
 
 def lpad_multiline(s: str, lpad: int) -> str:

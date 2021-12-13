@@ -18,14 +18,14 @@ from bibtexparser.customization import convert_to_unicode
 from tqdm.contrib.concurrent import process_map
 
 import docker
-from review_template import grobid_client
-from review_template.review_manager import RecordState
-from review_template.review_manager import ReviewManager
+from colrev_core import grobid_client
+from colrev_core.review_manager import RecordState
+from colrev_core.review_manager import ReviewManager
 
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 class NoSearchResultsAvailableError(Exception):
@@ -633,7 +633,7 @@ def order_bib_file(REVIEW_MANAGER) -> None:
 
 
 def check_search_details(REVIEW_MANAGER) -> None:
-    from review_template import review_manager
+    from colrev_core import review_manager
 
     review_manager.check_search_details(REVIEW_MANAGER)
     git_repo = REVIEW_MANAGER.get_repo()

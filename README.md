@@ -1,12 +1,12 @@
-# Literature review template
+# Engine for Colaborative Literature Reviews (CoLRev)
 
-[![License](https://img.shields.io/github/license/geritwagner/review_template.svg)](https://github.com/geritwagner/review_template/releases/)
+[![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![GitHub release](https://img.shields.io/github/v/release/geritwagner/review_template.svg)](https://github.com/geritwagner/review_template/releases/)
+[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 
 - Git-based collaborative literature reviews
-- Easy to learn: one command, `review_template status`, provides an overview and instructions
+- Easy to learn: one command, `colrev_core status`, provides an overview and instructions
 - Collaboration protocols and consistency checks ([pre-commit hooks](https://github.com/geritwagner/pipeline-validation-hooks)) aimed at preventing git conflicts
 - Traceability of records and changes
 - Designed with methodological and typological pluralism in mind: configurable templates for
@@ -27,34 +27,34 @@ Requirements: [git](https://git-scm.com/downloads), [Docker](https://www.docker.
 
 ```
 # Installation (currently, while not yet available via pip)
-git clone https://github.com/geritwagner/review_template
+git clone https://github.com/geritwagner/colrev_core
 # optional: checkout version
 mkdir review_project & cd review_project
-# currently: run review_template init before starting the virtualenv (the data files are not retrieved correctly/stored in the virtualenv at installation)
+# currently: run colrev_core init before starting the virtualenv (the data files are not retrieved correctly/stored in the virtualenv at installation)
 virtualenv venv
 source venv/bin/activate
-pip3 install ../review_template
+pip3 install ../colrev_core
 pip3 install ../pipeline_validation_hooks
 
 # for editing mode:
-cd review_template
+cd colrev_core
 pip3 install --user -e .
 # Once the project is available on PyPI:
-# pip install review_template
+# pip install colrev_core
 ```
 
 On the command line, use the following command:
 
-- `review_template status`: provides an overview of the state of the pipeline and suggests the next processing and versioning/collaboration steps (simply copy and paste).
+- `colrev_core status`: provides an overview of the state of the pipeline and suggests the next processing and versioning/collaboration steps (simply copy and paste).
 
 ![Status command and explanation](docs/figures/status_explanation.PNG?raw=true)
 
 Further information is available in the documentation (add-link).
-For the processing, the following `review_template commands` are available.
+For the processing, the following `colrev_core commands` are available.
 
 ```bash
-/home/user/repository$review_template
-Usage: review_template [OPTIONS] COMMAND [ARGS]...
+/home/user/repository$colrev_core
+Usage: colrev_core [OPTIONS] COMMAND [ARGS]...
 
   Review template pipeline
 
@@ -116,10 +116,10 @@ For meta-data preparation and PDF retrieval, we rely on the following data sourc
 Contributions, code and features are always welcome
 
 - See [contributing guidelines](CONTRIBUTING.rst).
-- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/review_template/issues) and let us know.
+- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev_core/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/review_template/releases).
+For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev_core/releases).
 
 # License
 

@@ -9,16 +9,16 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
-from review_template import prep
-from review_template.review_manager import RecordState
+from colrev_core import prep
+from colrev_core.review_manager import RecordState
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
 def prep_man_stats(REVIEW_MANAGER) -> None:
-    from review_template.review_manager import Process, ProcessType
+    from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     # TODO : this function mixes return values and saving to files.
@@ -94,7 +94,7 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
 
 
 def extract_needs_prep_man(REVIEW_MANAGER) -> None:
-    from review_template.review_manager import Process, ProcessType
+    from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
@@ -147,7 +147,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
 
 
 def get_data(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import RecordState, ProcessType, Process
+    from colrev_core.review_manager import RecordState, ProcessType, Process
 
     REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
 
@@ -179,7 +179,7 @@ def get_data(REVIEW_MANAGER) -> dict:
 
 
 def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
-    from review_template.review_manager import RecordState
+    from colrev_core.review_manager import RecordState
 
     # TODO: log details for processing_report
 

@@ -6,10 +6,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from review_template.review_manager import RecordState
+from colrev_core.review_manager import RecordState
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
@@ -133,7 +133,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
 
 
 def get_data(REVIEW_MANAGER) -> dict:
-    from review_template.review_manager import Process, ProcessType
+    from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
 

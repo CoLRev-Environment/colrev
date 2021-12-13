@@ -7,15 +7,15 @@ import requests
 
 import docker
 
-report_logger = logging.getLogger("review_template_report")
-logger = logging.getLogger("review_template")
+report_logger = logging.getLogger("colrev_core_report")
+logger = logging.getLogger("colrev_core")
 
 
 def main(REVIEW_MANAGER) -> None:
 
     if not REVIEW_MANAGER.paths["PAPER"].is_file():
         logger.error("File paper.md does not exist.")
-        logger.info("Complete processing and use review_template data")
+        logger.info("Complete processing and use colrev_core data")
         return
 
     REVIEW_MANAGER.build_docker_images()

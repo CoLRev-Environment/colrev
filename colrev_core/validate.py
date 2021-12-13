@@ -16,12 +16,12 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 from pipeline_validation_hooks import check  # noqa: F401
 
-from review_template import dedupe
-from review_template import status
+from colrev_core import dedupe
+from colrev_core import status
 
 CPUS = -1
 
-logger = logging.getLogger("review_template")
+logger = logging.getLogger("colrev_core")
 
 
 def load_records(bib_file: Path) -> list:
@@ -198,7 +198,7 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
 def validate_properties(target_commit: str = None) -> None:
     # TODO: option: --history: check all preceding commits (create a list...)
 
-    from review_template.review_manager import ReviewManager, ProcessType, Process
+    from colrev_core.review_manager import ReviewManager, ProcessType, Process
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
