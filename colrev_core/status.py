@@ -2,6 +2,7 @@
 import io
 import logging
 import pprint
+import typing
 from collections import Counter
 from pathlib import Path
 
@@ -105,7 +106,13 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
             st_o[str(current_state)] += md_duplicates_removed
 
         states_to_consider = [current_state]
-        predecessors = ["init"]
+        predecessors: typing.List[typing.Dict[str, typing.Any]] = [
+            {
+                "trigger": "init",
+                "source": RecordState.md_imported,
+                "dest": RecordState.md_imported,
+            }
+        ]
         while predecessors:
             predecessors = [
                 t
@@ -125,7 +132,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 if predecessor["dest"] not in states_to_consider:
                     states_to_consider.append(predecessor["dest"])
         if len(predecessors) > 0:
-            if predecessors[0] != "init":
+            if predecessors[0]["trigger"] != "init":
                 completed_atomic_steps += st_o[str(predecessor["dest"])]
         atomic_step_number += 1
         # Note : the following does not consider multiple parallel steps.
@@ -136,7 +143,9 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 str(trans_for_completeness["source"])
             ]
 
-        t = [t for t in Record.transitions if current_state == t["dest"]][0]
+        t_list = [t for t in Record.transitions if current_state == t["dest"]]
+        if 1 == len(t_list):
+            t: dict = t_list.pop()
         if current_state == RecordState.md_imported:
             break
         current_state = t["source"]  # go a step back

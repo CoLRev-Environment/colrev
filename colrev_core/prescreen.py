@@ -90,9 +90,9 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
         [x.get("ID", ""), x.get("inclusion_1", ""), x.get("inclusion_2", "")]
         for x in records
     ]:
-        record = [e for e in bib_db.entries if e["ID"] == x[0]]
-        if len(record) == 1:
-            record = record[0]
+        record_list = [e for e in bib_db.entries if e["ID"] == x[0]]
+        if len(record_list) == 1:
+            record: dict = record_list.pop()
             if x[1] == "no":
                 record["status"] = RecordState.rev_prescreen_excluded
             if x[1] == "yes":

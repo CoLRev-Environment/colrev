@@ -656,7 +656,9 @@ def get_data(REVIEW_MANAGER) -> dict:
     additional_records = list(chain(*additional_records))
 
     additional_records = [
-        x for x in additional_records if x["origin"] not in imported_origins
+        x
+        for x in additional_records
+        if x["origin"] not in imported_origins  # type: ignore
     ]
 
     load_data = {"nr_tasks": len(additional_records), "items": additional_records}

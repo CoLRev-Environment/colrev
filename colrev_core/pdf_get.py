@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pprint
+import typing
 from pathlib import Path
 
 import requests
@@ -113,10 +114,10 @@ def link_pdf(item: dict) -> dict:
     return record
 
 
-retrieval_scripts = {
-    "get_pdf_from_unpaywall": get_pdf_from_unpaywall,
-    "link_pdf": link_pdf,
-}
+retrieval_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+    {"script": get_pdf_from_unpaywall},
+    {"script": link_pdf},
+]
 
 
 def retrieve_pdf(item: dict) -> dict:
@@ -128,11 +129,15 @@ def retrieve_pdf(item: dict) -> dict:
     REVIEW_MANAGER = item["REVIEW_MANAGER"]
 
     for retrieval_script in retrieval_scripts:
-        report_logger.info(f'{retrieval_script}({record["ID"]}) called')
-        record = retrieval_scripts[retrieval_script](item, REVIEW_MANAGER)
+        report_logger.info(
+            f'{retrieval_script["script"].__name__}({record["ID"]}) called'
+        )
+
+        record = retrieval_script["script"](item, REVIEW_MANAGER)
         if "file" in record:
             report_logger.info(
-                f'{retrieval_script}({record["ID"]}): retrieved {record["file"]}'
+                f'{retrieval_script["script"].__name__}'
+                f'({record["ID"]}): retrieved {record["file"]}'
             )
             record.update(status=RecordState.pdf_imported)
         else:
@@ -276,7 +281,7 @@ def main(REVIEW_MANAGER) -> None:
     try:
         from local_paper_index import retrieve
 
-        retrieval_scripts["get_pdf_from_local_index"] = retrieve.individual_record
+        retrieval_scripts.append({"script": retrieve.individual_record})
     except ImportError as e:
         logger.debug(e)
         pass

@@ -666,10 +666,12 @@ def check_git_conflicts(REVIEW_MANAGER) -> None:
 
 
 def is_git_repo(path: str) -> bool:
+    from git.exc import InvalidGitRepositoryError
+
     try:
         _ = git.Repo(path).git_dir
         return True
-    except git.exc.InvalidGitRepositoryError:
+    except InvalidGitRepositoryError:
         return False
 
 
@@ -1251,12 +1253,12 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
             if len(prior_status) == 0:
                 status_transition[ID] = "load"
             else:
-                proc_transition = [
+                proc_transition_list: list = [
                     x["trigger"]
                     for x in Record.transitions
                     if str(x["source"]) == prior_status[0] and str(x["dest"]) == status
                 ]
-                if len(proc_transition) == 0 and prior_status[0] != status:
+                if len(proc_transition_list) == 0 and prior_status[0] != status:
                     data["start_states"].append(prior_status[0])
                     if prior_status[0] not in [str(x) for x in RecordState]:
                         raise StatusFieldValueError(ID, "status", prior_status[0])
@@ -1267,6 +1269,7 @@ def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
                         f"invalid state transition ({ID}):"
                         + f" {prior_status[0]} to {status}"
                     )
+                proc_transition = proc_transition_list.pop()
                 status_transition[ID] = proc_transition
 
             data["status_transitions"].append(status_transition)
@@ -1377,7 +1380,7 @@ def check_main_references_screen(data: dict) -> None:
             pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
             pattern_inclusion = "=no;".join(criteria) + "=no"
         else:
-            criteria = "NA"
+            criteria = ["NA"]
             pattern = "^NA$"
             pattern_inclusion = "^NA$"
         for [ID, status, excl_crit] in data["exclusion_criteria_list"]:
@@ -1391,7 +1394,7 @@ def check_main_references_screen(data: dict) -> None:
                 )
 
             elif str(RecordState.rev_excluded) == status:
-                if "NA" == criteria:
+                if ["NA"] == criteria:
                     if "NA" == excl_crit:
                         continue
                     else:
@@ -1619,9 +1622,10 @@ def check_raw_search_unchanged(REVIEW_MANAGER) -> None:
         return
 
     repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
-    revlist = (commit.tree for commit in repo.iter_commits())
-    last_tree = list(revlist)[0]
-    files_in_prev_commit = [el.path for el in list(last_tree.traverse())]
+
+    for commit in list(repo.iter_commits()):
+        files_in_prev_commit = [k for k, v in commit.stats.files.items()]
+        break
 
     changedFiles = [item.a_path for item in repo.index.diff("HEAD")]
     changedFilesWTree = [item.a_path for item in repo.index.diff(None)]
@@ -2036,10 +2040,13 @@ class ReviewManager:
     def run_process(self, process: Process, *args):
         """Pass a process to the REVIEW_MANAGER for execution"""
 
-        function_name = (
-            f"{inspect.getmodule(process.processing_function).__name__}."
-            + f"{process.processing_function.__name__}"
-        )
+        proc_fun = inspect.getmodule(process.processing_function)
+        if proc_fun:
+            function_name = (
+                f"{proc_fun.__name__}." + f"{process.processing_function.__name__}"
+            )
+        else:
+            function_name = "NA"
 
         self.report_logger.info(
             f"ReviewManager: check_precondition({function_name}, "

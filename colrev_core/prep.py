@@ -455,7 +455,9 @@ def crossref_json_to_record(item: dict) -> dict:
     return record
 
 
-def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
+def crossref_query(
+    record: dict, jour_vol_iss_list: bool = False
+) -> typing.List[typing.Dict]:
     # https://github.com/CrossRef/rest-api-doc
     api_url = "https://api.crossref.org/works?"
 
@@ -493,7 +495,7 @@ def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
         ret = requests.get(url, headers=headers)
         if ret.status_code != 200:
             logger.debug(f"crossref_query failed with status {ret.status_code}")
-            return {}
+            return [{}]
 
         data = json.loads(ret.text)
 
@@ -532,12 +534,12 @@ def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
                 most_similar_record = retrieved_record
     except requests.exceptions.ConnectionError:
         logger.error("requests.exceptions.ConnectionError in crossref_query")
-        return {}
+        return [{}]
 
     if jour_vol_iss_list:
         return record_list
     else:
-        return most_similar_record
+        return [most_similar_record]
 
 
 def container_is_abbreviated(record: dict) -> bool:
@@ -637,11 +639,13 @@ def get_md_from_crossref(record: dict) -> dict:
     if len(record["title"]) > 35:
         try:
 
-            retrieved_record = crossref_query(record)
+            retrieved_record_list = crossref_query(record)
+            retrieved_record = retrieved_record_list.pop()
             retries = 0
             while not retrieved_record and retries < MAX_RETRIES_ON_ERROR:
                 retries += 1
-                retrieved_record = crossref_query(record)
+                retrieved_record_list = crossref_query(record)
+                retrieved_record = retrieved_record_list.pop()
 
             if 0 == len(retrieved_record):
                 return record
@@ -1153,7 +1157,7 @@ def is_complete_metadata_source(record: dict) -> bool:
     return "ORIGINAL" != record["metadata_source"]
 
 
-record_field_inconsistencies = {
+record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
     "article": ["booktitle"],
     "inproceedings": ["volume", "issue", "number", "journal"],
     "incollection": [],
@@ -1496,7 +1500,7 @@ def prepare(item: dict) -> dict:
 
     # # Note: we require (almost) perfect matches for the scripts.
     # # Cases with higher dissimilarity will be handled in the prep_man.py
-    prep_scripts = [
+    prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
         {"script": drop_fields, "params": record},
         {
             "script": update_local_paper_index_fields,
@@ -1562,12 +1566,12 @@ def prepare(item: dict) -> dict:
 
 def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
     MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-    record = [x for x in bib_db.entries if x["ID"] == id]
-    if len(record) == 0:
-        report_logger.info(f'record with ID {record["ID"]} not found')
+    record_list = [x for x in bib_db.entries if x["ID"] == id]
+    if len(record_list) == 0:
+        report_logger.info(f"record with ID {id} not found")
         return
     # Note: the case len(record) > 1 should not occur.
-    record = record[0]
+    record: dict = record_list.pop()
     if RecordState.md_prepared != record["status"]:
         report_logger.error(f'{id}: status must be md_prepared (is {record["status"]})')
         return
