@@ -72,14 +72,14 @@ class RecordState(Enum):
 
 class ProcessType(Enum):
     load = auto()
-    prepare = auto()
+    prep = auto()
     prep_man = auto()
     dedupe = auto()
     dedupe_man = auto()
     prescreen = auto()
     pdf_get = auto()
     pdf_get_man = auto()
-    pdf_prepare = auto()
+    pdf_prep = auto()
     pdf_prep_man = auto()
     screen = auto()
     data = auto()
@@ -118,13 +118,13 @@ processing_transitions = [
         "conditions": ["clean_repo_except_search"],
     },
     {
-        "trigger": "prepare",
+        "trigger": "prep",
         "source": RecordState.md_imported,
         "dest": RecordState.md_needs_manual_preparation,
         "conditions": ["clean_repo", "check_records_state_precondition"],
     },
     {
-        "trigger": "prepare",
+        "trigger": "prep",
         "source": RecordState.md_imported,
         "dest": RecordState.md_prepared,
         "conditions": ["clean_repo", "check_records_state_precondition"],
@@ -211,13 +211,13 @@ processing_transitions = [
         ],
     },
     {
-        "trigger": "pdf_prepare",
+        "trigger": "pdf_prep",
         "source": RecordState.pdf_imported,
         "dest": RecordState.pdf_needs_manual_preparation,
         "conditions": ["clean_repo", "check_records_state_precondition"],
     },
     {
-        "trigger": "pdf_prepare",
+        "trigger": "pdf_prep",
         "source": RecordState.pdf_imported,
         "dest": RecordState.pdf_prepared,
         "conditions": ["clean_repo", "check_records_state_precondition"],
@@ -688,7 +688,7 @@ def get_installed_hooks() -> dict:
         pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
     installed_hooks[
         "remote_pv_hooks_repo"
-    ] = "https://github.com/geritwagner/pipeline-validation-hooks"
+    ] = "https://github.com/geritwagner/colrev-hooks"
     for repository in pre_commit_config["repos"]:
         if repository["repo"] == installed_hooks["remote_pv_hooks_repo"]:
             installed_hooks["local_hooks_version"] = repository["rev"]
@@ -819,7 +819,7 @@ def check_repository_setup(REVIEW_MANAGER):
     except git.exc.GitCommandError:
         REVIEW_MANAGER.logger.warning(
             "No Internet connection, cannot check remote "
-            "pipeline-validation-hooks repository for updates."
+            "colrev-hooks repository for updates."
         )
     return
 
@@ -2057,6 +2057,8 @@ class ReviewManager:
 
         report = "\n\nReport\n\n"
 
+        git_repo = self.__git_repo
+
         if script_name is not None:
             if "MANUAL" == script_name:
                 report = report + "Commit created manually or by external script\n\n"
@@ -2069,35 +2071,27 @@ class ReviewManager:
 
                 report = report + f"Command\n   {script_name}\n"
         if saved_args is not None:
-            repo = None
             for k, v in saved_args.items():
                 if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
                     report = report + f"     --{k}={v}\n"
-                if isinstance(v, git.repo.base.Repo):
-                    try:
-                        repo = v.head.commit.hexsha
-                    except ValueError:
-                        pass
-                # TODO: should we do anything with the bib_db?
-            if not repo:
-                try:
-                    repo = self.__git_repo.head.commit.hexsha
-                except ValueError:
-                    pass
-            # Note: this allows users to see whether the commit was changed!
-            if repo:
-                report = report + f"   On git repo with version {repo}\n"
+            try:
+                report = (
+                    report
+                    + f"   On git repo with version {git_repo.head.commit.hexsha}\n"
+                )
+            except ValueError:
+                pass
             report = report + "\n"
 
         report = report + "Software"
         rt_version = version("colrev_core")
         report = report + "\n   - colrev_core:".ljust(33, " ") + "version " + rt_version
-        version("pipeline_validation_hooks")
+        version("colrev_hooks")
         report = (
             report
-            + "\n   - pre-commit hooks:".ljust(33, " ")
+            + "\n   - colrev hooks:".ljust(33, " ")
             + "version "
-            + version("pipeline_validation_hooks")
+            + version("colrev_hooks")
         )
         sys_v = sys.version
         report = (
@@ -2141,10 +2135,10 @@ class ReviewManager:
                 report + "\n    * created with a modified version (not reproducible)"
             )
 
-        repo = self.__git_repo
-        tree_hash = repo.git.execute(["git", "write-tree"])
+        tree_hash = git_repo.git.execute(["git", "write-tree"])
         if self.paths["MAIN_REFERENCES"].is_file():
-            report = report + f"\n\nCertified properties for tree {tree_hash}\n"
+            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
+            report = report + "\n\n" + tree_info
             report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
             report = (
                 report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"

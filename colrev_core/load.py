@@ -614,7 +614,7 @@ def convert_non_bib_search_files(REVIEW_MANAGER) -> None:
     # Note: after the search_result_file (non-bib formats) has been loaded
     # for the first time, we save a corresponding bib_file, which allows for
     # more efficient status checking, tracing, and validation.
-    # This also applies to the pipeline_validation_hooks and is particularly
+    # This also applies to the colrev_hooks and is particularly
     # relevant for pdf sources that require long processing times.
     convert_to_bib(REVIEW_MANAGER, search_files)
     git_repo = REVIEW_MANAGER.get_repo()

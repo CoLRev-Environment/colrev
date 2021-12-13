@@ -41,24 +41,6 @@ test_requirements = ["pytest>=3", "attrs>=19.2.0", "packaging>=21.0"]
 
 
 entry_points = [
-    "process=colrev_core.cli:process",
-    "status=colrev_core.cli:status",
-    "init=colrev_core.cli:init",
-    "load=colrev_core.cli:load",
-    "prep=colrev_core.cli:prep",
-    "dedupe=colrev_core.cli:dedupe",
-    "prep_man=colrev_core.cli:prep_man",
-    "dedupe_man=colrev_core.cli:dedupe_man",
-    "prescreen=colrev_core.cli:prescreen",
-    "screen=colrev_core.cli:screen",
-    "pdf_get=colrev_core.cli:pdf_get",
-    "pdf_prep=colrev_core.cli:pdf_prepare",
-    "pdf_prep_man=colrev_core.cli:pdf_prep_man",
-    "pdf_get_man=colrev_core.cli:pdf_get_man",
-    "data=colrev_core.cli:data",
-    "validate=colrev_core.cli:validate",
-    "paper=colrev_core.cli:paper",
-    "trace=colrev_core.cli:trace",
     "debug=colrev_core.cli:debug",
 ]
 

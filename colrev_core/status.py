@@ -333,7 +333,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
             instruction = {
                 "msg": f"Detected {in_progress_processes[0]} in progress. "
                 + "Complete this process",
-                "cmd": f"colrev_core {in_progress_processes[0]}",
+                "cmd": f"colrev {in_progress_processes[0]}",
             }
             instruction["priority"] = "yes"
             review_instructions.append(instruction)
@@ -356,14 +356,14 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
 
     msgs = {
         "load": "Import search results",
-        "prepare": "Prepare records",
+        "prep": "Prepare records",
         "prep_man": "Prepare records (manually)",
         "dedupe": "Deduplicate records",
         "dedupe_man": "Deduplicate records (manually)",
         "prescreen": "Prescreen records",
         "pdf_get": "Retrieve pdfs",
         "pdf_get_man": "Retrieve pdfs (manually)",
-        "pdf_prepare": "Prepare pdfs",
+        "pdf_prep": "Prepare pdfs",
         "pdf_prep_man": "Prepare pdfs (manually)",
         "screen": "Screen records",
         "data": "Extract data/synthesize records",
@@ -371,9 +371,9 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     if stat["status"]["currently"]["md_retrieved"] > 0:
         instruction = {
             "msg": msgs["load"],
-            "cmd": "colrev_core load",
+            "cmd": "colrev load",
             "priority": "yes",
-            # "high_level_cmd": "colrev_core metadata",
+            # "high_level_cmd": "colrev metadata",
         }
         review_instructions.append(instruction)
 
@@ -381,8 +381,8 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
         for active_processing_function in active_processing_functions:
             instruction = {
                 "msg": msgs[active_processing_function],
-                "cmd": f"colrev_core {active_processing_function.replace('_', '-')}"
-                # "high_level_cmd": "colrev_core metadata",
+                "cmd": f"colrev {active_processing_function.replace('_', '-')}"
+                # "high_level_cmd": "colrev metadata",
             }
             if active_processing_function in priority_processing_functions:
                 keylist = [list(x.keys()) for x in review_instructions]
@@ -397,7 +397,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
         instruction = {
             "msg": "To import, copy search results to the search directory.",
-            "cmd": "colrev_core load",
+            "cmd": "colrev load",
         }
         review_instructions.append(instruction)
 
@@ -406,14 +406,14 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
             "info": "Iterationed completed.",
             "msg": "To start the next iteration of the review, "
             + "add records to search/ directory",
-            "cmd_after": "colrev_core load",
+            "cmd_after": "colrev load",
         }
         review_instructions.append(instruction)
 
     if "MANUSCRIPT" == REVIEW_MANAGER.config["DATA_FORMAT"]:
         instruction = {
             "msg": "Build the paper",
-            "cmd": "colrev_core paper",
+            "cmd": "colrev paper",
         }
         review_instructions.append(instruction)
 

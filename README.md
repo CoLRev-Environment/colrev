@@ -1,86 +1,16 @@
-# Engine for Colaborative Literature Reviews (CoLRev)
+# CoLRev Core
 
 [![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 
-- Git-based collaborative literature reviews
-- Easy to learn: one command, `colrev_core status`, provides an overview and instructions
-- Collaboration protocols and consistency checks ([pre-commit hooks](https://github.com/geritwagner/pipeline-validation-hooks)) aimed at preventing git conflicts
-- Traceability of records and changes
-- Designed with methodological and typological pluralism in mind: configurable templates for
-  - Informal literature reviews (e.g., for a related work section) or
-  - Standalone review papers requiring extraction and analysis of structured data (e.g., critical reviews, descriptive reviews, meta-analysis, qualitative systematic reviews, realist reviews)
-  - Standalone review papers requiring interpretive analyses and syntheses of (semi) structured data (e.g., narrative reviews, scoping reviews, theoretical reviews, umbrella reviews)
-- Builds on state-of-the-art algorithms and benefits from their ongoing improvement
-  - Import of structured reference data (BibTeX, RSI, END, CSV, XLSX, based on bibutils) and unstructured reference data (TXT, PDF, based on GROBID)
-  - Metadata consolidation based on crossref/doi.org and DBLP
-  - Algorithms for machine-readability of PDFs (ocrmypdf) and annotation (GROBID)
-- Cross-platform, open-source, tested, and extensible
+This repository contains the core engine for CoLRev (**C**olaborative **L**iterature **Rev**iews).
+To use CoLRev, install the [CLI interface](https://github.com/geritwagner/colrev).
 
-_Currently an alpha-version focused on the command-line. None of the scripts has been tested extensively._
+# Architecture
 
-# Installation and usage
-
-Requirements: [git](https://git-scm.com/downloads), [Docker](https://www.docker.com/), [Python 3](https://www.python.org/), and [pip](https://pypi.org/project/pip/).
-
-```
-# Installation (currently, while not yet available via pip)
-git clone https://github.com/geritwagner/colrev_core
-# optional: checkout version
-mkdir review_project & cd review_project
-# currently: run colrev_core init before starting the virtualenv (the data files are not retrieved correctly/stored in the virtualenv at installation)
-virtualenv venv
-source venv/bin/activate
-pip3 install ../colrev_core
-pip3 install ../pipeline_validation_hooks
-
-# for editing mode:
-cd colrev_core
-pip3 install --user -e .
-# Once the project is available on PyPI:
-# pip install colrev_core
-```
-
-On the command line, use the following command:
-
-- `colrev_core status`: provides an overview of the state of the pipeline and suggests the next processing and versioning/collaboration steps (simply copy and paste).
-
-![Status command and explanation](docs/figures/status_explanation.PNG?raw=true)
-
-Further information is available in the documentation (add-link).
-For the processing, the following `colrev_core commands` are available.
-
-```bash
-/home/user/repository$colrev_core
-Usage: colrev_core [OPTIONS] COMMAND [ARGS]...
-
-  Review template pipeline
-
-  Main commands: init | status | process, screen, ...
-
-Options:
-  --help  Show this message and exit.
-
-Commands:
-  init         Initialize repository
-  status       Show status
-  process      Process records (automated steps)
-  importer     Import records (part of automated processing)
-  prep         Prepare records (part of automated processing)
-  dedupe       Deduplicate records (part of automated processing)
-  man-prep     Manual preparation of records
-  man-dedupe   Manual processing of duplicates
-  prescreen    Pre-screen based on titles and abstracts
-  screen       Screen based on exclusion criteria and fulltext documents
-  pdfs         Retrieve PDFs (part of automated processing)
-  pdf-prep     Prepare PDFs (part of automated processing)
-  data         Extract data
-  validate     Validate changes
-  trace        Trace a record
-  paper        Build the paper
-```
+TODO
 
 # Credits
 

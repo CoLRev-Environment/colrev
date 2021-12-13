@@ -72,7 +72,7 @@ def debug_prep() -> None:
     )
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prepare, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
 
     record = {
         "ENTRYTYPE": "article",

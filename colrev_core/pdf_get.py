@@ -102,8 +102,9 @@ def get_pdf_from_unpaywall(item: dict, REVIEW_MANAGER) -> dict:
     return record
 
 
-def link_pdf(item: dict, REVIEW_MANAGER) -> dict:
+def link_pdf(item: dict) -> dict:
     record = item["record"]
+    REVIEW_MANAGER = item["REVIEW_MANAGER"]
     PDF_DIRECTORY_RELATIVE = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
     pdf_filepath = PDF_DIRECTORY_RELATIVE / f"{record['ID']}.pdf"
     if pdf_filepath.is_file() and str(pdf_filepath) != record.get("file", "NA"):

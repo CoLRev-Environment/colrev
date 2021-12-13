@@ -63,7 +63,7 @@ def initialize_repo(
     SHARE_STAT_REQ: str,
     PDF_HANDLING: str,
     DATA_FORMAT: str,
-    remote_url: str = None,
+    remote_url: str = "NA",
 ) -> bool:
 
     saved_args = locals()

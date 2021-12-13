@@ -1644,9 +1644,11 @@ def set_to_reprocess(REVIEW_MANAGER):
 
 def get_lpi_data(LPI_INDICES, item):
 
-    for LPI_INDDEX in LPI_INDICES:
-        if LPI_INDDEX["filename"] in item["origin"]:
-            return LPI_INDDEX
+    for LPI_INDEX in LPI_INDICES:
+        if not LPI_INDEX:
+            continue
+        if LPI_INDEX["filename"] in item["origin"]:
+            return LPI_INDEX
     return {}
 
 

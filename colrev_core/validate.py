@@ -8,13 +8,13 @@ from itertools import chain
 from pathlib import Path
 
 import bibtexparser
+import colrev_hooks
 import dictdiffer
 import git
-import pipeline_validation_hooks
 from bashplotlib.histogram import plot_hist
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
-from pipeline_validation_hooks import check  # noqa: F401
+from colrev_hooks import check  # noqa: F401
 
 from colrev_core import dedupe
 from colrev_core import status
@@ -224,7 +224,7 @@ def validate_properties(target_commit: str = None) -> None:
         logger.info("Completeness of iteration".ljust(32, " ") + "YES (validated)")
     else:
         logger.error("Completeness of iteration".ljust(32, " ") + "NO")
-    if 0 == pipeline_validation_hooks.check.main():
+    if 0 == colrev_hooks.check.main():
         logger.info("Traceability of records".ljust(32, " ") + "YES (validated)")
         logger.info("Consistency (based on hooks)".ljust(32, " ") + "YES (validated)")
     else:

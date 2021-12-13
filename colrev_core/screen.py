@@ -16,7 +16,7 @@ def get_excl_criteria(ec_string: str) -> list:
 
 
 def get_exclusion_criteria_from_str(ec_string: str) -> list:
-    if ec_string:
+    if ec_string != "":
         excl_criteria = get_excl_criteria(ec_string)
     else:
         excl_criteria_str = input("Exclusion criteria (comma separated or NA)")
@@ -30,8 +30,12 @@ def get_exclusion_criteria_from_str(ec_string: str) -> list:
 
 
 def get_exclusion_criteria(bib_db: BibDatabase) -> list:
-    ec_string = [x.get("excl_criteria") for x in bib_db.entries if "excl_criteria" in x]
-    return get_exclusion_criteria_from_str(ec_string[0])
+    ec_list = [x.get("excl_criteria") for x in bib_db.entries if "excl_criteria" in x]
+    if 0 == len(ec_list):
+        ec_string = ""
+    else:
+        ec_string = ec_list.pop()
+    return get_exclusion_criteria_from_str(ec_string)
 
 
 def get_data(REVIEW_MANAGER):
