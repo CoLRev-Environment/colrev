@@ -3,6 +3,7 @@ import os
 import re
 import subprocess
 import time
+from pathlib import Path
 
 import requests
 from lxml import etree
@@ -157,7 +158,6 @@ def get_paper_authors(root) -> str:
     author_string = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     author_list = []
-    author_node = ""
 
     if file_description.find(".//" + ns["tei"] + "analytic") is not None:
         author_node = file_description.find(".//" + ns["tei"] + "analytic")
@@ -235,7 +235,7 @@ def get_paper_doi(root) -> str:
     return doi
 
 
-def get_record_from_pdf_tei(filepath: str) -> dict:
+def get_record_from_pdf_tei(filepath: Path) -> dict:
 
     # Note: we have more control and transparency over the consolidation
     # if we do it in the review_template process

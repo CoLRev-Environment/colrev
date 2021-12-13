@@ -156,9 +156,9 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
     return
 
 
-def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
+def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
 
-    if "none" == target_commit:
+    if target_commit is None:
         logger.info("Loading data...")
         bib_db = REVIEW_MANAGER.load_bib_db()
         [x.update(changed_in_target_commit="True") for x in bib_db.entries]
@@ -195,7 +195,7 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str) -> BibDatabase:
     return bib_db
 
 
-def validate_properties(target_commit: str) -> None:
+def validate_properties(target_commit: str = None) -> None:
     # TODO: option: --history: check all preceding commits (create a list...)
 
     from review_template.review_manager import ReviewManager, ProcessType, Process

@@ -29,15 +29,15 @@ def get_records_for_synthesis(bib_db: BibDatabase) -> list:
     ]
 
 
-def get_data_page_missing(PAPER: Path, records: dict) -> list:
+def get_data_page_missing(PAPER: Path, record_id_list: list) -> list:
     available = []
     with open(PAPER) as f:
         line = f.read()
-        for record in records:
+        for record in record_id_list:
             if record in line:
                 available.append(record)
 
-    return list(set(records) - set(available))
+    return list(set(record_id_list) - set(available))
 
 
 def get_to_synthesize_in_manuscript(PAPER: Path, records_for_synthesis: list) -> list:
@@ -243,8 +243,10 @@ def update_structured_data(
     if not DATA.is_file():
         included = get_records_for_synthesis(bib_db)
 
-        coding_dimensions = input("Enter columns for data extraction (comma-separted)")
-        coding_dimensions = coding_dimensions.replace(" ", "_").split(",")
+        coding_dimensions_str = input(
+            "Enter columns for data extraction (comma-separted)"
+        )
+        coding_dimensions = coding_dimensions_str.replace(" ", "_").split(",")
 
         data = []
         for included_id in included:
@@ -266,22 +268,24 @@ def update_structured_data(
         nr_records_added = 0
 
         with open(DATA) as f:
-            data = pd.json_normalize(safe_load(f))
+            data_df = pd.json_normalize(safe_load(f))
 
         for record_id in included:
             # skip when already available
-            if 0 < len(data[data["ID"].str.startswith(record_id)]):
+            if 0 < len(data_df[data_df["ID"].str.startswith(record_id)]):
                 continue
 
             add_record = pd.DataFrame({"ID": [record_id]})
-            add_record = add_record.reindex(columns=data.columns, fill_value="TODO")
-            data = pd.concat([data, add_record], axis=0, ignore_index=True)
+            add_record = add_record.reindex(columns=data_df.columns, fill_value="TODO")
+            data_df = pd.concat([data_df, add_record], axis=0, ignore_index=True)
             nr_records_added = nr_records_added + 1
 
-        data.sort_values(by=["ID"], inplace=True)
+        data_df.sort_values(by=["ID"], inplace=True)
         with open(DATA, "w") as f:
             yaml.dump(
-                json.loads(data.to_json(orient="records")), f, default_flow_style=False
+                json.loads(data_df.to_json(orient="records")),
+                f,
+                default_flow_style=False,
             )
 
         report_logger.info(f"{nr_records_added} records added ({DATA})")

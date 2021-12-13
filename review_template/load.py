@@ -5,6 +5,7 @@ import multiprocessing as mp
 import pprint
 import re
 import shutil
+import typing
 from itertools import chain
 from pathlib import Path
 
@@ -35,7 +36,7 @@ class NoSearchResultsAvailableError(Exception):
         super().__init__(self.message)
 
 
-def get_search_files(restrict: list = None) -> None:
+def get_search_files(restrict: list = None) -> typing.List[Path]:
 
     supported_extensions = [
         "ris",
@@ -169,7 +170,7 @@ def source_heuristics(search_file: Path) -> str:
             if "UT_(Unique_WOS_ID) = {WOS:" in line:
                 return "WebOfScience"
 
-    return None
+    return ""
 
 
 def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
@@ -192,9 +193,6 @@ def bibutils_convert(script: str, data: str) -> str:
     else:
         script = script + " -i unicode "
 
-    if isinstance(data, str):
-        data = data.encode()
-
     client = docker.APIClient()
     try:
         cur_tag = docker.from_env().images.get("bibutils").tags[0]
@@ -211,7 +209,7 @@ def bibutils_convert(script: str, data: str) -> str:
     )
     client.start(container)
 
-    sock._sock.send(data)
+    sock._sock.send(data.encode())
     sock._sock.close()
     sock.close()
 
@@ -363,13 +361,13 @@ def xlsx2bib(file: Path) -> BibDatabase:
     return db
 
 
-def move_to_pdf_dir(filepath: Path) -> str:
+def move_to_pdf_dir(filepath: Path) -> Path:
     # TODO: replace by REVIEW_MANAGER.paths['PDF_DIRECTORY']
     PDF_DIRECTORY = "pdfs"
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
     Path(PDF_DIRECTORY).mkdir(exist_ok=True)
     new_fp = Path(PDF_DIRECTORY) / filepath.name
-    shutil.move(filepath, new_fp)
+    shutil.move(str(filepath), new_fp)
     return new_fp
 
 
@@ -418,8 +416,8 @@ def pdfRefs2bib(file: Path) -> BibDatabase:
         parser = BibTexParser(customization=convert_to_unicode)
         db = bibtexparser.loads(r.text, parser=parser)
         # Use lpad to maintain the sort order (easier to catch errors)
-        for r in db.entries:
-            r["ID"] = r["ID"].rjust(3, "0")
+        for rec in db.entries:
+            rec["ID"] = rec.get("ID", "").rjust(3, "0")
         return db
     if 500 == r.status_code:
         report_logger.error(f"Not a readable pdf file: {file.name}")
@@ -552,7 +550,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
             report_logger.info(f"Loading {filetype}: {sfpath.name}")
             logger.info(f"Loading {filetype}: {sfpath.name}")
             logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
-            db = conversion_scripts[filetype](str(sfpath))
+            db = conversion_scripts[filetype](sfpath)
 
             db = fix_keys(db)
             db = set_incremental_IDs(db)

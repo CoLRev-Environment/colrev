@@ -6,6 +6,7 @@ import logging
 import pprint
 import re
 import sys
+import typing
 import urllib
 from pathlib import Path
 
@@ -34,7 +35,7 @@ report_logger = logging.getLogger("review_template_report")
 logger = logging.getLogger("review_template")
 
 
-def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
+def retrieve_local_JOURNAL_ABBREVIATIONS() -> pd.DataFrame:
     j_abbrev = Path("lexicon/JOURNAL_ABBREVIATIONS.csv")
     if j_abbrev.is_file():
         JOURNAL_ABBREVIATIONS = pd.read_csv("lexicon/JOURNAL_ABBREVIATIONS.csv")
@@ -43,7 +44,7 @@ def retrieve_local_JOURNAL_ABBREVIATIONS() -> list:
     return JOURNAL_ABBREVIATIONS
 
 
-def retrieve_local_JOURNAL_VARIATIONS() -> list:
+def retrieve_local_JOURNAL_VARIATIONS() -> pd.DataFrame:
     j_var = Path("lexicon/JOURNAL_VARIATIONS.csv")
     if j_var.is_file():
         JOURNAL_VARIATIONS = pd.read_csv("lexicon/JOURNAL_VARIATIONS.csv")
@@ -52,7 +53,7 @@ def retrieve_local_JOURNAL_VARIATIONS() -> list:
     return JOURNAL_VARIATIONS
 
 
-def retrieve_local_CONFERENCE_ABBREVIATIONS() -> list:
+def retrieve_local_CONFERENCE_ABBREVIATIONS() -> pd.DataFrame:
     c_abbrev = Path("lexicon/CONFERENCE_ABBREVIATIONS.csv")
     if c_abbrev.is_file():
         CONFERENCE_ABBREVIATIONS = pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
@@ -232,8 +233,9 @@ def format(record: dict) -> dict:
         record.update(booktitle=stripped_btitle)
 
     if "date" in record and "year" not in record:
-        year = re.search(r"\d{4}", record["date"]).group(0)
-        record["year"] = year
+        year = re.search(r"\d{4}", record["date"])
+        if year:
+            record["year"] = year.group(0)
 
     if "journal" in record:
         if len(record["journal"]) > 10:
@@ -282,7 +284,7 @@ def apply_local_rules(record: dict) -> dict:
 
 def mostly_upper_case(input_string: str) -> bool:
     if not re.match(r"[a-zA-Z]+", input_string):
-        return input_string
+        return False
     input_string = input_string.replace(".", "").replace(",", "")
     words = input_string.split()
     return sum(word.isupper() for word in words) / len(words) > 0.8
@@ -370,7 +372,7 @@ def get_md_from_doi(record: dict) -> dict:
 
 def crossref_json_to_record(item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
-    record = {}
+    record: dict = {}
 
     if "title" in item:
         retrieved_title = item["title"]
@@ -491,13 +493,13 @@ def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
         ret = requests.get(url, headers=headers)
         if ret.status_code != 200:
             logger.debug(f"crossref_query failed with status {ret.status_code}")
-            return None
+            return {}
 
         data = json.loads(ret.text)
 
         items = data["message"]["items"]
         most_similar = 0
-        most_similar_record = None
+        most_similar_record = {}
         for item in items:
             if "title" not in item:
                 continue
@@ -530,7 +532,7 @@ def crossref_query(record: dict, jour_vol_iss_list: bool = False) -> dict:
                 most_similar_record = retrieved_record
     except requests.exceptions.ConnectionError:
         logger.error("requests.exceptions.ConnectionError in crossref_query")
-        return None
+        return {}
 
     if jour_vol_iss_list:
         return record_list
@@ -641,7 +643,7 @@ def get_md_from_crossref(record: dict) -> dict:
                 retries += 1
                 retrieved_record = crossref_query(record)
 
-            if retrieved_record is None:
+            if 0 == len(retrieved_record):
                 return record
 
             similarity = get_retrieval_similarity(
@@ -674,26 +676,26 @@ def get_year_from_vol_iss_jour_crossref(record: dict) -> dict:
     MAX_RETRIES_ON_ERROR = 3
     try:
         modified_record = record.copy()
-        modified_record = [
-            (k, v)
+        modified_record = {
+            k: v
             for k, v in modified_record.items()
             if k in ["journal", "volume", "number"]
-        ]
+        }
 
         # http://api.crossref.org/works?
         # query.container-title=%22MIS+Quarterly%22&query=%2216+2%22
 
-        retrieved_records = crossref_query(record, jour_vol_iss_list=True)
+        retrieved_records_list = crossref_query(record, jour_vol_iss_list=True)
         retries = 0
-        while not retrieved_records and retries < MAX_RETRIES_ON_ERROR:
+        while not retrieved_records_list and retries < MAX_RETRIES_ON_ERROR:
             retries += 1
-            retrieved_records = crossref_query(record, jour_vol_iss_list=True)
-        if retrieved_records is None:
+            retrieved_records_list = crossref_query(record, jour_vol_iss_list=True)
+        if 0 == len(retrieved_records_list):
             return record
 
         retrieved_records = [
             r
-            for r in retrieved_records
+            for r in retrieved_records_list
             if r.get("volume", "NA") == record["volume"]
             and r.get("journal", "NA") == record["journal"]
             and r.get("number", "NA") == record["number"]
@@ -715,7 +717,7 @@ def get_year_from_vol_iss_jour_crossref(record: dict) -> dict:
 
 
 def sem_scholar_json_to_record(item: dict, record: dict) -> dict:
-    retrieved_record = {}
+    retrieved_record: dict = {}
     if "authors" in item:
         authors_string = " and ".join(
             [author["name"] for author in item["authors"] if "name" in author]
@@ -806,7 +808,7 @@ def get_md_from_sem_scholar(record: dict) -> dict:
 
 
 def open_library_json_to_record(item: dict) -> dict:
-    retrieved_record = {}
+    retrieved_record: dict = {}
 
     if "author_name" in item:
         authors_string = " and ".join(
@@ -941,12 +943,12 @@ def dblp_json_to_record(item: dict) -> dict:
             if isinstance(item["authors"]["author"], dict):
                 author_string = item["authors"]["author"]["text"]
             else:
-                authors = [
+                authors_nodes = [
                     author
                     for author in item["authors"]["author"]
                     if isinstance(author, dict)
                 ]
-                authors = [x["text"] for x in authors if "text" in x]
+                authors = [x["text"] for x in authors_nodes if "text" in x]
                 author_string = " and ".join(authors)
             author_string = format_author_field(author_string)
             retrieved_record["author"] = author_string
@@ -1295,7 +1297,7 @@ def drop_fields(record: dict) -> dict:
     return record
 
 
-def read_next_record_str() -> str:
+def read_next_record_str() -> typing.Iterator[str]:
     # TODO : we should use the REVIEW_MANAGER.pahts[...] here
     with open("references.bib") as f:
         data = ""
@@ -1331,13 +1333,13 @@ def get_crossref_record(record) -> dict:
                 record = db.entries[0]
                 if record["origin"] == crossref_origin:
                     return record
-    return None
+    return {}
 
 
 def resolve_crossrefs(record: dict) -> dict:
     if "crossref" in record:
         crossref_record = get_crossref_record(record)
-        if crossref_record is not None:
+        if 0 != len(crossref_record):
             for k, v in crossref_record.items():
                 if k not in record:
                     record[k] = v
@@ -1345,7 +1347,7 @@ def resolve_crossrefs(record: dict) -> dict:
     return record
 
 
-def log_notifications(record: dict, unprepared_record: dict) -> None:
+def log_notifications(record: dict, unprepared_record: dict) -> dict:
 
     msg = ""
 
@@ -1458,7 +1460,6 @@ def update_local_paper_index_fields(
 
     sub_dir_pattern = LOCAL_PAPER_INDEX_FORMAT["sub_dir_pattern"]
 
-    r_sub_dir_pattern = ""
     partial_path = Path(record["file"]).parents[0].stem
     if "year" == sub_dir_pattern:
         r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
@@ -1467,22 +1468,21 @@ def update_local_paper_index_fields(
         partial_path = str(Path(record["file"]).parents[0]).replace(
             LOCAL_PAPER_INDEX_FORMAT["source_url"], ""
         )
-    if "volume_number" == sub_dir_pattern:
-        r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
-
-    volume, number, year = None, None, None
-    if "volume_number" == sub_dir_pattern:
-        match = r_sub_dir_pattern.search(str(partial_path))
-        if match is not None:
-            volume = match.group(1)
-            number = match.group(2)
-            record["volume"] = volume
-            record["number"] = number
-    if "year" == sub_dir_pattern:
         match = r_sub_dir_pattern.search(str(partial_path))
         if match is not None:
             year = match.group(1)
             record["year"] = year
+
+    if "volume_number" == sub_dir_pattern:
+        r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
+
+        if "volume_number" == sub_dir_pattern:
+            match = r_sub_dir_pattern.search(str(partial_path))
+            if match is not None:
+                volume = match.group(1)
+                number = match.group(2)
+                record["volume"] = volume
+                record["number"] = number
 
     return record
 

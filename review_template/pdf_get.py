@@ -33,27 +33,27 @@ def unpaywall(doi: str, retry: int = 0, pdfonly: bool = True) -> str:
     r = requests.get(url, params={"email": EMAIL})
 
     if r.status_code == 404:
-        return None
+        return "NA"
 
     if r.status_code == 500:
         if retry < 3:
             return unpaywall(doi, retry + 1)
         else:
-            return None
+            return "NA"
 
     best_loc = None
     try:
         best_loc = r.json()["best_oa_location"]
     except json.decoder.JSONDecodeError:
-        return None
+        return "NA"
     except KeyError:
-        return None
+        return "NA"
 
     if not r.json()["is_oa"] or best_loc is None:
-        return None
+        return "NA"
 
     if best_loc["url_for_pdf"] is None and pdfonly is True:
-        return None
+        return "NA"
     else:
         return best_loc["url_for_pdf"]
 
@@ -66,7 +66,8 @@ def is_pdf(path_to_file: str) -> bool:
         return False
 
 
-def get_pdf_from_unpaywall(record: dict, REVIEW_MANAGER) -> dict:
+def get_pdf_from_unpaywall(item: dict, REVIEW_MANAGER) -> dict:
+    record = item["record"]
 
     if "doi" not in record:
         return record
@@ -75,7 +76,7 @@ def get_pdf_from_unpaywall(record: dict, REVIEW_MANAGER) -> dict:
         REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / f"{record['ID']}.pdf"
     )
     url = unpaywall(record["doi"])
-    if url is not None:
+    if "NA" != url:
         if "Invalid/unknown DOI" not in url:
             res = requests.get(
                 url,
@@ -101,11 +102,9 @@ def get_pdf_from_unpaywall(record: dict, REVIEW_MANAGER) -> dict:
     return record
 
 
-def link_pdf(record: dict, REVIEW_MANAGER) -> dict:
+def link_pdf(item: dict, REVIEW_MANAGER) -> dict:
+    record = item["record"]
     PDF_DIRECTORY_RELATIVE = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-    global PAD
-    if "PAD" not in globals():
-        PAD = 40
     pdf_filepath = PDF_DIRECTORY_RELATIVE / f"{record['ID']}.pdf"
     if pdf_filepath.is_file() and str(pdf_filepath) != record.get("file", "NA"):
         record.update(file=str(pdf_filepath))
@@ -129,7 +128,7 @@ def retrieve_pdf(item: dict) -> dict:
 
     for retrieval_script in retrieval_scripts:
         report_logger.info(f'{retrieval_script}({record["ID"]}) called')
-        record = retrieval_scripts[retrieval_script](record, REVIEW_MANAGER)
+        record = retrieval_scripts[retrieval_script](item, REVIEW_MANAGER)
         if "file" in record:
             report_logger.info(
                 f'{retrieval_script}({record["ID"]}): retrieved {record["file"]}'
@@ -173,36 +172,36 @@ def check_existing_unlinked_pdfs(
             if "error" in pdf_record:
                 continue
 
-            max_similarity = 0
+            max_similarity = 0.0
             max_sim_record = None
             for record in bib_db.entries:
                 sim = dedupe.get_record_similarity(pdf_record, record.copy())
                 if sim > max_similarity:
                     max_similarity = sim
                     max_sim_record = record
+            if max_sim_record:
+                if max_similarity > 0.5:
+                    if RecordState.pdf_prepared == max_sim_record["status"]:
+                        continue
+                    new_filename = (
+                        REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                        / f"{max_sim_record['ID']}.pdf"
+                    )
 
-            if max_similarity > 0.5:
-                if RecordState.pdf_prepared == max_sim_record["status"]:
-                    continue
-                new_filename = (
-                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-                    / f"{max_sim_record['ID']}.pdf"
-                )
-
-                max_sim_record.update(file=str(new_filename))
-                max_sim_record.update(status=RecordState.pdf_imported)
-                file.rename(new_filename)
-                report_logger.info(
-                    "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
-                )
-                logger.info(
-                    "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
-                )
-                # max_sim_record = \
-                #     pdf_prepare.validate_pdf_metadata(max_sim_record)
-                # status = max_sim_record['status']
-                # if RecordState.pdf_needs_manual_preparation == status:
-                #     # revert?
+                    max_sim_record.update(file=str(new_filename))
+                    max_sim_record.update(status=RecordState.pdf_imported)
+                    file.rename(new_filename)
+                    report_logger.info(
+                        "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
+                    )
+                    logger.info(
+                        "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
+                    )
+                    # max_sim_record = \
+                    #     pdf_prepare.validate_pdf_metadata(max_sim_record)
+                    # status = max_sim_record['status']
+                    # if RecordState.pdf_needs_manual_preparation == status:
+                    #     # revert?
 
     return bib_db
 
@@ -270,9 +269,6 @@ def main(REVIEW_MANAGER) -> None:
 
     pdf_get_data = get_data(REVIEW_MANAGER)
     logger.debug(f"pdf_get_data: {pp.pformat(pdf_get_data)}")
-
-    global PAD
-    PAD = pdf_get_data["PAD"]
 
     logger.debug(pp.pformat(pdf_get_data["items"]))
 

@@ -26,8 +26,8 @@ pd.options.mode.chained_assignment = None  # default='warn'
 def remove_accents(input_str: str) -> str:
     try:
         nfkd_form = unicodedata.normalize("NFKD", input_str)
-        wo_ac = [rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)]
-        wo_ac = "".join(wo_ac)
+        wo_ac_str = [rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)]
+        wo_ac = "".join(wo_ac_str)
     except ValueError:
         wo_ac = input_str
         pass
@@ -73,7 +73,7 @@ def format_authors_string(authors: str) -> str:
 
 
 def year_similarity(y1: int, y2: int) -> float:
-    sim = 0
+    sim = 0.0
     if int(y1) == int(y2):
         sim = 1
     elif int(y1) in [int(y1) - 1, int(y1) + 1]:
@@ -137,7 +137,7 @@ def get_record_similarity(record_a: dict, record_b: dict) -> float:
     return get_similarity(df_a.iloc[0], df_b.iloc[0])
 
 
-def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
+def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
 
     author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
@@ -313,19 +313,19 @@ def append_merges(batch_item: dict) -> list:
             }
         ]
 
-    ID = references.loc[references["similarity"].idxmax()]["ID"]
-    logger.debug(f"max_similarity ({max_similarity}): {batch_item['record']} {ID}")
-    details = references.loc[references["similarity"].idxmax()]["details"]
-    logger.debug(details)
-    if (
+    elif (
         max_similarity > batch_item["MERGING_NON_DUP_THRESHOLD"]
         and max_similarity < batch_item["MERGING_DUP_THRESHOLD"]
     ):
 
+        ID = references.loc[references["similarity"].idxmax()]["ID"]
+        logger.debug(f"max_similarity ({max_similarity}): {batch_item['record']} {ID}")
+        details = references.loc[references["similarity"].idxmax()]["details"]
+        logger.debug(details)
         # record_a, record_b = sorted([ID, record["ID"]])
         msg = (
             f'{batch_item["record"]} - {ID}'.ljust(35, " ")
-            + +f"  - potential duplicate (similarity: {max_similarity})"
+            + f"  - potential duplicate (similarity: {max_similarity})"
         )
         report_logger.info(msg)
         logger.info(msg)
@@ -338,10 +338,14 @@ def append_merges(batch_item: dict) -> list:
             }
         ]
 
-    if max_similarity >= batch_item["MERGING_DUP_THRESHOLD"]:
+    else:  # max_similarity >= batch_item["MERGING_DUP_THRESHOLD"]:
         # note: the following status will not be saved in the bib file but
         # in the duplicate_tuples.csv (which will be applied to the bib file
         # in the end)
+        ID = references.loc[references["similarity"].idxmax()]["ID"]
+        logger.debug(f"max_similarity ({max_similarity}): {batch_item['record']} {ID}")
+        details = references.loc[references["similarity"].idxmax()]["details"]
+        logger.debug(details)
         msg = (
             f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
             + f" (similarity: {max_similarity})\nDetails: {details}"
@@ -371,22 +375,22 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
     bib_db = REVIEW_MANAGER.load_bib_db()
 
     for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
-        non_dupe_record = [x for x in bib_db.entries if x["ID"] == non_dupe]
-        if len(non_dupe_record) == 0:
+        non_dupe_record_list = [x for x in bib_db.entries if x["ID"] == non_dupe]
+        if len(non_dupe_record_list) == 0:
             continue
-        non_dupe_record = non_dupe_record[0]
+        non_dupe_record = non_dupe_record_list.pop()
         non_dupe_record.update(status=RecordState.md_processed)
 
     for dupe in [x for x in results if "duplicate" == x["decision"]]:
         try:
-            main_record = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
-            if len(main_record) == 0:
+            main_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
+            if len(main_record_list) == 0:
                 continue
-            main_record = main_record[0]
-            dupe_record = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
-            if len(dupe_record) == 0:
+            main_record = main_record_list.pop()
+            dupe_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
+            if len(dupe_record_list) == 0:
                 continue
-            dupe_record = dupe_record[0]
+            dupe_record = dupe_record_list.pop()
             origins = main_record["origin"].split(";") + dupe_record["origin"].split(
                 ";"
             )
@@ -411,9 +415,10 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
         # because new papers may be added to md_processed
         # (becoming additional potential duplicates)
 
-        pot_dupe_record = [x for x in bib_db.entries if x["ID"] == pot_dupe_item]
-        if len(pot_dupe_record) == 0:
+        pot_dupe_record_list = [x for x in bib_db.entries if x["ID"] == pot_dupe_item]
+        if len(pot_dupe_record_list) == 0:
             continue
+        pot_dupe_record = pot_dupe_record_list.pop()
         pot_dupe_record = pot_dupe_record[0]
         pot_dupe_record.update(status=RecordState.md_needs_manual_deduplication)
 

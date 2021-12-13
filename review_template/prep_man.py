@@ -26,8 +26,8 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     bib_db = REVIEW_MANAGER.load_bib_db()
 
     logger.info("Calculate statistics")
-    stats = {"ENTRYTYPE": {}}
-    overall_types = {"ENTRYTYPE": {}}
+    stats: dict = {"ENTRYTYPE": {}}
+    overall_types: dict = {"ENTRYTYPE": {}}
     prep_man_hints = []
     origins = []
     crosstab = []
@@ -119,7 +119,7 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
         for orig in record.get("origin", "NA").split(";"):
             origin_list.append(orig.split("/"))
 
-    search_results_list = {}
+    search_results_list: dict = {}
     for file, id in origin_list:
         if file in search_results_list:
             search_results_list[file].append(id)

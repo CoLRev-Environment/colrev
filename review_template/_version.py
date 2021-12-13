@@ -48,8 +48,8 @@ class NotThisMethod(Exception):
     """Exception raised if a method is not valid for the current scenario."""
 
 
-LONG_VERSION_PY = {}
-HANDLERS = {}
+LONG_VERSION_PY = {}  # type: ignore
+HANDLERS = {}  # type: ignore
 
 
 def register_vcs_handler(vcs, method):  # decorator

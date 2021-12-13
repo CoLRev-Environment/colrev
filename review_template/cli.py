@@ -95,7 +95,7 @@ class SpecialHelpOrder(click.Group):
         return decorator
 
 
-def get_value(msg: str, options: dict) -> str:
+def get_value(msg: str, options: list) -> str:
     valid_response = False
     user_input = ""
     while not valid_response:
@@ -155,7 +155,7 @@ def init(ctx) -> bool:
     if "y" == input("Connect to shared (remote) repository (y)?"):
         remote_url = input("URL:")
     else:
-        remote_url = None
+        remote_url = "NA"
 
     init.initialize_repo(
         project_title, SHARE_STAT_REQ, PDF_HANDLING, DATA_FORMAT, remote_url
@@ -939,7 +939,7 @@ def prescreen_cli(
         revrecord = customsort(record)
         pp.pprint(revrecord)
 
-        ret, inclusion_decision = "NA", "NA"
+        ret, inclusion_decision_str = "NA", "NA"
         i += 1
         while ret not in ["y", "n", "s", "q"]:
             ret = input(f"({i}/{stat_len}) Include this record [y,n,q,s]? ")
@@ -948,13 +948,13 @@ def prescreen_cli(
             elif "s" == ret:
                 continue
             else:
-                inclusion_decision = ret.replace("y", "yes").replace("n", "no")
+                inclusion_decision_str = ret.replace("y", "yes").replace("n", "no")
 
         if quit_pressed:
             logger.info("Stop prescreen")
             break
 
-        inclusion_decision = "yes" == inclusion_decision
+        inclusion_decision = "yes" == inclusion_decision_str
         prescreen.set_data(REVIEW_MANAGER, record, inclusion_decision, PAD)
 
     if i < stat_len:  # if records remain for pre-screening
@@ -1208,7 +1208,7 @@ def get_pdf_from_google(record: dict) -> dict:
     return record
 
 
-def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str) -> dict:
+def man_retrieve(REVIEW_MANAGER, bib_db, item: dict, stat: str):
     from review_template import pdf_get_man
 
     logger.debug(f"called man_retrieve for {pp.pformat(item)}")

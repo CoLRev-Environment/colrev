@@ -28,10 +28,10 @@ def main(REVIEW_MANAGER) -> None:
     WORD_TEMPLATE_FILENAME = WORD_TEMPLATE_URL.name
 
     # TODO: maybe update?
-    if not WORD_TEMPLATE_FILENAME.is_file():
+    if not Path(WORD_TEMPLATE_FILENAME).is_file():
 
         url = WORD_TEMPLATE_URL
-        r = requests.get(url)
+        r = requests.get(str(url))
         with open(WORD_TEMPLATE_FILENAME, "wb") as output:
             output.write(r.content)
 

@@ -362,8 +362,8 @@ class NotThisMethod(Exception):
 
 
 # these dictionaries contain VCS-specific tools
-LONG_VERSION_PY = {}
-HANDLERS = {}
+LONG_VERSION_PY = {}  # type: ignore
+HANDLERS = {}  # type: ignore
 
 
 def register_vcs_handler(vcs, method):  # decorator

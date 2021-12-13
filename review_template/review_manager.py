@@ -16,6 +16,7 @@ import re
 import string
 import subprocess
 import sys
+import typing
 import unicodedata
 from contextlib import redirect_stdout
 from enum import auto
@@ -296,8 +297,8 @@ def get_bibtex_writer():
     return writer
 
 
-def get_file_paths(repository_dir: str) -> dict:
-    repository_dir = Path(repository_dir)
+def get_file_paths(repository_dir_str: str) -> dict:
+    repository_dir = Path(repository_dir_str)
     main_refs = "references.bib"
     data = "data.yaml"
     pdf_dir = "pdfs"
@@ -553,8 +554,10 @@ def rmdiacritics(char: str) -> str:
 def remove_accents(input_str: str) -> str:
     try:
         nfkd_form = unicodedata.normalize("NFKD", input_str)
-        wo_ac = [rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)]
-        wo_ac = "".join(wo_ac)
+        wo_ac_list = [
+            rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
+        ]
+        wo_ac = "".join(wo_ac_list)
     except ValueError:
         wo_ac = input_str
         pass
@@ -575,9 +578,9 @@ def inplace_change(filename: str, old_string: str, new_string: str) -> None:
 
 def retrieve_package_file(template_file: str, target: str) -> None:
     filedata = pkgutil.get_data(__name__, template_file)
-    filedata = filedata.decode("utf-8")
-    with open(target, "w") as file:
-        file.write(filedata)
+    if filedata:
+        with open(target, "w") as file:
+            file.write(filedata.decode("utf-8"))
     return
 
 
@@ -616,8 +619,11 @@ def build_docker_images(self) -> None:
     if "bibutils" not in repo_tags:
         self.logger.info("Building bibutils Docker image...")
         filedata = pkgutil.get_data(__name__, "../docker/bibutils/Dockerfile")
-        fileobj = io.BytesIO(filedata)
-        client.images.build(fileobj=fileobj, tag="bibutils:latest")
+        if filedata:
+            fileobj = io.BytesIO(filedata)
+            client.images.build(fileobj=fileobj, tag="bibutils:latest")
+        else:
+            self.logger.error("Cannot retrieve image bibutils")
 
     if "lfoppiano/grobid" not in repo_tags:
         self.logger.info("Pulling grobid Docker image...")
@@ -677,7 +683,7 @@ def is_review_template_project() -> bool:
 
 
 def get_installed_hooks() -> dict:
-    installed_hooks = {}
+    installed_hooks: dict = {"hooks": list()}
     with open(".pre-commit-config.yaml") as pre_commit_y:
         pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
     installed_hooks[
@@ -690,7 +696,7 @@ def get_installed_hooks() -> dict:
     return installed_hooks
 
 
-def lsremote(url: str) -> str:
+def lsremote(url: str) -> dict:
     remote_refs = {}
     g = git.cmd.Git()
     for ref in g.ls_remote(url).split("\n"):
@@ -760,7 +766,7 @@ def require_hooks_installed(installed_hooks: dict) -> bool:
             "(use pre-commit install --hook-type prepare-commit-msg)"
         )
 
-    return
+    return True
 
 
 def check_software(REVIEW_MANAGER):
@@ -968,7 +974,7 @@ def get_record_header_item(r_header: str) -> list:
     ID = rhl0
 
     if "origin" not in rhlines[1]:
-        raise RecordFormatError(ID, "status", "NA")
+        raise RecordFormatError(f"{ID} has status=NA")
     origin = rhl1[:-1]  # to replace the trailing }
 
     if "status" not in rhlines[2]:
@@ -1081,7 +1087,7 @@ def retrieve_IDs_from_bib(file_path: Path) -> list:
     return IDs
 
 
-def read_next_record(file_object) -> str:
+def read_next_record(file_object) -> typing.Iterator[str]:
     data = ""
     first_record_processed = False
     while True:
@@ -1115,7 +1121,7 @@ def retrieve_prior(REVIEW_MANAGER) -> dict:
         (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
         for commit in repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
     )
-    prior = {"status": [], "persisted_IDs": []}
+    prior: dict = {"status": [], "persisted_IDs": []}
     filecontents = list(revlist)[0][1]
     for record_string in read_next_record(io.StringIO(filecontents.decode("utf-8"))):
 
@@ -1140,7 +1146,7 @@ def retrieve_prior(REVIEW_MANAGER) -> dict:
 
 def retrieve_data(prior: dict, MAIN_REFERENCES: str) -> dict:
 
-    data = {
+    data: dict = {
         "missing_file": [],
         "pdf_not_exists": [],
         "status_fields": [],
@@ -1295,7 +1301,8 @@ def check_main_references_origin(REVIEW_MANAGER, prior: dict, data: dict) -> Non
     all_record_links = []
     for bib_file in search_dir.glob("*.bib"):
         search_IDs = retrieve_IDs_from_bib(bib_file)
-        [all_record_links.append(bib_file.name + "/" + x) for x in search_IDs]
+        for x in search_IDs:
+            all_record_links.append(bib_file.name + "/" + x)
     delta = set(data["record_links_in_bib"]) - set(all_record_links)
     if len(delta) > 0:
         raise OriginError(f"broken origins: {delta}")
@@ -1474,7 +1481,7 @@ def check_update_synthesized_status(REVIEW_MANAGER) -> None:
 #     return
 
 
-def check_propagated_IDs(prior_id: str, new_id: str) -> None:
+def check_propagated_IDs(prior_id: str, new_id: str) -> list:
 
     ignore_patterns = [".git", "config.ini", "report.log", ".pre-commit-config.yaml"]
 
@@ -1495,7 +1502,7 @@ def check_propagated_IDs(prior_id: str, new_id: str) -> None:
                 continue
             logging.debug(f"Checking {name}")
             if name.endswith(".bib"):
-                retrieved_IDs = retrieve_IDs_from_bib(os.path.join(root, name))
+                retrieved_IDs = retrieve_IDs_from_bib(Path(os.path.join(root, name)))
                 if prior_id in retrieved_IDs:
                     notifications.append(
                         f"Old ID ({prior_id}, changed to {new_id} in "
@@ -2033,6 +2040,7 @@ class ReviewManager:
             f"{inspect.getmodule(process.processing_function).__name__}."
             + f"{process.processing_function.__name__}"
         )
+
         self.report_logger.info(
             f"ReviewManager: check_precondition({function_name}, "
             + f"a {process.type.name} process)"
@@ -2309,9 +2317,9 @@ class ReviewManager:
             self.__update_status_yaml()
             self.__git_repo.index.add(["status.yaml"])
 
-            hook_skipping = "false"
+            hook_skipping = False
             if not self.config["DEBUG_MODE"]:
-                hook_skipping = "true"
+                hook_skipping = True
 
             processing_report = ""
             if self.paths["REPORT"].is_file():
@@ -2428,7 +2436,7 @@ class ReviewManager:
         if bib_db is not None:
             ID_blacklist = [record["ID"] for record in bib_db.entries]
         else:
-            ID_blacklist = None
+            ID_blacklist = []
         ID = self.generate_ID_blacklist(
             record, ID_blacklist, record_in_bib_db, raise_error
         )
@@ -2458,11 +2466,7 @@ class ReviewManager:
         if "" != record.get("author", record.get("editor", "")):
             authors = prepare.format_author_field(
                 record.get("author", record.get("editor", "Anonymous"))
-            )
-            if " and " in authors:
-                authors = authors.split(" and ")
-            else:
-                authors = [authors]
+            ).split(" and ")
         else:
             authors = ["Anonymous"]
 
@@ -2514,7 +2518,7 @@ class ReviewManager:
             order = 0
             letters = list(string.ascii_lowercase)
             next_unique_ID = temp_ID
-            appends = []
+            appends: list = []
             while next_unique_ID in other_ids:
                 if len(appends) == 0:
                     order += 1
@@ -2547,9 +2551,8 @@ class ReviewManager:
             "search_parameters",
             "comment",
         ]
-        orderedCols = orderedCols.append(
-            [x for x in search_details_df.columns if x not in orderedCols]
-        )
+        for x in [x for x in search_details_df.columns if x not in orderedCols]:
+            orderedCols.append(x)
         search_details_df = search_details_df.reindex(columns=orderedCols)
 
         with open(self.paths["SEARCH_DETAILS"], "w") as f:
@@ -2565,7 +2568,7 @@ class ReviewManager:
 
     def read_next_record_header_str(
         self, file_object=None, HEADER_LENGTH: int = 9
-    ) -> str:
+    ) -> typing.Iterator[str]:
         if file_object is None:
             file_object = open(self.paths["MAIN_REFERENCES"])
         data = ""
@@ -2590,7 +2593,7 @@ class ReviewManager:
                 data = line
         yield data
 
-    def read_next_record_str(self, file_object=None) -> str:
+    def read_next_record_str(self, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
             file_object = open(self.paths["MAIN_REFERENCES"])
         data = ""
@@ -2611,7 +2614,7 @@ class ReviewManager:
                 data = line
         yield data
 
-    def read_next_record(self, conditions: dict = None) -> dict:
+    def read_next_record(self, conditions: dict = None) -> typing.Iterator[dict]:
         records = []
         with open(self.paths["MAIN_REFERENCES"]) as f:
             for record_string in self.read_next_record_str(f):
@@ -2626,20 +2629,20 @@ class ReviewManager:
                     records.append(record)
         yield from records
 
-    def replace_field(self, IDs: list, key: str, val: str) -> None:
+    def replace_field(self, IDs: list, key: str, val_str: str) -> None:
 
-        val = val.encode("utf-8")
-        current_ID = "NA"
+        val = val_str.encode("utf-8")
+        current_ID_str = "NA"
         with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
                 if b"@" in line[:3]:
                     current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
-                    current_ID = current_ID.decode("utf-8")
+                    current_ID_str = current_ID.decode("utf-8")
 
                 replacement = None
-                if current_ID in IDs:
+                if current_ID_str in IDs:
                     if line.lstrip()[: len(key)].decode("utf-8") == key:
                         replacement = line[: line.find(b"{") + 1] + val + b"},\n"
 
@@ -2662,7 +2665,7 @@ class ReviewManager:
                         fd.truncate()  # if the replacement is shorter...
                         fd.seek(seekpos)
                         line = fd.readline()
-                    IDs.remove(current_ID)
+                    IDs.remove(current_ID_str)
                     if 0 == len(IDs):
                         return
                 seekpos = fd.tell()
@@ -2677,16 +2680,16 @@ class ReviewManager:
         bib_db.entries = [new_record]
         replacement = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
-        current_ID = "NA"
+        current_ID_str = "NA"
         with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
                 if b"@" in line[:3]:
                     current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
-                    current_ID = current_ID.decode("utf-8")
+                    current_ID_str = current_ID.decode("utf-8")
 
-                if current_ID == ID:
+                if current_ID_str == ID:
                     line = fd.readline()
                     while (
                         b"@" not in line[:3] and line
@@ -2734,7 +2737,7 @@ class ReviewManager:
         record_list[0]["record"] = "@" + record_list[0]["record"][2:]
         record_list[-1]["record"] = record_list[-1]["record"][:-1]
 
-        current_ID = "NOTSET"
+        current_ID_str = "NOTSET"
         if self.paths["MAIN_REFERENCES"].is_file():
             with open(self.paths["MAIN_REFERENCES"], "r+b") as fd:
                 seekpos = fd.tell()
@@ -2742,10 +2745,12 @@ class ReviewManager:
                 while line:
                     if b"@" in line[:3]:
                         current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
-                        current_ID = current_ID.decode("utf-8")
-                    if current_ID in [x["ID"] for x in record_list]:
+                        current_ID_str = current_ID.decode("utf-8")
+                    if current_ID_str in [x["ID"] for x in record_list]:
                         replacement = [x["record"] for x in record_list][0]
-                        record_list = [x for x in record_list if x["ID"] != current_ID]
+                        record_list = [
+                            x for x in record_list if x["ID"] != current_ID_str
+                        ]
                         line = fd.readline()
                         while (
                             b"@" not in line[:3] and line
@@ -2766,9 +2771,9 @@ class ReviewManager:
 
         if len(record_list) > 0:
             if append_new:
-                with open(self.paths["MAIN_REFERENCES"], "a") as fd:
+                with open(self.paths["MAIN_REFERENCES"], "a") as m_refs:
                     for replacement in record_list:
-                        fd.write(replacement["record"])
+                        m_refs.write(replacement["record"])
 
             else:
                 self.report_logger.error(

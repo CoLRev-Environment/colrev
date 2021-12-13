@@ -27,8 +27,10 @@ from review_template.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-
-PDF_DIRECTORY, CPUS, REPO_DIR = "NA", -1, "NA"
+PDF_HANDLING = "NA"
+DEBUG_MODE = False
+PDF_DIRECTORY = Path("pdfs")
+CPUS, REPO_DIR = -1, "NA"
 
 PAD = 0
 
@@ -38,7 +40,7 @@ logger = logging.getLogger("review_template")
 
 def extract_text_by_page(record: dict, pages: list = None) -> str:
 
-    text_list = []
+    text_list: list = []
     with open(record["file"], "rb") as fh:
         for page in PDFPage.get_pages(
             fh,
@@ -118,13 +120,13 @@ def apply_ocr(record: dict) -> dict:
     docker_home_path = Path("/home/docker")
     command = (
         'docker run --rm --user "$(id -u):$(id -g)" -v "'
-        + PDF_DIRECTORY
+        + str(PDF_DIRECTORY)
         + ':/home/docker" jbarlow83/ocrmypdf --force-ocr '
         + options
         + ' -l eng+deu "'
-        + docker_home_path / pdf.name
+        + str(docker_home_path / pdf.name)
         + '"  "'
-        + docker_home_path / ocred_filename.name
+        + str(docker_home_path / ocred_filename.name)
         + '"'
     )
     subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
@@ -309,7 +311,7 @@ def prepare_pdf(item: dict) -> dict:
 
     if str(RecordState.pdf_imported) == str(record["status"]):
         # Remove temporary PDFs when processing has succeeded
-        target_fname = REPO_DIR / f'{record["ID"]}.pdf'
+        target_fname = REPO_DIR / Path(f'{record["ID"]}.pdf')
         linked_file = REPO_DIR / record["file"]
         record.update(
             pdf_hash=imagehash.average_hash(
@@ -332,7 +334,7 @@ def prepare_pdf(item: dict) -> dict:
     else:
         if not DEBUG_MODE:
             # Delete temporary PDFs for which processing has failed:
-            orig_filepath = PDF_DIRECTORY / f'{record["ID"]}.pdf'
+            orig_filepath = PDF_DIRECTORY / Path(f'{record["ID"]}.pdf')
             if orig_filepath.is_file():
                 for fpath in PDF_DIRECTORY.glob("*.pdf"):
                     if record["ID"] in str(fpath) and fpath != orig_filepath:

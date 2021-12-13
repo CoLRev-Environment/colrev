@@ -27,7 +27,8 @@ def main(REVIEW_MANAGER, ID: str) -> None:
 
     pp = pprint.PrettyPrinter(indent=4)
 
-    prev_record, prev_data = [], ""
+    prev_record: dict = {}
+    prev_data = ""
     for commit in reversed(list(revlist)):
         commit_message_first_line = commit.message.partition("\n")[0]
         print(
@@ -45,7 +46,7 @@ def main(REVIEW_MANAGER, ID: str) -> None:
             individual_bib_db = bibtexparser.loads(filecontents)
             record = [
                 record for record in individual_bib_db.entries if record["ID"] == ID
-            ]
+            ][0]
 
             if len(record) == 0:
                 print(f"record {ID} not in commit.")

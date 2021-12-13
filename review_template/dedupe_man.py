@@ -100,7 +100,7 @@ def set_data(REVIEW_MANAGER, bib_db: BibDatabase, dedupe_man_item: dict) -> BibD
     return bib_db
 
 
-def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> None:
+def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> dict:
     from review_template.review_manager import RecordState, Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.dedupe_man))

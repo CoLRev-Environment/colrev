@@ -81,7 +81,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
     #                            if not x.replace('.pdf', 'bw_search.bib')
     #                            in search_files])
 
-    stat = {"status": {}}
+    stat: dict = {"status": {}}
     stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
     stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
 
@@ -231,7 +231,7 @@ def get_remote_commit_differences(repo: git.Repo) -> list:
         commits_ahead = repo.iter_commits(ahead_operation)
         nr_commits_ahead = sum(1 for c in commits_ahead)
 
-    return nr_commits_behind, nr_commits_ahead
+    return [nr_commits_behind, nr_commits_ahead]
 
 
 def get_review_instructions(REVIEW_MANAGER, stat) -> list:
@@ -420,7 +420,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     return review_instructions
 
 
-def get_collaboration_instructions(REVIEW_MANAGER, stat) -> list:
+def get_collaboration_instructions(REVIEW_MANAGER, stat) -> dict:
     SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     found_a_conflict = False
     # git_repo = REVIEW_MANAGER.get_repo()
@@ -434,7 +434,7 @@ def get_collaboration_instructions(REVIEW_MANAGER, stat) -> list:
 
     nr_commits_behind, nr_commits_ahead = 0, 0
 
-    collaboration_instructions = {"items": []}
+    collaboration_instructions: dict = {"items": []}
     CONNECTED_REMOTE = 0 != len(git_repo.remotes)
     if CONNECTED_REMOTE:
         origin = git_repo.remotes.origin

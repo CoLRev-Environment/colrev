@@ -11,7 +11,7 @@ repos:
     -   id: name-tests-test
     -   id: requirements-txt-fixer
 -   repo: https://github.com/ambv/black
-    rev: 21.11b1
+    rev: 21.12b0
     hooks:
     - id: black
       language_version: python3.8
@@ -32,3 +32,7 @@ repos:
     hooks:
     -   id: pyupgrade
         args: [--py36-plus]
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.910-1'  # Use the sha / tag you want to point at
+    hooks:
+    -   id: mypy

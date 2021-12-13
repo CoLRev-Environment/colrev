@@ -79,7 +79,7 @@ def initialize_repo(
     global_git_vars = get_name_mail_from_global_git_config()
     if 2 != len(global_git_vars):
         logging.error("Global git variables (user name and email) not available.")
-        return 0
+        return False
     committer_name, committer_email = global_git_vars
 
     repo = git.Repo.init()
@@ -160,10 +160,10 @@ def initialize_repo(
         "Initial commit", manual_author=True, saved_args=saved_args
     )
 
-    if remote_url is not None:
+    if "NA" != remote_url:
         connect_to_remote(repo, remote_url)
 
-    return 1
+    return True
 
 
 def clone_shared_repo(remote_url: str) -> git.Repo:

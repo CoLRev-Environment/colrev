@@ -19,19 +19,19 @@ def get_exclusion_criteria_from_str(ec_string: str) -> list:
     if ec_string:
         excl_criteria = get_excl_criteria(ec_string)
     else:
-        excl_criteria = input("Exclusion criteria (comma separated or NA)")
-        excl_criteria = excl_criteria.split(",")
+        excl_criteria_str = input("Exclusion criteria (comma separated or NA)")
+        excl_criteria = excl_criteria_str.split(",")
         if "" in excl_criteria:
-            excl_criteria = excl_criteria.remove("")
+            excl_criteria.remove("")
     if "NA" in excl_criteria:
-        excl_criteria = excl_criteria.remove("NA")
+        excl_criteria.remove("NA")
 
     return excl_criteria
 
 
 def get_exclusion_criteria(bib_db: BibDatabase) -> list:
     ec_string = [x.get("excl_criteria") for x in bib_db.entries if "excl_criteria" in x]
-    return get_exclusion_criteria_from_str(ec_string)
+    return get_exclusion_criteria_from_str(ec_string[0])
 
 
 def get_data(REVIEW_MANAGER):
