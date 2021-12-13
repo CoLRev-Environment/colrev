@@ -2451,7 +2451,7 @@ class ReviewManager:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        from review_template import prepare
+        from review_template import prep
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
@@ -2464,7 +2464,7 @@ class ReviewManager:
                 )
 
         if "" != record.get("author", record.get("editor", "")):
-            authors = prepare.format_author_field(
+            authors = prep.format_author_field(
                 record.get("author", record.get("editor", "Anonymous"))
             ).split(" and ")
         else:

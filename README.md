@@ -68,14 +68,14 @@ Commands:
   status       Show status
   process      Process records (automated steps)
   importer     Import records (part of automated processing)
-  prepare      Prepare records (part of automated processing)
+  prep         Prepare records (part of automated processing)
   dedupe       Deduplicate records (part of automated processing)
   man-prep     Manual preparation of records
   man-dedupe   Manual processing of duplicates
   prescreen    Pre-screen based on titles and abstracts
   screen       Screen based on exclusion criteria and fulltext documents
   pdfs         Retrieve PDFs (part of automated processing)
-  pdf-prepare  Prepare PDFs (part of automated processing)
+  pdf-prep     Prepare PDFs (part of automated processing)
   data         Extract data
   validate     Validate changes
   trace        Trace a record

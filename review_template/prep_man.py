@@ -9,7 +9,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
-from review_template import prepare
+from review_template import prep
 from review_template.review_manager import RecordState
 
 report_logger = logging.getLogger("review_template_report")
@@ -185,7 +185,7 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
 
     record.update(status=RecordState.md_prepared)
     record.update(metadata_source="MAN_PREP")
-    record = prepare.drop_fields(record)
+    record = prep.drop_fields(record)
 
     REVIEW_MANAGER.update_record_by_ID(record)
 

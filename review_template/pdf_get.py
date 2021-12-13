@@ -198,7 +198,7 @@ def check_existing_unlinked_pdfs(
                         "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
                     )
                     # max_sim_record = \
-                    #     pdf_prepare.validate_pdf_metadata(max_sim_record)
+                    #     pdf_prep.validate_pdf_metadata(max_sim_record)
                     # status = max_sim_record['status']
                     # if RecordState.pdf_needs_manual_preparation == status:
                     #     # revert?

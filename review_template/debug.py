@@ -61,9 +61,9 @@ def debug_load() -> None:
     return
 
 
-def debug_prepare() -> None:
+def debug_prep() -> None:
 
-    from review_template import prepare
+    from review_template import prep
     from review_template.review_manager import (
         ReviewManager,
         ProcessType,
@@ -88,7 +88,7 @@ def debug_prepare() -> None:
     }
 
     pp.pprint(record)
-    res = prepare.get_md_from_crossref(record)
+    res = prep.get_md_from_crossref(record)
     pp.pprint(res)
 
     return
@@ -166,7 +166,7 @@ def main():
 
     # debug_load()
 
-    # debug_prepare()
+    # debug_prep()
 
     # debug_pdf_get()
 

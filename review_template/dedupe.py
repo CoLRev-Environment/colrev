@@ -558,13 +558,13 @@ def get_data(REVIEW_MANAGER):
 
 
 def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
-    from review_template import prepare
+    from review_template import prep
 
     bib_db = REVIEW_MANAGER.load_bib_db()
     git_repo = REVIEW_MANAGER.get_repo()
     for record in bib_db.entries:
         if "crossref" in record:
-            crossref_rec = prepare.get_crossref_record(record)
+            crossref_rec = prep.get_crossref_record(record)
             if crossref_rec is None:
                 continue
 

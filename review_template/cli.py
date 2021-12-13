@@ -366,9 +366,9 @@ def process(ctx, reprocess_id, keep_ids) -> None:
     from review_template.review_manager import ReviewManager
     from review_template import dedupe
     from review_template import load
-    from review_template import pdf_prepare
+    from review_template import pdf_prep
     from review_template import pdf_get
-    from review_template import prepare
+    from review_template import prep
 
     try:
         REVIEW_MANAGER = ReviewManager()
@@ -378,13 +378,13 @@ def process(ctx, reprocess_id, keep_ids) -> None:
 
         load.main(REVIEW_MANAGER, keep_ids)
 
-        prepare.main(REVIEW_MANAGER, keep_ids)
+        prep.main(REVIEW_MANAGER, keep_ids)
 
         dedupe.main(REVIEW_MANAGER)
 
         pdf_get.main(REVIEW_MANAGER)
 
-        pdf_prepare.main(REVIEW_MANAGER)
+        pdf_prep.main(REVIEW_MANAGER)
     except git.exc.InvalidGitRepositoryError:
         logging.error("No git repository found. Use review_template init")
         pass
@@ -498,9 +498,9 @@ def load(ctx, keep_ids) -> None:
     help="Do not change the record IDs. Useful when importing an existing sample.",
 )
 @click.pass_context
-def prepare(ctx, reset_id, reprocess, keep_ids) -> None:
+def prep(ctx, reset_id, reprocess, keep_ids) -> None:
     """Prepare records (part of automated processing)"""
-    from review_template import prepare
+    from review_template import prep
     from review_template.review_manager import ReviewManager, ProcessType, Process
 
     REVIEW_MANAGER = ReviewManager()
@@ -511,9 +511,9 @@ def prepare(ctx, reset_id, reprocess, keep_ids) -> None:
         except ValueError:
             pass
         reset_id = reset_id.split(",")
-        prepare.reset_ids(REVIEW_MANAGER, reset_id)
+        prep.reset_ids(REVIEW_MANAGER, reset_id)
     else:
-        prepare_process = Process(ProcessType.prepare, prepare.main)
+        prepare_process = Process(ProcessType.prepare, prep.main)
         REVIEW_MANAGER.run_process(prepare_process, reprocess, keep_ids)
 
     return
@@ -590,12 +590,12 @@ def man_correct_recordtype(record: dict) -> dict:
 
 
 def man_provide_required_fields(record: dict) -> dict:
-    from review_template import prepare
+    from review_template import prep
 
-    if prepare.is_complete(record):
+    if prep.is_complete(record):
         return record
 
-    reqs = prepare.record_field_requirements[record["ENTRYTYPE"]]
+    reqs = prep.record_field_requirements[record["ENTRYTYPE"]]
     for field in reqs:
         if field not in record:
             value = input("Please provide the " + field + " (or NA)")
@@ -604,9 +604,9 @@ def man_provide_required_fields(record: dict) -> dict:
 
 
 def man_fix_field_inconsistencies(record: dict) -> dict:
-    from review_template import prepare
+    from review_template import prep
 
-    if not prepare.has_inconsistent_fields(record):
+    if not prep.has_inconsistent_fields(record):
         return record
 
     print("TODO: ask whether the inconsistent fields can be dropped?")
@@ -615,9 +615,9 @@ def man_fix_field_inconsistencies(record: dict) -> dict:
 
 
 def man_fix_incomplete_fields(record: dict) -> dict:
-    from review_template import prepare
+    from review_template import prep
 
-    if not prepare.has_incomplete_fields(record):
+    if not prep.has_incomplete_fields(record):
         return record
 
     print("TODO: ask for completion of fields")
@@ -1175,9 +1175,9 @@ def pdf_get(ctx) -> None:
 
 @main.command(help_priority=12)
 @click.pass_context
-def pdf_prepare(ctx) -> None:
+def pdf_prep(ctx) -> None:
     """Prepare PDFs  (part of automated processing)"""
-    from review_template import pdf_prepare
+    from review_template import pdf_prep
     from review_template import review_manager
     from review_template.review_manager import ReviewManager
     from review_template.review_manager import ProcessType
@@ -1185,7 +1185,7 @@ def pdf_prepare(ctx) -> None:
 
     try:
         REVIEW_MANAGER = ReviewManager()
-        pdf_prepare_process = Process(ProcessType.pdf_prepare, pdf_prepare.main)
+        pdf_prepare_process = Process(ProcessType.pdf_prepare, pdf_prep.main)
         REVIEW_MANAGER.run_process(pdf_prepare_process)
 
     except review_manager.ProcessOrderViolation as e:
