@@ -22,6 +22,7 @@ from colrev_core import status
 CPUS = -1
 
 logger = logging.getLogger("colrev_core")
+pp = pprint.PrettyPrinter(indent=4)
 
 
 def load_records(bib_file: Path) -> list:
@@ -81,7 +82,6 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
     )
     input("continue")
 
-    pp = pprint.PrettyPrinter(indent=4)
     for eid, record_link, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system("cls" if os.name == "nt" else "clear")
@@ -137,8 +137,6 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
         else:
             logger.info("No merged records")
 
-    pp = pprint.PrettyPrinter(indent=4)
-
     for el_1, el_2, difference in change_diff:
         # Escape sequence to clear terminal output for each new comparison
         os.system("cls" if os.name == "nt" else "clear")
@@ -165,13 +163,16 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
 
     else:
         logger.info("Loading data from history...")
-        repo = git.Repo()
+        git_repo = git.Repo()
 
         MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
 
         revlist = (
-            (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
-            for commit in repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
+            (
+                commit.hexsha,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
         )
         found = False
         for commit, filecontents in list(revlist):
@@ -202,22 +203,22 @@ def validate_properties(target_commit: str = None) -> None:
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
-    repo = REVIEW_MANAGER.get_repo()
+    git_repo = REVIEW_MANAGER.get_repo()
 
-    cur_sha = repo.head.commit.hexsha
-    cur_branch = repo.active_branch.name
+    cur_sha = git_repo.head.commit.hexsha
+    cur_branch = git_repo.active_branch.name
     logger.info(f"Current commit: {cur_sha} (branch {cur_branch})")
 
     if not target_commit:
         target_commit = cur_sha
-    if repo.is_dirty() and not target_commit == cur_sha:
+    if git_repo.is_dirty() and not target_commit == cur_sha:
         logger.error(
             "Error: Need a clean repository to validate properties " "of prior commit"
         )
         return
     if not target_commit == cur_sha:
         logger.info(f"Check out target_commit = {target_commit}")
-        repo.git.checkout(target_commit)
+        git_repo.git.checkout(target_commit)
 
     completeness_condition = status.get_completeness_condition(REVIEW_MANAGER)
     if completeness_condition:
@@ -231,7 +232,7 @@ def validate_properties(target_commit: str = None) -> None:
         logger.error("Traceability of records".ljust(32, " ") + "NO")
         logger.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
 
-    repo.git.checkout(cur_branch, force=True)
+    git_repo.git.checkout(cur_branch, force=True)
 
     return
 

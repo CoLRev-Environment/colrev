@@ -73,8 +73,8 @@ def get_pdf_from_unpaywall(item: dict, REVIEW_MANAGER) -> dict:
     if "doi" not in record:
         return record
 
-    pdf_filepath = (
-        REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / f"{record['ID']}.pdf"
+    pdf_filepath = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+        f"{record['ID']}.pdf"
     )
     url = unpaywall(record["doi"])
     if "NA" != url:
@@ -107,7 +107,7 @@ def link_pdf(item: dict) -> dict:
     record = item["record"]
     REVIEW_MANAGER = item["REVIEW_MANAGER"]
     PDF_DIRECTORY_RELATIVE = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-    pdf_filepath = PDF_DIRECTORY_RELATIVE / f"{record['ID']}.pdf"
+    pdf_filepath = PDF_DIRECTORY_RELATIVE / Path(f"{record['ID']}.pdf")
     if pdf_filepath.is_file() and str(pdf_filepath) != record.get("file", "NA"):
         record.update(file=str(pdf_filepath))
 
@@ -189,10 +189,9 @@ def check_existing_unlinked_pdfs(
                 if max_similarity > 0.5:
                     if RecordState.pdf_prepared == max_sim_record["status"]:
                         continue
-                    new_filename = (
-                        REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-                        / f"{max_sim_record['ID']}.pdf"
-                    )
+                    new_filename = REVIEW_MANAGER.paths[
+                        "PDF_DIRECTORY_RELATIVE"
+                    ] / Path(f"{max_sim_record['ID']}.pdf")
 
                     max_sim_record.update(file=str(new_filename))
                     max_sim_record.update(status=RecordState.pdf_imported)

@@ -74,14 +74,6 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 if crit + "=yes" in exclusion_case:
                     exclusion_statistics[crit] += 1
 
-    # PDF_DIRECTORY = REVIEW_MANAGER.paths['PDF_DIRECTORY']
-    # if PDF_DIRECTORY.is_dir():
-    #     pdf_files = [x for x in os.listdir(PDF_DIRECTORY)]
-    #     search_files = [x for x in os.listdir('search/') if '.bib' == x[-4:]]
-    #     non_bw_searched = len([x for x in pdf_files
-    #                            if not x.replace('.pdf', 'bw_search.bib')
-    #                            in search_files])
-
     stat: dict = {"status": {}}
     stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
     stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
@@ -218,25 +210,25 @@ def get_active_processing_functions(current_states_set) -> list:
     return active_processing_functions
 
 
-def get_remote_commit_differences(repo: git.Repo) -> list:
+def get_remote_commit_differences(git_repo: git.Repo) -> list:
     nr_commits_behind, nr_commits_ahead = -1, -1
 
-    origin = repo.remotes.origin
+    origin = git_repo.remotes.origin
     if origin.exists():
         origin.fetch()
 
-    if repo.active_branch.tracking_branch() is not None:
+    if git_repo.active_branch.tracking_branch() is not None:
 
-        branch_name = str(repo.active_branch)
-        tracking_branch_name = str(repo.active_branch.tracking_branch())
+        branch_name = str(git_repo.active_branch)
+        tracking_branch_name = str(git_repo.active_branch.tracking_branch())
         logger.debug(f"{branch_name} - {tracking_branch_name}")
 
         behind_operation = branch_name + ".." + tracking_branch_name
-        commits_behind = repo.iter_commits(behind_operation)
+        commits_behind = git_repo.iter_commits(behind_operation)
         nr_commits_behind = sum(1 for c in commits_behind)
 
         ahead_operation = tracking_branch_name + ".." + branch_name
-        commits_ahead = repo.iter_commits(ahead_operation)
+        commits_ahead = git_repo.iter_commits(ahead_operation)
         nr_commits_ahead = sum(1 for c in commits_ahead)
 
     return [nr_commits_behind, nr_commits_ahead]
@@ -247,7 +239,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
 
     # git_repo = REVIEW_MANAGER.get_repo()
     git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
-    MAIN_REFERENCES_RELATIVE = str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
 
     non_staged = [
         item.a_path for item in git_repo.index.diff(None) if ".bib" == item.a_path[-4:]
@@ -269,7 +261,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
     # from colrev_core.review_manager import Record
     # current_states_set = set([x['source'] for x in Record.transitions])
 
-    MAIN_REFS_CHANGED = MAIN_REFERENCES_RELATIVE in [
+    MAIN_REFS_CHANGED = str(MAIN_REFERENCES_RELATIVE) in [
         item.a_path for item in git_repo.index.diff(None)
     ] + [x.a_path for x in git_repo.head.commit.diff()]
 
@@ -282,8 +274,11 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
         from colrev_core.review_manager import Record
 
         revlist = (
-            (commit.hexsha, (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read())
-            for commit in git_repo.iter_commits(paths=MAIN_REFERENCES_RELATIVE)
+            (
+                commit.hexsha,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
         )
         filecontents = list(revlist)[0][1]
         committed_record_states_list = (

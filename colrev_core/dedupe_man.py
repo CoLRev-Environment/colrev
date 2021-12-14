@@ -4,7 +4,7 @@ import os
 import pprint
 
 import pandas as pd
-from bibtexparser import BibDatabase
+from bibtexparser.bibdatabase import BibDatabase
 
 from colrev_core.review_manager import RecordState
 
@@ -100,7 +100,7 @@ def set_data(REVIEW_MANAGER, bib_db: BibDatabase, dedupe_man_item: dict) -> BibD
     return bib_db
 
 
-def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> dict:
+def get_data(REVIEW_MANAGER) -> dict:
     from colrev_core.review_manager import RecordState, Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.dedupe_man))
@@ -117,6 +117,8 @@ def get_data(REVIEW_MANAGER, bib_db: BibDatabase) -> dict:
         // 2
     )
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
 
     if not os.path.exists("potential_duplicate_tuples.csv"):
         logger.info("No potential duplicates found (potential_duplicate_tuples.csv)")

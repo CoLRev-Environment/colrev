@@ -38,7 +38,7 @@ def get_exclusion_criteria(bib_db: BibDatabase) -> list:
     return get_exclusion_criteria_from_str(ec_string)
 
 
-def get_data(REVIEW_MANAGER):
+def get_data(REVIEW_MANAGER) -> dict:
     from colrev_core.review_manager import RecordState
     from colrev_core.review_manager import Process, ProcessType
 

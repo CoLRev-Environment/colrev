@@ -2,6 +2,7 @@
 import configparser
 import logging
 import os
+from pathlib import Path
 from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
@@ -11,10 +12,10 @@ import requests
 
 
 def get_name_mail_from_global_git_config() -> list:
-    ggit_conf_path = os.path.normpath(os.path.expanduser("~/.gitconfig"))
+    ggit_conf_path = Path.home() / Path(".gitconfig")
     global_conf_details = []
-    if os.path.exists(ggit_conf_path):
-        glob_git_conf = git.GitConfigParser([ggit_conf_path], read_only=True)
+    if ggit_conf_path.is_file():
+        glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
         global_conf_details = [
             glob_git_conf.get("user", "name"),
             glob_git_conf.get("user", "email"),
@@ -22,11 +23,11 @@ def get_name_mail_from_global_git_config() -> list:
     return global_conf_details
 
 
-def connect_to_remote(repo: git.Repo, remote_url: str) -> None:
+def connect_to_remote(git_repo: git.Repo, remote_url: str) -> None:
     try:
         requests.get(remote_url)
-        origin = repo.create_remote("origin", remote_url)
-        repo.heads.main.set_tracking_branch(origin.refs.main)
+        origin = git_repo.create_remote("origin", remote_url)
+        git_repo.heads.main.set_tracking_branch(origin.refs.main)
         origin.push()
         logging.info("Connected to shared repository:".ljust(30, " ") + f"{remote_url}")
     except requests.ConnectionError:
@@ -171,7 +172,7 @@ def clone_shared_repo(remote_url: str) -> git.Repo:
         requests.get(remote_url)
         repo_name = os.path.splitext(os.path.basename(remote_url))[0]
         logging.info("Clone shared repository...")
-        repo = git.Repo.clone_from(remote_url, repo_name)
+        git_repo = git.Repo.clone_from(remote_url, repo_name)
         logging.info(f"Use cd {repo_name}")
     except requests.ConnectionError:
         logging.error(
@@ -180,4 +181,4 @@ def clone_shared_repo(remote_url: str) -> git.Repo:
             "git push origin main"
         )
         pass
-    return repo
+    return git_repo

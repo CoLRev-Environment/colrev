@@ -55,7 +55,7 @@ def export_retrieval_table(bib_db: BibDatabase) -> None:
 def get_data(REVIEW_MANAGER) -> dict:
     from colrev_core.review_manager import Process, ProcessType
 
-    REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(parents=True, exist_ok=True)
+    REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(exist_ok=True)
 
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_get_man))
     record_state_list = REVIEW_MANAGER.get_record_state_list()

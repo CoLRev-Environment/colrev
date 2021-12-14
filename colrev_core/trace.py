@@ -41,8 +41,10 @@ def main(REVIEW_MANAGER, ID: str) -> None:
             + f" {commit_message_first_line} (by {commit.author.name})"
         )
 
-        if MAIN_REFERENCES_RELATIVE in commit.tree:
-            filecontents = (commit.tree / MAIN_REFERENCES_RELATIVE).data_stream.read()
+        if str(MAIN_REFERENCES_RELATIVE) in commit.tree:
+            filecontents = (
+                commit.tree / str(MAIN_REFERENCES_RELATIVE)
+            ).data_stream.read()
             individual_bib_db = bibtexparser.loads(filecontents)
             record = [
                 record for record in individual_bib_db.entries if record["ID"] == ID

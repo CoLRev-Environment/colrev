@@ -1330,13 +1330,12 @@ def get_crossref_record(record) -> dict:
     crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
     crossref_origin = crossref_origin + "/" + record["crossref"]
     for record_string in read_next_record_str():
-        for line in record_string.split("\n"):
-            if crossref_origin in record_string:
-                parser = BibTexParser(customization=convert_to_unicode)
-                db = bibtexparser.loads(record_string, parser=parser)
-                record = db.entries[0]
-                if record["origin"] == crossref_origin:
-                    return record
+        if crossref_origin in record_string:
+            parser = BibTexParser(customization=convert_to_unicode)
+            db = bibtexparser.loads(record_string, parser=parser)
+            record = db.entries[0]
+            if record["origin"] == crossref_origin:
+                return record
     return {}
 
 
@@ -1578,10 +1577,10 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
 
     origins = record["origin"].split(";")
 
-    repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
+    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (
         ((commit.tree / MAIN_REFERENCES).data_stream.read())
-        for commit in repo.iter_commits(paths=MAIN_REFERENCES)
+        for commit in git_repo.iter_commits(paths=MAIN_REFERENCES)
     )
     for filecontents in list(revlist):
         prior_bib_db = bibtexparser.loads(filecontents)

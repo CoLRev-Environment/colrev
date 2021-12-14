@@ -419,7 +419,6 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
         if len(pot_dupe_record_list) == 0:
             continue
         pot_dupe_record = pot_dupe_record_list.pop()
-        pot_dupe_record = pot_dupe_record[0]
         pot_dupe_record.update(status=RecordState.md_needs_manual_deduplication)
 
     REVIEW_MANAGER.save_bib_db(bib_db)

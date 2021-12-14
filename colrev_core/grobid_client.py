@@ -2,7 +2,6 @@
 import logging
 import os
 import subprocess
-import sys
 import time
 
 import requests
@@ -31,7 +30,7 @@ def check_grobid_availability() -> None:
         if i == -1:
             break
         if i > 20:
-            sys.exit(0)
+            raise requests.exceptions.ConnectionError()
     return
 
 
@@ -69,5 +68,4 @@ def start_grobid() -> bool:
         except requests.exceptions.ConnectionError:
             pass
         if i > 30:
-            break
-    return False
+            raise requests.exceptions.ConnectionError()

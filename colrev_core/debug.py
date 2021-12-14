@@ -150,9 +150,7 @@ def debug_tei_tools() -> None:
     grobid_client.start_grobid()
     logger.debug("Started grobid")
 
-    filepath = Path(
-        "/home/gerit/ownCloud/data/journals/ISJ/7_3/Janson_Colruyt An Organization.pdf"
-    )
+    filepath = Path("/home/user/Webster2002.pdf")
     res = tei_tools.get_record_from_pdf_tei(filepath)
     print(res)
     return

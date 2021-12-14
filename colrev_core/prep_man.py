@@ -181,18 +181,11 @@ def get_data(REVIEW_MANAGER) -> dict:
 def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
     from colrev_core.review_manager import RecordState
 
-    # TODO: log details for processing_report
-
     record.update(status=RecordState.md_prepared)
     record.update(metadata_source="MAN_PREP")
     record = prep.drop_fields(record)
 
     REVIEW_MANAGER.update_record_by_ID(record)
-
-    # bib_db = REVIEW_MANAGER.load_bib_db()
-    # REVIEW_MANAGER.save_bib_db(bib_db)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     # TODO : maybe update the IDs when we have a replace_record procedure
     # set_IDs
@@ -203,5 +196,8 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
     #     )
     # )
     # all_ids.append(record["ID"])
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     return
