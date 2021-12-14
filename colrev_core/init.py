@@ -82,7 +82,7 @@ def initialize_repo(
         return False
     committer_name, committer_email = global_git_vars
 
-    repo = git.Repo.init()
+    git_repo = git.Repo.init()
     os.mkdir("search")
 
     from colrev_core import review_manager
@@ -136,7 +136,7 @@ def initialize_repo(
     for script_to_call in scripts_to_call:
         check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
 
-    repo.index.add(
+    git_repo.index.add(
         [
             "readme.md",
             ".pre-commit-config.yaml",
@@ -161,7 +161,7 @@ def initialize_repo(
     )
 
     if "NA" != remote_url:
-        connect_to_remote(repo, remote_url)
+        connect_to_remote(git_repo, remote_url)
 
     return True
 

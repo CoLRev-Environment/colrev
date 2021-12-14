@@ -144,8 +144,7 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
             ]
 
         t_list = [t for t in Record.transitions if current_state == t["dest"]]
-        if 1 == len(t_list):
-            t: dict = t_list.pop()
+        t: dict = t_list.pop()
         if current_state == RecordState.md_imported:
             break
         current_state = t["source"]  # go a step back
