@@ -173,14 +173,14 @@ def source_heuristics(search_file: Path) -> str:
     return ""
 
 
-def append_search_details(REVIEW_MANAGER, new_record: dict) -> None:
-    search_details = REVIEW_MANAGER.load_search_details()
-    search_details.append(new_record)
+def append_sources(REVIEW_MANAGER, new_record: dict) -> None:
+    sources = REVIEW_MANAGER.load_sources()
+    sources.append(new_record)
     logger.debug(
-        f"Added infos to {REVIEW_MANAGER.paths['SEARCH_DETAILS']}:"
+        f"Added infos to {REVIEW_MANAGER.paths['SOURCES']}:"
         f" \n{pp.pformat(new_record)}"
     )
-    REVIEW_MANAGER.save_search_details(search_details)
+    REVIEW_MANAGER.save_sources(sources)
     return
 
 
@@ -436,7 +436,7 @@ def pdfRefs2bib(file: Path) -> BibDatabase:
 def unify_field_names(db: BibDatabase) -> BibDatabase:
 
     # At some point, this may depend on the source (database)
-    # This should be available in the search_details.
+    # This should be available in the sources.
     # Note : if we do not unify (at least the author/year), the IDs of imported records
     # will be AnonymousNoYear a,b,c,d,....
     for record in db.entries:
@@ -572,7 +572,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                     "search_parameters": "NA",
                     "comment": "Extracted with GROBID",
                 }
-                append_search_details(REVIEW_MANAGER, new_record)
+                append_sources(REVIEW_MANAGER, new_record)
                 git_repo.index.add([new_fp])
 
             elif "pdf_refs" == filetype:
@@ -585,7 +585,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                     "search_parameters": "NA",
                     "comment": "Extracted with GROBID",
                 }
-                append_search_details(REVIEW_MANAGER, new_record)
+                append_sources(REVIEW_MANAGER, new_record)
                 git_repo.index.add([new_fp])
             # print(corresponding_bib_file)
             # print(str(sfpath))
@@ -632,12 +632,12 @@ def order_bib_file(REVIEW_MANAGER) -> None:
     return
 
 
-def check_search_details(REVIEW_MANAGER) -> None:
+def check_sources(REVIEW_MANAGER) -> None:
     from colrev_core import review_manager
 
-    review_manager.check_search_details(REVIEW_MANAGER)
+    review_manager.check_sources(REVIEW_MANAGER)
     git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["SEARCH_DETAILS_RELATIVE"])])
+    git_repo.index.add([str(REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
     return
 
 
@@ -680,7 +680,7 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         del saved_args["keep_ids"]
 
     convert_non_bib_search_files(REVIEW_MANAGER)
-    check_search_details(REVIEW_MANAGER)
+    check_sources(REVIEW_MANAGER)
 
     logger.info("Import")
     BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]

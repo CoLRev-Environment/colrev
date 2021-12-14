@@ -1659,17 +1659,17 @@ def get_lpi_data(LPI_INDICES, item):
 def batch(items, REVIEW_MANAGER):
     n = REVIEW_MANAGER.config["BATCH_SIZE"]
 
-    search_details = REVIEW_MANAGER.load_search_details()
+    sources = REVIEW_MANAGER.load_sources()
 
     LPI_INDICES = [
         {
             key: value
-            for key, value in search_detail.items()
-            if "LOCAL_PAPER_INDEX" == search_detail["search_type"]
+            for key, value in source.items()
+            if "LOCAL_PAPER_INDEX" == source["search_type"]
             and key
             in ["filename", "search_type", "source_url", "outlet", "sub_dir_pattern"]
         }
-        for search_detail in search_details
+        for source in sources
     ]
 
     batch = []

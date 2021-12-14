@@ -528,7 +528,7 @@ def get_data(REVIEW_MANAGER):
     from colrev_core.review_manager import RecordState
 
     # Note: this would also be a place to set records as "no-duplicate" by definition
-    # (e.g., for non-duplicated sources marked in the search_details)
+    # (e.g., for non-duplicated sources marked in the sources)
 
     get_record_state_list = REVIEW_MANAGER.get_record_state_list()
     IDs_to_dedupe = [

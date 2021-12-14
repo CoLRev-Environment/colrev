@@ -302,7 +302,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
     main_refs = "references.bib"
     data = "data.yaml"
     pdf_dir = "pdfs"
-    search_details = "search_details.yaml"
+    sources = "sources.yaml"
     paper = "paper.md"
     shared_config = "shared_config.ini"
     private_config = "private_config.ini"
@@ -317,8 +317,8 @@ def get_file_paths(repository_dir_str: str) -> dict:
         "DATA": repository_dir.joinpath(data),
         "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
         "PDF_DIRECTORY": repository_dir.joinpath(pdf_dir),
-        "SEARCH_DETAILS_RELATIVE": Path(search_details),
-        "SEARCH_DETAILS": repository_dir.joinpath(search_details),
+        "SOURCES_RELATIVE": Path(sources),
+        "SOURCES": repository_dir.joinpath(sources),
         "PAPER_RELATIVE": Path(paper),
         "PAPER": repository_dir.joinpath(paper),
         "SHARED_CONFIG_RELATIVE": Path(shared_config),
@@ -512,7 +512,7 @@ class SearchDetailsMissingError(Exception):
         self.message = (
             "Search results path "
             + f"({search_results_path.name}) "
-            + "is not in search_details.yaml"
+            + "is not in sources.yaml"
         )
         super().__init__(self.message)
 
@@ -876,9 +876,7 @@ class Record:
 
     @property
     def clean_repo_except_search(self):
-        return require_clean_repo_general(
-            ignore_pattern=["search/", "search_details.yaml"]
-        )
+        return require_clean_repo_general(ignore_pattern=["search/", "sources.yaml"])
 
     @property
     def clean_repo_except_main_references(self):
@@ -1550,29 +1548,29 @@ def check_persisted_ID_changes(prior: dict, data: dict) -> None:
     return
 
 
-def check_search_details(REVIEW_MANAGER) -> None:
-    SEARCH_DETAILS = REVIEW_MANAGER.paths["SEARCH_DETAILS"]
+def check_sources(REVIEW_MANAGER) -> None:
+    SOURCES = REVIEW_MANAGER.paths["SOURCES"]
     SEARCHDIR = REVIEW_MANAGER.paths["SEARCHDIR"]
     search_type_opts = REVIEW_MANAGER.search_type_opts
 
-    if not SEARCH_DETAILS.is_file():
-        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), SEARCH_DETAILS)
+    if not SOURCES.is_file():
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), SOURCES)
 
-    with open(SEARCH_DETAILS) as f:
-        search_details_df = pd.json_normalize(safe_load(f))
-        search_details = search_details_df.to_dict("records")
+    with open(SOURCES) as f:
+        sources_df = pd.json_normalize(safe_load(f))
+        sources = sources_df.to_dict("records")
 
     search_dir = Path("search")
     search_files = search_dir.glob("*.bib")
 
     for search_file in search_files:
-        if str(search_file.name) not in [x["filename"] for x in search_details]:
+        if str(search_file.name) not in [x["filename"] for x in sources]:
             raise SearchDetailsError(
-                "Search file not in search_details.yaml " f"({search_file})"
+                "Search file not in sources.yaml " f"({search_file})"
             )
 
     date_regex = r"^\d{4}-\d{2}-\d{2}$"
-    for search_record in search_details:
+    for search_record in sources:
         missing_cols = [
             x
             for x in [
@@ -1587,9 +1585,7 @@ def check_search_details(REVIEW_MANAGER) -> None:
         ]
 
         if any(missing_cols):
-            raise SearchDetailsError(
-                f"Missing columns in {SEARCH_DETAILS}: {missing_cols}"
-            )
+            raise SearchDetailsError(f"Missing columns in {SOURCES}: {missing_cols}")
 
         search_record_filename = SEARCHDIR / search_record["filename"]
         if not search_record_filename.is_file():
@@ -1670,7 +1666,7 @@ class ReviewManager:
         self.__git_repo = git.Repo(path)
         self.paths = get_file_paths(self.path)
         self.config = self.__load_config()
-        self.search_details = self.load_search_details()
+        self.sources = self.load_sources()
 
         if self.config["DEBUG_MODE"]:
             self.report_logger = setup_report_logger(logging.DEBUG)
@@ -1768,7 +1764,7 @@ class ReviewManager:
 
             main_refs_checks = [
                 {"script": check_persisted_ID_changes, "params": [prior, data]},
-                {"script": check_search_details, "params": self},
+                {"script": check_sources, "params": self},
                 {"script": check_main_references_duplicates, "params": data},
                 {"script": check_main_references_origin, "params": [self, prior, data]},
                 {"script": check_main_references_status_fields, "params": data},
@@ -2527,21 +2523,21 @@ class ReviewManager:
 
         return temp_ID
 
-    def load_search_details(self) -> list:
-        """Load the search details"""
+    def load_sources(self) -> list:
+        """Load the source details"""
 
-        if self.paths["SEARCH_DETAILS"].is_file():
-            with open(self.paths["SEARCH_DETAILS"]) as f:
-                search_details_df = pd.json_normalize(safe_load(f))
-                search_details = search_details_df.to_dict("records")
+        if self.paths["SOURCES"].is_file():
+            with open(self.paths["SOURCES"]) as f:
+                sources_df = pd.json_normalize(safe_load(f))
+                sources = sources_df.to_dict("records")
         else:
-            search_details = []
-        return search_details
+            sources = []
+        return sources
 
-    def save_search_details(self, search_details: list) -> None:
-        """Save the search details"""
+    def save_sources(self, sources: list) -> None:
+        """Save the source details"""
 
-        search_details_df = pd.DataFrame(search_details)
+        sources_df = pd.DataFrame(sources)
         orderedCols = [
             "filename",
             "search_type",
@@ -2550,19 +2546,19 @@ class ReviewManager:
             "search_parameters",
             "comment",
         ]
-        for x in [x for x in search_details_df.columns if x not in orderedCols]:
+        for x in [x for x in sources_df.columns if x not in orderedCols]:
             orderedCols.append(x)
-        search_details_df = search_details_df.reindex(columns=orderedCols)
+        sources_df = sources_df.reindex(columns=orderedCols)
 
-        with open(self.paths["SEARCH_DETAILS"], "w") as f:
+        with open(self.paths["SOURCES"], "w") as f:
             yaml.dump(
-                json.loads(search_details_df.to_json(orient="records")),
+                json.loads(sources_df.to_json(orient="records")),
                 f,
                 default_flow_style=False,
                 sort_keys=False,
             )
         git_repo = self.get_repo()
-        git_repo.index.add([str(self.paths["SEARCH_DETAILS_RELATIVE"])])
+        git_repo.index.add([str(self.paths["SOURCES_RELATIVE"])])
         return
 
     def read_next_record_header_str(
