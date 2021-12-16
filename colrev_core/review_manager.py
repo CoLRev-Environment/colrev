@@ -16,6 +16,7 @@ import re
 import string
 import subprocess
 import sys
+import tempfile
 import typing
 import unicodedata
 from contextlib import redirect_stdout
@@ -1077,7 +1078,7 @@ def retrieve_IDs_from_bib(file_path: Path) -> list:
         while line:
             if "@" in line[:5]:
                 ID = line[line.find("{") + 1 : line.rfind(",")]
-                IDs.append(ID)
+                IDs.append(ID.lstrip())
             line = f.readline()
     return IDs
 
@@ -2061,12 +2062,14 @@ class ReviewManager:
             if "MANUAL" == script_name:
                 report = report + "Commit created manually or by external script\n\n"
             elif " " in script_name:
+                script_name = script_name.replace("colrev_core", "colrev").replace(
+                    "colrev cli", "colrev"
+                )
                 script_name = (
                     script_name.split(" ")[0]
                     + " "
                     + script_name.split(" ")[1].replace("_", "-")
                 )
-                script_name = script_name.replace("colrev_core", "colrev")
 
                 report = report + f"Command\n   {script_name}\n"
         if saved_args is not None:
@@ -2314,6 +2317,34 @@ class ReviewManager:
 
             processing_report = ""
             if self.paths["REPORT"].is_file():
+
+                # Reformat
+                prefixes = [
+                    "[('change', 'author',",
+                    "[('change', 'title',",
+                    "[('change', 'journal',",
+                    "[('change', 'booktitle',",
+                ]
+                temp = tempfile.NamedTemporaryFile()
+                self.paths["REPORT"].rename(temp.name)
+                with open(temp.name) as reader, open(
+                    self.paths["REPORT"], "w"
+                ) as writer:
+                    line = reader.readline()
+                    while line:
+                        if (
+                            any(prefix in line for prefix in prefixes)
+                            and "', '" in line[30:]
+                        ):
+                            split_pos = line.rfind("', '") + 2
+                            indent = line.find("', (") + 3
+                            writer.write(line[:split_pos] + "\n")
+                            writer.write(" " * indent + line[split_pos:])
+                        else:
+                            writer.write(line)
+
+                        line = reader.readline()
+
                 with open("report.log") as f:
                     line = f.readline()
                     debug_part = False
@@ -2336,8 +2367,12 @@ class ReviewManager:
                 processing_report = "\nProcessing report\n" + "".join(processing_report)
 
             caller = sys._getframe(1)
+            from inspect import stack
+
             script = (
                 str(caller.f_globals["__name__"]).replace("-", "_").replace(".", " ")
+                + " "
+                + str(stack()[1].function)
             )
             if "Update pre-commit-config" in msg:
                 script = "pre-commit autoupdate"

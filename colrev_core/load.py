@@ -68,6 +68,11 @@ def get_search_files(restrict: list = None) -> typing.List[Path]:
     return files
 
 
+class BibFileFormatError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
 def getbib(file: Path) -> BibDatabase:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
@@ -76,10 +81,9 @@ def getbib(file: Path) -> BibDatabase:
             logger.error(f"Not a bib file? {file.name}")
             db = None
         if "Early Access Date" in contents:
-            logger.error(
-                "Replace Early Access Date in bibfile before " f"loading! {file.name}"
+            raise BibFileFormatError(
+                f"Replace Early Access Date in bibfile before loading! {file.name}"
             )
-            return None
 
     with open(file) as bibtex_file:
         db = BibTexParser(

@@ -174,6 +174,7 @@ def format_minor(record: dict) -> dict:
                 .lstrip()
                 .replace("{", "")
                 .replace("}", "")
+                .rstrip(",")
             )
             record[field] = re.sub(r"\s+", " ", record[field])
     return record
@@ -1550,7 +1551,8 @@ def prepare(item: dict) -> dict:
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
             report_logger.info(
-                f'{prep_script}({record["ID"]}) changed:' f" \n{pp.pformat(diffs)}\n"
+                f'{prep_script["script"].__name__}({prep_script["params"]["ID"]})'
+                f"  changed:\n{pp.pformat(diffs)}\n"
             )
         else:
             report_logger.debug(f"{prep_script} changed: -")
