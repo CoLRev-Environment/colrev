@@ -2232,12 +2232,15 @@ class ReviewManager:
             f.truncate(0)
         return
 
-    def reorder_log(self, IDs: list) -> None:
+    def reorder_log(self, IDs: list, criterion=None) -> None:
         """Reorder the report.log according to an ID list (after multiprocessing)"""
 
         # https://docs.python.org/3/howto/logging-cookbook.html
         # #logging-to-a-single-file-from-multiple-processes
+
         firsts = []
+        ordered_items = ""
+        consumed_items = []
         with open("report.log") as r:
             items = []
             item = ""
@@ -2271,31 +2274,44 @@ class ReviewManager:
                     item = item + line
             items.append(item.replace("\n\n", "\n").replace("\n\n", "\n"))
 
-        ordered_items = ""
-        consumed_items = []
-        for ID in IDs:
-            for item in items:
-                # if f'({ID})' in item:
-                if f"{ID}" in item:
-                    formatted_item = item
-                    if "] prepare(" in formatted_item:
-                        formatted_item = f"\n\n{formatted_item}"
-                    ordered_items = ordered_items + formatted_item
+        if criterion is None:
+            for ID in IDs:
+                for item in items:
+                    # if f'({ID})' in item:
+                    if f"{ID}" in item:
+                        formatted_item = item
+                        if "] prepare(" in formatted_item:
+                            formatted_item = f"\n\n{formatted_item}"
+                        ordered_items = ordered_items + formatted_item
+                        consumed_items.append(item)
+
+            for x in consumed_items:
+                if x in items:
+                    items.remove(x)
+
+        if criterion == "descending_thresholds":
+            item_details = []
+            while items:
+                item = items.pop()
+                confidence_value = re.search(r"\(confidence: (\d.\d{0,3})\)", item)
+                if confidence_value:
+                    item_details.append([confidence_value.group(1), item])
                     consumed_items.append(item)
+                else:
+                    firsts.append(item)
 
-        for x in consumed_items:
-            if x in items:
-                items.remove(x)
+            item_details.sort(key=lambda x: x[0])
+            ordered_items = "".join([x[1] for x in item_details])
 
-        ordered_items = (
+        formatted_report = (
             "".join(firsts)
-            + "\nDetailed report\n\n"
+            + "\nDetailed report\n"
             + ordered_items.lstrip("\n")
             + "\n\n"
             + "".join(items)
         )
         with open("report.log", "w") as f:
-            f.write(ordered_items)
+            f.write(formatted_report)
         return
 
     def create_commit(

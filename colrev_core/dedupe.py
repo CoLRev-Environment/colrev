@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import itertools
 import logging
 import pprint
 import re
@@ -370,7 +369,7 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
     # in global queue_order are considered before completing
     # the comparison/adding records ot the csvs)
 
-    results = list(itertools.chain(*results))
+    # results = list(itertools.chain(*results))
 
     bib_db = REVIEW_MANAGER.load_bib_db()
 
@@ -400,6 +399,10 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
                     main_record["file"] + ";" + dupe_record.get("file", "")
                 )
                 main_record["file"].rstrip(";")
+            report_logger.info(
+                f'Removed duplicate (confidence: {str(round(dupe["score"], 3))}): '
+                + f'{main_record["ID"]} <- {dupe_record["ID"]}'
+            )
             main_record["status"] = str(RecordState.md_processed)
             bib_db.entries = [x for x in bib_db.entries if x["ID"] != dupe_record["ID"]]
             # REVIEW_MANAGER.update_record_by_ID(main_record)
@@ -429,9 +432,7 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
     return
 
 
-def prep_references(references: pd.DataFrame) -> pd.DataFrame:
-
-    references["author"] = references["author"].str[:60]
+def prep_references(references: pd.DataFrame) -> dict:
 
     if "volume" not in references:
         references["volume"] = "nan"
@@ -449,6 +450,8 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
         references["author"] = references["author"].apply(
             lambda x: format_authors_string(x)
         )
+    references["author"] = references["author"].str[:60]
+
     if "title" not in references:
         references["title"] = "nan"
     else:
@@ -520,7 +523,46 @@ def prep_references(references: pd.DataFrame) -> pd.DataFrame:
         ["author", "title", "journal", "container_title", "pages"]
     ].astype(str)
 
-    return references
+    references_dict = references.to_dict("records")
+    logger.debug(pp.pformat(references_dict))
+
+    data_d = {}
+
+    for row in references_dict:
+        # Note: we need the ID to identify/remove duplicates in the MAIN_REFERENCES.
+        # It is ignored in the field-definitions by the deduper!
+        # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
+        clean_row = [(k, preProcess(k, v)) for (k, v) in row.items()]
+        data_d[row["ID"]] = dict(clean_row)
+
+    return data_d
+
+
+def preProcess(k, column):
+    # From dedupe (TODO : integrate)
+    """
+    Do a little bit of data cleaning with the help of Unidecode and Regex.
+    Things like casing, extra spaces, quotes and new lines can be ignored.
+    """
+    if k in ["ID", "ENTRYTYPE", "status"]:
+        return column
+
+    column = str(column)
+    if any(
+        column == x for x in ["no issue", "no volume", "no pages", "no author", "nan"]
+    ):
+        column = None
+        return column
+
+    # TODO : compare whether unidecode or rmdiacritics/remove_accents works better.
+    # column = unidecode(column)
+    column = re.sub("  +", " ", column)
+    column = re.sub("\n", " ", column)
+    column = column.strip().strip('"').strip("'").lower().strip()
+    # If data is missing, indicate that by setting the value to `None`
+    if not column:
+        column = None
+    return column
 
 
 def get_data(REVIEW_MANAGER):
@@ -657,3 +699,99 @@ def main(REVIEW_MANAGER) -> None:
         logger.info("No records to check for duplicates")
 
     return
+
+
+###########################################################################
+
+# Note: code based on
+# https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
+
+
+def readData(REVIEW_MANAGER):
+
+    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
+        bib_db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=False,
+            common_strings=True,
+        ).parse_file(target_db, partial=True)
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    # Note: Because we only introduce individual (non-merged records),
+    # there should be no semicolons in origin!
+    records_queue = [
+        x
+        for x in bib_db.entries
+        if x["status"]
+        not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
+    ]
+
+    references = pd.DataFrame.from_dict(records_queue)
+    references = prep_references(references)
+
+    return references
+
+
+def setup_active_learning_deupde(REVIEW_MANAGER):
+
+    from colrev_core.review_manager import Process, ProcessType
+    import dedupe
+    from pathlib import Path
+
+    REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
+
+    logging.getLogger("dedupe.training").setLevel(logging.WARNING)
+    logging.getLogger("dedupe.api").setLevel(logging.WARNING)
+
+    training_file = Path(".references_dedupe_training.json")
+
+    logger.info("Importing data ...")
+
+    data_d = readData(REVIEW_MANAGER)
+    logger.debug(pp.pformat(data_d))
+
+    def title_corpus():
+        for record in data_d.values():
+            yield record["title"]
+
+    def container_corpus():
+        for record in data_d.values():
+            yield record["container_title"]
+
+    def author_corpus():
+        for record in data_d.values():
+            yield record["author"]
+
+    # Training
+
+    # Define the fields dedupe will pay attention to
+    fields = [
+        {
+            "field": "author",
+            "type": "Text",
+            "corpus": author_corpus(),
+            "has missing": True,
+        },
+        {"field": "title", "type": "Text", "corpus": title_corpus()},
+        {"field": "container_title", "type": "Text", "corpus": container_corpus()},
+        {"field": "year", "type": "DateTime"},
+        {"field": "volume", "type": "Text", "has missing": True},
+        {"field": "number", "type": "Text", "has missing": True},
+        {"field": "pages", "type": "String", "has missing": True},
+    ]
+
+    # Create a new deduper object and pass our data model to it.
+    deduper = dedupe.Dedupe(fields)
+
+    # If we have training data saved from a previous run of dedupe,
+    # look for it and load it in.
+    # __Note:__ if you want to train from scratch, delete the training_file
+    if training_file.is_file():
+        logger.info(f"Reading pre-labeled training data from {training_file.name}")
+        with open(training_file, "rb") as f:
+            deduper.prepare_training(data_d, f)
+    else:
+        deduper.prepare_training(data_d)
+
+    return deduper

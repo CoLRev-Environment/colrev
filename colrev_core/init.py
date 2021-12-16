@@ -123,7 +123,9 @@ def initialize_repo(
         + "missing_pdf_files.csv\n"
         + "manual_cleansing_statistics.csv\n"
         + "data.csv\n"
-        + "venv"
+        + "venv\n"
+        + ".references_dedupe_training.json\n"
+        + ".references_learned_settings"
     )
     f.close()
 
