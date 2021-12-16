@@ -147,9 +147,10 @@ def initialize_repo(
         ]
     )
 
-    from colrev_core.review_manager import ReviewManager
+    from colrev_core.review_manager import ReviewManager, Process, ProcessType
 
     REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.format))
 
     report_logger = logging.getLogger("colrev_core_report")
     report_logger.info("Initialize review repository")
