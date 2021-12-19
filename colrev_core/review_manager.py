@@ -84,8 +84,10 @@ class ProcessType(Enum):
     pdf_prep_man = auto()
     screen = auto()
     data = auto()
+
     format = auto()
     explore = auto()
+    check = auto()
 
     def __str__(self):
         return f"{self.name}"
@@ -256,7 +258,7 @@ processing_transitions = [
 ]
 
 
-def get_bibtex_writer():
+def get_bibtex_writer() -> BibTexWriter:
 
     writer = BibTexWriter()
 
@@ -335,7 +337,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
     }
 
 
-def setup_logger(level=logging.INFO):
+def setup_logger(level=logging.INFO) -> logging.Logger:
     logger = logging.getLogger("colrev_core")
 
     if not logger.handlers:
@@ -352,7 +354,7 @@ def setup_logger(level=logging.INFO):
     return logger
 
 
-def setup_report_logger(level=logging.INFO):
+def setup_report_logger(level=logging.INFO) -> logging.Logger:
 
     report_logger = logging.getLogger("colrev_core_report")
 
@@ -565,7 +567,7 @@ def remove_accents(input_str: str) -> str:
     return wo_ac
 
 
-def inplace_change(filename: str, old_string: str, new_string: str) -> None:
+def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
     with open(filename) as f:
         s = f.read()
         if old_string not in s:
@@ -577,8 +579,8 @@ def inplace_change(filename: str, old_string: str, new_string: str) -> None:
     return
 
 
-def retrieve_package_file(template_file: str, target: str) -> None:
-    filedata = pkgutil.get_data(__name__, template_file)
+def retrieve_package_file(template_file: Path, target: Path) -> None:
+    filedata = pkgutil.get_data(__name__, str(template_file))
     if filedata:
         with open(target, "w") as file:
             file.write(filedata.decode("utf-8"))
@@ -639,7 +641,7 @@ def build_docker_images(self) -> None:
     return
 
 
-def get_base_prefix_compat():
+def get_base_prefix_compat() -> str:
     return (
         getattr(sys, "base_prefix", None)
         or getattr(sys, "real_prefix", None)
@@ -647,7 +649,7 @@ def get_base_prefix_compat():
     )
 
 
-def in_virtualenv():
+def in_virtualenv() -> bool:
     return get_base_prefix_compat() != sys.prefix
 
 
@@ -666,11 +668,11 @@ def check_git_conflicts(REVIEW_MANAGER) -> None:
     return
 
 
-def is_git_repo(path: str) -> bool:
+def is_git_repo(path: Path) -> bool:
     from git.exc import InvalidGitRepositoryError
 
     try:
-        _ = git.Repo(path).git_dir
+        _ = git.Repo(str(path)).git_dir
         return True
     except InvalidGitRepositoryError:
         return False
@@ -766,7 +768,7 @@ def require_hooks_installed(installed_hooks: dict) -> bool:
     return True
 
 
-def check_software(REVIEW_MANAGER):
+def check_software(REVIEW_MANAGER) -> None:
     git_repo = REVIEW_MANAGER.get_repo()
     master = git_repo.head.reference
     cmsg_lines = master.commit.message.split("\n")
@@ -784,7 +786,8 @@ def check_software(REVIEW_MANAGER):
     return
 
 
-def check_repository_setup(REVIEW_MANAGER):
+def check_repository_setup(REVIEW_MANAGER) -> None:
+    from git.exc import GitCommandError
 
     # 1. git repository?
     if not is_git_repo(REVIEW_MANAGER.paths["REPO_DIR"]):
@@ -813,7 +816,7 @@ def check_repository_setup(REVIEW_MANAGER):
             )
             # This could also be a warning, but hooks should not change often.
 
-    except git.exc.GitCommandError:
+    except GitCommandError:
         REVIEW_MANAGER.logger.warning(
             "No Internet connection, cannot check remote "
             "colrev-hooks repository for updates."
@@ -840,13 +843,13 @@ class Record:
             initial=start_state,
         )
 
-    def get_valid_transitions(self):
+    def get_valid_transitions(self) -> list:
         return list(
             {x["trigger"] for x in self.transitions if x["source"] == self.state}
         )
 
     @property
-    def check_records_state_precondition(self):
+    def check_records_state_precondition(self) -> None:
         possible_transitions = [
             x["trigger"] for x in self.transitions if self.state == x["source"]
         ]
@@ -866,33 +869,33 @@ class Record:
         return
 
     @property
-    def clean_repo(self):
+    def clean_repo(self) -> bool:
         return require_clean_repo_general()
 
     @property
-    def clean_repo_except_search(self):
+    def clean_repo_except_search(self) -> bool:
         # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=["search/", "sources.yaml"])
 
     @property
-    def clean_repo_except_main_references(self):
+    def clean_repo_except_main_references(self) -> bool:
         MAIN_REFERENCES = "references.bib"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[MAIN_REFERENCES])
 
     @property
-    def clean_repo_except_pdf_dir(self):
+    def clean_repo_except_pdf_dir(self) -> bool:
         PDF_DIRECTORY = "pdfs/"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[PDF_DIRECTORY])
 
     @property
-    def clean_repo_except_pdf_dir_and_main_refs(self):
+    def clean_repo_except_pdf_dir_and_main_refs(self) -> bool:
         # TODO
         # PDF_DIRECTORY = "pdfs/"  # TODO : this is a temporary fix
         # return require_clean_repo_general(ignore_pattern=[PDF_DIRECTORY])
         return True
 
     @property
-    def clean_repo_except_manuscript(self):
+    def clean_repo_except_manuscript(self) -> bool:
         PAPER = "paper.md"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[PAPER])
 
@@ -931,8 +934,8 @@ class Process:
             ]
             return source_state[0]
 
-    def get_preceding_states(self, state):
-        preceding_states = set()
+    def get_preceding_states(self, state) -> set:
+        preceding_states: typing.Set[RecordState] = set()
         added = True
         while added:
             preceding_states_size = len(preceding_states)
@@ -1434,13 +1437,13 @@ def check_main_references_files(data: dict) -> None:
     return
 
 
-def check_new_record_source_tag(PAPER: str) -> None:
+def check_new_record_source_tag(PAPER: Path) -> None:
     with open(PAPER) as f:
         for line in f:
             if "<!-- NEW_RECORD_SOURCE -->" in line:
                 return
     raise ManuscriptRecordSourceTagError(
-        "Did not find <!-- NEW_RECORD_SOURCE --> tag in {PAPER}"
+        f"Did not find <!-- NEW_RECORD_SOURCE --> tag in {PAPER}"
     )
 
 
@@ -1737,7 +1740,7 @@ class ReviewManager:
         # because printing from other packages does not work in pre-commit hook.
 
         # We work with exceptions because each issue may be raised in different checks.
-        self.notified_next_process = "check"
+        self.notified_next_process = ProcessType.check
         PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"script": check_git_installed, "params": []},
@@ -1837,7 +1840,7 @@ class ReviewManager:
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
         return {"status": PASS, "msg": "Everything ok."}
 
-    def report(self, msg_file) -> dict:
+    def report(self, msg_file: Path) -> dict:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
@@ -1908,7 +1911,7 @@ class ReviewManager:
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
-    def get_repo(self):
+    def get_repo(self) -> git.Repo:
         """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
 
         if self.notified_next_process is None:
@@ -2010,7 +2013,7 @@ class ReviewManager:
         """Notify the REVIEW_MANAGER about the next process"""
         self.__check_precondition(process)
 
-    def __check_precondition(self, process) -> None:
+    def __check_precondition(self, process: Process) -> None:
         # TODO : currently a special case (not in state model):
         if process.type.name in ["format"]:
             # require_clean_repo_general(ignore_pattern=[self.paths["MAIN_REFERENCES_RELATIVE"]])
@@ -2560,6 +2563,7 @@ class ReviewManager:
                 sources_df = pd.json_normalize(safe_load(f))
                 sources = sources_df.to_dict("records")
         else:
+            self.logger.error(f'Sources file does not exist {self.paths["SOURCES"]}')
             sources = []
         return sources
 
