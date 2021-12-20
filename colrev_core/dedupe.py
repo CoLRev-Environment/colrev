@@ -235,11 +235,12 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
         + "*weights_vecor^T = "
         + "["
         + ",".join([str(similarities[g]) for g in range(len(similarities))])
-        + "]"
+        + "]*"
         + "["
         + ",".join([str(weights[g]) for g in range(len(similarities))])
         + "]^T"
     )
+    report_logger.debug(f"Similarity score: {round(weighted_average, 4)}")
     report_logger.debug(details)
 
     return {"score": round(weighted_average, 4), "details": details}

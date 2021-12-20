@@ -1668,7 +1668,6 @@ class ReviewManager:
         self.__git_repo = git.Repo(path)
         self.paths = get_file_paths(self.path)
         self.config = self.__load_config()
-        self.sources = self.load_sources()
 
         if self.config["DEBUG_MODE"]:
             self.report_logger = setup_report_logger(logging.DEBUG)
@@ -1676,6 +1675,8 @@ class ReviewManager:
         else:
             self.report_logger = setup_report_logger(logging.INFO)
             self.logger = setup_logger(logging.INFO)
+
+        self.sources = self.load_sources()
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
@@ -2077,7 +2078,12 @@ class ReviewManager:
                 report = report + f"Command\n   {script_name}\n"
         if saved_args is not None:
             for k, v in saved_args.items():
-                if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
+                if (
+                    isinstance(v, str)
+                    or isinstance(v, bool)
+                    or isinstance(v, int)
+                    or isinstance(v, float)
+                ):
                     report = report + f"     --{k}={v}\n"
             try:
                 report = (
@@ -2086,9 +2092,58 @@ class ReviewManager:
                 )
             except ValueError:
                 pass
-            report = report + "\n"
 
-        report = report + "Software"
+        # url = g.execut['git', 'config', '--get remote.origin.url']
+
+        # append status
+        f = io.StringIO()
+        with redirect_stdout(f):
+            stat = status.get_status_freq(self)
+            status.print_review_status(self, stat)
+
+        # Remove colors for commit message
+        status_page = (
+            f.getvalue()
+            .replace("\033[91m", "")
+            .replace("\033[92m", "")
+            .replace("\033[93m", "")
+            .replace("\033[94m", "")
+            .replace("\033[0m", "")
+        )
+        status_page = status_page.replace("Status\n\n", "Status\n")
+        report = report + status_page
+
+        tree_hash = git_repo.git.execute(["git", "write-tree"])
+        if self.paths["MAIN_REFERENCES"].is_file():
+            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
+            report = report + "\n\n" + tree_info
+            report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
+            report = (
+                report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"
+            )
+            completeness_condition = status.get_completeness_condition(self)
+            if completeness_condition:
+                report = (
+                    report + "   - Completeness of iteration ".ljust(38, " ") + "YES\n"
+                )
+            else:
+                report = (
+                    report + "   - Completeness of iteration ".ljust(38, " ") + "NO\n"
+                )
+            report = (
+                report
+                + "   To check tree_hash use".ljust(38, " ")
+                + "git log --pretty=raw -1\n"
+            )
+            report = (
+                report
+                + "   To validate use".ljust(38, " ")
+                + "colrev_core validate --properties "
+                + "--commit INSERT_COMMIT_HASH"
+            )
+        report = report + "\n"
+
+        report = report + "\nSoftware"
         rt_version = version("colrev_core")
         report = report + "\n   - colrev_core:".ljust(33, " ") + "version " + rt_version
         version("colrev_hooks")
@@ -2139,56 +2194,7 @@ class ReviewManager:
             report = (
                 report + "\n    * created with a modified version (not reproducible)"
             )
-
-        tree_hash = git_repo.git.execute(["git", "write-tree"])
-        if self.paths["MAIN_REFERENCES"].is_file():
-            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
-            report = report + "\n\n" + tree_info
-            report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
-            report = (
-                report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"
-            )
-            completeness_condition = status.get_completeness_condition(self)
-            if completeness_condition:
-                report = (
-                    report + "   - Completeness of iteration ".ljust(38, " ") + "YES\n"
-                )
-            else:
-                report = (
-                    report + "   - Completeness of iteration ".ljust(38, " ") + "NO\n"
-                )
-            report = (
-                report
-                + "   To check tree_hash use".ljust(38, " ")
-                + "git log --pretty=raw -1\n"
-            )
-            report = (
-                report
-                + "   To validate use".ljust(38, " ")
-                + "colrev_core validate --properties "
-                + "--commit INSERT_COMMIT_HASH"
-            )
         report = report + "\n"
-
-        # url = g.execut['git', 'config', '--get remote.origin.url']
-
-        # append status
-        f = io.StringIO()
-        with redirect_stdout(f):
-            stat = status.get_status_freq(self)
-            status.print_review_status(self, stat)
-
-        # Remove colors for commit message
-        status_page = (
-            f.getvalue()
-            .replace("\033[91m", "")
-            .replace("\033[92m", "")
-            .replace("\033[93m", "")
-            .replace("\033[94m", "")
-            .replace("\033[0m", "")
-        )
-        status_page = status_page.replace("Status\n\n", "Status\n")
-        report = report + status_page
 
         return report
 
@@ -2263,6 +2269,8 @@ class ReviewManager:
                         "[INFO] Calculate statistics",
                         "[INFO] ReviewManager: run ",
                         "[INFO] Retrieve PDFs",
+                        "[INFO] Statistics:",
+                        "[INFO] Set ",
                     ]
                 ):
                     firsts.append(line)
@@ -2302,6 +2310,7 @@ class ReviewManager:
         )
         with open("report.log", "w") as f:
             f.write(ordered_items)
+
         return
 
     def create_commit(
@@ -2563,7 +2572,9 @@ class ReviewManager:
                 sources_df = pd.json_normalize(safe_load(f))
                 sources = sources_df.to_dict("records")
         else:
-            self.logger.error(f'Sources file does not exist {self.paths["SOURCES"]}')
+            self.logger.debug(
+                f'Sources file does not exist {self.paths["SOURCES"].name}'
+            )
             sources = []
         return sources
 

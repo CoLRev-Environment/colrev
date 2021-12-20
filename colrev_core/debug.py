@@ -89,6 +89,9 @@ def debug_prep() -> None:
 
     pp.pprint(record)
     res = prep.get_md_from_crossref(record)
+    # res = prep.get_md_from_urls(record)
+    # res = prep.get_md_from_dblp(record)
+
     pp.pprint(res)
 
     return
