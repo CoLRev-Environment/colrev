@@ -133,30 +133,85 @@ In addition, the ReviewManager keeps a detailed report of (1) the review environ
 ## Data
 
 The CoLRev framework is based on an oppinionated and well-justified selection of data structures, file-paths and operating principles.
-Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and coauthors share the same philosophy of data) without any side-effects on the anaylsis and synthesis process/outcomes.
+Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) without any side-effects on the anaylsis and synthesis process/outcomes.
 
-Raw data sources
-- Transformed to BibTex by CoLRev to facilitate more efficient processing
-- Can be immutable (e.g., results extracted from databases) * Exception: fixing incompatibilities with BibTex Standard
-- Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
+The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
+Having access to these data and being able ot analyze them efficiently is of critical importance to
 
-- MAIN_REFERENCES containing all [records](figures/record.png)
+1. develop confidence in the review process,
+2. communicate and justify the trustworthiness of the results,
+3. improve individual contributions (e.g., train research assistants, to validate algorithms),
+4. be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced,
+5. efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
-- Data structure (origin, md_status, rev_status, pdf_status, ... (first fields fixed to enable efficient status checks), metadata_source (from the beginning) as a long field/key to avoid indentation changes, ordering according to IDs - trying to set the final IDs in the load stages)
-- BibTex:
-  - Quasi-standard format that is supported by most reference managers and literature review tools for input/output [1](https://en.wikipedia.org/wiki/Comparison_of_reference_management_software).
-  - BibTex is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains few syntactic markup that makes it difficult to read (e.g., XML or MODS).
-  - BibTex is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
-  - BibTex can be augmented (including additional fields for the record origin, status, etc.)
+Examples of transparency in different stages are provided below.
 
-One important feature of CoLRev is that it tracks a status for each record.
+To accomplish these goals, CoLRev tracks a status for each record.
 
 - The status is used to determine the current state of the review project
 - It is used by the ReviewManager to determine which operations are valid according to the processing order (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
 - Tracking record status enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
 - Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., status="synthesized" implies pdf-prepared, md-prepared, included, prescreen-included - no need to check consistency between different screening decisions)
 
-<img src="figures/micro_framework.png" width="900">
+<img src="figures/micro_framework.png" width="1000">
+
+Examples of transparency in preparation, deduplication, and screening:
+
+<img src="figures/change_example1.png" width="1000">
+
+Note : in this case, we see that the record was prepared (changing the status from ```md_imported``` to ```md_prepared```) based on the LINKED_URL (as explained by the ```metadata_source``` field).
+The doi was extracted from the website (url) and used to update and complete the metadata (after checking whether it corresponds with the existing ```title```, ```author```, .... fields).
+The processing report (part of the commit message) provides further details.
+
+<img src="figures/change_example2.png" width="1000">
+
+**TODO**: include examples for deduplication and screening.
+
+
+Raw data sources
+- Transformed to BibTex by CoLRev to facilitate more efficient processing
+- Can be immutable (e.g., results extracted from databases) * Exception: fixing incompatibilities with BibTex Standard
+- Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
+
+The MAIN_REFERENCES contain all records. They are sorted according to IDs, which makes it easy to examine deduplication decisions. Once propagated to the review process (the prescreen), the ID field (e.g., BaranBerkowicz2021) is considered immutable and used to identify the record throughout the review process.
+To facilitate an efficient visual analysis of deduplication decisions (and preparation changes), CoLRev attempts to set the final IDs (based on formatted and completed metadata) when importing records into the MAIN_REFERENCEs (IDs may be updated until the deduplication step if the author and year fields change).
+
+ID formats, such as three-author+year (automatically generated by CoLRev), is recommended because
+
+  - semantic IDs are easier to remember (compared to arbitrary ones like DOIs or numbers that are incremented),
+  - global identifiers (like DOIs or Web of Science accession numbers) are not available for every record (such as conference papers, books, or unpublished reports),
+  - shorter formats (like first-author+year) may often require arbitrary suffixes
+
+Individual records in the MAIN_REFERENCES are augmented with
+
+- the ```status``` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between a references file and a screening sheet/data sheet/manuscript)
+- the ```origin``` field to enable traceability and analyses (in both directions)
+
+
+The order of the first fields is fixed to enable efficient status checks.
+
+```bibtex
+@article{BaranBerkowicz2021,
+  origin          = {PoPCites.bibtex.bib/pop00082},
+  status          = {md_prepared},
+  metadata_source = {LINKED_URL},
+  doi             = {10.3390/su13116494},
+  author          = {Baran, Grzegorz and Berkowicz, Aleksandra},
+  journal         = {Sustainability},
+  title           = {Digital Platform Ecosystems as Living Labs for Sustainable Entrepreneurship and Innovation},
+  year            = {2021},
+  number          = {11},
+  volume          = {13},
+  url             = {https://www.mdpi.com/2071-1050/13/11/6494/pdf},
+}
+```
+
+BibTex:
+
+- Quasi-standard format that is supported by most reference managers and literature review tools for input/output [1](https://en.wikipedia.org/wiki/Comparison_of_reference_management_software).
+- BibTex is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS).
+- BibTex is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
+- BibTex can be augmented (including additional fields for the record origin, status, etc.)
 
 ## Extension development and best practices
 
