@@ -286,7 +286,7 @@ For meta-data preparation and PDF retrieval, we rely on the following data sourc
 
 Contributions, code and features are always welcome
 
-- See [contributing guidelines](CONTRIBUTING.rst).
+- See [contributing guidelines](CONTRIBUTING.md).
 - Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev_core/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
