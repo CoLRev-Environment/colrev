@@ -49,7 +49,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     python_requires=">=3.6",
-    description="Template for git-based literature reviews",
+    description="Core engine for CoLRev (colaborative literature reviews)",
     long_description=readme + "\n\n" + changelog,
     long_description_content_type="text/markdown",
     url="https://github.com/geritwagner/colrev_core",

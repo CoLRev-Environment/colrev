@@ -20,7 +20,7 @@ Extensions are available at [Github](https://github.com/topics/colrev-extension)
 
 # Architecture and design principles
 
-A literature review is a collaborative process involving human-machine ensembles (authors, algorithms, crowds), which takes search results (metadata) and full-text documents as qualitativd, semistructured input to develop a synthesis. The result can take the form of a codified standalone review paper, a published as a web repository, or a curated locally as a living review.
+A literature review is a collaborative process involving human-machine ensembles (authors, algorithms, crowds), which takes search results (metadata) and full-text documents as qualitative, semi-structured input to develop a synthesis. The result can take the form of a codified standalone review paper, a published as a web repository, or a curated locally as a living review.
 
 It is commonly known that data generation processes are error prone (e.g., errors in the reference sections of primary papers, in the database indices, or in the machine-readability of PDFs) and as a result, each record (metadata or PDF) can have multiple data quality problems.
 As a direct implication, metadata and PDFs, like data in any other research method, require dedicated preparation steps.
@@ -48,14 +48,14 @@ In its basic form, the workflow consists of iteratively calling ```colrev status
 
 The workflow is self-explanatory with ```colrev status``` recommending the next ```colrev process``` or ```git process```
 
-The ReviewManager supports reviewers in completing the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
+The **ReviewManager** supports reviewers in completing the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
 Essentially, the ReviewManager operates in three modes:
 
 - Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
 - Supervised: ReviewManager is notified before a process is started, usually interactive processes requiring frequent user input (e.g., screening)
 - Consulted: ReviewManager is called after files have been modified and checks for consistency (e.g., writing the synthesis)
 
-In addition, the ReviewManager keeps a detailed report of (1) the review environmen and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset ([example](figures/commit_report.png)).
+In addition, the ReviewManager keeps a detailed report of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset ([example](figures/commit_report.png)).
 
 **TODO**: summarize steps I-IV displayed in the figure
 
@@ -84,7 +84,7 @@ In addition, the ReviewManager keeps a detailed report of (1) the review environ
   - Records can be highly similar but not a duplicate (e.g., conference papers published as extended journal versions, or editorials that differ only in the journal-issue)
   - Records can be completely dissimilar but require merging (e.g., conference details linked through a crossref field in BibTex)
   - Duplicate detection performance critically depends on preparation
-  - Duplicate detection sould be incremental, i.e., the pool of non-duplicated records is extended incrementally with new records being checked against existing records in the pool. Comparisons between records in the pool are not repeated. This is only possible if we meticulously track the status of records (after md_status=processed or not). Note: incremental merging is not possible with traditional workflows that do not rely on an explicit state model and corresponding fields. This can be a severe limitation for iterative searches!
+  - Duplicate detection should be incremental, i.e., the pool of non-duplicated records is extended incrementally with new records being checked against existing records in the pool. Comparisons between records in the pool are not repeated. This is only possible if we meticulously track the status of records (after md_status=processed or not). Note: incremental merging is not possible with traditional workflows that do not rely on an explicit state model and corresponding fields. This can be a severe limitation for iterative searches!
   - If the similarity between records is not high enough for merging (and not low enough to mark them as non-duplicates), they are marked as "needs_manual_preparation".
   - Efficient analysis requires records to be adjacent in the MAIN_REFERENCES
   - **TODO** We also need to define how records are matched across levels - e.g., book vs. book-chapter, conference proceedings vs. in-proceedings paper
@@ -132,8 +132,8 @@ In addition, the ReviewManager keeps a detailed report of (1) the review environ
 
 ## Data
 
-The CoLRev framework is based on an oppinionated and well-justified selection of data structures, file-paths and operating principles.
-Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) without any side-effects on the anaylsis and synthesis process/outcomes.
+The CoLRev framework is based on an opinionated and well-justified selection of data structures, file-paths and operating principles.
+Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) without any side-effects on the analysis and synthesis process/outcomes.
 
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
 Having access to these data and being able ot analyze them efficiently is of critical importance to
@@ -151,7 +151,7 @@ To accomplish these goals, CoLRev tracks a status for each record.
 - The status is used to determine the current state of the review project
 - It is used by the ReviewManager to determine which operations are valid according to the processing order (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
 - Tracking record status enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
-- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., status="synthesized" implies pdf-prepared, md-prepared, included, prescreen-included - no need to check consistency between different screening decisions)
+- Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., status="synthesized" implies pdf_prepared, md_prepared, rev_included, rev_prescreen_included - no need to check consistency between different screening decisions)
 
 <img src="figures/micro_framework.png" width="1000">
 
@@ -249,7 +249,7 @@ REVIEW_MANAGER.create_commit("Pre-screening (manual) based on PreScreenExtension
 - Logger (report vs tool/extension)
     - logg infos that are helpful to examine and validate the process to review_template_report logger.
     - logg infos on the progress to the review_template logger. keep the output relatively short, allowing users to see the progress and judge whether any errors occurred
-- PDF paths should be relative to the git repositoriy (if PDFs are not versioend in git, this can be accomplished through ignored paths or symlinked directories)
+- PDF paths should be relative to the git repository (if PDFs are not versioned in git, this can be accomplished through ignored paths or symlinked directories)
 - Commit message: link to docs with debugging-instructions
 - Instead of throwing the raw build output at the user and telling them to figure it out, we detect the underlying cause, if we can, and provide them with a short, but descriptive failure message, with links to the relevant documentation.
 

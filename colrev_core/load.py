@@ -190,8 +190,6 @@ def append_sources(REVIEW_MANAGER, new_record: dict) -> None:
 
 def bibutils_convert(script: str, data: str) -> str:
 
-    assert script in ["ris2xml", "end2xml", "endx2xml", "isi2xml", "med2xml", "xml2bib"]
-
     if "xml2bib" == script:
         script = script + " -b -w -sk "
     else:
