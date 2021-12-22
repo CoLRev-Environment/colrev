@@ -63,27 +63,40 @@ In addition, the ReviewManager keeps a detailed report of (1) the review environ
 
 ### Processing functions (transitions between record states)
 
-```load```
+```load```:  -> ```md_imported```
 
-  - This process must map field names to a common standard (BibTex) (e.g., Web of Science has "Author_Full_Names", which is "author" in BibTex). This mapping can be dependent on the database/source (and it may change over time).
+  - Converts search results stored in the ```search``` directory to BibTex format
+  - Combines all individual search results files in one MAIN_REFERENCES file and creates an origin link for each record (in addition to a status field)
+  - The origin fields allow ```load``` to operate in an incremental mode (i.e., recognize which records have already been loaded and load only the new ones)
+  - Maps field names to a common standard (BibTex) (e.g., Web of Science has "Author_Full_Names", which is "author" in BibTex). This mapping can be dependent on the database/source (and it may change over time).
+  - Creates IDs (IDs may be changed in the preparation/deduplication process but ideally, the load process sets most of the IDs to their final values to avoid positional changes of records, for which IDs are the primary sort criterion)
+  - Records details for each source (search results file)
 
-```prepare```
+```prepare```: transition from ```md_imported``` to ```md_prepared``` | ```md_needs_manual_preparation```
 
-  - Format fields (e.g., use ML to identify author first/last/middle names and format them)
-  - Automatically update metadata if there is a high similarity with a record in a curated repository (e.g., DOI/CROSSREF).
-  - Pragmatic assumption: the information provided by metadata repositories (like Crossref) is correct and complete
-  - If the similarity is low:
-    - If the record is missing fields (-> rules), has inconsistent fields or incomplete fields, mark for manual preparation
-    - Else: mark as prepared
-  - Efficient analysis requires transparency of the changes applied by each individual function (e.g., is it an error of the script, of the input data or of the curated repository?)
+  - To transition to ```md_prepared```, metadata of a record has to be complete and consistent
+    - Complete means that particular fields are required according to the respective ENTRYTYPE (see prep.py/record_field_requirements, which is based on [BibTex standard](https://en.wikipedia.org/wiki/BibTeX)) and that individual fields have to be complete (e.g., authors not ending with "...", "et al." or "and others"). Records are considered complete if a curated metadata repository confirms that particular fields do not exist for that record (e.g., the journal does not use numbers).
+    - Consistent means that consistency rules (as defined in prep.py/record_field_inconsistencies) are not violated.
+  - Several preparation scripts are applied:
+    - Formats fields (e.g., use ML to identify author first/last/middle names and format them)
+    - Queries curated metadata repositories (e.g., DOI.ORG, CROSSREF, DBLP, OPEN_LIBRARY) or check ```url```, ```fulltext``` fields to update metadata if there is a high similarity with the curated metadata. Only high-quality metadata repositories are covered and the data returned is considered correct and complete (e.g., useful to conclude that a record is complete if the journal publishes volumes but no individual numbers)
+  - If the resulting metadata is not complete and consistent, the record status is set to ```md_needs_manual_preparation```
+  - Analyses of the changes applied by each preparation script (e.g., is it an error of the script, of the input data or of the curated repository?) is supported by a detailed report (commit message)
 
-```man_prep```
+```man_prep```: transition from ```md_needs_manual_preparation``` to ```md_prepared```
 
-```dedupe```
+  - Manual process in which researchers check the ```man_prep_hints``` fields (e.g., indicating that the author field is missing) and update the records accordingly
 
-  - Records can be highly similar but not a duplicate (e.g., conference papers published as extended journal versions, or editorials that differ only in the journal-issue)
-  - Records can be completely dissimilar but require merging (e.g., conference details linked through a crossref field in BibTex)
-  - Duplicate detection performance critically depends on preparation
+```dedupe```: transition from ```md_prepared``` to ```md_processed```
+
+  - Interactive process (manual labeling), followed by automated classification of remaining records as non-duplicates
+  - Identifying and merging duplicates with high accuracy requires the following:
+    - Prepared metadata (especially completeness)
+    - State-of-the-art duplicate identification algorithms (active learning)
+    - FP safeguards (**TODO**) to prevent erroneous merging when records are highly similar but not duplicates (e.g., conference papers published as extended journal versions, or editorials in which all fields are identical, except for the journal-issue)
+    - "Domain knowledge": Records can be completely dissimilar but require merging (e.g., conference details linked through a crossref field in BibTex)
+
+**CONTINUE HERE**
   - Duplicate detection should be incremental, i.e., the pool of non-duplicated records is extended incrementally with new records being checked against existing records in the pool. Comparisons between records in the pool are not repeated. This is only possible if we meticulously track the status of records (after md_status=processed or not). Note: incremental merging is not possible with traditional workflows that do not rely on an explicit state model and corresponding fields. This can be a severe limitation for iterative searches!
   - If the similarity between records is not high enough for merging (and not low enough to mark them as non-duplicates), they are marked as "needs_manual_preparation".
   - Efficient analysis requires records to be adjacent in the MAIN_REFERENCES

@@ -181,6 +181,16 @@ def format_minor(record: dict) -> dict:
     return record
 
 
+def title_if_mostly_upper(input_string: str) -> str:
+    if not re.match(r"[a-zA-Z]+", input_string):
+        return input_string
+    words = input_string.split()
+    if sum(word.isupper() for word in words) / len(words) > 0.8:
+        return input_string.capitalize()
+    else:
+        return input_string
+
+
 def format(record: dict) -> dict:
 
     fields_to_process = [
@@ -294,16 +304,6 @@ def mostly_upper_case(input_string: str) -> bool:
     input_string = input_string.replace(".", "").replace(",", "")
     words = input_string.split()
     return sum(word.isupper() for word in words) / len(words) > 0.8
-
-
-def title_if_mostly_upper(input_string: str) -> str:
-    if not re.match(r"[a-zA-Z]+", input_string):
-        return input_string
-    words = input_string.split()
-    if sum(word.isupper() for word in words) / len(words) > 0.8:
-        return input_string.capitalize()
-    else:
-        return input_string
 
 
 def format_author_field(input_string: str) -> str:

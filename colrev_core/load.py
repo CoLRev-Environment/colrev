@@ -36,7 +36,25 @@ class NoSearchResultsAvailableError(Exception):
         super().__init__(self.message)
 
 
-def get_search_files(restrict: list = None) -> typing.List[Path]:
+class UnsupportedImportFormatError(Exception):
+    def __init__(
+        self,
+        import_path,
+    ):
+        self.import_path = import_path
+        self.message = (
+            "Format of search result file not (yet) supported "
+            + f"({self.import_path.name}) "
+        )
+        super().__init__(self.message)
+
+
+class BibFileFormatError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+def get_search_files(REVIEW_MANAGER, restrict: list = None) -> typing.List[Path]:
 
     supported_extensions = [
         "ris",
@@ -53,8 +71,7 @@ def get_search_files(restrict: list = None) -> typing.List[Path]:
     if restrict:
         supported_extensions = restrict
 
-    # TODO: replace by REVIEW_MANAGER.paths['SEARCHDIR']
-    search_dir = Path("search")
+    search_dir = REVIEW_MANAGER.paths["SEARCHDIR"]
 
     if not search_dir.is_dir():
         raise NoSearchResultsAvailableError()
@@ -66,11 +83,6 @@ def get_search_files(restrict: list = None) -> typing.List[Path]:
     ]
 
     return files
-
-
-class BibFileFormatError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
 
 
 def getbib(file: Path) -> BibDatabase:
@@ -216,18 +228,8 @@ def bibutils_convert(script: str, data: str) -> str:
     sock.close()
 
     client.wait(container)
-    # status = client.wait(container)
-    # status_code = status['StatusCode']
     stdout = client.logs(container, stderr=False).decode()
-    # stderr = client.logs(container, stdout=False).decode()
-
     client.remove_container(container)
-
-    # logger.debug('Exit: {}'.format(status_code))
-    # logger.debug('log stdout: {}'.format(stdout))
-    # logger.debug('log stderr: {}'.format(stderr))
-
-    # TODO: else: raise error!
 
     return stdout
 
@@ -363,9 +365,8 @@ def xlsx2bib(file: Path) -> BibDatabase:
     return db
 
 
-def move_to_pdf_dir(filepath: Path) -> Path:
-    # TODO: replace by REVIEW_MANAGER.paths['PDF_DIRECTORY']
-    PDF_DIRECTORY = "pdfs"
+def move_to_pdf_dir(REVIEW_MANAGER, filepath: Path) -> Path:
+    PDF_DIRECTORY = REVIEW_MANAGER.paths["PDF_DIRECTORY"]
     # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
     Path(PDF_DIRECTORY).mkdir(exist_ok=True)
     new_fp = Path(PDF_DIRECTORY) / filepath.name
@@ -510,21 +511,8 @@ conversion_scripts = {
 }
 
 
-class UnsupportedImportFormatError(Exception):
-    def __init__(
-        self,
-        import_path,
-    ):
-        self.import_path = import_path
-        self.message = (
-            "Format of search result file not (yet) supported "
-            + f"({self.import_path.name}) "
-        )
-        super().__init__(self.message)
-
-
-def validate_file_formats() -> None:
-    search_files = get_search_files()
+def validate_file_formats(REVIEW_MANAGER) -> None:
+    search_files = get_search_files(REVIEW_MANAGER)
     for sfp in search_files:
         if not any(sfp.suffix == f".{ext}" for ext in conversion_scripts.keys()):
             if not sfp.suffix == ".bib":
@@ -565,7 +553,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                 logger.error("No records loaded")
                 continue
             elif "pdf" == filetype:
-                new_fp = move_to_pdf_dir(sfpath)
+                new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
                 new_record = {
                     "filename": corresponding_bib_file.name,
                     "search_type": "OTHER",
@@ -578,7 +566,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
                 git_repo.index.add([new_fp])
 
             elif "pdf_refs" == filetype:
-                new_fp = move_to_pdf_dir(sfpath)
+                new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
                 new_record = {
                     "filename": corresponding_bib_file.name,
                     "search_type": "BACK_CIT",
@@ -607,7 +595,7 @@ def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
 
 
 def convert_non_bib_search_files(REVIEW_MANAGER) -> None:
-    search_files = get_search_files()
+    search_files = get_search_files(REVIEW_MANAGER)
     if any(".pdf" in x.suffix for x in search_files) or any(
         ".txt" in x.suffix for x in search_files
     ):
@@ -620,17 +608,8 @@ def convert_non_bib_search_files(REVIEW_MANAGER) -> None:
     # relevant for pdf sources that require long processing times.
     convert_to_bib(REVIEW_MANAGER, search_files)
     git_repo = REVIEW_MANAGER.get_repo()
-    search_files = get_search_files()
+    search_files = get_search_files(REVIEW_MANAGER)
     git_repo.index.add([str(x) for x in search_files])
-    return
-
-
-def order_bib_file(REVIEW_MANAGER) -> None:
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
-    REVIEW_MANAGER.save_bib_db(bib_db)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     return
 
 
@@ -649,7 +628,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     imported_origins = [x[1].split(";") for x in record_header_list]
     imported_origins = list(itertools.chain(*imported_origins))
 
-    search_files = get_search_files(restrict=["bib"])
+    search_files = get_search_files(REVIEW_MANAGER, restrict=["bib"])
     load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
     additional_records = load_pool.map(load_records, search_files)
     load_pool.close()
@@ -705,7 +684,12 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         if not keep_ids:
             REVIEW_MANAGER.set_IDs(selected_IDs=[x["ID"] for x in load_batch])
 
-        order_bib_file(REVIEW_MANAGER)
+        # To order the MAIN_REFERENCES:
+        bib_db = REVIEW_MANAGER.load_bib_db()
+        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+        REVIEW_MANAGER.save_bib_db(bib_db)
+        git_repo = REVIEW_MANAGER.get_repo()
+        git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
         REVIEW_MANAGER.create_commit("Import search results", saved_args=saved_args)
 

@@ -42,7 +42,7 @@ def debug_load() -> None:
     rec_header_lis = REVIEW_MANAGER.get_record_header_list()
     origin_list = [x[1] for x in rec_header_lis]
 
-    search_files = load.get_search_files(restrict=["bib"])
+    search_files = load.get_search_files(REVIEW_MANAGER, restrict=["bib"])
 
     for search_file in search_files:
         print(search_file)
