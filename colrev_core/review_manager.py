@@ -16,6 +16,7 @@ import re
 import string
 import subprocess
 import sys
+import tempfile
 import typing
 import unicodedata
 from contextlib import redirect_stdout
@@ -83,8 +84,10 @@ class ProcessType(Enum):
     pdf_prep_man = auto()
     screen = auto()
     data = auto()
+
     format = auto()
     explore = auto()
+    check = auto()
 
     def __str__(self):
         return f"{self.name}"
@@ -255,7 +258,7 @@ processing_transitions = [
 ]
 
 
-def get_bibtex_writer():
+def get_bibtex_writer() -> BibTexWriter:
 
     writer = BibTexWriter()
 
@@ -334,7 +337,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
     }
 
 
-def setup_logger(level=logging.INFO):
+def setup_logger(level=logging.INFO) -> logging.Logger:
     logger = logging.getLogger("colrev_core")
 
     if not logger.handlers:
@@ -351,7 +354,7 @@ def setup_logger(level=logging.INFO):
     return logger
 
 
-def setup_report_logger(level=logging.INFO):
+def setup_report_logger(level=logging.INFO) -> logging.Logger:
 
     report_logger = logging.getLogger("colrev_core_report")
 
@@ -564,7 +567,7 @@ def remove_accents(input_str: str) -> str:
     return wo_ac
 
 
-def inplace_change(filename: str, old_string: str, new_string: str) -> None:
+def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
     with open(filename) as f:
         s = f.read()
         if old_string not in s:
@@ -576,8 +579,8 @@ def inplace_change(filename: str, old_string: str, new_string: str) -> None:
     return
 
 
-def retrieve_package_file(template_file: str, target: str) -> None:
-    filedata = pkgutil.get_data(__name__, template_file)
+def retrieve_package_file(template_file: Path, target: Path) -> None:
+    filedata = pkgutil.get_data(__name__, str(template_file))
     if filedata:
         with open(target, "w") as file:
             file.write(filedata.decode("utf-8"))
@@ -638,7 +641,7 @@ def build_docker_images(self) -> None:
     return
 
 
-def get_base_prefix_compat():
+def get_base_prefix_compat() -> str:
     return (
         getattr(sys, "base_prefix", None)
         or getattr(sys, "real_prefix", None)
@@ -646,7 +649,7 @@ def get_base_prefix_compat():
     )
 
 
-def in_virtualenv():
+def in_virtualenv() -> bool:
     return get_base_prefix_compat() != sys.prefix
 
 
@@ -665,11 +668,11 @@ def check_git_conflicts(REVIEW_MANAGER) -> None:
     return
 
 
-def is_git_repo(path: str) -> bool:
+def is_git_repo(path: Path) -> bool:
     from git.exc import InvalidGitRepositoryError
 
     try:
-        _ = git.Repo(path).git_dir
+        _ = git.Repo(str(path)).git_dir
         return True
     except InvalidGitRepositoryError:
         return False
@@ -765,7 +768,7 @@ def require_hooks_installed(installed_hooks: dict) -> bool:
     return True
 
 
-def check_software(REVIEW_MANAGER):
+def check_software(REVIEW_MANAGER) -> None:
     git_repo = REVIEW_MANAGER.get_repo()
     master = git_repo.head.reference
     cmsg_lines = master.commit.message.split("\n")
@@ -783,7 +786,8 @@ def check_software(REVIEW_MANAGER):
     return
 
 
-def check_repository_setup(REVIEW_MANAGER):
+def check_repository_setup(REVIEW_MANAGER) -> None:
+    from git.exc import GitCommandError
 
     # 1. git repository?
     if not is_git_repo(REVIEW_MANAGER.paths["REPO_DIR"]):
@@ -812,7 +816,7 @@ def check_repository_setup(REVIEW_MANAGER):
             )
             # This could also be a warning, but hooks should not change often.
 
-    except git.exc.GitCommandError:
+    except GitCommandError:
         REVIEW_MANAGER.logger.warning(
             "No Internet connection, cannot check remote "
             "colrev-hooks repository for updates."
@@ -839,13 +843,13 @@ class Record:
             initial=start_state,
         )
 
-    def get_valid_transitions(self):
+    def get_valid_transitions(self) -> list:
         return list(
             {x["trigger"] for x in self.transitions if x["source"] == self.state}
         )
 
     @property
-    def check_records_state_precondition(self):
+    def check_records_state_precondition(self) -> None:
         possible_transitions = [
             x["trigger"] for x in self.transitions if self.state == x["source"]
         ]
@@ -865,33 +869,33 @@ class Record:
         return
 
     @property
-    def clean_repo(self):
+    def clean_repo(self) -> bool:
         return require_clean_repo_general()
 
     @property
-    def clean_repo_except_search(self):
+    def clean_repo_except_search(self) -> bool:
         # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=["search/", "sources.yaml"])
 
     @property
-    def clean_repo_except_main_references(self):
+    def clean_repo_except_main_references(self) -> bool:
         MAIN_REFERENCES = "references.bib"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[MAIN_REFERENCES])
 
     @property
-    def clean_repo_except_pdf_dir(self):
+    def clean_repo_except_pdf_dir(self) -> bool:
         PDF_DIRECTORY = "pdfs/"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[PDF_DIRECTORY])
 
     @property
-    def clean_repo_except_pdf_dir_and_main_refs(self):
+    def clean_repo_except_pdf_dir_and_main_refs(self) -> bool:
         # TODO
         # PDF_DIRECTORY = "pdfs/"  # TODO : this is a temporary fix
         # return require_clean_repo_general(ignore_pattern=[PDF_DIRECTORY])
         return True
 
     @property
-    def clean_repo_except_manuscript(self):
+    def clean_repo_except_manuscript(self) -> bool:
         PAPER = "paper.md"  # TODO : this is a temporary fix
         return require_clean_repo_general(ignore_pattern=[PAPER])
 
@@ -930,8 +934,8 @@ class Process:
             ]
             return source_state[0]
 
-    def get_preceding_states(self, state):
-        preceding_states = set()
+    def get_preceding_states(self, state) -> set:
+        preceding_states: typing.Set[RecordState] = set()
         added = True
         while added:
             preceding_states_size = len(preceding_states)
@@ -1077,7 +1081,7 @@ def retrieve_IDs_from_bib(file_path: Path) -> list:
         while line:
             if "@" in line[:5]:
                 ID = line[line.find("{") + 1 : line.rfind(",")]
-                IDs.append(ID)
+                IDs.append(ID.lstrip())
             line = f.readline()
     return IDs
 
@@ -1433,13 +1437,13 @@ def check_main_references_files(data: dict) -> None:
     return
 
 
-def check_new_record_source_tag(PAPER: str) -> None:
+def check_new_record_source_tag(PAPER: Path) -> None:
     with open(PAPER) as f:
         for line in f:
             if "<!-- NEW_RECORD_SOURCE -->" in line:
                 return
     raise ManuscriptRecordSourceTagError(
-        "Did not find <!-- NEW_RECORD_SOURCE --> tag in {PAPER}"
+        f"Did not find <!-- NEW_RECORD_SOURCE --> tag in {PAPER}"
     )
 
 
@@ -1664,7 +1668,6 @@ class ReviewManager:
         self.__git_repo = git.Repo(path)
         self.paths = get_file_paths(self.path)
         self.config = self.__load_config()
-        self.sources = self.load_sources()
 
         if self.config["DEBUG_MODE"]:
             self.report_logger = setup_report_logger(logging.DEBUG)
@@ -1672,6 +1675,8 @@ class ReviewManager:
         else:
             self.report_logger = setup_report_logger(logging.INFO)
             self.logger = setup_logger(logging.INFO)
+
+        self.sources = self.load_sources()
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
@@ -1736,7 +1741,7 @@ class ReviewManager:
         # because printing from other packages does not work in pre-commit hook.
 
         # We work with exceptions because each issue may be raised in different checks.
-        self.notified_next_process = "check"
+        self.notified_next_process = ProcessType.check
         PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"script": check_git_installed, "params": []},
@@ -1836,7 +1841,7 @@ class ReviewManager:
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
         return {"status": PASS, "msg": "Everything ok."}
 
-    def report(self, msg_file) -> dict:
+    def report(self, msg_file: Path) -> dict:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
@@ -1907,7 +1912,7 @@ class ReviewManager:
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
-    def get_repo(self):
+    def get_repo(self) -> git.Repo:
         """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
 
         if self.notified_next_process is None:
@@ -2009,7 +2014,7 @@ class ReviewManager:
         """Notify the REVIEW_MANAGER about the next process"""
         self.__check_precondition(process)
 
-    def __check_precondition(self, process) -> None:
+    def __check_precondition(self, process: Process) -> None:
         # TODO : currently a special case (not in state model):
         if process.type.name in ["format"]:
             # require_clean_repo_general(ignore_pattern=[self.paths["MAIN_REFERENCES_RELATIVE"]])
@@ -2061,17 +2066,24 @@ class ReviewManager:
             if "MANUAL" == script_name:
                 report = report + "Commit created manually or by external script\n\n"
             elif " " in script_name:
+                script_name = script_name.replace("colrev_core", "colrev").replace(
+                    "colrev cli", "colrev"
+                )
                 script_name = (
                     script_name.split(" ")[0]
                     + " "
                     + script_name.split(" ")[1].replace("_", "-")
                 )
-                script_name = script_name.replace("colrev_core", "colrev")
 
                 report = report + f"Command\n   {script_name}\n"
         if saved_args is not None:
             for k, v in saved_args.items():
-                if isinstance(v, str) or isinstance(v, bool) or isinstance(v, int):
+                if (
+                    isinstance(v, str)
+                    or isinstance(v, bool)
+                    or isinstance(v, int)
+                    or isinstance(v, float)
+                ):
                     report = report + f"     --{k}={v}\n"
             try:
                 report = (
@@ -2080,9 +2092,58 @@ class ReviewManager:
                 )
             except ValueError:
                 pass
-            report = report + "\n"
 
-        report = report + "Software"
+        # url = g.execut['git', 'config', '--get remote.origin.url']
+
+        # append status
+        f = io.StringIO()
+        with redirect_stdout(f):
+            stat = status.get_status_freq(self)
+            status.print_review_status(self, stat)
+
+        # Remove colors for commit message
+        status_page = (
+            f.getvalue()
+            .replace("\033[91m", "")
+            .replace("\033[92m", "")
+            .replace("\033[93m", "")
+            .replace("\033[94m", "")
+            .replace("\033[0m", "")
+        )
+        status_page = status_page.replace("Status\n\n", "Status\n")
+        report = report + status_page
+
+        tree_hash = git_repo.git.execute(["git", "write-tree"])
+        if self.paths["MAIN_REFERENCES"].is_file():
+            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
+            report = report + "\n\n" + tree_info
+            report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
+            report = (
+                report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"
+            )
+            completeness_condition = status.get_completeness_condition(self)
+            if completeness_condition:
+                report = (
+                    report + "   - Completeness of iteration ".ljust(38, " ") + "YES\n"
+                )
+            else:
+                report = (
+                    report + "   - Completeness of iteration ".ljust(38, " ") + "NO\n"
+                )
+            report = (
+                report
+                + "   To check tree_hash use".ljust(38, " ")
+                + "git log --pretty=raw -1\n"
+            )
+            report = (
+                report
+                + "   To validate use".ljust(38, " ")
+                + "colrev_core validate --properties "
+                + "--commit INSERT_COMMIT_HASH"
+            )
+        report = report + "\n"
+
+        report = report + "\nSoftware"
         rt_version = version("colrev_core")
         report = report + "\n   - colrev_core:".ljust(33, " ") + "version " + rt_version
         version("colrev_hooks")
@@ -2133,56 +2194,7 @@ class ReviewManager:
             report = (
                 report + "\n    * created with a modified version (not reproducible)"
             )
-
-        tree_hash = git_repo.git.execute(["git", "write-tree"])
-        if self.paths["MAIN_REFERENCES"].is_file():
-            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
-            report = report + "\n\n" + tree_info
-            report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
-            report = (
-                report + "   - Consistency (based on hooks) ".ljust(38, " ") + "YES\n"
-            )
-            completeness_condition = status.get_completeness_condition(self)
-            if completeness_condition:
-                report = (
-                    report + "   - Completeness of iteration ".ljust(38, " ") + "YES\n"
-                )
-            else:
-                report = (
-                    report + "   - Completeness of iteration ".ljust(38, " ") + "NO\n"
-                )
-            report = (
-                report
-                + "   To check tree_hash use".ljust(38, " ")
-                + "git log --pretty=raw -1\n"
-            )
-            report = (
-                report
-                + "   To validate use".ljust(38, " ")
-                + "colrev_core validate --properties "
-                + "--commit INSERT_COMMIT_HASH"
-            )
         report = report + "\n"
-
-        # url = g.execut['git', 'config', '--get remote.origin.url']
-
-        # append status
-        f = io.StringIO()
-        with redirect_stdout(f):
-            stat = status.get_status_freq(self)
-            status.print_review_status(self, stat)
-
-        # Remove colors for commit message
-        status_page = (
-            f.getvalue()
-            .replace("\033[91m", "")
-            .replace("\033[92m", "")
-            .replace("\033[93m", "")
-            .replace("\033[94m", "")
-            .replace("\033[0m", "")
-        )
-        status_page = status_page.replace("Status\n\n", "Status\n")
-        report = report + status_page
 
         return report
 
@@ -2260,6 +2272,8 @@ class ReviewManager:
                         "[INFO] Calculate statistics",
                         "[INFO] ReviewManager: run ",
                         "[INFO] Retrieve PDFs",
+                        "[INFO] Statistics:",
+                        "[INFO] Set ",
                     ]
                 ):
                     firsts.append(line)
@@ -2330,6 +2344,34 @@ class ReviewManager:
 
             processing_report = ""
             if self.paths["REPORT"].is_file():
+
+                # Reformat
+                prefixes = [
+                    "[('change', 'author',",
+                    "[('change', 'title',",
+                    "[('change', 'journal',",
+                    "[('change', 'booktitle',",
+                ]
+                temp = tempfile.NamedTemporaryFile()
+                self.paths["REPORT"].rename(temp.name)
+                with open(temp.name) as reader, open(
+                    self.paths["REPORT"], "w"
+                ) as writer:
+                    line = reader.readline()
+                    while line:
+                        if (
+                            any(prefix in line for prefix in prefixes)
+                            and "', '" in line[30:]
+                        ):
+                            split_pos = line.rfind("', '") + 2
+                            indent = line.find("', (") + 3
+                            writer.write(line[:split_pos] + "\n")
+                            writer.write(" " * indent + line[split_pos:])
+                        else:
+                            writer.write(line)
+
+                        line = reader.readline()
+
                 with open("report.log") as f:
                     line = f.readline()
                     debug_part = False
@@ -2352,8 +2394,12 @@ class ReviewManager:
                 processing_report = "\nProcessing report\n" + "".join(processing_report)
 
             caller = sys._getframe(1)
+            from inspect import stack
+
             script = (
                 str(caller.f_globals["__name__"]).replace("-", "_").replace(".", " ")
+                + " "
+                + str(stack()[1].function)
             )
             if "Update pre-commit-config" in msg:
                 script = "pre-commit autoupdate"
@@ -2541,6 +2587,9 @@ class ReviewManager:
                 sources_df = pd.json_normalize(safe_load(f))
                 sources = sources_df.to_dict("records")
         else:
+            self.logger.debug(
+                f'Sources file does not exist {self.paths["SOURCES"].name}'
+            )
             sources = []
         return sources
 

@@ -74,12 +74,12 @@ def get_paper_title(root: Element) -> str:
 def get_paper_journal(root: Element) -> str:
     journal_name = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
-    if file_description:
+    if file_description is not None:
         if file_description.find(".//" + ns["tei"] + "monogr") is not None:
             journal_node = file_description.find(".//" + ns["tei"] + "monogr")
-            if journal_node:
+            if journal_node is not None:
                 jtitle_node = journal_node.find(".//" + ns["tei"] + "title")
-                if jtitle_node:
+                if jtitle_node is not None:
                     journal_name = (
                         jtitle_node.text if jtitle_node.text is not None else "NA"
                     )
@@ -94,16 +94,16 @@ def get_paper_journal(root: Element) -> str:
 def get_paper_journal_volume(root: Element) -> str:
     volume = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
-    if file_description:
+    if file_description is not None:
         if file_description.find(".//" + ns["tei"] + "monogr") is not None:
             journal_node = file_description.find(".//" + ns["tei"] + "monogr")
-            if journal_node:
+            if journal_node is not None:
                 imprint_node = journal_node.find(".//" + ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     vnode = imprint_node.find(
                         ".//" + ns["tei"] + "biblScope[@unit='volume']"
                     )
-                    if vnode:
+                    if vnode is not None:
                         volume = vnode.text if vnode.text is not None else "NA"
     return volume
 
@@ -111,16 +111,16 @@ def get_paper_journal_volume(root: Element) -> str:
 def get_paper_journal_issue(root: Element) -> str:
     issue = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
-    if file_description:
+    if file_description is not None:
         if file_description.find(".//" + ns["tei"] + "monogr") is not None:
             journal_node = file_description.find(".//" + ns["tei"] + "monogr")
-            if journal_node:
+            if journal_node is not None:
                 imprint_node = journal_node.find(".//" + ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     issue_node = imprint_node.find(
                         ".//" + ns["tei"] + "biblScope[@unit='issue']"
                     )
-                    if issue_node:
+                    if issue_node is not None:
                         issue = issue_node.text if issue_node.text is not None else "NA"
     return issue
 
@@ -150,14 +150,14 @@ def get_paper_journal_pages(root: Element) -> str:
 def get_paper_year(root: Element) -> str:
     year = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
-    if file_description:
+    if file_description is not None:
         if file_description.find(".//" + ns["tei"] + "monogr") is not None:
             journal_node = file_description.find(".//" + ns["tei"] + "monogr")
-            if journal_node:
+            if journal_node is not None:
                 imprint_node = journal_node.find(".//" + ns["tei"] + "imprint")
-                if imprint_node:
+                if imprint_node is not None:
                     date_node = imprint_node.find(".//" + ns["tei"] + "date")
-                    if date_node:
+                    if date_node is not None:
                         year = (
                             date_node.get("when", "")
                             if date_node.get("when") is not None
@@ -172,10 +172,10 @@ def get_paper_authors(root: Element) -> str:
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
     author_list = []
 
-    if file_description:
+    if file_description is not None:
         if file_description.find(".//" + ns["tei"] + "analytic") is not None:
             analytic_node = file_description.find(".//" + ns["tei"] + "analytic")
-            if analytic_node:
+            if analytic_node is not None:
                 for author_node in analytic_node.iterfind(ns["tei"] + "author"):
                     authorname = ""
 
@@ -254,12 +254,12 @@ def get_paper_authors(root: Element) -> str:
 def get_paper_doi(root: Element) -> str:
     doi = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
-    if file_description:
+    if file_description is not None:
         bibl_struct = file_description.find(".//" + ns["tei"] + "biblStruct")
-        if bibl_struct:
+        if bibl_struct is not None:
             dois = bibl_struct.findall(".//" + ns["tei"] + "idno[@type='DOI']")
             for res in dois:
-                if res.text:
+                if res.text is not None:
                     doi = res.text
     return doi
 

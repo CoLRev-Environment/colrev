@@ -8,13 +8,11 @@ from itertools import chain
 from pathlib import Path
 
 import bibtexparser
-import colrev_hooks
 import dictdiffer
 import git
 from bashplotlib.histogram import plot_hist
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
-from colrev_hooks import check  # noqa: F401
 
 from colrev_core import dedupe
 from colrev_core import status
@@ -207,7 +205,7 @@ def validate_properties(target_commit: str = None) -> None:
 
     cur_sha = git_repo.head.commit.hexsha
     cur_branch = git_repo.active_branch.name
-    logger.info(f"Current commit: {cur_sha} (branch {cur_branch})")
+    logger.info(f" Current commit: {cur_sha} (branch {cur_branch})")
 
     if not target_commit:
         target_commit = cur_sha
@@ -220,17 +218,19 @@ def validate_properties(target_commit: str = None) -> None:
         logger.info(f"Check out target_commit = {target_commit}")
         git_repo.git.checkout(target_commit)
 
-    completeness_condition = status.get_completeness_condition(REVIEW_MANAGER)
-    if completeness_condition:
-        logger.info("Completeness of iteration".ljust(32, " ") + "YES (validated)")
-    else:
-        logger.error("Completeness of iteration".ljust(32, " ") + "NO")
-    if 0 == colrev_hooks.check.main():
-        logger.info("Traceability of records".ljust(32, " ") + "YES (validated)")
-        logger.info("Consistency (based on hooks)".ljust(32, " ") + "YES (validated)")
+    ret = REVIEW_MANAGER.check_repo()
+    if 0 == ret["status"]:
+        logger.info(" Traceability of records".ljust(32, " ") + "YES (validated)")
+        logger.info(" Consistency (based on hooks)".ljust(32, " ") + "YES (validated)")
     else:
         logger.error("Traceability of records".ljust(32, " ") + "NO")
         logger.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
+
+    completeness_condition = status.get_completeness_condition(REVIEW_MANAGER)
+    if completeness_condition:
+        logger.info(" Completeness of iteration".ljust(32, " ") + "YES (validated)")
+    else:
+        logger.error("Completeness of iteration".ljust(32, " ") + "NO")
 
     git_repo.git.checkout(cur_branch, force=True)
 

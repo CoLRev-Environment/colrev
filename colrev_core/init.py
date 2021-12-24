@@ -88,14 +88,16 @@ def initialize_repo(
 
     from colrev_core import review_manager
 
-    review_manager.retrieve_package_file("template/readme.md", "readme.md")
+    review_manager.retrieve_package_file(Path("template/readme.md"), Path("readme.md"))
     review_manager.retrieve_package_file(
-        "template/.pre-commit-config.yaml", ".pre-commit-config.yaml"
+        Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")
     )
-    review_manager.retrieve_package_file("template/.gitattributes", ".gitattributes")
+    review_manager.retrieve_package_file(
+        Path("template/.gitattributes"), Path(".gitattributes")
+    )
 
     review_manager.inplace_change(
-        "readme.md", "{{project_title}}", project_title.rstrip(" ")
+        Path("readme.md"), "{{project_title}}", project_title.rstrip(" ")
     )
 
     private_config = configparser.ConfigParser()

@@ -30,6 +30,7 @@ pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 EMAIL, DEBUG_MODE = "NA", "NA"
 RETRIEVAL_SIMILARITY = 0.84
+TIMEOUT = 10
 
 report_logger = logging.getLogger("colrev_core_report")
 logger = logging.getLogger("colrev_core")
@@ -174,9 +175,20 @@ def format_minor(record: dict) -> dict:
                 .lstrip()
                 .replace("{", "")
                 .replace("}", "")
+                .rstrip(",")
             )
             record[field] = re.sub(r"\s+", " ", record[field])
     return record
+
+
+def title_if_mostly_upper(input_string: str) -> str:
+    if not re.match(r"[a-zA-Z]+", input_string):
+        return input_string
+    words = input_string.split()
+    if sum(word.isupper() for word in words) / len(words) > 0.8:
+        return input_string.capitalize()
+    else:
+        return input_string
 
 
 def format(record: dict) -> dict:
@@ -260,6 +272,10 @@ def format(record: dict) -> dict:
         record.update(number=record["issue"])
         del record["issue"]
 
+    if "url" in record and "fulltext" in record:
+        if record["url"] == record["fulltext"]:
+            del record["fulltext"]
+
     return record
 
 
@@ -288,16 +304,6 @@ def mostly_upper_case(input_string: str) -> bool:
     input_string = input_string.replace(".", "").replace(",", "")
     words = input_string.split()
     return sum(word.isupper() for word in words) / len(words) > 0.8
-
-
-def title_if_mostly_upper(input_string: str) -> str:
-    if not re.match(r"[a-zA-Z]+", input_string):
-        return input_string
-    words = input_string.split()
-    if sum(word.isupper() for word in words) / len(words) > 0.8:
-        return input_string.capitalize()
-    else:
-        return input_string
 
 
 def format_author_field(input_string: str) -> str:
@@ -492,7 +498,8 @@ def crossref_query(
     record_list = []
     try:
         logger.debug(url)
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+        ret.raise_for_status()
         if ret.status_code != 200:
             logger.debug(f"crossref_query failed with status {ret.status_code}")
             return [{}]
@@ -588,12 +595,19 @@ def get_retrieval_similarity(record: dict, retrieved_record: dict) -> float:
         abbreviate_container(record, min_len)
         abbreviate_container(retrieved_record, min_len)
 
+    if "title" in record:
+        record["title"] = record["title"][:90]
+    if "title" in retrieved_record:
+        retrieved_record["title"] = retrieved_record["title"][:90]
+
     if "author" in record:
         record["author"] = dedupe.format_authors_string(record["author"])
+        record["author"] = record["author"][:45]
     if "author" in retrieved_record:
         retrieved_record["author"] = dedupe.format_authors_string(
             retrieved_record["author"]
         )
+        retrieved_record["author"] = retrieved_record["author"][:45]
     if not ("volume" in record and "volume" in retrieved_record):
         record["volume"] = "nan"
         retrieved_record["volume"] = "nan"
@@ -623,7 +637,7 @@ def get_md_from_crossref(record: dict) -> dict:
         ("title" not in record)
         or ("doi" in record)
         or is_complete_metadata_source(record)
-    ) or "abstract" in record:
+    ):
         return record
 
     enrich_only = False
@@ -662,7 +676,9 @@ def get_md_from_crossref(record: dict) -> dict:
                     record[key] = val
                 if not enrich_only:
                     record.update(metadata_source="CROSSREF")
-
+        except requests.exceptions.ReadTimeout as e:
+            logger.error(f"exception: {e}")
+            pass
         except KeyboardInterrupt:
             sys.exit()
     return record
@@ -768,7 +784,8 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         url = search_api_url + record.get("title", "").replace(" ", "+")
         logger.debug(url)
         headers = {"user-agent": f"{__name__} (mailto:{EMAIL})"}
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+        ret.raise_for_status()
 
         data = json.loads(ret.text)
         items = data["data"]
@@ -780,7 +797,8 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
         logger.debug(record_retrieval_url)
-        ret_ent = requests.get(record_retrieval_url, headers=headers)
+        ret_ent = requests.get(record_retrieval_url, headers=headers, timeout=TIMEOUT)
+        ret_ent.raise_for_status()
         item = json.loads(ret_ent.text)
         retrieved_record = sem_scholar_json_to_record(item, record)
 
@@ -801,7 +819,6 @@ def get_md_from_sem_scholar(record: dict) -> dict:
 
     except KeyError:
         pass
-
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
@@ -862,7 +879,8 @@ def get_md_from_open_library(record: dict) -> dict:
         if ":" in title:
             title = title[: title.find(":")]  # To catch sub-titles
         url = url + "&title=" + title.replace(" ", "+")
-        ret = requests.get(url)
+        ret = requests.get(url, timeout=TIMEOUT)
+        ret.raise_for_status()
         logger.debug(url)
 
         # if we have an exact match, we don't need to check the similarity
@@ -896,7 +914,8 @@ def get_dblp_venue(venue_string: str) -> str:
     url = api_url + venue_string.replace(" ", "+") + "&format=json"
     headers = {"user-agent": f"{__name__} (mailto:{EMAIL})"}
     try:
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+        ret.raise_for_status()
         data = json.loads(ret.text)
         if "hit" not in data["result"]["hits"]:
             return ""
@@ -974,19 +993,21 @@ def get_md_from_dblp(record: dict) -> dict:
         query = ""
         if "title" in record:
             query = query + record["title"].replace("-", "_")
-        if "author" in record:
-            query = query + "_" + record["author"].split(",")[0]
-        if "booktitle" in record:
-            query = query + "_" + record["booktitle"]
-        if "journal" in record:
-            query = query + "_" + record["journal"]
-        if "year" in record:
-            query = query + "_" + record["year"]
+        # Note : queries combining title and author/journal do not seem to work any more
+        # if "author" in record:
+        #     query = query + "_" + record["author"].split(",")[0]
+        # if "booktitle" in record:
+        #     query = query + "_" + record["booktitle"]
+        # if "journal" in record:
+        #     query = query + "_" + record["journal"]
+        # if "year" in record:
+        #     query = query + "_" + record["year"]
         query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
         url = api_url + query.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__}  (mailto:{EMAIL})"}
         logger.debug(url)
-        ret = requests.get(url, headers=headers)
+        ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+        ret.raise_for_status()
         if ret.status_code == 500:
             logger.error("DBLP server error")
             return record
@@ -1019,9 +1040,12 @@ def get_md_from_dblp(record: dict) -> dict:
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
+    except requests.exceptions.ReadTimeout as e:
+        logger.error(f"exception: {e}")
+        pass
     except requests.exceptions.ConnectionError:
         logger.error("requests.exceptions.ConnectionError in crossref_query")
-        return record
+        pass
     return record
 
 
@@ -1041,8 +1065,9 @@ def retrieve_doi_metadata(record: dict) -> dict:
         url = "http://dx.doi.org/" + record["doi"]
         logger.debug(url)
         headers = {"accept": "application/vnd.citationstyles.csl+json"}
-        r = requests.get(url, headers=headers)
-        if r.status_code != 200:
+        ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+        ret.raise_for_status()
+        if ret.status_code != 200:
             report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "metadata for "
@@ -1053,7 +1078,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
         # For exceptions:
         orig_record = record.copy()
 
-        retrieved_json = json.loads(r.text)
+        retrieved_json = json.loads(ret.text)
         retrieved_record = crossref_json_to_record(retrieved_json)
         for key, val in retrieved_record.items():
             if val:
@@ -1062,10 +1087,15 @@ def retrieve_doi_metadata(record: dict) -> dict:
     # except IndexError:
     # except json.decoder.JSONDecodeError:
     # except TypeError:
+    except requests.exceptions.HTTPError:
+        pass
+    except requests.exceptions.ReadTimeout as e:
+        logger.error(f"exception: {e}")
+        pass
     except requests.exceptions.ConnectionError:
         logger.error(f'ConnectionError: {record["ID"]}')
-        return orig_record
         pass
+        return orig_record
     return record
 
 
@@ -1076,9 +1106,10 @@ def get_md_from_urls(record: dict) -> dict:
     url = record.get("url", record.get("fulltext", "NA"))
     if "NA" != url:
         try:
-            logger.debug(url)
+            logger.debug(f"Retrieve doi-md from {url}")
             headers = {"user-agent": f"{__name__}  (mailto:{EMAIL})"}
-            ret = requests.get(url, headers=headers)
+            ret = requests.get(url, headers=headers, timeout=TIMEOUT)
+            ret.raise_for_status()
             res = re.findall(doi_regex, ret.text)
             if res:
                 if len(res) == 1:
@@ -1099,18 +1130,16 @@ def get_md_from_urls(record: dict) -> dict:
                         for key, val in retrieved_record.items():
                             record[key] = val
 
-                        report_logger.info(
+                        report_logger.debug(
                             "Retrieved metadata based on doi from"
                             f' website: {record["doi"]}'
                         )
                         record.update(metadata_source="LINKED_URL")
 
         except requests.exceptions.ConnectionError:
-            return record
             pass
         except Exception as e:
             print(f"exception: {e}")
-            return record
             pass
     return record
 
@@ -1298,6 +1327,9 @@ def drop_fields(record: dict) -> dict:
     if "article" == record["ENTRYTYPE"] or "inproceedings" == record["ENTRYTYPE"]:
         if "publisher" in record:
             del record["publisher"]
+    if "publisher" in record:
+        if "researchgate.net" == record["publisher"]:
+            del record["publisher"]
     return record
 
 
@@ -1346,7 +1378,6 @@ def resolve_crossrefs(record: dict) -> dict:
             for k, v in crossref_record.items():
                 if k not in record:
                     record[k] = v
-        pass
     return record
 
 
@@ -1525,7 +1556,7 @@ def prepare(item: dict) -> dict:
     unprepared_record = record.copy()
     short_form = drop_fields(record.copy())
     report_logger.info(
-        f'prepare({record["ID"]})' + f" started with: \n{pp.pformat(short_form)}\n\n"
+        f'prepare({record["ID"]})' + f" called with: \n{pp.pformat(short_form)}\n\n"
     )
 
     for prep_script in prep_scripts:
@@ -1550,10 +1581,11 @@ def prepare(item: dict) -> dict:
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
             report_logger.info(
-                f'{prep_script}({record["ID"]}) changed:' f" \n{pp.pformat(diffs)}\n"
+                f'{prep_script["script"].__name__}({prep_script["params"]["ID"]})'
+                f" changed:\n{pp.pformat(diffs)}\n"
             )
         else:
-            report_logger.debug(f"{prep_script} changed: -")
+            report_logger.debug(f"{prep_script['script'].__name__} changed: -")
         if DEBUG_MODE:
             print("\n")
 
@@ -1561,6 +1593,51 @@ def prepare(item: dict) -> dict:
         record = log_notifications(record, unprepared_record)
 
     return record
+
+
+def log_details(preparation_batch: list) -> None:
+    metadata_sources = {record["metadata_source"] for record in preparation_batch}
+    if "ORIGINAL" in metadata_sources:
+        metadata_sources.remove("ORIGINAL")
+        nr_recs = len(
+            [
+                record
+                for record in preparation_batch
+                if record["metadata_source"] == "ORIGINAL"
+                and record["status"] == RecordState.md_prepared
+            ]
+        )
+        report_logger.info(f"Statistics: {nr_recs} records did not need preparation")
+
+    for metadata_source in metadata_sources:
+        nr_recs = len(
+            [
+                record
+                for record in preparation_batch
+                if record["metadata_source"] == metadata_source
+                and record["status"] == RecordState.md_prepared
+            ]
+        )
+        report_logger.info(
+            f"Statistics: {nr_recs} records prepared with {metadata_source}"
+        )
+
+    nr_recs = len(
+        [
+            record
+            for record in preparation_batch
+            if record["status"] == RecordState.md_needs_manual_preparation
+        ]
+    )
+    report_logger.info(f"Statistics: {nr_recs} records not prepared")
+
+    report_logger.info(
+        "To reset the metdatata of records, use " "colrev prepare --reset-ID [ID1,ID2]"
+    )
+    report_logger.info(
+        "Further instructions are available in the " "documentation (TODO: link)"
+    )
+    return
 
 
 def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
@@ -1709,6 +1786,8 @@ def main(
         set_to_reprocess(REVIEW_MANAGER)
 
     logger.info("Prepare")
+    report_logger.debug(f"Set RETRIEVAL_SIMILARITY={RETRIEVAL_SIMILARITY}")
+    saved_args["retrieval_similarity"] = RETRIEVAL_SIMILARITY
 
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
@@ -1730,13 +1809,7 @@ def main(
         if not keep_ids:
             REVIEW_MANAGER.set_IDs(selected_IDs=preparation_batch_IDs)
 
-        report_logger.info(
-            "To reset the metdatata of records, use "
-            "colrev_core prepare --reset-ID [ID1,ID2]"
-        )
-        report_logger.info(
-            "Further instructions are available in the " "documentation (TODO: link)"
-        )
+        log_details(preparation_batch)
 
         # Multiprocessing mixes logs of different records.
         # For better readability:
