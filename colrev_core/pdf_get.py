@@ -67,8 +67,7 @@ def is_pdf(path_to_file: str) -> bool:
         return False
 
 
-def get_pdf_from_unpaywall(item: dict, REVIEW_MANAGER) -> dict:
-    record = item["record"]
+def get_pdf_from_unpaywall(record: dict, REVIEW_MANAGER) -> dict:
 
     if "doi" not in record:
         return record
@@ -103,9 +102,8 @@ def get_pdf_from_unpaywall(item: dict, REVIEW_MANAGER) -> dict:
     return record
 
 
-def link_pdf(item: dict) -> dict:
-    record = item["record"]
-    REVIEW_MANAGER = item["REVIEW_MANAGER"]
+def link_pdf(record: dict, REVIEW_MANAGER) -> dict:
+
     PDF_DIRECTORY_RELATIVE = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
     pdf_filepath = PDF_DIRECTORY_RELATIVE / Path(f"{record['ID']}.pdf")
     if pdf_filepath.is_file() and str(pdf_filepath) != record.get("file", "NA"):
@@ -133,7 +131,7 @@ def retrieve_pdf(item: dict) -> dict:
             f'{retrieval_script["script"].__name__}({record["ID"]}) called'
         )
 
-        record = retrieval_script["script"](item, REVIEW_MANAGER)
+        record = retrieval_script["script"](record, REVIEW_MANAGER)
         if "file" in record:
             report_logger.info(
                 f'{retrieval_script["script"].__name__}'
