@@ -819,6 +819,8 @@ def get_md_from_sem_scholar(record: dict) -> dict:
 
     except KeyError:
         pass
+    except requests.exceptions.HTTPError:
+        pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
@@ -1037,6 +1039,9 @@ def get_md_from_dblp(record: dict) -> dict:
     # except KeyError:
     # except json.decoder.JSONDecodeError:
     #     pass
+    except requests.exceptions.HTTPError:
+        logger.error("HTTPError")
+        pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
