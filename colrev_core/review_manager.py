@@ -2313,7 +2313,7 @@ class ReviewManager:
             for ID in IDs:
                 for item in items:
                     # if f'({ID})' in item:
-                    if f"{ID}" in item:
+                    if f"({ID})" in item:
                         formatted_item = item
                         if "] prepare(" in formatted_item:
                             formatted_item = f"\n\n{formatted_item}"

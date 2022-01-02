@@ -105,7 +105,7 @@ def getbib(file: Path) -> BibDatabase:
     return db
 
 
-def load_records(filepath: Path) -> list:
+def load_records(filepath: Path, REVIEW_MANAGER) -> list:
 
     search_db = getbib(filepath)
 
@@ -138,6 +138,41 @@ def load_records(filepath: Path) -> list:
         record.update(status=RecordState.md_retrieved)
         logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
+
+    # Source-specific field mappings/corrections
+    sources = REVIEW_MANAGER.load_sources()
+
+    source = [source for source in sources if filepath.name == source["filename"]].pop()
+    if source["source_name"] == "AISeLibrary":
+        for record in record_list:
+            # Note : simple heuristic
+            # but at the moment, AISeLibrary only indexes articles and conference papers
+            if "volume" in record or "number" in record:
+                record["ENTRYTYPE"] = "article"
+                if "journal" not in record and "booktitle" in record:
+                    record["journal"] = record["booktitle"]
+                    del record["booktitle"]
+                if (
+                    "journal" not in record
+                    and "title" in record
+                    and "chapter" in record
+                ):
+                    record["journal"] = record["title"]
+                    record["title"] = record["chapter"]
+                    del record["chapter"]
+            else:
+                record["ENTRYTYPE"] = "inproceedings"
+                if (
+                    "booktitle" not in record
+                    and "title" in record
+                    and "chapter" in record
+                ):
+                    record["booktitle"] = record["title"]
+                    record["title"] = record["chapter"]
+                    del record["chapter"]
+                if "journal" in record and "booktitle" not in record:
+                    record["booktitle"] = record["journal"]
+                    del record["journal"]
 
     return record_list
 
@@ -195,6 +230,8 @@ def source_heuristics(search_file: Path) -> str:
                 return "DBLP"
             if "UT_(Unique_WOS_ID) = {WOS:" in line:
                 return "WebOfScience"
+            if "https://aisel.aisnet.org/" in line:
+                return "AISeLibrary"
 
     return ""
 
@@ -644,7 +681,7 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         logger.info(f"Load {search_file.name}")
         saved_args["file"] = search_file.name
 
-        search_records = load_records(corresponding_bib_file)
+        search_records = load_records(corresponding_bib_file, REVIEW_MANAGER)
         to_import = len(search_records)
 
         from colrev_core import status

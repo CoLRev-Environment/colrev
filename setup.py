@@ -64,6 +64,8 @@ setup(
         "colrev_core": [
             "template/*",
             "template/.*",
+            "lexicon/*",
+            "lexicon/.*",
         ],
     },
     packages=find_packages(include=["colrev_core", "colrev_core.*"]),

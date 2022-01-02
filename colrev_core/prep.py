@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 import collections
 import html
+import io
 import json
 import logging
+import pkgutil
 import pprint
 import re
 import sys
@@ -15,6 +17,7 @@ import dictdiffer
 import git
 import pandas as pd
 import requests
+from alphabet_detector import AlphabetDetector
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
@@ -26,6 +29,8 @@ from colrev_core import dedupe
 from colrev_core.review_manager import RecordState
 from colrev_core.review_manager import ReviewManager
 
+ad = AlphabetDetector()
+
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 PAD = 0
 EMAIL, DEBUG_MODE = "NA", "NA"
@@ -34,6 +39,12 @@ TIMEOUT = 10
 
 report_logger = logging.getLogger("colrev_core_report")
 logger = logging.getLogger("colrev_core")
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+
+requests_headers = {
+    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+}
 
 
 def retrieve_local_JOURNAL_ABBREVIATIONS() -> pd.DataFrame:
@@ -55,13 +66,18 @@ def retrieve_local_JOURNAL_VARIATIONS() -> pd.DataFrame:
 
 
 def retrieve_local_CONFERENCE_ABBREVIATIONS() -> pd.DataFrame:
-    c_abbrev = Path("lexicon/CONFERENCE_ABBREVIATIONS.csv")
-    if c_abbrev.is_file():
-        CONFERENCE_ABBREVIATIONS = pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
-    else:
-        CONFERENCE_ABBREVIATIONS = pd.DataFrame(
-            [], columns=["conference", "abbreviation"]
-        )
+
+    filedata = pkgutil.get_data(__name__, "lexicon/CONFERENCE_ABBREVIATIONS.csv")
+    if filedata:
+        CONFERENCE_ABBREVIATIONS = pd.read_csv(io.BytesIO(filedata), encoding="utf8")
+
+    # c_abbrev = Path("lexicon/CONFERENCE_ABBREVIATIONS.csv")
+    # if c_abbrev.is_file():
+    #     CONFERENCE_ABBREVIATIONS = pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
+    # else:
+    #     CONFERENCE_ABBREVIATIONS = pd.DataFrame(
+    #         [], columns=["conference", "abbreviation"]
+    #     )
     return CONFERENCE_ABBREVIATIONS
 
 
@@ -119,6 +135,17 @@ def correct_recordtype(record: dict) -> dict:
             '("thesis" in fulltext link)'
         )
 
+    if (
+        "This thesis" in record.get("abstract", "NA").lower()
+        and record["ENTRYTYPE"] != "phdthesis"
+    ):
+        prior_e_type = record["ENTRYTYPE"]
+        record.update(ENTRYTYPE="phdthesis")
+        report_logger.info(
+            f' {record["ID"]}'.ljust(PAD, " ")
+            + f"Set from {prior_e_type} to phdthesis "
+            '("thesis" in abstract)'
+        )
     # TODO: create a warning if any conference strings (ecis, icis, ..)
     # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
 
@@ -544,7 +571,6 @@ def crossref_query(
                 most_similar = similarity
                 most_similar_record = retrieved_record
     except requests.exceptions.ConnectionError:
-        logger.error("requests.exceptions.ConnectionError in crossref_query")
         return [{}]
 
     if jour_vol_iss_list:
@@ -682,8 +708,7 @@ def get_md_from_crossref(record: dict) -> dict:
                     record.update(metadata_source="CROSSREF")
         except requests.exceptions.HTTPError:
             pass
-        except requests.exceptions.ReadTimeout as e:
-            logger.error(f"exception: {e}")
+        except requests.exceptions.ReadTimeout:
             pass
         except KeyboardInterrupt:
             sys.exit()
@@ -835,7 +860,6 @@ def get_md_from_sem_scholar(record: dict) -> dict:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
     except requests.exceptions.ConnectionError:
-        logger.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
         pass
     return record
 
@@ -891,7 +915,7 @@ def get_md_from_open_library(record: dict) -> dict:
         if ":" in title:
             title = title[: title.find(":")]  # To catch sub-titles
         url = url + "&title=" + title.replace(" ", "+")
-        ret = requests.get(url, timeout=TIMEOUT)
+        ret = requests.get(url, headers=requests_headers, timeout=TIMEOUT)
         ret.raise_for_status()
         logger.debug(url)
 
@@ -910,13 +934,14 @@ def get_md_from_open_library(record: dict) -> dict:
         record.update(metadata_source="OPEN_LIBRARY")
         if "title" in record and "booktitle" in record:
             del record["booktitle"]
+    except requests.exceptions.ReadTimeout:
+        pass
     except requests.exceptions.HTTPError:
         pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
     except requests.exceptions.ConnectionError:
-        logger.error("requests.exceptions.ConnectionError in get_md_from_sem_scholar")
         pass
     return record
 
@@ -940,7 +965,6 @@ def get_dblp_venue(venue_string: str) -> str:
 
         venue = re.sub(r" \(.*?\)", "", venue)
     except requests.exceptions.ConnectionError:
-        logger.error("requests.exceptions.ConnectionError in get_dblp_venue()")
         pass
     return venue
 
@@ -1022,7 +1046,6 @@ def get_md_from_dblp(record: dict) -> dict:
         ret = requests.get(url, headers=headers, timeout=TIMEOUT)
         ret.raise_for_status()
         if ret.status_code == 500:
-            logger.error("DBLP server error")
             return record
 
         data = json.loads(ret.text)
@@ -1051,16 +1074,13 @@ def get_md_from_dblp(record: dict) -> dict:
     # except json.decoder.JSONDecodeError:
     #     pass
     except requests.exceptions.HTTPError:
-        logger.error("HTTPError")
         pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
-    except requests.exceptions.ReadTimeout as e:
-        logger.error(f"exception: {e}")
+    except requests.exceptions.ReadTimeout:
         pass
     except requests.exceptions.ConnectionError:
-        logger.error("requests.exceptions.ConnectionError in crossref_query")
         pass
     return record
 
@@ -1104,11 +1124,9 @@ def retrieve_doi_metadata(record: dict) -> dict:
     # except TypeError:
     except requests.exceptions.HTTPError:
         pass
-    except requests.exceptions.ReadTimeout as e:
-        logger.error(f"exception: {e}")
+    except requests.exceptions.ReadTimeout:
         pass
     except requests.exceptions.ConnectionError:
-        logger.error(f'ConnectionError: {record["ID"]}')
         pass
         return orig_record
     return record
@@ -1153,8 +1171,7 @@ def get_md_from_urls(record: dict) -> dict:
 
         except requests.exceptions.ConnectionError:
             pass
-        except Exception as e:
-            print(f"exception: {e}")
+        except Exception:
             pass
     return record
 
@@ -1345,6 +1362,52 @@ def drop_fields(record: dict) -> dict:
     if "publisher" in record:
         if "researchgate.net" == record["publisher"]:
             del record["publisher"]
+    return record
+
+
+def remove_urls_with_500_errors(record: dict) -> dict:
+    try:
+        if "url" in record:
+            r = requests.get(record["url"], headers=requests_headers, timeout=TIMEOUT)
+            if r.status_code >= 500:
+                del record["url"]
+    except (
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ):
+        pass
+    try:
+        if "fulltext" in record:
+            r = requests.get(
+                record["fulltext"], headers=requests_headers, timeout=TIMEOUT
+            )
+            if r.status_code >= 500:
+                del record["fulltext"]
+    except (
+        requests.exceptions.ReadTimeout,
+        requests.exceptions.ConnectionError,
+        requests.exceptions.HTTPError,
+    ):
+        pass
+
+    return record
+
+
+def exclude_non_latin_alphabets(record: dict) -> dict:
+
+    str_to_check = " ".join(
+        [
+            record.get("title", ""),
+            record.get("author", ""),
+            record.get("journal", ""),
+            record.get("booktitle", ""),
+        ]
+    )
+    if not ad.only_alphabet_chars(str_to_check, "LATIN"):
+        record["status"] = RecordState.rev_prescreen_excluded
+        record["prescreen_exclusion"] = "script:non_latin_alphabet"
+
     return record
 
 
@@ -1547,6 +1610,8 @@ def prepare(item: dict) -> dict:
     # # Cases with higher dissimilarity will be handled in the prep_man.py
     prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
         {"script": drop_fields, "params": record},
+        {"script": remove_urls_with_500_errors, "params": record},
+        {"script": exclude_non_latin_alphabets, "params": record},
         {
             "script": update_local_paper_index_fields,
             "params": [record, item["LOCAL_PAPER_INDEX_FORMAT"]],
@@ -1603,6 +1668,8 @@ def prepare(item: dict) -> dict:
             report_logger.debug(f"{prep_script['script'].__name__} changed: -")
         if DEBUG_MODE:
             print("\n")
+        if RecordState.rev_prescreen_excluded == record["status"]:
+            break
 
     if RecordState.md_needs_manual_preparation == record["status"]:
         record = log_notifications(record, unprepared_record)
@@ -1645,6 +1712,17 @@ def log_details(preparation_batch: list) -> None:
         ]
     )
     report_logger.info(f"Statistics: {nr_recs} records not prepared")
+
+    nr_recs = len(
+        [
+            record
+            for record in preparation_batch
+            if record["status"] == RecordState.rev_prescreen_excluded
+        ]
+    )
+    report_logger.info(
+        f"Statistics: {nr_recs} records (prescreen) excluded " "(non-latin alphabet)"
+    )
 
     report_logger.info(
         "To reset the metdatata of records, use " "colrev prepare --reset-ID [ID1,ID2]"
@@ -1779,11 +1857,16 @@ def batch(items, REVIEW_MANAGER):
 
 def main(
     REVIEW_MANAGER: ReviewManager,
+    RETRIEVAL_SIMILARITY: float = None,
     reprocess: bool = False,
     keep_ids: bool = False,
 ) -> None:
 
     saved_args = locals()
+    if RETRIEVAL_SIMILARITY is not None:
+        reprocess = True
+    else:
+        saved_args["RETRIEVAL_SIMILARITY"] = RETRIEVAL_SIMILARITY
     if not keep_ids:
         del saved_args["keep_ids"]
     if not reprocess:
@@ -1800,10 +1883,6 @@ def main(
     if reprocess:
         set_to_reprocess(REVIEW_MANAGER)
 
-    logger.info("Prepare")
-    report_logger.debug(f"Set RETRIEVAL_SIMILARITY={RETRIEVAL_SIMILARITY}")
-    saved_args["preparation_similarity"] = RETRIEVAL_SIMILARITY
-
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")
 
@@ -1812,6 +1891,9 @@ def main(
 
     i = 1
     for preparation_batch in batch(prepare_data["items"], REVIEW_MANAGER):
+
+        logger.info("Prepare")
+        report_logger.debug(f"Set RETRIEVAL_SIMILARITY={RETRIEVAL_SIMILARITY}")
 
         print(f"Batch {i}")
         i += 1
