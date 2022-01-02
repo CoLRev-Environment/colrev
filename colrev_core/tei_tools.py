@@ -222,8 +222,8 @@ def get_paper_authors(root: Element) -> str:
                     if ", " != authorname:
                         author_list.append(authorname)
 
-                for author in author_list:
-                    author_string = " and ".join(author)
+                author_string = " and ".join(author_list)
+
                 author_string = (
                     author_string.replace("\n", " ")
                     .replace("\r", "")

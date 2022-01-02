@@ -25,8 +25,8 @@ def get_nr_in_bib(file_path: Path) -> int:
         while line:
             # Note: the '﻿' occured in some bibtex files
             # (e.g., Publish or Perish exports)
-            if line.replace("﻿", "").lstrip()[:1] == "@":
-                if not "@comment" == line.replace("﻿", "").lstrip()[:8].lower():
+            if "@" in line[:3]:
+                if "@comment" not in line[:10].lower():
                     number_in_bib += 1
             line = f.readline()
 

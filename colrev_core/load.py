@@ -1,12 +1,10 @@
 #! /usr/bin/env python
 import itertools
 import logging
-import multiprocessing as mp
 import pprint
 import re
 import shutil
 import typing
-from itertools import chain
 from pathlib import Path
 
 import bibtexparser
@@ -15,7 +13,6 @@ import requests
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from tqdm.contrib.concurrent import process_map
 
 import docker
 from colrev_core import grobid_client
@@ -57,8 +54,9 @@ class BibFileFormatError(Exception):
 def get_search_files(REVIEW_MANAGER, restrict: list = None) -> typing.List[Path]:
 
     supported_extensions = [
-        "ris",
         "bib",
+        "ris",
+        "enl",
         "end",
         "txt",
         "csv",
@@ -88,7 +86,7 @@ def get_search_files(REVIEW_MANAGER, restrict: list = None) -> typing.List[Path]
 def getbib(file: Path) -> BibDatabase:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
-        bib_r = re.compile(r"^@.*{.*,", re.M)
+        bib_r = re.compile(r"@.*{.*,", re.M)
         if len(re.findall(bib_r, contents)) == 0:
             logger.error(f"Not a bib file? {file.name}")
             db = None
@@ -116,6 +114,20 @@ def load_records(filepath: Path) -> list:
     if search_db is None:
         return []
 
+    from colrev_core import status
+
+    nr_in_bib = status.get_nr_in_bib(filepath)
+    if len(search_db.entries) < nr_in_bib:
+        logger.error("broken bib file (not imported all records)")
+        with open(filepath) as f:
+            line = f.readline()
+            while line:
+                if "@" in line[:3]:
+                    ID = line[line.find("{") + 1 : line.rfind(",")]
+                    if ID not in [x["ID"] for x in search_db.entries]:
+                        logger.error(f"{ID} not imported")
+                line = f.readline()
+
     record_list = []
     for record in search_db.entries:
         record.update(origin=f"{filepath.name}/{record['ID']}")
@@ -126,8 +138,6 @@ def load_records(filepath: Path) -> list:
         record.update(status=RecordState.md_retrieved)
         logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
-
-    logger.debug(f"Thereof {len(record_list)} new records (not yet imported)")
 
     return record_list
 
@@ -209,9 +219,6 @@ def bibutils_convert(script: str, data: str) -> str:
 
     client = docker.APIClient()
     try:
-        cur_tag = docker.from_env().images.get("bibutils").tags[0]
-        report_logger.info(f"Running docker container created from {cur_tag}")
-        logger.info(f"Running docker container created from {cur_tag}")
         container = client.create_container("bibutils", script, stdin_open=True)
     except docker.errors.ImageNotFound:
         logger.info("Docker image not found")
@@ -501,6 +508,7 @@ def fix_keys(db: BibDatabase) -> BibDatabase:
 
 conversion_scripts = {
     "ris": ris2bib,
+    "enl": end2bib,
     "end": end2bib,
     "txt": txt2bib,
     "csv": csv2bib,
@@ -520,97 +528,83 @@ def validate_file_formats(REVIEW_MANAGER) -> None:
     return None
 
 
-def convert_to_bib(REVIEW_MANAGER, search_files: list) -> None:
+def convert_to_bib(REVIEW_MANAGER, sfpath: Path) -> Path:
 
-    for sfpath in search_files:
-        corresponding_bib_file = sfpath.with_suffix(".bib")
+    corresponding_bib_file = sfpath.with_suffix(".bib")
 
-        if corresponding_bib_file.is_file():
-            continue
+    if corresponding_bib_file.is_file():
+        return corresponding_bib_file
 
-        if not any(sfpath.suffix == f".{ext}" for ext in conversion_scripts.keys()):
-            raise UnsupportedImportFormatError(sfpath)
+    if not any(sfpath.suffix == f".{ext}" for ext in conversion_scripts.keys()):
+        raise UnsupportedImportFormatError(sfpath)
 
-        filetype = sfpath.suffix.replace(".", "")
-        if "pdf" == filetype:
-            if str(sfpath).endswith("_ref_list.pdf"):
-                filetype = "pdf_refs"
+    filetype = sfpath.suffix.replace(".", "")
+    if "pdf" == filetype:
+        if str(sfpath).endswith("_ref_list.pdf"):
+            filetype = "pdf_refs"
 
-        if filetype in conversion_scripts.keys():
-            report_logger.info(f"Loading {filetype}: {sfpath.name}")
-            logger.info(f"Loading {filetype}: {sfpath.name}")
-            logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
-            db = conversion_scripts[filetype](sfpath)
-
-            db = fix_keys(db)
-            db = set_incremental_IDs(db)
-            db = unify_field_names(db)
-            db = drop_empty_fields(db)
-
-            git_repo = REVIEW_MANAGER.get_repo()
-            if db is None:
-                report_logger.error("No records loaded")
-                logger.error("No records loaded")
-                continue
-            elif "pdf" == filetype:
-                new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
-                new_record = {
-                    "filename": corresponding_bib_file.name,
-                    "search_type": "OTHER",
-                    "source_name": "PDF (metadata)",
-                    "source_url": new_fp,
-                    "search_parameters": "NA",
-                    "comment": "Extracted with GROBID",
-                }
-                append_sources(REVIEW_MANAGER, new_record)
-                git_repo.index.add([new_fp])
-
-            elif "pdf_refs" == filetype:
-                new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
-                new_record = {
-                    "filename": corresponding_bib_file.name,
-                    "search_type": "BACK_CIT",
-                    "source_name": "PDF backward search",
-                    "source_url": new_fp,
-                    "search_parameters": "NA",
-                    "comment": "Extracted with GROBID",
-                }
-                append_sources(REVIEW_MANAGER, new_record)
-                git_repo.index.add([new_fp])
-            # print(corresponding_bib_file)
-            # print(str(sfpath))
-            if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
-                if not corresponding_bib_file.is_file():
-                    logger.info(
-                        f"Loaded {len(db.entries)} " f"records from {sfpath.name}"
-                    )
-                    with open(corresponding_bib_file, "w") as fi:
-                        fi.write(bibtexparser.dumps(db))
-        else:
-            report_logger.info(f"Filetype not recognized: {sfpath.name}")
-            logger.info(f"Filetype not recognized: {sfpath.name}")
-            continue
-
-    return
-
-
-def convert_non_bib_search_files(REVIEW_MANAGER) -> None:
-    search_files = get_search_files(REVIEW_MANAGER)
-    if any(".pdf" in x.suffix for x in search_files) or any(
-        ".txt" in x.suffix for x in search_files
-    ):
+    if ".pdf" == sfpath.suffix or ".txt" in sfpath.suffix:
         grobid_client.start_grobid()
 
-    # Note: after the search_result_file (non-bib formats) has been loaded
-    # for the first time, we save a corresponding bib_file, which allows for
-    # more efficient status checking, tracing, and validation.
-    # This also applies to the colrev_hooks and is particularly
-    # relevant for pdf sources that require long processing times.
-    convert_to_bib(REVIEW_MANAGER, search_files)
-    git_repo = REVIEW_MANAGER.get_repo()
-    search_files = get_search_files(REVIEW_MANAGER)
-    git_repo.index.add([str(x) for x in search_files])
-    return
+    if filetype in conversion_scripts.keys():
+        report_logger.info(f"Loading {filetype}: {sfpath.name}")
+        logger.info(f"Loading {filetype}: {sfpath.name}")
+
+        cur_tag = docker.from_env().images.get("bibutils").tags[0]
+        report_logger.info(f"Running docker container created from {cur_tag}")
+        logger.info(f"Running docker container created from {cur_tag}")
+
+        logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
+        db = conversion_scripts[filetype](sfpath)
+
+        db = fix_keys(db)
+        db = set_incremental_IDs(db)
+        db = unify_field_names(db)
+        db = drop_empty_fields(db)
+
+        git_repo = REVIEW_MANAGER.get_repo()
+        if db is None:
+            report_logger.error("No records loaded")
+            logger.error("No records loaded")
+            return corresponding_bib_file
+
+        elif "pdf" == filetype:
+            new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
+            new_record = {
+                "filename": corresponding_bib_file.name,
+                "search_type": "OTHER",
+                "source_name": "PDF (metadata)",
+                "source_url": new_fp,
+                "search_parameters": "NA",
+                "comment": "Extracted with GROBID",
+            }
+            append_sources(REVIEW_MANAGER, new_record)
+            git_repo.index.add([new_fp])
+
+        elif "pdf_refs" == filetype:
+            new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
+            new_record = {
+                "filename": corresponding_bib_file.name,
+                "search_type": "BACK_CIT",
+                "source_name": "PDF backward search",
+                "source_url": new_fp,
+                "search_parameters": "NA",
+                "comment": "Extracted with GROBID",
+            }
+            append_sources(REVIEW_MANAGER, new_record)
+            git_repo.index.add([new_fp])
+
+        if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
+            if not corresponding_bib_file.is_file():
+                logger.info(f"Loaded {len(db.entries)} " f"records from {sfpath.name}")
+                with open(corresponding_bib_file, "w") as fi:
+                    fi.write(bibtexparser.dumps(db))
+    else:
+        report_logger.info(f"Filetype not recognized: {sfpath.name}")
+        logger.info(f"Filetype not recognized: {sfpath.name}")
+        return corresponding_bib_file
+
+    return corresponding_bib_file
 
 
 def check_sources(REVIEW_MANAGER) -> None:
@@ -622,36 +616,12 @@ def check_sources(REVIEW_MANAGER) -> None:
     return
 
 
-def get_data(REVIEW_MANAGER) -> dict:
-
+def get_currently_imported_origin_list(REVIEW_MANAGER) -> list:
     record_header_list = REVIEW_MANAGER.get_record_header_list()
     imported_origins = [x[1].split(";") for x in record_header_list]
     imported_origins = list(itertools.chain(*imported_origins))
 
-    search_files = get_search_files(REVIEW_MANAGER, restrict=["bib"])
-    load_pool = mp.Pool(REVIEW_MANAGER.config["CPUS"])
-    additional_records = load_pool.map(load_records, search_files)
-    load_pool.close()
-    load_pool.join()
-
-    additional_records = list(chain(*additional_records))
-
-    additional_records = [
-        x
-        for x in additional_records
-        if x["origin"] not in imported_origins  # type: ignore
-    ]
-
-    load_data = {"nr_tasks": len(additional_records), "items": additional_records}
-    logger.debug(pp.pformat(load_data))
-
-    return load_data
-
-
-def batch(iterable, n=1):
-    it_len = len(iterable)
-    for ndx in range(0, it_len, n):
-        yield iterable[ndx : min(ndx + n, it_len)]
+    return imported_origins
 
 
 def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
@@ -660,40 +630,73 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
     if not keep_ids:
         del saved_args["keep_ids"]
 
-    convert_non_bib_search_files(REVIEW_MANAGER)
     check_sources(REVIEW_MANAGER)
+    for search_file in get_search_files(REVIEW_MANAGER):
 
-    logger.info("Import")
-    BATCH_SIZE = REVIEW_MANAGER.config["BATCH_SIZE"]
-    logger.info(f"Batch size: {BATCH_SIZE}")
+        corresponding_bib_file = convert_to_bib(REVIEW_MANAGER, search_file)
+        if not corresponding_bib_file.is_file():
+            continue
 
-    load_data = get_data(REVIEW_MANAGER)
+        imported_origins = get_currently_imported_origin_list(REVIEW_MANAGER)
+        len_before = len(imported_origins)
 
-    i = 1
-    for load_batch in batch(load_data["items"], BATCH_SIZE):
+        report_logger.info(f"Load {search_file.name}")
+        logger.info(f"Load {search_file.name}")
+        saved_args["file"] = search_file.name
 
-        logger.info(f"Batch {i}")
-        i += 1
+        search_records = load_records(corresponding_bib_file)
+        to_import = len(search_records)
 
-        load_batch = process_map(
-            import_record, load_batch, max_workers=REVIEW_MANAGER.config["CPUS"]
-        )
+        from colrev_core import status
 
-        REVIEW_MANAGER.save_record_list_by_ID(load_batch, append_new=True)
+        nr_in_bib = status.get_nr_in_bib(corresponding_bib_file)
+        if nr_in_bib != to_import:
+            print(f"ERROR in bib file:  {corresponding_bib_file}")
+
+        search_records = [
+            x for x in search_records if x["origin"] not in imported_origins
+        ]
+        nr_not_imported = len(search_records)
+        if 0 == nr_not_imported:
+            continue
+
+        for sr in search_records:
+            sr = import_record(sr)
+
+        bib_db = REVIEW_MANAGER.load_bib_db(init=True)
+        bib_db.entries += search_records
+        REVIEW_MANAGER.save_bib_db(bib_db)
+
+        # TBD: does the following create errors!?
+        # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
 
         if not keep_ids:
-            REVIEW_MANAGER.set_IDs(selected_IDs=[x["ID"] for x in load_batch])
+            bib_db = REVIEW_MANAGER.set_IDs(
+                bib_db, selected_IDs=[x["ID"] for x in search_records]
+            )
 
-        # To order the MAIN_REFERENCES:
-        bib_db = REVIEW_MANAGER.load_bib_db()
-        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
-        REVIEW_MANAGER.save_bib_db(bib_db)
         git_repo = REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+        git_repo.index.add([str(REVIEW_MANAGER.paths["SOURCES"])])
+        git_repo.index.add([str(corresponding_bib_file)])
+        git_repo.index.add([str(search_file)])
+        REVIEW_MANAGER.create_commit(
+            f"Import {saved_args['file']}", saved_args=saved_args
+        )
 
-        REVIEW_MANAGER.create_commit("Import search results", saved_args=saved_args)
+        imported_origins = get_currently_imported_origin_list(REVIEW_MANAGER)
+        len_after = len(imported_origins)
+        imported = len_after - len_before
+        if (imported != to_import) or (nr_in_bib != to_import):
+            logger.error(
+                f"PROBLEM: delta: {to_import - imported} "
+                "records missing (negative: too much)"
+            )
+            logger.error(f"len_before: {len_before}")
+            logger.error(f"Loaded {to_import} records")
+            logger.error(f"Records not yet imported: {nr_not_imported}")
+            logger.error(f"len_after: {len_after}")
+            print([x["ID"] for x in search_records])
 
-    if 1 == i:
-        logger.info("No records to load")
+        print("\n")
 
     return

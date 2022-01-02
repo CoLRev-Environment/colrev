@@ -383,9 +383,13 @@ def crossref_json_to_record(item: dict) -> dict:
     if "title" in item:
         retrieved_title = item["title"]
         if isinstance(retrieved_title, list):
-            retrieved_title = retrieved_title[0]
-        retrieved_title = re.sub(r"\s+", " ", str(retrieved_title)).replace("\n", " ")
-        record.update(title=retrieved_title)
+            if len(retrieved_title) > 0:
+                retrieved_title = retrieved_title[0]
+                retrieved_title = re.sub(r"\s+", " ", str(retrieved_title))
+                retrieved_title = retrieved_title.replace("\n", " ")
+                record.update(title=retrieved_title)
+        elif isinstance(retrieved_title, str):
+            record.update(title=retrieved_title)
 
     container_title = None
     if "container-title" in item:
@@ -676,6 +680,8 @@ def get_md_from_crossref(record: dict) -> dict:
                     record[key] = val
                 if not enrich_only:
                     record.update(metadata_source="CROSSREF")
+        except requests.exceptions.HTTPError:
+            pass
         except requests.exceptions.ReadTimeout as e:
             logger.error(f"exception: {e}")
             pass
@@ -729,7 +735,10 @@ def get_year_from_vol_iss_jour_crossref(record: dict) -> dict:
         if years.count(most_common) > 3:
             record["year"] = most_common
             record["metadata_source"] = "CROSSREF"
-
+    except requests.exceptions.HTTPError:
+        pass
+    except requests.exceptions.ReadTimeout:
+        pass
     except KeyboardInterrupt:
         sys.exit()
 
@@ -816,8 +825,11 @@ def get_md_from_sem_scholar(record: dict) -> dict:
                 record[key] = val
             if not enrich_only:
                 record.update(metadata_source="SEMANTIC_SCHOLAR")
-
+    except requests.exceptions.ReadTimeout:
+        pass
     except KeyError:
+        pass
+    except requests.exceptions.HTTPError:
         pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
@@ -898,7 +910,8 @@ def get_md_from_open_library(record: dict) -> dict:
         record.update(metadata_source="OPEN_LIBRARY")
         if "title" in record and "booktitle" in record:
             del record["booktitle"]
-
+    except requests.exceptions.HTTPError:
+        pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
@@ -1037,6 +1050,9 @@ def get_md_from_dblp(record: dict) -> dict:
     # except KeyError:
     # except json.decoder.JSONDecodeError:
     #     pass
+    except requests.exceptions.HTTPError:
+        logger.error("HTTPError")
+        pass
     except UnicodeEncodeError:
         logger.error("UnicodeEncodeError - this needs to be fixed at some time")
         pass
@@ -1061,6 +1077,8 @@ def retrieve_doi_metadata(record: dict) -> dict:
     # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
     # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
 
+    # For exceptions:
+    orig_record = record.copy()
     try:
         url = "http://dx.doi.org/" + record["doi"]
         logger.debug(url)
@@ -1074,9 +1092,6 @@ def retrieve_doi_metadata(record: dict) -> dict:
                 + f'doi  {record["doi"]} not (yet) available'
             )
             return record
-
-        # For exceptions:
-        orig_record = record.copy()
 
         retrieved_json = json.loads(ret.text)
         retrieved_record = crossref_json_to_record(retrieved_json)
@@ -1787,7 +1802,7 @@ def main(
 
     logger.info("Prepare")
     report_logger.debug(f"Set RETRIEVAL_SIMILARITY={RETRIEVAL_SIMILARITY}")
-    saved_args["retrieval_similarity"] = RETRIEVAL_SIMILARITY
+    saved_args["preparation_similarity"] = RETRIEVAL_SIMILARITY
 
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")

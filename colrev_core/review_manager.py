@@ -850,8 +850,8 @@ class Record:
 
     @property
     def check_records_state_precondition(self) -> None:
-        possible_transitions = [
-            x["trigger"] for x in self.transitions if self.state == x["source"]
+        possible_transitions: typing.List[str] = [
+            str(x["trigger"]) for x in self.transitions if self.state == x["source"]
         ]
         for possible_transition in possible_transitions:
             if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
@@ -1115,7 +1115,7 @@ def format_transition(start_state: str, end_state: str) -> str:
 
 def retrieve_prior(REVIEW_MANAGER) -> dict:
     MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
+    git_repo = REVIEW_MANAGER.get_repo()
     revlist = (
         (
             commit.hexsha,
@@ -1322,9 +1322,7 @@ def check_main_references_origin(REVIEW_MANAGER, prior: dict, data: dict) -> Non
     if non_unique_origins:
         for ID, org in data["origin_list"]:
             if org in non_unique_origins:
-                raise OriginError(
-                    f'Non-unique origin: origin="{org}" in record with ID={ID}'
-                )
+                raise OriginError(f'Non-unique origin: origin="{org}"')
 
     # Check for removed origins
     # TODO !!!!
@@ -1538,6 +1536,8 @@ def check_propagated_IDs(prior_id: str, new_id: str) -> list:
 
 
 def check_persisted_ID_changes(prior: dict, data: dict) -> None:
+    if "persisted_IDs" not in prior:
+        return
     for prior_origin, prior_id in prior["persisted_IDs"]:
         if prior_origin not in [x[0] for x in data["persisted_IDs"]]:
             # Note: this does not catch origins removed before md_processed
@@ -1758,9 +1758,17 @@ class ReviewManager:
         else:
             # Note : retrieving data once is more efficient than
             # reading the MAIN_REFERENCES multiple times (for each check)
-            prior = retrieve_prior(self)
-            self.logger.debug("prior")
-            self.logger.debug(pp.pformat(prior))
+
+            git_repo = self.get_repo()
+            if self.paths["MAIN_REFERENCES"] in [
+                x.path for x in git_repo.head.commit.tree
+            ]:
+                prior = retrieve_prior(self)
+                self.logger.debug("prior")
+                self.logger.debug(pp.pformat(prior))
+            else:  # if MAIN_REFERENCES not yet in git history
+                prior = {}
+
             data = retrieve_data(prior, self.paths["MAIN_REFERENCES"])
             self.logger.debug("data")
             self.logger.debug(pp.pformat(data))
@@ -1771,11 +1779,24 @@ class ReviewManager:
                 {"script": check_main_references_duplicates, "params": data},
                 {"script": check_main_references_origin, "params": [self, prior, data]},
                 {"script": check_main_references_status_fields, "params": data},
+                {"script": check_main_references_files, "params": data},
                 {"script": check_main_references_status_transitions, "params": data},
                 {"script": check_main_references_screen, "params": data},
-                {"script": check_main_references_files, "params": data},
             ]
             check_scripts += main_refs_checks
+            if prior == {}:  # Selected checks if MAIN_REFERENCES not yet in git history
+                main_refs_checks = [
+                    x
+                    for x in main_refs_checks
+                    if x["script"]
+                    in [
+                        "check_sources",
+                        "check_main_references_duplicates",
+                        "check_main_references_origin",
+                        "check_main_references_status_fields",
+                        "check_main_references_files",
+                    ]
+                ]
             self.logger.debug("Checks for MAIN_REFERENCES activated")
 
             PAPER = self.paths["PAPER"]
@@ -2426,7 +2447,9 @@ class ReviewManager:
         else:
             return False
 
-    def set_IDs(self, bib_db: BibDatabase = None, selected_IDs: list = None) -> None:
+    def set_IDs(
+        self, bib_db: BibDatabase = None, selected_IDs: list = None
+    ) -> BibDatabase:
         """Set the IDs of records according to predefined formats"""
 
         if bib_db is None:
@@ -2454,7 +2477,16 @@ class ReviewManager:
                 self.report_logger.info(f"set_ID({old_id}) to {new_id}")
                 if old_id in ID_list:
                     ID_list.remove(old_id)
+
+        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+
         self.save_bib_db(bib_db)
+
+        # Note : temporary fix
+        # (to prevent failing format checks caused by special characters)
+        bib_db = self.load_bib_db()
+        self.save_bib_db(bib_db)
+
         git_repo = self.get_repo()
         git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
 
