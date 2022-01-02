@@ -28,6 +28,8 @@ As a direct implication, metadata and PDFs, like data in any other research meth
 There is variance in how accurately authors and algorithms perform (e.g., disagreements in the screening process or performance of duplicate detection algorithms).
 As an implication, control of process reliability (and constant improvement of algorithms) is needed, which requires transparency of atomic changes.
 
+As an implication of error-prone input data and variance in processing accuracy, efficient error-tracing and debugging functionality must be built-in.
+
 With ever growing volumes and heterogeneity of research, there is a growing need to allocate efforts rationally and based on evidence.
 As an implication, we need to use prior research as crowdsourcing (e.g., for deduplication), we need to use evidence in the searches.
 
@@ -71,13 +73,14 @@ In addition, the ReviewManager keeps a detailed report of (1) the review environ
   - Maps field names to a common standard (BibTex) (e.g., Web of Science has "Author_Full_Names", which is "author" in BibTex). This mapping can be dependent on the database/source (and it may change over time).
   - Creates IDs (IDs may be changed in the preparation/deduplication process but ideally, the load process sets most of the IDs to their final values to avoid positional changes of records, for which IDs are the primary sort criterion)
   - Records details for each source (search results file)
+  - Loading of each file corresponds to an individual commit (instead of batches across multiple search result files) to facilitate debugging
 
 ```prepare```: transition from ```md_imported``` to ```md_prepared``` | ```md_needs_manual_preparation```
 
   - To transition to ```md_prepared```, metadata of a record has to be complete and consistent
     - Complete means that particular fields are required according to the respective ENTRYTYPE (see prep.py/record_field_requirements, which is based on [BibTex standard](https://en.wikipedia.org/wiki/BibTeX)) and that individual fields have to be complete (e.g., authors not ending with "...", "et al." or "and others"). Records are considered complete if a curated metadata repository confirms that particular fields do not exist for that record (e.g., the journal does not use numbers).
     - Consistent means that consistency rules (as defined in prep.py/record_field_inconsistencies) are not violated.
-  - Several preparation scripts are applied:
+  - Preparation is a complex process (comprising multiple atomic steps) and as a result, several preparation scripts are applied:
     - Formats fields (e.g., use ML to identify author first/last/middle names and format them)
     - Queries curated metadata repositories (e.g., DOI.ORG, CROSSREF, DBLP, OPEN_LIBRARY) or check ```url```, ```fulltext``` fields to update metadata if there is a high similarity with the curated metadata. Only high-quality metadata repositories are covered and the data returned is considered correct and complete (e.g., useful to conclude that a record is complete if the journal publishes volumes but no individual numbers)
   - If the resulting metadata is not complete and consistent, the record status is set to ```md_needs_manual_preparation```

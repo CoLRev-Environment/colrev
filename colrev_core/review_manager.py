@@ -850,8 +850,8 @@ class Record:
 
     @property
     def check_records_state_precondition(self) -> None:
-        possible_transitions = [
-            x["trigger"] for x in self.transitions if self.state == x["source"]
+        possible_transitions: typing.List[str] = [
+            str(x["trigger"]) for x in self.transitions if self.state == x["source"]
         ]
         for possible_transition in possible_transitions:
             if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
@@ -1115,7 +1115,7 @@ def format_transition(start_state: str, end_state: str) -> str:
 
 def retrieve_prior(REVIEW_MANAGER) -> dict:
     MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
+    git_repo = REVIEW_MANAGER.get_repo()
     revlist = (
         (
             commit.hexsha,
@@ -2467,7 +2467,8 @@ class ReviewManager:
 
         self.save_bib_db(bib_db)
 
-        # Note : temporary fix (to prevent failing format checks caused by special characters)
+        # Note : temporary fix
+        # (to prevent failing format checks caused by special characters)
         bib_db = self.load_bib_db()
         self.save_bib_db(bib_db)
 
