@@ -4,14 +4,14 @@ repos:
 -   repo: https://github.com/geritwagner/colrev-hooks
     rev: d0e509fc0fec01167afafe252ef756fef86d7678
     hooks:
-    -   id: check
-        name: "ReviewManager: checks"
-        entry: colrev_hooks/check.py
-        language: script
-        files: 'references.bib|paper.md'
     -   id: format
         name: "ReviewManager: format"
         entry: colrev_hooks/format.py
+        language: script
+        files: 'references.bib|paper.md'
+    -   id: check
+        name: "ReviewManager: checks"
+        entry: colrev_hooks/check.py
         language: script
         files: 'references.bib|paper.md'
     -   id: report
@@ -28,7 +28,7 @@ repos:
     rev: v4.0.1
     hooks:
     -   id: check-yaml
--   repo: https://github.com/markdownlint/markdownlint
-    rev: v0.11.0
+-   repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: 5276c7093b9e29c0594d173c4d253c2380f1e51d
     hooks:
-    -   id: markdownlint
+    - id: markdownlint-fix

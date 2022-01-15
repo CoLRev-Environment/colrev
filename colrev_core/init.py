@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import configparser
+import json
 import logging
 import os
 from pathlib import Path
@@ -8,7 +9,10 @@ from subprocess import DEVNULL
 from subprocess import STDOUT
 
 import git
+import pandas as pd
 import requests
+import yaml
+from yaml import safe_load
 
 
 def get_name_mail_from_global_git_config() -> list:
@@ -59,11 +63,75 @@ def require_empty_directory():
         raise NonEmptyDirectoryError()
 
 
+def load_local_registry(REVIEW_MANAGER) -> list:
+    local_registry_path = REVIEW_MANAGER.paths["LOCAL_REGISTRY"]
+    if os.path.exists(local_registry_path):
+        with open(local_registry_path) as f:
+            local_registry_df = pd.json_normalize(safe_load(f))
+            local_registry = local_registry_df.to_dict("records")
+    else:
+        local_registry = []
+
+    return local_registry
+
+
+def save_local_registry(REVIEW_MANAGER, local_registry: list) -> None:
+    local_registry_path = REVIEW_MANAGER.paths["LOCAL_REGISTRY"]
+
+    local_registry_df = pd.DataFrame(local_registry)
+    orderedCols = [
+        "filename",
+        "source_name",
+        "source_url",
+    ]
+    for x in [x for x in local_registry_df.columns if x not in orderedCols]:
+        orderedCols.append(x)
+    local_registry_df = local_registry_df.reindex(columns=orderedCols)
+
+    with open(local_registry_path, "w") as f:
+        yaml.dump(
+            json.loads(
+                local_registry_df.to_json(orient="records", default_handler=str)
+            ),
+            f,
+            default_flow_style=False,
+            sort_keys=False,
+        )
+
+    return
+
+
+def register_repo(REVIEW_MANAGER):
+    logger = logging.getLogger("colrev_core")
+
+    local_registry = load_local_registry(REVIEW_MANAGER)
+
+    registered_paths = [x["source_url"] for x in local_registry]
+    # TODO: maybe resolve symlinked directories?
+    path_to_register = str(Path.cwd())
+    if registered_paths != []:
+        if path_to_register in registered_paths:
+            logger.error(f"Path already registered: {path_to_register}")
+    else:
+        logger.error(f"Creating {REVIEW_MANAGER.paths['LOCAL_REGISTRY']}")
+
+    new_record = {
+        "filename": Path.cwd().stem,
+        "source_name": Path.cwd().stem,
+        "source_url": Path.cwd(),
+    }
+    local_registry.append(new_record)
+    save_local_registry(REVIEW_MANAGER, local_registry)
+
+    logger.info(f"Registered path ({path_to_register})")
+
+    return
+
+
 def initialize_repo(
     project_title: str,
     SHARE_STAT_REQ: str,
     PDF_HANDLING: str,
-    DATA_FORMAT: str,
     remote_url: str = "NA",
 ) -> bool:
 
@@ -73,9 +141,6 @@ def initialize_repo(
 
     assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
     assert PDF_HANDLING in ["EXT", "GIT"]
-
-    # TODO: allow multiple?
-    assert DATA_FORMAT in ["NONE", "STRUCTURED", "MANUSCRIPT", "SHEETs", "MACODING"]
 
     global_git_vars = get_name_mail_from_global_git_config()
     if 2 != len(global_git_vars):
@@ -88,13 +153,14 @@ def initialize_repo(
 
     from colrev_core import review_manager
 
-    review_manager.retrieve_package_file(Path("template/readme.md"), Path("readme.md"))
-    review_manager.retrieve_package_file(
-        Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")
-    )
-    review_manager.retrieve_package_file(
-        Path("template/.gitattributes"), Path(".gitattributes")
-    )
+    files_to_retrieve = [
+        [Path("template/readme.md"), Path("readme.md")],
+        [Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")],
+        [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
+        [Path("template/.gitattributes"), Path(".gitattributes")],
+    ]
+    for rp, p in files_to_retrieve:
+        review_manager.retrieve_package_file(rp, p)
 
     review_manager.inplace_change(
         Path("readme.md"), "{{project_title}}", project_title.rstrip(" ")
@@ -136,7 +202,8 @@ def initialize_repo(
         ["pre-commit", "install"],
         ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
         ["pre-commit", "install", "--hook-type", "pre-push"],
-        ["pre-commit", "autoupdate", "--bleeding-edge"],
+        ["pre-commit", "autoupdate"],
+        # ["pre-commit", "autoupdate", "--bleeding-edge"],
     ]
     for script_to_call in scripts_to_call:
         check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
@@ -148,6 +215,7 @@ def initialize_repo(
             ".gitattributes",
             ".gitignore",
             "shared_config.ini",
+            ".markdownlint.yaml",
         ]
     )
 
@@ -166,24 +234,9 @@ def initialize_repo(
         "Initial commit", manual_author=True, saved_args=saved_args
     )
 
-    if "NA" != remote_url:
-        connect_to_remote(git_repo, remote_url)
+    # LOCAL_REGISTRY
+    register_repo(REVIEW_MANAGER)
+
+    # TODO : include a link on how to connect to a remote repo
 
     return True
-
-
-def clone_shared_repo(remote_url: str) -> git.Repo:
-    try:
-        requests.get(remote_url)
-        repo_name = os.path.splitext(os.path.basename(remote_url))[0]
-        logging.info("Clone shared repository...")
-        git_repo = git.Repo.clone_from(remote_url, repo_name)
-        logging.info(f"Use cd {repo_name}")
-    except requests.ConnectionError:
-        logging.error(
-            "URL of shared repository cannot be reached. Use "
-            "git remote add origin https://github.com/user/repo\n"
-            "git push origin main"
-        )
-        pass
-    return git_repo

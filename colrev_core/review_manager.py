@@ -216,7 +216,7 @@ processing_transitions = [
         "source": RecordState.pdf_needs_manual_preparation,
         "dest": RecordState.pdf_prepared,
         "conditions": [
-            "clean_repo_except_pdf_dir",
+            "clean_repo_except_pdf_dir_and_main_refs",
             "check_records_state_precondition",
         ],
     },
@@ -248,7 +248,7 @@ def get_bibtex_writer() -> BibTexWriter:
 
     writer = BibTexWriter()
 
-    writer.contents = ["entries", "comments"]
+    writer.contents = ["entries"]
     # Note: IDs should be at the beginning to facilitate git versioning
     # order: hard-coded in get_record_status_item()
     writer.display_order = [
@@ -298,6 +298,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
     readme = "readme.md"
     report = "report.log"
     search_dir = "search"
+    local_registry = ".colrev.yaml"
     return {
         "REPO_DIR": repository_dir,
         "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -320,6 +321,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
         "REPORT": repository_dir.joinpath(report),
         "SEARCHDIR_RELATIVE": Path(search_dir),
         "SEARCHDIR": repository_dir.joinpath(search_dir),
+        "LOCAL_REGISTRY": Path.home().joinpath(local_registry),
     }
 
 
@@ -706,7 +708,7 @@ def hooks_up_to_date(installed_hooks: dict) -> bool:
 
 def require_hooks_installed(installed_hooks: dict) -> bool:
     required_hooks = ["check", "format", "report", "sharing"]
-    hooks_activated = installed_hooks["hooks"] == required_hooks
+    hooks_activated = set(installed_hooks["hooks"]) == set(required_hooks)
     if not hooks_activated:
         missing_hooks = [x for x in required_hooks if x not in installed_hooks["hooks"]]
         raise RepoSetupError(
@@ -1704,7 +1706,7 @@ class ReviewManager:
             ),
             PDF_HANDLING=local_config.get("general", "PDF_HANDLING", fallback="EXT"),
             ID_PATTERN=local_config.get(
-                "general", "ID_PATTERN", fallback="THREE_AUTHORS"
+                "general", "ID_PATTERN", fallback="THREE_AUTHORS_YEAR"
             ),
             CSL=local_config.get("general", "CSL", fallback=self.csl_fallback),
             WORD_TEMPLATE_URL=local_config.get(
@@ -1883,9 +1885,29 @@ class ReviewManager:
         return {"msg": msgs, "status": status_code}
 
     def __format_main_references(self) -> None:
+        from colrev_core import prep
+
         bib_db = self.load_bib_db()
-        self.__update_status_yaml()
+        for record in bib_db.entries:
+            if record["status"] == RecordState.md_needs_manual_preparation:
+                prior = record.get("man_prep_hints", "")
+                record = prep.log_notifications(record, record.copy())
+                record = prep.update_metadata_status(record)
+                if record["status"] == RecordState.md_prepared:
+                    record["metadata_source"] = "MANUAL"
+                if RecordState.md_needs_manual_preparation == record["status"]:
+                    if "change-score" in prior:
+                        record["man_prep_hints"] += (
+                            "; " + prior[prior.find("change-score") :]
+                        )
+                else:
+                    if record.get("man_prep_hints", "NA") == "":
+                        del record["man_prep_hints"]
+
+        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+
         self.save_bib_db(bib_db)
+        self.__update_status_yaml()
         return
 
     def format_references(self) -> dict:
@@ -1971,6 +1993,12 @@ class ReviewManager:
 
         with open(self.paths["MAIN_REFERENCES"], "w") as out:
             out.write(bibtex_str)
+
+        # Casting to RecordState (in case the bib_db is used afterwards)
+        bib_db.entries = [
+            {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
+            for r in bib_db.entries
+        ]
 
         return
 
@@ -2085,7 +2113,10 @@ class ReviewManager:
                     or isinstance(v, int)
                     or isinstance(v, float)
                 ):
-                    report = report + f"     --{k}={v}\n"
+                    if v == "":
+                        report = report + f"     --{k}\n"
+                    else:
+                        report = report + f"     --{k}={v}\n"
             try:
                 report = (
                     report
@@ -2241,8 +2272,21 @@ class ReviewManager:
         return
 
     def __reset_log(self) -> None:
+
+        self.report_logger.handlers[0].stream.close()
+        self.report_logger.removeHandler(self.report_logger.handlers[0])
+
         with open("report.log", "r+") as f:
             f.truncate(0)
+
+        file_handler = logging.FileHandler("report.log")
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        file_handler.setFormatter(formatter)
+        self.report_logger.addHandler(file_handler)
+
         return
 
     def reorder_log(self, IDs: list, criterion=None) -> None:
@@ -2250,6 +2294,9 @@ class ReviewManager:
 
         # https://docs.python.org/3/howto/logging-cookbook.html
         # #logging-to-a-single-file-from-multiple-processes
+
+        self.report_logger.handlers[0].stream.close()
+        self.report_logger.removeHandler(self.report_logger.handlers[0])
 
         firsts = []
         ordered_items = ""
@@ -2327,6 +2374,15 @@ class ReviewManager:
         )
         with open("report.log", "w") as f:
             f.write(formatted_report)
+
+        file_handler = logging.FileHandler("report.log")
+        file_handler.setLevel(logging.INFO)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
+        )
+        file_handler.setFormatter(formatter)
+        self.report_logger.addHandler(file_handler)
+
         return
 
     def create_commit(
@@ -2542,11 +2598,11 @@ class ReviewManager:
 
         ID_PATTERN = self.config["ID_PATTERN"]
 
-        assert ID_PATTERN in ["FIRST_AUTHOR", "THREE_AUTHORS"]
-        if "FIRST_AUTHOR" == ID_PATTERN:
+        assert ID_PATTERN in ["FIRST_AUTHOR_YEAR", "THREE_AUTHORS_YEAR"]
+        if "FIRST_AUTHOR_YEAR" == ID_PATTERN:
             temp_ID = f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
 
-        if "THREE_AUTHORS" == ID_PATTERN:
+        if "THREE_AUTHORS_YEAR" == ID_PATTERN:
             temp_ID = ""
             indices = len(authors)
             if len(authors) > 3:
@@ -2651,13 +2707,15 @@ class ReviewManager:
                     header_line_count = header_line_count + 1
                     data += line
             else:
-                if first_entry_processed:
-                    yield data
-                    header_line_count = 0
-                else:
-                    first_entry_processed = True
+                if "@comment" not in line:
+                    if first_entry_processed:
+                        yield data
+                        header_line_count = 0
+                    else:
+                        first_entry_processed = True
                 data = line
-        yield data
+        if "@comment" not in data:
+            yield data
 
     def read_next_record_str(self, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
@@ -2687,6 +2745,7 @@ class ReviewManager:
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 record = db.entries[0]
+                record["status"] = RecordState[record["status"]]
                 if conditions is not None:
                     for key, value in conditions.items():
                         if str(value) == str(record[key]):
@@ -2847,3 +2906,7 @@ class ReviewManager:
         git_repo = self.get_repo()
         git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
         return
+
+
+if __name__ == "__main__":
+    pass

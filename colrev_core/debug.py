@@ -77,6 +77,7 @@ def debug_prep() -> None:
     record = {
         "ENTRYTYPE": "article",
         "ID": "NewmanRobeyNoYear",
+        "doi": "10.5465/amr.2011.59330932",
         "author": "Newman, Michael and Robey, Daniel",
         "journal": "MIS Quarterly",
         "metadata_source": "ORIGINAL",
@@ -88,7 +89,8 @@ def debug_prep() -> None:
     }
 
     pp.pprint(record)
-    res = prep.get_md_from_crossref(record)
+    res = prep.get_md_from_doi(record)
+    # res = prep.get_md_from_crossref(record)
     # res = prep.get_md_from_urls(record)
     # res = prep.get_md_from_dblp(record)
 
@@ -159,6 +161,75 @@ def debug_tei_tools() -> None:
     return
 
 
+def debug_pdf_prep():
+    from colrev_core.review_manager import (
+        ReviewManager,
+        ProcessType,
+        Process,
+    )
+
+    from pdfminer.pdfdocument import PDFDocument
+    from pdfminer.pdfinterp import resolve1
+    from pdfminer.pdfparser import PDFParser
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep, str))
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+    from colrev_core.review_manager import (
+        ReviewManager,
+        ProcessType,
+        Process,
+    )
+    from colrev_core import pdf_prep
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    record = [x for x in bib_db.entries if x["ID"] == "Johns2006"].pop()
+
+    with open(record["file"], "rb") as file:
+        parser = PDFParser(file)
+        document = PDFDocument(parser)
+
+        pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+
+    text = pdf_prep.extract_text_by_page(record, [pages_in_file - 1])
+    print(text.lower().replace(" ", ""))
+
+    # "copyrightofacademyofmanagementreviewisthepropertyofacademyofmanagementanditscontentmaynotbecopiedoremailedtomultiplesitesorpostedtoalistservwithoutthecopyrightholder'sexpresswrittenpermission.however,usersmayprint,download,oremailarticlesforindividualuse."
+
+    # FOR LAST-Pages
+
+    return
+
+
+def get_non_unique_pdf_hashes() -> None:
+    from colrev_core.review_manager import (
+        ReviewManager,
+        ProcessType,
+        Process,
+    )
+    import pandas as pd
+
+    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    import collections
+
+    pdf_hashes = [x["pdf_hash"] for x in bib_db.entries if "pdf_hash" in x]
+    pdf_hashes = [
+        item for item, count in collections.Counter(pdf_hashes).items() if count > 1
+    ]
+    df = pd.DataFrame(pdf_hashes, columns=["pdf_hashes"])
+
+    df.to_csv("pdf_hashes.csv", index=False)
+    return
+
+
 def main():
 
     # code for debugging ...
@@ -171,8 +242,14 @@ def main():
 
     # debug_pdf_get()
 
+    # debug_pdf_prep()
+
     # debug_data()
 
     # debug_tei_tools()
+
+    # remove_needs_manual_preparation_records()
+
+    # get_non_unique_pdf_hashes()
 
     return

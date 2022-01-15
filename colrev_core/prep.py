@@ -399,6 +399,9 @@ def get_md_from_doi(record: dict) -> dict:
     if "doi" not in record:
         return record
     record = retrieve_doi_metadata(record)
+    if "title" in record:
+        record["title"] = title_if_mostly_upper(record["title"])
+        record["title"] = record["title"].replace("\n", " ")
     record.update(metadata_source="DOI.ORG")
     return record
 
@@ -806,11 +809,10 @@ def sem_scholar_json_to_record(item: dict, record: dict) -> dict:
     return retrieved_record
 
 
-def get_md_from_sem_scholar(record: dict) -> dict:
-    if is_complete_metadata_source(record) or "abstract" in record:
-        return record
+def get_doi_from_sem_scholar(record: dict) -> dict:
+
     enrich_only = False
-    if is_complete_metadata_source(record):
+    if "doi" in record:
         enrich_only = True
 
     try:
@@ -847,9 +849,12 @@ def get_md_from_sem_scholar(record: dict) -> dict:
             for key, val in retrieved_record.items():
                 if enrich_only and "abstract" != key:
                     continue
+                # For now, only use DOIs (TODO : enrich/add other fields)
+                if "doi" != key:
+                    continue
                 record[key] = val
-            if not enrich_only:
-                record.update(metadata_source="SEMANTIC_SCHOLAR")
+            # if not enrich_only:
+            #     record.update(metadata_source="SEMANTIC_SCHOLAR")
     except requests.exceptions.ReadTimeout:
         pass
     except KeyError:
@@ -972,6 +977,7 @@ def get_dblp_venue(venue_string: str) -> str:
 def dblp_json_to_record(item: dict) -> dict:
     # To test in browser:
     # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
+
     retrieved_record = {}
     if "Withdrawn Items" == item["type"]:
         if "journals" == item["key"][:8]:
@@ -1013,10 +1019,16 @@ def dblp_json_to_record(item: dict) -> dict:
             author_string = format_author_field(author_string)
             retrieved_record["author"] = author_string
 
+    if "key" in item:
+        retrieved_record["dblp_key"] = item["key"]
+
     if "doi" in item:
         retrieved_record["doi"] = item["doi"]
     if "url" not in item:
         retrieved_record["url"] = item["ee"]
+
+    for k, v in retrieved_record.items():
+        retrieved_record[k] = html.unescape(v)
 
     return retrieved_record
 
@@ -1215,7 +1227,7 @@ def is_complete(record: dict) -> bool:
 def is_complete_metadata_source(record: dict) -> bool:
     # Note: metadata_source is set at the end of each procedure
     # that completes/corrects metadata based on an external source
-    return "ORIGINAL" != record["metadata_source"]
+    return record["metadata_source"] not in ["ORIGINAL", "SEMANTIC_SCHOLAR"]
 
 
 record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
@@ -1276,6 +1288,7 @@ fields_to_keep = [
     "title",
     "journal",
     "booktitle",
+    "chapter",
     "series",
     "volume",
     "number",
@@ -1303,6 +1316,7 @@ fields_to_keep = [
     "crossref",
     "date",
     "grobid-version",
+    "pdf_hash",
 ]
 fields_to_drop = [
     "type",
@@ -1562,13 +1576,14 @@ def update_local_paper_index_fields(
         return record
 
     if "outlet" in LOCAL_PAPER_INDEX_FORMAT:
-        outlet, container_name = LOCAL_PAPER_INDEX_FORMAT["outlet"].split("=")
-        if "journal" == outlet:
-            record["journal"] = container_name
-            record["ENTRYTYPE"] = "article"
-        if "conference" == outlet:
-            record["booktitle"] = container_name
-            record["ENTRYTYPE"] = "inproceedings"
+        if LOCAL_PAPER_INDEX_FORMAT["outlet"] != "NA":
+            outlet, container_name = LOCAL_PAPER_INDEX_FORMAT["outlet"].split("=")
+            if "journal" == outlet:
+                record["journal"] = container_name
+                record["ENTRYTYPE"] = "article"
+            if "conference" == outlet:
+                record["booktitle"] = container_name
+                record["ENTRYTYPE"] = "inproceedings"
 
     sub_dir_pattern = LOCAL_PAPER_INDEX_FORMAT["sub_dir_pattern"]
 
@@ -1603,34 +1618,35 @@ def prepare(item: dict) -> dict:
 
     record = item["record"]
 
-    if str(RecordState.md_imported) != str(record["status"]):
+    if RecordState.md_imported != record["status"]:
         return record
 
-    # # Note: we require (almost) perfect matches for the scripts.
-    # # Cases with higher dissimilarity will be handled in the prep_man.py
+    # Note: we require (almost) perfect matches for the scripts.
+    # Cases with higher dissimilarity will be handled in the prep_man.py
+    # Note : the record should always be the first element of the list.
     prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-        {"script": drop_fields, "params": record},
-        {"script": remove_urls_with_500_errors, "params": record},
-        {"script": exclude_non_latin_alphabets, "params": record},
+        {"script": drop_fields, "params": [record]},
+        {"script": remove_urls_with_500_errors, "params": [record]},
+        {"script": exclude_non_latin_alphabets, "params": [record]},
         {
             "script": update_local_paper_index_fields,
             "params": [record, item["LOCAL_PAPER_INDEX_FORMAT"]],
         },
-        {"script": resolve_crossrefs, "params": record},
-        {"script": correct_recordtype, "params": record},
-        {"script": format, "params": record},
-        {"script": apply_local_rules, "params": record},
-        {"script": get_md_from_doi, "params": record},
-        {"script": get_md_from_crossref, "params": record},
-        {"script": get_md_from_dblp, "params": record},
-        {"script": get_md_from_sem_scholar, "params": record},
-        {"script": get_md_from_open_library, "params": record},
-        {"script": get_md_from_urls, "params": record},
-        {"script": get_year_from_vol_iss_jour_crossref, "params": record},
-        {"script": remove_nicknames, "params": record},
-        {"script": remove_redundant_fields, "params": record},
-        {"script": format_minor, "params": record},
-        {"script": update_metadata_status, "params": record},
+        {"script": resolve_crossrefs, "params": [record]},
+        {"script": correct_recordtype, "params": [record]},
+        {"script": format, "params": [record]},
+        {"script": apply_local_rules, "params": [record]},
+        {"script": get_doi_from_sem_scholar, "params": [record]},
+        {"script": get_md_from_urls, "params": [record]},
+        {"script": get_md_from_doi, "params": [record]},
+        {"script": get_md_from_crossref, "params": [record]},
+        {"script": get_md_from_dblp, "params": [record]},
+        {"script": get_md_from_open_library, "params": [record]},
+        {"script": get_year_from_vol_iss_jour_crossref, "params": [record]},
+        {"script": remove_nicknames, "params": [record]},
+        {"script": remove_redundant_fields, "params": [record]},
+        {"script": format_minor, "params": [record]},
+        {"script": update_metadata_status, "params": [record]},
     ]
 
     unprepared_record = record.copy()
@@ -1643,25 +1659,16 @@ def prepare(item: dict) -> dict:
 
         prior = record.copy()
 
+        report_logger.debug(f'{prep_script["script"].__name__}(params) called')
         if [] == prep_script["params"]:
-            report_logger.debug(f'{prep_script["script"].__name__}() called')
             prep_script["script"]()
         else:
-            # TODO
-            # if type(prep_script["params"]) != list:
-            #     param_names = prep_script["params"]
-            # else:
-            #     param_names = [x.__name__ for x in prep_script["params"]]
-            report_logger.debug(f'{prep_script["script"].__name__}(params) called')
-            if type(prep_script["params"]) == list:
-                prep_script["script"](*prep_script["params"])
-            else:
-                prep_script["script"](prep_script["params"])
+            prep_script["script"](*prep_script["params"])
 
         diffs = list(dictdiffer.diff(prior, record))
         if diffs:
             report_logger.info(
-                f'{prep_script["script"].__name__}({prep_script["params"]["ID"]})'
+                f'{prep_script["script"].__name__}({prep_script["params"][0]["ID"]})'
                 f" changed:\n{pp.pformat(diffs)}\n"
             )
         else:
@@ -1734,7 +1741,7 @@ def log_details(preparation_batch: list) -> None:
 
 
 def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
-    MAIN_REFERENCES = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
     record_list = [x for x in bib_db.entries if x["ID"] == id]
     if len(record_list) == 0:
         report_logger.info(f"record with ID {id} not found")
@@ -1749,8 +1756,8 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
 
     git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (
-        ((commit.tree / MAIN_REFERENCES).data_stream.read())
-        for commit in git_repo.iter_commits(paths=MAIN_REFERENCES)
+        ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+        for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
     )
     for filecontents in list(revlist):
         prior_bib_db = bibtexparser.loads(filecontents)
@@ -1765,7 +1772,7 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
     return
 
 
-def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
+def reset_records(REVIEW_MANAGER, reset_ids: list) -> None:
     bib_db = REVIEW_MANAGER.load_bib_db()
     for reset_id in reset_ids:
         reset(REVIEW_MANAGER, bib_db, reset_id)
@@ -1776,16 +1783,71 @@ def reset_ids(REVIEW_MANAGER, reset_ids: list) -> None:
     return
 
 
+def reset_ids(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+
+    # TODO : notify for different ProcessType
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+    revlist = (
+        ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+        for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+    )
+    filecontents = next(revlist)  # noqa
+    prior_bib_db = bibtexparser.loads(filecontents)
+
+    for record in bib_db.entries:
+        prior_record_l = [
+            x for x in prior_bib_db.entries if x["origin"] == record["origin"]
+        ]
+        if len(prior_record_l) != 1:
+            continue
+        prior_record = prior_record_l.pop()
+        record["ID"] = prior_record["ID"]
+    REVIEW_MANAGER.save_bib_db(bib_db)
+
+    return
+
+
+def set_ids(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+    REVIEW_MANAGER.set_IDs()
+    REVIEW_MANAGER.create_commit("Set IDs")
+
+    return
+
+
+def update_doi_md(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+    bib_db = REVIEW_MANAGER.load_bib_db()
+    for record in bib_db.entries:
+        if "doi" in record:
+            record = get_md_from_doi(record)
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
+    return
+
+
 def get_data(REVIEW_MANAGER):
     from colrev_core.review_manager import RecordState
 
     rsl = REVIEW_MANAGER.get_record_state_list()
-    nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])
+    nr_tasks = len([x for x in rsl if RecordState.md_imported == x[1]])
 
     PAD = min((max(len(x[0]) for x in rsl) + 2), 35)
 
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.md_imported)},
+        conditions={"status": RecordState.md_imported},
     )
 
     prior_ids = [x[0] for x in rsl if str(RecordState.md_imported) == x[1]]
@@ -1857,16 +1919,24 @@ def batch(items, REVIEW_MANAGER):
 
 def main(
     REVIEW_MANAGER: ReviewManager,
-    RETRIEVAL_SIMILARITY: float = None,
+    RETRIEVAL_SIMILARITY_INPUT: float = 0.0,
     reprocess: bool = False,
     keep_ids: bool = False,
 ) -> None:
 
     saved_args = locals()
-    if RETRIEVAL_SIMILARITY is not None:
-        reprocess = True
-    else:
+    del saved_args["RETRIEVAL_SIMILARITY_INPUT"]
+
+    global RETRIEVAL_SIMILARITY
+
+    if RETRIEVAL_SIMILARITY_INPUT == 0.0:  # if it has not been set use default
         saved_args["RETRIEVAL_SIMILARITY"] = RETRIEVAL_SIMILARITY
+        RETRIEVAL_SIMILARITY = RETRIEVAL_SIMILARITY
+    else:
+        reprocess = True
+        saved_args["RETRIEVAL_SIMILARITY"] = RETRIEVAL_SIMILARITY_INPUT
+        RETRIEVAL_SIMILARITY = RETRIEVAL_SIMILARITY_INPUT
+
     if not keep_ids:
         del saved_args["keep_ids"]
     if not reprocess:
@@ -1903,8 +1973,6 @@ def main(
         REVIEW_MANAGER.save_record_list_by_ID(preparation_batch)
 
         preparation_batch_IDs = [x["ID"] for x in preparation_batch]
-        if not keep_ids:
-            REVIEW_MANAGER.set_IDs(selected_IDs=preparation_batch_IDs)
 
         log_details(preparation_batch)
 
@@ -1916,4 +1984,13 @@ def main(
 
     if 1 == i:
         logger.info("No records to prepare")
+    else:
+        if not keep_ids:
+            REVIEW_MANAGER.set_IDs()
+            REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
+
     return
+
+
+if __name__ == "__main__":
+    pass

@@ -123,9 +123,9 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
                 visited_states.append(predecessor["dest"])
                 if predecessor["dest"] not in states_to_consider:
                     states_to_consider.append(predecessor["dest"])
-        if len(predecessors) > 0:
-            if predecessors[0]["trigger"] != "init":
-                completed_atomic_steps += st_o[str(predecessor["dest"])]
+            if len(predecessors) > 0:
+                if predecessors[0]["trigger"] != "init":
+                    completed_atomic_steps += st_o[str(predecessor["dest"])]
         atomic_step_number += 1
         # Note : the following does not consider multiple parallel steps.
         for trans_for_completeness in [
@@ -300,10 +300,13 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
                 rec[1] for rec in committed_record_states_list if rec[0] == item[0]
             ]
             if len(source_state) != 1:
+                # TODO : we should match the current and committed records based
+                # on their origins because IDs may changes (e.g., in the preparation)
+                print(item)
                 print(f"Error (no source_state): {transitioned_record}")
                 review_instructions.append(
                     {
-                        "msg": f"Resolve commited status of {transitioned_record}",
+                        "msg": f"Resolve committed status of {transitioned_record}",
                         "priority": "yes",
                     }
                 )
@@ -322,7 +325,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
                         "msg": "Resolve invalid transition of "
                         + f"{transitioned_record['ID']} from "
                         + f"{transitioned_record['source']} to "
-                        + " {transitioned_record['dest']}",
+                        + f" {transitioned_record['dest']}",
                         "priority": "yes",
                     }
                 )
@@ -676,7 +679,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "record(s) need manual preparation",
+                "record(s) to prepare (manually)",
                 stat["currently"]["md_needs_manual_preparation"],
             )
         stat_print(True, "Records prepared", stat["overall"]["md_prepared"])
@@ -759,7 +762,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "PDFs need manual preparation",
+                "PDFs to prepare (manually)",
                 stat["currently"]["pdf_needs_manual_preparation"],
             )
         if 0 != stat["currently"]["pdf_imported"]:
@@ -807,7 +810,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                     "Synthesized",
                     stat["overall"]["rev_synthesized"],
                     "*",
-                    "need synthesis",
+                    "to synthesize",
                     stat["currently"]["rev_included"],
                 )
             else:

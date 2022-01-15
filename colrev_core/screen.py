@@ -11,6 +11,36 @@ logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 
+def include_all_in_screen(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType, RecordState
+
+    REVIEW_MANAGER.notify(Process(ProcessType.screen))
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    excl_criteria = get_exclusion_criteria(bib_db)
+
+    saved_args = locals()
+    saved_args["include_all"] = ""
+    PAD = 50  # TODO
+    for record in bib_db.entries:
+        if record["status"] != RecordState.pdf_prepared:
+            continue
+        report_logger.info(
+            f' {record["ID"]}'.ljust(PAD, " ") + "Included in screen (automatically)"
+        )
+        record.update(excl_criteria=";".join([e + "=no" for e in excl_criteria]))
+        record.update(status=RecordState.rev_included)
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.create_commit(
+        "Screen (include_all)", manual_author=False, saved_args=saved_args
+    )
+
+    return
+
+
 def get_excl_criteria(ec_string: str) -> list:
     return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
@@ -50,7 +80,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     )
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.pdf_prepared)}
+        conditions={"status": RecordState.pdf_prepared}
     )
     screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
     logger.debug(pp.pformat(screen_data))

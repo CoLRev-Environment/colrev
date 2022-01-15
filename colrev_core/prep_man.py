@@ -1,13 +1,9 @@
 #! /usr/bin/env python
 import logging
 import pprint
-from pathlib import Path
 
 import bibtexparser
 import pandas as pd
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
 
 from colrev_core import prep
 from colrev_core.review_manager import RecordState
@@ -93,6 +89,60 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     return
 
 
+def apply_prep_man(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
+
+    logger.info("Load prep-references.csv")
+    bib_db_df = pd.read_csv("prep-references.csv")
+
+    bib_db_changed = bib_db_df.to_dict("records")
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+    revlist = (
+        ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+        for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+    )
+
+    filecontents_current_commit = next(revlist)  # noqa
+    filecontents = next(revlist)
+    prior_bib_db = bibtexparser.loads(filecontents)
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+    for record in bib_db.entries:
+        # TODO : IDs may change - this has to be accounted for when changing
+        # the following matching to IDs.
+        changed_record_l = [
+            x for x in bib_db_changed if x["origin"] == record["origin"]
+        ]
+        if len(changed_record_l) == 1:
+            changed_record = changed_record_l.pop()
+            for k, v in changed_record.items():
+                # if record['ID'] == 'Alter2014':
+                #     print(k, v)
+                if str(v) == "nan":
+                    if k in record:
+                        del record[k]
+                    continue
+                record[k] = v
+                if v == "":
+                    del record[k]
+                if v == "RESET":
+                    prior_record_l = [
+                        x
+                        for x in prior_bib_db.entries
+                        if x["origin"] == record["origin"]
+                    ]
+                    if len(prior_record_l) == 1:
+                        prior_record = prior_record_l.pop()
+                        record[k] = prior_record[k]
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    return
+
+
 def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
@@ -103,45 +153,29 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     bib_db.entries = [
         record
         for record in bib_db.entries
-        if RecordState.md_needs_manual_preparation == record["status"]
+        # if RecordState.md_needs_manual_preparation == record["status"]
     ]
 
-    Path("prep_man").mkdir(exist_ok=True)
-    Path("prep_man/search").mkdir(exist_ok=True)
+    bib_db_df = pd.DataFrame.from_records(bib_db.entries)
 
-    with open("prep_man/references_need_prep_man_export.bib", "w") as fi:
-        fi.write(bibtexparser.dumps(bib_db))
+    bib_db_df = bib_db_df[
+        [
+            "ID",
+            "origin",
+            "author",
+            "title",
+            "year",
+            "journal",
+            # "booktitle",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+        ]
+    ]
 
-    logger.info("Load origins")
-
-    origin_list = []
-    for record in bib_db.entries:
-        for orig in record.get("origin", "NA").split(";"):
-            origin_list.append(orig.split("/"))
-
-    search_results_list: dict = {}
-    for file, id in origin_list:
-        if file in search_results_list:
-            search_results_list[file].append(id)
-        else:
-            search_results_list[file] = [id]
-
-    for file, id_list in search_results_list.items():
-        search_db = BibDatabase()
-        print(file)
-        with open(REVIEW_MANAGER.paths["SEARCHDIR"] / file) as sr_db_path:
-            sr_db = BibTexParser(
-                customization=convert_to_unicode,
-                ignore_nonstandard_types=False,
-                common_strings=True,
-            ).parse_file(sr_db_path, partial=True)
-        for id in id_list:
-            orig_rec = [r for r in sr_db.entries if id == r["ID"]][0]
-            search_db.entries.append(orig_rec)
-        print(len(search_db.entries))
-
-        with open("prep_man/search/" + file, "w") as fi:
-            fi.write(bibtexparser.dumps(search_db))
+    bib_db_df.to_csv("prep-references.csv", index=False)
+    logger.info("Created prep-references.csv")
 
     return
 
@@ -165,7 +199,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
 
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.md_needs_manual_preparation)}
+        conditions={"status": RecordState.md_needs_manual_preparation}
     )
 
     md_prep_man_data = {

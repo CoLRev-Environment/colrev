@@ -109,13 +109,16 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
 
 
 def include_all_in_prescreen(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
 
+    REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
     bib_db = REVIEW_MANAGER.load_bib_db()
 
     saved_args = locals()
+    saved_args["include_all"] = ""
     PAD = 50  # TODO
     for record in bib_db.entries:
-        if record["status"] in [RecordState.md_retrieved, RecordState.md_processed]:
+        if record["status"] != RecordState.md_processed:
             continue
         report_logger.info(
             f' {record["ID"]}'.ljust(PAD, " ") + "Included in prescreen (automatically)"
@@ -126,7 +129,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit(
-        "Pre-screening (manual)", manual_author=False, saved_args=saved_args
+        "Pre-screen (include_all)", manual_author=False, saved_args=saved_args
     )
 
     return
@@ -143,7 +146,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     )
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.md_processed)}
+        conditions={"status": RecordState.md_processed}
     )
     prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
     logger.debug(pp.pformat(prescreen_data))

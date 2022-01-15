@@ -60,7 +60,7 @@ def get_search_files(REVIEW_MANAGER, restrict: list = None) -> typing.List[Path]
         "end",
         "txt",
         "csv",
-        "txt",
+        "md",
         "xlsx",
         "xls",
         "pdf",
@@ -135,7 +135,24 @@ def load_records(filepath: Path, REVIEW_MANAGER) -> list:
         # Drop empty fields
         record = {k: v for k, v in record.items() if v}
 
-        record.update(status=RecordState.md_retrieved)
+        if "status" not in record:
+            record.update(status=RecordState.md_retrieved)
+        elif record["status"] in [
+            str(RecordState.md_processed),
+            str(RecordState.rev_prescreen_included),
+            str(RecordState.rev_prescreen_excluded),
+            str(RecordState.pdf_needs_manual_retrieval),
+            str(RecordState.pdf_not_available),
+            str(RecordState.pdf_needs_manual_preparation),
+            str(RecordState.pdf_prepared),
+            str(RecordState.rev_excluded),
+            str(RecordState.rev_included),
+            str(RecordState.rev_synthesized),
+        ]:
+            # Note : when importing a record, it always needs to be
+            # deduplicated against the other records in the repository
+            record["status"] = RecordState.md_prepared
+
         logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
 
@@ -208,6 +225,10 @@ def import_record(record: dict) -> dict:
                 .replace("{", "")
                 .replace("}", "")
             )
+
+    if "number" not in record and "issue" in record:
+        record.update(number=record["issue"])
+        del record["issue"]
 
     record.update(metadata_source="ORIGINAL")
     record.update(status=RecordState.md_imported)
@@ -315,7 +336,10 @@ def end2bib(file: Path) -> BibDatabase:
 def txt2bib(file: Path) -> BibDatabase:
     grobid_client.check_grobid_availability()
     with open(file) as f:
-        references = [line.rstrip() for line in f]
+        if file.suffix == ".md":
+            references = [line.rstrip() for line in f if "#" not in line[:2]]
+        else:
+            references = [line.rstrip() for line in f]
 
     data = ""
     ind = 0
@@ -548,6 +572,7 @@ conversion_scripts = {
     "enl": end2bib,
     "end": end2bib,
     "txt": txt2bib,
+    "md": txt2bib,
     "csv": csv2bib,
     "xlsx": xlsx2bib,
     "xls": xlsx2bib,
@@ -580,7 +605,7 @@ def convert_to_bib(REVIEW_MANAGER, sfpath: Path) -> Path:
         if str(sfpath).endswith("_ref_list.pdf"):
             filetype = "pdf_refs"
 
-    if ".pdf" == sfpath.suffix or ".txt" in sfpath.suffix:
+    if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
         grobid_client.start_grobid()
 
     if filetype in conversion_scripts.keys():
@@ -682,19 +707,19 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         saved_args["file"] = search_file.name
 
         search_records = load_records(corresponding_bib_file, REVIEW_MANAGER)
-        to_import = len(search_records)
+        nr_search_recs = len(search_records)
 
         from colrev_core import status
 
         nr_in_bib = status.get_nr_in_bib(corresponding_bib_file)
-        if nr_in_bib != to_import:
-            print(f"ERROR in bib file:  {corresponding_bib_file}")
+        if nr_in_bib != nr_search_recs:
+            logger.error(f"ERROR in bib file:  {corresponding_bib_file}")
 
         search_records = [
             x for x in search_records if x["origin"] not in imported_origins
         ]
-        nr_not_imported = len(search_records)
-        if 0 == nr_not_imported:
+        to_import = len(search_records)
+        if 0 == to_import:
             continue
 
         for sr in search_records:
@@ -717,23 +742,27 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         git_repo.index.add([str(corresponding_bib_file)])
         git_repo.index.add([str(search_file)])
         REVIEW_MANAGER.create_commit(
-            f"Import {saved_args['file']}", saved_args=saved_args
+            f"Load {saved_args['file']}", saved_args=saved_args
         )
 
         imported_origins = get_currently_imported_origin_list(REVIEW_MANAGER)
         len_after = len(imported_origins)
         imported = len_after - len_before
-        if (imported != to_import) or (nr_in_bib != to_import):
+
+        if imported != to_import:
             logger.error(
                 f"PROBLEM: delta: {to_import - imported} "
                 "records missing (negative: too much)"
             )
             logger.error(f"len_before: {len_before}")
-            logger.error(f"Loaded {to_import} records")
-            logger.error(f"Records not yet imported: {nr_not_imported}")
+            logger.error(f"Records not yet imported: {to_import}")
             logger.error(f"len_after: {len_after}")
-            print([x["ID"] for x in search_records])
+            logger.error([x["ID"] for x in search_records])
 
         print("\n")
 
     return
+
+
+if __name__ == "__main__":
+    pass
