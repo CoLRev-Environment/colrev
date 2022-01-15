@@ -68,7 +68,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     )
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.pdf_needs_manual_retrieval)}
+        conditions={"status": RecordState.pdf_needs_manual_retrieval}
     )
     pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
     logger.debug(pp.pformat(pdf_get_man_data))

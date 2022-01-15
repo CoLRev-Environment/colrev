@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import pprint
+import shutil
 import typing
 from pathlib import Path
 
@@ -25,6 +26,36 @@ logger = logging.getLogger("colrev_core")
 # https://github.com/ContentMine/getpapers
 
 EMAIL = "NA"
+
+
+def copy_pdfs_to_repo(REVIEW_MANAGER) -> None:
+    logger.info("Copy PDFs to dir")
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    for record in bib_db.entries:
+        if "file" in record:
+            fpath = Path(record["file"]).resolve()
+            if fpath.is_file() and not str(REVIEW_MANAGER.paths["REPO_DIR"]) in str(
+                fpath
+            ):
+                new_fpath = REVIEW_MANAGER.paths["PDF_DIRECTORY"] / Path(
+                    record["ID"] + ".pdf"
+                )
+                if new_fpath.is_file():
+                    logger.warning(
+                        f'PDF cannot be copied - already exits ({record["ID"]})'
+                    )
+                    continue
+                shutil.copyfile(fpath, new_fpath)
+                record["file"] = str(
+                    REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                    / Path(record["ID"] + ".pdf")
+                )
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    add_to_git(REVIEW_MANAGER, bib_db.entries)
+    return
 
 
 def unpaywall(doi: str, retry: int = 0, pdfonly: bool = True) -> str:
@@ -166,9 +197,12 @@ def check_existing_unlinked_pdfs(
     grobid_client.start_grobid()
 
     IDs = [x["ID"] for x in bib_db.entries]
+    linked_pdfs = [Path(x["file"]) for x in bib_db.entries if "file" in x]
 
     pdf_files = Path(REVIEW_MANAGER.paths["PDF_DIRECTORY"]).glob("*.pdf")
-    for file in pdf_files:
+    unlinked_pdfs = [x for x in pdf_files if x not in linked_pdfs]
+
+    for file in unlinked_pdfs:
         if file.stem not in IDs:
 
             pdf_record = tei_tools.get_record_from_pdf_tei(file)
@@ -187,25 +221,40 @@ def check_existing_unlinked_pdfs(
                 if max_similarity > 0.5:
                     if RecordState.pdf_prepared == max_sim_record["status"]:
                         continue
-                    new_filename = REVIEW_MANAGER.paths[
-                        "PDF_DIRECTORY_RELATIVE"
-                    ] / Path(f"{max_sim_record['ID']}.pdf")
 
-                    max_sim_record.update(file=str(new_filename))
+                    max_sim_record.update(file=str(file))
                     max_sim_record.update(status=RecordState.pdf_imported)
-                    file.rename(new_filename)
-                    report_logger.info(
-                        "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
-                    )
-                    logger.info(
-                        "checked and renamed pdf:" f" {file.name} > {new_filename.name}"
-                    )
+
+                    report_logger.info("linked unlinked pdf:" f" {file.name}")
+                    logger.info("linked unlinked pdf:" f" {file.name}")
                     # max_sim_record = \
                     #     pdf_prep.validate_pdf_metadata(max_sim_record)
                     # status = max_sim_record['status']
                     # if RecordState.pdf_needs_manual_preparation == status:
                     #     # revert?
 
+    return bib_db
+
+
+def rename_pdfs(REVIEW_MANAGER, bib_db) -> BibDatabase:
+    logger.info("RENAME PDFs")
+    for record in bib_db.entries:
+        if "file" in record and record["status"] == RecordState.pdf_imported:
+            file = Path(record["file"])
+            new_filename = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+                f"{record['ID']}.pdf"
+            )
+            try:
+                file.rename(new_filename)
+                record["file"] = str(new_filename)
+                logger.info(f"rename {file.name} > {new_filename.name}")
+            except FileNotFoundError:
+                logger.error(f"Could not rename {record['ID']} - FileNotFoundError")
+                pass
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     return bib_db
 
 
@@ -223,7 +272,7 @@ def get_data(REVIEW_MANAGER) -> dict:
 
     PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
     items = REVIEW_MANAGER.read_next_record(
-        conditions={"status": str(RecordState.rev_prescreen_included)},
+        conditions={"status": RecordState.rev_prescreen_included},
     )
 
     prep_data = {
@@ -251,7 +300,22 @@ def batch(items, REVIEW_MANAGER):
     yield batch
 
 
-def main(REVIEW_MANAGER) -> None:
+def set_status_if_file_linked(REVIEW_MANAGER, bib_db: BibDatabase) -> BibDatabase:
+
+    for record in bib_db.entries:
+        if record["status"] == RecordState.rev_prescreen_included:
+            if "file" in record:
+                if any(Path(fpath).is_file() for fpath in record["file"].split(";")):
+                    record["status"] = RecordState.pdf_imported
+                    logger.info(f'Set status to pdf_imported for {record["ID"]}')
+    REVIEW_MANAGER.save_bib_db(bib_db)
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+
+    return bib_db
+
+
+def main(REVIEW_MANAGER, copy_to_repo: bool, rename: bool) -> None:
 
     saved_args = locals()
 
@@ -268,6 +332,7 @@ def main(REVIEW_MANAGER) -> None:
     logger.info("Retrieve PDFs")
 
     bib_db = REVIEW_MANAGER.load_bib_db()
+    bib_db = set_status_if_file_linked(REVIEW_MANAGER, bib_db)
     bib_db = check_existing_unlinked_pdfs(REVIEW_MANAGER, bib_db)
 
     pdf_get_data = get_data(REVIEW_MANAGER)
@@ -297,6 +362,13 @@ def main(REVIEW_MANAGER) -> None:
         # For better readability:
         REVIEW_MANAGER.reorder_log([x["ID"] for x in retrieval_batch])
 
+        if copy_to_repo:
+            copy_pdfs_to_repo(REVIEW_MANAGER)
+
+        # Note: rename should be after copy.
+        if rename:
+            bib_db = rename_pdfs(REVIEW_MANAGER, bib_db)
+
         add_to_git(REVIEW_MANAGER, retrieval_batch)
 
         REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args=saved_args)
@@ -305,3 +377,7 @@ def main(REVIEW_MANAGER) -> None:
         logger.info("No additional pdfs to retrieve")
 
     return
+
+
+if __name__ == "__main__":
+    pass
