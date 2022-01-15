@@ -126,7 +126,7 @@ def initialize_repo(
         + "manual_cleansing_statistics.csv\n"
         + "data.csv\n"
         + "venv\n"
-        + ".references_dedupe_training.json\n"
+        # + ".references_dedupe_training.json\n"
         + ".references_learned_settings"
     )
     f.close()

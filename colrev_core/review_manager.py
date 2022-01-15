@@ -53,7 +53,6 @@ class RecordState(Enum):
     md_imported = auto()
     md_needs_manual_preparation = auto()
     md_prepared = auto()
-    md_needs_manual_deduplication = auto()
     md_processed = auto()
     rev_prescreen_excluded = auto()
     rev_prescreen_included = auto()
@@ -76,7 +75,6 @@ class ProcessType(Enum):
     prep = auto()
     prep_man = auto()
     dedupe = auto()
-    dedupe_man = auto()
     prescreen = auto()
     pdf_get = auto()
     pdf_get_man = auto()
@@ -144,18 +142,6 @@ processing_transitions = [
     {
         "trigger": "dedupe",
         "source": RecordState.md_prepared,
-        "dest": RecordState.md_needs_manual_deduplication,
-        "conditions": ["clean_repo", "check_records_state_precondition"],
-    },
-    {
-        "trigger": "dedupe",
-        "source": RecordState.md_prepared,
-        "dest": RecordState.md_processed,
-        "conditions": ["clean_repo", "check_records_state_precondition"],
-    },
-    {
-        "trigger": "dedupe_man",
-        "source": RecordState.md_needs_manual_deduplication,
         "dest": RecordState.md_processed,
         "conditions": ["clean_repo", "check_records_state_precondition"],
     },
@@ -1708,12 +1694,6 @@ class ReviewManager:
                 "general", "SHARE_STAT_REQ", fallback="PROCESSED"
             ),
             CPUS=local_config.getint("general", "CPUS", fallback=mp.cpu_count() - 1),
-            MERGING_NON_DUP_THRESHOLD=local_config.getfloat(
-                "general", "MERGING_NON_DUP_THRESHOLD", fallback=0.75
-            ),
-            MERGING_DUP_THRESHOLD=local_config.getfloat(
-                "general", "MERGING_DUP_THRESHOLD", fallback=0.95
-            ),
             EMAIL=local_config.get("general", "EMAIL", fallback=email_fallback()),
             GIT_ACTOR=local_config.get(
                 "general", "GIT_ACTOR", fallback=actor_fallback()

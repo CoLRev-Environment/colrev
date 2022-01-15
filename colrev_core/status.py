@@ -362,7 +362,6 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
         "prep": "Prepare records",
         "prep_man": "Prepare records (manually)",
         "dedupe": "Deduplicate records",
-        "dedupe_man": "Deduplicate records (manually)",
         "prescreen": "Prescreen records",
         "pdf_get": "Retrieve pdfs",
         "pdf_get_man": "Retrieve pdfs (manually)",
@@ -687,17 +686,8 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "record(s) need deduplication",
+                "record(s) to deduplicate",
                 stat["currently"]["md_prepared"],
-            )
-        if stat["currently"]["md_needs_manual_deduplication"] > 0:
-            stat_print(
-                True,
-                "",
-                "",
-                "*",
-                "record(s) need manual deduplication",
-                stat["currently"]["md_needs_manual_deduplication"],
             )
         stat_print(
             True,

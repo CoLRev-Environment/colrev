@@ -3,7 +3,9 @@ import logging
 import pprint
 import re
 import unicodedata
+from pathlib import Path
 
+import git
 import pandas as pd
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
@@ -20,6 +22,23 @@ logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140)
 
 pd.options.mode.chained_assignment = None  # default='warn'
+
+
+###########################################################################
+
+# Active-learning deduplication
+
+# Note: code based on
+# https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
+
+
+# - If the results list does not contain a 'score' value, it is generated
+#   manually and we cannot set the 'status' to md_processed
+# - If the results list contains a 'score value'
+
+# IMPORTANT: manual_duplicate/manual_non_duplicate fields:
+# ID in the (same) deduplication commit
+# the same ID may be used for other records in following commits!
 
 
 def remove_accents(input_str: str) -> str:
@@ -69,6 +88,586 @@ def format_authors_string(authors: str) -> str:
             authors_string = authors_string + author + " "
     authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
     return authors_string
+
+
+def prep_references(references: pd.DataFrame) -> dict:
+
+    if "volume" not in references:
+        references["volume"] = "nan"
+    if "number" not in references:
+        references["number"] = "nan"
+    if "pages" not in references:
+        references["pages"] = "nan"
+    if "year" not in references:
+        references["year"] = "nan"
+    else:
+        references["year"] = references["year"].astype(str)
+    if "author" not in references:
+        references["author"] = "nan"
+    else:
+        references["author"] = references["author"].apply(
+            lambda x: format_authors_string(x)
+        )
+    references["author"] = references["author"].str[:60]
+
+    references.loc[
+        references.ENTRYTYPE == "inbook", "container_title"
+    ] = references.loc[references.ENTRYTYPE == "inbook", "title"]
+    if "chapter" in references:
+        references.loc[references.ENTRYTYPE == "inbook", "title"] = references.loc[
+            references.ENTRYTYPE == "inbook", "chapter"
+        ]
+
+    if "title" not in references:
+        references["title"] = "nan"
+    else:
+        references["title"] = (
+            references["title"]
+            .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
+            .str.lower()
+        )
+        references.loc[references["title"].isnull(), "title"] = "nan"
+
+    if "journal" not in references:
+        references["journal"] = ""
+    else:
+        references["journal"] = (
+            references["journal"]
+            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+            .str.lower()
+        )
+    if "booktitle" not in references:
+        references["booktitle"] = ""
+    else:
+        references["booktitle"] = (
+            references["booktitle"]
+            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+            .str.lower()
+        )
+        # possibly for @proceedings{ ... records
+        # if 'address' in references:
+        #     references['booktitle'] = references["booktitle"] + references["address"]
+        #     print(references['address'])
+    if "series" not in references:
+        references["series"] = ""
+    else:
+        references["series"] = (
+            references["series"]
+            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+            .str.lower()
+        )
+
+    references["container_title"] = (
+        references["journal"].fillna("")
+        + references["booktitle"].fillna("")
+        + references["series"].fillna("")
+    )
+
+    # To validate/improve preparation in jupyter notebook:
+    # return references
+    # Copy to notebook:
+    # from colrev_core.review_manager import ReviewManager
+    # from colrev_core import dedupe
+    # from colrev_core.review_manager import Process, ProcessType
+    # REVIEW_MANAGER = ReviewManager()
+    # REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
+    # df = dedupe.readData(REVIEW_MANAGER)
+    # EDITS
+    # df.to_csv('export.csv', index=False)
+
+    references.drop(
+        references.columns.difference(
+            [
+                "ID",
+                "author",
+                "title",
+                "year",
+                "journal",
+                "container_title",
+                "volume",
+                "number",
+                "pages",
+            ]
+        ),
+        1,
+        inplace=True,
+    )
+    references[["author", "title", "journal", "container_title", "pages"]] = references[
+        ["author", "title", "journal", "container_title", "pages"]
+    ].astype(str)
+
+    references_dict = references.to_dict("records")
+    logger.debug(pp.pformat(references_dict))
+
+    data_d = {}
+
+    for row in references_dict:
+        # Note: we need the ID to identify/remove duplicates in the MAIN_REFERENCES.
+        # It is ignored in the field-definitions by the deduper!
+        # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
+        clean_row = [(k, preProcess(k, v)) for (k, v) in row.items()]
+        data_d[row["ID"]] = dict(clean_row)
+
+    return data_d
+
+
+def preProcess(k, column):
+    # From dedupe (TODO : integrate)
+    """
+    Do a little bit of data cleaning with the help of Unidecode and Regex.
+    Things like casing, extra spaces, quotes and new lines can be ignored.
+    """
+    if k in ["ID", "ENTRYTYPE", "status"]:
+        return column
+
+    column = str(column)
+    if any(
+        column == x for x in ["no issue", "no volume", "no pages", "no author", "nan"]
+    ):
+        column = None
+        return column
+
+    # TODO : compare whether unidecode or rmdiacritics/remove_accents works better.
+    # column = unidecode(column)
+    column = re.sub("  +", " ", column)
+    column = re.sub("\n", " ", column)
+    column = column.strip().strip('"').strip("'").lower().strip()
+    # If data is missing, indicate that by setting the value to `None`
+    if not column:
+        column = None
+    return column
+
+
+def readData(REVIEW_MANAGER):
+
+    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
+        bib_db = BibTexParser(
+            customization=convert_to_unicode,
+            ignore_nonstandard_types=False,
+            common_strings=True,
+        ).parse_file(target_db, partial=True)
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    # Note: Because we only introduce individual (non-merged records),
+    # there should be no semicolons in origin!
+    records_queue = [
+        x
+        for x in bib_db.entries
+        if x["status"]
+        not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
+    ]
+
+    # TODO : do not consider md_prescreen_excluded (non-latin alphabets)
+
+    references = pd.DataFrame.from_dict(records_queue)
+    references = prep_references(references)
+
+    return references
+
+
+def setup_active_learning_dedupe(REVIEW_MANAGER, retrain: bool):
+
+    from colrev_core.review_manager import Process, ProcessType
+    import dedupe
+    from pathlib import Path
+
+    REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
+
+    logging.getLogger("dedupe.training").setLevel(logging.WARNING)
+    logging.getLogger("dedupe.api").setLevel(logging.WARNING)
+
+    training_file = Path(".references_dedupe_training.json")
+    settings_file = Path(".references_learned_settings")
+    if retrain:
+        training_file.unlink(missing_ok=True)
+        settings_file.unlink(missing_ok=True)
+
+    logger.info("Importing data ...")
+
+    ret_dict = {}
+
+    # TODO : in the readData, we may want to append the status
+    # to use Gazetteer (dedupe_io) if applicable
+
+    # TODO  We need to calculate the training data (and prepare it)
+    #       from colrev-history
+    # -> feed the "old training data", pre-calculated indices into the
+    #    active-learning
+    # -> see dedupe.py/setup_active_learning_dedupe (end of function)
+
+    # TODO TBD do we assume that MAIN_REFERENCES/post-md_processed
+    # does not have duplicates?
+
+    data_d = readData(REVIEW_MANAGER)
+    if len(data_d) < 50:
+        ret_dict["status"] = "not_enough_data"
+
+    else:
+
+        logger.debug(pp.pformat(data_d))
+
+        def title_corpus():
+            for record in data_d.values():
+                yield record["title"]
+
+        def container_corpus():
+            for record in data_d.values():
+                yield record["container_title"]
+
+        def author_corpus():
+            for record in data_d.values():
+                yield record["author"]
+
+        # Training
+
+        # Define the fields dedupe will pay attention to
+        fields = [
+            {
+                "field": "author",
+                "type": "Text",
+                "corpus": author_corpus(),
+                "has missing": True,
+            },
+            {"field": "title", "type": "Text", "corpus": title_corpus()},
+            {"field": "container_title", "type": "Text", "corpus": container_corpus()},
+            {"field": "year", "type": "DateTime"},
+            {"field": "volume", "type": "Text", "has missing": True},
+            {"field": "number", "type": "Text", "has missing": True},
+            {"field": "pages", "type": "String", "has missing": True},
+        ]
+
+        # Create a new deduper object and pass our data model to it.
+        deduper = dedupe.Dedupe(fields)
+
+        # If we have training data saved from a previous run of dedupe,
+        # look for it and load it in.
+        # __Note:__ if you want to train from scratch, delete the training_file
+        if training_file.is_file():
+            logger.info(f"Reading pre-labeled training data from {training_file.name}")
+            with open(training_file, "rb") as f:
+                deduper.prepare_training(data_d, f)
+        else:
+            deduper.prepare_training(data_d)
+
+        ret_dict["status"] = "ok"
+        ret_dict["deduper"] = deduper
+
+    return ret_dict
+
+
+def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
+    """Apply automated deduplication decisions
+
+    Level: IDs (not origins), requiring IDs to be immutable after md_prepared
+
+    record['status'] can only be set to md_processed after running the
+    active-learning classifier and checking whether the record is not part of
+    any other duplicate-cluster
+    - If the results list does not contain a 'score' value, it is generated
+      manually and we cannot set the 'status' to md_processed
+    - If the results list contains a 'score value'
+
+    """
+
+    # The merging also needs to consider whether IDs are propagated
+    # Completeness of comparisons should be ensured by the
+    # append_merges procedure (which ensures that all prior records
+    # in global queue_order are considered before completing
+    # the comparison/adding records ot the csvs)
+
+    # results = list(itertools.chain(*results))
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
+        non_dupe_record_list = [x for x in bib_db.entries if x["ID"] == non_dupe]
+        if len(non_dupe_record_list) == 0:
+            continue
+        non_dupe_record = non_dupe_record_list.pop()
+        non_dupe_record.update(status=RecordState.md_processed)
+
+    for dupe in [x for x in results if "duplicate" == x["decision"]]:
+        try:
+            main_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
+            if len(main_record_list) == 0:
+                continue
+            main_record = main_record_list.pop()
+            dupe_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
+            if len(dupe_record_list) == 0:
+                continue
+            dupe_record = dupe_record_list.pop()
+            origins = main_record["origin"].split(";") + dupe_record["origin"].split(
+                ";"
+            )
+            main_record["origin"] = ";".join(list(set(origins)))
+            if "file" in main_record and "file" in dupe_record:
+                main_record["file"] = (
+                    main_record["file"] + ";" + dupe_record.get("file", "")
+                )
+            if "score" in dupe:
+                conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
+            else:
+                conf_details = ""
+            report_logger.info(
+                f"Removed duplicate{conf_details}: "
+                + f'{main_record["ID"]} <- {dupe_record["ID"]}'
+            )
+            # main_record["status"] = str(RecordState.md_processed)
+            bib_db.entries = [x for x in bib_db.entries if x["ID"] != dupe_record["ID"]]
+            # REVIEW_MANAGER.update_record_by_ID(main_record)
+            # REVIEW_MANAGER.update_record_by_ID(dupe_record, delete=True)
+        except StopIteration:
+            # TODO : check whether this is valid.
+            pass
+
+    # Set remaining records to md_processed (not duplicate) because all records
+    # have been considered by dedupe
+    for record in bib_db.entries:
+        if record["status"] == RecordState.md_prepared:
+            record["status"] = RecordState.md_processed
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+
+    return
+
+
+def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDatabase:
+    """Apply manual deduplication decisions
+
+    Level: IDs (not origins), requiring IDs to be immutable after md_prepared
+
+    Note : record['status'] can only be set to md_processed after running the
+    active-learning classifier and checking whether the record is not part of
+    any other duplicate-cluster
+    """
+
+    # The merging also needs to consider whether IDs are propagated
+
+    bib_db = REVIEW_MANAGER.load_bib_db()
+
+    non_dupe_list = []
+    dupe_list = []
+    for x in results:
+        if "no_duplicate" == x["decision"]:
+            non_dupe_list.append([x["ID1"], x["ID2"]])
+        if "duplicate" == x["decision"]:
+            dupe_list.append([x["ID1"], x["ID2"]])
+
+    for non_dupe_1, non_dupe_2 in non_dupe_list:
+        record = [x for x in bib_db.entries if x["ID"] == non_dupe_1].pop()
+        if "manual_non_duplicate" in record:
+            record["manual_non_duplicate"] = (
+                record["manual_non_duplicate"] + ";" + non_dupe_2
+            )
+        else:
+            record["manual_non_duplicate"] = non_dupe_2
+
+        record = [x for x in bib_db.entries if x["ID"] == non_dupe_2].pop()
+        if "manual_non_duplicate" in record:
+            record["manual_non_duplicate"] = (
+                record["manual_non_duplicate"] + ";" + non_dupe_1
+            )
+        else:
+            record["manual_non_duplicate"] = non_dupe_1
+
+        # Note : no need to consider "manual_duplicate" (it stays the same)
+
+    for main_rec_id, dupe_rec_id in dupe_list:
+        main_record = [x for x in bib_db.entries if x["ID"] == main_rec_id].pop()
+        # Simple way of implementing the closure
+        # cases where the main_record has already been merged into another record
+        if "MOVED_DUPE" in main_record:
+            main_record = [
+                x for x in bib_db.entries if x["ID"] == main_record["MOVED_DUPE"]
+            ].pop()
+
+        dupe_record = [x for x in bib_db.entries if x["ID"] == dupe_rec_id].pop()
+
+        dupe_record["MOVED_DUPE"] = main_rec_id
+
+        origins = main_record["origin"].split(";") + dupe_record["origin"].split(";")
+        main_record["origin"] = ";".join(list(set(origins)))
+
+        if "file" in main_record and "file" in dupe_record:
+            main_record["file"] = ";".join([main_record["file"], dupe_record["file"]])
+        if "file" in dupe_record and "file" not in main_record:
+            main_record["file"] = dupe_record["file"]
+
+        if "manual_duplicate" in main_record:
+            main_record["manual_duplicate"] = (
+                main_record["manual_duplicate"] + ";" + dupe_rec_id
+            )
+        else:
+            main_record["manual_duplicate"] = dupe_rec_id
+
+        # Note: no need to change "manual_non_duplicate" or "manual_duplicate"
+        # in dupe_record because dupe_record will be dropped anyway
+
+        if (
+            "manual_non_duplicate" in main_record
+            and "manual_non_duplicate" in dupe_record
+        ):
+            main_record["manual_non_duplicate"] = (
+                main_record["manual_non_duplicate"]
+                + ";"
+                + dupe_record["manual_non_duplicate"]
+            )
+
+        # Note : we add the "manual_duplicate" from dedupe record to keep all
+        # manual_duplicate classification decisions
+        if "manual_duplicate" in dupe_record:
+            if "manual_duplicate" in main_record:
+                main_record["manual_duplicate"] = (
+                    main_record["manual_duplicate"]
+                    + ";"
+                    + dupe_record["manual_duplicate"]
+                )
+            else:
+                main_record["manual_duplicate"] = dupe_record["manual_duplicate"]
+
+        report_logger.info(
+            f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
+        )
+
+    bib_db.entries = [
+        x for x in bib_db.entries if x["ID"] not in [d[1] for d in dupe_list]
+    ]
+
+    bib_db.entries = [
+        {k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in bib_db.entries
+    ]
+
+    REVIEW_MANAGER.save_bib_db(bib_db)
+
+    git_repo = REVIEW_MANAGER.get_repo()
+    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+
+    return
+
+
+def fix_errors(REVIEW_MANAGER) -> None:
+    """Errors are highlighted in the Excel files"""
+
+    from colrev_core.review_manager import Process, ProcessType
+    import bibtexparser
+
+    report_logger = logging.getLogger("colrev_core_report")
+    logger = logging.getLogger("colrev_core")
+
+    report_logger.info("Dedupe: fix errors")
+    logger.info("Dedupe: fix errors")
+    REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
+    saved_args = locals()
+
+    dupe_file = Path("duplicates_to_validate.xlsx")
+    non_dupe_file = Path("non_duplicates_to_validate.xlsx")
+    git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
+    if dupe_file.is_file():
+        dupes = pd.read_excel(dupe_file)
+        dupes.fillna("", inplace=True)
+        c_to_correct = dupes.loc[dupes["error"] != "", "cluster_id"].to_list()
+        dupes = dupes[dupes["cluster_id"].isin(c_to_correct)]
+        IDs_to_unmerge = dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+
+        if len(IDs_to_unmerge) > 0:
+            bib_db = REVIEW_MANAGER.load_bib_db()
+
+            MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+            revlist = (
+                ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+                for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            )
+
+            # Note : there could be more than two IDs in the list
+            while len(IDs_to_unmerge) > 0:
+                filecontents = next(revlist)
+                prior_bib_db = bibtexparser.loads(filecontents)
+
+                unmerged = []
+                for ID_list_to_unmerge in IDs_to_unmerge:
+                    report_logger.info(f'Undo merge: {",".join(ID_list_to_unmerge)}')
+
+                    # delete new record, add previous records (from history) to bib_db
+                    bib_db.entries = [
+                        r for r in bib_db.entries if r["ID"] not in ID_list_to_unmerge
+                    ]
+
+                    if all(
+                        [
+                            ID in [r["ID"] for r in prior_bib_db.entries]
+                            for ID in ID_list_to_unmerge
+                        ]
+                    ):
+                        for r in prior_bib_db.entries:
+                            if r["ID"] in ID_list_to_unmerge:
+                                # add the manual_dedupe/non_dupe decision to the records
+                                manual_non_duplicates = ID_list_to_unmerge.copy()
+                                manual_non_duplicates.remove(r["ID"])
+
+                                if "manual_non_duplicate" in r:
+                                    r["manual_non_duplicate"] = (
+                                        r["manual_non_duplicate"]
+                                        + ";"
+                                        + ";".join(manual_non_duplicates)
+                                    )
+                                else:
+                                    r["manual_non_duplicate"] = ";".join(
+                                        manual_non_duplicates
+                                    )
+                                r["status"] = RecordState.md_processed
+                                bib_db.entries.append(r)
+                                logger.info(f'Restored {r["ID"]}')
+                    else:
+                        unmerged.append(ID_list_to_unmerge)
+
+                IDs_to_unmerge = unmerged
+
+            bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+            REVIEW_MANAGER.save_bib_db(bib_db)
+            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+
+    if non_dupe_file.is_file():
+        non_dupes = pd.read_excel(non_dupe_file)
+        non_dupes.fillna("", inplace=True)
+        c_to_correct = non_dupes.loc[non_dupes["error"] != "", "cluster_id"].to_list()
+        non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
+        IDs_to_merge = non_dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+
+        # TODO : there could be more than two IDs in the list!
+        # change the apply_manual_deduplication_decisions() to accept a list of IDs
+        if len(IDs_to_merge) > 0:
+            auto_dedupe = []
+            for ID1, ID2 in IDs_to_merge:
+                auto_dedupe.append(
+                    {
+                        "ID1": ID1,
+                        "ID2": ID2,
+                        "decision": "duplicate",
+                    }
+                )
+            apply_manual_deduplication_decisions(REVIEW_MANAGER, auto_dedupe)
+
+    if dupe_file.is_file() or non_dupe_file.is_file():
+        REVIEW_MANAGER.create_commit(
+            "Validate and correct duplicates",
+            manual_author=True,
+            saved_args=saved_args,
+        )
+    else:
+        logger.error("No file with potential errors found.")
+    return
+
+
+###############################################################################
+
+# Deprecated version of similarity-based, partially-automated matching
+
+# Note : we use some of the functionality in other scripts
+# e.g., for checking similarity with curated records in the preparation
 
 
 def year_similarity(y1: int, y2: int) -> float:
@@ -362,210 +961,6 @@ def append_merges(batch_item: dict) -> list:
         ]
 
 
-def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
-
-    # The merging also needs to consider whether IDs are propagated
-    # Completeness of comparisons should be ensured by the
-    # append_merges procedure (which ensures that all prior records
-    # in global queue_order are considered before completing
-    # the comparison/adding records ot the csvs)
-
-    # results = list(itertools.chain(*results))
-
-    bib_db = REVIEW_MANAGER.load_bib_db()
-
-    for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
-        non_dupe_record_list = [x for x in bib_db.entries if x["ID"] == non_dupe]
-        if len(non_dupe_record_list) == 0:
-            continue
-        non_dupe_record = non_dupe_record_list.pop()
-        non_dupe_record.update(status=RecordState.md_processed)
-
-    for dupe in [x for x in results if "duplicate" == x["decision"]]:
-        try:
-            main_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
-            if len(main_record_list) == 0:
-                continue
-            main_record = main_record_list.pop()
-            dupe_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
-            if len(dupe_record_list) == 0:
-                continue
-            dupe_record = dupe_record_list.pop()
-            origins = main_record["origin"].split(";") + dupe_record["origin"].split(
-                ";"
-            )
-            main_record["origin"] = ";".join(list(set(origins)))
-            if "file" in main_record:
-                main_record["file"] = (
-                    main_record["file"] + ";" + dupe_record.get("file", "")
-                )
-                main_record["file"].rstrip(";")
-            report_logger.info(
-                f'Removed duplicate (confidence: {str(round(dupe["score"], 3))}): '
-                + f'{main_record["ID"]} <- {dupe_record["ID"]}'
-            )
-            main_record["status"] = str(RecordState.md_processed)
-            bib_db.entries = [x for x in bib_db.entries if x["ID"] != dupe_record["ID"]]
-            # REVIEW_MANAGER.update_record_by_ID(main_record)
-            # REVIEW_MANAGER.update_record_by_ID(dupe_record, delete=True)
-        except StopIteration:
-            # TODO : check whether this is valid.
-            pass
-
-    for pot_dupe_item in [
-        x["ID1"] for x in results if "potential_duplicate" == x["decision"]
-    ]:
-        # Note: set set needs_manual_dedupliation without IDs of the potential duplicate
-        # because new papers may be added to md_processed
-        # (becoming additional potential duplicates)
-
-        pot_dupe_record_list = [x for x in bib_db.entries if x["ID"] == pot_dupe_item]
-        if len(pot_dupe_record_list) == 0:
-            continue
-        pot_dupe_record = pot_dupe_record_list.pop()
-        pot_dupe_record.update(status=RecordState.md_needs_manual_deduplication)
-
-    REVIEW_MANAGER.save_bib_db(bib_db)
-
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
-
-    return
-
-
-def prep_references(references: pd.DataFrame) -> dict:
-
-    if "volume" not in references:
-        references["volume"] = "nan"
-    if "number" not in references:
-        references["number"] = "nan"
-    if "pages" not in references:
-        references["pages"] = "nan"
-    if "year" not in references:
-        references["year"] = "nan"
-    else:
-        references["year"] = references["year"].astype(str)
-    if "author" not in references:
-        references["author"] = "nan"
-    else:
-        references["author"] = references["author"].apply(
-            lambda x: format_authors_string(x)
-        )
-    references["author"] = references["author"].str[:60]
-
-    if "title" not in references:
-        references["title"] = "nan"
-    else:
-        references["title"] = (
-            references["title"]
-            .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
-            .str.lower()
-        )
-        if "chapter" in references:
-            references.loc[references["title"].isnull(), "title"] = references[
-                "chapter"
-            ]
-        else:
-            references.loc[references["title"].isnull(), "title"] = "nan"
-
-    if "journal" not in references:
-        references["journal"] = ""
-    else:
-        references["journal"] = (
-            references["journal"]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-    if "booktitle" not in references:
-        references["booktitle"] = ""
-    else:
-        references["booktitle"] = (
-            references["booktitle"]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-        # possibly for @proceedings{ ... records
-        # if 'address' in references:
-        #     references['booktitle'] = references["booktitle"] + references["address"]
-        #     print(references['address'])
-    if "series" not in references:
-        references["series"] = ""
-    else:
-        references["series"] = (
-            references["series"]
-            .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-            .str.lower()
-        )
-
-    references["container_title"] = (
-        references["journal"].fillna("")
-        + references["booktitle"].fillna("")
-        + references["series"].fillna("")
-    )
-
-    references.drop(
-        references.columns.difference(
-            [
-                "ID",
-                "author",
-                "title",
-                "year",
-                "journal",
-                "container_title",
-                "volume",
-                "number",
-                "pages",
-            ]
-        ),
-        1,
-        inplace=True,
-    )
-    references[["author", "title", "journal", "container_title", "pages"]] = references[
-        ["author", "title", "journal", "container_title", "pages"]
-    ].astype(str)
-
-    references_dict = references.to_dict("records")
-    logger.debug(pp.pformat(references_dict))
-
-    data_d = {}
-
-    for row in references_dict:
-        # Note: we need the ID to identify/remove duplicates in the MAIN_REFERENCES.
-        # It is ignored in the field-definitions by the deduper!
-        # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
-        clean_row = [(k, preProcess(k, v)) for (k, v) in row.items()]
-        data_d[row["ID"]] = dict(clean_row)
-
-    return data_d
-
-
-def preProcess(k, column):
-    # From dedupe (TODO : integrate)
-    """
-    Do a little bit of data cleaning with the help of Unidecode and Regex.
-    Things like casing, extra spaces, quotes and new lines can be ignored.
-    """
-    if k in ["ID", "ENTRYTYPE", "status"]:
-        return column
-
-    column = str(column)
-    if any(
-        column == x for x in ["no issue", "no volume", "no pages", "no author", "nan"]
-    ):
-        column = None
-        return column
-
-    # TODO : compare whether unidecode or rmdiacritics/remove_accents works better.
-    # column = unidecode(column)
-    column = re.sub("  +", " ", column)
-    column = re.sub("\n", " ", column)
-    column = column.strip().strip('"').strip("'").lower().strip()
-    # If data is missing, indicate that by setting the value to `None`
-    if not column:
-        column = None
-    return column
-
-
 def get_data(REVIEW_MANAGER):
     from colrev_core.review_manager import RecordState
 
@@ -584,7 +979,6 @@ def get_data(REVIEW_MANAGER):
             str(RecordState.md_imported),
             str(RecordState.md_prepared),
             str(RecordState.md_needs_manual_preparation),
-            str(RecordState.md_needs_manual_deduplication),
         ]
     ]
 
@@ -657,12 +1051,8 @@ def batch(data, REVIEW_MANAGER):
                 {
                     "record": data["queue"][i],
                     "queue": references.iloc[: i + 1],
-                    "MERGING_NON_DUP_THRESHOLD": REVIEW_MANAGER.config[
-                        "MERGING_NON_DUP_THRESHOLD"
-                    ],
-                    "MERGING_DUP_THRESHOLD": REVIEW_MANAGER.config[
-                        "MERGING_DUP_THRESHOLD"
-                    ],
+                    "MERGING_NON_DUP_THRESHOLD": 0.7,
+                    "MERGING_DUP_THRESHOLD": 0.95,
                 }
             )
 
@@ -700,99 +1090,3 @@ def main(REVIEW_MANAGER) -> None:
         logger.info("No records to check for duplicates")
 
     return
-
-
-###########################################################################
-
-# Note: code based on
-# https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
-
-
-def readData(REVIEW_MANAGER):
-
-    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
-        bib_db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=False,
-            common_strings=True,
-        ).parse_file(target_db, partial=True)
-
-    bib_db = REVIEW_MANAGER.load_bib_db()
-
-    # Note: Because we only introduce individual (non-merged records),
-    # there should be no semicolons in origin!
-    records_queue = [
-        x
-        for x in bib_db.entries
-        if x["status"]
-        not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
-    ]
-
-    references = pd.DataFrame.from_dict(records_queue)
-    references = prep_references(references)
-
-    return references
-
-
-def setup_active_learning_deupde(REVIEW_MANAGER):
-
-    from colrev_core.review_manager import Process, ProcessType
-    import dedupe
-    from pathlib import Path
-
-    REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
-
-    logging.getLogger("dedupe.training").setLevel(logging.WARNING)
-    logging.getLogger("dedupe.api").setLevel(logging.WARNING)
-
-    training_file = Path(".references_dedupe_training.json")
-
-    logger.info("Importing data ...")
-
-    data_d = readData(REVIEW_MANAGER)
-    logger.debug(pp.pformat(data_d))
-
-    def title_corpus():
-        for record in data_d.values():
-            yield record["title"]
-
-    def container_corpus():
-        for record in data_d.values():
-            yield record["container_title"]
-
-    def author_corpus():
-        for record in data_d.values():
-            yield record["author"]
-
-    # Training
-
-    # Define the fields dedupe will pay attention to
-    fields = [
-        {
-            "field": "author",
-            "type": "Text",
-            "corpus": author_corpus(),
-            "has missing": True,
-        },
-        {"field": "title", "type": "Text", "corpus": title_corpus()},
-        {"field": "container_title", "type": "Text", "corpus": container_corpus()},
-        {"field": "year", "type": "DateTime"},
-        {"field": "volume", "type": "Text", "has missing": True},
-        {"field": "number", "type": "Text", "has missing": True},
-        {"field": "pages", "type": "String", "has missing": True},
-    ]
-
-    # Create a new deduper object and pass our data model to it.
-    deduper = dedupe.Dedupe(fields)
-
-    # If we have training data saved from a previous run of dedupe,
-    # look for it and load it in.
-    # __Note:__ if you want to train from scratch, delete the training_file
-    if training_file.is_file():
-        logger.info(f"Reading pre-labeled training data from {training_file.name}")
-        with open(training_file, "rb") as f:
-            deduper.prepare_training(data_d, f)
-    else:
-        deduper.prepare_training(data_d)
-
-    return deduper
