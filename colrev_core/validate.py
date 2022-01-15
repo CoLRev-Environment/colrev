@@ -4,6 +4,7 @@ import logging
 import multiprocessing as mp
 import os
 import pprint
+import typing
 from itertools import chain
 from pathlib import Path
 
@@ -11,7 +12,6 @@ import bibtexparser
 import dictdiffer
 import git
 from bashplotlib.histogram import plot_hist
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.customization import convert_to_unicode
 
 from colrev_core import dedupe
@@ -23,7 +23,7 @@ logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4)
 
 
-def load_records(bib_file: Path) -> list:
+def load_search_records(bib_file: Path) -> list:
 
     with open(bib_file) as bibtex_file:
         individual_bib_db = bibtexparser.bparser.BibTexParser(
@@ -41,17 +41,19 @@ def get_search_records(REVIEW_MANAGER) -> list:
     search_dir = REVIEW_MANAGER.paths["SEARCHDIR"]
 
     pool = mp.Pool(CPUS)
-    records = pool.map(load_records, search_dir.glob("*.bib"))
+    records = pool.map(load_search_records, search_dir.glob("*.bib"))
     records = list(chain(*records))
 
     return records
 
 
-def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> None:
+def validate_preparation_changes(
+    records: typing.List[dict], search_records: list
+) -> None:
 
     logger.info("Calculating preparation differences...")
     change_diff = []
-    for record in bib_db.entries:
+    for record in records:
         if "changed_in_target_commit" not in record:
             continue
         del record["changed_in_target_commit"]
@@ -88,7 +90,7 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
         logger.info("Difference: " + str(round(difference, 4)) + "\n\n")
         record_1 = [x for x in search_records if record_link == x["origin"]]
         pp.pprint(record_1[0])
-        record_2 = [x for x in bib_db.entries if eid == x["ID"]]
+        record_2 = [x for x in records if eid == x["ID"]]
         pp.pprint(record_2[0])
 
         print("\n\n")
@@ -103,13 +105,13 @@ def validate_preparation_changes(bib_db: BibDatabase, search_records: list) -> N
     return
 
 
-def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
+def validate_merging_changes(records: typing.List[dict], search_records: list) -> None:
 
     os.system("cls" if os.name == "nt" else "clear")
     logger.info("Calculating differences between merged records...")
     change_diff = []
     merged_records = False
-    for record in bib_db.entries:
+    for record in records:
         if "changed_in_target_commit" not in record:
             continue
         del record["changed_in_target_commit"]
@@ -152,12 +154,12 @@ def validate_merging_changes(bib_db: BibDatabase, search_records: list) -> None:
     return
 
 
-def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
+def load_records(REVIEW_MANAGER, target_commit: str = None) -> typing.List[dict]:
 
     if target_commit is None:
         logger.info("Loading data...")
-        bib_db = REVIEW_MANAGER.load_bib_db()
-        [x.update(changed_in_target_commit="True") for x in bib_db.entries]
+        records = REVIEW_MANAGER.load_records()
+        [x.update(changed_in_target_commit="True") for x in records]
 
     else:
         logger.info("Loading data from history...")
@@ -179,11 +181,12 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
                 break
             if commit == target_commit:
                 bib_db = bibtexparser.loads(filecontents)
+                records = bib_db.entries
                 found = True
 
         # determine which records have been changed (prepared or merged)
         # in the target_commit
-        for record in bib_db.entries:
+        for record in records:
             prior_record = [x for x in prior_bib_db.entries if x["ID"] == record["ID"]][
                 0
             ]
@@ -191,7 +194,7 @@ def load_bib_db(REVIEW_MANAGER, target_commit: str = None) -> BibDatabase:
             if record != prior_record:
                 record.update(changed_in_target_commit="True")
 
-    return bib_db
+    return records
 
 
 def validate_properties(target_commit: str = None) -> None:
@@ -249,16 +252,16 @@ def main(
         return
 
     # TODO: extension: filter for changes of contributor (git author)
-    bib_db = load_bib_db(REVIEW_MANAGER, target_commit)
+    records = load_records(REVIEW_MANAGER, target_commit)
 
     # Note: search records are considered immutable
     # we therefore load the latest files
     search_records = get_search_records(REVIEW_MANAGER)
 
     if "prepare" == scope or "all" == scope:
-        validate_preparation_changes(bib_db, search_records)
+        validate_preparation_changes(records, search_records)
 
     if "merge" == scope or "all" == scope:
-        validate_merging_changes(bib_db, search_records)
+        validate_merging_changes(records, search_records)
 
     return

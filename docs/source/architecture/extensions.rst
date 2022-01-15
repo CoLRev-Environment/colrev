@@ -23,12 +23,12 @@ Developing extensions of CoLRev in Python/R is easy. We provide examples and ins
     REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
 
     # Load the records and process
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    for record in bib_db.entries:
+    records = REVIEW_MANAGER.load_records()
+    for record in records:
         ....
 
     # Save the changes and create commit
-    bib_db = REVIEW_MANAGER.save_bib_db()
+    REVIEW_MANAGER.save_records(records)
     REVIEW_MANAGER.create_commit("Pre-screening (extension X")
 
 

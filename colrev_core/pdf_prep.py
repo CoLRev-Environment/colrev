@@ -13,7 +13,6 @@ import git
 import imagehash
 import langdetect
 import timeout_decorator
-from bibtexparser.bibdatabase import BibDatabase
 from langdetect import detect_langs
 from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
@@ -48,8 +47,8 @@ def reset_hashes(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    for record in bib_db.entries:
+    records = REVIEW_MANAGER.load_records()
+    for record in records:
         if "pdf_hash" in record:
             record.update(
                 pdf_hash=imagehash.average_hash(
@@ -57,7 +56,7 @@ def reset_hashes(REVIEW_MANAGER) -> None:
                     hash_size=32,
                 )
             )
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit("Update PDF hashes")
@@ -442,7 +441,7 @@ def remove_coverpage(record, PAD):
     return record
 
 
-def cleanup_pdf_processing_fields(record: dict) -> BibDatabase:
+def cleanup_pdf_processing_fields(record: dict) -> dict:
 
     if "text_from_pdf" in record:
         del record["text_from_pdf"]

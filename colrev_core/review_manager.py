@@ -1436,8 +1436,8 @@ def check_new_record_source_tag(PAPER: Path) -> None:
 def check_update_synthesized_status(REVIEW_MANAGER) -> None:
     from colrev_core import data
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    data.update_synthesized_status(REVIEW_MANAGER, bib_db)
+    records = REVIEW_MANAGER.load_records()
+    data.update_synthesized_status(REVIEW_MANAGER, records)
 
     return
 
@@ -1887,8 +1887,8 @@ class ReviewManager:
     def __format_main_references(self) -> None:
         from colrev_core import prep
 
-        bib_db = self.load_bib_db()
-        for record in bib_db.entries:
+        records = self.load_records()
+        for record in records:
             if record["status"] == RecordState.md_needs_manual_preparation:
                 prior = record.get("man_prep_hints", "")
                 record = prep.log_notifications(record, record.copy())
@@ -1904,9 +1904,9 @@ class ReviewManager:
                     if record.get("man_prep_hints", "NA") == "":
                         del record["man_prep_hints"]
 
-        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+        records = sorted(records, key=lambda d: d["ID"])
 
-        self.save_bib_db(bib_db)
+        self.save_records(records)
         self.__update_status_yaml()
         return
 
@@ -1942,13 +1942,12 @@ class ReviewManager:
             raise ReviewManagerNotNofiedError()
         return self.__git_repo
 
-    def load_bib_db(self, init: bool = False) -> BibDatabase:
-        """Get the bib_db object (requires REVIEW_MANAGER.notify(...))"""
+    def load_records(self, init: bool = False) -> typing.List[dict]:
+        """Get the records (requires REVIEW_MANAGER.notify(...))"""
 
         if self.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
 
-        from bibtexparser.bibdatabase import BibDatabase
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
 
@@ -1962,42 +1961,42 @@ class ReviewManager:
                     common_strings=True,
                 ).parse_file(target_db, partial=True)
 
+                records = bib_db.entries
+
                 # Cast status to Enum
-                bib_db.entries = [
+                records = [
                     {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-                    for r in bib_db.entries
+                    for r in records
                 ]
 
         else:
             if init:
-                bib_db = BibDatabase()
+                records = []
             else:
                 raise FileNotFoundError(
                     errno.ENOENT, os.strerror(errno.ENOENT), MAIN_REFERENCES
                 )
 
-        return bib_db
+        return records
 
-    def save_bib_db(self, bib_db: BibDatabase) -> None:
-        """Save the bib_db object"""
-
-        try:
-            bib_db.comments.remove("% Encoding: UTF-8")
-        except ValueError:
-            pass
+    def save_records(self, records: typing.List[dict]) -> None:
+        """Save the records"""
 
         # Casting to string (in particular the RecordState Enum)
-        bib_db.entries = [{k: str(v) for k, v in r.items()} for r in bib_db.entries]
+        records = [{k: str(v) for k, v in r.items()} for r in records]
+
+        bib_db = BibDatabase()
+        bib_db.entries = records
 
         bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
         with open(self.paths["MAIN_REFERENCES"], "w") as out:
             out.write(bibtex_str)
 
-        # Casting to RecordState (in case the bib_db is used afterwards)
-        bib_db.entries = [
+        # Casting to RecordState (in case the records are used afterwards)
+        records = [
             {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-            for r in bib_db.entries
+            for r in records
         ]
 
         return
@@ -2262,9 +2261,9 @@ class ReviewManager:
                 [str(self.paths["MAIN_REFERENCES_RELATIVE"])], working_tree=True
             )
         else:
-            bib_db = self.load_bib_db()
-            bib_db.entries = [x for x in bib_db.entries if id != x["ID"]]
-            self.save_bib_db(bib_db)
+            records = self.load_records()
+            records = [x for x in records if id != x["ID"]]
+            self.save_records(records)
             git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
 
         self.create_commit("Reprocess", saved_args=saved_args)
@@ -2484,16 +2483,16 @@ class ReviewManager:
             return False
 
     def set_IDs(
-        self, bib_db: BibDatabase = None, selected_IDs: list = None
-    ) -> BibDatabase:
+        self, records: typing.List[dict] = [], selected_IDs: list = None
+    ) -> typing.List[dict]:
         """Set the IDs of records according to predefined formats"""
 
-        if bib_db is None:
-            bib_db = self.load_bib_db()
+        if len(records) == 0:
+            records = self.load_records()
 
-        ID_list = [record["ID"] for record in bib_db.entries]
+        ID_list = [record["ID"] for record in records]
 
-        for record in bib_db.entries:
+        for record in records:
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
                     continue
@@ -2514,19 +2513,19 @@ class ReviewManager:
                 if old_id in ID_list:
                     ID_list.remove(old_id)
 
-        bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
+        records = sorted(records, key=lambda d: d["ID"])
 
-        self.save_bib_db(bib_db)
+        self.save_records(records)
 
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
-        bib_db = self.load_bib_db()
-        self.save_bib_db(bib_db)
+        records = self.load_records()
+        self.save_records(records)
 
         git_repo = self.get_repo()
         git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
 
-        return bib_db
+        return records
 
     def propagated_ID(self, ID: str) -> bool:
         """Check whether an ID has been propagated"""
@@ -2546,14 +2545,14 @@ class ReviewManager:
     def generate_ID(
         self,
         record: dict,
-        bib_db: BibDatabase = None,
+        records: typing.List[dict] = [],
         record_in_bib_db: bool = False,
         raise_error: bool = True,
     ) -> str:
         """Generate a record ID according to the predefined format"""
 
-        if bib_db is not None:
-            ID_blacklist = [record["ID"] for record in bib_db.entries]
+        if len(records) == 0:
+            ID_blacklist = [record["ID"] for record in records]
         else:
             ID_blacklist = []
         ID = self.generate_ID_blacklist(

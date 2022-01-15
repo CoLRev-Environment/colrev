@@ -7,9 +7,6 @@ from pathlib import Path
 
 import git
 import pandas as pd
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
 from thefuzz import fuzz
 from tqdm.contrib.concurrent import process_map
 
@@ -240,20 +237,13 @@ def preProcess(k, column):
 
 def readData(REVIEW_MANAGER):
 
-    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
-        bib_db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=False,
-            common_strings=True,
-        ).parse_file(target_db, partial=True)
-
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     # Note: Because we only introduce individual (non-merged records),
     # there should be no semicolons in origin!
     records_queue = [
         x
-        for x in bib_db.entries
+        for x in records
         if x["status"]
         not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
     ]
@@ -356,7 +346,7 @@ def setup_active_learning_dedupe(REVIEW_MANAGER, retrain: bool):
     return ret_dict
 
 
-def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
+def apply_merges(REVIEW_MANAGER, results: list):
     """Apply automated deduplication decisions
 
     Level: IDs (not origins), requiring IDs to be immutable after md_prepared
@@ -378,10 +368,10 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
 
     # results = list(itertools.chain(*results))
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_()
 
     for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
-        non_dupe_record_list = [x for x in bib_db.entries if x["ID"] == non_dupe]
+        non_dupe_record_list = [x for x in records if x["ID"] == non_dupe]
         if len(non_dupe_record_list) == 0:
             continue
         non_dupe_record = non_dupe_record_list.pop()
@@ -389,11 +379,11 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
 
     for dupe in [x for x in results if "duplicate" == x["decision"]]:
         try:
-            main_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID1"]]
+            main_record_list = [x for x in records if x["ID"] == dupe["ID1"]]
             if len(main_record_list) == 0:
                 continue
             main_record = main_record_list.pop()
-            dupe_record_list = [x for x in bib_db.entries if x["ID"] == dupe["ID2"]]
+            dupe_record_list = [x for x in records if x["ID"] == dupe["ID2"]]
             if len(dupe_record_list) == 0:
                 continue
             dupe_record = dupe_record_list.pop()
@@ -414,7 +404,7 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
                 + f'{main_record["ID"]} <- {dupe_record["ID"]}'
             )
             # main_record["status"] = str(RecordState.md_processed)
-            bib_db.entries = [x for x in bib_db.entries if x["ID"] != dupe_record["ID"]]
+            records = [x for x in records if x["ID"] != dupe_record["ID"]]
             # REVIEW_MANAGER.update_record_by_ID(main_record)
             # REVIEW_MANAGER.update_record_by_ID(dupe_record, delete=True)
         except StopIteration:
@@ -423,11 +413,11 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
 
     # Set remaining records to md_processed (not duplicate) because all records
     # have been considered by dedupe
-    for record in bib_db.entries:
+    for record in records:
         if record["status"] == RecordState.md_prepared:
             record["status"] = RecordState.md_processed
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
 
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
@@ -435,7 +425,7 @@ def apply_merges(REVIEW_MANAGER, results: list) -> BibDatabase:
     return
 
 
-def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDatabase:
+def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list):
     """Apply manual deduplication decisions
 
     Level: IDs (not origins), requiring IDs to be immutable after md_prepared
@@ -447,7 +437,7 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDa
 
     # The merging also needs to consider whether IDs are propagated
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     non_dupe_list = []
     dupe_list = []
@@ -458,7 +448,7 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDa
             dupe_list.append([x["ID1"], x["ID2"]])
 
     for non_dupe_1, non_dupe_2 in non_dupe_list:
-        record = [x for x in bib_db.entries if x["ID"] == non_dupe_1].pop()
+        record = [x for x in records if x["ID"] == non_dupe_1].pop()
         if "manual_non_duplicate" in record:
             record["manual_non_duplicate"] = (
                 record["manual_non_duplicate"] + ";" + non_dupe_2
@@ -466,7 +456,7 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDa
         else:
             record["manual_non_duplicate"] = non_dupe_2
 
-        record = [x for x in bib_db.entries if x["ID"] == non_dupe_2].pop()
+        record = [x for x in records if x["ID"] == non_dupe_2].pop()
         if "manual_non_duplicate" in record:
             record["manual_non_duplicate"] = (
                 record["manual_non_duplicate"] + ";" + non_dupe_1
@@ -477,15 +467,15 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDa
         # Note : no need to consider "manual_duplicate" (it stays the same)
 
     for main_rec_id, dupe_rec_id in dupe_list:
-        main_record = [x for x in bib_db.entries if x["ID"] == main_rec_id].pop()
+        main_record = [x for x in records if x["ID"] == main_rec_id].pop()
         # Simple way of implementing the closure
         # cases where the main_record has already been merged into another record
         if "MOVED_DUPE" in main_record:
             main_record = [
-                x for x in bib_db.entries if x["ID"] == main_record["MOVED_DUPE"]
+                x for x in records if x["ID"] == main_record["MOVED_DUPE"]
             ].pop()
 
-        dupe_record = [x for x in bib_db.entries if x["ID"] == dupe_rec_id].pop()
+        dupe_record = [x for x in records if x["ID"] == dupe_rec_id].pop()
 
         dupe_record["MOVED_DUPE"] = main_rec_id
 
@@ -533,15 +523,11 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list) -> BibDa
             f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
         )
 
-    bib_db.entries = [
-        x for x in bib_db.entries if x["ID"] not in [d[1] for d in dupe_list]
-    ]
+    records = [x for x in records if x["ID"] not in [d[1] for d in dupe_list]]
 
-    bib_db.entries = [
-        {k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in bib_db.entries
-    ]
+    records = [{k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in records]
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
 
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
@@ -574,7 +560,7 @@ def fix_errors(REVIEW_MANAGER) -> None:
         IDs_to_unmerge = dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
 
         if len(IDs_to_unmerge) > 0:
-            bib_db = REVIEW_MANAGER.load_bib_db()
+            records = REVIEW_MANAGER.load_records()
 
             MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
             revlist = (
@@ -585,24 +571,23 @@ def fix_errors(REVIEW_MANAGER) -> None:
             # Note : there could be more than two IDs in the list
             while len(IDs_to_unmerge) > 0:
                 filecontents = next(revlist)
-                prior_bib_db = bibtexparser.loads(filecontents)
+                prior_db = bibtexparser.loads(filecontents)
+                prior_records = prior_db.entries
 
                 unmerged = []
                 for ID_list_to_unmerge in IDs_to_unmerge:
                     report_logger.info(f'Undo merge: {",".join(ID_list_to_unmerge)}')
 
-                    # delete new record, add previous records (from history) to bib_db
-                    bib_db.entries = [
-                        r for r in bib_db.entries if r["ID"] not in ID_list_to_unmerge
-                    ]
+                    # delete new record, add previous records (from history) to records
+                    records = [r for r in records if r["ID"] not in ID_list_to_unmerge]
 
                     if all(
                         [
-                            ID in [r["ID"] for r in prior_bib_db.entries]
+                            ID in [r["ID"] for r in prior_records]
                             for ID in ID_list_to_unmerge
                         ]
                     ):
-                        for r in prior_bib_db.entries:
+                        for r in prior_records:
                             if r["ID"] in ID_list_to_unmerge:
                                 # add the manual_dedupe/non_dupe decision to the records
                                 manual_non_duplicates = ID_list_to_unmerge.copy()
@@ -619,15 +604,15 @@ def fix_errors(REVIEW_MANAGER) -> None:
                                         manual_non_duplicates
                                     )
                                 r["status"] = RecordState.md_processed
-                                bib_db.entries.append(r)
+                                records.append(r)
                                 logger.info(f'Restored {r["ID"]}')
                     else:
                         unmerged.append(ID_list_to_unmerge)
 
                 IDs_to_unmerge = unmerged
 
-            bib_db.entries = sorted(bib_db.entries, key=lambda d: d["ID"])
-            REVIEW_MANAGER.save_bib_db(bib_db)
+            records = sorted(records, key=lambda d: d["ID"])
+            REVIEW_MANAGER.save_records(records)
             git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
 
     if non_dupe_file.is_file():
@@ -875,7 +860,7 @@ def append_merges(batch_item: dict) -> list:
 
     references = batch_item["queue"]
 
-    # if the record is the first one added to the bib_db
+    # if the record is the first one added to the records
     # (in a preceding processing step), it can be propagated
     # if len(batch_item["queue"]) < 2:
     if len(references.index) < 2:
@@ -996,9 +981,9 @@ def get_data(REVIEW_MANAGER):
 def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
     from colrev_core import prep
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
     git_repo = REVIEW_MANAGER.get_repo()
-    for record in bib_db.entries:
+    for record in records:
         if "crossref" in record:
             crossref_rec = prep.get_crossref_record(record)
             if crossref_rec is None:
@@ -1027,16 +1012,11 @@ def batch(data, REVIEW_MANAGER):
     # additional record is compared to/merged with all prior records in
     # the queue)
 
-    with open(REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as target_db:
-        bib_db = BibTexParser(
-            customization=convert_to_unicode,
-            ignore_nonstandard_types=False,
-            common_strings=True,
-        ).parse_file(target_db, partial=True)
+    records = REVIEW_MANAGER.load_records()
 
     # Note: Because we only introduce individual (non-merged records),
     # there should be no semicolons in origin!
-    records_queue = [x for x in bib_db.entries if x["ID"] in data["queue"]]
+    records_queue = [x for x in records if x["ID"] in data["queue"]]
 
     references = pd.DataFrame.from_dict(records_queue)
     references = prep_references(references)

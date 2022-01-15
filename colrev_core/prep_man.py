@@ -19,7 +19,7 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     # TODO : this function mixes return values and saving to files.
     logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     logger.info("Calculate statistics")
     stats: dict = {"ENTRYTYPE": {}}
@@ -27,7 +27,7 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     prep_man_hints = []
     origins = []
     crosstab = []
-    for record in bib_db.entries:
+    for record in records:
         if RecordState.md_imported != record["status"]:
             if record["ENTRYTYPE"] in overall_types["ENTRYTYPE"]:
                 overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = (
@@ -109,9 +109,10 @@ def apply_prep_man(REVIEW_MANAGER) -> None:
     filecontents_current_commit = next(revlist)  # noqa
     filecontents = next(revlist)
     prior_bib_db = bibtexparser.loads(filecontents)
+    prior_records = prior_bib_db.entries
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    for record in bib_db.entries:
+    records = REVIEW_MANAGER.load_records()
+    for record in records:
         # TODO : IDs may change - this has to be accounted for when changing
         # the following matching to IDs.
         changed_record_l = [
@@ -131,15 +132,13 @@ def apply_prep_man(REVIEW_MANAGER) -> None:
                     del record[k]
                 if v == "RESET":
                     prior_record_l = [
-                        x
-                        for x in prior_bib_db.entries
-                        if x["origin"] == record["origin"]
+                        x for x in prior_records if x["origin"] == record["origin"]
                     ]
                     if len(prior_record_l) == 1:
                         prior_record = prior_record_l.pop()
                         record[k] = prior_record[k]
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     return
 
 
@@ -148,15 +147,15 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
-    bib_db.entries = [
+    records = [
         record
-        for record in bib_db.entries
+        for record in records
         # if RecordState.md_needs_manual_preparation == record["status"]
     ]
 
-    bib_db_df = pd.DataFrame.from_records(bib_db.entries)
+    bib_db_df = pd.DataFrame.from_records(records)
 
     bib_db_df = bib_db_df[
         [

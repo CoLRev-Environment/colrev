@@ -83,7 +83,7 @@ def get_search_files(REVIEW_MANAGER, restrict: list = None) -> typing.List[Path]
     return files
 
 
-def getbib(file: Path) -> BibDatabase:
+def getbib(file: Path) -> typing.List[dict]:
     with open(file) as bibtex_file:
         contents = bibtex_file.read()
         bib_r = re.compile(r"@.*{.*,", re.M)
@@ -102,34 +102,34 @@ def getbib(file: Path) -> BibDatabase:
             common_strings=True,
         ).parse_file(bibtex_file, partial=True)
 
-    return db
+    return db.entries
 
 
 def load_records(filepath: Path, REVIEW_MANAGER) -> list:
 
-    search_db = getbib(filepath)
+    search_records = getbib(filepath)
 
-    logger.debug(f"Loaded {filepath.name} with {len(search_db.entries)} records")
+    logger.debug(f"Loaded {filepath.name} with {len(search_records)} records")
 
-    if search_db is None:
+    if len(search_records) == 0:
         return []
 
     from colrev_core import status
 
     nr_in_bib = status.get_nr_in_bib(filepath)
-    if len(search_db.entries) < nr_in_bib:
+    if len(search_records) < nr_in_bib:
         logger.error("broken bib file (not imported all records)")
         with open(filepath) as f:
             line = f.readline()
             while line:
                 if "@" in line[:3]:
                     ID = line[line.find("{") + 1 : line.rfind(",")]
-                    if ID not in [x["ID"] for x in search_db.entries]:
+                    if ID not in [x["ID"] for x in search_records]:
                         logger.error(f"{ID} not imported")
                 line = f.readline()
 
     record_list = []
-    for record in search_db.entries:
+    for record in search_records:
         record.update(origin=f"{filepath.name}/{record['ID']}")
 
         # Drop empty fields
@@ -299,12 +299,12 @@ def bibutils_convert(script: str, data: str) -> str:
     return stdout
 
 
-def ris2bib(file: Path) -> BibDatabase:
+def ris2bib(file: Path) -> typing.List[dict]:
     with open(file) as reader:
         data = reader.read(4096)
     if "TY  - " not in data:
         logger.error(f"Error: Not a ris file? {file.name}")
-        return None
+        return []
 
     with open(file) as reader:
         data = reader.read()
@@ -313,15 +313,15 @@ def ris2bib(file: Path) -> BibDatabase:
     data = bibutils_convert("xml2bib", data)
     parser = BibTexParser(customization=convert_to_unicode)
     db = bibtexparser.loads(data, parser=parser)
-    return db
+    return db.entries
 
 
-def end2bib(file: Path) -> BibDatabase:
+def end2bib(file: Path) -> typing.List[dict]:
     with open(file) as reader:
         data = reader.read(4096)
     if "%T " not in data:
         logger.error(f"Error: Not an end file? {file.name}")
-        return None
+        return []
 
     with open(file) as reader:
         data = reader.read()
@@ -330,10 +330,10 @@ def end2bib(file: Path) -> BibDatabase:
     data = bibutils_convert("xml2bib", data)
     parser = BibTexParser(customization=convert_to_unicode)
     db = bibtexparser.loads(data, parser=parser)
-    return db
+    return db.entries
 
 
-def txt2bib(file: Path) -> BibDatabase:
+def txt2bib(file: Path) -> typing.List[dict]:
     grobid_client.check_grobid_availability()
     with open(file) as f:
         if file.suffix == ".md":
@@ -357,7 +357,7 @@ def txt2bib(file: Path) -> BibDatabase:
 
     parser = BibTexParser(customization=convert_to_unicode)
     db = bibtexparser.loads(data, parser=parser)
-    return db
+    return db.entries
 
 
 def preprocess_records(data: list) -> list:
@@ -399,38 +399,34 @@ def preprocess_records(data: list) -> list:
     return data
 
 
-def csv2bib(file: Path) -> BibDatabase:
+def csv2bib(file: Path) -> typing.List[dict]:
     try:
         data = pd.read_csv(file)
     except pd.errors.ParserError:
         logger.error(f"Error: Not a csv file? {file.name}")
         pass
-        return None
+        return []
     data.columns = data.columns.str.replace(" ", "_")
     data.columns = data.columns.str.replace("-", "_")
     data = data.to_dict("records")
     data = preprocess_records(data)
 
-    db = BibDatabase()
-    db.entries = data
-    return db
+    return data
 
 
-def xlsx2bib(file: Path) -> BibDatabase:
+def xlsx2bib(file: Path) -> typing.List[dict]:
     try:
         data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
     except pd.errors.ParserError:
         logger.error(f"Error: Not an xlsx file: {file.name}")
         pass
-        return None
+        return []
     data.columns = data.columns.str.replace(" ", "_")
     data.columns = data.columns.str.replace("-", "_")
     data = data.to_dict("records")
     data = preprocess_records(data)
 
-    db = BibDatabase()
-    db.entries = data
-    return db
+    return data
 
 
 def move_to_pdf_dir(REVIEW_MANAGER, filepath: Path) -> Path:
@@ -445,7 +441,7 @@ def move_to_pdf_dir(REVIEW_MANAGER, filepath: Path) -> Path:
 # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
 # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
 # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-def pdf2bib(file: Path) -> BibDatabase:
+def pdf2bib(file: Path) -> typing.List[dict]:
     grobid_client.check_grobid_availability()
 
     # https://github.com/kermitt2/grobid/issues/837
@@ -459,22 +455,22 @@ def pdf2bib(file: Path) -> BibDatabase:
     if 200 == r.status_code:
         parser = BibTexParser(customization=convert_to_unicode)
         db = bibtexparser.loads(r.text, parser=parser)
-        return db
+        return db.entries
     if 500 == r.status_code:
         report_logger.error(f"Not a readable pdf file: {file.name}")
         logger.error(f"Not a readable pdf file: {file.name}")
         report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
-        return None
+        return []
 
     report_logger.debug(f"Status: {r.status_code}")
     logger.debug(f"Status: {r.status_code}")
     report_logger.debug(f"Response: {r.text}")
     logger.debug(f"Response: {r.text}")
-    return None
+    return []
 
 
-def pdfRefs2bib(file: Path) -> BibDatabase:
+def pdfRefs2bib(file: Path) -> typing.List[dict]:
     grobid_client.check_grobid_availability()
 
     r = requests.post(
@@ -489,28 +485,28 @@ def pdfRefs2bib(file: Path) -> BibDatabase:
         # Use lpad to maintain the sort order (easier to catch errors)
         for rec in db.entries:
             rec["ID"] = rec.get("ID", "").rjust(3, "0")
-        return db
+        return db.entries
     if 500 == r.status_code:
         report_logger.error(f"Not a readable pdf file: {file.name}")
         logger.error(f"Not a readable pdf file: {file.name}")
         report_logger.debug(f"Grobid: {r.text}")
         logger.debug(f"Grobid: {r.text}")
-        return None
+        return []
 
     report_logger.debug(f"Status: {r.status_code}")
     logger.debug(f"Status: {r.status_code}")
     report_logger.debug(f"Response: {r.text}")
     logger.debug(f"Response: {r.text}")
-    return None
+    return []
 
 
-def unify_field_names(db: BibDatabase) -> BibDatabase:
+def unify_field_names(records: typing.List[dict]) -> typing.List[dict]:
 
     # At some point, this may depend on the source (database)
     # This should be available in the sources.
     # Note : if we do not unify (at least the author/year), the IDs of imported records
     # will be AnonymousNoYear a,b,c,d,....
-    for record in db.entries:
+    for record in records:
         if "Publication_Type" in record:
             if "J" == record["Publication_Type"]:
                 record["ENTRYTYPE"] = "article"
@@ -533,38 +529,38 @@ def unify_field_names(db: BibDatabase) -> BibDatabase:
                 del record["Start_Page"]
                 del record["End_Page"]
 
-    return db
+    return records
 
 
-def drop_empty_fields(db: BibDatabase) -> BibDatabase:
-    db.entries = [{k: v for k, v in r.items() if v is not None} for r in db.entries]
-    db.entries = [{k: v for k, v in r.items() if v != "nan"} for r in db.entries]
-    return db
+def drop_empty_fields(records: typing.List[dict]) -> typing.List[dict]:
+    records = [{k: v for k, v in r.items() if v is not None} for r in records]
+    records = [{k: v for k, v in r.items() if v != "nan"} for r in records]
+    return records
 
 
-def set_incremental_IDs(db: BibDatabase) -> BibDatabase:
+def set_incremental_IDs(records: typing.List[dict]) -> typing.List[dict]:
 
-    if 0 == len([r for r in db.entries if "ID" not in r]):
+    if 0 == len([r for r in records if "ID" not in r]):
         # IDs set for all records
-        return db
+        return records
 
-    for i, record in enumerate(db.entries):
+    for i, record in enumerate(records):
         if "ID" not in record:
             if "UT_(Unique_WOS_ID)" in record:
                 record["ID"] = record["UT_(Unique_WOS_ID)"].replace(":", "_")
             else:
                 record["ID"] = f"{i+1}".rjust(10, "0")
 
-    return db
+    return records
 
 
-def fix_keys(db: BibDatabase) -> BibDatabase:
-    for record in db.entries:
+def fix_keys(records: typing.List[dict]) -> typing.List[dict]:
+    for record in records:
         record = {
             re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
             for k, v in record.items()
         }
-    return db
+    return records
 
 
 conversion_scripts = {
@@ -617,15 +613,15 @@ def convert_to_bib(REVIEW_MANAGER, sfpath: Path) -> Path:
         logger.info(f"Running docker container created from {cur_tag}")
 
         logger.debug(f"Called {conversion_scripts[filetype].__name__}({sfpath})")
-        db = conversion_scripts[filetype](sfpath)
+        records = conversion_scripts[filetype](sfpath)
 
-        db = fix_keys(db)
-        db = set_incremental_IDs(db)
-        db = unify_field_names(db)
-        db = drop_empty_fields(db)
+        records = fix_keys(records)
+        records = set_incremental_IDs(records)
+        records = unify_field_names(records)
+        records = drop_empty_fields(records)
 
         git_repo = REVIEW_MANAGER.get_repo()
-        if db is None:
+        if len(records) == 0:
             report_logger.error("No records loaded")
             logger.error("No records loaded")
             return corresponding_bib_file
@@ -658,7 +654,9 @@ def convert_to_bib(REVIEW_MANAGER, sfpath: Path) -> Path:
 
         if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
             if not corresponding_bib_file.is_file():
-                logger.info(f"Loaded {len(db.entries)} " f"records from {sfpath.name}")
+                logger.info(f"Loaded {len(records)} " f"records from {sfpath.name}")
+                db = BibDatabase()
+                db.entries = records
                 with open(corresponding_bib_file, "w") as fi:
                     fi.write(bibtexparser.dumps(db))
     else:
@@ -725,16 +723,16 @@ def main(REVIEW_MANAGER: ReviewManager, keep_ids: bool = False) -> None:
         for sr in search_records:
             sr = import_record(sr)
 
-        bib_db = REVIEW_MANAGER.load_bib_db(init=True)
-        bib_db.entries += search_records
-        REVIEW_MANAGER.save_bib_db(bib_db)
+        records = REVIEW_MANAGER.load_records(init=True)
+        records += search_records
+        REVIEW_MANAGER.save_records(records)
 
         # TBD: does the following create errors!?
         # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
 
         if not keep_ids:
-            bib_db = REVIEW_MANAGER.set_IDs(
-                bib_db, selected_IDs=[x["ID"] for x in search_records]
+            records = REVIEW_MANAGER.set_IDs(
+                records, selected_IDs=[x["ID"] for x in search_records]
             )
 
         git_repo = REVIEW_MANAGER.get_repo()

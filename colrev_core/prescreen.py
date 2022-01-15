@@ -15,10 +15,10 @@ pp = pprint.PrettyPrinter(indent=4, width=140)
 
 def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     tbl = []
-    for record in bib_db.entries:
+    for record in records:
 
         inclusion_1, inclusion_2 = "NA", "NA"
 
@@ -76,7 +76,7 @@ def export_table(REVIEW_MANAGER, export_table_format: str) -> None:
 
 def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
     if not Path(import_table_path).is_file():
         logger.error(f"Did not find {import_table_path} - exiting.")
         return
@@ -90,7 +90,7 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
         [x.get("ID", ""), x.get("inclusion_1", ""), x.get("inclusion_2", "")]
         for x in records
     ]:
-        record_list = [e for e in bib_db.entries if e["ID"] == x[0]]
+        record_list = [e for e in records if e["ID"] == x[0]]
         if len(record_list) == 1:
             record: dict = record_list.pop()
             if x[1] == "no":
@@ -103,7 +103,7 @@ def import_table(REVIEW_MANAGER, import_table_path: str) -> None:
                 record["status"] = RecordState.rev_included
             # TODO: exclusion-criteria
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
 
     return
 
@@ -112,12 +112,12 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     saved_args = locals()
     saved_args["include_all"] = ""
     PAD = 50  # TODO
-    for record in bib_db.entries:
+    for record in records:
         if record["status"] != RecordState.md_processed:
             continue
         report_logger.info(
@@ -125,7 +125,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
         )
         record.update(status=RecordState.rev_prescreen_included)
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit(

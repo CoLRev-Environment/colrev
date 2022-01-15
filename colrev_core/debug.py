@@ -140,10 +140,10 @@ def debug_data():
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.data, str))
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    included = data.get_records_for_synthesis(bib_db)
+    records = REVIEW_MANAGER.load_records()
+    included = data.get_records_for_synthesis(records)
 
-    data.update_manuscript(REVIEW_MANAGER, bib_db, included)
+    data.update_manuscript(REVIEW_MANAGER, records, included)
 
     return
 
@@ -175,7 +175,7 @@ def debug_pdf_prep():
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep, str))
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
     from colrev_core.review_manager import (
         ReviewManager,
         ProcessType,
@@ -186,9 +186,9 @@ def debug_pdf_prep():
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
-    record = [x for x in bib_db.entries if x["ID"] == "Johns2006"].pop()
+    record = [x for x in records if x["ID"] == "Johns2006"].pop()
 
     with open(record["file"], "rb") as file:
         parser = PDFParser(file)
@@ -216,11 +216,11 @@ def get_non_unique_pdf_hashes() -> None:
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     import collections
 
-    pdf_hashes = [x["pdf_hash"] for x in bib_db.entries if "pdf_hash" in x]
+    pdf_hashes = [x["pdf_hash"] for x in records if "pdf_hash" in x]
     pdf_hashes = [
         item for item, count in collections.Counter(pdf_hashes).items() if count > 1
     ]

@@ -2,10 +2,10 @@
 import csv
 import logging
 import pprint
+import typing
 from pathlib import Path
 
 import pandas as pd
-from bibtexparser.bibdatabase import BibDatabase
 
 from colrev_core.review_manager import RecordState
 
@@ -17,16 +17,16 @@ pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 # https://github.com/ContentMine/getpapers
 
 
-def get_pdf_get_man(bib_db: BibDatabase) -> list:
+def get_pdf_get_man(records: typing.List[dict]) -> list:
     missing_records = []
-    for record in bib_db.entries:
+    for record in records:
         if record["status"] == RecordState.pdf_needs_manual_retrieval:
             missing_records.append(record)
     return missing_records
 
 
-def export_retrieval_table(bib_db: BibDatabase) -> None:
-    missing_records = get_pdf_get_man(bib_db)
+def export_retrieval_table(records: typing.List[dict]) -> None:
+    missing_records = get_pdf_get_man(records)
     missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
     if len(missing_records) > 0:

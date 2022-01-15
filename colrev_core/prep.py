@@ -18,7 +18,6 @@ import git
 import pandas as pd
 import requests
 from alphabet_detector import AlphabetDetector
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
@@ -1740,9 +1739,9 @@ def log_details(preparation_batch: list) -> None:
     return
 
 
-def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
+def reset(REVIEW_MANAGER, records: typing.List[dict], id: str) -> None:
     MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-    record_list = [x for x in bib_db.entries if x["ID"] == id]
+    record_list = [x for x in records if x["ID"] == id]
     if len(record_list) == 0:
         report_logger.info(f"record with ID {id} not found")
         return
@@ -1760,8 +1759,8 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
         for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
     )
     for filecontents in list(revlist):
-        prior_bib_db = bibtexparser.loads(filecontents)
-        for r in prior_bib_db.entries:
+        prior_db = bibtexparser.loads(filecontents)
+        for r in prior_db.entries:
             if RecordState.md_imported == r["status"] and any(
                 o in r["origin"] for o in origins
             ):
@@ -1773,10 +1772,10 @@ def reset(REVIEW_MANAGER, bib_db: BibDatabase, id: str) -> None:
 
 
 def reset_records(REVIEW_MANAGER, reset_ids: list) -> None:
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
     for reset_id in reset_ids:
-        reset(REVIEW_MANAGER, bib_db, reset_id)
-    REVIEW_MANAGER.save_bib_db(bib_db)
+        reset(REVIEW_MANAGER, records, reset_id)
+    REVIEW_MANAGER.save_records(records)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
@@ -1789,7 +1788,7 @@ def reset_ids(REVIEW_MANAGER) -> None:
     # TODO : notify for different ProcessType
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
     git_repo = REVIEW_MANAGER.get_repo()
     MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
@@ -1800,7 +1799,7 @@ def reset_ids(REVIEW_MANAGER) -> None:
     filecontents = next(revlist)  # noqa
     prior_bib_db = bibtexparser.loads(filecontents)
 
-    for record in bib_db.entries:
+    for record in records:
         prior_record_l = [
             x for x in prior_bib_db.entries if x["origin"] == record["origin"]
         ]
@@ -1808,7 +1807,7 @@ def reset_ids(REVIEW_MANAGER) -> None:
             continue
         prior_record = prior_record_l.pop()
         record["ID"] = prior_record["ID"]
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
 
     return
 
@@ -1827,11 +1826,11 @@ def update_doi_md(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
-    bib_db = REVIEW_MANAGER.load_bib_db()
-    for record in bib_db.entries:
+    records = REVIEW_MANAGER.load_records()
+    for record in records:
         if "doi" in record:
             record = get_md_from_doi(record)
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
@@ -1867,13 +1866,13 @@ def set_to_reprocess(REVIEW_MANAGER):
     # consistent with the check_valid_transitions because it will either
     # transition to prepared or to needs_manual_preparation
 
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
     [
         r.update(status=RecordState.md_imported)
-        for r in bib_db.entries
+        for r in records
         if RecordState.md_needs_manual_preparation == r["status"]
     ]
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     return
 
 

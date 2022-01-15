@@ -1,8 +1,7 @@
 #! /usr/bin/env python
 import logging
 import pprint
-
-from bibtexparser.bibdatabase import BibDatabase
+import typing
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -15,14 +14,14 @@ def include_all_in_screen(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType, RecordState
 
     REVIEW_MANAGER.notify(Process(ProcessType.screen))
-    bib_db = REVIEW_MANAGER.load_bib_db()
+    records = REVIEW_MANAGER.load_records()
 
-    excl_criteria = get_exclusion_criteria(bib_db)
+    excl_criteria = get_exclusion_criteria(records)
 
     saved_args = locals()
     saved_args["include_all"] = ""
     PAD = 50  # TODO
-    for record in bib_db.entries:
+    for record in records:
         if record["status"] != RecordState.pdf_prepared:
             continue
         report_logger.info(
@@ -31,7 +30,7 @@ def include_all_in_screen(REVIEW_MANAGER) -> None:
         record.update(excl_criteria=";".join([e + "=no" for e in excl_criteria]))
         record.update(status=RecordState.rev_included)
 
-    REVIEW_MANAGER.save_bib_db(bib_db)
+    REVIEW_MANAGER.save_records(records)
     git_repo = REVIEW_MANAGER.get_repo()
     git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
     REVIEW_MANAGER.create_commit(
@@ -59,8 +58,8 @@ def get_exclusion_criteria_from_str(ec_string: str) -> list:
     return excl_criteria
 
 
-def get_exclusion_criteria(bib_db: BibDatabase) -> list:
-    ec_list = [x.get("excl_criteria") for x in bib_db.entries if "excl_criteria" in x]
+def get_exclusion_criteria(records: typing.List[dict]) -> list:
+    ec_list = [x.get("excl_criteria") for x in records if "excl_criteria" in x]
     if 0 == len(ec_list):
         ec_string = ""
     else:
