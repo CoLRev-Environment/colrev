@@ -613,23 +613,28 @@ def stat_print(
         val2 = ""
     if field1 != "":
         if separate_category:
-            stat = "     |  - " + field1
-        else:
             stat = " |  - " + field1
+        else:
+            stat = "   - " + field1
     else:
         if separate_category:
-            stat = "     | "
-        else:
             stat = " | "
-    rjust_padd = 37 - len(stat)
+        else:
+            stat = " "
+    rjust_padd = 33 - len(stat)
     stat = stat + str(val1).rjust(rjust_padd, " ")
     if connector is not None:
         stat = stat + "  " + connector + "  "
     if val2 != "":
-        rjust_padd = 47 - len(stat)
+        rjust_padd = 39 - len(stat)
         stat = stat + str(val2).rjust(rjust_padd, " ") + " "
     if field2 != "":
         stat = stat + str(field2)
+    # TBD: if we close it, the closing | does not align...
+    # if separate_category:
+    #     ljust_pad = (95 - len(stat))
+    #     stat = stat.ljust(ljust_pad, "-") + "|"
+
     print(stat)
     return
 
@@ -641,26 +646,29 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
     # (blank call)  * the number of records requiring manual action
     #               -> the number of records excluded/merged
 
-    print("\nStatus\n")
-
+    # print("\nStatus\n")
+    print("\n")
+    print("_________________________ Status ________________________________")
+    print("")
     if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-        print(" | Search")
-        print(" |  - No records added yet")
+        print(" Search")
+        print("  - No records added yet")
     else:
 
         stat = statuts_info["status"]
 
-        print(" | Search")
+        print(" Search")
         stat_print(False, "Records retrieved", stat["overall"]["md_retrieved"])
-        print(" |")
-        print("     | Metadata preparation")
+        print("")
+        print(" _______________________________________________________________")
+        print(" | Metadata preparation                                         ")
         if stat["currently"]["md_retrieved"] > 0:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
-                "record(s) not yet imported",
+                "not yet imported",
                 stat["currently"]["md_retrieved"],
             )
         stat_print(True, "Records imported", stat["overall"]["md_imported"])
@@ -670,7 +678,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "record(s) need preparation",
+                "need preparation",
                 stat["currently"]["md_imported"],
             )
         if stat["currently"]["md_needs_manual_preparation"] > 0:
@@ -679,7 +687,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "record(s) to prepare (manually)",
+                "to prepare (manually)",
                 stat["currently"]["md_needs_manual_preparation"],
             )
         stat_print(True, "Records prepared", stat["overall"]["md_prepared"])
@@ -689,7 +697,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "record(s) to deduplicate",
+                "to deduplicate",
                 stat["currently"]["md_prepared"],
             )
         stat_print(
@@ -700,9 +708,9 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
             "duplicates removed",
             stat["currently"]["md_duplicates_removed"],
         )
-
-        print(" |")
-        print(" | Prescreen")
+        print(" |______________________________________________________________")
+        print("")
+        print(" Prescreen")
         if stat["overall"]["rev_prescreen"] == 0:
             stat_print(False, "Not initiated", "")
         else:
@@ -713,7 +721,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                     "",
                     "",
                     "*",
-                    "records to prescreen",
+                    "to prescreen",
                     stat["currently"]["md_processed"],
                 )
             stat_print(
@@ -725,15 +733,16 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 stat["currently"]["rev_prescreen_excluded"],
             )
 
-        print(" |")
-        print("     | PDF preparation")
+        print("")
+        print(" ______________________________________________________________")
+        print(" | PDF preparation                                             ")
         if 0 != stat["currently"]["rev_prescreen_included"]:
             stat_print(
                 True,
                 "",
                 "",
                 "*",
-                "PDFs to retrieve",
+                "to retrieve",
                 stat["currently"]["rev_prescreen_included"],
             )
         if 0 != stat["currently"]["pdf_needs_manual_retrieval"]:
@@ -742,7 +751,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "PDFs to retrieve manually",
+                "to retrieve manually",
                 stat["currently"]["pdf_needs_manual_retrieval"],
             )
         if stat["currently"]["pdf_not_available"] > 0:
@@ -751,7 +760,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "PDFs imported",
                 stat["overall"]["pdf_imported"],
                 "*",
-                "PDFs not available",
+                "not available",
                 stat["currently"]["pdf_not_available"],
             )
         else:
@@ -762,17 +771,18 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 "",
                 "",
                 "*",
-                "PDFs to prepare (manually)",
+                "to prepare (manually)",
                 stat["currently"]["pdf_needs_manual_preparation"],
             )
         if 0 != stat["currently"]["pdf_imported"]:
             stat_print(
-                True, "", "", "*", "PDFs to prepare", stat["currently"]["pdf_imported"]
+                True, "", "", "*", "to prepare", stat["currently"]["pdf_imported"]
             )
         stat_print(True, "PDFs prepared", stat["overall"]["pdf_prepared"])
 
-        print(" |")
-        print(" | Screen")
+        print(" |_____________________________________________________________")
+        print("")
+        print(" Screen")
         if stat["overall"]["rev_screen"] == 0:
             stat_print(False, "Not initiated", "")
         else:
@@ -783,7 +793,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                     "",
                     "",
                     "*",
-                    "records to screen",
+                    "to screen",
                     stat["currently"]["pdf_prepared"],
                 )
             stat_print(
@@ -798,8 +808,8 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 for crit, nr in stat["currently"]["exclusion"].items():
                     stat_print(False, "", "", "->", f"reason: {crit}", nr)
 
-        print(" |")
-        print(" | Data and synthesis")
+        print("")
+        print(" Data and synthesis")
         if stat["overall"]["rev_included"] == 0:
             stat_print(False, "Not initiated", "")
         else:
@@ -815,5 +825,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 )
             else:
                 stat_print(False, "Synthesized", stat["overall"]["rev_synthesized"])
+
+        print("_______________________________________________________________")
 
     return
