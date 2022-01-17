@@ -324,8 +324,7 @@ def update_synthesized_status(REVIEW_MANAGER, records: typing.List[dict]):
         logger.info(f' {record["ID"]}'.ljust(PAD, " ") + "set status to synthesized")
 
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return records
 
@@ -422,7 +421,7 @@ def update_tei(
                 pass
     # TODO : only create a commit if there are changes.
     REVIEW_MANAGER.save_records(records)
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     # REVIEW_MANAGER.create_commit("Create TEIs")
 
     # Enhance TEIs (link local IDs)
@@ -560,7 +559,7 @@ def main(REVIEW_MANAGER) -> None:
         if "TEI" in DATA_FORMAT:
             records = update_tei(REVIEW_MANAGER, records, included)
             REVIEW_MANAGER.save_records(records)
-            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+            REVIEW_MANAGER.add_record_changes()
         if "MANUSCRIPT" in DATA_FORMAT:
             records = update_manuscript(REVIEW_MANAGER, records, included)
             git_repo.index.add([str(REVIEW_MANAGER.paths["PAPER_RELATIVE"])])

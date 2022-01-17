@@ -126,8 +126,7 @@ def include_all_in_prescreen(REVIEW_MANAGER) -> None:
         record.update(status=RecordState.rev_prescreen_included)
 
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit(
         "Pre-screen (include_all)", manual_author=False, saved_args=saved_args
     )
@@ -157,8 +156,6 @@ def set_data(
     REVIEW_MANAGER, record: dict, prescreen_inclusion: bool, PAD: int = 40
 ) -> None:
 
-    git_repo = REVIEW_MANAGER.get_repo()
-
     if prescreen_inclusion:
         report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen")
         REVIEW_MANAGER.replace_field(
@@ -170,6 +167,6 @@ def set_data(
             [record["ID"]], "status", str(RecordState.rev_prescreen_excluded)
         )
 
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return

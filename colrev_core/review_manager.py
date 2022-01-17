@@ -1889,6 +1889,9 @@ class ReviewManager:
 
         records = self.load_records()
         for record in records:
+            if "status" not in record:
+                print(f'Error: no status field in record ({record["ID"]})')
+                continue
             if record["status"] == RecordState.md_needs_manual_preparation:
                 prior = record.get("man_prep_hints", "")
                 record = prep.log_notifications(record, record.copy())
@@ -1999,6 +2002,10 @@ class ReviewManager:
             for r in records
         ]
 
+        return
+
+    def add_record_changes(self) -> None:
+        self.__git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
         return
 
     def get_record_state_list_from_file_obj(self, file_object) -> list:
@@ -2264,7 +2271,7 @@ class ReviewManager:
             records = self.load_records()
             records = [x for x in records if id != x["ID"]]
             self.save_records(records)
-            git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
+            self.add_record_changes()
 
         self.create_commit("Reprocess", saved_args=saved_args)
 
@@ -2521,9 +2528,7 @@ class ReviewManager:
         # (to prevent failing format checks caused by special characters)
         records = self.load_records()
         self.save_records(records)
-
-        git_repo = self.get_repo()
-        git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
+        self.add_record_changes()
 
         return records
 
@@ -2902,8 +2907,8 @@ class ReviewManager:
                     "records not written to file: " f'{[x["ID"] for x in record_list]}'
                 )
 
-        git_repo = self.get_repo()
-        git_repo.index.add([str(self.paths["MAIN_REFERENCES_RELATIVE"])])
+        self.add_record_changes()
+
         return
 
 

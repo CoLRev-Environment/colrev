@@ -57,8 +57,7 @@ def reset_hashes(REVIEW_MANAGER) -> None:
                 )
             )
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit("Update PDF hashes")
     return
 

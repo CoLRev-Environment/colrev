@@ -1776,8 +1776,7 @@ def reset_records(REVIEW_MANAGER, reset_ids: list) -> None:
     for reset_id in reset_ids:
         reset(REVIEW_MANAGER, records, reset_id)
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
     return
 
@@ -1831,8 +1830,7 @@ def update_doi_md(REVIEW_MANAGER) -> None:
         if "doi" in record:
             record = get_md_from_doi(record)
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
     return
 

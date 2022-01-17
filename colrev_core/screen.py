@@ -31,8 +31,7 @@ def include_all_in_screen(REVIEW_MANAGER) -> None:
         record.update(status=RecordState.rev_included)
 
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit(
         "Screen (include_all)", manual_author=False, saved_args=saved_args
     )
@@ -89,8 +88,6 @@ def get_data(REVIEW_MANAGER) -> dict:
 def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
     from colrev_core.review_manager import RecordState
 
-    git_repo = REVIEW_MANAGER.get_repo()
-
     if RecordState.rev_included == record["status"]:
         report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Included in screen")
         REVIEW_MANAGER.update_record_by_ID(record)
@@ -98,6 +95,6 @@ def set_data(REVIEW_MANAGER, record: dict, PAD: int = 40) -> None:
         report_logger.info(f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen")
         REVIEW_MANAGER.update_record_by_ID(record)
 
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return

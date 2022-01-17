@@ -51,8 +51,7 @@ def copy_pdfs_to_repo(REVIEW_MANAGER) -> None:
                     / Path(record["ID"] + ".pdf")
                 )
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
     add_to_git(REVIEW_MANAGER, records)
     return
 
@@ -252,8 +251,8 @@ def rename_pdfs(REVIEW_MANAGER, records: typing.List[dict]) -> typing.List[dict]
                 pass
 
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
+
     return records
 
 
@@ -310,8 +309,7 @@ def set_status_if_file_linked(
                     record["status"] = RecordState.pdf_imported
                     logger.info(f'Set status to pdf_imported for {record["ID"]}')
     REVIEW_MANAGER.save_records(records)
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return records
 

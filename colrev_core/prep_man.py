@@ -230,7 +230,6 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
     # )
     # all_ids.append(record["ID"])
 
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return

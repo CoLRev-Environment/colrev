@@ -16,19 +16,18 @@ Developing extensions of CoLRev in Python/R is easy. We provide examples and ins
     report_logger = logging.getLogger("review_template_report")
     logger = logging.getLogger("extension")
 
-    # Initialize the ReviewManager
+    # Initialize the ReviewManager and notify about upcoming process
     REVIEW_MANAGER = ReviewManager()
-    # Notify about the upcoming ProcessType
-    # see colrev_core/review_manager.py
     REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
 
-    # Load the records and process
+    # Load the records and apply changes
     records = REVIEW_MANAGER.load_records()
     for record in records:
         ....
 
-    # Save the changes and create commit
+    # Save the changes, add them to git, and create commit
     REVIEW_MANAGER.save_records(records)
+    REVIEW_MANAGER.add_record_changes()
     REVIEW_MANAGER.create_commit("Pre-screening (extension X")
 
 

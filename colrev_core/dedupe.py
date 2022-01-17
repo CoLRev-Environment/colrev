@@ -418,9 +418,7 @@ def apply_merges(REVIEW_MANAGER, results: list):
             record["status"] = RecordState.md_processed
 
     REVIEW_MANAGER.save_records(records)
-
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return
 
@@ -528,9 +526,7 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list):
     records = [{k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in records]
 
     REVIEW_MANAGER.save_records(records)
-
-    git_repo = REVIEW_MANAGER.get_repo()
-    git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+    REVIEW_MANAGER.add_record_changes()
 
     return
 
@@ -613,7 +609,7 @@ def fix_errors(REVIEW_MANAGER) -> None:
 
             records = sorted(records, key=lambda d: d["ID"])
             REVIEW_MANAGER.save_records(records)
-            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+            REVIEW_MANAGER.add_record_changes()
 
     if non_dupe_file.is_file():
         non_dupes = pd.read_excel(non_dupe_file)
@@ -982,7 +978,6 @@ def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
     from colrev_core import prep
 
     records = REVIEW_MANAGER.load_records()
-    git_repo = REVIEW_MANAGER.get_repo()
     for record in records:
         if "crossref" in record:
             crossref_rec = prep.get_crossref_record(record)
@@ -1003,7 +998,8 @@ def merge_crossref_linked_records(REVIEW_MANAGER) -> None:
                     }
                 ],
             )
-            git_repo.index.add([str(REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+            REVIEW_MANAGER.add_record_changes()
+
     return
 
 
