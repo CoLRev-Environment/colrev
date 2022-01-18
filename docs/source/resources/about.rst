@@ -2,4 +2,8 @@
 About
 ====================================
 
-TODO : include links and materials
+Our goal is to provide value to the research community and we welcome participation, contributions, and feedback.
+
+Interested? Check out the `contribution guidelines <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>`_, `good first issues <https://github.com/geritwagner/colrev_core/labels/good%20first%20issue>`_ or get in touch!
+
+Current lead developer: Gerit Wagner

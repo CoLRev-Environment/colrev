@@ -2,7 +2,7 @@
 Roadmap
 ==================================
 
-CoLRev is an ambitious, long-term project....
+The goal is to release new versions on a regular basis, approximately every 2 months.
 
 Priorities
 ----------------------------
@@ -21,7 +21,6 @@ Expected release: 0.4.0 (Apr 2022)
 Upcoming
 
 - Tests
-- Publication
 
 Future
 

@@ -26,7 +26,6 @@ extensions = [
     "sphinx.ext.autosummary",
 ]
 
-
 # -- Project information -----------------------------------------------------
 
 project = "CoLRev"

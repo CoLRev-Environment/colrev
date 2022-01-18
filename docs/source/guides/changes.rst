@@ -3,11 +3,11 @@
 Check the changes
 ==================================
 
-Using a git `client of your choice <https://git-scm.com/downloads/guis>`_, you can inspect the report created for each commit:
+Using a git `client of your choice <https://git-scm.com/downloads/guis>`_, you can validate the individual changes and the commit report for each version.
+Instructions on how to correct and trace errors are available in the guidelines for the respective step.
 
-.. figure:: ../../figures/commit_report.png
-   :width: 700
-   :alt: Example commit report
+Changes
+-------------
 
 CoLRev also ensures that the git-diffs are readable so you can check all changes:
 
@@ -15,4 +15,9 @@ CoLRev also ensures that the git-diffs are readable so you can check all changes
    :width: 700
    :alt: Changes example
 
-Instructions on how to correct and trace errors are available in the guidelines for the respective step.
+Git commit report
+-----------------------
+
+.. figure:: ../../figures/commit_report.png
+   :width: 700
+   :alt: Example commit report

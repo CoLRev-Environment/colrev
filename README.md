@@ -1,11 +1,11 @@
-# CoLRev Core
+# CoLRev Framework
 
 [![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 [![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
 
-This repository contains the core engine for CoLRev (**C**olaborative **L**iterature **Rev**iews) and explains its architecture design principles.
+This repository contains the core engine for the CoLRev framework (**C**olaborative **L**iterature **Rev**iews), the reference implementation, and documentation on the CoLRev standard.
 
 # Usage and Documentation
 
@@ -13,7 +13,7 @@ See the [documentation](docs/source/index.rst).
 
 # Credits
 
-We build on the shoulders of amazing projects (growing giants) and benefit from their ongoing improvements
+The reference implementation builds on the shoulders of amazing projects (growing giants) and benefit from their ongoing improvements
 
 - [GitPython](https://github.com/gitpython-developers/GitPython), which is available under a [BSD 3-Clause License](https://github.com/gitpython-developers/GitPython/blob/main/LICENSE). [![GitPython](https://img.shields.io/github/commit-activity/y/gitpython-developers/GitPython?color=green&style=plastic)](https://github.com/gitpython-developers/GitPython)
 - [pre-commit](https://github.com/pre-commit/pre-commit), which is available under an [MIT License](https://github.com/pre-commit/pre-commit/blob/master/LICENSE). [![pre-commit](https://img.shields.io/github/commit-activity/y/pre-commit/pre-commit?color=green&style=plastic)](https://github.com/pre-commit/pre-commit.six)

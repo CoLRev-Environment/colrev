@@ -6,7 +6,12 @@ Load
 
 - Save file in `search/`.
 - Check that the extension corresponds to the file format (see below)
-- Run`colrev load`
+- Run`colrev load`, which
+    - asks for details on the source (records them in sources.yaml)
+    - converts search files (with supported formats) to BiBTex
+    - unifies field names (in line with the source)
+    - creates an origin link for each record
+    - imports the records into the references.bib
 
 .. code:: bash
 
@@ -16,7 +21,7 @@ Load
 Formats
 ---------------
 
-- structured formats (csv, xlsx) are imported using standard Python libraries
+- Structured formats (csv, xlsx) are imported using standard Python libraries
 - Semi-structured formats are imported using bibtexparser or bibutils (.end and .ris)
 - Unstructured formats are imported using Grobid (lists of references and pdf reference lists)
 
@@ -71,6 +76,21 @@ Formats
 - EXCEL: `.xlsx` extension
 
 
+.. list-table::
+   :widths: 28 10 28 23 5
+   :header-rows: 1
+
+   * - author
+     - year
+     - title
+     - journal
+     - ...
+   * - Webster and Watson
+     - 2002
+     - Analyzing the past...
+     - MIS Quarterly
+     - ...
+
 - TXT: `.txt` extension
 
 .. code-block:: text
@@ -79,19 +99,3 @@ Formats
     Webster, J., and Watson, R. T. (2002). Analyzing the past to prepare for the future: Writing a literature review. MIS Quarterly, xiii-xxiii.
 
 - PDF: `.pdf` extension or `_ref_list.pdf` extension
-
-
-Tracing errors and debugging
------------------------------------
-
-- Debugging/tracing errors to review_template, bibutils/Grobid/doi.org
-
-- [ ] Explain how to trace errors in the backward-search (grobid extraction, reference consolidation or the original PDF), test cases:
-
-    - without reference consolidation: curl -X POST -H "Accept: application/x-bibtex" -d "consolidateCitations=0&citations=Abbasi, A., Zhou, Y., Deng, S., and Zhang, P. 2018. “Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective,” MIS Quarterly (42:2), pp. 427-464." localhost:8070/api/processCitation
-    - with reference consolidation: curl -X POST -H "Accept: application/x-bibtex" -d "consolidateCitations=1&citations=Abbasi, A., Zhou, Y., Deng, S., and Zhang, P. 2018. “Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective,” MIS Quarterly (42:2), pp. 427-464." localhost:8070/api/processCitation
-    - TEI: curl -X POST -d "consolidateCitations=1&citations=Abbasi, A., Zhou, Y., Deng, S., and Zhang, P. 2018. “Text Analytics to Support Sense-Making in Social Media: A Language-Action Perspective,” MIS Quarterly (42:2), pp. 427-464." localhost:8070/api/processCitation
-
-- [ ] Explain how to trace errors in bibutils:
-      cat references.ris  | docker run -i --rm bibutils ris2xml /dev/stdin | docker run -i --rm bibutils xml2bib -b -w /dev/stdin
-      cat aisel-ris.ris  | docker run -i --rm bibutils end2xml /dev/stdin | docker run -i --rm bibutils xml2bib -b -w /dev/stdin
