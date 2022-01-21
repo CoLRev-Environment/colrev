@@ -739,17 +739,20 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
             number_similarity = 1
         else:
             number_similarity = 0
+
+        # page similarity is not considered at the moment.
+        #
         # sometimes, only the first page is provided.
-        if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
-            pages_similarity = 1
-        else:
-            if df_a["pages"] == df_b["pages"]:
-                pages_similarity = 1
-            else:
-                if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
-                    pages_similarity = 1
-                else:
-                    pages_similarity = 0
+        # if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
+        #     pages_similarity = 1
+        # else:
+        #     if df_a["pages"] == df_b["pages"]:
+        #         pages_similarity = 1
+        #     else:
+        #         if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
+        #             pages_similarity = 1
+        #         else:
+        #            pages_similarity = 0
 
         # Put more weithe on other fields if the title is very common
         # ie., non-distinctive
@@ -764,9 +767,9 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
             ["editorial note", "editorial note"],
             ["reviewer ackowledgment", "reviewer ackowledgment"],
         ]:
-            weights = [0.175, 0, 0.175, 0.175, 0.175, 0.175, 0.125]
+            weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
         else:
-            weights = [0.25, 0.3, 0.13, 0.2, 0.05, 0.05, 0.02]
+            weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
 
         sim_names = [
             "authors",
@@ -775,7 +778,6 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
             "outlet",
             "volume",
             "number",
-            "pages",
         ]
         similarities = [
             author_similarity,
@@ -784,7 +786,6 @@ def get_similarity_detailed(df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
             outlet_similarity,
             volume_similarity,
             number_similarity,
-            pages_similarity,
         ]
 
     else:
