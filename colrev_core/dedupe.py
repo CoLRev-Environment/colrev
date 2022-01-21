@@ -368,7 +368,7 @@ def apply_merges(REVIEW_MANAGER, results: list):
 
     # results = list(itertools.chain(*results))
 
-    records = REVIEW_MANAGER.load_()
+    records = REVIEW_MANAGER.load_records()
 
     for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
         non_dupe_record_list = [x for x in records if x["ID"] == non_dupe]

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 import yaml
+from urllib3.exceptions import ProtocolError
 from yaml import safe_load
 
 from colrev_core import review_manager
@@ -416,13 +417,17 @@ def update_tei(
                 if tei_path.is_file():
                     git_repo.index.add([str(tei_path)])
 
-            except etree.XMLSyntaxError:
+            except (
+                etree.XMLSyntaxError,
+                ProtocolError,
+                requests.exceptions.ConnectionError,
+            ):
                 del record["tei_file"]
                 pass
     # TODO : only create a commit if there are changes.
     REVIEW_MANAGER.save_records(records)
     REVIEW_MANAGER.add_record_changes()
-    # REVIEW_MANAGER.create_commit("Create TEIs")
+    REVIEW_MANAGER.create_commit("Create TEIs")
 
     # Enhance TEIs (link local IDs)
     for record in records:
@@ -488,7 +493,7 @@ def update_tei(
             # if tei_path.is_file():
             #     git_repo.index.add([str(tei_path)])
 
-    # REVIEW_MANAGER.create_commit("Enhance TEIs")
+    REVIEW_MANAGER.create_commit("Enhance TEIs")
 
     return records
 

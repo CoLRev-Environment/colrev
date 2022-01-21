@@ -146,6 +146,13 @@ def get_status_freq(REVIEW_MANAGER) -> dict:
     stat["atomic_steps"] = atomic_step_number * st_o[str(RecordState.md_imported)]
     stat["completed_atomic_steps"] = completed_atomic_steps
 
+    stat["status"]["currently"]["non_processed"] = (
+        stat["status"]["currently"]["md_imported"]
+        + stat["status"]["currently"]["md_retrieved"]
+        + stat["status"]["currently"]["md_needs_manual_preparation"]
+        + stat["status"]["currently"]["md_prepared"]
+    )
+
     stat["status"]["currently"]["md_duplicates_removed"] = md_duplicates_removed
     stat["status"]["overall"]["md_retrieved"] = get_nr_search(REVIEW_MANAGER)
     stat["status"]["currently"]["md_retrieved"] = (
@@ -302,7 +309,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
             if len(source_state) != 1:
                 # TODO : we should match the current and committed records based
                 # on their origins because IDs may changes (e.g., in the preparation)
-                print(item)
+
                 print(f"Error (no source_state): {transitioned_record}")
                 review_instructions.append(
                     {
@@ -426,6 +433,7 @@ def get_review_instructions(REVIEW_MANAGER, stat) -> list:
 
 
 def get_collaboration_instructions(REVIEW_MANAGER, stat) -> dict:
+
     SHARE_STAT_REQ = REVIEW_MANAGER.config["SHARE_STAT_REQ"]
     found_a_conflict = False
     # git_repo = REVIEW_MANAGER.get_repo()
@@ -513,7 +521,7 @@ def get_collaboration_instructions(REVIEW_MANAGER, stat) -> dict:
 
             # TODO all the following: should all search results be imported?!
             if SHARE_STAT_REQ == "PROCESSED":
-                if 0 == stat["metadata_status"]["currently"]["non_processed"]:
+                if 0 == stat["status"]["currently"]["non_processed"]:
                     collaboration_instructions["status"] = {
                         "title": "Sharing: currently ready for sharing",
                         "level": "SUCCESS",
@@ -659,7 +667,6 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
 
         print(" Search")
         stat_print(False, "Records retrieved", stat["overall"]["md_retrieved"])
-        print("")
         print(" _______________________________________________________________")
         print(" | Metadata preparation                                         ")
         if stat["currently"]["md_retrieved"] > 0:
@@ -733,7 +740,6 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
                 stat["currently"]["rev_prescreen_excluded"],
             )
 
-        print("")
         print(" ______________________________________________________________")
         print(" | PDF preparation                                             ")
         if 0 != stat["currently"]["rev_prescreen_included"]:

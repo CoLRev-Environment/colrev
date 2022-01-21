@@ -58,7 +58,7 @@ def get_exclusion_criteria_from_str(ec_string: str) -> list:
 
 
 def get_exclusion_criteria(records: typing.List[dict]) -> list:
-    ec_list = [x.get("excl_criteria") for x in records if "excl_criteria" in x]
+    ec_list = [str(x.get("excl_criteria")) for x in records if "excl_criteria" in x]
     if 0 == len(ec_list):
         ec_string = ""
     else:

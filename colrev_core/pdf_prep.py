@@ -376,14 +376,6 @@ def get_coverpages(pdf):
     ):
         coverpages.append(0)
 
-    # CAIS First Page
-    if (
-        "communicationsoftheassociationforinformationsystems" in page0
-        and "abstract" not in page0
-        and "keywords" not in page0
-    ):
-        coverpages.append(0)
-
     # AIS First Page
     if (
         "associationforinformationsystemsaiselectroniclibrary(aisel)" in page0
@@ -497,15 +489,20 @@ def prepare_pdf(item: dict) -> dict:
     # pdf_tools.remove_coverpage(filepath)
     # pdf_tools.remove_last_page_info(filepath)
 
+    original_filename = record["file"]
+
     # Note: if there are problems status is set to pdf_needs_manual_preparation
     # if it remains 'imported', all preparation checks have passed
     report_logger.info(f'prepare({record["ID"]})')  # / {record["file"]}
     for prep_script in prep_scripts:
         try:
-            prepped_record = prep_script["script"](*prep_script["params"])
-            # Note : the record should not be changed
-            # if the prep_script throws an exception
-            record = prepped_record
+            if isinstance(record, dict):
+                prepped_record = prep_script["script"](*prep_script["params"])
+                # Note : the record should not be changed
+                # if the prep_script throws an exception
+                record = prepped_record
+            else:
+                record["status"] = RecordState.pdf_needs_manual_preparation
         except (
             subprocess.CalledProcessError,
             timeout_decorator.timeout_decorator.TimeoutError,
@@ -516,11 +513,10 @@ def prepare_pdf(item: dict) -> dict:
             )
             pass
             record["status"] = RecordState.pdf_needs_manual_preparation
-            if "text_from_pdf" in record:
-                del record["text_from_pdf"]
-            if "pages_in_file" in record:
-                del record["pages_in_file"]
-            return record
+
+        except Exception as e:
+            print(e)
+            record["status"] = RecordState.pdf_needs_manual_preparation
 
         failed = RecordState.pdf_needs_manual_preparation == record["status"]
         msg = f'{prep_script["script"].__name__}({record["ID"]}):'.ljust(PAD, " ") + " "
@@ -531,6 +527,8 @@ def prepare_pdf(item: dict) -> dict:
 
     # Each prep_scripts can create a new file
     # previous/temporary pdfs are deleted when the process is successful
+    # The original PDF is never deleted automatically.
+    # If successful, it is renamed to *_backup.pdf
 
     if RecordState.pdf_imported == record["status"]:
         record.update(status=RecordState.pdf_prepared)
@@ -540,6 +538,25 @@ def prepare_pdf(item: dict) -> dict:
                 hash_size=32,
             )
         )
+
+        # status == pdf_imported : means successful
+        # create *_backup.pdf if record['file'] was changed
+        if original_filename != record["file"]:
+
+            current_file = Path(record["file"])
+            original_file = Path(original_filename)
+            if current_file.is_file() and original_file.is_file():
+                backup_filename = original_filename.replace(".pdf", "_backup.pdf")
+                original_file.rename(backup_filename)
+                current_file.rename(original_filename)
+                record["file"] = str(original_file)
+                logger.info(
+                    f"created backup after successful pdf-prep: {backup_filename}"
+                )
+
+            # TODO : cover/test relative file paths!
+            # for relative:
+            # linked_file = REPO_DIR / record["file"]
 
     # Backup:
     # Create a copy of the original PDF if users cannot

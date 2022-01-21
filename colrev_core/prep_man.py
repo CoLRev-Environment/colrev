@@ -63,21 +63,24 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
 
     crosstab_df = pd.DataFrame(crosstab, columns=["origin", "hint"])
 
-    tabulated = pd.pivot_table(
-        crosstab_df[["origin", "hint"]],
-        index=["origin"],
-        columns=["hint"],
-        aggfunc=len,
-        fill_value=0,
-        margins=True,
-    )
-    # .sort_index(axis='columns')
-    tabulated.sort_values(by=["All"], ascending=False, inplace=True)
-    # Transpose because we tend to have more error categories than search files.
-    tabulated = tabulated.transpose()
-    print(tabulated)
-    logger.info("Writing data to file: manual_preparation_statistics.csv")
-    tabulated.to_csv("manual_preparation_statistics.csv")
+    if crosstab_df.empty:
+        print("No records to prepare manually.")
+    else:
+        tabulated = pd.pivot_table(
+            crosstab_df[["origin", "hint"]],
+            index=["origin"],
+            columns=["hint"],
+            aggfunc=len,
+            fill_value=0,
+            margins=True,
+        )
+        # .sort_index(axis='columns')
+        tabulated.sort_values(by=["All"], ascending=False, inplace=True)
+        # Transpose because we tend to have more error categories than search files.
+        tabulated = tabulated.transpose()
+        print(tabulated)
+        logger.info("Writing data to file: manual_preparation_statistics.csv")
+        tabulated.to_csv("manual_preparation_statistics.csv")
 
     # TODO : these should be combined in one dict and returned:
     print("Entry type statistics overall:")

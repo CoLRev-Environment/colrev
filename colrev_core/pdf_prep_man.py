@@ -78,3 +78,61 @@ def set_data(REVIEW_MANAGER, record, PAD: int = 40) -> None:
 def pdfs_prepared_manually(REVIEW_MANAGER) -> bool:
     git_repo = REVIEW_MANAGER.get_repo()
     return git_repo.is_dirty()
+
+
+def pdf_prep_man_stats(REVIEW_MANAGER) -> None:
+
+    from colrev_core.review_manager import Process, ProcessType
+    import pandas as pd
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+    # TODO : this function mixes return values and saving to files.
+    logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
+    records = REVIEW_MANAGER.load_records()
+
+    logger.info("Calculate statistics")
+    stats: dict = {"ENTRYTYPE": {}}
+
+    prep_man_hints = []
+    crosstab = []
+    for record in records:
+
+        if RecordState.pdf_needs_manual_preparation != record["status"]:
+            continue
+
+        if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
+            stats["ENTRYTYPE"][record["ENTRYTYPE"]] = (
+                stats["ENTRYTYPE"][record["ENTRYTYPE"]] + 1
+            )
+        else:
+            stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
+
+        if "pdf_prep_hints" in record:
+            hints = record["pdf_prep_hints"].split(";")
+            prep_man_hints.append(hints)
+
+            for hint in hints:
+                crosstab.append([record["journal"], hint])
+
+    crosstab_df = pd.DataFrame(crosstab, columns=["journal", "hint"])
+
+    if crosstab_df.empty:
+        print("No records to prepare manually.")
+    else:
+        tabulated = pd.pivot_table(
+            crosstab_df[["journal", "hint"]],
+            index=["journal"],
+            columns=["hint"],
+            aggfunc=len,
+            fill_value=0,
+            margins=True,
+        )
+        # .sort_index(axis='columns')
+        tabulated.sort_values(by=["All"], ascending=False, inplace=True)
+        # Transpose because we tend to have more error categories than search files.
+        tabulated = tabulated.transpose()
+        print(tabulated)
+        logger.info("Writing data to file: manual_preparation_statistics.csv")
+        tabulated.to_csv("manual_pdf_preparation_statistics.csv")
+
+    return

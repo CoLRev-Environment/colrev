@@ -38,7 +38,8 @@ def debug_load() -> None:
     from colrev_core import load
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.explore, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+
     rec_header_lis = REVIEW_MANAGER.get_record_header_list()
     origin_list = [x[1] for x in rec_header_lis]
 
@@ -72,7 +73,7 @@ def debug_prep() -> None:
     )
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.prep))
 
     record = {
         "ENTRYTYPE": "article",
@@ -109,7 +110,7 @@ def debug_pdf_get():
     from colrev_core import pdf_get
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.pdf_get, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_get))
 
     record = {
         "ENTRYTYPE": "article",
@@ -138,7 +139,7 @@ def debug_data():
     from colrev_core import data
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.data, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.data))
 
     records = REVIEW_MANAGER.load_records()
     included = data.get_records_for_synthesis(records)
@@ -173,7 +174,7 @@ def debug_pdf_prep():
     from pdfminer.pdfparser import PDFParser
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
 
     records = REVIEW_MANAGER.load_records()
     from colrev_core.review_manager import (
@@ -184,7 +185,7 @@ def debug_pdf_prep():
     from colrev_core import pdf_prep
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.prep))
 
     records = REVIEW_MANAGER.load_records()
 
@@ -199,10 +200,6 @@ def debug_pdf_prep():
     text = pdf_prep.extract_text_by_page(record, [pages_in_file - 1])
     print(text.lower().replace(" ", ""))
 
-    # "copyrightofacademyofmanagementreviewisthepropertyofacademyofmanagementanditscontentmaynotbecopiedoremailedtomultiplesitesorpostedtoalistservwithoutthecopyrightholder'sexpresswrittenpermission.however,usersmayprint,download,oremailarticlesforindividualuse."
-
-    # FOR LAST-Pages
-
     return
 
 
@@ -215,7 +212,7 @@ def get_non_unique_pdf_hashes() -> None:
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep, str))
+    REVIEW_MANAGER.notify(Process(ProcessType.prep))
     records = REVIEW_MANAGER.load_records()
 
     import collections
@@ -227,7 +224,7 @@ def get_non_unique_pdf_hashes() -> None:
     df = pd.DataFrame(pdf_hashes, columns=["pdf_hashes"])
 
     df.to_csv("pdf_hashes.csv", index=False)
-    return
+    return df
 
 
 def main():

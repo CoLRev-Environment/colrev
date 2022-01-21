@@ -292,7 +292,7 @@ def format(record: dict) -> dict:
             )
 
     if "doi" in record:
-        record.update(doi=record["doi"].replace("http://dx.doi.org/", ""))
+        record.update(doi=record["doi"].replace("http://dx.doi.org/", "").upper())
 
     if "number" not in record and "issue" in record:
         record.update(number=record["issue"])
@@ -409,6 +409,16 @@ def crossref_json_to_record(item: dict) -> dict:
     # Note: the format differst between crossref and doi.org
     record: dict = {}
 
+    if "link" in item:
+        fulltext_link_l = [u["URL"] for u in item["link"] if "pdf" in u["content-type"]]
+        if len(fulltext_link_l) == 1:
+            record["fulltext"] = fulltext_link_l.pop()
+        item["link"] = [u for u in item["link"] if "pdf" not in u["content-type"]]
+        if len(item["link"]) >= 1:
+            link = item["link"][0]["URL"]
+            if link != record.get("fulltext", ""):
+                record["link"] = link
+
     if "title" in item:
         retrieved_title = item["title"]
         if isinstance(retrieved_title, list):
@@ -442,7 +452,7 @@ def crossref_json_to_record(item: dict) -> dict:
                 record.update(series=container_title)
 
     if "DOI" in item:
-        record.update(doi=item["DOI"])
+        record.update(doi=item["DOI"].upper())
 
     authors = [
         f'{author["family"]}, {author.get("given", "")}'
@@ -665,11 +675,7 @@ def get_retrieval_similarity(record: dict, retrieved_record: dict) -> float:
 
 
 def get_md_from_crossref(record: dict) -> dict:
-    if (
-        ("title" not in record)
-        or ("doi" in record)
-        or is_complete_metadata_source(record)
-    ):
+    if "title" not in record:
         return record
 
     enrich_only = False
@@ -705,7 +711,10 @@ def get_md_from_crossref(record: dict) -> dict:
                     # Note: no abstracts in crossref?
                     # if enrich_only and 'abstract' != key:
                     #     continue
-                    record[key] = val
+                    if "author" == key:
+                        record[key] = select_best_author(record["author"], val)
+                    else:
+                        record[key] = val
                 if not enrich_only:
                     record.update(metadata_source="CROSSREF")
         except requests.exceptions.HTTPError:
@@ -783,7 +792,7 @@ def sem_scholar_json_to_record(item: dict, record: dict) -> dict:
     if "abstract" in item:
         retrieved_record.update(abstract=item["abstract"])
     if "doi" in item:
-        retrieved_record.update(doi=item["doi"])
+        retrieved_record.update(doi=str(item["doi"]).upper())
     if "title" in item:
         retrieved_record.update(title=item["title"])
     if "year" in item:
@@ -896,8 +905,7 @@ def open_library_json_to_record(item: dict) -> dict:
 
 
 def get_md_from_open_library(record: dict) -> dict:
-    if is_complete_metadata_source(record):
-        return record
+
     # only consider entries that are not journal or conference papers
     if record.get("ENTRYTYPE", "NA") in ["article", "inproceedings"]:
         return record
@@ -1022,7 +1030,7 @@ def dblp_json_to_record(item: dict) -> dict:
         retrieved_record["dblp_key"] = item["key"]
 
     if "doi" in item:
-        retrieved_record["doi"] = item["doi"]
+        retrieved_record["doi"] = item["doi"].upper()
     if "url" not in item:
         retrieved_record["url"] = item["ee"]
 
@@ -1033,8 +1041,7 @@ def dblp_json_to_record(item: dict) -> dict:
 
 
 def get_md_from_dblp(record: dict) -> dict:
-    if is_complete_metadata_source(record):
-        return record
+
     # TODO: check if the url/dblp_key already points to a dblp page?
     try:
         api_url = "https://dblp.org/search/publ/api?q="
@@ -1096,6 +1103,27 @@ def get_md_from_dblp(record: dict) -> dict:
     return record
 
 
+def select_best_author(default: str, candidate: str) -> str:
+    # TODO check if they contain the same authors (fuzzy/partial?)
+
+    # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
+    if ", and " in default and ", and " not in candidate:
+        return candidate
+    if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
+        return candidate
+
+    default_mostly_upper = (
+        sum(word.isupper() for word in default.split()) / len(default.split()) > 0.8
+    )
+    candidate_mostly_upper = (
+        sum(word.isupper() for word in candidate.split()) / len(candidate.split()) > 0.8
+    )
+    if default_mostly_upper and not candidate_mostly_upper:
+        return candidate
+
+    return default
+
+
 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
 doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
@@ -1128,7 +1156,10 @@ def retrieve_doi_metadata(record: dict) -> dict:
         retrieved_record = crossref_json_to_record(retrieved_json)
         for key, val in retrieved_record.items():
             if val:
-                record[key] = str(val)
+                if "author" == key:
+                    record[key] = select_best_author(record["author"], val)
+                else:
+                    record[key] = str(val)
 
     # except IndexError:
     # except json.decoder.JSONDecodeError:
@@ -1143,9 +1174,7 @@ def retrieve_doi_metadata(record: dict) -> dict:
     return record
 
 
-def get_md_from_urls(record: dict) -> dict:
-    if is_complete_metadata_source(record):
-        return record
+def get_doi_from_urls(record: dict) -> dict:
 
     url = record.get("url", record.get("fulltext", "NA"))
     if "NA" != url:
@@ -1165,7 +1194,7 @@ def get_md_from_urls(record: dict) -> dict:
                 if not ret_dois:
                     return record
                 for doi, freq in ret_dois:
-                    retrieved_record = {"doi": doi, "ID": record["ID"]}
+                    retrieved_record = {"doi": doi.upper(), "ID": record["ID"]}
                     retrieved_record = retrieve_doi_metadata(retrieved_record)
                     similarity = get_retrieval_similarity(
                         record.copy(), retrieved_record.copy()
@@ -1226,7 +1255,9 @@ def is_complete(record: dict) -> bool:
 def is_complete_metadata_source(record: dict) -> bool:
     # Note: metadata_source is set at the end of each procedure
     # that completes/corrects metadata based on an external source
-    return record["metadata_source"] not in ["ORIGINAL", "SEMANTIC_SCHOLAR"]
+    return (record["metadata_source"] in ["DOI.ORG", "CROSSREF", "DBLP"]) and (
+        "title" in record and "author" in record and "year" in record
+    )
 
 
 record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
@@ -1316,6 +1347,7 @@ fields_to_keep = [
     "date",
     "grobid-version",
     "pdf_hash",
+    "wos_accession_number",
 ]
 fields_to_drop = [
     "type",
@@ -1375,6 +1407,19 @@ def drop_fields(record: dict) -> dict:
     if "publisher" in record:
         if "researchgate.net" == record["publisher"]:
             del record["publisher"]
+    return record
+
+
+def remove_broken_dois(record: dict) -> dict:
+
+    if "doi" not in record:
+        return record
+
+    # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+    d = re.match(r"^10.\d{4}/", record["doi"])
+    if not d:
+        del record["doi"]
+
     return record
 
 
@@ -1626,6 +1671,7 @@ def prepare(item: dict) -> dict:
     prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
         {"script": drop_fields, "params": [record]},
         {"script": remove_urls_with_500_errors, "params": [record]},
+        {"script": remove_broken_dois, "params": [record]},
         {"script": exclude_non_latin_alphabets, "params": [record]},
         {
             "script": update_local_paper_index_fields,
@@ -1636,7 +1682,7 @@ def prepare(item: dict) -> dict:
         {"script": format, "params": [record]},
         {"script": apply_local_rules, "params": [record]},
         {"script": get_doi_from_sem_scholar, "params": [record]},
-        {"script": get_md_from_urls, "params": [record]},
+        {"script": get_doi_from_urls, "params": [record]},
         {"script": get_md_from_doi, "params": [record]},
         {"script": get_md_from_crossref, "params": [record]},
         {"script": get_md_from_dblp, "params": [record]},
@@ -1835,6 +1881,60 @@ def update_doi_md(REVIEW_MANAGER) -> None:
     return
 
 
+def polish(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+    import collections
+    import lxml
+    from lxml import etree
+    from colrev_core import tei_tools
+
+    REVIEW_MANAGER.notify(Process(ProcessType.prep))
+    records = REVIEW_MANAGER.load_records()
+
+    # TODO : switch loops (requires a different data structure...)
+    for record in records:
+
+        if record["status"] not in [
+            RecordState.rev_included,
+            RecordState.rev_synthesized,
+        ]:
+            continue
+        logger.info(f'Polishing {record["ID"]}')
+
+        title_variations = []
+        journal_variations = []
+
+        for tei_file in Path("tei").glob("*.tei.xml"):
+            try:
+                with open(tei_file, "rb") as tf:
+                    xml_string = tf.read()
+                root = etree.fromstring(xml_string)
+                tei_records = tei_tools.get_bibliography(root)
+
+                for ref in tei_records:
+                    if record["ID"] == ref["ID"]:
+                        if "title" in ref:
+                            title_variations.append(ref["title"])
+                        if "journal" in ref:
+                            journal_variations.append(ref["journal"])
+                        # TODO : other fields...
+            except lxml.etree.XMLSyntaxError:
+                continue
+
+        if len(title_variations) > 2:
+            title_counter = collections.Counter(title_variations)
+            record["title"] = title_counter.most_common()[0][0]
+
+        if len(journal_variations) > 2 and "journal" in record:
+            journal_counter = collections.Counter(journal_variations)
+            record["journal"] = journal_counter.most_common()[0][0]
+
+    REVIEW_MANAGER.save_records(records)
+    REVIEW_MANAGER.add_record_changes()
+    REVIEW_MANAGER.create_commit("Polish metadata based on PDFs")
+    return
+
+
 def get_data(REVIEW_MANAGER):
     from colrev_core.review_manager import RecordState
 
@@ -1859,7 +1959,7 @@ def get_data(REVIEW_MANAGER):
     return prep_data
 
 
-def set_to_reprocess(REVIEW_MANAGER):
+def set_to_reprocess(REVIEW_MANAGER, reprocess_state):
     # Note: resetting needs_manual_preparation to imported would also be
     # consistent with the check_valid_transitions because it will either
     # transition to prepared or to needs_manual_preparation
@@ -1868,7 +1968,7 @@ def set_to_reprocess(REVIEW_MANAGER):
     [
         r.update(status=RecordState.md_imported)
         for r in records
-        if RecordState.md_needs_manual_preparation == r["status"]
+        if RecordState[reprocess_state] == r["status"]
     ]
     REVIEW_MANAGER.save_records(records)
     return
@@ -1917,7 +2017,7 @@ def batch(items, REVIEW_MANAGER):
 def main(
     REVIEW_MANAGER: ReviewManager,
     RETRIEVAL_SIMILARITY_INPUT: float = 0.0,
-    reprocess: bool = False,
+    reprocess_state: RecordState = RecordState.md_imported,
     keep_ids: bool = False,
 ) -> None:
 
@@ -1930,14 +2030,14 @@ def main(
         saved_args["RETRIEVAL_SIMILARITY"] = RETRIEVAL_SIMILARITY
         RETRIEVAL_SIMILARITY = RETRIEVAL_SIMILARITY
     else:
-        reprocess = True
+        reprocess_state = RecordState.md_needs_manual_preparation
         saved_args["RETRIEVAL_SIMILARITY"] = RETRIEVAL_SIMILARITY_INPUT
         RETRIEVAL_SIMILARITY = RETRIEVAL_SIMILARITY_INPUT
 
     if not keep_ids:
         del saved_args["keep_ids"]
-    if not reprocess:
-        del saved_args["reprocess"]
+    if reprocess_state == RecordState.md_imported:
+        del saved_args["reprocess_state"]
 
     global EMAIL
     EMAIL = REVIEW_MANAGER.config["EMAIL"]
@@ -1947,8 +2047,8 @@ def main(
 
     CPUS = REVIEW_MANAGER.config["CPUS"] * 5
 
-    if reprocess:
-        set_to_reprocess(REVIEW_MANAGER)
+    if reprocess_state != "":
+        set_to_reprocess(REVIEW_MANAGER, reprocess_state)
 
     prepare_data = get_data(REVIEW_MANAGER)
     logger.debug(f"prepare_data: {pp.pformat(prepare_data)}")

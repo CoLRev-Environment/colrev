@@ -264,6 +264,7 @@ def get_bibtex_writer() -> BibTexWriter:
         "doi",
         "grobid-version",
         "dblp_key",
+        "wos_accession_number",
         "author",
         "booktitle",
         "journal",
@@ -298,7 +299,8 @@ def get_file_paths(repository_dir_str: str) -> dict:
     readme = "readme.md"
     report = "report.log"
     search_dir = "search"
-    local_registry = ".colrev.yaml"
+    local_colrev_config = Path.home().joinpath(".colrev")
+    local_registry = "registry.yaml"
     return {
         "REPO_DIR": repository_dir,
         "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -321,7 +323,7 @@ def get_file_paths(repository_dir_str: str) -> dict:
         "REPORT": repository_dir.joinpath(report),
         "SEARCHDIR_RELATIVE": Path(search_dir),
         "SEARCHDIR": repository_dir.joinpath(search_dir),
-        "LOCAL_REGISTRY": Path.home().joinpath(local_registry),
+        "LOCAL_REGISTRY": local_colrev_config.joinpath(local_registry),
     }
 
 
@@ -1853,7 +1855,7 @@ class ReviewManager:
             contents = f.read()
             if "Command" not in contents:
                 update = True
-            if "Certified properties" in contents:
+            if "Properties" in contents:
                 update = False
         with open(msg_file, "w") as f:
             f.write(contents)
@@ -1972,6 +1974,12 @@ class ReviewManager:
                     for r in records
                 ]
 
+                # DOIs are case sensitive -> use upper case.
+                records = [
+                    {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
+                    for r in records
+                ]
+
         else:
             if init:
                 records = []
@@ -2000,6 +2008,11 @@ class ReviewManager:
         records = [
             {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
             for r in records
+        ]
+
+        # DOIs are case sensitive -> use upper case.
+        records = [
+            {k: v.upper() if ("doi" == k) else v for k, v in r.items()} for r in records
         ]
 
         return
@@ -2153,7 +2166,7 @@ class ReviewManager:
 
         tree_hash = git_repo.git.execute(["git", "write-tree"])
         if self.paths["MAIN_REFERENCES"].is_file():
-            tree_info = f"Certified properties for tree {tree_hash}\n"  # type: ignore
+            tree_info = f"Properties for tree {tree_hash}\n"  # type: ignore
             report = report + "\n\n" + tree_info
             report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
             report = (
@@ -2176,7 +2189,8 @@ class ReviewManager:
             report = (
                 report
                 + "   To validate use".ljust(38, " ")
-                + "colrev_core validate --properties "
+                + "colrev validate --properties\n"
+                + "".ljust(38, " ")
                 + "--commit INSERT_COMMIT_HASH"
             )
         report = report + "\n"

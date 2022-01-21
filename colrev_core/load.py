@@ -153,6 +153,13 @@ def load_records(filepath: Path, REVIEW_MANAGER) -> list:
             # deduplicated against the other records in the repository
             record["status"] = RecordState.md_prepared
 
+        if "doi" in record:
+            record.update(doi=record["doi"].replace("http://dx.doi.org/", "").upper())
+            # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+            d = re.match(r"^10.\d{4}/", record["doi"])
+            if not d:
+                del record["doi"]
+
         logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
 
@@ -265,7 +272,7 @@ def append_sources(REVIEW_MANAGER, new_record: dict) -> None:
         f" \n{pp.pformat(new_record)}"
     )
     REVIEW_MANAGER.save_sources(sources)
-    return
+    return sources
 
 
 def bibutils_convert(script: str, data: str) -> str:

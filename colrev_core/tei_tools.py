@@ -167,6 +167,59 @@ def get_paper_year(root: Element) -> str:
     return year
 
 
+def get_author_name_from_node(author_node) -> str:
+    authorname = ""
+
+    author_pers_node = author_node.find(ns["tei"] + "persName")
+    if author_pers_node is None:
+        return authorname
+    surname_node = author_pers_node.find(ns["tei"] + "surname")
+    if surname_node is not None:
+        surname = surname_node.text if surname_node.text is not None else ""
+    else:
+        surname = ""
+
+    forename_node = author_pers_node.find(ns["tei"] + 'forename[@type="first"]')
+    if forename_node is not None:
+        forename = forename_node.text if forename_node.text is not None else ""
+    else:
+        forename = ""
+
+    if 1 == len(forename):
+        forename = forename + "."
+
+    middlename_node = author_pers_node.find(ns["tei"] + 'forename[@type="middle"]')
+    if middlename_node is not None:
+        middlename = (
+            " " + middlename_node.text if middlename_node.text is not None else ""
+        )
+    else:
+        middlename = ""
+
+    if 1 == len(middlename):
+        middlename = middlename + "."
+
+    authorname = surname + ", " + forename + middlename
+
+    authorname = (
+        authorname.replace("\n", " ")
+        .replace("\r", "")
+        .replace("•", "")
+        .replace("+", "")
+        .replace("Dipl.", "")
+        .replace("Prof.", "")
+        .replace("Dr.", "")
+        .replace("&apos", "'")
+        .replace("❚", "")
+        .replace("~", "")
+        .replace("®", "")
+        .replace("|", "")
+    )
+
+    authorname = re.sub("^Paper, Short; ", "", authorname)
+    return authorname
+
+
 def get_paper_authors(root: Element) -> str:
     author_string = "NA"
     file_description = root.find(".//" + ns["tei"] + "sourceDesc")
@@ -177,69 +230,12 @@ def get_paper_authors(root: Element) -> str:
             analytic_node = file_description.find(".//" + ns["tei"] + "analytic")
             if analytic_node is not None:
                 for author_node in analytic_node.iterfind(ns["tei"] + "author"):
-                    authorname = ""
 
-                    author_pers_node = author_node.find(ns["tei"] + "persName")
-                    if author_pers_node is None:
-                        continue
-                    surname_node = author_pers_node.find(ns["tei"] + "surname")
-                    if surname_node is not None:
-                        surname = (
-                            surname_node.text if surname_node.text is not None else ""
-                        )
-                    else:
-                        surname = ""
-
-                    forename_node = author_pers_node.find(
-                        ns["tei"] + 'forename[@type="first"]'
-                    )
-                    if forename_node is not None:
-                        forename = (
-                            forename_node.text if forename_node.text is not None else ""
-                        )
-                    else:
-                        forename = ""
-
-                    if 1 == len(forename):
-                        forename = forename + "."
-
-                    middlename_node = author_pers_node.find(
-                        ns["tei"] + 'forename[@type="middle"]'
-                    )
-                    if middlename_node is not None:
-                        middlename = (
-                            " " + middlename_node.text
-                            if middlename_node.text is not None
-                            else ""
-                        )
-                    else:
-                        middlename = ""
-
-                    if 1 == len(middlename):
-                        middlename = middlename + "."
-
-                    authorname = surname + ", " + forename + middlename
-                    if ", " != authorname:
+                    authorname = get_author_name_from_node(author_node)
+                    if ", " != authorname and "" != authorname:
                         author_list.append(authorname)
 
                 author_string = " and ".join(author_list)
-
-                author_string = (
-                    author_string.replace("\n", " ")
-                    .replace("\r", "")
-                    .replace("•", "")
-                    .replace("+", "")
-                    .replace("Dipl.", "")
-                    .replace("Prof.", "")
-                    .replace("Dr.", "")
-                    .replace("&apos", "'")
-                    .replace("❚", "")
-                    .replace("~", "")
-                    .replace("®", "")
-                    .replace("|", "")
-                )
-
-                author_string = re.sub("^Paper, Short; ", "", author_string)
 
                 # TODO: deduplicate
                 if author_string is None:
@@ -307,3 +303,129 @@ def get_record_from_pdf_tei(filepath: Path) -> dict:
             print(f"problem in filename: {k}")
 
     return record
+
+
+def get_bibliography(root):
+
+    tei_bib_db = []
+
+    bibliographies = root.iter(ns["tei"] + "listBibl")
+    for bibliography in bibliographies:
+        for reference in bibliography:
+
+            ref_rec = {
+                "ID": get_reference_bibliography_id(reference),
+                "tei_id": get_reference_bibliography_tei_id(reference),
+                "author": get_reference_author_string(reference),
+                "title": get_reference_title_string(reference),
+                "year": get_reference_year_string(reference),
+                "journal": get_reference_journal_string(reference),
+            }
+            ref_rec = {k: v for k, v in ref_rec.items() if v is not None}
+            # print(ref_rec)
+            tei_bib_db.append(ref_rec)
+
+    return tei_bib_db
+
+
+# (individual) bibliography-reference elements  ----------------------------
+
+
+def get_reference_bibliography_id(reference):
+    if "ID" in reference.attrib:
+        return reference.attrib["ID"]
+    else:
+        return ""
+
+
+def get_reference_bibliography_tei_id(reference):
+    return reference.attrib[ns["w3"] + "id"]
+
+
+def get_reference_author_string(reference):
+    author_list = []
+    if reference.find(ns["tei"] + "analytic") is not None:
+        authors_node = reference.find(ns["tei"] + "analytic")
+    elif reference.find(ns["tei"] + "monogr") is not None:
+        authors_node = reference.find(ns["tei"] + "monogr")
+
+    for author_node in authors_node.iterfind(ns["tei"] + "author"):
+
+        authorname = get_author_name_from_node(author_node)
+
+        if ", " != authorname and "" != authorname:
+            author_list.append(authorname)
+
+    author_string = " and ".join(author_list)
+
+    author_string = (
+        author_string.replace("\n", " ")
+        .replace("\r", "")
+        .replace("•", "")
+        .replace("+", "")
+        .replace("Dipl.", "")
+        .replace("Prof.", "")
+        .replace("Dr.", "")
+        .replace("&apos", "'")
+        .replace("❚", "")
+        .replace("~", "")
+        .replace("®", "")
+        .replace("|", "")
+    )
+
+    # TODO: deduplicate
+    if author_string is None:
+        author_string = "NA"
+    if "" == author_string.replace(" ", "").replace(",", "").replace(";", ""):
+        author_string = "NA"
+    return author_string
+
+
+def get_reference_title_string(reference):
+    title_string = ""
+    if reference.find(ns["tei"] + "analytic") is not None:
+        title = reference.find(ns["tei"] + "analytic").find(ns["tei"] + "title")
+    elif reference.find(ns["tei"] + "monogr") is not None:
+        title = reference.find(ns["tei"] + "monogr").find(ns["tei"] + "title")
+    if title is None:
+        title_string = "NA"
+    else:
+        title_string = title.text
+    return title_string
+
+
+def get_reference_year_string(reference):
+    year_string = ""
+    if reference.find(ns["tei"] + "monogr") is not None:
+        year = (
+            reference.find(ns["tei"] + "monogr")
+            .find(ns["tei"] + "imprint")
+            .find(ns["tei"] + "date")
+        )
+    elif reference.find(ns["tei"] + "analytic") is not None:
+        year = (
+            reference.find(ns["tei"] + "analytic")
+            .find(ns["tei"] + "imprint")
+            .find(ns["tei"] + "date")
+        )
+
+    if year is not None:
+        for name, value in sorted(year.items()):
+            if name == "when":
+                year_string = value
+            else:
+                year_string = "NA"
+    else:
+        year_string = "NA"
+    return year_string
+
+
+def get_reference_journal_string(reference):
+    journal_title = ""
+    if reference.find(ns["tei"] + "monogr") is not None:
+        journal_title = (
+            reference.find(ns["tei"] + "monogr").find(ns["tei"] + "title").text
+        )
+    if journal_title is None:
+        journal_title = ""
+    return journal_title
