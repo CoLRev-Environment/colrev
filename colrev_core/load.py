@@ -13,9 +13,11 @@ import requests
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
+from yaml import safe_load
 
 import docker
 from colrev_core import grobid_client
+from colrev_core import load_custom
 from colrev_core.review_manager import RecordState
 from colrev_core.review_manager import ReviewManager
 
@@ -128,6 +130,8 @@ def load_records(filepath: Path, REVIEW_MANAGER) -> list:
                         logger.error(f"{ID} not imported")
                 line = f.readline()
 
+    search_records = unify_field_names(search_records, REVIEW_MANAGER, filepath.name)
+
     record_list = []
     for record in search_records:
         record.update(origin=f"{filepath.name}/{record['ID']}")
@@ -162,41 +166,6 @@ def load_records(filepath: Path, REVIEW_MANAGER) -> list:
 
         logger.debug(f'append record {record["ID"]} ' f"\n{pp.pformat(record)}\n\n")
         record_list.append(record)
-
-    # Source-specific field mappings/corrections
-    sources = REVIEW_MANAGER.load_sources()
-
-    source = [source for source in sources if filepath.name == source["filename"]].pop()
-    if source["source_name"] == "AISeLibrary":
-        for record in record_list:
-            # Note : simple heuristic
-            # but at the moment, AISeLibrary only indexes articles and conference papers
-            if "volume" in record or "number" in record:
-                record["ENTRYTYPE"] = "article"
-                if "journal" not in record and "booktitle" in record:
-                    record["journal"] = record["booktitle"]
-                    del record["booktitle"]
-                if (
-                    "journal" not in record
-                    and "title" in record
-                    and "chapter" in record
-                ):
-                    record["journal"] = record["title"]
-                    record["title"] = record["chapter"]
-                    del record["chapter"]
-            else:
-                record["ENTRYTYPE"] = "inproceedings"
-                if (
-                    "booktitle" not in record
-                    and "title" in record
-                    and "chapter" in record
-                ):
-                    record["booktitle"] = record["title"]
-                    record["title"] = record["chapter"]
-                    del record["chapter"]
-                if "journal" in record and "booktitle" not in record:
-                    record["booktitle"] = record["journal"]
-                    del record["journal"]
 
     return record_list
 
@@ -243,25 +212,24 @@ def import_record(record: dict) -> dict:
     return record
 
 
-def source_heuristics(search_file: Path) -> str:
-    if str(search_file).endswith("_ref_list.bib"):
-        return "PDF reference section"
-    if search_file.suffix == ".pdf":
-        return "PDF"
-    with open(search_file) as f:
-        for line in f.readlines():
-            if (
-                "bibsource = {dblp computer science"
-                + " bibliography, https://dblp.org}"
-                in line
-            ):
-                return "DBLP"
-            if "UT_(Unique_WOS_ID) = {WOS:" in line:
-                return "WebOfScience"
-            if "https://aisel.aisnet.org/" in line:
-                return "AISeLibrary"
+def apply_source_heuristics(new_record: dict, sfp: Path, original: Path) -> dict:
 
-    return ""
+    if str(original).endswith("_ref_list.bib"):
+        new_record["source_name"] = "PDF reference section"
+    if original.suffix == ".pdf":
+        new_record["source_name"] = "PDF"
+    data = ""
+    # TODO : tbd: how we deal with misleading file extensions.
+    try:
+        data = original.read_text()
+    except UnicodeDecodeError:
+        pass
+    for source in [x for x in load_custom.scripts if "heuristic" in x]:
+        if source["heuristic"](original, data):
+            new_record["source_name"] = source["source_name"]
+            break
+
+    return new_record
 
 
 def append_sources(REVIEW_MANAGER, new_record: dict) -> None:
@@ -507,34 +475,31 @@ def pdfRefs2bib(file: Path) -> typing.List[dict]:
     return []
 
 
-def unify_field_names(records: typing.List[dict]) -> typing.List[dict]:
+def unify_field_names(
+    records: typing.List[dict], REVIEW_MANAGER, sfp: str
+) -> typing.List[dict]:
 
-    # At some point, this may depend on the source (database)
-    # This should be available in the sources.
+    SOURCES = REVIEW_MANAGER.paths["SOURCES"]
+    source_name = "NA"
+    with open(SOURCES) as f:
+        sources_df = pd.json_normalize(safe_load(f))
+        sources = sources_df.to_dict("records")
+        if sfp in [x["filename"] for x in sources]:
+            source_name = [
+                x["source_name"] for x in sources if sfp == x["filename"]
+            ].pop()
+
+    # Note : field name corrections etc. that should be fixed before the preparation
+    # stages should be source-specific (in the load_custom.scripts):
     # Note : if we do not unify (at least the author/year), the IDs of imported records
     # will be AnonymousNoYear a,b,c,d,....
-    for record in records:
-        if "Publication_Type" in record:
-            if "J" == record["Publication_Type"]:
-                record["ENTRYTYPE"] = "article"
-            if "C" == record["Publication_Type"]:
-                record["ENTRYTYPE"] = "inproceedings"
-            del record["Publication_Type"]
-        if "Author_Full_Names" in record:
-            record["author"] = record["Author_Full_Names"]
-            del record["Author_Full_Names"]
-        if "Publication_Year" in record:
-            record["year"] = record["Publication_Year"]
-            # match =re.match(r'([1-3][0-9]{3})', record['year'])
-            # if match is not None:
-            #     record['year'] = match.group(1)
-            del record["Publication_Year"]
-        if "Start_Page" in record and "End_Page" in record:
-            if record["Start_Page"] != "nan" and record["End_Page"] != "nan":
-                record["pages"] = record["Start_Page"] + "--" + record["End_Page"]
-                record["pages"] = record["pages"].replace(".0", "")
-                del record["Start_Page"]
-                del record["End_Page"]
+    if source_name != "NA":
+        if source_name in [x["source_name"] for x in load_custom.scripts]:
+            source_details = [
+                x for x in load_custom.scripts if source_name == x["source_name"]
+            ].pop()
+            if "load_script" in source_details:
+                records = source_details["load_script"](records)
 
     return records
 
@@ -624,40 +589,16 @@ def convert_to_bib(REVIEW_MANAGER, sfpath: Path) -> Path:
 
         records = fix_keys(records)
         records = set_incremental_IDs(records)
-        records = unify_field_names(records)
+
+        records = unify_field_names(
+            records, REVIEW_MANAGER, corresponding_bib_file.name
+        )
         records = drop_empty_fields(records)
 
-        git_repo = REVIEW_MANAGER.get_repo()
         if len(records) == 0:
             report_logger.error("No records loaded")
             logger.error("No records loaded")
             return corresponding_bib_file
-
-        elif "pdf" == filetype:
-            new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
-            new_record = {
-                "filename": corresponding_bib_file.name,
-                "search_type": "OTHER",
-                "source_name": "PDF (metadata)",
-                "source_url": new_fp,
-                "search_parameters": "NA",
-                "comment": "Extracted with GROBID",
-            }
-            append_sources(REVIEW_MANAGER, new_record)
-            git_repo.index.add([new_fp])
-
-        elif "pdf_refs" == filetype:
-            new_fp = move_to_pdf_dir(REVIEW_MANAGER, sfpath)
-            new_record = {
-                "filename": corresponding_bib_file.name,
-                "search_type": "BACK_CIT",
-                "source_name": "PDF backward search",
-                "source_url": new_fp,
-                "search_parameters": "NA",
-                "comment": "Extracted with GROBID",
-            }
-            append_sources(REVIEW_MANAGER, new_record)
-            git_repo.index.add([new_fp])
 
         if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
             if not corresponding_bib_file.is_file():
