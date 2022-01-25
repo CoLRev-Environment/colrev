@@ -39,7 +39,15 @@ With ever growing volumes and heterogeneity of research, there is a growing **ne
 Literature reviews, in their current form, do not effectively leverage data from prior reviews (e.g., in the duplicate detection process, the preparation of metadata and PDFs, or the classification of documents).
 As an implication, a clear vision for effectively leveraging evidence and establishing reuse paths (crowdsourcing) is needed.
 
-.. figure:: ../../figures/macro_framework.png
+Efficient and transparent access to changes is of critical importance to
+
+1. develop confidence in the review process,
+2. communicate and justify the trustworthiness of the results,
+3. improve individual contributions (e.g., train research assistants, to validate algorithms),
+4. be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced,
+5. efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
+
+.. figure:: ../../figures/macro_framework.svg
    :alt: Macro framework
 
 .. _architecture:
@@ -89,7 +97,7 @@ The overview defines the micro-level steps and situates them in the three macro-
 Each step can effect a state transition for a record, as recorded in the *status* field.
 Key considerations are documented in the guides for the reference implementation.
 
-.. figure:: ../../figures/states-overview.png
+.. figure:: ../../figures/state-machine.svg
    :width: 700
    :alt: Overview of states
 
@@ -102,37 +110,15 @@ The CoLRev framework is based on an opinionated and well-justified selection of 
 Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) without any side-effects on the analysis and synthesis process/outcomes.
 
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
-Having access to these data and being able ot analyze them efficiently is of critical importance to
+Examples of transparent changes and a commit report are available in the `changes section <../guides/changes.html>`_.
 
-1. develop confidence in the review process,
-2. communicate and justify the trustworthiness of the results,
-3. improve individual contributions (e.g., train research assistants, to validate algorithms),
-4. be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced,
-5. efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
-
-Examples of transparency in different stages are provided below.
-
-To accomplish these goals, CoLRev tracks a status for each record.
+To accomplish these goals, CoLRev tracks a status for each record (see :any:`Shared model for the steps of the review process`).
 
 - The status is used to determine the current state of the review project
 - It is used by the ReviewManager to determine which operations are valid according to the processing order (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
 - Tracking record status enables incremental duplicate detection (record pairs that have passed deduplication once do not need to be checked again in the next iterations)
 - Strictly adhering to the state machine allows us to rely on a simple data structure (e.g., status="synthesized" implies pdf_prepared, md_prepared, rev_included, rev_prescreen_included - no need to check consistency between different screening decisions)
-
-.. figure:: ../../figures/micro_framework.png
-   :alt: Micro framework
-
-Examples of transparency in preparation, deduplication, and screening:
-
-.. figure:: ../../figures/change_example1.png
-   :alt: Change example 1
-
-Note : in this case, we see that the record was prepared (changing the status from ```md_imported``` to ```md_prepared```) based on the LINKED_URL (as explained by the ```metadata_source``` field).
-The doi was extracted from the website (url) and used to update and complete the metadata (after checking whether it corresponds with the existing ```title```, ```author```, .... fields).
-The processing report (part of the `commit message <../guides/changes.html#git-commit-report>`_) provides further details.
-
-.. figure:: ../../figures/change_example2.png
-   :alt: Change example 2
+- An underlying assumption is that different types of reviews share the same process model (with different parameters) and that the main differences are in the data extraction and analysis stages (e.g., requiring structured or unstructured data formats).
 
 Raw data sources
 - Transformed to BibTex by CoLRev to facilitate more efficient processing
@@ -155,25 +141,6 @@ Individual records in the MAIN_REFERENCES are augmented with
 - the ```status``` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between a references file and a screening sheet/data sheet/manuscript)
 - the ```origin``` field to enable traceability and analyses (in both directions)
 
-
-The order of the first fields is fixed to enable efficient status checks.
-
-.. code-block:: latex
-
-    @article{BaranBerkowicz2021,
-      origin          = {PoPCites.bibtex.bib/pop00082},
-      status          = {md_prepared},
-      metadata_source = {LINKED_URL},
-      doi             = {10.3390/su13116494},
-      author          = {Baran, Grzegorz and Berkowicz, Aleksandra},
-      journal         = {Sustainability},
-      title           = {Digital Platform Ecosystems as Living Labs for Sustainable Entrepreneurship and Innovation},
-      year            = {2021},
-      number          = {11},
-      volume          = {13},
-      url             = {https://www.mdpi.com/2071-1050/13/11/6494/pdf},
-    }
-
 BibTex:
 
 - Quasi-standard format that is supported by most reference managers and literature review tools for input/output [1](https://en.wikipedia.org/wiki/Comparison_of_reference_management_software).
@@ -183,6 +150,7 @@ BibTex:
 - BibTex is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
 - Uppwer/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple.
 - Current policy (may change): don't use the crossref field (i.e., resolve it in the preparation). Efficient abbreviation of conference proceedings, can be accomplished through the pandoc `citation abbreviation options <https://pandoc.org/MANUAL.html#option--citation-abbreviations>`_. In addition, the crossreferenced record would not be displayed next to the original record, making it harder to visually validate (preparation) changes. The crossref-fields would also require special treatment in the deduplication process, the retrieval (across repositories) and operations reading records from the disk.
+- The order of the first fields is fixed to enable efficient status checks (reading the first n lines of each record instead of parsing the whole file).
 
 .. _CoLRev: https://github.com/geritwagner/colrev
 .. _CoLRev-core: https://github.com/geritwagner/colrev_core
@@ -194,15 +162,16 @@ BibTex:
 Versioning and collaboration principles
 --------------------------------------------------
 
-- **TODO**: Summarize main advantages of git for collaborative literature reviews (collaborative codification, processing of semi-structured data)
-
-- Git (as a synonym for distributed versioning systems): line-based versioning of text-files (challenge: merging)
+- CoLRev builds on git as the most capable collaborative versioning system currently available.
+- Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
+- Git is used most effectively as line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
+- A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
 - A commit corresponds to an individual processing step
 - Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
 - Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether robots or researchers edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify).
 - One-branch principle (do not consider branching in the pipeline (yet??))
-- Principle: commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
-- Git versions should be frequent but also well thought-through and checked/reviewed (no automated mixing/syncing of work with the project as in database-tools)
+- Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
+- Git versions should be frequent but also well thought-through and checked/reviewed
 - Committed changes should be as small as possible for collaboration/merging purposes (also for checking/restoring)
 - Scripts should add their changes to the index
 
