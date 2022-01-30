@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+# import json
 import logging
 import pprint
 import re
@@ -192,7 +193,6 @@ def prep_references(references: pd.DataFrame) -> dict:
     references[["author", "title", "journal", "container_title", "pages"]] = references[
         ["author", "title", "journal", "container_title", "pages"]
     ].astype(str)
-
     references_dict = references.to_dict("records")
     logger.debug(pp.pformat(references_dict))
 
@@ -1035,6 +1035,248 @@ def batch(data, REVIEW_MANAGER):
 
     for ndx in range(0, it_len, n):
         yield batch_data[ndx : min(ndx + n, it_len)]
+
+
+def cluster_tuples(REVIEW_MANAGER, deduper, partition_threshold, auto_merge_threshold):
+
+    report_logger = logging.getLogger("colrev_core_report")
+    logger.info("Clustering duplicates...")
+
+    data_d = readData(REVIEW_MANAGER)
+    logger.info(f"Number of records: {len(data_d.items())}")
+
+    # `partition` will return sets of records that dedupe
+    # believes are all referring to the same entity.
+
+    report_logger.info(f"set partition_threshold: {partition_threshold}")
+
+    clustered_dupes = deduper.partition(data_d, partition_threshold)
+    report_logger.info(f"Number of duplicate sets {len(clustered_dupes)}")
+
+    # Results
+    cluster_membership = {}
+    dedupe_decision_list = []
+    for cluster_id, (records, scores) in enumerate(clustered_dupes):
+        dedupe_decision_list.append(
+            {
+                "cluster_id": cluster_id,
+                "records": list(records),
+                "score": list(scores).pop(),
+            }
+        )
+        for record_id, score in zip(records, scores):
+
+            cluster_membership[record_id] = {
+                "cluster_id": cluster_id,
+                "confidence_score": score,
+            }
+
+    # cluster_membership:
+    # {'FrolovaFrolovKayurovEtAl2021': {'Cluster ID': 352, 'confidence_score': 1.0},
+    #  'BhaskaraBawa2021': {'Cluster ID': 353, 'confidence_score': 1.0}}
+
+    auto_dedupe = []
+    ID_list = []
+    report_logger.info(f"set auto_merge_threshold: {auto_merge_threshold}")
+    for dedupe_decision in dedupe_decision_list:
+
+        if len(dedupe_decision["records"]) > 1:
+            if dedupe_decision["score"] > auto_merge_threshold:
+                orig_rec = dedupe_decision["records"].pop()
+                ID_list.append(orig_rec)
+                if 0 == len(dedupe_decision["records"]):
+                    auto_dedupe.append(
+                        {
+                            "ID1": orig_rec,
+                            "decision": "no_duplicate",
+                        }
+                    )
+                    continue
+
+                for dupe_rec in dedupe_decision["records"]:
+
+                    orig_propagated = REVIEW_MANAGER.propagated_ID(orig_rec)
+                    dupe_propagated = REVIEW_MANAGER.propagated_ID(dupe_rec)
+
+                    if not orig_propagated and not dupe_propagated:
+
+                        # Use the record['ID'] without appended letters if possible
+                        # Set orig_propagated=True if record_a_ID should be kept
+                        if orig_rec[-1:].isnumeric() and not dupe_rec[-1:].isnumeric():
+                            orig_propagated = True
+                        else:
+                            dupe_propagated = True
+                            # This arbitrarily uses record_b_ID
+                            # if none of the IDs has a letter appended.
+
+                        if orig_propagated and dupe_propagated:
+                            # both_IDs_propagated
+                            logger.error(f"Both IDs propagated: {orig_rec}, {dupe_rec}")
+                            continue
+
+                        if orig_propagated:
+                            auto_dedupe.append(
+                                {
+                                    "ID1": orig_rec,
+                                    "ID2": dupe_rec,
+                                    "decision": "duplicate",
+                                    "score": dedupe_decision["score"],
+                                }
+                            )
+
+                        else:
+                            auto_dedupe.append(
+                                {
+                                    "ID1": dupe_rec,
+                                    "ID2": orig_rec,
+                                    "decision": "duplicate",
+                                    "score": dedupe_decision["score"],
+                                }
+                            )
+
+    apply_merges(REVIEW_MANAGER, auto_dedupe)
+
+    REVIEW_MANAGER.reorder_log(ID_list, criterion="descending_thresholds")
+
+    # Export excels for validation
+    def highlight_cells(x):
+        df = x.copy()
+        df["cluster_id"] = df["cluster_id"].astype(str)
+        df.loc[:, df.columns != "cluster_id"] = "background-color: white"
+
+        # http://www.excelsupersite.com/what-are-the-56-colorindex-colors-in-excel/
+        available_colors = [
+            "#FFFFFF",
+            "#FFCC99",
+            "#FFFFCC",
+            "#CCFFCC",
+            "#FFFF99",
+            "#99CCFF",
+            "#FF99CC",
+        ]
+        cur_color_index = -1
+        cur_cluster = ""
+
+        prev_row = []
+        for i, row in df.iterrows():
+            if row["cluster_id"] != cur_cluster:
+                cur_color_index += 1
+                cur_cluster = row["cluster_id"]
+            # df.at[i, 'cluster_id'] = ( # only the cluster_id column
+            df.at[i, :] = (
+                "background-color: "
+                + available_colors[cur_color_index % len(available_colors)]
+            )
+
+        for i, row in x.iterrows():
+            if i == 0 or i == 1:
+                continue
+            if len(prev_row) != 0:
+                for j, val in row.items():
+                    # changes in these fields should not be marked
+                    if j in ["error", "confidence_score", "ID"]:
+                        continue
+                    # do not mark changes between different clusters
+                    if j == "cluster_id" and prev_row["cluster_id"] != val:
+                        break
+                    if val != prev_row[j]:
+                        df.at[i, j] = df.at[i, j] + "; font-weight: bold"
+                        # TODO : also mark the preceding cell in bold
+                        # df.at[(i-1), j] = df.at[(i-1    ), j] +
+                        # "; font-weight: bold"
+            prev_row = row
+
+        return df
+
+    collected_duplicates = []
+    collected_non_duplicates = []
+    for ID, vals in data_d.items():
+        vals.update(error="")
+        cur_cluster_membership = cluster_membership[ID]
+        vals.update(cur_cluster_membership)
+        if cur_cluster_membership["confidence_score"] > auto_merge_threshold:
+            collected_duplicates.append(vals)
+        else:
+            collected_non_duplicates.append(vals)
+
+    duplicates_df = pd.DataFrame.from_records(collected_duplicates)
+    duplicates_df.fillna("", inplace=True)
+    duplicates_df["distinct_str"] = (
+        duplicates_df["author"]
+        + duplicates_df["title"]
+        + duplicates_df["year"]
+        + duplicates_df["container_title"]
+        + duplicates_df["volume"]
+        + duplicates_df["number"]
+        + duplicates_df["pages"]
+    )
+    # Only export bibliographically distict cases
+    duplicates_df = duplicates_df.groupby("distinct_str").filter(lambda x: len(x) == 1)
+    duplicates_df.drop(columns=["distinct_str"], inplace=True)
+
+    duplicates_df = duplicates_df[
+        [
+            "error",
+            "confidence_score",
+            "cluster_id",
+            "ID",
+            "author",
+            "title",
+            "year",
+            "container_title",
+            "volume",
+            "number",
+            "pages",
+        ]
+    ]
+
+    duplicates_df = duplicates_df.groupby("cluster_id").filter(lambda x: len(x) > 1)
+    duplicates_df = duplicates_df.sort_values(
+        ["confidence_score", "cluster_id"], ascending=(False, False)
+    )
+    duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(4)
+    # to adjust column widths in ExcelWriter:
+    # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
+    duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
+    duplicates_df.to_excel("duplicates_to_validate.xlsx", index=False)
+
+    if len(collected_non_duplicates) > 0:
+        non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
+        # To develop in jupyter:
+        # non_duplicates_df.to_csv(output_file, index=False)
+        # non_duplicates_df = pd.read_csv("duplicates_for_validation.csv")
+        non_duplicates_df = non_duplicates_df[
+            [
+                "error",
+                "cluster_id",
+                "confidence_score",
+                "ID",
+                "author",
+                "title",
+                "year",
+                "container_title",
+                "volume",
+                "number",
+                "pages",
+            ]
+        ]
+        non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
+            lambda x: len(x) > 1
+        )
+        non_duplicates_df = non_duplicates_df.sort_values(
+            ["confidence_score", "cluster_id"], ascending=(False, False)
+        )
+        non_duplicates_df["confidence_score"] = non_duplicates_df[
+            "confidence_score"
+        ].round(4)
+        # to adjust column widths in ExcelWriter:
+        # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
+        non_duplicates_df = non_duplicates_df.style.applrecordsy(
+            highlight_cells, axis=None
+        )
+        non_duplicates_df.to_excel("non_duplicates_to_validate.xlsx", index=False)
+
+    return
 
 
 def main(REVIEW_MANAGER) -> None:
