@@ -1787,8 +1787,6 @@ class ReviewManager:
                     in [
                         "check_sources",
                         "check_main_references_duplicates",
-                        "check_main_references_origin",
-                        "check_main_references_status_fields",
                         "check_main_references_files",
                     ]
                 ]
@@ -2134,8 +2132,11 @@ class ReviewManager:
                     + script_name.split(" ")[1].replace("_", "-")
                 )
 
-                report = report + f"Command\n   {script_name}\n"
-        if saved_args is not None:
+                report = report + f"Command\n   {script_name}"
+        if saved_args is None:
+            report = report + "\n"
+        else:
+            report = report + "\\ \n"
             for k, v in saved_args.items():
                 if (
                     isinstance(v, str)
