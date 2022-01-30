@@ -9,11 +9,14 @@ from collections import Counter
 from pathlib import Path
 
 import pandas as pd
+import requests
 import yaml
 from urllib3.exceptions import ProtocolError
 from yaml import safe_load
 
+from colrev_core import grobid_client
 from colrev_core import review_manager
+from colrev_core import tei_tools
 from colrev_core.review_manager import RecordState
 
 report_logger = logging.getLogger("colrev_core_report")
@@ -361,17 +364,11 @@ def load_csv(REVIEW_MANAGER) -> None:
 def update_tei(
     REVIEW_MANAGER, records: typing.List[dict], included: typing.List[dict]
 ) -> typing.List[dict]:
-    from colrev_core import grobid_client, tei_tools, dedupe
-    import requests
     from lxml import etree
     from lxml.etree import XMLSyntaxError
 
     grobid_client.start_grobid()
     git_repo = REVIEW_MANAGER.get_repo()
-    ns = {
-        "tei": "{http://www.tei-c.org/ns/1.0}",
-        "w3": "{http://www.w3.org/XML/1998/namespace}",
-    }
 
     for record in records:
         if "file" not in record:
@@ -393,15 +390,8 @@ def update_tei(
                 continue
 
             try:
-                options = {}
-                # options["consolidateCitations"] = "1"
-                options["consolidateCitations"] = "0"
-                r = requests.post(
-                    grobid_client.get_grobid_url() + "/api/processFulltextDocument",
-                    files={"input": open(str(fpath), "rb")},
-                    data=options,
-                )
-                data = r.content
+                data = tei_tools.get_root_tei_data(fpath)
+
                 if b"[TIMEOUT]" in data:
                     del record["tei_file"]
                     continue
@@ -411,6 +401,7 @@ def update_tei(
                 with open(record["tei_file"], "rb") as tf:
                     xml_string = tf.read()
                 root = etree.fromstring(xml_string)
+
                 tree = etree.ElementTree(root)
                 tree.write(record["tei_file"], pretty_print=True, encoding="utf-8")
 
@@ -439,45 +430,16 @@ def update_tei(
                 with open(tei_path, "rb") as tf:
                     xml_string = tf.read()
                 root = etree.fromstring(xml_string)
-                tei_records = tei_tools.get_bibliography(root)
             except XMLSyntaxError:
                 pass
                 continue
 
-            for record in tei_records:
-                if "title" not in record:
-                    continue
+            root = tei_tools.mark_references(root, records)
 
-                max_sim = 0.8
-                max_sim_record = {}
-                for local_record in records:
-                    if local_record["status"] not in [
-                        RecordState.rev_included,
-                        RecordState.rev_synthesized,
-                    ]:
-                        continue
-                    rec_sim = dedupe.get_record_similarity(
-                        record.copy(), local_record.copy()
-                    )
-                    if rec_sim > max_sim:
-                        max_sim_record = local_record
-                        max_sim = rec_sim
-
-                if len(max_sim_record) == 0:
-                    continue
-
-                # Record found: mark in tei
-                bibliography = root.find(".//" + ns["tei"] + "listBibl")
-                for ref in bibliography:
-                    if ref.get(ns["w3"] + "id") == record["ID"]:
-                        ref.set("ID", max_sim_record["ID"])
-                for reference in root.iter(ns["tei"] + "ref"):
-                    if "target" in reference.keys():
-                        if reference.get("target") == f"#{record['ID']}":
-                            reference.set("ID", max_sim_record["ID"])
-
-                # if settings file available: dedupe_io match agains records
-
+            # ns = {
+            #     "tei": "{http://www.tei-c.org/ns/1.0}",
+            #     "w3": "{http://www.w3.org/XML/1998/namespace}",
+            # }
             # theories = ['actornetwork theory', 'structuration theory']
             # for paragraph in root.iter(ns['tei'] + 'p'):
             #     # print(paragraph.text.lower())

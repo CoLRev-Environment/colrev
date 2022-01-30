@@ -53,6 +53,22 @@ def start_grobid() -> bool:
     return False
 
 
+def get_root_tei_data(fpath: Path):
+    from colrev_core import grobid_client
+
+    options = {}
+    # options["consolidateCitations"] = "1"
+    options["consolidateCitations"] = "0"
+    r = requests.post(
+        grobid_client.get_grobid_url() + "/api/processFulltextDocument",
+        files={"input": open(str(fpath), "rb")},
+        data=options,
+    )
+    data = r.content
+
+    return data
+
+
 def get_paper_title(root: Element) -> str:
     title_text = "NA"
     file_description = root.find(".//" + ns["tei"] + "fileDesc")
@@ -320,12 +336,55 @@ def get_bibliography(root):
                 "title": get_reference_title_string(reference),
                 "year": get_reference_year_string(reference),
                 "journal": get_reference_journal_string(reference),
+                "volume": get_reference_volume_string(reference),
+                "number": get_reference_number_string(reference),
+                "pages": get_reference_page_string(reference),
             }
             ref_rec = {k: v for k, v in ref_rec.items() if v is not None}
             # print(ref_rec)
             tei_bib_db.append(ref_rec)
 
     return tei_bib_db
+
+
+def mark_references(root, records):
+    from colrev_core.review_manager import RecordState
+    from colrev_core import dedupe
+
+    tei_records = get_bibliography(root)
+    for record in tei_records:
+        if "title" not in record:
+            continue
+
+        max_sim = 0.9
+        max_sim_record = {}
+        for local_record in records:
+            if local_record["status"] not in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                continue
+            rec_sim = dedupe.get_record_similarity(record.copy(), local_record.copy())
+            if rec_sim > max_sim:
+                max_sim_record = local_record
+                max_sim = rec_sim
+        if len(max_sim_record) == 0:
+            continue
+
+        # Record found: mark in tei
+        bibliography = root.find(".//" + ns["tei"] + "listBibl")
+        # mark reference in bibliography
+        for ref in bibliography:
+            if ref.get(ns["w3"] + "id") == record["tei_id"]:
+                ref.set("ID", max_sim_record["ID"])
+        # mark reference in in-text citations
+        for reference in root.iter(ns["tei"] + "ref"):
+            if "target" in reference.keys():
+                if reference.get("target") == f"#{record['tei_id']}":
+                    reference.set("ID", max_sim_record["ID"])
+
+        # if settings file available: dedupe_io match agains records
+    return root
 
 
 # (individual) bibliography-reference elements  ----------------------------
@@ -418,6 +477,85 @@ def get_reference_year_string(reference):
     else:
         year_string = "NA"
     return year_string
+
+
+def get_reference_page_string(reference):
+    page_string = ""
+
+    if reference.find(ns["tei"] + "monogr") is not None:
+        page_list = (
+            reference.find(ns["tei"] + "monogr")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='page']")
+        )
+    elif reference.find(ns["tei"] + "analytic") is not None:
+        page_list = (
+            reference.find(ns["tei"] + "analytic")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='page']")
+        )
+
+    for page in page_list:
+        if page is not None:
+            for name, value in sorted(page.items()):
+                if name == "from":
+                    page_string += value
+                if name == "to":
+                    page_string += "--" + value
+        else:
+            page_string = "NA"
+
+    return page_string
+
+
+def get_reference_number_string(reference):
+    number_string = ""
+
+    if reference.find(ns["tei"] + "monogr") is not None:
+        number_list = (
+            reference.find(ns["tei"] + "monogr")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='issue']")
+        )
+    elif reference.find(ns["tei"] + "analytic") is not None:
+        number_list = (
+            reference.find(ns["tei"] + "analytic")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='issue']")
+        )
+
+    for number in number_list:
+        if number is not None:
+            number_string = number.text
+        else:
+            number_string = "NA"
+
+    return number_string
+
+
+def get_reference_volume_string(reference):
+    volume_string = ""
+
+    if reference.find(ns["tei"] + "monogr") is not None:
+        volume_list = (
+            reference.find(ns["tei"] + "monogr")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='volume']")
+        )
+    elif reference.find(ns["tei"] + "analytic") is not None:
+        volume_list = (
+            reference.find(ns["tei"] + "analytic")
+            .find(ns["tei"] + "imprint")
+            .findall(ns["tei"] + "biblScope[@unit='volume']")
+        )
+
+    for volume in volume_list:
+        if volume is not None:
+            volume_string = volume.text
+        else:
+            volume_string = "NA"
+
+    return volume_string
 
 
 def get_reference_journal_string(reference):
