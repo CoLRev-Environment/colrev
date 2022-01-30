@@ -109,10 +109,10 @@ def pdf_prep_man_stats(REVIEW_MANAGER) -> None:
 
         if "pdf_prep_hints" in record:
             hints = record["pdf_prep_hints"].split(";")
-            prep_man_hints.append(hints)
+            prep_man_hints.append([hint.lstrip() for hint in hints])
 
             for hint in hints:
-                crosstab.append([record["journal"], hint])
+                crosstab.append([record["journal"], hint.lstrip()])
 
     crosstab_df = pd.DataFrame(crosstab, columns=["journal", "hint"])
 

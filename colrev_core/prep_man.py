@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import logging
 import pprint
+from pathlib import Path
 
 import bibtexparser
 import pandas as pd
@@ -48,14 +49,14 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
 
         if "man_prep_hints" in record:
             hints = record["man_prep_hints"].split(";")
-            prep_man_hints.append(hints)
+            prep_man_hints.append([hint.lstrip() for hint in hints])
             for hint in hints:
                 if "change-score" in hint:
                     continue
                 # Note: if something causes the needs_manual_preparation
                 # it is caused by all origins
                 for orig in record.get("origin", "NA").split(";"):
-                    crosstab.append([orig[: orig.rfind("/")], hint])
+                    crosstab.append([orig[: orig.rfind("/")], hint.lstrip()])
 
         origins.append(
             [x[: x.rfind("/")] for x in record.get("origin", "NA").split(";")]
@@ -97,10 +98,24 @@ def apply_prep_man(REVIEW_MANAGER) -> None:
 
     REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
 
-    logger.info("Load prep-references.csv")
-    bib_db_df = pd.read_csv("prep-references.csv")
+    if Path("prep-references.csv").is_file():
+        logger.info("Load prep-references.csv")
+        bib_db_df = pd.read_csv("prep-references.csv")
+        bib_db_changed = bib_db_df.to_dict("records")
+    if Path("prep-references.bib").is_file():
+        logger.info("Load prep-references.bib")
 
-    bib_db_changed = bib_db_df.to_dict("records")
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+
+        with open("prep-references.bib") as target_db:
+            bib_db = BibTexParser(
+                customization=convert_to_unicode,
+                ignore_nonstandard_types=False,
+                common_strings=True,
+            ).parse_file(target_db, partial=True)
+
+            bib_db_changed = bib_db.entries
 
     git_repo = REVIEW_MANAGER.get_repo()
     MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
@@ -114,10 +129,10 @@ def apply_prep_man(REVIEW_MANAGER) -> None:
     prior_bib_db = bibtexparser.loads(filecontents)
     prior_records = prior_bib_db.entries
 
+    records_to_reset = []
     records = REVIEW_MANAGER.load_records()
     for record in records:
-        # TODO : IDs may change - this has to be accounted for when changing
-        # the following matching to IDs.
+        # IDs may change - matching based on origins
         changed_record_l = [
             x for x in bib_db_changed if x["origin"] == record["origin"]
         ]
@@ -140,13 +155,78 @@ def apply_prep_man(REVIEW_MANAGER) -> None:
                     if len(prior_record_l) == 1:
                         prior_record = prior_record_l.pop()
                         record[k] = prior_record[k]
+                if v == "UNMERGE":
+                    records_to_reset.append(record)
+
+    if len(records_to_reset) > 0:
+        prep.reset(REVIEW_MANAGER, records_to_reset)
 
     REVIEW_MANAGER.save_records(records)
+    REVIEW_MANAGER.format_references()
+    REVIEW_MANAGER.check_repo()
+    return
+
+
+def append_to_non_dupe_db(
+    REVIEW_MANAGER, record_to_unmerge_original: dict, record_original: dict
+):
+    from bibtexparser.bibdatabase import BibDatabase
+    from bibtexparser.bparser import BibTexParser
+    from bibtexparser.customization import convert_to_unicode
+    from colrev_core import review_manager
+
+    record_to_unmerge = record_to_unmerge_original.copy()
+    record = record_original.copy()
+
+    non_dupe_db_path = Path.home().joinpath(".colrev") / Path("non_duplicates.bib")
+
+    non_dupe_db_path.parents[0].mkdir(parents=True, exist_ok=True)
+
+    if non_dupe_db_path.is_file():
+
+        with open(non_dupe_db_path) as target_db:
+            non_dupe_db = BibTexParser(
+                customization=convert_to_unicode,
+                ignore_nonstandard_types=False,
+                common_strings=True,
+            ).parse_file(target_db, partial=True)
+
+        max_id = max([int(x["ID"]) for x in non_dupe_db.entries] + [1]) + 1
+    else:
+        non_dupe_db = BibDatabase()
+        max_id = 1
+
+    record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
+    max_id += 1
+    record["ID"] = str(max_id).rjust(9, "0")
+    record_to_unmerge["manual_non_duplicate"] = record["ID"]
+    record["manual_non_duplicate"] = record_to_unmerge["ID"]
+
+    record_to_unmerge = {k: str(v) for k, v in record_to_unmerge.items()}
+    record = {k: str(v) for k, v in record.items()}
+
+    del record_to_unmerge["origin"]
+    del record["origin"]
+    del record_to_unmerge["status"]
+    del record["status"]
+    if "man_prep_hints" in record_to_unmerge:
+        del record_to_unmerge["man_prep_hints"]
+    if "man_prep_hints" in record:
+        del record["man_prep_hints"]
+
+    non_dupe_db.entries.append(record_to_unmerge)
+    non_dupe_db.entries.append(record)
+    bibtex_str = bibtexparser.dumps(non_dupe_db, review_manager.get_bibtex_writer())
+
+    with open(non_dupe_db_path, "w") as out:
+        out.write(bibtex_str)
+
     return
 
 
 def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
+    from bibtexparser.bibdatabase import BibDatabase
 
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
@@ -155,26 +235,37 @@ def extract_needs_prep_man(REVIEW_MANAGER) -> None:
     records = [
         record
         for record in records
-        # if RecordState.md_needs_manual_preparation == record["status"]
+        if RecordState.md_needs_manual_preparation == record["status"]
     ]
+
+    # Casting to string (in particular the RecordState Enum)
+    records = [{k: str(v) for k, v in r.items()} for r in records]
+
+    bib_db = BibDatabase()
+    bib_db.entries = records
+    bibtex_str = bibtexparser.dumps(bib_db)
+    with open("prep-references.bib", "w") as out:
+        out.write(bibtex_str)
 
     bib_db_df = pd.DataFrame.from_records(records)
 
-    bib_db_df = bib_db_df[
-        [
-            "ID",
-            "origin",
-            "author",
-            "title",
-            "year",
-            "journal",
-            # "booktitle",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-        ]
+    col_names = [
+        "ID",
+        "origin",
+        "author",
+        "title",
+        "year",
+        "journal",
+        # "booktitle",
+        "volume",
+        "number",
+        "pages",
+        "doi",
     ]
+    for col_name in col_names:
+        if col_name not in bib_db_df:
+            bib_db_df[col_name] = "NA"
+    bib_db_df = bib_db_df[col_names]
 
     bib_db_df.to_csv("prep-references.csv", index=False)
     logger.info("Created prep-references.csv")

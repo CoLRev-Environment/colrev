@@ -626,7 +626,7 @@ def get_abbrev_container_min_len(record: dict) -> int:
 
 def get_retrieval_similarity(record: dict, retrieved_record: dict) -> float:
 
-    # TODO: also replace speicla characters (e.g., &amp;)
+    # TODO: also replace special characters (e.g., &amp;)
 
     if container_is_abbreviated(record):
         min_len = get_abbrev_container_min_len(record)
@@ -959,6 +959,7 @@ def get_md_from_open_library(record: dict) -> dict:
 
 
 def get_dblp_venue(venue_string: str) -> str:
+    # Note : venue_string should be like "behaviourIT"
     venue = venue_string
     api_url = "https://dblp.org/search/venue/api?q="
     url = api_url + venue_string.replace(" ", "+") + "&format=json"
@@ -971,7 +972,7 @@ def get_dblp_venue(venue_string: str) -> str:
             return ""
         hits = data["result"]["hits"]["hit"]
         for hit in hits:
-            if f"/{venue_string.lower()}/" in hit["info"]["url"]:
+            if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
                 venue = hit["info"]["venue"]
                 break
 
@@ -1348,6 +1349,8 @@ fields_to_keep = [
     "grobid-version",
     "pdf_hash",
     "wos_accession_number",
+    "link",
+    "url",
 ]
 fields_to_drop = [
     "type",
@@ -1785,45 +1788,110 @@ def log_details(preparation_batch: list) -> None:
     return
 
 
-def reset(REVIEW_MANAGER, records: typing.List[dict], id: str) -> None:
-    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-    record_list = [x for x in records if x["ID"] == id]
-    if len(record_list) == 0:
-        report_logger.info(f"record with ID {id} not found")
-        return
-    # Note: the case len(record) > 1 should not occur.
-    record: dict = record_list.pop()
-    if RecordState.md_prepared != record["status"]:
-        report_logger.error(f'{id}: status must be md_prepared (is {record["status"]})')
-        return
+def reset(REVIEW_MANAGER, record_list: typing.List[dict]):
+    from colrev_core import prep_man
 
-    origins = record["origin"].split(";")
+    MAIN_REFERENCES_RELATIVE = REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+
+    record_list = [
+        r
+        for r in record_list
+        if str(r["status"])
+        in [
+            str(RecordState.md_prepared),
+            str(RecordState.md_needs_manual_preparation),
+        ]
+    ]
+
+    for r in [
+        r
+        for r in record_list
+        if str(r["status"])
+        not in [
+            str(RecordState.md_prepared),
+            str(RecordState.md_needs_manual_preparation),
+        ]
+    ]:
+        msg = (
+            f"{r['ID']}: status must be md_prepared/md_needs_manual_preparation "
+            + f'(is {r["status"]})'
+        )
+        logger.error(msg)
+        report_logger.error(msg)
+
+    record_reset_list = [[record, record.copy()] for record in record_list]
 
     git_repo = git.Repo(str(REVIEW_MANAGER.paths["REPO_DIR"]))
     revlist = (
-        ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+        (
+            commit.hexsha,
+            commit.message,
+            (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+        )
         for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
     )
-    for filecontents in list(revlist):
+
+    for commit_id, cmsg, filecontents in list(revlist):
+        cmsg_l1 = str(cmsg).split("\n")[0]
+        # if commit_id != 'fe0e644704884a1d1788510824bee824dd1142c1':
+        #     continue
+        if "colrev load" not in cmsg and "local_paper_index index" not in cmsg:
+            print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
+            continue
+        print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
         prior_db = bibtexparser.loads(filecontents)
         for r in prior_db.entries:
-            if RecordState.md_imported == r["status"] and any(
-                o in r["origin"] for o in origins
-            ):
-                r.update(status=RecordState.md_needs_manual_preparation)
-                report_logger.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
-                record.update(r)
+            for record_to_unmerge, record in record_reset_list:
+                # We want the latest md_imported version
+                if str(record_to_unmerge["status"]) == str(RecordState.md_imported):
+                    continue
+
+                if str(RecordState.md_imported) == str(r["status"]) and any(
+                    o in r["origin"] for o in record["origin"].split(";")
+                ):
+                    report_logger.info(f'reset({record["ID"]}) to\n{pp.pformat(r)}\n\n')
+                    # Note : we don't want to restore the old ID...
+                    current_id = record_to_unmerge["ID"]
+                    record_to_unmerge.clear()
+                    for k, v in r.items():
+                        record_to_unmerge[k] = v
+                    record_to_unmerge["ID"] = current_id
+                    break
+            # Stop if all original records have been found
+            if len([x["status"] != "md_imported" for x, y in record_reset_list]) == 0:
                 break
+
+    # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
+    # retrieve the original record from the search/source file
+    for record_to_unmerge, record in record_reset_list:
+        prep_man.append_to_non_dupe_db(REVIEW_MANAGER, record_to_unmerge, record)
+        record_to_unmerge.update(status=RecordState.md_needs_manual_preparation)
+
     return
 
 
 def reset_records(REVIEW_MANAGER, reset_ids: list) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+
+    REVIEW_MANAGER.notify(Process(ProcessType.prep))
     records = REVIEW_MANAGER.load_records()
+    records_to_reset = []
     for reset_id in reset_ids:
-        reset(REVIEW_MANAGER, records, reset_id)
+        record_list = [x for x in records if x["ID"] == reset_id]
+        if len(record_list) != 1:
+            print(f"Error: record not found (ID={reset_id})")
+            continue
+        records_to_reset.append(record_list.pop())
+
+    reset(REVIEW_MANAGER, records_to_reset)
+
+    saved_args = {"reset_records": ",".join(reset_ids)}
     REVIEW_MANAGER.save_records(records)
+    REVIEW_MANAGER.format_references()
     REVIEW_MANAGER.add_record_changes()
-    REVIEW_MANAGER.create_commit("Reset metadata for manual preparation")
+    REVIEW_MANAGER.create_commit(
+        "Reset metadata for manual preparation", saved_args=saved_args
+    )
     return
 
 
@@ -1873,7 +1941,7 @@ def update_doi_md(REVIEW_MANAGER) -> None:
     REVIEW_MANAGER.notify(Process(ProcessType.explore))
     records = REVIEW_MANAGER.load_records()
     for record in records:
-        if "doi" in record:
+        if "doi" in record and record.get("journal", "") == "MIS Quarterly":
             record = get_md_from_doi(record)
     REVIEW_MANAGER.save_records(records)
     REVIEW_MANAGER.add_record_changes()
