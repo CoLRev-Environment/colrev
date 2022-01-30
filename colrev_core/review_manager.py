@@ -1717,6 +1717,17 @@ class ReviewManager:
         )
         return config
 
+    def load_local_registry(self) -> list:
+        local_registry_path = self.paths["LOCAL_REGISTRY"]
+        if os.path.exists(local_registry_path):
+            with open(local_registry_path) as f:
+                local_registry_df = pd.json_normalize(safe_load(f))
+                local_registry = local_registry_df.to_dict("records")
+        else:
+            local_registry = []
+
+        return local_registry
+
     def check_repo(self) -> dict:
         """Check whether the repository is in a consistent state
         Entrypoint for pre-commit hooks)

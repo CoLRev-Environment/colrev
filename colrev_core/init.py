@@ -12,7 +12,6 @@ import git
 import pandas as pd
 import requests
 import yaml
-from yaml import safe_load
 
 
 def get_name_mail_from_global_git_config() -> list:
@@ -63,18 +62,6 @@ def require_empty_directory():
         raise NonEmptyDirectoryError()
 
 
-def load_local_registry(REVIEW_MANAGER) -> list:
-    local_registry_path = REVIEW_MANAGER.paths["LOCAL_REGISTRY"]
-    if os.path.exists(local_registry_path):
-        with open(local_registry_path) as f:
-            local_registry_df = pd.json_normalize(safe_load(f))
-            local_registry = local_registry_df.to_dict("records")
-    else:
-        local_registry = []
-
-    return local_registry
-
-
 def save_local_registry(REVIEW_MANAGER, local_registry: list) -> None:
     local_registry_path = REVIEW_MANAGER.paths["LOCAL_REGISTRY"]
 
@@ -104,7 +91,7 @@ def save_local_registry(REVIEW_MANAGER, local_registry: list) -> None:
 def register_repo(REVIEW_MANAGER):
     logger = logging.getLogger("colrev_core")
 
-    local_registry = load_local_registry(REVIEW_MANAGER)
+    local_registry = REVIEW_MANAGER.load_local_registry()
 
     registered_paths = [x["source_url"] for x in local_registry]
     # TODO: maybe resolve symlinked directories?
