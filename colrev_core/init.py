@@ -115,11 +115,27 @@ def register_repo(REVIEW_MANAGER):
     return
 
 
+def create_local_index():
+    import os
+
+    local_index_path = Path.home().joinpath(".colrev/local_index")
+    curdir = Path.cwd()
+    if not local_index_path.is_dir():
+        local_index_path.mkdir(parents=True, exist_ok=True)
+        os.chdir(local_index_path)
+        initialize_repo("local_index", "PROCESSED", "EXT", "NA", True)
+        print("Created local_index repository")
+
+    os.chdir(curdir)
+    return
+
+
 def initialize_repo(
     project_title: str,
     SHARE_STAT_REQ: str,
     PDF_HANDLING: str,
     remote_url: str = "NA",
+    local_index_repo: bool = False,
 ) -> bool:
 
     saved_args = locals()
@@ -223,6 +239,10 @@ def initialize_repo(
 
     # LOCAL_REGISTRY
     register_repo(REVIEW_MANAGER)
+
+    if not local_index_repo:
+        report_logger.handlers = []
+        create_local_index()
 
     # TODO : include a link on how to connect to a remote repo
 
