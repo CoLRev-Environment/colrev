@@ -1918,6 +1918,10 @@ class ReviewManager:
                     if record.get("man_prep_hints", "NA") == "":
                         del record["man_prep_hints"]
 
+            if record["status"] == RecordState.pdf_prepared:
+                if "pdf_prep_hints" in record:
+                    del record["pdf_prep_hints"]
+
         records = sorted(records, key=lambda d: d["ID"])
 
         self.save_records(records)
