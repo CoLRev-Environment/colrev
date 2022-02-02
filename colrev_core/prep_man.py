@@ -93,6 +93,66 @@ def prep_man_stats(REVIEW_MANAGER) -> None:
     return
 
 
+def extract_needs_prep_man(REVIEW_MANAGER) -> None:
+    from colrev_core.review_manager import Process, ProcessType
+    from bibtexparser.bibdatabase import BibDatabase
+
+    prep_bib_path = REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-references.bib")
+    prep_csv_path = REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-references.csv")
+
+    if prep_csv_path.is_file():
+        print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
+        return
+
+    if prep_bib_path.is_file():
+        print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
+        return
+
+    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+    logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
+    records = REVIEW_MANAGER.load_records()
+
+    records = [
+        record
+        for record in records
+        if RecordState.md_needs_manual_preparation == record["status"]
+    ]
+
+    # Casting to string (in particular the RecordState Enum)
+    records = [{k: str(v) for k, v in r.items()} for r in records]
+
+    bib_db = BibDatabase()
+    bib_db.entries = records
+    bibtex_str = bibtexparser.dumps(bib_db)
+    with open(prep_bib_path, "w") as out:
+        out.write(bibtex_str)
+
+    bib_db_df = pd.DataFrame.from_records(records)
+
+    col_names = [
+        "ID",
+        "origin",
+        "author",
+        "title",
+        "year",
+        "journal",
+        # "booktitle",
+        "volume",
+        "number",
+        "pages",
+        "doi",
+    ]
+    for col_name in col_names:
+        if col_name not in bib_db_df:
+            bib_db_df[col_name] = "NA"
+    bib_db_df = bib_db_df[col_names]
+
+    bib_db_df.to_csv(prep_csv_path, index=False)
+    logger.info(f"Created {prep_csv_path.name}")
+
+    return
+
+
 def apply_prep_man(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
@@ -220,55 +280,6 @@ def append_to_non_dupe_db(
 
     with open(non_dupe_db_path, "w") as out:
         out.write(bibtex_str)
-
-    return
-
-
-def extract_needs_prep_man(REVIEW_MANAGER) -> None:
-    from colrev_core.review_manager import Process, ProcessType
-    from bibtexparser.bibdatabase import BibDatabase
-
-    REVIEW_MANAGER.notify(Process(ProcessType.explore))
-    logger.info(f"Load {REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}")
-    records = REVIEW_MANAGER.load_records()
-
-    records = [
-        record
-        for record in records
-        if RecordState.md_needs_manual_preparation == record["status"]
-    ]
-
-    # Casting to string (in particular the RecordState Enum)
-    records = [{k: str(v) for k, v in r.items()} for r in records]
-
-    bib_db = BibDatabase()
-    bib_db.entries = records
-    bibtex_str = bibtexparser.dumps(bib_db)
-    with open("prep-references.bib", "w") as out:
-        out.write(bibtex_str)
-
-    bib_db_df = pd.DataFrame.from_records(records)
-
-    col_names = [
-        "ID",
-        "origin",
-        "author",
-        "title",
-        "year",
-        "journal",
-        # "booktitle",
-        "volume",
-        "number",
-        "pages",
-        "doi",
-    ]
-    for col_name in col_names:
-        if col_name not in bib_db_df:
-            bib_db_df[col_name] = "NA"
-    bib_db_df = bib_db_df[col_names]
-
-    bib_db_df.to_csv("prep-references.csv", index=False)
-    logger.info("Created prep-references.csv")
 
     return
 

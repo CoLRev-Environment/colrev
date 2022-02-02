@@ -222,7 +222,11 @@ def get_remote_commit_differences(git_repo: git.Repo) -> list:
 
     origin = git_repo.remotes.origin
     if origin.exists():
-        origin.fetch()
+        try:
+            origin.fetch()
+        except git.exc.GitCommandError:
+            pass  # probably not online
+            return [-1, -1]
 
     if git_repo.active_branch.tracking_branch() is not None:
 
