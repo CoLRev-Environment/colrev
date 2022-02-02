@@ -324,6 +324,24 @@ def apply_local_rules(record: dict) -> dict:
     return record
 
 
+def get_record_from_local_index(record: dict) -> dict:
+    from colrev_core.local_index import LocalIndex
+
+    LOCAL_INDEX = LocalIndex()
+
+    try:
+        retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+        for k, v in retrieved_record.items():
+            if k in ["origin", "ID", "source_url", "grobid-version"]:
+                continue
+            record[k] = v
+        record["metadata_source"] = "LOCAL_INDEX"
+    except LocalIndex.RecordNotInIndexException:
+        pass
+
+    return record
+
+
 def mostly_upper_case(input_string: str) -> bool:
     if not re.match(r"[a-zA-Z]+", input_string):
         return False
@@ -395,7 +413,7 @@ def unify_pages_field(input_string: str) -> str:
 
 
 def get_md_from_doi(record: dict) -> dict:
-    if "doi" not in record:
+    if "doi" not in record or "LOCAL_INDEX" == record.get("metadata_source", ""):
         return record
     record = retrieve_doi_metadata(record)
     if "title" in record:
@@ -675,7 +693,7 @@ def get_retrieval_similarity(record: dict, retrieved_record: dict) -> float:
 
 
 def get_md_from_crossref(record: dict) -> dict:
-    if "title" not in record:
+    if "title" not in record or "LOCAL_INDEX" == record.get("metadata_source", ""):
         return record
 
     enrich_only = False
@@ -907,7 +925,10 @@ def open_library_json_to_record(item: dict) -> dict:
 def get_md_from_open_library(record: dict) -> dict:
 
     # only consider entries that are not journal or conference papers
-    if record.get("ENTRYTYPE", "NA") in ["article", "inproceedings"]:
+    if record.get("ENTRYTYPE", "NA") in [
+        "article",
+        "inproceedings",
+    ] or "LOCAL_INDEX" == record.get("metadata_source", ""):
         return record
 
     try:
@@ -1042,6 +1063,8 @@ def dblp_json_to_record(item: dict) -> dict:
 
 
 def get_md_from_dblp(record: dict) -> dict:
+    if "dblp_key" in record:
+        return record
 
     # TODO: check if the url/dblp_key already points to a dblp page?
     try:
@@ -1256,8 +1279,9 @@ def is_complete(record: dict) -> bool:
 def is_complete_metadata_source(record: dict) -> bool:
     # Note: metadata_source is set at the end of each procedure
     # that completes/corrects metadata based on an external source
-    return (record["metadata_source"] in ["DOI.ORG", "CROSSREF", "DBLP"]) and (
-        "title" in record and "author" in record and "year" in record
+    return (record["metadata_source"] == "LOCAL_INDEX") or (
+        (record["metadata_source"] in ["DOI.ORG", "CROSSREF", "DBLP"])
+        and ("title" in record and "author" in record and "year" in record)
     )
 
 
@@ -1684,6 +1708,7 @@ def prepare(item: dict) -> dict:
         {"script": correct_recordtype, "params": [record]},
         {"script": format, "params": [record]},
         {"script": apply_local_rules, "params": [record]},
+        {"script": get_record_from_local_index, "params": [record]},
         {"script": get_doi_from_sem_scholar, "params": [record]},
         {"script": get_doi_from_urls, "params": [record]},
         {"script": get_md_from_doi, "params": [record]},
@@ -2091,6 +2116,8 @@ def main(
 
     saved_args = locals()
     del saved_args["RETRIEVAL_SIMILARITY_INPUT"]
+    if reprocess_state == "":
+        reprocess_state = RecordState.md_imported
 
     global RETRIEVAL_SIMILARITY
 
@@ -2115,7 +2142,7 @@ def main(
 
     CPUS = REVIEW_MANAGER.config["CPUS"] * 5
 
-    if reprocess_state != "":
+    if reprocess_state != RecordState.md_imported:
         set_to_reprocess(REVIEW_MANAGER, reprocess_state)
 
     prepare_data = get_data(REVIEW_MANAGER)

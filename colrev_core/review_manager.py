@@ -2522,7 +2522,8 @@ class ReviewManager:
     def set_IDs(
         self, records: typing.List[dict] = [], selected_IDs: list = None
     ) -> typing.List[dict]:
-        """Set the IDs of records according to predefined formats"""
+        """Set the IDs of records according to predefined formats or
+        according to the LocalIndex"""
 
         if len(records) == 0:
             records = self.load_records()
@@ -2532,6 +2533,8 @@ class ReviewManager:
         for record in records:
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
+                    continue
+                if record["metadata_source"] == "LOCAL_INDEX":
                     continue
             elif str(record["status"]) not in [
                 str(RecordState.md_imported),
@@ -2605,6 +2608,7 @@ class ReviewManager:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
         from colrev_core import prep
+        from colrev_core.local_index import LocalIndex
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
@@ -2616,44 +2620,53 @@ class ReviewManager:
                     + f'propagated to {self.paths["DATA"]} ({record["ID"]})'
                 )
 
-        if "" != record.get("author", record.get("editor", "")):
-            authors = prep.format_author_field(
-                record.get("author", record.get("editor", "Anonymous"))
-            ).split(" and ")
-        else:
-            authors = ["Anonymous"]
+        LOCAL_INDEX = LocalIndex()
+        try:
+            retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+            temp_ID = retrieved_record["ID"]
+        except LocalIndex.RecordNotInIndexException:
+            pass
 
-        # Use family names
-        for author in authors:
-            if "," in author:
-                author = author.split(",")[0]
+            if "" != record.get("author", record.get("editor", "")):
+                authors = prep.format_author_field(
+                    record.get("author", record.get("editor", "Anonymous"))
+                ).split(" and ")
             else:
-                author = author.split(" ")[0]
+                authors = ["Anonymous"]
 
-        ID_PATTERN = self.config["ID_PATTERN"]
+            # Use family names
+            for author in authors:
+                if "," in author:
+                    author = author.split(",")[0]
+                else:
+                    author = author.split(" ")[0]
 
-        assert ID_PATTERN in ["FIRST_AUTHOR_YEAR", "THREE_AUTHORS_YEAR"]
-        if "FIRST_AUTHOR_YEAR" == ID_PATTERN:
-            temp_ID = f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
+            ID_PATTERN = self.config["ID_PATTERN"]
 
-        if "THREE_AUTHORS_YEAR" == ID_PATTERN:
-            temp_ID = ""
-            indices = len(authors)
-            if len(authors) > 3:
-                indices = 3
-            for ind in range(0, indices):
-                temp_ID = temp_ID + f'{authors[ind].split(",")[0].replace(" ", "")}'
-            if len(authors) > 3:
-                temp_ID = temp_ID + "EtAl"
-            temp_ID = temp_ID + str(record.get("year", "NoYear"))
+            assert ID_PATTERN in ["FIRST_AUTHOR_YEAR", "THREE_AUTHORS_YEAR"]
+            if "FIRST_AUTHOR_YEAR" == ID_PATTERN:
+                temp_ID = (
+                    f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
+                )
 
-        if temp_ID.isupper():
-            temp_ID = temp_ID.capitalize()
-        # Replace special characters
-        # (because IDs may be used as file names)
-        temp_ID = remove_accents(temp_ID)
-        temp_ID = re.sub(r"\(.*\)", "", temp_ID)
-        temp_ID = re.sub("[^0-9a-zA-Z]+", "", temp_ID)
+            if "THREE_AUTHORS_YEAR" == ID_PATTERN:
+                temp_ID = ""
+                indices = len(authors)
+                if len(authors) > 3:
+                    indices = 3
+                for ind in range(0, indices):
+                    temp_ID = temp_ID + f'{authors[ind].split(",")[0].replace(" ", "")}'
+                if len(authors) > 3:
+                    temp_ID = temp_ID + "EtAl"
+                temp_ID = temp_ID + str(record.get("year", "NoYear"))
+
+            if temp_ID.isupper():
+                temp_ID = temp_ID.capitalize()
+            # Replace special characters
+            # (because IDs may be used as file names)
+            temp_ID = remove_accents(temp_ID)
+            temp_ID = re.sub(r"\(.*\)", "", temp_ID)
+            temp_ID = re.sub("[^0-9a-zA-Z]+", "", temp_ID)
 
         if ID_blacklist is not None:
             if record_in_bib_db:

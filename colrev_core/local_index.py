@@ -487,6 +487,16 @@ class LocalIndex:
                 record["source_url"] = source_url
                 if "excl_criteria" in record:
                     del record["excl_criteria"]
+                # Note: if the pdf_hash has not been checked,
+                # we cannot use it for retrieval or preparation.
+                if record["status"] not in [
+                    RecordState.pdf_prepared,
+                    RecordState.rev_excluded,
+                    RecordState.rev_included,
+                    RecordState.synthesized,
+                ]:
+                    if "pdf_hash" in record:
+                        del record["pdf_hash"]
 
                 self.__record_index(record)
                 self.__gid_index(record)
@@ -510,7 +520,7 @@ class LocalIndex:
                 pass
 
         if retrieved_record:
-            print("Retrieved from g_id index")
+            logger.debug("Retrieved from g_id index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
@@ -533,7 +543,7 @@ class LocalIndex:
                 break
 
         if retrieved_record:
-            print("Retrieved from record index")
+            logger.debug("Retrieved from record index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 3. Try the duplicate representation index
@@ -546,7 +556,7 @@ class LocalIndex:
         if not retrieved_record:
             raise self.RecordNotInIndexException(record.get("ID", "no-key"))
 
-        print("Retrieved from d index")
+        logger.debug("Retrieved from d index")
         return self.__prep_record_for_return(retrieved_record)
 
     def is_duplicate(self, record1: dict, record2: dict) -> str:
@@ -598,7 +608,6 @@ class LocalIndex:
 
 
 def main() -> None:
-
 
     # LOCAL_INDEX = LocalIndex()
 

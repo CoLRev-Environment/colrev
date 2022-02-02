@@ -43,6 +43,11 @@ Conducting a full literature review should be as simple as running the following
 
 
 Details and options for each step are provided in the guidelines section (on the left).
+
+
+Analyze changes
+-------------------------
+
 After each step, check and validate the changes using git status, gitk, and colrev status:
 
 .. code-block:: bash
@@ -52,16 +57,32 @@ After each step, check and validate the changes using git status, gitk, and colr
       colrev status
 
 
+Leverage community repositories
+---------------------------------------------
+
+Because changes are analyzed after each step, you can rely on curated community repositories (e.g., reuse of prepared metadata, duplicate matchings, PDF hashes), and effectivley dedicate most of your efforts to the synthesis.
+To add a curated repository and to create a reuse-index run:
+
+.. code-block:: bash
+
+      colrev local-index add --url https://github.com/u_name/repo_name
+      colrev local-index
+
+
+Collaborate in a team
+-------------------------
+
+
 Collaborative reviews based on a shared git repository (repositories can be hosted at `Github <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
 .. code-block:: bash
 
       # To connect to the remote repository (update the url)
-      git remote add origin https://github.com/username/repository_name.git
+      git remote add origin https://github.com/u_name/repo_name.git
       git branch -M main
       git push -u origin main
 
-      # To submit the state of your local CoLRev repository to the shared repository
+      # To submit your local changes to the shared repository
       git push
 
       # To retrieve changes from coauthors

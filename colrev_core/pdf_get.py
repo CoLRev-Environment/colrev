@@ -141,7 +141,26 @@ def link_pdf(record: dict, REVIEW_MANAGER) -> dict:
     return record
 
 
+def get_pdf_from_local_index(record: dict, REVIEW_MANAGER) -> dict:
+
+    from colrev_core.local_index import LocalIndex
+
+    LOCAL_INDEX = LocalIndex()
+    try:
+        retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+        # pp.pprint(retrieved_record)
+    except LocalIndex.RecordNotInIndexException:
+        pass
+        return record
+
+    if "file" in retrieved_record:
+        record["file"] = retrieved_record["file"]
+
+    return record
+
+
 retrieval_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+    {"script": get_pdf_from_local_index},
     {"script": get_pdf_from_unpaywall},
     {"script": link_pdf},
 ]
@@ -338,14 +357,6 @@ def main(REVIEW_MANAGER, copy_to_repo: bool, rename: bool) -> None:
     logger.debug(f"pdf_get_data: {pp.pformat(pdf_get_data)}")
 
     logger.debug(pp.pformat(pdf_get_data["items"]))
-
-    try:
-        from local_paper_index import retrieve
-
-        retrieval_scripts.append({"script": retrieve.individual_record})
-    except ImportError as e:
-        logger.debug(e)
-        pass
 
     i = 1
     for retrieval_batch in batch(pdf_get_data["items"], REVIEW_MANAGER):

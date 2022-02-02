@@ -54,7 +54,7 @@ roman_page_pattern = re.compile(
 )
 
 
-def reset_hashes(REVIEW_MANAGER) -> None:
+def update_hashes(REVIEW_MANAGER) -> None:
     from colrev_core.review_manager import Process, ProcessType
 
     REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
@@ -244,6 +244,26 @@ def validate_pdf_metadata(record: dict, PAD: int) -> dict:
 
     if RecordState.pdf_imported != record["status"]:
         return record
+
+    from colrev_core.local_index import LocalIndex
+
+    LOCAL_INDEX = LocalIndex()
+
+    try:
+        retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+
+        current_hash = imagehash.average_hash(
+            convert_from_path(record["file"], first_page=0, last_page=1)[0],
+            hash_size=32,
+        )
+        if "pdf_hash" in retrieved_record:
+            if retrieved_record["pdf_hash"] == str(current_hash):
+                print("validated pdf metadata based on local_index")
+                return record
+            else:
+                print("pdf_hashes not matching")
+    except LocalIndex.RecordNotInIndexException:
+        pass
 
     if "text_from_pdf" not in record:
         record = get_text_from_pdf(record, PAD)
