@@ -365,12 +365,6 @@ class LocalIndex:
         # 2. add representations to index
         non_identical_representations = list(set(non_identical_representations))
         if len(non_identical_representations) > 0:
-            # Note : for analyses:
-            with open("/home/gerit/ownCloud/action-office/stats.txt", "a") as f:
-                f.write("\n".join(non_identical_representations + [orig_record_string]))
-                f.write(
-                    "\n------------------------------------------------------------\n"
-                )
 
             for non_identical_representation in non_identical_representations:
                 hash = hashlib.sha256(
@@ -576,17 +570,37 @@ class LocalIndex:
 
         return "unknown"
 
+    def analyze(self, threshold: float = 0.95) -> None:
+        from thefuzz import fuzz
+        import pandas as pd
+
+        changes = []
+        for d_file in self.dind_path.rglob("*.txt"):
+            str1, str2 = d_file.read_text().split("\n")
+            similarity = fuzz.ratio(str1, str2) / 100
+            if similarity < threshold:
+                changes.append(
+                    {"similarity": similarity, "str": str1, "fname": str(d_file)}
+                )
+                changes.append(
+                    {"similarity": similarity, "str": str2, "fname": str(d_file)}
+                )
+
+        df = pd.DataFrame(changes)
+        # df = df.groupby('fname').apply(pd.DataFrame.sort_values, 'similarity')
+        # grouped_df = df.groupby('fname')
+        # df['similarity'] = grouped_df['similarity'].transform(max)
+        # df = df.sort_values('similarity')
+        df.to_csv("changes.csv", index=False)
+        print("Exported changes.csv")
+
+        return
+
 
 def main() -> None:
 
-    # TODO TBD: how/where to store non-duplicates (and duplicate representations)?
-    # (especially when they are not in the same repo-scope)
-    # think: /home/gerit/.colrev/non_duplicates.bib
-    # TODO: the d_index also seems to accept non-complete records (from the origins)
 
-    LOCAL_INDEX = LocalIndex()
-
-    LOCAL_INDEX.index_records()
+    # LOCAL_INDEX = LocalIndex()
 
     # To Test retrieval of record:
     # record = {
@@ -626,7 +640,8 @@ def main() -> None:
     #     "journal" : "Information Systems Research",
     #     "number" : "4",
     #     "pages" : "685--703",
-    #     "title" : "Effect of Knowledge-Sharing Trajectories on Innovative Outcomes in Temporary Online Crowds",
+    #     "title" : "Effect of Knowledge-Sharing Trajectories on " + \
+    #                   "Innovative Outcomes in Temporary Online Crowds",
     #     "volume" : "27",
     #     "year" : "2016"
     # }
@@ -646,7 +661,8 @@ def main() -> None:
     #     "journal" : "academy of management journal",
     #     "number" : "6",
     #     "pages" : "1281--1303",
-    #     "title" : "trends in theory building and theory testing a five-decade study of theacademy of management journal",
+    #     "title" : "trends in theory building and theory testing a " + \
+    #           "five-decade study of theacademy of management journal",
     #     "volume" : "50",
     #     "year" : "2007"
     # }
@@ -656,7 +672,8 @@ def main() -> None:
     #     "journal" : "academy of management journal",
     #     "number" : "6",
     #     "pages" : "1281--1303",
-    #     "title" : "trends in theory building and theory testing a five-decade study of the academy of management journal",
+    #     "title" : "trends in theory building and theory testing a " + \
+    #           "five-decade study of the academy of management journal",
     #     "volume" : "50",
     #     "year" : "2007"
     # }
