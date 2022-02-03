@@ -14,6 +14,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
+from tqdm import tqdm
 
 from colrev_core.review_manager import Process
 from colrev_core.review_manager import ProcessType
@@ -28,6 +29,7 @@ logger.setLevel(logging.INFO)
 class LocalIndex:
 
     global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
+    max_len_sha256 = 2 ** 256
 
     def __init__(self):
         self.local_index_path = Path.home().joinpath(".colrev")
@@ -160,9 +162,9 @@ class LocalIndex:
         plaintext_number = int.from_bytes(plaintext, "big")
 
         # recommendation: do not increment by 1
-        # TODO: we have to use modulo in the following line...
-        # TBD: what's the max(plaintext)?
         plaintext_number += 10
+        plaintext_number = plaintext_number % self.max_len_sha256
+
         new_plaintext = plaintext_number.to_bytes(plaintext_length, "big")
         new_hex = binascii.hexlify(new_plaintext)
         # print(new_hex.decode("utf-8"))
@@ -256,18 +258,17 @@ class LocalIndex:
 
         for global_key in self.global_keys:
             if global_key in record:
-                # print(f"{global_key}={record[global_key]}")
 
                 if "file" == global_key:
-                    if not Path(record[global_key]).is_file():
-                        if Path(
-                            record["source_url"] + "/" + record[global_key]
-                        ).is_file():
-                            record[global_key] = (
-                                record["source_url"] + "/" + record[global_key]
-                            )
+                    record["file"] = str(Path(record["file"]).resolve())
+                    if not Path(record["file"]).is_file():
+                        if Path(record["source_url"] + "/" + record["file"]).is_file():
+                            record["file"] = record["source_url"] + "/" + record["file"]
                         else:
+                            print(f'File not available for gid index: {record["file"]}')
                             continue
+
+                # print(f"{global_key}={record[global_key]}")
 
                 gid = f"{global_key}={record[global_key]}"
                 hash = hashlib.sha256(gid.encode("utf-8")).hexdigest()
@@ -297,13 +298,9 @@ class LocalIndex:
 
         return
 
-    def __did_index(self, record: dict) -> None:
-        from colrev_core import prep
-
-        # pp.pprint(record)
-
-        # 1. create representations
-        orig_record_string = self.__get_string_representation(record)
+    def __append_if_duplicate_repr(
+        self, non_identical_representations: list, origin_record: dict, record: dict
+    ) -> list:
 
         required_fields = [
             k
@@ -320,53 +317,84 @@ class LocalIndex:
                 "booktitle",
             ]
         ]
+        if all(required_field in origin_record for required_field in required_fields):
+            orig_repr = self.__get_string_representation(origin_record)
+            main_repr = self.__get_string_representation(record)
+            if orig_repr != main_repr:
+                non_identical_representations.append([orig_repr, main_repr])
 
-        unprepared_records = []
-        for origin in record["origin"].split(";"):
-            origin_file_name, origin_id = origin.split("/")
-            orig_file = Path(f"{record['source_url']}/search/{origin_file_name}")
+        return non_identical_representations
 
-            # TODO: this can be done efficiently...
-            if orig_file.is_file():
-                with open(orig_file) as target_db:
+    def __did_index(self, records: typing.List[dict]) -> None:
+        from colrev_core import prep
+
+        # Note : records are at least md_processed.
+        duplicate_repr_list = []
+        for record in records:
+            for orig in record["origin"].split(";"):
+                duplicate_repr_list.append(
+                    {
+                        "origin_source": orig.split("/")[0],
+                        "origin_id": orig.split("/")[1],
+                        "record": record,
+                    }
+                )
+
+        search_path = Path(records[0]["source_url"] + "/search/")
+        origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
+        non_identical_representations: typing.List[list] = []
+        for origin_source in origin_sources:
+            os_fp = search_path / Path(origin_source)
+            if not os_fp.is_file():
+                print(f"source not fount {os_fp}")
+            else:
+                with open(os_fp) as target_db:
                     bib_db = BibTexParser(
                         customization=convert_to_unicode,
                         ignore_nonstandard_types=False,
                         common_strings=True,
                     ).parse_file(target_db, partial=True)
 
-                    records = bib_db.entries
-                    unprepared_record = [
-                        r for r in records if r["ID"] == origin_id
-                    ].pop()
-            unprepared_records.append(unprepared_record)
+                    origin_source_records = bib_db.entries
+                for duplicate_repr in duplicate_repr_list:
+                    record = duplicate_repr["record"]
+                    origin_record_list = [
+                        x
+                        for x in origin_source_records
+                        if x["ID"] == duplicate_repr["origin_id"]
+                    ]
+                    if len(origin_record_list) == 0:
+                        continue
+                    origin_record = origin_record_list.pop()
 
-        if "doi" in record:
-            unprepared_record = prep.get_md_from_doi(record)
-            unprepared_records.append(unprepared_record)
+                    self.__append_if_duplicate_repr(
+                        non_identical_representations, origin_record, record
+                    )
 
-        if "dblp_key" in record:
-            unprepared_record = prep.get_md_from_dblp(record)
-            unprepared_records.append(unprepared_record)
+        # also include the doi/dblp representations
+        for record in tqdm(records):
+            if "doi" in record:
+                unprepared_record = prep.get_md_from_doi(record)
+                self.__append_if_duplicate_repr(
+                    non_identical_representations, unprepared_record, record
+                )
 
-        non_identical_representations = []
-        for unprepared_record in unprepared_records:
-            if not all(
-                required_field in unprepared_record
-                for required_field in required_fields
-            ):
-                continue
-            unprpepped_record_string = self.__get_string_representation(
-                unprepared_record
-            )
-            if orig_record_string != unprpepped_record_string:
-                non_identical_representations.append(unprpepped_record_string)
+            if "dblp_key" in record:
+                unprepared_record = prep.get_md_from_dblp(record)
+                self.__append_if_duplicate_repr(
+                    non_identical_representations, unprepared_record, record
+                )
 
         # 2. add representations to index
-        non_identical_representations = list(set(non_identical_representations))
+        non_identical_representations = [
+            list(x) for x in {tuple(x) for x in non_identical_representations}
+        ]
         if len(non_identical_representations) > 0:
 
-            for non_identical_representation in non_identical_representations:
+            for (
+                non_identical_representation,
+                orig_record_string,
+            ) in non_identical_representations:
                 hash = hashlib.sha256(
                     non_identical_representation.encode("utf-8")
                 ).hexdigest()
@@ -449,7 +477,6 @@ class LocalIndex:
         return record
 
     def index_records(self) -> None:
-        from tqdm import tqdm
         import shutil
 
         logger.info("Called LocalIndex")
@@ -464,11 +491,17 @@ class LocalIndex:
 
         local_registry = self.__load_local_registry()
         for source_url in [x["source_url"] for x in local_registry]:
+            if not Path(source_url).is_dir():
+                print(f"Warning {source_url} not a directory")
+                continue
             os.chdir(source_url)
             logger.info(f"Index records from {source_url}")
 
             REVIEW_MANAGER = ReviewManager()
             REVIEW_MANAGER.notify(Process(ProcessType.format))
+
+            if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                continue
 
             records = REVIEW_MANAGER.load_records()
             records = [
@@ -493,14 +526,15 @@ class LocalIndex:
                     RecordState.pdf_prepared,
                     RecordState.rev_excluded,
                     RecordState.rev_included,
-                    RecordState.synthesized,
+                    RecordState.rev_synthesized,
                 ]:
                     if "pdf_hash" in record:
                         del record["pdf_hash"]
 
                 self.__record_index(record)
                 self.__gid_index(record)
-                self.__did_index(record)
+
+            self.__did_index(records)
 
         return
 
