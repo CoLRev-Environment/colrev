@@ -34,13 +34,13 @@ def check_grobid_availability() -> None:
     return
 
 
-def start_grobid() -> bool:
+def start_grobid():
     logging.info(f"Running docker container created from {grobid_image}")
     try:
         r = requests.get(GROBID_URL + "/api/isalive")
         if r.text == "true":
             logging.debug("Docker running")
-            return True
+            return
     except requests.exceptions.ConnectionError:
         logging.info("Starting grobid service...")
         subprocess.Popen(
@@ -55,17 +55,3 @@ def start_grobid() -> bool:
             close_fds=True,
         )
         pass
-
-    i = 0
-    while True:
-        i += 1
-        time.sleep(1)
-        try:
-            r = requests.get(GROBID_URL + "/api/isalive")
-            if r.text == "true":
-                logging.info("Grobid service alive.")
-                return True
-        except requests.exceptions.ConnectionError:
-            pass
-        if i > 30:
-            raise requests.exceptions.ConnectionError()

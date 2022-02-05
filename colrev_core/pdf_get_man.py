@@ -96,3 +96,8 @@ def set_data(REVIEW_MANAGER, record, filepath: Path, PAD: int = 40) -> None:
     REVIEW_MANAGER.add_record_changes()
 
     return
+
+
+def pdfs_retrieved_manually(REVIEW_MANAGER) -> bool:
+    git_repo = REVIEW_MANAGER.get_repo()
+    return git_repo.is_dirty()

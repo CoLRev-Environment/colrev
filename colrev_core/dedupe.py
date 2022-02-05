@@ -448,17 +448,17 @@ def apply_manual_deduplication_decisions(REVIEW_MANAGER, results: list):
     for non_dupe_1, non_dupe_2 in non_dupe_list:
         record = [x for x in records if x["ID"] == non_dupe_1].pop()
         if "manual_non_duplicate" in record:
-            record["manual_non_duplicate"] = (
-                record["manual_non_duplicate"] + ";" + non_dupe_2
-            )
+            id_list = record["manual_non_duplicate"].split(";") + [non_dupe_2]
+            id_list = list(set(id_list))
+            record["manual_non_duplicate"] = ";".join(id_list)
         else:
             record["manual_non_duplicate"] = non_dupe_2
 
         record = [x for x in records if x["ID"] == non_dupe_2].pop()
         if "manual_non_duplicate" in record:
-            record["manual_non_duplicate"] = (
-                record["manual_non_duplicate"] + ";" + non_dupe_1
-            )
+            id_list = record["manual_non_duplicate"].split(";") + [non_dupe_1]
+            id_list = list(set(id_list))
+            record["manual_non_duplicate"] = ";".join(id_list)
         else:
             record["manual_non_duplicate"] = non_dupe_1
 
@@ -1271,9 +1271,7 @@ def cluster_tuples(REVIEW_MANAGER, deduper, partition_threshold, auto_merge_thre
         ].round(4)
         # to adjust column widths in ExcelWriter:
         # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-        non_duplicates_df = non_duplicates_df.style.applrecordsy(
-            highlight_cells, axis=None
-        )
+        non_duplicates_df = non_duplicates_df.style.apply(highlight_cells, axis=None)
         non_duplicates_df.to_excel("non_duplicates_to_validate.xlsx", index=False)
 
     return

@@ -578,6 +578,8 @@ class LocalIndex:
                     if "pdf_hash" in record:
                         del record["pdf_hash"]
 
+                del record["status"]
+
                 self.__record_index(record)
                 self.__gid_index(record)
 
@@ -691,7 +693,7 @@ class LocalIndex:
                     if not line:
                         break
                     if "pdf_hash" in line[:9]:
-                        pdf_hashes.append(line[line.find("{") + 1 : line.rfind(",")])
+                        pdf_hashes.append(line[line.find("{") + 1 : line.rfind("}")])
 
         import collections
 

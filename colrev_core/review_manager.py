@@ -823,6 +823,7 @@ class Record:
 
     def __init__(self, ID, start_state, REVIEW_MANAGER=None):
         self.ID = ID
+        self.state = start_state
         if REVIEW_MANAGER is not None:
             self.REVIEW_MANAGER = REVIEW_MANAGER
 
@@ -934,7 +935,7 @@ class Process:
                     transition["dest"] in preceding_states
                     or state == transition["dest"]
                 ):
-                    preceding_states.add(transition["source"])
+                    preceding_states.add(transition["source"])  # type: ignore
             if preceding_states_size == len(preceding_states):
                 added = False
         return preceding_states
@@ -2308,7 +2309,7 @@ class ReviewManager:
 
     def __reset_log(self) -> None:
 
-        self.report_logger.handlers[0].stream.close()
+        self.report_logger.handlers[0].stream.close()  # type: ignore
         self.report_logger.removeHandler(self.report_logger.handlers[0])
 
         with open("report.log", "r+") as f:
@@ -2330,7 +2331,7 @@ class ReviewManager:
         # https://docs.python.org/3/howto/logging-cookbook.html
         # #logging-to-a-single-file-from-multiple-processes
 
-        self.report_logger.handlers[0].stream.close()
+        self.report_logger.handlers[0].stream.close()  # type: ignore
         self.report_logger.removeHandler(self.report_logger.handlers[0])
 
         firsts = []

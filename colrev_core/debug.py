@@ -167,39 +167,45 @@ def debug_pdf_prep():
         ReviewManager,
         ProcessType,
         Process,
-    )
-
-    from pdfminer.pdfdocument import PDFDocument
-    from pdfminer.pdfinterp import resolve1
-    from pdfminer.pdfparser import PDFParser
-
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
-
-    records = REVIEW_MANAGER.load_records()
-    from colrev_core.review_manager import (
-        ReviewManager,
-        ProcessType,
-        Process,
+        RecordState,
     )
     from colrev_core import pdf_prep
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep))
+    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
 
-    records = REVIEW_MANAGER.load_records()
+    # from pdfminer.pdfdocument import PDFDocument
+    # from pdfminer.pdfinterp import resolve1
+    # from pdfminer.pdfparser import PDFParser
+    # records = REVIEW_MANAGER.load_records()
+    # record = [x for x in records if x["ID"] == "Johns2006"].pop()
+    # with open(record["file"], "rb") as file:
+    #     parser = PDFParser(file)
+    #     document = PDFDocument(parser)
+    #     pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+    # text = pdf_prep.extract_text_by_page(record, [pages_in_file - 1])
+    # print(text.lower().replace(" ", ""))
 
-    record = [x for x in records if x["ID"] == "Johns2006"].pop()
-
-    with open(record["file"], "rb") as file:
-        parser = PDFParser(file)
-        document = PDFDocument(parser)
-
-        pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-
-    text = pdf_prep.extract_text_by_page(record, [pages_in_file - 1])
-    print(text.lower().replace(" ", ""))
-
+    record = {
+        "ENTRYTYPE": "article",
+        "ID": "GuoLiuNault2021",
+        "author": "Bødker, Mads",
+        "file": "/home/gerit/ownCloud/data/journals/"
+        + "MISQ/42_1/Hua2018_User Service Innovatio.pdf",
+        "journal": "MIS Quarterly",
+        "metadata_source": "ORIGINAL",
+        "number": "1",
+        "origin": "MISQ.bib/0000000826",
+        "status": RecordState.pdf_imported,
+        "title": "Provisioning Interoperable Disaster Management Systems",
+        "volume": "45",
+        "year": "2021",
+        "doi": " 10.25300/MISQ/2020/14947",
+        "pages": "165--187",
+    }
+    # pdf_prep.remove_last_page(record, 40)
+    ret = pdf_prep.validate_completeness(record, 40)
+    print(ret)
     return
 
 
@@ -227,6 +233,21 @@ def get_non_unique_pdf_hashes() -> None:
     return df
 
 
+def get_local_index():
+    from colrev_core.local_index import LocalIndex
+
+    LOCAL_INDEX = LocalIndex()
+
+    record = {
+        "ENTRYTYPE": "article",
+        "pdf_hash": "fffffffffcffffffe027ffffc0020",
+    }
+
+    res = LOCAL_INDEX.retrieve_record_from_index(record)
+    print(res)
+    return
+
+
 def main():
 
     # code for debugging ...
@@ -248,5 +269,7 @@ def main():
     # remove_needs_manual_preparation_records()
 
     # get_non_unique_pdf_hashes()
+
+    # get_local_index()
 
     return

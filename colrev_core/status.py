@@ -218,13 +218,15 @@ def get_active_processing_functions(current_states_set) -> list:
 
 
 def get_remote_commit_differences(git_repo: git.Repo) -> list:
+    from git.exc import GitCommandError
+
     nr_commits_behind, nr_commits_ahead = -1, -1
 
     origin = git_repo.remotes.origin
     if origin.exists():
         try:
             origin.fetch()
-        except git.exc.GitCommandError:
+        except GitCommandError:
             pass  # probably not online
             return [-1, -1]
 
@@ -660,7 +662,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
 
     # print("\nStatus\n")
     print("\n")
-    print("_________________________ Status ________________________________")
+    print("________________________ Status _______________________________")
     print("")
     if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
         print(" Search")
@@ -671,7 +673,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
 
         print(" Search")
         stat_print(False, "Records retrieved", stat["overall"]["md_retrieved"])
-        print(" _______________________________________________________________")
+        print(" ______________________________________________________________")
         print(" | Metadata preparation                                         ")
         if stat["currently"]["md_retrieved"] > 0:
             stat_print(
@@ -719,7 +721,7 @@ def print_review_status(REVIEW_MANAGER, statuts_info: dict) -> None:
             "duplicates removed",
             stat["currently"]["md_duplicates_removed"],
         )
-        print(" |______________________________________________________________")
+        print(" |_____________________________________________________________")
         print("")
         print(" Prescreen")
         if stat["overall"]["rev_prescreen"] == 0:
