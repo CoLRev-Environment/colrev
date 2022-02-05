@@ -141,7 +141,8 @@ class LocalIndex:
         srep = self.__robust_append(srep, record["ENTRYTYPE"].lower())
         srep = self.__robust_append(srep, self.__format_author_field(author))
         srep = self.__robust_append(srep, record.get("year", ""))
-        srep = self.__robust_append(srep, record.get("title", ""))
+        title_str = re.sub("[^0-9a-zA-Z]+", " ", record.get("title", ""))
+        srep = self.__robust_append(srep, title_str)
         srep = self.__robust_append(srep, self.__get_container_title(record))
         srep = self.__robust_append(srep, record.get("volume", ""))
         srep = self.__robust_append(srep, record.get("number", ""))
@@ -227,11 +228,50 @@ class LocalIndex:
         d_fpath = self.__get_d_index_file(hash)
         return d_fpath.read_text().splitlines()
 
+    def __amend_record(self, hash: str, record: dict) -> None:
+
+        index_fpath = self.__get_record_index_file(hash)
+        saved_record = self.__retrieve_from_index(hash)
+        # TODO: check key and increment hash if necessary?
+
+        # Casting to string (in particular the RecordState Enum)
+        record = {k: str(v) for k, v in record.items()}
+
+        # amend saved record
+        for k, v in record.items():
+            if k in saved_record:
+                continue
+            saved_record[k] = v
+
+        index_record_db = BibDatabase()
+        index_record_db.entries = [saved_record]
+        bibtex_str = bibtexparser.dumps(index_record_db)
+        with open(index_fpath, "w") as out:
+            out.write(bibtex_str)
+
+        return
+
     def __record_index(self, record: dict) -> None:
         hash = self.__get_record_hash(record)
         index_fpath = self.__get_record_index_file(hash)
         string_representation = self.__get_string_representation(record)
         record["hash_string_representation"] = string_representation
+
+        try:
+            dupl: typing.List[str] = []
+            # check if the record is already indexed (based on gid/d)
+            retrieved_record = self.retrieve_record_from_index(record)
+            # if the string_representations are not identical: add to d_index
+            if not self.__get_string_representation(
+                retrieved_record
+            ) == self.__get_string_representation(record):
+                self.__append_if_duplicate_repr(dupl, record, retrieved_record)
+
+            # Note: we need the hash of retrieved_record (different from record)
+            self.__amend_record(self.__get_record_hash(retrieved_record), record)
+            return
+        except self.RecordNotInIndexException:
+            pass
 
         while True:
             if not index_fpath.is_file():
@@ -245,7 +285,7 @@ class LocalIndex:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
                     # should take precedence - reset the index to update)
-                    # store_record(record, index_fpath)
+                    self.__amend_record(hash, record)
                     break
                 else:
                     # to handle the collision:
@@ -317,6 +357,7 @@ class LocalIndex:
                 "booktitle",
             ]
         ]
+
         if all(required_field in origin_record for required_field in required_fields):
             orig_repr = self.__get_string_representation(origin_record)
             main_repr = self.__get_string_representation(record)
@@ -325,67 +366,7 @@ class LocalIndex:
 
         return non_identical_representations
 
-    def __did_index(self, records: typing.List[dict]) -> None:
-        from colrev_core import prep
-
-        # Note : records are at least md_processed.
-        duplicate_repr_list = []
-        for record in records:
-            for orig in record["origin"].split(";"):
-                duplicate_repr_list.append(
-                    {
-                        "origin_source": orig.split("/")[0],
-                        "origin_id": orig.split("/")[1],
-                        "record": record,
-                    }
-                )
-
-        search_path = Path(records[0]["source_url"] + "/search/")
-        origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
-        non_identical_representations: typing.List[list] = []
-        for origin_source in origin_sources:
-            os_fp = search_path / Path(origin_source)
-            if not os_fp.is_file():
-                print(f"source not fount {os_fp}")
-            else:
-                with open(os_fp) as target_db:
-                    bib_db = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
-
-                    origin_source_records = bib_db.entries
-                for duplicate_repr in duplicate_repr_list:
-                    record = duplicate_repr["record"]
-                    origin_record_list = [
-                        x
-                        for x in origin_source_records
-                        if x["ID"] == duplicate_repr["origin_id"]
-                    ]
-                    if len(origin_record_list) == 0:
-                        continue
-                    origin_record = origin_record_list.pop()
-
-                    self.__append_if_duplicate_repr(
-                        non_identical_representations, origin_record, record
-                    )
-
-        # also include the doi/dblp representations
-        for record in tqdm(records):
-            if "doi" in record:
-                unprepared_record = prep.get_md_from_doi(record)
-                self.__append_if_duplicate_repr(
-                    non_identical_representations, unprepared_record, record
-                )
-
-            if "dblp_key" in record:
-                unprepared_record = prep.get_md_from_dblp(record)
-                self.__append_if_duplicate_repr(
-                    non_identical_representations, unprepared_record, record
-                )
-
-        # 2. add representations to index
+    def __add_to_d_index(self, non_identical_representations: list) -> None:
         non_identical_representations = [
             list(x) for x in {tuple(x) for x in non_identical_representations}
         ]
@@ -419,6 +400,72 @@ class LocalIndex:
                             print(f"Collision: {hash}")
                             hash = self.__increment_hash(hash)
                             index_fpath = self.__get_d_index_file(hash)
+        return
+
+    def __d_index(self, records: typing.List[dict]) -> None:
+        from colrev_core import prep
+
+        search_path = Path(records[0]["source_url"] + "/search/")
+        logger.info(f"Create d_index for {search_path.parent}")
+
+        # records = [x for x in records if x['ID'] == 'BenbasatZmud1999']
+
+        # Note : records are at least md_processed.
+        duplicate_repr_list = []
+        for record in records:
+            for orig in record["origin"].split(";"):
+                duplicate_repr_list.append(
+                    {
+                        "origin_source": orig.split("/")[0],
+                        "origin_id": orig.split("/")[1],
+                        "record": record,
+                    }
+                )
+
+        origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
+        non_identical_representations: typing.List[list] = []
+        for origin_source in origin_sources:
+            os_fp = search_path / Path(origin_source)
+            if not os_fp.is_file():
+                print(f"source not fount {os_fp}")
+            else:
+                with open(os_fp) as target_db:
+                    bib_db = BibTexParser(
+                        customization=convert_to_unicode,
+                        ignore_nonstandard_types=False,
+                        common_strings=True,
+                    ).parse_file(target_db, partial=True)
+
+                    origin_source_records = bib_db.entries
+                for duplicate_repr in duplicate_repr_list:
+                    record = duplicate_repr["record"]
+                    origin_record_list = [
+                        x
+                        for x in origin_source_records
+                        if x["ID"] == duplicate_repr["origin_id"]
+                    ]
+                    if len(origin_record_list) == 0:
+                        continue
+                    origin_record = origin_record_list.pop()
+                    non_identical_representations = self.__append_if_duplicate_repr(
+                        non_identical_representations, origin_record, record
+                    )
+        # also include the doi/dblp representations
+        for record in tqdm(records):
+            if "doi" in record:
+                unprepared_record = prep.get_md_from_doi(record.copy())
+                non_identical_representations = self.__append_if_duplicate_repr(
+                    non_identical_representations, unprepared_record, record
+                )
+
+            if "dblp_key" in record:
+                unprepared_record = prep.get_md_from_dblp(record.copy())
+                non_identical_representations = self.__append_if_duplicate_repr(
+                    non_identical_representations, unprepared_record, record
+                )
+
+        # 2. add representations to index
+        self.__add_to_d_index(non_identical_representations)
 
         return
 
@@ -534,7 +581,7 @@ class LocalIndex:
                 self.__record_index(record)
                 self.__gid_index(record)
 
-            self.__did_index(records)
+            self.__d_index(records)
 
         return
 
@@ -631,13 +678,30 @@ class LocalIndex:
                 )
 
         df = pd.DataFrame(changes)
-        # df = df.groupby('fname').apply(pd.DataFrame.sort_values, 'similarity')
-        # grouped_df = df.groupby('fname')
-        # df['similarity'] = grouped_df['similarity'].transform(max)
-        # df = df.sort_values('similarity')
+        df = df.sort_values(by=["similarity", "fname"])
         df.to_csv("changes.csv", index=False)
         print("Exported changes.csv")
 
+        pdf_hashes = []
+        for r_file in self.rind_path.rglob("*.bib"):
+
+            with open(r_file) as f:
+                while True:
+                    line = f.readline()
+                    if not line:
+                        break
+                    if "pdf_hash" in line[:9]:
+                        pdf_hashes.append(line[line.find("{") + 1 : line.rfind(",")])
+
+        import collections
+
+        pdf_hashes_dupes = [
+            item for item, count in collections.Counter(pdf_hashes).items() if count > 1
+        ]
+
+        with open("non-unique-pdf-hashes.txt", "w") as o:
+            o.write("\n".join(pdf_hashes_dupes))
+        print("non-unique-pdf-hashes.txt")
         return
 
 
