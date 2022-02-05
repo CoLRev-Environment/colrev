@@ -33,7 +33,6 @@ from colrev_core.review_manager import RecordState
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-PDF_HANDLING = "NA"
 DEBUG_MODE = False
 PDF_DIRECTORY = Path("pdfs")
 CPUS, REPO_DIR = -1, "NA"
@@ -910,9 +909,6 @@ def main(
 
     logger.info("Prepare PDFs")
 
-    global PDF_HANDLING
-    PDF_HANDLING = REVIEW_MANAGER.config["PDF_HANDLING"]
-
     global DEBUG_MODE
     DEBUG_MODE = REVIEW_MANAGER.config["DEBUG_MODE"]
 
@@ -928,10 +924,6 @@ def main(
 
     if reprocess:
         set_to_reprocess(REVIEW_MANAGER)
-
-    # if "GIT" != PDF_HANDLING:
-    #     print("PDFs not versioned - exit.")
-    #     return
 
     pdf_prep_data = get_data(REVIEW_MANAGER)
 

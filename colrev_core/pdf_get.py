@@ -52,7 +52,6 @@ def copy_pdfs_to_repo(REVIEW_MANAGER) -> None:
                 )
     REVIEW_MANAGER.save_records(records)
     REVIEW_MANAGER.add_record_changes()
-    add_to_git(REVIEW_MANAGER, records)
     return
 
 
@@ -190,18 +189,6 @@ def retrieve_pdf(item: dict) -> dict:
             record.update(status=RecordState.pdf_needs_manual_retrieval)
 
     return record
-
-
-def add_to_git(REVIEW_MANAGER, retrieval_batch) -> None:
-    git_repo = REVIEW_MANAGER.get_repo()
-    if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-        if REVIEW_MANAGER.paths["PDF_DIRECTORY"].is_dir():
-            for record in retrieval_batch:
-                if "file" in record:
-                    if Path(record["file"]).is_file():
-                        git_repo.index.add([record["file"]])
-
-    return
 
 
 def check_existing_unlinked_pdfs(
@@ -378,8 +365,6 @@ def main(REVIEW_MANAGER, copy_to_repo: bool, rename: bool) -> None:
         # Note: rename should be after copy.
         if rename:
             records = rename_pdfs(REVIEW_MANAGER, records)
-
-        add_to_git(REVIEW_MANAGER, retrieval_batch)
 
         REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args=saved_args)
 

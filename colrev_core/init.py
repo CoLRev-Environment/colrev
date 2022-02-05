@@ -133,7 +133,6 @@ def create_local_index():
 def initialize_repo(
     project_title: str,
     SHARE_STAT_REQ: str,
-    PDF_HANDLING: str,
     remote_url: str = "NA",
     local_index_repo: bool = False,
 ) -> bool:
@@ -143,7 +142,6 @@ def initialize_repo(
     require_empty_directory()
 
     assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
-    assert PDF_HANDLING in ["EXT", "GIT"]
 
     global_git_vars = get_name_mail_from_global_git_config()
     if 2 != len(global_git_vars):
@@ -181,7 +179,6 @@ def initialize_repo(
     shared_config = configparser.ConfigParser()
     shared_config.add_section("general")
     shared_config["general"]["SHARE_STAT_REQ"] = SHARE_STAT_REQ
-    shared_config["general"]["PDF_HANDLING"] = PDF_HANDLING
     with open("shared_config.ini", "w") as configfile:
         shared_config.write(configfile)
 
@@ -231,7 +228,6 @@ def initialize_repo(
     report_logger.info("Initialize review repository")
     report_logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
     report_logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
-    report_logger.info("Set PDF_HANDLING:".ljust(30, " ") + f"{PDF_HANDLING}")
 
     REVIEW_MANAGER.create_commit(
         "Initial commit", manual_author=True, saved_args=saved_args

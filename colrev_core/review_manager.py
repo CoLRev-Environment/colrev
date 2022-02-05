@@ -1706,7 +1706,6 @@ class ReviewManager:
             DATA_FORMAT=local_config.get(
                 "general", "DATA_FORMAT", fallback='["MANUSCRIPT"]'
             ),
-            PDF_HANDLING=local_config.get("general", "PDF_HANDLING", fallback="EXT"),
             ID_PATTERN=local_config.get(
                 "general", "ID_PATTERN", fallback="THREE_AUTHORS_YEAR"
             ),

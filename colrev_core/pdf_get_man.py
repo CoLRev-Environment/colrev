@@ -75,14 +75,7 @@ def get_data(REVIEW_MANAGER) -> dict:
     return pdf_get_man_data
 
 
-def pdfs_retrieved_maually(REVIEW_MANAGER) -> bool:
-    git_repo = REVIEW_MANAGER.get_repo()
-    return git_repo.is_dirty()
-
-
 def set_data(REVIEW_MANAGER, record, filepath: Path, PAD: int = 40) -> None:
-
-    git_repo = REVIEW_MANAGER.get_repo()
 
     if filepath is None:
         record.update(status=RecordState.pdf_not_available)
@@ -94,8 +87,6 @@ def set_data(REVIEW_MANAGER, record, filepath: Path, PAD: int = 40) -> None:
     else:
         record.update(status=RecordState.pdf_imported)
         record.update(file=str(filepath))
-        if "GIT" == REVIEW_MANAGER.config["PDF_HANDLING"]:
-            git_repo.index.add([str(filepath)])
         report_logger.info(
             f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
         )
