@@ -28,7 +28,3 @@ repos:
     rev: v4.0.1
     hooks:
     -   id: check-yaml
--   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: 5276c7093b9e29c0594d173c4d253c2380f1e51d
-    hooks:
-    - id: markdownlint-fix
