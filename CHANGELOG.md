@@ -9,18 +9,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Added
 
-- Fetch metadata from Open Library
-- Required fields for misc
-- Information on needs_manual_preparation (man_prep_hints)
-
 ### Changed
 
 ### Removed
 
 ### Fixed
 
+### [0.3.0] - 2022-02-05
+
+### Added
+
+- Introduced ReviewManager and integrated hooks/checks
+- Fetch metadata from Open Library
+- Required fields for misc
+- Information on needs_manual_preparation (man_prep_hints)
+- Activated mypy hooks
+- Introduced custom load scripts
+- Documentation
+- LocalIndex: hash-table implementation for indexing and retrieval
+
+### Changed
+
+- Dedupe: based on active learning (dedupe-io)
+- Improved batches
+- Pass records instead of BibDatabase
+- PDF prep and longer pdf hashes
+
+### Removed
+
+- CLI: now in separate colrev repository
+
+### Fixed
+
 - Initializing repositories
 - Backward search adds two entries to search_details
+- Logging (reinitialize after batches/commits)
 
 ### [0.2.0] - 2021-09-12
 
