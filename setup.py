@@ -11,24 +11,32 @@ with open("CHANGELOG.md") as changelog_file:
     changelog = changelog_file.read()
 
 requirements = [
+    "alphabet_detector==0.0.7",
     "ansiwrap==0.8.4",
     "bashplotlib==0.6.5",
     "bibtexparser==1.2.0",
     "Click==8.0.1",
     "click_completion==0.5.2",
+    "cx_Freeze==6.10",
     "dictdiffer==0.8.1",
     "docker_py==1.10.6",
     "docker==2.1.0",
     "GitPython==3.1.24",
+    "ImageHash==4.2.0",
     "langdetect==1.0.9",
+    "lxml==4.5.0",
     "nameparser==1.0.6",
     "pandas==1.2.5",
+    "pdfminer==20191125",
     "pdfminer.six==20211012",
+    "pdf2image==1.16.0",
+    "PyPDF2==1.26.0",
     "PyYAML==6.0",
     "requests==2.22.0",
     "thefuzz==0.19.0",
     "tqdm==4.61.1",
     "transitions==0.8.10",
+    "timeout_decorator==0.5.0",
 ]
 # 'configparser>=5.0'
 
