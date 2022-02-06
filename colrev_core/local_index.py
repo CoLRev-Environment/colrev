@@ -261,12 +261,12 @@ class LocalIndex:
             dupl: typing.List[str] = []
             # check if the record is already indexed (based on gid/d)
             retrieved_record = self.retrieve_record_from_index(record)
+
             # if the string_representations are not identical: add to d_index
             if not self.__get_string_representation(
                 retrieved_record
             ) == self.__get_string_representation(record):
                 self.__append_if_duplicate_repr(dupl, record, retrieved_record)
-
             # Note: we need the hash of retrieved_record (different from record)
             self.__amend_record(self.__get_record_hash(retrieved_record), record)
             return
@@ -491,23 +491,32 @@ class LocalIndex:
         """Convenience function to retrieve a record based on a global ID"""
 
         string_representation = ""
+        retrieved = False
         for k, v in record.items():
-            if k not in self.global_keys:
+            if k not in self.global_keys or "ID" == k:
                 continue
 
             gid = f"{k}={v}"
             hash = hashlib.sha256(gid.encode("utf-8")).hexdigest()
-            while True:
-                (
-                    saved_gid,
-                    string_representation,
-                ) = self.__retrieve_from_gid_index_based_on_hash(hash)
-                if saved_gid == gid:
-                    # ok - no collision,
-                    break
-                else:
-                    # to handle the collision:
-                    hash = self.__increment_hash(hash)
+            # Note: catch exceptions to make sure that all global IDs are considered
+            try:
+                while True:
+                    (
+                        saved_gid,
+                        string_representation,
+                    ) = self.__retrieve_from_gid_index_based_on_hash(hash)
+                    if saved_gid == gid:
+                        # ok - no collision,
+                        retrieved = True
+                        break
+                    else:
+                        # to handle the collision:
+                        hash = self.__increment_hash(hash)
+            except FileNotFoundError:
+                pass
+
+        if not retrieved:
+            raise self.RecordNotInIndexException
 
         indexed_record = self.__retrieve_from_index(
             hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
@@ -703,7 +712,7 @@ class LocalIndex:
 
         with open("non-unique-pdf-hashes.txt", "w") as o:
             o.write("\n".join(pdf_hashes_dupes))
-        print("non-unique-pdf-hashes.txt")
+        print("Export non-unique-pdf-hashes.txt")
         return
 
 
