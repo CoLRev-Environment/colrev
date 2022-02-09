@@ -4,6 +4,10 @@ import pprint
 from pathlib import Path  # noqa F401
 
 from colrev_core import review_manager
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
+from colrev_core.process import RecordState
+from colrev_core.review_manager import ReviewManager
 
 review_manager.setup_logger(level=logging.DEBUG)
 logger = logging.getLogger("colrev_core")
@@ -34,16 +38,14 @@ def debug_load() -> None:
     # Debugging: get all imported records, their origins
     # then compare them to the original search_files
 
-    from colrev_core.review_manager import ReviewManager, ProcessType, Process
-    from colrev_core import load
+    from colrev_core.load import Loader
 
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.explore))
+    LOADER = Loader(keep_ids=True)
 
-    rec_header_lis = REVIEW_MANAGER.get_record_header_list()
+    rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
     origin_list = [x[1] for x in rec_header_lis]
 
-    search_files = load.get_search_files(REVIEW_MANAGER, restrict=["bib"])
+    search_files = LOADER.get_search_files(restrict=["bib"])
 
     for search_file in search_files:
         print(search_file)
@@ -64,16 +66,7 @@ def debug_load() -> None:
 
 def debug_prep() -> None:
 
-    from colrev_core import prep
-    from colrev_core.review_manager import (
-        ReviewManager,
-        ProcessType,
-        Process,
-        RecordState,
-    )
-
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep))
+    from colrev_core.prep import Preparation
 
     record = {
         "ENTRYTYPE": "article",
@@ -89,11 +82,94 @@ def debug_prep() -> None:
         "volume": "16",
     }
 
+    record = {
+        "ID": "BarrettDavidsonPrabhuEtAl2015",
+        "ENTRYTYPE": "article",
+        "origin": "ais_services_outsourcing.bib/Barrett2015",
+        "status": "md_processed",
+        "metadata_source": "CROSSREF",
+        "doi": "10.25300/MISQ/2015/39:1.03",
+        "author": "Abbott, Pamela and Zheng, Y and Du, Rong and Willcocks, Leslie P.",
+        "journal": "MIS Quarterly",
+        "title": "Service Innovation in the Digital Age: Key Contributions and Future",
+        "year": "2015",
+        "number": "1",
+        "pages": "135--154",
+        "volume": "39",
+        "url": "https://aisel.aisnet.org/misq/vol39/iss1/9",
+    }
+
+    # record_list = [
+    #     {
+    #         "ID": "BarrettDavidsonPrabhuEtAl2016",
+    #         "ENTRYTYPE": "article",
+    #         "origin": "ais_services_outsourcing.bib/Barrett2015",
+    #         "status": "md_processed",
+    #         "metadata_source": "CROSSREF",
+    #         "doi": "10.25300/MISQ/2015/39:1.03",
+    #         "author": "Abbott, P and Zheng, Y and Du, Rong and Willcocks, Leslie P.",
+    #         "journal": "MIS Quarterly",
+    #         "title": "Service Innovation in the Digital Age: Key Contributionns",
+    #         "year": "2015",
+    #         "number": "1",
+    #         "pages": "135--154",
+    #         "volume": "39",
+    #         "url": "https://aisel.aisnet.org/misq/vol39/iss1/9",
+    #     },
+    # {   'ENTRYTYPE': 'article',
+    #     'ID': 'QiuTangWhinston2015',
+    #     'author': 'Qiu, Liangfei and Tang, Qian and Whinston, Andrew B.',
+    #     'doi': '10.1080/07421222.2015.1138368',
+    #     'grobid-version': 'lfoppiano/grobid:0.7.0',
+    #     'journal': 'Journal of Management Information Systems',
+    #     'metadata_source': 'DOI.ORG',
+    #     'number': '4',
+    #     'origin': 'JMIS.bib/0000000659',
+    #     'pages': '78--108',
+    #     'status': RecordState.md_imported,
+    #     'title': 'Two Formulas for Success in Social Media',
+    #     'volume': '32',
+    #     'year': '2015'},
+    # {   'ENTRYTYPE': 'article',
+    #     'ID': 'QuJiangNoYear',
+    #     'author': 'Qu, Shawn and Jiang, Zhengrui',
+    #     'doi': '10.25300/MISQ/2019/14804',
+    #     'grobid-version': 'lfoppiano/grobid:0.7.0',
+    #     'journal': 'MIS Quarterly',
+    #     'metadata_source': 'DOI.ORG',
+    #     'number': '4',
+    #     'origin': 'MISQ.bib/0000001196',
+    #     'status': RecordState.md_imported,
+    #     'title': 'A time-based dynamic synchronization policy',
+    #     'volume': '43'}
+    # ]
+
+    # import colrev_core.dedupe as cc_dedupe
+
+    PREPARATION = Preparation()
+
+    # cc_dedupe.preparation_link_to_curated_record(record, record_list)
+    # input("stop")
+
+    record = {
+        "ENTRYTYPE": "inproceedings",
+        "ID": "WagnerPrester2019",
+        "author": "Wagner, Gerit and Prester, Julian",
+        "booktitle": "International Conference on Information Systems",
+        "metadata_source": "ORIGINAL",
+        "origin": "ais_digital_labor_platform.bib/Wagner2019",
+        "status": RecordState.md_imported,
+        "title": "Information Systems Research on Digital Platforms for Knowledge Work",
+        "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
+        "year": "2019",
+    }
+
     pp.pprint(record)
-    res = prep.get_md_from_doi(record)
-    # res = prep.get_md_from_crossref(record)
-    # res = prep.get_md_from_urls(record)
-    # res = prep.get_md_from_dblp(record)
+    # res = PREPARATION.get_md_from_doi(record)
+    res = PREPARATION.get_md_from_crossref(record)
+    # res = PREPARATION.get_md_from_urls(record)
+    # res = PREPARATION.get_md_from_dblp(record)
+    # res = PREPARATION.get_doi_from_sem_scholar(record)
 
     pp.pprint(res)
 
@@ -101,16 +177,8 @@ def debug_prep() -> None:
 
 
 def debug_pdf_get():
-    from colrev_core.review_manager import (
-        ReviewManager,
-        ProcessType,
-        Process,
-        RecordState,
-    )
-    from colrev_core import pdf_get
 
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.pdf_get))
+    from colrev_core.pdf_get import PDF_Retrieval
 
     record = {
         "ENTRYTYPE": "article",
@@ -128,51 +196,43 @@ def debug_pdf_get():
         "doi": " 10.25300/MISQ/2020/14947",
     }
 
-    pdf_get.get_pdf_from_unpaywall(record, REVIEW_MANAGER)
+    PDF_RETRIEVAL = PDF_Retrieval()
+    PDF_RETRIEVAL.get_pdf_from_unpaywall(record)
 
     return
 
 
 def debug_data():
 
-    from colrev_core.review_manager import ReviewManager, ProcessType, Process
-    from colrev_core import data
+    from colrev_core.data import Data
 
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.data))
+    DATA = Data()
+    records = DATA.REVIEW_MANAGER.load_records()
+    included = DATA.get_records_for_synthesis(records)
 
-    records = REVIEW_MANAGER.load_records()
-    included = data.get_records_for_synthesis(records)
-
-    data.update_manuscript(REVIEW_MANAGER, records, included)
+    DATA.update_manuscript(records, included)
 
     return
 
 
 def debug_tei_tools() -> None:
-    from colrev_core import tei_tools, grobid_client
+    from colrev_core.tei import TEI
+    from colrev_core import grobid_client
 
     logger.debug("Start grobid")
     grobid_client.start_grobid()
     logger.debug("Started grobid")
 
     filepath = Path("/home/user/Webster2002.pdf")
-    res = tei_tools.get_record_from_pdf_tei(filepath)
+    TEI_INSTANCE = TEI(pdf_path=filepath)
+    res = TEI_INSTANCE.get_metadata()
     print(res)
     return
 
 
 def debug_pdf_prep():
-    from colrev_core.review_manager import (
-        ReviewManager,
-        ProcessType,
-        Process,
-        RecordState,
-    )
-    from colrev_core import pdf_prep
 
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.pdf_prep))
+    from colrev_core.pdf_prep import PDF_Preparation
 
     # from pdfminer.pdfdocument import PDFDocument
     # from pdfminer.pdfinterp import resolve1
@@ -204,22 +264,17 @@ def debug_pdf_prep():
         "pages": "165--187",
     }
     # pdf_prep.remove_last_page(record, 40)
-    ret = pdf_prep.validate_completeness(record, 40)
+    ret = PDF_Preparation.validate_completeness(record, 40)
     print(ret)
     return
 
 
 def get_non_unique_pdf_hashes() -> None:
-    from colrev_core.review_manager import (
-        ReviewManager,
-        ProcessType,
-        Process,
-    )
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
     REVIEW_MANAGER.notify(Process(ProcessType.prep))
-    records = REVIEW_MANAGER.load_records()
+    records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
     import collections
 
@@ -233,18 +288,103 @@ def get_non_unique_pdf_hashes() -> None:
     return df
 
 
-def get_local_index():
+def local_index():
     from colrev_core.local_index import LocalIndex
 
     LOCAL_INDEX = LocalIndex()
-
+    # To Test retrieval of record:
     record = {
         "ENTRYTYPE": "article",
-        "pdf_hash": "fffffffffcffffffe027ffffc0020",
+        "author": "Addis, T. R.",
+        "journal": "Journal of Information Technology",
+        "number": "1",
+        "pages": "38--45",
+        "title": "Knowledge for the New Generation Computers",
+        "volume": "1",
+        "year": "1986",
     }
+    record = LOCAL_INDEX.retrieve_record_from_index(record)
+    pp.pprint(record)
 
-    res = LOCAL_INDEX.retrieve_record_from_index(record)
-    print(res)
+    # To Test retrieval of global ID
+    # record = {
+    #     'doi' : '10.17705/1JAIS.00598',
+    # }
+    # record = LOCAL_INDEX.retrieve_record_from_index(record)
+    # pp.pprint(record)
+
+    # record = {
+    #     "ENTRYTYPE": "article",
+    #     "pdf_hash": "fffffffffcffffffe027ffffc0020",
+    # }
+
+    # res = LOCAL_INDEX.retrieve_record_from_index(record)
+    # print(res)
+
+    # To test the duplicate convenience function:
+    # record1 = {
+    #     "ENTRYTYPE": "article",
+    #     "author" : "Addis, T. R.",
+    #     "journal" : "Journal of Information Technology",
+    #     "number" : "1",
+    #     "pages" : "38--45",
+    #     "title" : "Knowledge for the New Generation Computers",
+    #     "volume" : "1",
+    #     "year" : "1986"
+    # }
+    # record2 = {
+    #     "ENTRYTYPE": "article",
+    #     "author" : "Majchrzak, Ann and Malhotra, Arvind",
+    #     "journal" : "Information Systems Research",
+    #     "number" : "4",
+    #     "pages" : "685--703",
+    #     "title" : "Effect of Knowledge-Sharing Trajectories on " + \
+    #                   "Innovative Outcomes in Temporary Online Crowds",
+    #     "volume" : "27",
+    #     "year" : "2016"
+    # }
+    # record3 = {
+    #     "ENTRYTYPE": "article",
+    #     "author" : "Addis, T. R.",
+    #     "journal" : "Journal of Technology",
+    #     "number" : "1",
+    #     "pages" : "38--45",
+    #     "title" : "Knowledge for the New Generation Computers",
+    #     "volume" : "1",
+    #     "year" : "1986"
+    # }
+    # record3 = {
+    #     "ENTRYTYPE": "article",
+    #     "author" : "colquitt, j and zapata-phelan, c p",
+    #     "journal" : "academy of management journal",
+    #     "number" : "6",
+    #     "pages" : "1281--1303",
+    #     "title" : "trends in theory building and theory testing a " + \
+    #           "five-decade study of theacademy of management journal",
+    #     "volume" : "50",
+    #     "year" : "2007"
+    # }
+    # record4 = {
+    #     "ENTRYTYPE": "article",
+    #     "author" : "colquitt, j and zapata-phelan, c p",
+    #     "journal" : "academy of management journal",
+    #     "number" : "6",
+    #     "pages" : "1281--1303",
+    #     "title" : "trends in theory building and theory testing a " + \
+    #           "five-decade study of the academy of management journal",
+    #     "volume" : "50",
+    #     "year" : "2007"
+    # }
+    # print(LOCAL_INDEX.is_duplicate(record1, record2))
+    # print(LOCAL_INDEX.is_duplicate(record1, record3))
+    # print(LOCAL_INDEX.is_duplicate(record3, record4))
+
+    # To test the duplicate representation function:
+    # record3 = LOCAL_INDEX.retrieve_record_from_index(record3)
+    # pp.pprint(record3)
+    # record4 = LOCAL_INDEX.retrieve_record_from_index(record4)
+    # pp.pprint(record4)
+
     return
 
 
@@ -270,6 +410,6 @@ def main():
 
     # get_non_unique_pdf_hashes()
 
-    # get_local_index()
+    # local_index()
 
     return

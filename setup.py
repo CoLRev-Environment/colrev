@@ -32,6 +32,7 @@ requirements = [
     "pdf2image==1.16.0",
     "PyPDF2==1.26.0",
     "PyYAML==6.0",
+    "p_tqdm==1.3.3",
     "requests==2.22.0",
     "thefuzz==0.19.0",
     "tqdm==4.61.1",

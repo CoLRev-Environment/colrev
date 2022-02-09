@@ -1,9 +1,7 @@
 #! /usr/bin/env python
 import binascii
 import hashlib
-import logging
 import os
-import pprint
 import re
 import typing
 import unicodedata
@@ -16,22 +14,20 @@ from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 from tqdm import tqdm
 
-from colrev_core.review_manager import Process
-from colrev_core.review_manager import ProcessType
-from colrev_core.review_manager import RecordState
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
+from colrev_core.process import RecordState
 from colrev_core.review_manager import ReviewManager
 
-pp = pprint.PrettyPrinter(indent=4, width=140)
-logger = logging.getLogger("colrev_core")
-logger.setLevel(logging.INFO)
 
-
-class LocalIndex:
+class LocalIndex(Process):
 
     global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
     max_len_sha256 = 2 ** 256
 
     def __init__(self):
+        super().__init__(ProcessType.explore)
+
         self.local_index_path = Path.home().joinpath(".colrev")
         self.rind_path = self.local_index_path / Path(".record_index/")
         self.gind_path = self.local_index_path / Path(".gid_index/")
@@ -189,24 +185,12 @@ class LocalIndex:
 
         index_record_db = BibDatabase()
         index_record_db.entries = [record]
-        bibtex_str = bibtexparser.dumps(index_record_db)
+        bibtex_str = bibtexparser.dumps(
+            index_record_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+        )
         with open(index_fpath, "w") as out:
             out.write(bibtex_str)
         return
-
-    def __load_local_registry(self) -> list:
-        from yaml import safe_load
-        import pandas as pd
-
-        local_colrev_config = Path.home().joinpath(".colrev")
-        local_registry = "registry.yaml"
-        local_registry_list: typing.List[dict] = []
-        local_registry_path = local_colrev_config.joinpath(local_registry)
-        if os.path.exists(local_registry_path):
-            with open(local_registry_path) as f:
-                local_registry_df = pd.json_normalize(safe_load(f))
-                local_registry_list = local_registry_df.to_dict("records")
-        return local_registry_list
 
     def __retrieve_from_index(self, hash: str) -> dict:
         record_fp = self.__get_record_index_file(hash)
@@ -403,10 +387,13 @@ class LocalIndex:
         return
 
     def __d_index(self, records: typing.List[dict]) -> None:
-        from colrev_core import prep
+
+        from colrev_core.prep import Preparation
+
+        PREPARATION = Preparation()
 
         search_path = Path(records[0]["source_url"] + "/search/")
-        logger.info(f"Create d_index for {search_path.parent}")
+        self.logger.info(f"Create d_index for {search_path.parent}")
 
         # records = [x for x in records if x['ID'] == 'BenbasatZmud1999']
 
@@ -453,13 +440,13 @@ class LocalIndex:
         # also include the doi/dblp representations
         for record in tqdm(records):
             if "doi" in record:
-                unprepared_record = prep.get_md_from_doi(record.copy())
+                unprepared_record = PREPARATION.get_md_from_doi(record.copy())
                 non_identical_representations = self.__append_if_duplicate_repr(
                     non_identical_representations, unprepared_record, record
                 )
 
             if "dblp_key" in record:
-                unprepared_record = prep.get_md_from_dblp(record.copy())
+                unprepared_record = PREPARATION.get_md_from_dblp(record.copy())
                 non_identical_representations = self.__append_if_duplicate_repr(
                     non_identical_representations, unprepared_record, record
                 )
@@ -524,7 +511,7 @@ class LocalIndex:
         return indexed_record
 
     def __prep_record_for_return(self, record: dict) -> dict:
-        from colrev_core.review_manager import RecordState
+        from colrev_core.process import RecordState
 
         if "hash_string_representation" in record:
             del record["hash_string_representation"]
@@ -535,9 +522,9 @@ class LocalIndex:
     def index_records(self) -> None:
         import shutil
 
-        logger.info("Called LocalIndex")
+        self.logger.info("Called LocalIndex")
 
-        logger.info("Reset record_index, gid_index, d_index")
+        self.logger.info("Reset record_index, gid_index, d_index")
         if self.rind_path.is_dir():
             shutil.rmtree(self.rind_path)
         if self.gind_path.is_dir():
@@ -545,21 +532,24 @@ class LocalIndex:
         if self.dind_path.is_dir():
             shutil.rmtree(self.dind_path)
 
-        local_registry = self.__load_local_registry()
+        REVIEW_MANAGER = ReviewManager()
+        REVIEW_MANAGER.notify(self)
+        local_registry = REVIEW_MANAGER.load_local_registry()
         for source_url in [x["source_url"] for x in local_registry]:
             if not Path(source_url).is_dir():
                 print(f"Warning {source_url} not a directory")
                 continue
             os.chdir(source_url)
-            logger.info(f"Index records from {source_url}")
+            self.logger.info(f"Index records from {source_url}")
 
+            # get ReviewManager for project (after chdir)
             REVIEW_MANAGER = ReviewManager()
             REVIEW_MANAGER.notify(Process(ProcessType.format))
 
             if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue
 
-            records = REVIEW_MANAGER.load_records()
+            records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
             records = [
                 r
                 for r in records
@@ -612,7 +602,7 @@ class LocalIndex:
                 pass
 
         if retrieved_record:
-            logger.debug("Retrieved from g_id index")
+            self.logger.debug("Retrieved from g_id index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
@@ -635,7 +625,7 @@ class LocalIndex:
                 break
 
         if retrieved_record:
-            logger.debug("Retrieved from record index")
+            self.logger.debug("Retrieved from record index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 3. Try the duplicate representation index
@@ -648,7 +638,7 @@ class LocalIndex:
         if not retrieved_record:
             raise self.RecordNotInIndexException(record.get("ID", "no-key"))
 
-        logger.debug("Retrieved from d index")
+        self.logger.debug("Retrieved from d index")
         return self.__prep_record_for_return(retrieved_record)
 
     def is_duplicate(self, record1: dict, record2: dict) -> str:
@@ -714,98 +704,6 @@ class LocalIndex:
             o.write("\n".join(pdf_hashes_dupes))
         print("Export non-unique-pdf-hashes.txt")
         return
-
-
-def main() -> None:
-
-    # LOCAL_INDEX = LocalIndex()
-
-    # To Test retrieval of record:
-    # record = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "Addis, T. R.",
-    #     "journal" : "Journal of Information Technology",
-    #     "number" : "1",
-    #     "pages" : "38--45",
-    #     "title" : "Knowledge for the New Generation Computers",
-    #     "volume" : "1",
-    #     "year" : "1986"
-    # }
-    # record = LOCAL_INDEX.retrieve_record_from_index(record)
-    # pp.pprint(record)
-
-    # To Test retrieval of global ID
-    # record = {
-    #     'doi' : '10.17705/1JAIS.00598',
-    # }
-    # record = LOCAL_INDEX.retrieve_record_from_index(record)
-    # pp.pprint(record)
-
-    # To test the duplicate convenience function:
-    # record1 = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "Addis, T. R.",
-    #     "journal" : "Journal of Information Technology",
-    #     "number" : "1",
-    #     "pages" : "38--45",
-    #     "title" : "Knowledge for the New Generation Computers",
-    #     "volume" : "1",
-    #     "year" : "1986"
-    # }
-    # record2 = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "Majchrzak, Ann and Malhotra, Arvind",
-    #     "journal" : "Information Systems Research",
-    #     "number" : "4",
-    #     "pages" : "685--703",
-    #     "title" : "Effect of Knowledge-Sharing Trajectories on " + \
-    #                   "Innovative Outcomes in Temporary Online Crowds",
-    #     "volume" : "27",
-    #     "year" : "2016"
-    # }
-    # record3 = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "Addis, T. R.",
-    #     "journal" : "Journal of Technology",
-    #     "number" : "1",
-    #     "pages" : "38--45",
-    #     "title" : "Knowledge for the New Generation Computers",
-    #     "volume" : "1",
-    #     "year" : "1986"
-    # }
-    # record3 = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "colquitt, j and zapata-phelan, c p",
-    #     "journal" : "academy of management journal",
-    #     "number" : "6",
-    #     "pages" : "1281--1303",
-    #     "title" : "trends in theory building and theory testing a " + \
-    #           "five-decade study of theacademy of management journal",
-    #     "volume" : "50",
-    #     "year" : "2007"
-    # }
-    # record4 = {
-    #     "ENTRYTYPE": "article",
-    #     "author" : "colquitt, j and zapata-phelan, c p",
-    #     "journal" : "academy of management journal",
-    #     "number" : "6",
-    #     "pages" : "1281--1303",
-    #     "title" : "trends in theory building and theory testing a " + \
-    #           "five-decade study of the academy of management journal",
-    #     "volume" : "50",
-    #     "year" : "2007"
-    # }
-    # print(LOCAL_INDEX.is_duplicate(record1, record2))
-    # print(LOCAL_INDEX.is_duplicate(record1, record3))
-    # print(LOCAL_INDEX.is_duplicate(record3, record4))
-
-    # To test the duplicate representation function:
-    # record3 = LOCAL_INDEX.retrieve_record_from_index(record3)
-    # pp.pprint(record3)
-    # record4 = LOCAL_INDEX.retrieve_record_from_index(record4)
-    # pp.pprint(record4)
-
-    return
 
 
 if __name__ == "__main__":
