@@ -394,7 +394,6 @@ class PDF_Preparation(Process):
                 f'{record["ID"]}'.ljust(PAD - 1, " ")
                 + "Could not validate completeness: no pages in metadata"
             )
-            # report_logger.error(msg)
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; no_pages_in_metadata"
             )
@@ -406,12 +405,6 @@ class PDF_Preparation(Process):
         record = self.__get_pages_in_pdf(record)
         if nr_pages_metadata != record["pages_in_file"]:
             if nr_pages_metadata == int(record["pages_in_file"]) - 1:
-                # report_logger.warning(
-                #     f'{record["ID"]}'.ljust(PAD - 3, " ")
-                #     + "File has one more page "
-                #     + f'({record["pages_in_file"]}) compared to '
-                #     + f"metadata ({nr_pages_metadata} pages)"
-                # )
                 record["pdf_prep_hints"] = (
                     record.get("pdf_prep_hints", "") + "; more_pages_in_pdf"
                 )
@@ -425,7 +418,6 @@ class PDF_Preparation(Process):
                     + "not identical with record "
                     + f"({nr_pages_metadata} pages)"
                 )
-                # report_logger.error(msg)
                 record["pdf_prep_hints"] = (
                     record.get("pdf_prep_hints", "") + "; nr_pages_not_matching"
                 )
@@ -477,8 +469,6 @@ class PDF_Preparation(Process):
             stderr=subprocess.PIPE,
         )
         page1 = res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
-
-        # input(page0)
 
         # input(page0)
 
@@ -820,7 +810,6 @@ class PDF_Preparation(Process):
         return prep_data
 
     def __batch(self, items: dict):
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
         batch = []
         for item in items:
 
@@ -832,10 +821,7 @@ class PDF_Preparation(Process):
                     "record": item,
                 }
             )
-            if len(batch) == n:
-                yield batch
-                batch = []
-        yield batch
+        return batch
 
     def __set_to_reprocess(self):
 
@@ -864,18 +850,21 @@ class PDF_Preparation(Process):
             print(f'"{last_page_average_hash_16}",')
         return
 
-    def update_hashes(self) -> None:
+    def __update_hash(self, record: dict) -> dict:
+        if "file" in record:
+            record.update(
+                pdf_hash=imagehash.average_hash(
+                    convert_from_path(record["file"], first_page=0, last_page=1)[0],
+                    hash_size=32,
+                )
+            )
+        return record
 
+    def update_hashes(self) -> None:
+        self.logger.info("Update hashes")
         self.REVIEW_MANAGER.notify(self)
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
-            if "pdf_hash" in record:
-                record.update(
-                    pdf_hash=imagehash.average_hash(
-                        convert_from_path(record["file"], first_page=0, last_page=1)[0],
-                        hash_size=32,
-                    )
-                )
+        records = p_map(self.__update_hash, records)
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Update PDF hashes")
@@ -896,33 +885,26 @@ class PDF_Preparation(Process):
         if reprocess:
             self.__set_to_reprocess()
 
-        pdf_prep_data = self.__get_data()
+        pdf_prep_data_batch = self.__get_data()
 
-        i = 1
-        for pdf_prep_batch in self.__batch(pdf_prep_data["items"]):
+        pdf_prep_batch = self.__batch(pdf_prep_data_batch["items"])
 
-            print(f"Batch {i}")
-            i += 1
+        # Note : for debugging:
+        # for item in pdf_prep_batch:
+        #     record = item['record']
+        #     print(record['ID'])
+        #     record = prepare_pdf(item)
+        #     REVIEW_MANAGER.save_record_list_by_ID([record])
 
-            # Note : for debugging:
-            # for item in pdf_prep_batch:
-            #     record = item['record']
-            #     print(record['ID'])
-            #     record = prepare_pdf(item)
-            #     REVIEW_MANAGER.save_record_list_by_ID([record])
+        pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
 
-            pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(pdf_prep_batch)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(pdf_prep_batch)
+        # Multiprocessing mixes logs of different records.
+        # For better readability:
+        self.REVIEW_MANAGER.reorder_log([x["ID"] for x in pdf_prep_batch])
 
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            self.REVIEW_MANAGER.reorder_log([x["ID"] for x in pdf_prep_batch])
-
-            self.REVIEW_MANAGER.create_commit("Prepare PDFs", saved_args=saved_args)
-
-        if i == 1:
-            self.logger.info("No additional pdfs to prepare")
+        self.REVIEW_MANAGER.create_commit("Prepare PDFs", saved_args=saved_args)
 
         return
 

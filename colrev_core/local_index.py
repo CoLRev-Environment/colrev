@@ -26,12 +26,15 @@ class LocalIndex(Process):
     max_len_sha256 = 2 ** 256
 
     def __init__(self):
-        super().__init__(ProcessType.explore)
+        super().__init__(ProcessType.check)
 
         self.local_index_path = Path.home().joinpath(".colrev")
         self.rind_path = self.local_index_path / Path(".record_index/")
         self.gind_path = self.local_index_path / Path(".gid_index/")
         self.dind_path = self.local_index_path / Path(".d_index/")
+        self.toc_path = self.local_index_path / Path(".toc_index/")
+        self.jind_path = self.local_index_path / Path(".j_index/")
+        self.wos_j_abbrev = self.local_index_path / Path(".wos_abbrev_table.csv")
 
     class RecordNotInIndexException(Exception):
         def __init__(self, id: str = None):
@@ -177,6 +180,9 @@ class LocalIndex(Process):
     def __get_d_index_file(self, hash: str) -> Path:
         return self.local_index_path / Path(f".d_index/{hash[:2]}/{hash[2:]}.txt")
 
+    def __get_toc_index_file(self, hash: str) -> Path:
+        return self.local_index_path / Path(f".toc_index/{hash[:2]}/{hash[2:]}.txt")
+
     def __store_record(self, record: dict, index_fpath: Path) -> None:
         index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
 
@@ -211,6 +217,16 @@ class LocalIndex(Process):
     def __retrieve_from_d_index_based_on_hash(self, hash: str) -> list:
         d_fpath = self.__get_d_index_file(hash)
         return d_fpath.read_text().splitlines()
+
+    def __retrieve_from_toc_index_based_on_hash(self, hash: str) -> list:
+        toc_fpath = self.__get_toc_index_file(hash)
+        res = toc_fpath.read_text().splitlines()
+        return res
+
+    def __amend_toc(self, index_fpath: Path, string_repr: str) -> None:
+        with open(index_fpath, "a") as out:
+            out.write(f"{string_repr}\n")
+        return
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
@@ -322,6 +338,92 @@ class LocalIndex(Process):
 
         return
 
+    def __toc_index(self, record) -> None:
+
+        if "article" == record.get("ENTRYTYPE", ""):
+            # Note : records are md_prepared, i.e., complete
+
+            toc_key = f"toc_key={record.get('journal', '').lower()}"
+            if "volume" in record:
+                toc_key = toc_key + f"|{record['volume']}"
+            if "number" in record:
+                toc_key = toc_key + f"|{record['number']}"
+
+            # print(toc_key)
+            hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
+            index_fpath = self.__get_toc_index_file(hash)
+            record_string_repr = self.__get_string_representation(record)
+            while True:
+                if not index_fpath.is_file():
+                    index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
+                    index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
+                    break
+                else:
+                    res = self.__retrieve_from_toc_index_based_on_hash(hash)
+                    saved_toc_key = res[0]
+                    saved_toc_content = res[1:]
+                    if saved_toc_key == toc_key:
+                        # ok - no collision, update the record
+                        # Note : do not update (the record from the first repository
+                        #  should take precedence - reset the index to update)
+                        if record_string_repr not in saved_toc_content:
+                            self.__amend_toc(index_fpath, record_string_repr)
+                        break
+                    else:
+                        # to handle the collision:
+                        print(f"Collision: {hash}")
+                        hash = self.__increment_hash(hash)
+                        index_fpath = self.__get_toc_index_file(hash)
+
+        if "inproceedings" == record.get("ENTRYTYPE", ""):
+            # Note : records are md_prepared, i.e., complete
+
+            toc_key = (
+                f"toc_key={record.get('booktitle', '').lower()}"
+                + f"|{record.get('year', '')}"
+            )
+
+            # print(toc_key)
+            hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
+            index_fpath = self.__get_toc_index_file(hash)
+            record_string_repr = self.__get_string_representation(record)
+            print(index_fpath)
+            while True:
+                if not index_fpath.is_file():
+                    index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
+                    index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
+                    break
+                else:
+                    res = self.__retrieve_from_toc_index_based_on_hash(hash)
+                    saved_toc_key = res[0]
+                    saved_toc_content = res[1:]
+                    if saved_toc_key == toc_key:
+                        # ok - no collision, update the record
+                        # Note : do not update (the record from the first repository
+                        #  should take precedence - reset the index to update)
+                        if record_string_repr not in saved_toc_content:
+                            self.__amend_toc(index_fpath, record_string_repr)
+                        break
+                    else:
+                        # to handle the collision:
+                        print(f"Collision: {hash}")
+                        hash = self.__increment_hash(hash)
+                        index_fpath = self.__get_toc_index_file(hash)
+
+        return
+
+    def __append_j_variation(
+        self, j_variations: list, origin_record: dict, record: dict
+    ) -> list:
+
+        if "journal" not in origin_record or "journal" not in record:
+            return j_variations
+        else:
+            if origin_record["journal"] != record["journal"]:
+                j_variations.append([origin_record["journal"], record["journal"]])
+
+        return j_variations
+
     def __append_if_duplicate_repr(
         self, non_identical_representations: list, origin_record: dict, record: dict
     ) -> list:
@@ -390,9 +492,15 @@ class LocalIndex(Process):
 
         from colrev_core.prep import Preparation
 
-        PREPARATION = Preparation()
+        # Note: preparation notifies of preparation processs...
+        PREPARATION = Preparation(notify=False)
 
-        search_path = Path(records[0]["source_url"] + "/search/")
+        try:
+            search_path = Path(records[0]["source_url"] + "/search/")
+        except IndexError:
+            pass
+            return
+
         self.logger.info(f"Create d_index for {search_path.parent}")
 
         # records = [x for x in records if x['ID'] == 'BenbasatZmud1999']
@@ -411,6 +519,7 @@ class LocalIndex(Process):
 
         origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
         non_identical_representations: typing.List[list] = []
+        j_variations: typing.List[list] = []
         for origin_source in origin_sources:
             os_fp = search_path / Path(origin_source)
             if not os_fp.is_file():
@@ -437,6 +546,10 @@ class LocalIndex(Process):
                     non_identical_representations = self.__append_if_duplicate_repr(
                         non_identical_representations, origin_record, record
                     )
+                    j_variations = self.__append_j_variation(
+                        j_variations, origin_record, record
+                    )
+
         # also include the doi/dblp representations
         for record in tqdm(records):
             if "doi" in record:
@@ -444,13 +557,19 @@ class LocalIndex(Process):
                 non_identical_representations = self.__append_if_duplicate_repr(
                     non_identical_representations, unprepared_record, record
                 )
+                j_variations = self.__append_j_variation(
+                    j_variations, origin_record, record
+                )
 
             if "dblp_key" in record:
                 unprepared_record = PREPARATION.get_md_from_dblp(record.copy())
                 non_identical_representations = self.__append_if_duplicate_repr(
                     non_identical_representations, unprepared_record, record
                 )
-
+                j_variations = self.__append_j_variation(
+                    j_variations, origin_record, record
+                )
+        # print(j_variations)
         # 2. add representations to index
         self.__add_to_d_index(non_identical_representations)
 
@@ -519,6 +638,15 @@ class LocalIndex(Process):
         record["status"] = RecordState.md_prepared
         return record
 
+    def __download_resources(self) -> None:
+        import requests
+
+        if not self.wos_j_abbrev.is_file():
+            url = "https://su.figshare.com/ndownloader/files/5212423"
+            r = requests.get(url, allow_redirects=True)
+            open(self.wos_j_abbrev, "wb").write(r.content)
+        return
+
     def index_records(self) -> None:
         import shutil
 
@@ -531,9 +659,17 @@ class LocalIndex(Process):
             shutil.rmtree(self.gind_path)
         if self.dind_path.is_dir():
             shutil.rmtree(self.dind_path)
+        if self.jind_path.is_dir():
+            shutil.rmtree(self.jind_path)
+        if self.toc_path.is_dir():
+            shutil.rmtree(self.toc_path)
 
         REVIEW_MANAGER = ReviewManager()
         REVIEW_MANAGER.notify(self)
+
+        # TODO: add web of science abbreviations (only when they are unique!?)
+        # self.__download_resources()
+
         local_registry = REVIEW_MANAGER.load_local_registry()
         for source_url in [x["source_url"] for x in local_registry]:
             if not Path(source_url).is_dir():
@@ -544,7 +680,7 @@ class LocalIndex(Process):
 
             # get ReviewManager for project (after chdir)
             REVIEW_MANAGER = ReviewManager()
-            REVIEW_MANAGER.notify(Process(ProcessType.format))
+            REVIEW_MANAGER.notify(self)
 
             if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue
@@ -581,6 +717,7 @@ class LocalIndex(Process):
 
                 self.__record_index(record)
                 self.__gid_index(record)
+                self.__toc_index(record)
 
             self.__d_index(records)
 

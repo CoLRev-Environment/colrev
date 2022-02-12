@@ -18,9 +18,7 @@ logger = logging.getLogger("colrev_core")
 
 
 class Distribute(Process):
-    def __init__(
-        self,
-    ):
+    def __init__(self):
         super().__init__(ProcessType.explore)
 
     def main(self, path_str: str, target: Path) -> None:
@@ -73,3 +71,7 @@ class Distribute(Process):
                     f.write(bibtex_str)
 
         return
+
+
+if __name__ == "__main__":
+    pass

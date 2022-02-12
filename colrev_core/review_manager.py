@@ -151,6 +151,7 @@ class ReviewManager:
         search_dir = "search"
         local_colrev_config = Path.home().joinpath(".colrev")
         local_registry = "registry.yaml"
+        status = "status.yaml"
         return {
             "REPO_DIR": repository_dir,
             "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -173,6 +174,8 @@ class ReviewManager:
             "REPORT": repository_dir.joinpath(report),
             "SEARCHDIR_RELATIVE": Path(search_dir),
             "SEARCHDIR": repository_dir.joinpath(search_dir),
+            "STATUS_RELATIVE": Path(status),
+            "STATUS": repository_dir.joinpath(status),
             "LOCAL_REGISTRY": local_colrev_config.joinpath(local_registry),
         }
 
@@ -539,7 +542,7 @@ class ReviewManager:
                     "params": data,
                 },
             ]
-            check_scripts += main_refs_checks
+
             if prior == {}:  # Selected checks if MAIN_REFERENCES not yet in git history
                 main_refs_checks = [
                     x
@@ -551,6 +554,9 @@ class ReviewManager:
                         "check_main_references_files",
                     ]
                 ]
+
+            check_scripts += main_refs_checks
+
             self.logger.debug("Checks for MAIN_REFERENCES activated")
 
             PAPER = self.paths["PAPER"]
@@ -588,11 +594,6 @@ class ReviewManager:
                     self.logger.debug(f'{check_script["script"].__name__}() called')
                     check_script["script"]()
                 else:
-                    # TODO
-                    # if type(check_script["params"]) != list:
-                    #     param_names = check_script["params"]
-                    # else:
-                    #     param_names = [x.__name__ for x in check_script["params"]]
                     self.logger.debug(
                         f'{check_script["script"].__name__}(params) called'
                     )
@@ -710,7 +711,7 @@ class ReviewManager:
 
         self.notified_next_process = process.type
         if not self.__git_repo.is_dirty():
-            self.__reset_log()
+            self.reset_log()
 
     def run_process(self, process: Process, *args) -> None:
         """Pass a process to the REVIEW_MANAGER for execution"""
@@ -758,7 +759,7 @@ class ReviewManager:
         if saved_args is None:
             report = report + "\n"
         else:
-            report = report + "\\ \n"
+            report = report + " \\ \n"
             for k, v in saved_args.items():
                 if (
                     isinstance(v, str)
@@ -767,9 +768,11 @@ class ReviewManager:
                     or isinstance(v, float)
                 ):
                     if v == "":
-                        report = report + f"     --{k}\n"
+                        report = report + f"     --{k} \\\n"
                     else:
-                        report = report + f"     --{k}={v}\n"
+                        report = report + f"     --{k}={v} \\\n"
+            # Replace the last backslash (for argument chaining across linebreaks)
+            report = report.rstrip(" \\\n") + "\n"
             try:
                 report = (
                     report
@@ -850,7 +853,6 @@ class ReviewManager:
 
         stream = os.popen("git --version")
         git_v = stream.read()
-        # git_v = git.Git.execute(["git", "--version"])
         report = (
             report
             + "\n   - Git:".ljust(33, " ")
@@ -897,15 +899,15 @@ class ReviewManager:
         STATUS = Status()
         status_freq = STATUS.get_status_freq()
 
-        with open("status.yaml", "w") as f:
+        with open(self.paths["STATUS"], "w") as f:
             yaml.dump(status_freq, f, allow_unicode=True)
 
         git_repo = self.get_repo()
-        git_repo.index.add(["status.yaml"])
+        git_repo.index.add([str(self.paths["STATUS_RELATIVE"])])
 
         return
 
-    def __reset_log(self) -> None:
+    def reset_log(self) -> None:
 
         self.report_logger.handlers[0].stream.close()  # type: ignore
         self.report_logger.removeHandler(self.report_logger.handlers[0])
@@ -973,7 +975,6 @@ class ReviewManager:
         if criterion is None:
             for ID in IDs:
                 for item in items:
-                    # if f'({ID})' in item:
                     if f"({ID})" in item:
                         formatted_item = item
                         if "] prepare(" in formatted_item:
@@ -1027,7 +1028,7 @@ class ReviewManager:
         if self.__git_repo.is_dirty():
 
             self.update_status_yaml()
-            self.__git_repo.index.add(["status.yaml"])
+            self.__git_repo.index.add([str(self.paths["STATUS_RELATIVE"])])
 
             hook_skipping = False
             if not self.config["DEBUG_MODE"]:
@@ -1110,7 +1111,7 @@ class ReviewManager:
                 skip_hooks=hook_skipping,
             )
             self.logger.info("Created commit")
-            self.__reset_log()
+            self.reset_log()
             if self.__git_repo.is_dirty():
                 raise DirtyRepoAfterProcessingError
             return True
@@ -1145,26 +1146,22 @@ class ReviewManager:
         logger = logging.getLogger("colrev_core")
 
         local_registry = self.load_local_registry()
-
         registered_paths = [x["source_url"] for x in local_registry]
-        # TODO: maybe resolve symlinked directories?
-        path_to_register = str(Path.cwd())
+        path_to_register = Path.cwd()
         if registered_paths != []:
-            if path_to_register in registered_paths:
+            if str(path_to_register) in registered_paths:
                 logger.error(f"Path already registered: {path_to_register}")
         else:
             logger.error(f"Creating {self.paths['LOCAL_REGISTRY']}")
 
         new_record = {
-            "filename": Path.cwd().stem,
-            "source_name": Path.cwd().stem,
-            "source_url": Path.cwd(),
+            "filename": path_to_register.stem,
+            "source_name": path_to_register.stem,
+            "source_url": path_to_register,
         }
         local_registry.append(new_record)
         self.__save_local_registry(local_registry)
-
         logger.info(f"Registered path ({path_to_register})")
-
         return
 
 

@@ -42,25 +42,49 @@ def debug_load() -> None:
 
     LOADER = Loader(keep_ids=True)
 
-    rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-    origin_list = [x[1] for x in rec_header_lis]
+    # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
+    # origin_list = [x[1] for x in rec_header_lis]
 
-    search_files = LOADER.get_search_files(restrict=["bib"])
+    # search_files = LOADER.get_search_files(restrict=["bib"])
 
-    for search_file in search_files:
-        print(search_file)
-        sfn = search_file.stem
-        search_file_origins = [x for x in origin_list if sfn in x]
-        with open(search_file) as f:
-            line = f.readline()
-            while line:
-                if "@" in line[:3]:
-                    current_ID = line[line.find("{") + 1 : line.rfind(",")]
-                    corresponding_origin = f"{sfn}/{current_ID}"
-                    if corresponding_origin not in search_file_origins:
-                        print(corresponding_origin)
+    # for search_file in search_files:
+    #     print(search_file)
+    #     sfn = search_file.stem
+    #     search_file_origins = [x for x in origin_list if sfn in x]
+    #     with open(search_file) as f:
+    #         line = f.readline()
+    #         while line:
+    #             if "@" in line[:3]:
+    #                 current_ID = line[line.find("{") + 1 : line.rfind(",")]
+    #                 corresponding_origin = f"{sfn}/{current_ID}"
+    #                 if corresponding_origin not in search_file_origins:
+    #                     print(corresponding_origin)
 
-                line = f.readline()
+    #             line = f.readline()
+
+    # To test ID retrieval from local_index
+    records = [
+        {
+            "ENTRYTYPE": "article",
+            "ID": "0001",
+            "doi": "10.1057/EJIS.2014.41",
+            "author": "Bansal, Gaurav and Zahedi, F. Mariam and Gefen, David",
+            "journal": "European Journal of Information Systems",
+            "title": "The role of privacy assurance mechanisms in building "
+            "trust and the moderating role of privacy concern",
+            "year": "2015",
+            "number": "6",
+            "pages": "624--644",
+            "volume": "24",
+            "metadata_source": "ORIGINAL",
+        }
+    ]
+
+    records = LOADER.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
+        records, selected_IDs=[x["ID"] for x in records]
+    )
+    print(records)
+
     return
 
 
@@ -82,21 +106,24 @@ def debug_prep() -> None:
         "volume": "16",
     }
 
+    # Retract / crossmark restriction example:
     record = {
-        "ID": "BarrettDavidsonPrabhuEtAl2015",
         "ENTRYTYPE": "article",
-        "origin": "ais_services_outsourcing.bib/Barrett2015",
-        "status": "md_processed",
-        "metadata_source": "CROSSREF",
-        "doi": "10.25300/MISQ/2015/39:1.03",
-        "author": "Abbott, Pamela and Zheng, Y and Du, Rong and Willcocks, Leslie P.",
-        "journal": "MIS Quarterly",
-        "title": "Service Innovation in the Digital Age: Key Contributions and Future",
+        "ID": "Assemi2015",
+        "author": "Assemi, B., and Schlagwein, D.",
+        "file": "/home/gerit/ownCloud/data/EG IS Planning (strategy investment "
+        "architecture digital)/Digitale Plattformen/PlatformLR_Paper/"
+        "papers-excluded/Assemi2015.pdf",
+        "journal": "Decision SupportSystems",
+        "metadata_source": "ORIGINAL",
+        "origin": "JSIS_Review.bib/Assemi2015",
+        "pages": "1-11",
+        "status": RecordState.md_imported,
+        "title": "Provider feedback information and customer choice decisions on "
+        + "crowdsourcing marketplaces: Evidence from two discrete choice "
+        "experiments",
+        "volume": "82",
         "year": "2015",
-        "number": "1",
-        "pages": "135--154",
-        "volume": "39",
-        "url": "https://aisel.aisnet.org/misq/vol39/iss1/9",
     }
 
     # record_list = [
@@ -151,18 +178,18 @@ def debug_prep() -> None:
     # cc_dedupe.preparation_link_to_curated_record(record, record_list)
     # input("stop")
 
-    record = {
-        "ENTRYTYPE": "inproceedings",
-        "ID": "WagnerPrester2019",
-        "author": "Wagner, Gerit and Prester, Julian",
-        "booktitle": "International Conference on Information Systems",
-        "metadata_source": "ORIGINAL",
-        "origin": "ais_digital_labor_platform.bib/Wagner2019",
-        "status": RecordState.md_imported,
-        "title": "Information Systems Research on Digital Platforms for Knowledge Work",
-        "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
-        "year": "2019",
-    }
+    # record = {
+    #     "ENTRYTYPE": "inproceedings",
+    #     "ID": "WagnerPrester2019",
+    #     "author": "Wagner, Gerit and Prester, Julian",
+    #     "booktitle": "International Conference on Information Systems",
+    #     "metadata_source": "ORIGINAL",
+    #     "origin": "ais_digital_labor_platform.bib/Wagner2019",
+    #     "status": RecordState.md_imported,
+    # title": "Information Systems Research on Digital Platforms for Knowledge Work",
+    #     "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
+    #     "year": "2019",
+    # }
 
     pp.pprint(record)
     # res = PREPARATION.get_md_from_doi(record)

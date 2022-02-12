@@ -154,6 +154,8 @@ class ReviewDataset:
         # Casting to string (in particular the RecordState Enum)
         records = [{k: str(v) for k, v in r.items()} for r in records]
 
+        records.sort(key=lambda x: x["ID"])
+
         bib_db = BibDatabase()
         bib_db.entries = records
 
@@ -343,7 +345,7 @@ class ReviewDataset:
                 )
 
         LOCAL_INDEX = LocalIndex()
-        PREPARATION = Preparation()
+        PREPARATION = Preparation(notify=False)
         try:
             retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
             temp_ID = retrieved_record["ID"]
@@ -681,7 +683,7 @@ class ReviewDataset:
     def format_main_references(self) -> None:
         from colrev_core import prep
 
-        PREPARATION = prep.Preparation()
+        PREPARATION = prep.Preparation(notify=False)
 
         records = self.load_records()
         for record in records:

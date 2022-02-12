@@ -152,7 +152,6 @@ class Validate(Process):
 
             if "n" == input("continue (y/n)?"):
                 break
-            # TODO: explain users how to change it/offer option to reverse!
 
         return
 
@@ -201,7 +200,7 @@ class Validate(Process):
         return records
 
     def validate_properties(self, target_commit: str = None) -> None:
-        # TODO: option: --history: check all preceding commits (create a list...)
+        # option: --history: check all preceding commits (create a list...)
 
         from colrev_core.status import Status
 
@@ -256,7 +255,7 @@ class Validate(Process):
             self.validate_properties(target_commit)
             return
 
-        # TODO: extension: filter for changes of contributor (git author)
+        # extension: filter for changes of contributor (git author)
         records = self.load_records(target_commit)
 
         # Note: search records are considered immutable

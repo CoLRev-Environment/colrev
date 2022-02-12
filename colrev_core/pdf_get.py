@@ -18,9 +18,6 @@ from colrev_core.tei import TEI
 
 
 class PDF_Retrieval(Process):
-
-    # https://github.com/ContentMine/getpapers
-
     def __init__(self, copy_to_repo: bool = False, rename: bool = False):
 
         super().__init__(ProcessType.pdf_get, fun=self.main)

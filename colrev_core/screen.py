@@ -20,7 +20,7 @@ class Screen(Process):
 
         saved_args = locals()
         saved_args["include_all"] = ""
-        PAD = 50  # TODO
+        PAD = 50
         for record in records:
             if record["status"] != RecordState.pdf_prepared:
                 continue

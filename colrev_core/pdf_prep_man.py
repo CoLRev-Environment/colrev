@@ -15,7 +15,6 @@ class PDFPrepMan(Process):
     def __init__(self):
 
         super().__init__(ProcessType.pdf_prep_man)
-
         self.REVIEW_MANAGER.notify(self)
 
     def get_data(self) -> dict:
@@ -65,7 +64,6 @@ class PDFPrepMan(Process):
         return git_repo.is_dirty()
 
     def pdf_prep_man_stats(self) -> None:
-
         import pandas as pd
 
         self.REVIEW_MANAGER.notify(Process(ProcessType.explore))
@@ -123,7 +121,6 @@ class PDFPrepMan(Process):
         return
 
     def extract_needs_pdf_prep_man(self) -> None:
-
         from bibtexparser.bibdatabase import BibDatabase
 
         prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(

@@ -1,14 +1,8 @@
 #! /usr/bin/env python
-import configparser
 import logging
-import pkgutil
 from pathlib import Path
-from subprocess import check_call
-from subprocess import DEVNULL
-from subprocess import STDOUT
 
 import git
-import requests
 
 
 class Initializer:
@@ -16,22 +10,45 @@ class Initializer:
         self,
         project_title: str,
         SHARE_STAT_REQ: str,
-        remote_url: str = "NA",
         local_index_repo: bool = False,
     ) -> None:
+
         saved_args = locals()
-
-        self.__require_empty_directory()
-
+        self.project_title = project_title
+        self.SHARE_STAT_REQ = SHARE_STAT_REQ
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
 
-        global_git_vars = self.__get_name_mail_from_global_git_config()
-        if 2 != len(global_git_vars):
-            logging.error("Global git variables (user name and email) not available.")
-            return
-        committer_name, committer_email = global_git_vars
+        self.__require_empty_directory()
+        self.__setup_files()
+        self.__setup_git()
+        self.__create_commit(saved_args)
+        self.REVIEW_MANAGER.register_repo()
+        self.__create_local_index(local_index_repo)
 
-        git_repo = git.Repo.init()
+    def __create_commit(self, saved_args: dict) -> None:
+        from colrev_core.review_manager import ReviewManager
+        from colrev_core.process import Process, ProcessType
+
+        self.REVIEW_MANAGER = ReviewManager()
+        self.REVIEW_MANAGER.notify(Process(ProcessType.format))
+
+        report_logger = logging.getLogger("colrev_core_report")
+        report_logger.info("Initialize review repository")
+        report_logger.info(
+            "Set project title:".ljust(30, " ") + f"{self.project_title}"
+        )
+        report_logger.info(
+            "Set SHARE_STAT_REQ:".ljust(30, " ") + f"{self.SHARE_STAT_REQ}"
+        )
+        del saved_args["local_index_repo"]
+        self.REVIEW_MANAGER.create_commit(
+            "Initial commit", manual_author=True, saved_args=saved_args
+        )
+        return
+
+    def __setup_files(self) -> None:
+        import configparser
+
         Path("search").mkdir()
 
         files_to_retrieve = [
@@ -44,9 +61,14 @@ class Initializer:
             self.__retrieve_package_file(rp, p)
 
         self.__inplace_change(
-            Path("readme.md"), "{{project_title}}", project_title.rstrip(" ")
+            Path("readme.md"), "{{project_title}}", self.project_title.rstrip(" ")
         )
 
+        global_git_vars = self.__get_name_mail_from_global_git_config()
+        if 2 != len(global_git_vars):
+            logging.error("Global git variables (user name and email) not available.")
+            return
+        committer_name, committer_email = global_git_vars
         private_config = configparser.ConfigParser()
         private_config.add_section("general")
         private_config["general"]["EMAIL"] = committer_email
@@ -58,7 +80,7 @@ class Initializer:
 
         shared_config = configparser.ConfigParser()
         shared_config.add_section("general")
-        shared_config["general"]["SHARE_STAT_REQ"] = SHARE_STAT_REQ
+        shared_config["general"]["SHARE_STAT_REQ"] = self.SHARE_STAT_REQ
         with open("shared_config.ini", "w") as configfile:
             shared_config.write(configfile)
 
@@ -72,22 +94,26 @@ class Initializer:
             + "manual_cleansing_statistics.csv\n"
             + "data.csv\n"
             + "venv\n"
-            # + ".references_dedupe_training.json\n"
             + ".references_learned_settings"
         )
         f.close()
+        return
 
+    def __setup_git(self) -> None:
+        from subprocess import check_call
+        from subprocess import DEVNULL
+        from subprocess import STDOUT
+
+        git_repo = git.Repo.init()
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [
             ["pre-commit", "install"],
             ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
             ["pre-commit", "install", "--hook-type", "pre-push"],
             ["pre-commit", "autoupdate"],
-            # ["pre-commit", "autoupdate", "--bleeding-edge"],
         ]
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
-
         git_repo.index.add(
             [
                 "readme.md",
@@ -98,30 +124,7 @@ class Initializer:
                 ".markdownlint.yaml",
             ]
         )
-
-        from colrev_core.review_manager import ReviewManager
-        from colrev_core.process import Process, ProcessType
-
-        REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(Process(ProcessType.format))
-
-        report_logger = logging.getLogger("colrev_core_report")
-        report_logger.info("Initialize review repository")
-        report_logger.info("Set project title:".ljust(30, " ") + f"{project_title}")
-        report_logger.info("Set SHARE_STAT_REQ:".ljust(30, " ") + f"{SHARE_STAT_REQ}")
-
-        REVIEW_MANAGER.create_commit(
-            "Initial commit", manual_author=True, saved_args=saved_args
-        )
-
-        # LOCAL_REGISTRY
-        REVIEW_MANAGER.register_repo()
-
-        if not local_index_repo:
-            report_logger.handlers = []
-            self.__create_local_index()
-
-        # TODO : include a link on how to connect to a remote repo
+        return
 
     def __require_empty_directory(self):
 
@@ -149,6 +152,15 @@ class Initializer:
             f.write(s)
         return
 
+    def __retrieve_package_file(self, template_file: Path, target: Path) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, str(template_file))
+        if filedata:
+            with open(target, "w") as file:
+                file.write(filedata.decode("utf-8"))
+        return
+
     def __get_name_mail_from_global_git_config(self) -> list:
         ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = []
@@ -160,7 +172,11 @@ class Initializer:
             ]
         return global_conf_details
 
-    def __create_local_index(self):
+    def __create_local_index(self, local_index_repo: bool) -> None:
+        if local_index_repo:
+            return
+        self.REVIEW_MANAGER.report_logger.handlers = []
+
         import os
 
         local_index_path = Path.home().joinpath(".colrev/local_index")
@@ -168,35 +184,10 @@ class Initializer:
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_index_path)
-            Initializer("local_index", "PROCESSED", "EXT", "NA", True)
+            Initializer("local_index", "PROCESSED", True)
             print("Created local_index repository")
 
         os.chdir(curdir)
-        return
-
-    def connect_to_remote(self, git_repo: git.Repo, remote_url: str) -> None:
-        try:
-            requests.get(remote_url)
-            origin = git_repo.create_remote("origin", remote_url)
-            git_repo.heads.main.set_tracking_branch(origin.refs.main)
-            origin.push()
-            logging.info(
-                "Connected to shared repository:".ljust(30, " ") + f"{remote_url}"
-            )
-        except requests.ConnectionError:
-            logging.error(
-                "URL of shared repository cannot be reached. Use "
-                "git remote add origin https://github.com/user/repo"
-                "\ngit push origin main"
-            )
-            pass
-        return
-
-    def __retrieve_package_file(self, template_file: Path, target: Path) -> None:
-        filedata = pkgutil.get_data(__name__, str(template_file))
-        if filedata:
-            with open(target, "w") as file:
-                file.write(filedata.decode("utf-8"))
         return
 
 

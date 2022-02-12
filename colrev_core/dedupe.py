@@ -90,11 +90,7 @@ class Dedupe(Process):
                 .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
                 .str.lower()
             )
-            # possibly for @proceedings{ ... records
-            # if 'address' in references:
-            #     references['booktitle'] = \
-            #       references["booktitle"] + references["address"]
-            #     print(references['address'])
+
         if "series" not in references:
             references["series"] = ""
         else:

@@ -24,12 +24,13 @@ from colrev_core.tei import TEI_TimeoutException
 
 class Data(Process):
     PAD = 0
+    NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
     def __init__(self):
 
         super().__init__(ProcessType.data, fun=self.main)
 
-    def get_records_for_synthesis(self, records: typing.List[dict]) -> list:
+    def get_record_ids_for_synthesis(self, records: typing.List[dict]) -> list:
         return [
             x["ID"]
             for x in records
@@ -52,7 +53,7 @@ class Data(Process):
         in_manuscript_to_synthesize = []
         with open(PAPER) as f:
             for line in f:
-                if "<!-- NEW_RECORD_SOURCE -->" in line:
+                if self.NEW_RECORD_SOURCE_TAG in line:
                     while line != "":
                         line = f.readline()
                         if re.search(r"- @.*", line):
@@ -68,17 +69,17 @@ class Data(Process):
 
     def get_synthesized_ids(self, records: typing.List[dict], PAPER: Path) -> list:
 
-        records_for_synthesis = self.get_records_for_synthesis(records)
+        record_ids_for_synthesis = self.get_record_ids_for_synthesis(records)
 
         in_manuscript_to_synthesize = self.get_to_synthesize_in_manuscript(
-            PAPER, records_for_synthesis
+            PAPER, record_ids_for_synthesis
         )
         # Assuming that all records have been added to the PAPER before
-        synthesized = [
-            x for x in records_for_synthesis if x not in in_manuscript_to_synthesize
+        synthesized_ids = [
+            x for x in record_ids_for_synthesis if x not in in_manuscript_to_synthesize
         ]
 
-        return synthesized
+        return synthesized_ids
 
     def get_data_extracted(self, DATA: Path, records_for_data_extraction: list) -> list:
         data_extracted = []
@@ -108,9 +109,7 @@ class Data(Process):
         ]
 
         data_extracted = self.get_data_extracted(DATA, records_for_data_extraction)
-
         data_extracted = [x for x in data_extracted if x in records_for_data_extraction]
-
         return data_extracted
 
     def add_missing_records_to_manuscript(
@@ -122,7 +121,7 @@ class Data(Process):
             appended, completed = False, False
             line = reader.readline()
             while line != "":
-                if "<!-- NEW_RECORD_SOURCE -->" in line:
+                if self.NEW_RECORD_SOURCE_TAG in line:
                     if "_Records to synthesize" not in line:
                         line = "_Records to synthesize_:" + line + "\n"
                         writer.write(line)
@@ -163,7 +162,7 @@ class Data(Process):
 
             if not appended:
                 msg = (
-                    "Marker <!-- NEW_RECORD_SOURCE --> not found in "
+                    f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
                     + f"{PAPER.name}. Adding records at the end of "
                     + "the document."
                 )
@@ -172,7 +171,7 @@ class Data(Process):
 
                 if line != "\n":
                     writer.write("\n")
-                marker = "<!-- NEW_RECORD_SOURCE -->_Records to synthesize_:\n\n"
+                marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
                 writer.write(marker)
                 for missing_record in missing_records:
                     writer.write(missing_record)
@@ -267,7 +266,7 @@ class Data(Process):
         DATA = self.REVIEW_MANAGER.paths["DATA"]
 
         if not DATA.is_file():
-            included = self.get_records_for_synthesis(records)
+            included = self.get_record_ids_for_synthesis(records)
 
             coding_dimensions_str = input(
                 "Enter columns for data extraction (comma-separted)"
@@ -390,6 +389,7 @@ class Data(Process):
                     if "tei_file" in record:
                         del record["tei_file"]
                     pass
+
         # TODO : only create a commit if there are changes.
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -438,7 +438,7 @@ class Data(Process):
 
         enlit_list = []
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        relevant_records = self.get_records_for_synthesis(records)
+        relevant_records = self.get_record_ids_for_synthesis(records)
         for relevant_record in relevant_records:
             enlit_status = str(
                 [x["status"] for x in records if x["ID"] == relevant_record].pop()
@@ -477,7 +477,7 @@ class Data(Process):
 
         self.PAD = min((max(len(x["ID"]) for x in records) + 2), 35)
 
-        included = self.get_records_for_synthesis(records)
+        included = self.get_record_ids_for_synthesis(records)
 
         if 0 == len(included):
             self.report_logger.info("No records included yet (use colrev_core screen)")
@@ -511,10 +511,10 @@ class Data(Process):
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]
         with open(PAPER) as f:
             for line in f:
-                if "<!-- NEW_RECORD_SOURCE -->" in line:
+                if self.NEW_RECORD_SOURCE_TAG in line:
                     return
         raise ManuscriptRecordSourceTagError(
-            f"Did not find <!-- NEW_RECORD_SOURCE --> tag in {PAPER}"
+            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {PAPER}"
         )
 
     def update_synthesized_status(self) -> typing.List[dict]:

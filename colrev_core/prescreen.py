@@ -15,17 +15,25 @@ class Prescreen(Process):
         self.REVIEW_MANAGER.notify(self)
 
     def export_table(self, export_table_format: str) -> None:
-
+        self.logger.info("Loading records for export")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         tbl = []
         for record in records:
 
+            if record["status"] in [
+                RecordState.md_imported,
+                RecordState.md_retrieved,
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_prepared,
+            ]:
+                continue
+
             inclusion_1, inclusion_2 = "NA", "NA"
 
-            if RecordState.md_retrieved == record["status"]:
+            if RecordState.md_processed == record["status"]:
                 inclusion_1 = "TODO"
-            if RecordState.rev_prescreen_excluded == record["status"]:
+            elif RecordState.rev_prescreen_excluded == record["status"]:
                 inclusion_1 = "no"
             else:
                 inclusion_1 = "yes"
@@ -38,11 +46,15 @@ class Prescreen(Process):
                 ]:
                     inclusion_2 = "yes"
 
-            excl_criteria = {}
-            if "excl_criteria" in record:
-                for ecrit in record["excl_criteria"].split(";"):
-                    criteria = {ecrit.split("=")[0]: ecrit.split("=")[1]}
-                    excl_criteria.update(criteria)
+            # excl_criteria = {}
+            # if "excl_criteria" in record:
+            #     for ecrit in record["excl_criteria"].split(";"):
+            #         criteria = {ecrit.split("=")[0]: ecrit.split("=")[1]}
+            #         excl_criteria.update(criteria)
+
+            excl_criteria = record.get("excl_criteria", "NA")
+            if excl_criteria == "NA" and inclusion_2 == "yes":
+                excl_criteria = "TODO"
 
             row = {
                 "ID": record["ID"],
@@ -58,8 +70,9 @@ class Prescreen(Process):
                 "abstract": record.get("abstract", ""),
                 "inclusion_1": inclusion_1,
                 "inclusion_2": inclusion_2,
+                "excl_criteria": excl_criteria,
             }
-            row.update(excl_criteria)
+            # row.update    (excl_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -82,15 +95,20 @@ class Prescreen(Process):
             return
         screen_df = pd.read_csv(import_table_path)
         screen_df.fillna("", inplace=True)
-        records = screen_df.to_dict("records")
+        screened_records = screen_df.to_dict("records")
 
         self.logger.warning(
             "import_table not completed (exclusion_criteria not yet imported)"
         )
 
         for x in [
-            [x.get("ID", ""), x.get("inclusion_1", ""), x.get("inclusion_2", "")]
-            for x in records
+            [
+                x.get("ID", ""),
+                x.get("inclusion_1", ""),
+                x.get("inclusion_2", ""),
+                x.get("excl_criteria", ""),
+            ]
+            for x in screened_records
         ]:
             record_list = [e for e in records if e["ID"] == x[0]]
             if len(record_list) == 1:
@@ -103,7 +121,8 @@ class Prescreen(Process):
                     record["status"] = RecordState.rev_excluded
                 if x[2] == "yes":
                     record["status"] = RecordState.rev_included
-                # TODO: exclusion-criteria
+                if x[3] != "":
+                    record["excl_criteria"] = x[3]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
 
@@ -115,7 +134,7 @@ class Prescreen(Process):
 
         saved_args = locals()
         saved_args["include_all"] = ""
-        PAD = 50  # TODO
+        PAD = 50
         for record in records:
             if record["status"] != RecordState.md_processed:
                 continue

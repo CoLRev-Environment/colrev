@@ -10,9 +10,6 @@ from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-# https://github.com/ContentMine/getpapers
-
-
 class PDFRetrievalMan(Process):
     def __init__(self):
 

@@ -1,10 +1,8 @@
 #! /usr/bin/env python
 import collections
 import html
-import io
 import json
 import logging
-import pkgutil
 import re
 import sys
 import typing
@@ -14,7 +12,6 @@ from pathlib import Path
 import bibtexparser
 import dictdiffer
 import git
-import pandas as pd
 import requests
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
@@ -113,6 +110,7 @@ class Preparation(Process):
         "wos_accession_number",
         "link",
         "url",
+        "crossmark-restriction",
     ]
     fields_to_drop = [
         "type",
@@ -158,11 +156,13 @@ class Preparation(Process):
         similarity: float = 0.9,
         reprocess_state: RecordState = RecordState.md_imported,
         keep_ids: bool = False,
+        notify: bool = True,
     ):
 
         super().__init__(ProcessType.prep, fun=self.main)
 
-        self.REVIEW_MANAGER.notify(self)
+        if notify:
+            self.REVIEW_MANAGER.notify(self)
 
         logging.getLogger("urllib3").setLevel(logging.ERROR)
 
@@ -181,76 +181,13 @@ class Preparation(Process):
             self.reprocess_state = reprocess_state
 
         self.keep_ids = keep_ids
-
-        self.LOCAL_JOURNAL_ABBREVIATIONS = self.__retrieve_local_JOURNAL_ABBREVIATIONS()
-        self.LOCAL_JOURNAL_VARIATIONS = self.__retrieve_local_JOURNAL_VARIATIONS()
-        self.LOCAL_CONFERENCE_ABBREVIATIONS = (
-            self.__retrieve_local_CONFERENCE_ABBREVIATIONS()
-        )
-
-        self.conf_strings = []
-        for i, row in self.LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
-            self.conf_strings.append(row["abbreviation"])
-            self.conf_strings.append(row["conference"])
-
         self.LOCAL_INDEX = LocalIndex()
-
         self.CPUS = self.CPUS * 5
-
-    def __retrieve_local_JOURNAL_ABBREVIATIONS(self) -> pd.DataFrame:
-        j_abbrev = Path("lexicon/JOURNAL_ABBREVIATIONS.csv")
-        if j_abbrev.is_file():
-            JOURNAL_ABBREVIATIONS = pd.read_csv("lexicon/JOURNAL_ABBREVIATIONS.csv")
-        else:
-            JOURNAL_ABBREVIATIONS = pd.DataFrame(
-                [], columns=["journal", "abbreviation"]
-            )
-        return JOURNAL_ABBREVIATIONS
-
-    def __retrieve_local_JOURNAL_VARIATIONS(self) -> pd.DataFrame:
-        j_var = Path("lexicon/JOURNAL_VARIATIONS.csv")
-        if j_var.is_file():
-            JOURNAL_VARIATIONS = pd.read_csv("lexicon/JOURNAL_VARIATIONS.csv")
-        else:
-            JOURNAL_VARIATIONS = pd.DataFrame([], columns=["journal", "variation"])
-        return JOURNAL_VARIATIONS
-
-    def __retrieve_local_CONFERENCE_ABBREVIATIONS(self) -> pd.DataFrame:
-
-        filedata = pkgutil.get_data(__name__, "lexicon/CONFERENCE_ABBREVIATIONS.csv")
-        if filedata:
-            CONFERENCE_ABBREVIATIONS = pd.read_csv(
-                io.BytesIO(filedata), encoding="utf8"
-            )
-
-        # c_abbrev = Path("lexicon/CONFERENCE_ABBREVIATIONS.csv")
-        # if c_abbrev.is_file():
-        #     CONFERENCE_ABBREVIATIONS =
-        #           pd.read_csv("lexicon/CONFERENCE_ABBREVIATIONS.csv")
-        # else:
-        #     CONFERENCE_ABBREVIATIONS = pd.DataFrame(
-        #         [], columns=["conference", "abbreviation"]
-        #     )
-        return CONFERENCE_ABBREVIATIONS
 
     def __correct_recordtype(self, record: dict) -> dict:
 
         if self.__is_complete(record) and not self.__has_inconsistent_fields(record):
             return record
-
-        # Consistency checks
-        if "journal" in record:
-            if any(x in record["journal"] for x in self.conf_strings):
-                record.update(booktitle=record["journal"])
-                record.update(ENTRYTYPE="inproceedings")
-                del record["journal"]
-        if "booktitle" in record:
-            if any(x in record["booktitle"] for x in self.conf_strings):
-                record.update(ENTRYTYPE="inproceedings")
-                if "title" in record and "chapter" in record:
-                    record["booktitle"] = record["title"]
-                    record["title"] = record["chapter"]
-                    del record["chapter"]
 
         if (
             "dissertation" in record.get("fulltext", "NA").lower()
@@ -287,8 +224,6 @@ class Preparation(Process):
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
             )
-        # TODO: create a warning if any conference strings (ecis, icis, ..)
-        # as stored in CONFERENCE_ABBREVIATIONS is in an article/book
 
         # Journal articles should not have booktitles/series set.
         if "article" == record["ENTRYTYPE"]:
@@ -300,14 +235,6 @@ class Preparation(Process):
                 if "journal" not in record:
                     record.update(journal=record["series"])
                     del record["series"]
-
-        if "book" == record["ENTRYTYPE"]:
-            if "series" in record:
-                if any(x in record["series"] for x in self.conf_strings):
-                    conf_name = record["series"]
-                    del record["series"]
-                    record.update(booktitle=conf_name)
-                    record.update(ENTRYTYPE="inproceedings")
 
         if "article" == record["ENTRYTYPE"]:
             if "journal" not in record:
@@ -445,24 +372,6 @@ class Preparation(Process):
 
         return record
 
-    def __apply_local_rules(self, record: dict) -> dict:
-
-        if "journal" in record:
-            for i, row in self.LOCAL_JOURNAL_ABBREVIATIONS.iterrows():
-                if row["abbreviation"].lower() == record["journal"].lower():
-                    record.update(journal=row["journal"])
-
-            for i, row in self.LOCAL_JOURNAL_VARIATIONS.iterrows():
-                if row["variation"].lower() == record["journal"].lower():
-                    record.update(journal=row["journal"])
-
-        if "booktitle" in record:
-            for i, row in self.LOCAL_CONFERENCE_ABBREVIATIONS.iterrows():
-                if row["abbreviation"].lower() == record["booktitle"].lower():
-                    record.update(booktitle=row["conference"])
-
-        return record
-
     def __get_record_from_local_index(self, record: dict) -> dict:
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
@@ -554,7 +463,7 @@ class Preparation(Process):
         record.update(metadata_source="DOI.ORG")
         return record
 
-    def __crossref_json_to_record(self, item: dict) -> dict:
+    def crossref_json_to_record(self, item: dict) -> dict:
         # Note: the format differst between crossref and doi.org
         record: dict = {}
 
@@ -654,6 +563,12 @@ class Preparation(Process):
                 retrieved_abstract = retrieved_abstract.lstrip().rstrip()
                 retrieved_abstract = html.unescape(retrieved_abstract)
                 record.update(abstract=retrieved_abstract)
+
+        if "content-domain" in item:
+            if "crossmark-restriction" in item["content-domain"]:
+                if item["content-domain"]["crossmark-restriction"]:
+                    record["crossmark-restriction"] = "True"
+
         return record
 
     def __crossref_query(
@@ -710,7 +625,7 @@ class Preparation(Process):
                 if "title" not in item:
                     continue
 
-                retrieved_record = self.__crossref_json_to_record(item)
+                retrieved_record = self.crossref_json_to_record(item)
 
                 title_similarity = fuzz.partial_ratio(
                     retrieved_record["title"].lower(),
@@ -857,16 +772,7 @@ class Preparation(Process):
                 )
                 self.logger.debug(f"crossref similarity: {similarity}")
                 if similarity > self.RETRIEVAL_SIMILARITY:
-                    for key, val in retrieved_record.items():
-                        # Note: no abstracts in crossref?
-                        # if enrich_only and 'abstract' != key:
-                        #     continue
-                        if "author" == key:
-                            record[key] = self.__select_best_author(
-                                record["author"], val
-                            )
-                        else:
-                            record[key] = val
+                    record = self.__fuse_best_fields(record, retrieved_record)
                     if not enrich_only:
                         record.update(metadata_source="CROSSREF")
             except requests.exceptions.HTTPError:
@@ -1016,15 +922,12 @@ class Preparation(Process):
             )
             self.logger.debug(f"scholar similarity: {similarity}")
             if similarity > self.RETRIEVAL_SIMILARITY:
-                for key, val in retrieved_record.items():
-                    if enrich_only and "abstract" != key:
-                        continue
-                    # For now, only use DOIs (TODO : enrich/add other fields)
-                    if "doi" == key:
-                        if "NONE" != val:
-                            record[key] = val
-                # if not enrich_only:
-                #     record.update(metadata_source="SEMANTIC_SCHOLAR")
+
+                if not enrich_only:
+                    record = self.__fuse_best_fields(record, retrieved_record)
+                if record.get("doi", "") == "NONE":
+                    del record["doi"]
+                # record.update(metadata_source="SEMANTIC_SCHOLAR")
         except requests.exceptions.ReadTimeout:
             pass
         except KeyError:
@@ -1130,7 +1033,7 @@ class Preparation(Process):
             pass
         return record
 
-    def __get_dblp_venue(self, venue_string: str) -> str:
+    def __get_dblp_venue(self, venue_string: str, type: str) -> str:
         # Note : venue_string should be like "behaviourIT"
         venue = venue_string
         api_url = "https://dblp.org/search/venue/api?q="
@@ -1144,6 +1047,8 @@ class Preparation(Process):
                 return ""
             hits = data["result"]["hits"]["hit"]
             for hit in hits:
+                if hit["info"]["type"] != type:
+                    continue
                 if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
                     venue = hit["info"]["venue"]
                     break
@@ -1153,7 +1058,7 @@ class Preparation(Process):
             pass
         return venue
 
-    def __dblp_json_to_record(self, item: dict) -> dict:
+    def dblp_json_to_record(self, item: dict) -> dict:
         # To test in browser:
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -1169,11 +1074,13 @@ class Preparation(Process):
             lpos = item["key"].find("/") + 1
             rpos = item["key"].rfind("/")
             jour = item["key"][lpos:rpos]
-            retrieved_record["journal"] = html.unescape(self.__get_dblp_venue(jour))
+            retrieved_record["journal"] = html.unescape(
+                self.__get_dblp_venue(jour, "Journal")
+            )
         if "Conference and Workshop Papers" == item["type"]:
             retrieved_record["ENTRYTYPE"] = "inproceedings"
             retrieved_record["booktitle"] = html.unescape(
-                self.__get_dblp_venue(item["venue"])
+                self.__get_dblp_venue(item["venue"], "Conference or Workshop")
             )
         if "title" in item:
             retrieved_record["title"] = html.unescape(item["title"].rstrip("."))
@@ -1250,7 +1157,7 @@ class Preparation(Process):
             for hit in hits:
                 item = hit["info"]
 
-                retrieved_record = self.__dblp_json_to_record(item)
+                retrieved_record = self.dblp_json_to_record(item)
                 # self.pp.pprint(retrieved_record)
 
                 similarity = self.__get_retrieval_similarity(
@@ -1259,20 +1166,13 @@ class Preparation(Process):
 
                 self.logger.debug(f"dblp similarity: {similarity}")
                 if similarity > self.RETRIEVAL_SIMILARITY:
-                    for key, val in retrieved_record.items():
-                        record[key] = val
+                    record = self.__fuse_best_fields(record, retrieved_record)
                     record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
                     record.update(metadata_source="DBLP")
 
-        # except KeyError:
-        # except json.decoder.JSONDecodeError:
-        #     pass
         except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
-            self.logger.error(
-                "UnicodeEncodeError - this needs to be fixed at some time"
-            )
             pass
         except requests.exceptions.ReadTimeout:
             pass
@@ -1281,7 +1181,6 @@ class Preparation(Process):
         return record
 
     def __select_best_author(self, default: str, candidate: str) -> str:
-        # TODO check if they contain the same authors (fuzzy/partial?)
 
         # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
         if ", and " in default and ", and " not in candidate:
@@ -1300,6 +1199,36 @@ class Preparation(Process):
             return candidate
 
         return default
+
+    def __select_best_pages(self, default: str, candidate: str) -> str:
+        if "--" in candidate and "--" not in default:
+            return candidate
+        return default
+
+    def __fuse_best_fields(self, record: dict, merging_record: dict) -> dict:
+        """Apply heuristics to create a fusion of the best fields based on
+        quality heuristics"""
+
+        for key, val in merging_record.items():
+            if val:
+                if "author" == key:
+                    if "author" in record:
+                        record["author"] = self.__select_best_author(
+                            record["author"], merging_record["author"]
+                        )
+                    else:
+                        record["author"] = str(val)
+                elif "pages" == key:
+                    if "pages" in record:
+                        record["pages"] = self.__select_best_pages(
+                            record["pages"], merging_record["pages"]
+                        )
+                    else:
+                        record["pages"] = str(val)
+                else:
+                    record[key] = str(val)
+
+        return record
 
     def __retrieve_doi_metadata(self, record: dict) -> dict:
         if "doi" not in record:
@@ -1326,17 +1255,9 @@ class Preparation(Process):
                 return record
 
             retrieved_json = json.loads(ret.text)
-            retrieved_record = self.__crossref_json_to_record(retrieved_json)
-            for key, val in retrieved_record.items():
-                if val:
-                    if "author" == key:
-                        record[key] = self.__select_best_author(record["author"], val)
-                    else:
-                        record[key] = str(val)
+            retrieved_record = self.crossref_json_to_record(retrieved_json)
+            record = self.__fuse_best_fields(record, retrieved_record)
 
-        # except IndexError:
-        # except json.decoder.JSONDecodeError:
-        # except TypeError:
         except requests.exceptions.HTTPError:
             pass
         except requests.exceptions.ReadTimeout:
@@ -1528,6 +1449,13 @@ class Preparation(Process):
 
         return record
 
+    def __check_potential_retracts(self, record: dict) -> dict:
+        retrieved_record = self.get_md_from_crossref(record.copy())
+        if retrieved_record.get("crossmark-restriction", "") == "True":
+            record["status"] = RecordState.md_needs_manual_preparation
+            record["man_prep_hints"] = "crossmark_restriction_potential_retract"
+        return record
+
     def __read_next_record_str(self) -> typing.Iterator[str]:
         with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
             data = ""
@@ -1611,7 +1539,11 @@ class Preparation(Process):
         if change > 0.1:
             msg += f"; change-score: {change}"
 
-        record["man_prep_hints"] = msg.strip(";").lstrip(" ")
+        if "man_prep_hints" not in record:
+            record["man_prep_hints"] = ""
+        else:
+            record["man_prep_hints"] = record["man_prep_hints"] + ";"
+        record["man_prep_hints"] = record["man_prep_hints"] + msg.strip(";").lstrip(" ")
 
         return record
 
@@ -1646,6 +1578,10 @@ class Preparation(Process):
         return record
 
     def update_metadata_status(self, record: dict) -> dict:
+        record = self.__check_potential_retracts(record)
+        if "crossmark-restriction" in record:
+            return record
+
         self.logger.debug(f'is_complete({record["ID"]}): {self.__is_complete(record)}')
         self.logger.debug(
             f'is_complete_metadata_source({record["ID"]}): '
@@ -1722,46 +1658,114 @@ class Preparation(Process):
         if RecordState.md_imported != record["status"]:
             return record
 
+        #  preparation_record will change and eventually replace record (if successful)
+        preparation_record = record.copy()
+        # unprepared_record will not change (for diffs)
+        unprepared_record = record.copy()
+
         # Note: we require (almost) perfect matches for the scripts.
         # Cases with higher dissimilarity will be handled in the prep_man.py
         # Note : the record should always be the first element of the list.
-        prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"script": self.drop_fields, "params": [record]},
-            {"script": self.__remove_urls_with_500_errors, "params": [record]},
-            {"script": self.__remove_broken_dois, "params": [record]},
-            {"script": self.__exclude_non_latin_alphabets, "params": [record]},
-            {
-                "script": self.__update_local_paper_index_fields,
-                "params": [record, item["LOCAL_PAPER_INDEX_FORMAT"]],
-            },
-            {"script": self.__resolve_crossrefs, "params": [record]},
-            {"script": self.__correct_recordtype, "params": [record]},
-            {"script": self.__format, "params": [record]},
-            {"script": self.__apply_local_rules, "params": [record]},
-            {"script": self.__get_record_from_local_index, "params": [record]},
-            {"script": self.get_doi_from_sem_scholar, "params": [record]},
-            {"script": self.__get_doi_from_urls, "params": [record]},
-            {"script": self.get_md_from_doi, "params": [record]},
-            {"script": self.get_md_from_crossref, "params": [record]},
-            {"script": self.get_md_from_dblp, "params": [record]},
-            {"script": self.__get_md_from_open_library, "params": [record]},
-            {"script": self.__get_year_from_vol_iss_jour_crossref, "params": [record]},
-            {"script": self.__remove_nicknames, "params": [record]},
-            {"script": self.__remove_redundant_fields, "params": [record]},
-            {"script": self.__format_minor, "params": [record]},
-            {"script": self.update_metadata_status, "params": [record]},
-        ]
+        # Note : we need to rerun all preparation scripts because records are not stored
+        # if not prepared successfully.
+        prep_scripts: typing.List[typing.Dict[str, typing.Any]] = []
+        if "strict" == item["mode"]["name"]:
+            prep_scripts = [
+                {"script": self.drop_fields, "params": [preparation_record]},
+                {
+                    "script": self.__remove_urls_with_500_errors,
+                    "params": [preparation_record],
+                },
+                {"script": self.__remove_broken_dois, "params": [preparation_record]},
+                {"script": self.__resolve_crossrefs, "params": [preparation_record]},
+                {
+                    "script": self.__update_local_paper_index_fields,
+                    "params": [preparation_record, item["LOCAL_PAPER_INDEX_FORMAT"]],
+                },
+                {"script": self.__format, "params": [preparation_record]},
+                {
+                    "script": self.__get_record_from_local_index,
+                    "params": [preparation_record],
+                },
+                {"script": self.get_md_from_doi, "params": [preparation_record]},
+                {"script": self.__remove_nicknames, "params": [preparation_record]},
+                {
+                    "script": self.__remove_redundant_fields,
+                    "params": [preparation_record],
+                },
+                {"script": self.__format_minor, "params": [preparation_record]},
+                {
+                    "script": self.__exclude_non_latin_alphabets,
+                    "params": [preparation_record],
+                },
+                {"script": self.update_metadata_status, "params": [preparation_record]},
+            ]
+        elif item["mode"]["name"] in [
+            "high_confidence",
+            "medium_confidence",
+            "low_confidence",
+        ]:
+            # Note: for these scripts, only the similarity changes.
+            prep_scripts = [
+                {"script": self.drop_fields, "params": [preparation_record]},
+                {
+                    "script": self.__remove_urls_with_500_errors,
+                    "params": [preparation_record],
+                },
+                {"script": self.__remove_broken_dois, "params": [preparation_record]},
+                {
+                    "script": self.__update_local_paper_index_fields,
+                    "params": [preparation_record, item["LOCAL_PAPER_INDEX_FORMAT"]],
+                },
+                {"script": self.__resolve_crossrefs, "params": [preparation_record]},
+                {"script": self.__correct_recordtype, "params": [preparation_record]},
+                {"script": self.__format, "params": [preparation_record]},
+                {
+                    "script": self.__get_record_from_local_index,
+                    "params": [preparation_record],
+                },
+                {
+                    "script": self.get_doi_from_sem_scholar,
+                    "params": [preparation_record],
+                },
+                {"script": self.__get_doi_from_urls, "params": [preparation_record]},
+                {"script": self.get_md_from_doi, "params": [preparation_record]},
+                {"script": self.get_md_from_crossref, "params": [preparation_record]},
+                {"script": self.get_md_from_dblp, "params": [preparation_record]},
+                {
+                    "script": self.__get_md_from_open_library,
+                    "params": [preparation_record],
+                },
+                {
+                    "script": self.__get_year_from_vol_iss_jour_crossref,
+                    "params": [preparation_record],
+                },
+                {"script": self.__remove_nicknames, "params": [preparation_record]},
+                {
+                    "script": self.__remove_redundant_fields,
+                    "params": [preparation_record],
+                },
+                {"script": self.__format_minor, "params": [preparation_record]},
+                {
+                    "script": self.__exclude_non_latin_alphabets,
+                    "params": [preparation_record],
+                },
+                {"script": self.update_metadata_status, "params": [preparation_record]},
+            ]
+        else:
+            print("Error: mode not yet implemented")
 
-        unprepared_record = record.copy()
         short_form = self.drop_fields(record.copy())
-        self.report_logger.info(
+
+        preparation_details = []
+        preparation_details.append(
             f'prepare({record["ID"]})'
             + f" called with: \n{self.pp.pformat(short_form)}\n\n"
         )
 
         for prep_script in prep_scripts:
 
-            prior = record.copy()
+            prior = preparation_record.copy()
 
             self.report_logger.debug(f'{prep_script["script"].__name__}(params) called')
             if [] == prep_script["params"]:
@@ -1769,9 +1773,10 @@ class Preparation(Process):
             else:
                 prep_script["script"](*prep_script["params"])
 
-            diffs = list(dictdiffer.diff(prior, record))
+            diffs = list(dictdiffer.diff(prior, preparation_record))
             if diffs:
-                self.report_logger.info(
+                # self.pp.pprint(preparation_record)
+                preparation_details.append(
                     f'{prep_script["script"].__name__}'
                     f'({prep_script["params"][0]["ID"]})'
                     f" changed:\n{self.pp.pformat(diffs)}\n"
@@ -1780,11 +1785,26 @@ class Preparation(Process):
                 self.report_logger.debug(f"{prep_script['script'].__name__} changed: -")
             if self.DEBUG_MODE:
                 print("\n")
-            if RecordState.rev_prescreen_excluded == record["status"]:
+            if RecordState.rev_prescreen_excluded == preparation_record["status"]:
+                record = preparation_record.copy()
                 break
 
-        if RecordState.md_needs_manual_preparation == record["status"]:
-            record = self.log_notifications(record, unprepared_record)
+        if (
+            preparation_record["status"]
+            in [RecordState.md_prepared, RecordState.rev_prescreen_excluded]
+            or "crossmark-restriction" in preparation_record
+        ):
+            record = preparation_record.copy()
+            if "crossmark-restriction" in preparation_record:
+                record = self.log_notifications(record, unprepared_record)
+
+            for preparation_detail in preparation_details:
+                self.report_logger.info(preparation_detail)
+
+        if "low_confidence" == item["mode"]["name"]:
+            record = preparation_record.copy()
+            if RecordState.md_needs_manual_preparation == preparation_record["status"]:
+                record = self.log_notifications(record, unprepared_record)
 
         return record
 
@@ -1850,8 +1870,6 @@ class Preparation(Process):
     def reset(self, record_list: typing.List[dict]):
         from colrev_core.prep_man import PrepMan
 
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-
         record_list = [
             r
             for r in record_list
@@ -1880,6 +1898,7 @@ class Preparation(Process):
 
         record_reset_list = [[record, record.copy()] for record in record_list]
 
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
         revlist = (
             (
@@ -1892,22 +1911,17 @@ class Preparation(Process):
 
         for commit_id, cmsg, filecontents in list(revlist):
             cmsg_l1 = str(cmsg).split("\n")[0]
-            # if commit_id != 'fe0e644704884a1d1788510824bee824dd1142c1':
-            #     continue
             if "colrev load" not in cmsg and "local_paper_index index" not in cmsg:
                 print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
                 continue
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
             prior_db = bibtexparser.loads(filecontents)
             for r in prior_db.entries:
+                if str(r["status"]) != str(RecordState.md_imported):
+                    continue
                 for record_to_unmerge, record in record_reset_list:
-                    # We want the latest md_imported version
-                    if str(record_to_unmerge["status"]) == str(RecordState.md_imported):
-                        continue
 
-                    if str(RecordState.md_imported) == str(r["status"]) and any(
-                        o in r["origin"] for o in record["origin"].split(";")
-                    ):
+                    if any(o in r["origin"] for o in record["origin"].split(";")):
                         self.report_logger.info(
                             f'reset({record["ID"]}) to\n{self.pp.pformat(r)}\n\n'
                         )
@@ -1926,6 +1940,8 @@ class Preparation(Process):
                     break
 
         PREP_MAN = PrepMan()
+        # TODO : double-check! resetting the prep does not necessarily mean
+        # that wrong records were merged...
         # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
         # retrieve the original record from the search/source file
         for record_to_unmerge, record in record_reset_list:
@@ -1949,7 +1965,8 @@ class Preparation(Process):
 
         saved_args = {"reset_records": ",".join(reset_ids)}
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.format_references()
+        # self.REVIEW_MANAGER.notify(Process(ProcessType.check))
+        # self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
             "Reset metadata for manual preparation", saved_args=saved_args
@@ -1977,6 +1994,7 @@ class Preparation(Process):
                 continue
             prior_record = prior_record_l.pop()
             record["ID"] = prior_record["ID"]
+
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
 
         return
@@ -2091,9 +2109,7 @@ class Preparation(Process):
                 return LPI_INDEX
         return {}
 
-    def __batch(self, items):
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
-
+    def __batch(self, items, mode: dict):
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         LPI_INDICES = [
@@ -2118,22 +2134,18 @@ class Preparation(Process):
             batch.append(
                 {
                     "record": item,
+                    "mode": mode,
                     "LOCAL_PAPER_INDEX_FORMAT": self.__get_lpi_data(LPI_INDICES, item),
                 }
             )
-            if len(batch) == n:
-                yield batch
-                batch = []
-        yield batch
+        return batch
 
     def main(
         self,
-        RETRIEVAL_SIMILARITY_INPUT: float = 0.0,
         reprocess_state: RecordState = RecordState.md_imported,
         keep_ids: bool = False,
     ) -> None:
         saved_args = locals()
-        del saved_args["RETRIEVAL_SIMILARITY_INPUT"]
 
         if not keep_ids:
             del saved_args["keep_ids"]
@@ -2143,21 +2155,27 @@ class Preparation(Process):
         if reprocess_state != RecordState.md_imported:
             self.set_to_reprocess(reprocess_state)
 
-        prepare_data = self.get_data()
-        self.logger.debug(f"prepare_data: {self.pp.pformat(prepare_data)}")
+        modes = [
+            {"name": "strict", "similarity": 1.0},
+            {"name": "high_confidence", "similarity": 0.95},
+            {"name": "medium_confidence", "similarity": 0.875},
+            {"name": "low_confidence", "similarity": 0.80},
+        ]
 
-        self.PAD = prepare_data["PAD"]
+        for mode in modes:
+            self.logger.info(f"Prepare ({mode['name']})")
 
-        i = 1
-        for preparation_batch in self.__batch(prepare_data["items"]):
+            prepare_data = self.get_data()
+            self.logger.debug(f"prepare_data: {self.pp.pformat(prepare_data)}")
+            self.PAD = prepare_data["PAD"]
 
-            self.logger.info("Prepare")
+            preparation_batch = self.__batch(prepare_data["items"], mode)
+
+            self.RETRIEVAL_SIMILARITY = mode["similarity"]  # type: ignore
+            saved_args["similarity"] = self.RETRIEVAL_SIMILARITY
             self.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
-
-            print(f"Batch {i}")
-            i += 1
 
             # Note: preparation_batch is not turned into a list of records.
             # preparation_batch_items = preparation_batch
@@ -2179,21 +2197,19 @@ class Preparation(Process):
             # For better readability:
             self.REVIEW_MANAGER.reorder_log(preparation_batch_IDs)
 
-            self.REVIEW_MANAGER.create_commit("Prepare records", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(
+                f"Prepare records ({mode['name']})", saved_args=saved_args
+            )
+            self.REVIEW_MANAGER.reset_log()
 
-        if 1 == i:
-            self.logger.info("No records to prepare")
-        else:
-            if not keep_ids:
-                self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-                self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
+        if not keep_ids:
+            self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
+            self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
 
         return
 
     def run(self):
-        self.REVIEW_MANAGER.run_process(
-            self, self.RETRIEVAL_SIMILARITY, self.reprocess_state, self.keep_ids
-        )
+        self.REVIEW_MANAGER.run_process(self, self.reprocess_state, self.keep_ids)
 
 
 if __name__ == "__main__":

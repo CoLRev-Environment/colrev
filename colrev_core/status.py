@@ -651,12 +651,12 @@ class Status(Process):
                 stat = " | "
             else:
                 stat = " "
-        rjust_padd = 33 - len(stat)
+        rjust_padd = 31 - len(stat)
         stat = stat + str(val1).rjust(rjust_padd, " ")
         if connector is not None:
             stat = stat + "  " + connector + "  "
         if val2 != "":
-            rjust_padd = 39 - len(stat)
+            rjust_padd = 41 - len(stat)
             stat = stat + str(val2).rjust(rjust_padd, " ") + " "
         if field2 != "":
             stat = stat + str(field2)
@@ -835,7 +835,7 @@ class Status(Process):
                 )
                 if "exclusion" in stat["currently"]:
                     for crit, nr in stat["currently"]["exclusion"].items():
-                        self.stat_print(False, "", "", "->", f"reason: {crit}", nr)
+                        self.stat_print(False, "", "", "-", f": {crit}", nr)
 
             print("")
             print(" Data and synthesis")
