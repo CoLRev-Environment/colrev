@@ -5,17 +5,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import PDFManualRetrievalProcess
 from colrev_core.process import RecordState
 
 
-class PDFRetrievalMan(Process):
+class PDFRetrievalMan(PDFManualRetrievalProcess):
     def __init__(self):
 
-        super().__init__(ProcessType.pdf_get_man)
-
-        self.REVIEW_MANAGER.notify(self)
+        super().__init__()
 
     def get_pdf_get_man(self, records: typing.List[dict]) -> list:
         missing_records = []
@@ -54,7 +51,6 @@ class PDFRetrievalMan(Process):
 
         self.REVIEW_MANAGER.paths["PDF_DIRECTORY"].mkdir(exist_ok=True)
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.pdf_get_man))
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len(
             [
@@ -65,7 +61,7 @@ class PDFRetrievalMan(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.pdf_needs_manual_retrieval}
+            conditions=[{"status": RecordState.pdf_needs_manual_retrieval}]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.logger.debug(self.pp.pformat(pdf_get_man_data))

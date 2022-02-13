@@ -11,21 +11,18 @@ from pdfminer.high_level import extract_text
 
 from colrev_core import grobid_client
 from colrev_core import utils
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import PDFRetrievalProcess
 from colrev_core.process import RecordState
 from colrev_core.tei import TEI
 
 
-class PDF_Retrieval(Process):
+class PDF_Retrieval(PDFRetrievalProcess):
     def __init__(self, copy_to_repo: bool = False, rename: bool = False):
 
-        super().__init__(ProcessType.pdf_get, fun=self.main)
+        super().__init__(fun=self.main)
 
         self.copy_to_repo = copy_to_repo
         self.rename = rename
-
-        self.pdf_get_process = Process(ProcessType.pdf_get, self.main)
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
@@ -274,7 +271,7 @@ class PDF_Retrieval(Process):
 
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.rev_prescreen_included},
+            conditions=[{"status": RecordState.rev_prescreen_included}],
         )
 
         prep_data = {

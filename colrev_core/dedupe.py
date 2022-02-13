@@ -10,15 +10,14 @@ import pandas as pd
 from tqdm.contrib.concurrent import process_map
 
 from colrev_core import utils
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import DedupeProcess
 from colrev_core.process import RecordState
 
 
-class Dedupe(Process):
+class Dedupe(DedupeProcess):
     def __init__(self):
 
-        super().__init__(ProcessType.dedupe)
+        super().__init__()
         pd.options.mode.chained_assignment = None  # default='warn'
 
     ###########################################################################
@@ -113,7 +112,6 @@ class Dedupe(Process):
         # from colrev_core import dedupe
         # from colrev_core.process import Process, ProcessType
         # REVIEW_MANAGER = ReviewManager()
-        # REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
         # df = dedupe.readData(REVIEW_MANAGER)
         # EDITS
         # df.to_csv('export.csv', index=False)
@@ -207,8 +205,6 @@ class Dedupe(Process):
 
         import dedupe
         from pathlib import Path
-
-        self.REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
 
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)
         logging.getLogger("dedupe.api").setLevel(logging.WARNING)
@@ -494,7 +490,6 @@ class Dedupe(Process):
 
         report_logger.info("Dedupe: fix errors")
         logger.info("Dedupe: fix errors")
-        self.REVIEW_MANAGER.notify(Process(ProcessType.dedupe))
         saved_args = locals()
 
         dupe_file = Path("duplicates_to_validate.xlsx")

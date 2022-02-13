@@ -16,17 +16,14 @@ from yaml import safe_load
 import docker
 from colrev_core import grobid_client
 from colrev_core import load_custom
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import LoadProcess
 from colrev_core.process import RecordState
 
 
-class Loader(Process):
+class Loader(LoadProcess):
     def __init__(self, keep_ids):
+        super().__init__(fun=self.main)
 
-        super().__init__(ProcessType.load, fun=self.main)
-
-        self.REVIEW_MANAGER.notify(self)
         self.keep_ids = keep_ids
 
         self.conversion_scripts = {
@@ -199,7 +196,6 @@ class Loader(Process):
             record.update(number=record["issue"])
             del record["issue"]
 
-        record.update(metadata_source="ORIGINAL")
         record.update(status=RecordState.md_imported)
 
         return record

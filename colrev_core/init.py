@@ -27,10 +27,8 @@ class Initializer:
 
     def __create_commit(self, saved_args: dict) -> None:
         from colrev_core.review_manager import ReviewManager
-        from colrev_core.process import Process, ProcessType
 
         self.REVIEW_MANAGER = ReviewManager()
-        self.REVIEW_MANAGER.notify(Process(ProcessType.format))
 
         report_logger = logging.getLogger("colrev_core_report")
         report_logger.info("Initialize review repository")

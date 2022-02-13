@@ -4,15 +4,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import PrescreenProcess
 from colrev_core.process import RecordState
 
 
-class Prescreen(Process):
+class Prescreen(PrescreenProcess):
     def __init__(self):
-        super().__init__(ProcessType.prescreen)
-        self.REVIEW_MANAGER.notify(self)
+        super().__init__()
 
     def export_table(self, export_table_format: str) -> None:
         self.logger.info("Loading records for export")
@@ -160,7 +158,7 @@ class Prescreen(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.md_processed}
+            conditions=[{"status": RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.logger.debug(self.pp.pformat(prescreen_data))

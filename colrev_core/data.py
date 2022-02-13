@@ -15,20 +15,19 @@ from urllib3.exceptions import ProtocolError
 from yaml import safe_load
 
 from colrev_core import grobid_client
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import DataProcess
 from colrev_core.process import RecordState
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_TimeoutException
 
 
-class Data(Process):
+class Data(DataProcess):
     PAD = 0
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    def __init__(self):
+    def __init__(self, notify=True):
 
-        super().__init__(ProcessType.data, fun=self.main)
+        super().__init__(fun=self.main, notify=notify)
 
     def get_record_ids_for_synthesis(self, records: typing.List[dict]) -> list:
         return [
@@ -431,8 +430,6 @@ class Data(Process):
 
     def enlit_heuristic(self):
 
-        self.REVIEW_MANAGER.notify(self)
-
         # TODO : warn if teis are missing for some files
         tei_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("tei")
 
@@ -470,8 +467,6 @@ class Data(Process):
     def main(self) -> None:
 
         saved_args = locals()
-
-        self.REVIEW_MANAGER.notify(self)
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
@@ -518,10 +513,10 @@ class Data(Process):
         )
 
     def update_synthesized_status(self) -> typing.List[dict]:
+        from colrev_core.process import CheckProcess
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.check, str))
-
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        CHECK_PROCESS = CheckProcess()
+        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]
         DATA = self.REVIEW_MANAGER.paths["DATA"]
@@ -550,8 +545,8 @@ class Data(Process):
                 f' {record["ID"]}'.ljust(self.PAD, " ") + "set status to synthesized"
             )
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
 

@@ -6,16 +6,14 @@ import imagehash
 import pandas as pd
 from pdf2image import convert_from_path
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import PDFManualPreparationProcess
 from colrev_core.process import RecordState
 
 
-class PDFPrepMan(Process):
+class PDFPrepMan(PDFManualPreparationProcess):
     def __init__(self):
 
-        super().__init__(ProcessType.pdf_prep_man)
-        self.REVIEW_MANAGER.notify(self)
+        super().__init__()
 
     def get_data(self) -> dict:
 
@@ -30,7 +28,7 @@ class PDFPrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.pdf_needs_manual_preparation}
+            conditions=[{"status": RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.logger.debug(self.pp.pformat(pdf_prep_man_data))
@@ -66,7 +64,6 @@ class PDFPrepMan(Process):
     def pdf_prep_man_stats(self) -> None:
         import pandas as pd
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.explore))
         # TODO : this function mixes return values and saving to files.
         self.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
@@ -138,7 +135,6 @@ class PDFPrepMan(Process):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.explore))
         self.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
@@ -185,8 +181,6 @@ class PDFPrepMan(Process):
         return
 
     def apply_pdf_prep_man(self) -> None:
-
-        self.REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
 
         if Path("prep-references.csv").is_file():
             self.logger.info("Load prep-references.csv")

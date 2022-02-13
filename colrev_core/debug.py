@@ -3,13 +3,9 @@ import logging
 import pprint
 from pathlib import Path  # noqa F401
 
-from colrev_core import review_manager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 from colrev_core.review_manager import ReviewManager
 
-review_manager.setup_logger(level=logging.DEBUG)
 logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -300,7 +296,6 @@ def get_non_unique_pdf_hashes() -> None:
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prep))
     records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
     import collections

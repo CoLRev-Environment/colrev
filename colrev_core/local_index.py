@@ -14,19 +14,19 @@ from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 from tqdm import tqdm
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import ExploreProcess
 from colrev_core.process import RecordState
 from colrev_core.review_manager import ReviewManager
 
 
-class LocalIndex(Process):
+class LocalIndex(ExploreProcess):
 
     global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
     max_len_sha256 = 2 ** 256
 
     def __init__(self):
-        super().__init__(ProcessType.check)
+
+        super().__init__()
 
         self.local_index_path = Path.home().joinpath(".colrev")
         self.rind_path = self.local_index_path / Path(".record_index/")
@@ -665,7 +665,6 @@ class LocalIndex(Process):
             shutil.rmtree(self.toc_path)
 
         REVIEW_MANAGER = ReviewManager()
-        REVIEW_MANAGER.notify(self)
 
         # TODO: add web of science abbreviations (only when they are unique!?)
         # self.__download_resources()
@@ -680,7 +679,6 @@ class LocalIndex(Process):
 
             # get ReviewManager for project (after chdir)
             REVIEW_MANAGER = ReviewManager()
-            REVIEW_MANAGER.notify(self)
 
             if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue
@@ -739,7 +737,7 @@ class LocalIndex(Process):
                 pass
 
         if retrieved_record:
-            self.logger.debug("Retrieved from g_id index")
+            self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
@@ -762,7 +760,7 @@ class LocalIndex(Process):
                 break
 
         if retrieved_record:
-            self.logger.debug("Retrieved from record index")
+            self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
             return self.__prep_record_for_return(retrieved_record)
 
         # 3. Try the duplicate representation index
@@ -775,7 +773,7 @@ class LocalIndex(Process):
         if not retrieved_record:
             raise self.RecordNotInIndexException(record.get("ID", "no-key"))
 
-        self.logger.debug("Retrieved from d index")
+        self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
         return self.__prep_record_for_return(retrieved_record)
 
     def is_duplicate(self, record1: dict, record2: dict) -> str:

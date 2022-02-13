@@ -257,7 +257,7 @@ class ReviewDataset:
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
                     continue
-                if record["metadata_source"] == "LOCAL_INDEX":
+                if "LOCAL_INDEX" == record.get("metadata_source", ""):
                     continue
             elif str(record["status"]) not in [
                 str(RecordState.md_imported),
@@ -511,7 +511,7 @@ class ReviewDataset:
                 data = line
         yield data
 
-    def read_next_record(self, conditions: dict = None) -> typing.Iterator[dict]:
+    def read_next_record(self, conditions: list = None) -> typing.Iterator[dict]:
         records = []
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
@@ -520,9 +520,10 @@ class ReviewDataset:
                 record = db.entries[0]
                 record["status"] = RecordState[record["status"]]
                 if conditions is not None:
-                    for key, value in conditions.items():
-                        if str(value) == str(record[key]):
-                            records.append(record)
+                    for condition in conditions:
+                        for key, value in condition.items():
+                            if str(value) == str(record[key]):
+                                records.append(record)
                 else:
                     records.append(record)
         yield from records
@@ -681,9 +682,12 @@ class ReviewDataset:
         return
 
     def format_main_references(self) -> None:
-        from colrev_core import prep
+        from colrev_core.prep import Preparation
+        from colrev_core.process import FormatProcess
 
-        PREPARATION = prep.Preparation(notify=False)
+        PREPARATION = Preparation(notify=False)
+
+        FormatProcess()  # to notify
 
         records = self.load_records()
         for record in records:
@@ -710,9 +714,7 @@ class ReviewDataset:
                     del record["pdf_prep_hints"]
 
         records = sorted(records, key=lambda d: d["ID"])
-
         self.save_records(records)
-        self.REVIEW_MANAGER.update_status_yaml()
         return
 
     def add_record_changes(self) -> None:
@@ -721,7 +723,7 @@ class ReviewDataset:
         return
 
     def retrieve_data(self, prior: dict) -> dict:
-        from colrev_core.process import Record
+        from colrev_core.process import ProcessModel
 
         data: dict = {
             "missing_file": [],
@@ -838,7 +840,7 @@ class ReviewDataset:
                 else:
                     proc_transition_list: list = [
                         x["trigger"]
-                        for x in Record.transitions
+                        for x in ProcessModel.transitions
                         if str(x["source"]) == prior_status[0]
                         and str(x["dest"]) == status
                     ]

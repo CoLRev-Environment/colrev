@@ -1,14 +1,13 @@
 #! /usr/bin/env python
 import typing
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
+from colrev_core.process import ScreenProcess
 
 
-class Screen(Process):
+class Screen(ScreenProcess):
     def __init__(self):
-        super().__init__(ProcessType.screen)
+        super().__init__()
 
     def include_all_in_screen(
         self,
@@ -71,7 +70,7 @@ class Screen(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.pdf_prepared}
+            conditions=[{"status": RecordState.pdf_prepared}]
         )
         screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.logger.debug(self.pp.pformat(screen_data))

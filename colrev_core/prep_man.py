@@ -5,21 +5,17 @@ import bibtexparser
 import pandas as pd
 
 from colrev_core import prep
-from colrev_core.process import Process
+from colrev_core.process import PrepManProcess
 from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class PrepMan(Process):
+class PrepMan(PrepManProcess):
     def __init__(self):
-
         super().__init__(ProcessType.prep_man)
-
-        self.REVIEW_MANAGER.notify(self)
 
     def prep_man_stats(self) -> None:
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.explore))
         self.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
@@ -113,7 +109,6 @@ class PrepMan(Process):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.REVIEW_MANAGER.notify(Process(ProcessType.explore))
         self.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
@@ -160,8 +155,6 @@ class PrepMan(Process):
         return
 
     def apply_prep_man(self) -> None:
-
-        self.REVIEW_MANAGER.notify(Process(ProcessType.prep_man))
 
         PREPARATION = prep.Preparation()
 
@@ -304,7 +297,7 @@ class PrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.md_needs_manual_preparation}
+            conditions=[{"status": RecordState.md_needs_manual_preparation}]
         )
 
         md_prep_man_data = {

@@ -29,52 +29,11 @@ from colrev_core import review_dataset
 from colrev_core.data import ManuscriptRecordSourceTagError
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import Record
 from colrev_core.process import UnstagedGitChangesError
 from colrev_core.review_dataset import DuplicatesError
 from colrev_core.review_dataset import FieldError
 from colrev_core.review_dataset import OriginError
 from colrev_core.review_dataset import PropagatedIDChange
-
-
-def setup_logger(level=logging.INFO) -> logging.Logger:
-    logger = logging.getLogger("colrev_core")
-
-    if not logger.handlers:
-        logger.setLevel(level)
-
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-
-        logger.addHandler(handler)
-        logger.propagate = False
-    return logger
-
-
-def setup_report_logger(level=logging.INFO) -> logging.Logger:
-
-    report_logger = logging.getLogger("colrev_core_report")
-
-    if not report_logger.handlers:
-        report_logger.setLevel(level)
-        formatter = logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S"
-        )
-        handler = logging.StreamHandler()
-        handler.setFormatter(formatter)
-
-        report_file_handler = logging.FileHandler("report.log", mode="a")
-        report_file_handler.setFormatter(formatter)
-
-        report_logger.addHandler(report_file_handler)
-        if logging.DEBUG == level:
-            report_logger.addHandler(handler)
-        report_logger.propagate = False
-
-    return report_logger
 
 
 class ReviewManager:
@@ -113,11 +72,11 @@ class ReviewManager:
         self.config = self.__load_config()
 
         if self.config["DEBUG_MODE"]:
-            self.report_logger = setup_report_logger(logging.DEBUG)
-            self.logger = setup_logger(logging.DEBUG)
+            self.report_logger = self.__setup_report_logger(logging.DEBUG)
+            self.logger = self.__setup_logger(logging.DEBUG)
         else:
-            self.report_logger = setup_report_logger(logging.INFO)
-            self.logger = setup_logger(logging.INFO)
+            self.report_logger = self.__setup_report_logger(logging.INFO)
+            self.logger = self.__setup_logger(logging.INFO)
 
         self.REVIEW_DATASET = ReviewDataset(self)
         self.sources = self.REVIEW_DATASET.load_sources()
@@ -134,8 +93,10 @@ class ReviewManager:
 
         self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-        self.logger.debug(f"config: {self.pp.pformat(self.config)}")
-        self.logger.debug(f"paths: {self.pp.pformat(self.paths)}")
+        if self.config["DEBUG_MODE"]:
+            print("\n\n")
+            self.logger.debug("Created review manager instance")
+            self.logger.debug(f" config: {self.pp.pformat(self.config)}")
 
     def __get_file_paths(self, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
@@ -244,6 +205,46 @@ class ReviewManager:
                 local_registry = local_registry_df.to_dict("records")
 
         return local_registry
+
+    def __setup_logger(self, level=logging.INFO) -> logging.Logger:
+        logger = logging.getLogger("colrev_core")
+
+        if not logger.handlers:
+            logger.setLevel(level)
+
+            formatter = logging.Formatter(
+                fmt="%(asctime)s [%(levelname)s] %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+
+            logger.addHandler(handler)
+            logger.propagate = False
+        return logger
+
+    def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
+
+        report_logger = logging.getLogger("colrev_core_report")
+
+        if not report_logger.handlers:
+            report_logger.setLevel(level)
+            formatter = logging.Formatter(
+                fmt="%(asctime)s [%(levelname)s] %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+            handler = logging.StreamHandler()
+            handler.setFormatter(formatter)
+
+            report_file_handler = logging.FileHandler("report.log", mode="a")
+            report_file_handler.setFormatter(formatter)
+
+            report_logger.addHandler(report_file_handler)
+            if logging.DEBUG == level:
+                report_logger.addHandler(handler)
+            report_logger.propagate = False
+
+        return report_logger
 
     def __check_git_installed(self) -> None:
         try:
@@ -565,7 +566,7 @@ class ReviewManager:
             else:
                 from colrev_core.data import Data
 
-                DATA = Data()
+                DATA = Data(notify=False)
                 manuscript_checks = [
                     {
                         "script": DATA.check_new_record_source_tag,
@@ -671,7 +672,6 @@ class ReviewManager:
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
-            self.notify(Process(ProcessType.format))
             self.REVIEW_DATASET.format_main_references()
             self.update_status_yaml()
 
@@ -696,18 +696,7 @@ class ReviewManager:
         self.__check_precondition(process)
 
     def __check_precondition(self, process: Process) -> None:
-        # TODO : currently a special case (not in state model):
-        if process.type.name in ["format"]:
-            # PDFs etc. can be modified!
-            pass
-        else:
-            # perform a transition in the Record (state model)
-            # to call the corresponding condition check
-            condition_check_record = Record(
-                "checker", Process.get_source_state(process), self
-            )
-            class_method = getattr(condition_check_record, process.type.name)
-            class_method(condition_check_record)
+        process.check_precondition()
 
         self.notified_next_process = process.type
         if not self.__git_repo.is_dirty():
@@ -897,12 +886,12 @@ class ReviewManager:
         from colrev_core.status import Status
 
         STATUS = Status()
-        status_freq = STATUS.get_status_freq()
 
+        status_freq = STATUS.get_status_freq()
         with open(self.paths["STATUS"], "w") as f:
             yaml.dump(status_freq, f, allow_unicode=True)
 
-        git_repo = self.get_repo()
+        git_repo = STATUS.REVIEW_MANAGER.get_repo()
         git_repo.index.add([str(self.paths["STATUS_RELATIVE"])])
 
         return

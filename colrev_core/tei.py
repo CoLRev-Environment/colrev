@@ -66,6 +66,8 @@ class TEI(Process):
             if b"[TIMEOUT]" in r.content:
                 raise TEI_TimeoutException()
 
+            self.root = etree.fromstring(r.content)
+
             if tei_path is not None:
                 with open(tei_path, "wb") as tf:
                     tf.write(r.content)

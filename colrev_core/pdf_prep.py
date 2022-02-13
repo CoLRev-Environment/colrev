@@ -27,12 +27,11 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import PDFPreparationProcess
 from colrev_core.process import RecordState
 
 
-class PDF_Preparation(Process):
+class PDF_Preparation(PDFPreparationProcess):
 
     roman_pages_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
@@ -43,14 +42,12 @@ class PDF_Preparation(Process):
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
     )
 
-    def __init__(self, reprocess: bool = False):
+    def __init__(self, reprocess: bool = False, notify: bool = True):
 
-        super().__init__(ProcessType.pdf_prep, fun=self.main)
+        super().__init__(fun=self.main, notify=notify)
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
         self.reprocess = reprocess
-
-        self.pdf_prep_process = Process(ProcessType.pdf_prep, self.main)
 
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
@@ -89,7 +86,7 @@ class PDF_Preparation(Process):
         record["pages_in_file"] = pages_in_file
         return record
 
-    def __get_text_from_pdf(self, record: dict, PAD: int) -> dict:
+    def get_text_from_pdf(self, record: dict, PAD: int) -> dict:
 
         record = self.__get_pages_in_pdf(record)
 
@@ -158,7 +155,7 @@ class PDF_Preparation(Process):
         record["pdf_processed"] = "OCRMYPDF"
 
         record["file"] = str(ocred_filename)
-        record = self.__get_text_from_pdf(record, PAD)
+        record = self.get_text_from_pdf(record, PAD)
 
         return record
 
@@ -248,7 +245,7 @@ class PDF_Preparation(Process):
             pass
 
         if "text_from_pdf" not in record:
-            record = self.__get_text_from_pdf(record, PAD)
+            record = self.get_text_from_pdf(record, PAD)
 
         text = record["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
@@ -672,7 +669,7 @@ class PDF_Preparation(Process):
             return record
 
         prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"script": self.__get_text_from_pdf, "params": [record, PAD]},
+            {"script": self.get_text_from_pdf, "params": [record, PAD]},
             {"script": self.__pdf_check_ocr, "params": [record, PAD]},
             {"script": self.__remove_coverpage, "params": [record, PAD]},
             {"script": self.__remove_last_page, "params": [record, PAD]},
@@ -799,7 +796,7 @@ class PDF_Preparation(Process):
         )
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions={"status": RecordState.pdf_imported},
+            conditions=[{"status": RecordState.pdf_imported}],
         )
 
         prep_data = {
@@ -862,7 +859,6 @@ class PDF_Preparation(Process):
 
     def update_hashes(self) -> None:
         self.logger.info("Update hashes")
-        self.REVIEW_MANAGER.notify(self)
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records = p_map(self.__update_hash, records)
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)

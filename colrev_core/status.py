@@ -6,14 +6,12 @@ from pathlib import Path
 
 import git
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+from colrev_core.process import CheckProcess
 
 
-class Status(Process):
-    def __init__(self):
-
-        super().__init__(ProcessType.explore)
+class Status(CheckProcess):
+    def __init__(self, notify=True):
+        super().__init__(fun=None, notify=notify)
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
@@ -50,7 +48,7 @@ class Status(Process):
 
     def get_status_freq(self) -> dict:
         from colrev_core.process import RecordState
-        from colrev_core.process import Record
+        from colrev_core.process import ProcessModel
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
         status_list = [x[2] for x in record_header_list]
@@ -84,14 +82,16 @@ class Status(Process):
         atomic_step_number = 0
         completed_atomic_steps = 0
 
-        self.logger.debug("Set overall status statistics (going backwards)")
+        self.REVIEW_MANAGER.logger.debug(
+            "Set overall status statistics (going backwards)"
+        )
         st_o = stat["status"]["overall"]
         non_completed = 0
         current_state = RecordState.rev_synthesized  # start with the last
         visited_states = []
         nr_incomplete = 0
         while True:
-            self.logger.debug(
+            self.REVIEW_MANAGER.logger.debug(
                 f"current_state: {current_state} with {st_o[str(current_state)]}"
             )
             if RecordState.md_prepared == current_state:
@@ -108,12 +108,12 @@ class Status(Process):
             while predecessors:
                 predecessors = [
                     t
-                    for t in Record.transitions
+                    for t in ProcessModel.transitions
                     if t["source"] in states_to_consider
                     and t["dest"] not in visited_states
                 ]
                 for predecessor in predecessors:
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug(
                         f' add {st_o[str(predecessor["dest"])]} '
                         f'from {str(predecessor["dest"])} '
                         f'(predecessor transition: {predecessor["trigger"]})'
@@ -130,13 +130,13 @@ class Status(Process):
             atomic_step_number += 1
             # Note : the following does not consider multiple parallel steps.
             for trans_for_completeness in [
-                t for t in Record.transitions if current_state == t["dest"]
+                t for t in ProcessModel.transitions if current_state == t["dest"]
             ]:
                 nr_incomplete += stat["status"]["currently"][
                     str(trans_for_completeness["source"])
                 ]
 
-            t_list = [t for t in Record.transitions if current_state == t["dest"]]
+            t_list = [t for t in ProcessModel.transitions if current_state == t["dest"]]
             t: dict = t_list.pop()
             if current_state == RecordState.md_imported:
                 break
@@ -175,11 +175,13 @@ class Status(Process):
             "currently"
         ]["rev_prescreen_included"]
 
-        self.logger.debug(f"stat: {self.pp.pformat(stat)}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"stat: {self.REVIEW_MANAGER.pp.pformat(stat)}"
+        )
         return stat
 
     def get_priority_transition(self, current_states: set) -> list:
-        from colrev_core.process import Record
+        from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
         earliest_state = []
@@ -195,7 +197,7 @@ class Status(Process):
                 ]
             search_states = [
                 str(x["source"])
-                for x in Record.transitions
+                for x in ProcessModel.transitions
                 if str(x["dest"]) in search_states
             ]
             if [] == search_states:
@@ -205,18 +207,18 @@ class Status(Process):
         # next: get the priority transition for the earliest states
         priority_transitions = [
             x["trigger"]
-            for x in Record.transitions
+            for x in ProcessModel.transitions
             if str(x["source"]) in earliest_state
         ]
         # print(f'priority_transitions: {priority_transitions}')
         return list(set(priority_transitions))
 
     def get_active_processing_functions(self, current_states_set) -> list:
-        from colrev_core.process import Record
+        from colrev_core.process import ProcessModel
 
         active_processing_functions = []
         for state in current_states_set:
-            srec = Record("item", state)
+            srec = ProcessModel(state=state)
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
         return active_processing_functions
@@ -238,7 +240,7 @@ class Status(Process):
 
             branch_name = str(git_repo.active_branch)
             tracking_branch_name = str(git_repo.active_branch.tracking_branch())
-            self.logger.debug(f"{branch_name} - {tracking_branch_name}")
+            self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
             commits_behind = git_repo.iter_commits(behind_operation)
@@ -280,8 +282,8 @@ class Status(Process):
         )
         # temporarily override for testing
         # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
-        # from colrev_core.process import Record
-        # current_states_set = set([x['source'] for x in Record.transitions])
+        # from colrev_core.process import ProcessModel
+        # current_states_set = set([x['source'] for x in ProcessModel.transitions])
 
         MAIN_REFS_CHANGED = str(MAIN_REFERENCES_RELATIVE) in [
             item.a_path for item in git_repo.index.diff(None)
@@ -294,7 +296,7 @@ class Status(Process):
             # TODO : we may need to trace records based on their origins
             # (IDs can change)
 
-            from colrev_core.process import Record
+            from colrev_core.process import ProcessModel
 
             revlist = (
                 (
@@ -338,7 +340,7 @@ class Status(Process):
 
                 process_type = [
                     x["trigger"]
-                    for x in Record.transitions
+                    for x in ProcessModel.transitions
                     if str(x["source"]) == transitioned_record["source"]
                     and str(x["dest"]) == transitioned_record["dest"]
                 ]
@@ -359,7 +361,9 @@ class Status(Process):
             in_progress_processes = list(
                 {x["process_type"] for x in transitioned_records}
             )
-            self.logger.debug(f"in_progress_processes: {in_progress_processes}")
+            self.REVIEW_MANAGER.logger.debug(
+                f"in_progress_processes: {in_progress_processes}"
+            )
             if len(in_progress_processes) == 1:
                 instruction = {
                     "msg": f"Detected {in_progress_processes[0]} in progress. "
@@ -380,13 +384,15 @@ class Status(Process):
                 instruction["priority"] = "yes"
                 review_instructions.append(instruction)
 
-        self.logger.debug(f"current_states_set: {current_states_set}")
+        self.REVIEW_MANAGER.logger.debug(f"current_states_set: {current_states_set}")
         active_processing_functions = self.get_active_processing_functions(
             current_states_set
         )
-        self.logger.debug(f"active_processing_functions: {active_processing_functions}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"active_processing_functions: {active_processing_functions}"
+        )
         priority_processing_functions = self.get_priority_transition(current_states_set)
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )
 
@@ -625,7 +631,9 @@ class Status(Process):
             "review_instructions": self.get_review_instructions(stat),
             "collaboration_instructions": self.get_collaboration_instructions(stat),
         }
-        self.logger.debug(f"instructions: {self.pp.pformat(instructions)}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"instructions: {self.REVIEW_MANAGER.pp.pformat(instructions)}"
+        )
         return instructions
 
     def stat_print(
