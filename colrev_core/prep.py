@@ -1679,61 +1679,54 @@ class Preparation(PrepProcess):
         # Note : the record should always be the first element of the list.
         # Note : we need to rerun all preparation scripts because records are not stored
         # if not prepared successfully.
-        prep_scripts: typing.List[typing.Dict[str, typing.Any]] = []
-        if item["mode"]["name"] in [
-            "high_confidence",
-            "medium_confidence",
-            "low_confidence",
-        ]:
-            # Note: for these scripts, only the similarity changes.
-            prep_scripts = [
-                {
-                    "script": self.__remove_urls_with_500_errors,
-                    "params": [preparation_record],
-                },
-                {"script": self.__remove_broken_dois, "params": [preparation_record]},
-                {
-                    "script": self.__update_local_paper_index_fields,
-                    "params": [preparation_record, item["LOCAL_PAPER_INDEX_FORMAT"]],
-                },
-                {"script": self.__resolve_crossrefs, "params": [preparation_record]},
-                {"script": self.__correct_recordtype, "params": [preparation_record]},
-                {"script": self.__format, "params": [preparation_record]},
-                {
-                    "script": self.get_doi_from_sem_scholar,
-                    "params": [preparation_record],
-                },
-                {"script": self.__get_doi_from_urls, "params": [preparation_record]},
-                {"script": self.get_md_from_doi, "params": [preparation_record]},
-                {"script": self.get_md_from_crossref, "params": [preparation_record]},
-                {"script": self.get_md_from_dblp, "params": [preparation_record]},
-                {
-                    "script": self.__get_record_from_local_index,
-                    "params": [preparation_record],
-                },
-                {
-                    "script": self.__get_md_from_open_library,
-                    "params": [preparation_record],
-                },
-                {
-                    "script": self.__get_year_from_vol_iss_jour_crossref,
-                    "params": [preparation_record],
-                },
-                {"script": self.__remove_nicknames, "params": [preparation_record]},
-                {
-                    "script": self.__remove_redundant_fields,
-                    "params": [preparation_record],
-                },
-                {"script": self.__format_minor, "params": [preparation_record]},
-                {
-                    "script": self.__exclude_non_latin_alphabets,
-                    "params": [preparation_record],
-                },
-                {"script": self.drop_fields, "params": [preparation_record]},
-                {"script": self.update_metadata_status, "params": [preparation_record]},
-            ]
-        else:
-            print("Error: mode not yet implemented")
+
+        # Note: for these scripts, only the similarity changes.
+        prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+            {
+                "script": self.__remove_urls_with_500_errors,
+                "params": [preparation_record],
+            },
+            {"script": self.__remove_broken_dois, "params": [preparation_record]},
+            {
+                "script": self.__update_local_paper_index_fields,
+                "params": [preparation_record, item["LOCAL_PAPER_INDEX_FORMAT"]],
+            },
+            {"script": self.__resolve_crossrefs, "params": [preparation_record]},
+            {"script": self.__correct_recordtype, "params": [preparation_record]},
+            {"script": self.__format, "params": [preparation_record]},
+            {
+                "script": self.get_doi_from_sem_scholar,
+                "params": [preparation_record],
+            },
+            {"script": self.__get_doi_from_urls, "params": [preparation_record]},
+            {"script": self.get_md_from_doi, "params": [preparation_record]},
+            {"script": self.get_md_from_crossref, "params": [preparation_record]},
+            {"script": self.get_md_from_dblp, "params": [preparation_record]},
+            {
+                "script": self.__get_record_from_local_index,
+                "params": [preparation_record],
+            },
+            {
+                "script": self.__get_md_from_open_library,
+                "params": [preparation_record],
+            },
+            {
+                "script": self.__get_year_from_vol_iss_jour_crossref,
+                "params": [preparation_record],
+            },
+            {"script": self.__remove_nicknames, "params": [preparation_record]},
+            {
+                "script": self.__remove_redundant_fields,
+                "params": [preparation_record],
+            },
+            {"script": self.__format_minor, "params": [preparation_record]},
+            {
+                "script": self.__exclude_non_latin_alphabets,
+                "params": [preparation_record],
+            },
+            {"script": self.drop_fields, "params": [preparation_record]},
+            {"script": self.update_metadata_status, "params": [preparation_record]},
+        ]
 
         short_form = self.drop_fields(record.copy())
 
