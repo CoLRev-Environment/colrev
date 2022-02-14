@@ -151,7 +151,8 @@ class Process:
                 changedFiles = [item.a_path for item in git_repo.index.diff(None)] + [
                     x.a_path
                     for x in git_repo.head.commit.diff()
-                    if x.a_path not in ["status.yaml"]
+                    if x.a_path
+                    not in [str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])]
                 ]
                 if len(changedFiles) > 0:
                     raise CleanRepoRequiredError(changedFiles, "")
@@ -165,8 +166,10 @@ class Process:
                     for x in git_repo.head.commit.diff()
                     if not any(str(ip) in x.a_path for ip in ignore_pattern)
                 ]
-                if "status.yaml" in changedFiles:
-                    changedFiles.remove("status.yaml")
+                if str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"]) in changedFiles:
+                    changedFiles.remove(
+                        str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
+                    )
                 if changedFiles:
                     raise CleanRepoRequiredError(
                         changedFiles, ",".join([str(x) for x in ignore_pattern])
