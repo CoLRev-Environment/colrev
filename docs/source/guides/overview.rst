@@ -68,6 +68,7 @@ To add a curated repository and to create a reuse-index run:
       colrev local-index add --url https://github.com/u_name/repo_name
       colrev local-index
 
+See `reuse of community-curated data <../framework/reuse.html>`_ for details.
 
 Collaborate in a team
 -------------------------
