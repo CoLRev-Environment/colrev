@@ -75,34 +75,34 @@ class ReviewDataset:
 
     def __get_record_header_item(self, r_header: str) -> list:
         rhlines = r_header.split("\n")
-        rhl0, rhl1, rhl2, rhl3, rhl4, rhl5, rhl6, rhl7 = (
+
+        items = list(
             line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:8]
         )
-        ID = rhl0
+        ID = items.pop(0)
 
         if "origin" not in rhlines[1]:
             raise RecordFormatError(f"{ID} has status=NA")
-        origin = rhl1[:-1]  # to replace the trailing }
+        origin = items.pop(0)
+        origin = origin[:-1]  # to replace the trailing }
 
         if "status" not in rhlines[2]:
             raise StatusFieldValueError(ID, "status", "NA")
-        status = rhl2[:-1]  # to replace the trailing }
+        status = items.pop(0)
+        status = status[:-1]  # to replace the trailing }
 
-        # excl_criteria can only be in line 4 (but it is optional)
-        excl_criteria = ""
-        if "excl_criteria" in rhlines[4]:
-            excl_criteria = rhl4[:-1]  # to replace the trailing }
+        excl_criteria, file = "", ""
+        while items:
+            item = items.pop(0)
 
-        # file is optional and could be in lines 4-7
-        file = ""
-        if "file" in rhlines[4]:
-            file = rhl4[:-1]  # to replace the trailing }
-        if "file" in rhlines[5]:
-            file = rhl5[:-1]  # to replace the trailing }
-        if "file" in rhlines[6]:
-            file = rhl6[:-1]  # to replace the trailing }
-        if "file" in rhlines[7]:
-            file = rhl7[:-1]  # to replace the trailing }
+            # excl_criteria can only be in line 4 (but it is optional)
+            if "excl_criteria" in item:
+                excl_criteria = item[:-1]  # to replace the trailing }
+                continue
+
+            # file is optional and could be in lines 4-7
+            if "file" in item:
+                file = item[:-1]  # to replace the trailing }
 
         return [ID, origin, status, excl_criteria, file]
 
