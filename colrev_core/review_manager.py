@@ -1120,6 +1120,7 @@ class ReviewManager:
             orderedCols.append(x)
         local_registry_df = local_registry_df.reindex(columns=orderedCols)
 
+        local_registry_path.parents[0].mkdir(parents=True, exist_ok=True)
         with open(local_registry_path, "w") as f:
             yaml.dump(
                 json.loads(
