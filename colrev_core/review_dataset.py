@@ -74,22 +74,19 @@ class ReviewDataset:
         return [ID, status]
 
     def __get_record_header_item(self, r_header: str) -> list:
-        rhlines = r_header.split("\n")
+        items = r_header.split("\n")[0:8]
 
-        items = list(
-            line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:8]
-        )
         ID = items.pop(0)
 
-        if "origin" not in rhlines[1]:
-            raise RecordFormatError(f"{ID} has status=NA")
         origin = items.pop(0)
-        origin = origin[:-1]  # to replace the trailing }
+        if "origin" not in origin:
+            raise RecordFormatError(f"{ID} has status=NA")
+        origin = origin[origin.find("{") + 1 : origin.rfind("}")]
 
-        if "status" not in rhlines[2]:
-            raise StatusFieldValueError(ID, "status", "NA")
         status = items.pop(0)
-        status = status[:-1]  # to replace the trailing }
+        if "status" not in status:
+            raise StatusFieldValueError(ID, "status", "NA")
+        status = status[status.find("{") + 1 : status.rfind("}")]
 
         excl_criteria, file = "", ""
         while items:
@@ -97,12 +94,12 @@ class ReviewDataset:
 
             # excl_criteria can only be in line 4 (but it is optional)
             if "excl_criteria" in item:
-                excl_criteria = item[:-1]  # to replace the trailing }
+                excl_criteria = item[item.find("{") + 1 : item.rfind("}")]
                 continue
 
             # file is optional and could be in lines 4-7
             if "file" in item:
-                file = item[:-1]  # to replace the trailing }
+                file = item[item.find("{") + 1 : item.rfind("}")]
 
         return [ID, origin, status, excl_criteria, file]
 
