@@ -492,6 +492,8 @@ class ReviewManager:
             {"script": self.__check_software, "params": []},
         ]
 
+        not self.paths["SEARCHDIR"].mkdir(exist_ok=True)
+
         if not self.paths["MAIN_REFERENCES"].is_file():
             self.logger.debug("Checks for MAIN_REFERENCES not activated")
         else:
@@ -1107,7 +1109,7 @@ class ReviewManager:
         else:
             return False
 
-    def __save_local_registry(self, local_registry: list) -> None:
+    def save_local_registry(self, local_registry: list) -> None:
         local_registry_path = self.paths["LOCAL_REGISTRY"]
 
         local_registry_df = pd.DataFrame(local_registry)
@@ -1150,7 +1152,7 @@ class ReviewManager:
             "source_url": path_to_register,
         }
         local_registry.append(new_record)
-        self.__save_local_registry(local_registry)
+        self.save_local_registry(local_registry)
         logger.info(f"Registered path ({path_to_register})")
         return
 

@@ -346,7 +346,7 @@ class TEI(Process):
 
         for k, v in record.items():
             if "file" != k:
-                record[k] = v.replace("}", "").replace("{", "")
+                record[k] = v.replace("}", "").replace("{", "").rstrip("\\")
             else:
                 print(f"problem in filename: {k}")
 

@@ -693,6 +693,8 @@ class ReviewDataset:
                 continue
             if record["status"] == RecordState.md_needs_manual_preparation:
                 prior = record.get("man_prep_hints", "")
+                if "man_prep_hints" in record:
+                    del record["man_prep_hints"]
                 record = PREPARATION.log_notifications(record, record.copy())
                 record = PREPARATION.update_metadata_status(record)
                 if record["status"] == RecordState.md_prepared:

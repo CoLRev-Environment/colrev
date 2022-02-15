@@ -15,15 +15,20 @@ class Initializer:
 
         saved_args = locals()
         self.project_title = project_title
-        self.SHARE_STAT_REQ = SHARE_STAT_REQ
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+        self.SHARE_STAT_REQ = SHARE_STAT_REQ
 
         self.__require_empty_directory()
         self.__setup_files()
         self.__setup_git()
         self.__create_commit(saved_args)
+        self.__register_repo()
+        if local_index_repo:
+            self.__create_local_index()
+
+    def __register_repo(self) -> None:
         self.REVIEW_MANAGER.register_repo()
-        self.__create_local_index(local_index_repo)
+        return
 
     def __create_commit(self, saved_args: dict) -> None:
         from colrev_core.review_manager import ReviewManager
@@ -170,9 +175,7 @@ class Initializer:
             ]
         return global_conf_details
 
-    def __create_local_index(self, local_index_repo: bool) -> None:
-        if local_index_repo:
-            return
+    def __create_local_index(self) -> None:
         self.REVIEW_MANAGER.report_logger.handlers = []
 
         import os

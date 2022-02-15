@@ -252,6 +252,21 @@ class Status(CheckProcess):
 
         return [nr_commits_behind, nr_commits_ahead]
 
+    def get_environment_instructions(self) -> list:
+        environment_instructions = []
+
+        local_registry = self.REVIEW_MANAGER.load_local_registry()
+        registered_paths = [Path(x["source_url"]) for x in local_registry]
+        for registered_path in registered_paths:
+            if not registered_path.is_dir():
+                instruction = {
+                    "msg": "Locally registered repo no longer exists.",
+                    "cmd": f"colrev config --remove_from_registry {registered_path}",
+                }
+                environment_instructions.append(instruction)
+
+        return environment_instructions
+
     def get_review_instructions(self, stat) -> list:
         review_instructions = []
 
@@ -535,6 +550,7 @@ class Status(CheckProcess):
                     # (depending on the working directory/index)
                     item = {
                         "title": "Local changes not yet on the server",
+                        "level": "WARNING",
                         "msg": "Once you have committed your changes, upload them "
                         + "to the shared repository.",
                         "cmd_after": "git push",
@@ -629,6 +645,7 @@ class Status(CheckProcess):
     def get_instructions(self, stat: dict) -> dict:
         instructions = {
             "review_instructions": self.get_review_instructions(stat),
+            "environment_instructions": self.get_environment_instructions(),
             "collaboration_instructions": self.get_collaboration_instructions(stat),
         }
         self.REVIEW_MANAGER.logger.debug(

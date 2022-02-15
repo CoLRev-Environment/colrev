@@ -1111,8 +1111,9 @@ class Preparation(PrepProcess):
 
         if "doi" in item:
             retrieved_record["doi"] = item["doi"].upper()
-        if "url" not in item:
-            retrieved_record["url"] = item["ee"]
+        if "ee" in item:
+            if "https://doi.org" not in item["ee"]:
+                retrieved_record["url"] = item["ee"]
 
         for k, v in retrieved_record.items():
             retrieved_record[k] = html.unescape(v)
@@ -2148,6 +2149,7 @@ class Preparation(PrepProcess):
 
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             self.REVIEW_MANAGER.create_commit(
                 f"Prepare records ({mode['name']})", saved_args=saved_args

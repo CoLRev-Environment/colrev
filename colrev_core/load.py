@@ -490,18 +490,14 @@ class Loader(LoadProcess):
         return records
 
     def __set_incremental_IDs(self, records: typing.List[dict]) -> typing.List[dict]:
-
-        if 0 == len([r for r in records if "ID" not in r]):
-            # IDs set for all records
-            return records
-
-        for i, record in enumerate(records):
-            if "ID" not in record:
-                if "UT_(Unique_WOS_ID)" in record:
-                    record["ID"] = record["UT_(Unique_WOS_ID)"].replace(":", "_")
-                else:
-                    record["ID"] = f"{i+1}".rjust(10, "0")
-
+        # if IDs to set for some records
+        if 0 != len([r for r in records if "ID" not in r]):
+            for i, record in enumerate(records):
+                if "ID" not in record:
+                    if "UT_(Unique_WOS_ID)" in record:
+                        record["ID"] = record["UT_(Unique_WOS_ID)"].replace(":", "_")
+                    else:
+                        record["ID"] = f"{i+1}".rjust(10, "0")
         return records
 
     def __fix_keys(self, records: typing.List[dict]) -> typing.List[dict]:
@@ -582,8 +578,7 @@ class Loader(LoadProcess):
 
         return corresponding_bib_file
 
-    def __check_sources(self) -> None:
-        self.REVIEW_MANAGER.REVIEW_DATASET.check_sources()
+    def __add_sources(self) -> None:
         git_repo = self.REVIEW_MANAGER.get_repo()
         git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
         return
@@ -615,7 +610,8 @@ class Loader(LoadProcess):
         if not keep_ids:
             del saved_args["keep_ids"]
 
-        self.__check_sources()
+        self.REVIEW_MANAGER.REVIEW_DATASET.check_sources()
+        self.__add_sources()
         for search_file in self.get_search_files():
 
             corresponding_bib_file = self.__convert_to_bib(search_file)
