@@ -238,7 +238,7 @@ def debug_data():
     return
 
 
-def debug_tei_tools() -> None:
+def debug_tei_tools(param) -> None:
     from colrev_core.tei import TEI
     from colrev_core import grobid_client
 
@@ -246,7 +246,7 @@ def debug_tei_tools() -> None:
     grobid_client.start_grobid()
     logger.debug("Started grobid")
 
-    filepath = Path("/home/user/Webster2002.pdf")
+    filepath = Path(param)
     TEI_INSTANCE = TEI(pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
@@ -410,28 +410,29 @@ def local_index():
     return
 
 
-def main():
-
-    # code for debugging ...
+def main(operation: str, param):
 
     # TODO : helper-function to load entries from any bib-file (based on ID or origin)
 
-    # debug_load()
+    operations = {
+        "load": debug_load,
+        "prep": debug_prep,
+        "pdf_get": debug_pdf_get,
+        "pdf_prep": debug_pdf_prep,
+        "data": debug_data,
+        "local_index": local_index,
+        "tei": debug_tei_tools,
+    }
 
-    # debug_prep()
-
-    # debug_pdf_get()
-
-    # debug_pdf_prep()
-
-    # debug_data()
-
-    # debug_tei_tools()
+    func = operations.get(operation, lambda: "not implemented")
+    func(param)  # type: ignore
 
     # remove_needs_manual_preparation_records()
 
     # get_non_unique_pdf_hashes()
 
-    # local_index()
-
     return
+
+
+if __name__ == "__main__":
+    pass
