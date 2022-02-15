@@ -19,8 +19,7 @@ requirements = [
     "click_completion==0.5.2",
     "cx_Freeze==6.10",
     "dictdiffer==0.8.1",
-    "docker_py==1.10.6",
-    "docker==2.1.0",
+    "docker==5.0.3",
     "GitPython==3.1.24",
     "ImageHash==4.2.0",
     "langdetect==1.0.9",
@@ -41,10 +40,6 @@ requirements = [
 ]
 # 'configparser>=5.0'
 
-
-# Note: docker and docker-py seem to be similar/identical?!
-# https://pypi.org/project/docker-py/
-# https://pypi.org/project/docker/
 
 test_requirements = ["pytest>=3", "attrs>=19.2.0", "packaging>=21.0"]
 
