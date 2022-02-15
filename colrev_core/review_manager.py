@@ -270,10 +270,10 @@ class ReviewManager:
 
         client = docker.from_env()
 
-        repo_tags = [x.attrs.get("RepoTags", "") for x in client.images.list()]
+        repo_tags = [image.tags for image in client.images.list()]
         repo_tags = [
-            item[0][: item[0].find(":")]
-            for item in [sublist for sublist in repo_tags if sublist is not None]
+            tag[0][: tag[0].find(":")]
+            for tag in repo_tags if tag
         ]
 
         if "bibutils" not in repo_tags:
