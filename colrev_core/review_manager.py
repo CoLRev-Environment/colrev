@@ -293,7 +293,7 @@ class ReviewManager:
             client.images.pull("pandoc/ubuntu-latex:2.14")
         if "jbarlow83/ocrmypdf" not in repo_tags:
             self.logger.info("Pulling jbarlow83/ocrmypdf image...")
-            client.images.pull("pandoc/ubuntu-latex:latest")
+            client.images.pull("jbarlow83/ocrmypdf:v13.3.0")
 
         return
 
