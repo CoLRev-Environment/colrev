@@ -5,15 +5,17 @@ import bibtexparser
 import imagehash
 import pandas as pd
 from pdf2image import convert_from_path
+from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfFileWriter
 
 from colrev_core.process import PDFManualPreparationProcess
 from colrev_core.process import RecordState
 
 
 class PDFPrepMan(PDFManualPreparationProcess):
-    def __init__(self):
+    def __init__(self, notify: bool = True):
 
-        super().__init__()
+        super().__init__(notify=notify)
 
     def get_data(self) -> dict:
 
@@ -223,6 +225,24 @@ class PDFPrepMan(PDFManualPreparationProcess):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
+        return
+
+    def extract_coverpage(self, filepath: Path) -> None:
+        from colrev_core.local_index import LocalIndex
+
+        cp_path = LocalIndex.local_index_path / Path(".coverpages")
+        cp_path.mkdir(exist_ok=True)
+
+        pdfReader = PdfFileReader(str(filepath), strict=False)
+        writer_cp = PdfFileWriter()
+        writer_cp.addPage(pdfReader.getPage(0))
+        writer = PdfFileWriter()
+        for i in range(1, pdfReader.getNumPages()):
+            writer.addPage(pdfReader.getPage(i))
+        with open(filepath, "wb") as outfile:
+            writer.write(outfile)
+        with open(cp_path / filepath.name, "wb") as outfile:
+            writer_cp.write(outfile)
         return
 
 

@@ -29,6 +29,7 @@ requirements = [
     "pdfminer==20191125",
     "pdfminer.six==20211012",
     "pdf2image==1.16.0",
+    "spacy==3.2.2",
     "PyPDF2==1.26.0",
     "PyYAML==6.0",
     "p_tqdm==1.3.3",

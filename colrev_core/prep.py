@@ -13,6 +13,7 @@ import bibtexparser
 import dictdiffer
 import git
 import requests
+import spacy
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
@@ -179,6 +180,7 @@ class Preparation(PrepProcess):
         self.keep_ids = keep_ids
         self.LOCAL_INDEX = LocalIndex()
         self.CPUS = self.CPUS * 5
+        self.NER = spacy.load("en_core_web_sm")
 
     def __correct_recordtype(self, record: dict) -> dict:
 
@@ -268,13 +270,23 @@ class Preparation(PrepProcess):
                     .rstrip(",")
                 )
                 record[field] = re.sub(r"\s+", " ", record[field])
+
+        if "title" in record:
+            title_text = self.NER(record["title"])
+            for word in title_text.ents:
+                if word.text.islower():
+                    if word.label_ in ["GPE", "NORP", "LOC", "ORG", "PERSON"]:
+                        record["title"] = record["title"].replace(
+                            word.text, word.text.title()
+                        )
+
         return record
 
     def __title_if_mostly_upper(self, input_string: str) -> str:
         if not re.match(r"[a-zA-Z]+", input_string):
             return input_string
-        words = input_string.split()
-        if sum(word.isupper() for word in words) / len(words) > 0.8:
+
+        if self.__percent_upper_chars(input_string) > 0.8:
             return input_string.capitalize()
         else:
             return input_string
@@ -1970,13 +1982,45 @@ class Preparation(PrepProcess):
 
     def polish(self) -> None:
         import collections
-        from colrev_core.tei import TEI
+        from colrev_core.tei import TEI, TEI_Exception
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
-        # TODO : switch loops (requires a different data structure...)
-        for record in records:
+        refs = []
+        for tei_file in Path("tei").glob("*.tei.xml"):
+            try:
+                TEI_INSTANCE = TEI(tei_path=tei_file)
+                refs.extend(TEI_INSTANCE.get_bibliography())
+            except TEI_Exception:
+                pass
 
+        for record in records:
+            if "title" in record:
+
+                suffixes_to_remove = [
+                    " teaching cases",
+                    " research-in-progress",
+                    " research in progress paper",
+                    " research-in-progress paper",
+                    " complete paper",
+                    " research paper",
+                    " practitioner paper",
+                    " 1",
+                    " *",
+                ]
+                for suffix_to_remove in suffixes_to_remove:
+                    if record["title"].lower().endswith(suffix_to_remove):
+                        record["title"] = record["title"][: -len(suffix_to_remove)]
+
+                title_text = self.NER(record["title"])
+                for word in title_text.ents:
+                    if word.text.islower():
+                        if word.label_ in ["GPE", "NORP", "LOC", "ORG", "PERSON"]:
+                            record["title"] = record["title"].replace(
+                                word.text, word.text.title()
+                            )
+
+            # polish based on TEI
             if record["status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
@@ -1987,15 +2031,13 @@ class Preparation(PrepProcess):
             title_variations = []
             journal_variations = []
 
-            for tei_file in Path("tei").glob("*.tei.xml"):
-                TEI_INSTANCE = TEI(tei_path=tei_file)
-                for ref in TEI_INSTANCE.get_bibliography():
-                    if record["ID"] == ref["ID"]:
-                        if "title" in ref:
-                            title_variations.append(ref["title"])
-                        if "journal" in ref:
-                            journal_variations.append(ref["journal"])
-                        # TODO : other fields...
+            for ref in refs:
+                if record["ID"] == ref["ID"]:
+                    if "title" in ref:
+                        title_variations.append(ref["title"])
+                    if "journal" in ref:
+                        journal_variations.append(ref["journal"])
+                    # TODO : other fields...
 
             if len(title_variations) > 2:
                 title_counter = collections.Counter(title_variations)
@@ -2007,7 +2049,7 @@ class Preparation(PrepProcess):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Polish metadata based on PDFs")
+        self.REVIEW_MANAGER.create_commit("Polish metadata")
         return
 
     def get_data(self):

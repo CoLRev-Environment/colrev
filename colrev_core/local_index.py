@@ -16,7 +16,6 @@ from tqdm import tqdm
 
 from colrev_core.process import ExploreProcess
 from colrev_core.process import RecordState
-from colrev_core.review_manager import ReviewManager
 
 
 class LocalIndex(ExploreProcess):
@@ -24,17 +23,17 @@ class LocalIndex(ExploreProcess):
     global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
     max_len_sha256 = 2 ** 256
 
+    local_index_path = Path.home().joinpath(".colrev")
+    rind_path = local_index_path / Path(".record_index/")
+    gind_path = local_index_path / Path(".gid_index/")
+    dind_path = local_index_path / Path(".d_index/")
+    toc_path = local_index_path / Path(".toc_index/")
+    jind_path = local_index_path / Path(".j_index/")
+    wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
+
     def __init__(self):
 
         super().__init__()
-
-        self.local_index_path = Path.home().joinpath(".colrev")
-        self.rind_path = self.local_index_path / Path(".record_index/")
-        self.gind_path = self.local_index_path / Path(".gid_index/")
-        self.dind_path = self.local_index_path / Path(".d_index/")
-        self.toc_path = self.local_index_path / Path(".toc_index/")
-        self.jind_path = self.local_index_path / Path(".j_index/")
-        self.wos_j_abbrev = self.local_index_path / Path(".wos_abbrev_table.csv")
 
     class RecordNotInIndexException(Exception):
         def __init__(self, id: str = None):
@@ -649,6 +648,7 @@ class LocalIndex(ExploreProcess):
 
     def index_records(self) -> None:
         import shutil
+        from colrev_core.review_manager import ReviewManager
 
         self.logger.info("Called LocalIndex")
 

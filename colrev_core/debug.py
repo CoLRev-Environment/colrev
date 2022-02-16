@@ -84,43 +84,43 @@ def debug_load() -> None:
     return
 
 
-def debug_prep() -> None:
+def debug_prep(param: str) -> None:
 
     from colrev_core.prep import Preparation
 
-    record = {
-        "ENTRYTYPE": "article",
-        "ID": "NewmanRobeyNoYear",
-        "doi": "10.5465/amr.2011.59330932",
-        "author": "Newman, Michael and Robey, Daniel",
-        "journal": "MIS Quarterly",
-        "metadata_source": "ORIGINAL",
-        "number": "2",
-        "origin": "MISQ.bib/0000000826",
-        "status": RecordState.md_imported,
-        "title": "A Social Process Model of User-Analyst Relationships",
-        "volume": "16",
-    }
+    # record = {
+    #     "ENTRYTYPE": "article",
+    #     "ID": "NewmanRobeyNoYear",
+    #     "doi": "10.5465/amr.2011.59330932",
+    #     "author": "Newman, Michael and Robey, Daniel",
+    #     "journal": "MIS Quarterly",
+    #     "metadata_source": "ORIGINAL",
+    #     "number": "2",
+    #     "origin": "MISQ.bib/0000000826",
+    #     "status": RecordState.md_imported,
+    #     "title": "A Social Process Model of User-Analyst Relationships",
+    #     "volume": "16",
+    # }
 
-    # Retract / crossmark restriction example:
-    record = {
-        "ENTRYTYPE": "article",
-        "ID": "Assemi2015",
-        "author": "Assemi, B., and Schlagwein, D.",
-        "file": "/home/gerit/ownCloud/data/EG IS Planning (strategy investment "
-        "architecture digital)/Digitale Plattformen/PlatformLR_Paper/"
-        "papers-excluded/Assemi2015.pdf",
-        "journal": "Decision SupportSystems",
-        "metadata_source": "ORIGINAL",
-        "origin": "JSIS_Review.bib/Assemi2015",
-        "pages": "1-11",
-        "status": RecordState.md_imported,
-        "title": "Provider feedback information and customer choice decisions on "
-        + "crowdsourcing marketplaces: Evidence from two discrete choice "
-        "experiments",
-        "volume": "82",
-        "year": "2015",
-    }
+    # # Retract / crossmark restriction example:
+    # record = {
+    #     "ENTRYTYPE": "article",
+    #     "ID": "Assemi2015",
+    #     "author": "Assemi, B., and Schlagwein, D.",
+    #     "file": "/home/gerit/ownCloud/data/EG IS Planning (strategy investment "
+    #     "architecture digital)/Digitale Plattformen/PlatformLR_Paper/"
+    #     "papers-excluded/Assemi2015.pdf",
+    #     "journal": "Decision SupportSystems",
+    #     "metadata_source": "ORIGINAL",
+    #     "origin": "JSIS_Review.bib/Assemi2015",
+    #     "pages": "1-11",
+    #     "status": RecordState.md_imported,
+    #     "title": "Provider feedback information and customer choice decisions on "
+    #     + "crowdsourcing marketplaces: Evidence from two discrete choice "
+    #     "experiments",
+    #     "volume": "82",
+    #     "year": "2015",
+    # }
 
     # record_list = [
     #     {
@@ -174,27 +174,31 @@ def debug_prep() -> None:
     # cc_dedupe.preparation_link_to_curated_record(record, record_list)
     # input("stop")
 
-    # record = {
-    #     "ENTRYTYPE": "inproceedings",
-    #     "ID": "WagnerPrester2019",
-    #     "author": "Wagner, Gerit and Prester, Julian",
-    #     "booktitle": "International Conference on Information Systems",
-    #     "metadata_source": "ORIGINAL",
-    #     "origin": "ais_digital_labor_platform.bib/Wagner2019",
-    #     "status": RecordState.md_imported,
-    # title": "Information Systems Research on Digital Platforms for Knowledge Work",
-    #     "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
-    #     "year": "2019",
-    # }
+    record = {
+        "ENTRYTYPE": "inproceedings",
+        "ID": "WagnerPrester2019",
+        "author": "Wagner, Gerit and Prester, Julian",
+        "booktitle": "International Conference on Information Systems",
+        "metadata_source": "ORIGINAL",
+        "origin": "ais_digital_labor_platform.bib/Wagner2019",
+        "status": RecordState.md_imported,
+        "title": "Information Systems Research on Digital Platforms for Knowledge Work",
+        "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
+        "year": "2019",
+    }
 
     pp.pprint(record)
-    # res = PREPARATION.get_md_from_doi(record)
-    res = PREPARATION.get_md_from_crossref(record)
+    res = PREPARATION.get_md_from_doi(record)
+    # res = PREPARATION.get_md_from_crossref(record)
     # res = PREPARATION.get_md_from_urls(record)
     # res = PREPARATION.get_md_from_dblp(record)
     # res = PREPARATION.get_doi_from_sem_scholar(record)
-
     pp.pprint(res)
+
+    # TODO load record corresponding to param (ID)
+    # debug should be activated
+    # call PREPARATION.prepare(record)
+    # -> this should print out much more detailed information.
 
     return
 

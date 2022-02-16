@@ -74,14 +74,16 @@ class TEI(Process):
 
                 # Note : reopen/write to prevent format changes in the enhancement
                 with open(tei_path, "rb") as tf:
-                    xml_string = tf.read()
-                self.root = etree.fromstring(xml_string)
+                    xml_fstring = tf.read()
+                self.root = etree.fromstring(xml_fstring)
 
                 tree = etree.ElementTree(self.root)
                 tree.write(tei_path, pretty_print=True, encoding="utf-8")
         elif tei_path is not None:
-            with open(tei_path, "rb") as tf:
-                xml_string = tf.read()
+            with open(tei_path) as ts:
+                xml_string = ts.read()
+            if "[BAD_INPUT_DATA]" in xml_string[:100]:
+                raise TEI_Exception()
             self.root = etree.fromstring(xml_string)
 
     def start_grobid(self) -> bool:
@@ -304,6 +306,8 @@ class TEI(Process):
                     ):
 
                         authorname = self.get_author_name_from_node(author_node)
+                        if authorname in ["Paper, Short"]:
+                            continue
                         if ", " != authorname and "" != authorname:
                             author_list.append(authorname)
 

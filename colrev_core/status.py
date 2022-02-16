@@ -886,6 +886,42 @@ class Status(CheckProcess):
 
         return
 
+    def get_environment_details(self) -> dict:
+        from colrev_core.review_manager import ReviewManager
+        from colrev_core.local_index import LocalIndex
+        import os
+        import time
+
+        environment_details = {}
+        record_index_files = list(LocalIndex.rind_path.glob("**/*"))
+        list_of_files = sorted(record_index_files, key=os.path.getmtime)
+        file_last_modified = list_of_files[0]
+        last_modified = time.strftime(
+            "%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(file_last_modified))
+        )
+
+        environment_details["index"] = {
+            "size": len(record_index_files),
+            "last_modified": last_modified,
+            "path": str(LocalIndex.local_index_path),
+        }
+
+        local_repos = self.REVIEW_MANAGER.load_local_registry()
+
+        for repo in local_repos:
+            REPO_MAN = ReviewManager(repo["source_url"])
+            repo_stat = REPO_MAN.get_status()
+            repo["size"] = repo_stat["status"]["overall"]["md_imported"]
+            if repo_stat["atomic_steps"] != 0:
+                repo["progress"] = round(
+                    repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"], 2
+                )
+            else:
+                repo["progress"] = -1
+
+        environment_details["local_repos"] = {"repos": local_repos}
+        return environment_details
+
 
 if __name__ == "__main__":
     pass

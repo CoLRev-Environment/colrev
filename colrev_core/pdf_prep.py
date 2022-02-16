@@ -544,7 +544,7 @@ class PDF_Preparation(PDFPreparationProcess):
 
         return list(set(coverpages))
 
-    def __extract_pages(self, record, pages):
+    def __extract_pages(self, record: dict, pages: list) -> None:
         pdf = record["file"]
         pdfReader = PdfFileReader(pdf, strict=False)
         writer = PdfFileWriter()
@@ -557,7 +557,7 @@ class PDF_Preparation(PDFPreparationProcess):
         return
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def __remove_coverpage(self, record, PAD):
+    def __remove_coverpage(self, record: dict) -> dict:
         coverpages = self.__get_coverpages(record["file"])
         if [] == coverpages:
             return record

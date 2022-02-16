@@ -271,10 +271,7 @@ class ReviewManager:
         client = docker.from_env()
 
         repo_tags = [image.tags for image in client.images.list()]
-        repo_tags = [
-            tag[0][: tag[0].find(":")]
-            for tag in repo_tags if tag
-        ]
+        repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
 
         if "bibutils" not in repo_tags:
             self.logger.info("Building bibutils Docker image...")
@@ -501,7 +498,7 @@ class ReviewManager:
             # reading the MAIN_REFERENCES multiple times (for each check)
 
             git_repo = self.get_repo()
-            if self.paths["MAIN_REFERENCES"] in [
+            if str(self.paths["MAIN_REFERENCES_RELATIVE"]) in [
                 x.path for x in git_repo.head.commit.tree
             ]:
                 prior = self.REVIEW_DATASET.retrieve_prior()
@@ -639,6 +636,19 @@ class ReviewManager:
             if update:
                 report = self.__get_commit_report("MANUAL", saved_args=None)
                 f.write(report)
+
+        git_repo = self.get_repo()
+        if str(self.paths["MAIN_REFERENCES_RELATIVE"]) in [
+            x.path for x in git_repo.head.commit.tree
+        ]:
+            prior = self.REVIEW_DATASET.retrieve_prior()
+            self.logger.debug("prior")
+            self.logger.debug(self.pp.pformat(prior))
+        else:  # if MAIN_REFERENCES not yet in git history
+            prior = {}
+
+        data = self.REVIEW_DATASET.retrieve_data(prior)
+        self.REVIEW_DATASET.check_corrections_of_curated_records(prior, data)
 
         return {"msg": "TODO", "status": 0}
 
@@ -898,6 +908,16 @@ class ReviewManager:
 
         return
 
+    def get_status(self) -> dict:
+        status_dict = {}
+        with open(self.paths["STATUS"]) as stream:
+            try:
+                status_dict = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+                pass
+        return status_dict
+
     def reset_log(self) -> None:
 
         self.report_logger.handlers[0].stream.close()  # type: ignore
@@ -1154,6 +1174,42 @@ class ReviewManager:
         local_registry.append(new_record)
         self.save_local_registry(local_registry)
         logger.info(f"Registered path ({path_to_register})")
+        return
+
+    def apply_corrections(self, indexed_record: dict, changes) -> None:
+        # TODO : default/other modes of accepting changes
+        # e.g., only-metadata, no-changes, all(including optional fields)
+
+        # self.pp.pprint(indexed_record)
+        essential_md_keys = [
+            "title",
+            "author",
+            "journal",
+            "year",
+            "booktitle",
+            "number",
+            "volume",
+            "issue",
+            "author",
+            "doi",
+        ]
+        for (type, key, change) in list(changes):
+            if key in ["status", "origin", "metadata_source", "file"]:
+                continue
+            if key not in essential_md_keys:
+                continue
+            # TODO : deal with add/remove
+            if type != "change":
+                continue
+
+            # Note: the most important thing is to update the metadata.
+            # we can create a copy in the search results later.
+            self.REVIEW_DATASET.replace_field([indexed_record["ID"]], key, change[1])
+
+        # TODO : check if repo clean (otherwise: write to temporary file?)
+        # TODO : the ID may not be identical with the indexed one...
+        # add the previous version to a corrections-search-file?
+
         return
 
 
