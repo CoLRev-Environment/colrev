@@ -27,6 +27,7 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
+from colrev_core.local_index import LocalIndex
 from colrev_core.process import PDFPreparationProcess
 from colrev_core.process import RecordState
 
@@ -48,6 +49,12 @@ class PDF_Preparation(PDFPreparationProcess):
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
         self.reprocess = reprocess
+
+        self.cp_path = LocalIndex.local_index_path / Path(".coverpages")
+        self.cp_path.mkdir(exist_ok=True)
+
+        self.lp_path = LocalIndex.local_index_path / Path(".lastpages")
+        self.lp_path.mkdir(exist_ok=True)
 
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
@@ -544,7 +551,7 @@ class PDF_Preparation(PDFPreparationProcess):
 
         return list(set(coverpages))
 
-    def __extract_pages(self, record: dict, pages: list) -> None:
+    def __extract_pages(self, record: dict, pages: list, type: str) -> None:
         pdf = record["file"]
         pdfReader = PdfFileReader(pdf, strict=False)
         writer = PdfFileWriter()
@@ -554,6 +561,18 @@ class PDF_Preparation(PDFPreparationProcess):
             writer.addPage(pdfReader.getPage(i))
         with open(pdf, "wb") as outfile:
             writer.write(outfile)
+        if type == "coverpage":
+            writer_cp = PdfFileWriter()
+            writer_cp.addPage(pdfReader.getPage(0))
+            filepath = Path(pdf)
+            with open(self.cp_path / filepath.name, "wb") as outfile:
+                writer_cp.write(outfile)
+        if type == "last_page":
+            writer_lp = PdfFileWriter()
+            writer_lp.addPage(pdfReader.getPage(pdfReader.getNumPages()))
+            filepath = Path(pdf)
+            with open(self.lp_path / filepath.name, "wb") as outfile:
+                writer_lp.write(outfile)
         return
 
     @timeout_decorator.timeout(60, use_signals=False)
@@ -565,7 +584,7 @@ class PDF_Preparation(PDFPreparationProcess):
             prior = record["file"]
             record["file"] = record["file"].replace(".pdf", "_wo_cp.pdf")
             shutil.copy(prior, record["file"])
-            self.__extract_pages(record, coverpages)
+            self.__extract_pages(record, coverpages, type="coverpage")
             self.report_logger.info(f'removed cover page for ({record["ID"]})')
         return record
 
@@ -638,7 +657,7 @@ class PDF_Preparation(PDFPreparationProcess):
             prior = record["file"]
             record["file"] = record["file"].replace(".pdf", "_wo_lp.pdf")
             shutil.copy(prior, record["file"])
-            self.__extract_pages(record, last_pages)
+            self.__extract_pages(record, last_pages, type="last_page")
             self.report_logger.info(f'removed last page for ({record["ID"]})')
 
         return record
