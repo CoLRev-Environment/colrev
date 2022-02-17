@@ -887,7 +887,6 @@ class Status(CheckProcess):
         return
 
     def get_environment_details(self) -> dict:
-        from colrev_core.review_manager import ReviewManager
         from colrev_core.local_index import LocalIndex
         import os
         import time
@@ -909,8 +908,8 @@ class Status(CheckProcess):
         local_repos = self.REVIEW_MANAGER.load_local_registry()
 
         for repo in local_repos:
-            REPO_MAN = ReviewManager(repo["source_url"])
-            repo_stat = REPO_MAN.get_status()
+            CHECK_PROCESS = CheckProcess(path=repo["source_url"])
+            repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
             repo["size"] = repo_stat["status"]["overall"]["md_imported"]
             if repo_stat["atomic_steps"] != 0:
                 repo["progress"] = round(
@@ -918,6 +917,12 @@ class Status(CheckProcess):
                 )
             else:
                 repo["progress"] = -1
+
+            repo["remote"] = False
+            git_repo = CHECK_PROCESS.REVIEW_MANAGER.get_repo()
+            for remote in git_repo.remotes:
+                if remote.url:
+                    repo["remote"] = True
 
         environment_details["local_repos"] = {"repos": local_repos}
         return environment_details

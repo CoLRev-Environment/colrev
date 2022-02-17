@@ -52,14 +52,10 @@ class RecordState(Enum):
 
 
 class Process:
-    def __init__(
-        self,
-        type: ProcessType,
-        fun=None,
-    ):
+    def __init__(self, type: ProcessType, fun=None, path=None):
         from colrev_core.review_manager import ReviewManager
 
-        self.REVIEW_MANAGER = ReviewManager()
+        self.REVIEW_MANAGER = ReviewManager(path)
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
@@ -178,8 +174,8 @@ class Process:
 
 
 class LoadProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.load, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.load, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -195,9 +191,9 @@ class LoadProcess(Process):
 
 
 class PrepProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
+    def __init__(self, fun=None, notify: bool = True, path=None):
         self.notify = notify
-        super().__init__(ProcessType.prep, fun)
+        super().__init__(ProcessType.prep, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -209,8 +205,8 @@ class PrepProcess(Process):
 
 
 class PrepManProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.prep_man, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.prep_man, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -223,8 +219,8 @@ class PrepManProcess(Process):
 
 
 class DedupeProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.dedupe, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.dedupe, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -235,8 +231,8 @@ class DedupeProcess(Process):
 
 
 class PrescreenProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.prescreen, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.prescreen, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -250,8 +246,8 @@ class PrescreenProcess(Process):
 
 
 class PDFRetrievalProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.pdf_get, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.pdf_get, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -264,8 +260,8 @@ class PDFRetrievalProcess(Process):
 
 
 class PDFManualRetrievalProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.pdf_get_man, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.pdf_get_man, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -278,8 +274,8 @@ class PDFManualRetrievalProcess(Process):
 
 
 class PDFPreparationProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.pdf_prep, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.pdf_prep, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -290,8 +286,8 @@ class PDFPreparationProcess(Process):
 
 
 class PDFManualPreparationProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.pdf_prep_man, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.pdf_prep_man, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -304,8 +300,8 @@ class PDFManualPreparationProcess(Process):
 
 
 class ScreenProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.screen, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.screen, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -316,9 +312,9 @@ class ScreenProcess(Process):
 
 
 class DataProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
+    def __init__(self, fun=None, notify: bool = True, path=None):
         self.notify = notify
-        super().__init__(ProcessType.data, fun)
+        super().__init__(ProcessType.data, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -331,8 +327,8 @@ class DataProcess(Process):
 
 
 class FormatProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.format, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.format, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -341,8 +337,8 @@ class FormatProcess(Process):
 
 
 class CheckProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.check, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.check, fun, path)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -351,8 +347,8 @@ class CheckProcess(Process):
 
 
 class ExploreProcess(Process):
-    def __init__(self, fun=None, notify: bool = True):
-        super().__init__(ProcessType.explore, fun)
+    def __init__(self, fun=None, notify: bool = True, path=None):
+        super().__init__(ProcessType.explore, fun, path)
 
         self.notify = notify
         if notify:
