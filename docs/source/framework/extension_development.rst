@@ -20,26 +20,23 @@ Python
 .. code-block:: python
 
     import logging
-    from colrev_core.review_manager import ReviewManager
-    from colrev_core.review_manager import Process
-    from colrev_core.review_manager import ProcessType
+    from colrev_core.process import PrepProcess
 
-    # Set up the loggers
-    report_logger = logging.getLogger("colrev_report")
-    logger = logging.getLogger("extension")
+    # Initialize the process and notify the ReviewManager
+    PREP_PROCESS = PrepProcess()
 
-    # Initialize the ReviewManager and notify about upcoming process
-    REVIEW_MANAGER = ReviewManager()
-    REVIEW_MANAGER.notify(Process(ProcessType.prescreen))
+    REVIEW_MANAGER= PREP_PROCESS.REVIEW_MANAGER
+    REVIEW_DATASET = REVIEW_MANAGER.REVIEW_DATASET
 
     # Load the records and apply changes
-    records = REVIEW_MANAGER.load_records()
+    records = REVIEW_DATASET.load_records()
     for record in records:
         ....
+        self.report_logger.info('Applied changes...')
 
     # Save the changes, add them to git, and create commit
-    REVIEW_MANAGER.save_records(records)
-    REVIEW_MANAGER.add_record_changes()
+    REVIEW_DATASET.save_records(records)
+    REVIEW_DATASET.add_record_changes()
     REVIEW_MANAGER.create_commit("Pre-screening (extension X")
 
 
@@ -65,10 +62,9 @@ For extensions aimed at changing records
     colrev_core <- reticulate::import("colrev_core")
 
      # Initialize the ReviewManager and notify about upcoming process
-    REVIEW_MANAGER <- colrev_core$review_manager$ReviewManager()
-    p_type = colrev_core$review_manager$ProcessType$prescreen
-    proc = colrev_core$review_manager$Process(p_type)
-    REVIEW_MANAGER$notify(proc)
+    PREP_PROCESS <- colrev_core$process$PrepProcess()
+    REVIEW_MANAGER = PREP_PROCESS$REVIEW_MANAGER
+    REVIEW_DATASET = PREP_PROCESS$REVIEW_DATASET
 
     # Load the records and apply changes
-    records = REVIEW_MANAGER$load_records()
+    records = REVIEW_DATASET$load_records()
