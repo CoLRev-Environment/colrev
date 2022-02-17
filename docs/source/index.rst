@@ -55,7 +55,6 @@ After each processing step, make sure to `check the changes <guides/changes.html
    :maxdepth: 1
 
    framework/colrev
-   framework/reuse
    framework/extension_development
    framework/roadmap
 

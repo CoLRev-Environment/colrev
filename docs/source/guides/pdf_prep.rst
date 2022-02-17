@@ -14,6 +14,16 @@ PDF prep
 
 	colrev pdf-prep [options]
 
+.. option:: --update_hashes
+
+    Regenerate pdf_hashes
+
+.. option:: --reprocess
+
+    Prepare all PDFs again (pdf_needs_manual_preparation)
+
+..
+	--get_hashes : a convenience function
 
 When PDFs cannot be prepared automatically, :program:`colrev pdf-prep-man` provides an interactive convenience function.
 

@@ -319,32 +319,6 @@ class Data(DataProcess):
 
         return records
 
-    def edit_csv(self) -> None:
-        DATA = self.REVIEW_MANAGER.paths["DATA"]
-        DATA_CSV = str(DATA).replace(".yaml", ".csv")
-        if self.edit_csv:
-            with open(DATA) as f:
-                data_df = pd.json_normalize(safe_load(f))
-                data_df.to_csv(DATA_CSV, index=False)
-                self.report_logger.info(f"Created {DATA_CSV} based on {DATA}")
-                self.logger.info(f"Created {DATA_CSV} based on {DATA}")
-        return
-
-    def load_csv(self) -> None:
-        DATA = self.REVIEW_MANAGER.paths["DATA"]
-        DATA_CSV = str(DATA).replace(".yaml", ".csv")
-        if self.load_csv:
-            data_df = pd.read_csv(DATA_CSV)
-            with open(DATA, "w") as f:
-                yaml.dump(
-                    json.loads(data_df.to_json(orient="records")),
-                    f,
-                    default_flow_style=False,
-                )
-            self.report_logger.info(f"Loaded {DATA_CSV} into {DATA}")
-            self.logger.info(f"Loaded {DATA_CSV} into {DATA}")
-        return
-
     def update_tei(
         self, records: typing.List[dict], included: typing.List[dict]
     ) -> typing.List[dict]:

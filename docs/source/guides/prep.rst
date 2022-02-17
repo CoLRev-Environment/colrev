@@ -54,7 +54,7 @@ Operating assumptions and principles:
 
 .. option:: --polish
 
-    Polish the metadata (based on PDFs)
+    Polish the metadata without changing the record status.
 
     Based on the enhanced TEIs, it conducts a frequency analysis of the reference sections and checks how included and synthesized papers are cited.
     Titles and journals are set to the most frequent values.

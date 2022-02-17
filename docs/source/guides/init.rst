@@ -10,6 +10,11 @@ Init
 
 .. program:: colrev init
 
+.. option:: --name
+
+    Name of the project
+
+
 Once the repository is set up, you can share it with your team (see `instructions <overview.html#collaborate-in-a-team>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:

@@ -17,6 +17,12 @@ Load
 
 	colrev load [options]
 
+.. program: colrev load
+
+.. option:: --keep_ids, -k
+
+    Do not change the record IDs. Useful when importing an existing sample.
+
 
 Formats
 ---------------
