@@ -67,7 +67,6 @@ class ReviewManager:
         else:
             self.path = Path.cwd()
 
-        self.__git_repo = git.Repo(self.path)
         self.paths = self.__get_file_paths(self.path)
         self.config = self.__load_config()
 
@@ -295,9 +294,8 @@ class ReviewManager:
         return
 
     def __check_software(self) -> None:
-        git_repo = self.get_repo()
-        master = git_repo.head.reference
-        cmsg_lines = master.commit.message.split("\n")
+        last_commit_message = self.REVIEW_DATASET.get_commit_message(0)
+        cmsg_lines = last_commit_message.split("\n")
         for cmsg_line in cmsg_lines[0:20]:
             if "- colrev_core:" in cmsg_line:
                 last_colrev_core_version = cmsg_line[cmsg_line.find("version ") + 8 :]
@@ -494,13 +492,13 @@ class ReviewManager:
         if not self.paths["MAIN_REFERENCES"].is_file():
             self.logger.debug("Checks for MAIN_REFERENCES not activated")
         else:
+
             # Note : retrieving data once is more efficient than
             # reading the MAIN_REFERENCES multiple times (for each check)
 
-            git_repo = self.get_repo()
-            if str(self.paths["MAIN_REFERENCES_RELATIVE"]) in [
-                x.path for x in git_repo.head.commit.tree
-            ]:
+            if self.REVIEW_DATASET.file_in_history(
+                self.paths["MAIN_REFERENCES_RELATIVE"]
+            ):
                 prior = self.REVIEW_DATASET.retrieve_prior()
                 self.logger.debug("prior")
                 self.logger.debug(self.pp.pformat(prior))
@@ -575,6 +573,10 @@ class ReviewManager:
                         "script": DATA.update_synthesized_status,
                         "params": [],
                     },
+                    {
+                        "script": self.update_status_yaml,
+                        "params": [],
+                    },
                 ]
                 check_scripts += manuscript_checks
                 self.logger.debug("Checks for PAPER activated\n")
@@ -623,6 +625,7 @@ class ReviewManager:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
+
         update = False
         with open(msg_file) as f:
             contents = f.read()
@@ -637,10 +640,7 @@ class ReviewManager:
                 report = self.__get_commit_report("MANUAL", saved_args=None)
                 f.write(report)
 
-        git_repo = self.get_repo()
-        if str(self.paths["MAIN_REFERENCES_RELATIVE"]) in [
-            x.path for x in git_repo.head.commit.tree
-        ]:
+        if self.REVIEW_DATASET.file_in_history(self.paths["MAIN_REFERENCES_RELATIVE"]):
             prior = self.REVIEW_DATASET.retrieve_prior()
             self.logger.debug("prior")
             self.logger.debug(self.pp.pformat(prior))
@@ -679,40 +679,28 @@ class ReviewManager:
         """
 
         PASS, FAIL = 0, 1
-        MAIN_REFERENCES = self.paths["MAIN_REFERENCES"]
-        if not MAIN_REFERENCES.is_file():
+        if not self.paths["MAIN_REFERENCES"].is_file():
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
-            self.REVIEW_DATASET.format_main_references()
+            changed = self.REVIEW_DATASET.format_main_references()
             self.update_status_yaml()
 
         except (UnstagedGitChangesError, review_dataset.StatusFieldValueError) as e:
             pass
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
 
-        if MAIN_REFERENCES in [r.a_path for r in self.__git_repo.index.diff(None)]:
+        if changed:
             return {"status": FAIL, "msg": "references formatted"}
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
-    def get_repo(self) -> git.Repo:
-        """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
-
-        if self.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
-        return self.__git_repo
-
     def notify(self, process: Process) -> None:
         """Notify the REVIEW_MANAGER about the next process"""
-        self.__check_precondition(process)
 
-    def __check_precondition(self, process: Process) -> None:
         process.check_precondition()
-
         self.notified_next_process = process.type
-        if not self.__git_repo.is_dirty():
-            self.reset_log()
+        self.REVIEW_DATASET.reset_log_if_no_changes()
 
     def run_process(self, process: Process, *args) -> None:
         """Pass a process to the REVIEW_MANAGER for execution"""
@@ -729,7 +717,7 @@ class ReviewManager:
             f"ReviewManager: check_precondition({function_name}, "
             + f"a {process.type.name} process)"
         )
-        self.__check_precondition(process)
+        self.notify(process)
         self.report_logger.info(f"ReviewManager: run {function_name}()")
         process.run_process(*args)
         self.notified_next_process = None
@@ -740,8 +728,6 @@ class ReviewManager:
         from colrev_core.status import Status
 
         report = "\n\nReport\n\n"
-
-        git_repo = self.__git_repo
 
         if script_name is not None:
             if "MANUAL" == script_name:
@@ -775,10 +761,8 @@ class ReviewManager:
             # Replace the last backslash (for argument chaining across linebreaks)
             report = report.rstrip(" \\\n") + "\n"
             try:
-                report = (
-                    report
-                    + f"   On git repo with version {git_repo.head.commit.hexsha}\n"
-                )
+                last_commit_sha = self.REVIEW_DATASET.get_last_commit_sha()
+                report = report + f"   On git repo with version {last_commit_sha}\n"
             except ValueError:
                 pass
 
@@ -803,7 +787,7 @@ class ReviewManager:
         status_page = status_page.replace("Status\n\n", "Status\n")
         report = report + status_page
 
-        tree_hash = git_repo.git.execute(["git", "write-tree"])
+        tree_hash = self.REVIEW_DATASET.get_tree_hash()
         if self.paths["MAIN_REFERENCES"].is_file():
             tree_info = f"Properties for tree {tree_hash}\n"  # type: ignore
             report = report + "\n\n" + tree_info
@@ -903,8 +887,7 @@ class ReviewManager:
         with open(self.paths["STATUS"], "w") as f:
             yaml.dump(status_freq, f, allow_unicode=True)
 
-        git_repo = STATUS.REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(self.paths["STATUS_RELATIVE"])])
+        self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
 
         return
 
@@ -1036,10 +1019,10 @@ class ReviewManager:
     ) -> bool:
         """Create a commit (including a commit report)"""
 
-        if self.__git_repo.is_dirty():
+        if self.REVIEW_DATASET.has_changes():
 
             self.update_status_yaml()
-            self.__git_repo.index.add([str(self.paths["STATUS_RELATIVE"])])
+            self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
 
             hook_skipping = False
             if not self.config["DEBUG_MODE"]:
@@ -1112,18 +1095,19 @@ class ReviewManager:
             else:
                 git_author = git.Actor(f"script:{script}", "")
 
-            self.__git_repo.index.commit(
+            self.REVIEW_DATASET.create_commit(
                 msg
                 + self.__get_version_flag()
                 + self.__get_commit_report(f"{script}", saved_args)
                 + processing_report,
                 author=git_author,
                 committer=git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"]),
-                skip_hooks=hook_skipping,
+                hook_skipping=hook_skipping,
             )
+
             self.logger.info("Created commit")
             self.reset_log()
-            if self.__git_repo.is_dirty():
+            if self.REVIEW_DATASET.has_changes():
                 raise DirtyRepoAfterProcessingError
             return True
         else:
@@ -1256,15 +1240,6 @@ class SearchDetailsMissingError(Exception):
             "Search results path "
             + f"({search_results_path.name}) "
             + "is not in sources.yaml"
-        )
-        super().__init__(self.message)
-
-
-class ReviewManagerNotNofiedError(Exception):
-    def __init__(self):
-        self.message = (
-            "inform the review manager about the next process in advance"
-            + " to avoid conflicts (run review_manager.notify(processing_function))"
         )
         super().__init__(self.message)
 

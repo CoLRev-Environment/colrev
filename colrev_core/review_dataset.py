@@ -10,6 +10,7 @@ import typing
 from pathlib import Path
 
 import bibtexparser
+import git
 import pandas as pd
 import yaml
 from bibtexparser.bibdatabase import BibDatabase
@@ -27,6 +28,48 @@ class ReviewDataset:
     def __init__(self, REVIEW_MANAGER) -> None:
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.MAIN_REFERENCES_FILE = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
+
+    def load_sources(self) -> list:
+        """Load the source details"""
+
+        if self.REVIEW_MANAGER.paths["SOURCES"].is_file():
+            with open(self.REVIEW_MANAGER.paths["SOURCES"]) as f:
+                sources_df = pd.json_normalize(safe_load(f))
+                sources = sources_df.to_dict("records")
+        else:
+            self.REVIEW_MANAGER.logger.debug(
+                "Sources file does not exist "
+                f'{self.REVIEW_MANAGER.paths["SOURCES"].name}'
+            )
+            sources = []
+        return sources
+
+    def save_sources(self, sources: list) -> None:
+        """Save the source details"""
+
+        sources_df = pd.DataFrame(sources)
+        orderedCols = [
+            "filename",
+            "search_type",
+            "source_name",
+            "source_url",
+            "search_parameters",
+            "comment",
+        ]
+        for x in [x for x in sources_df.columns if x not in orderedCols]:
+            orderedCols.append(x)
+        sources_df = sources_df.reindex(columns=orderedCols)
+
+        with open(self.REVIEW_MANAGER.paths["SOURCES"], "w") as f:
+            yaml.dump(
+                json.loads(sources_df.to_json(orient="records")),
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+            )
+        self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
+        return
 
     def get_record_state_list_from_file_obj(self, file_object) -> list:
         return [
@@ -106,7 +149,6 @@ class ReviewDataset:
 
     def load_records(self, init: bool = False) -> typing.List[dict]:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
-        from colrev_core.review_manager import ReviewManagerNotNofiedError
 
         if self.REVIEW_MANAGER.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
@@ -180,11 +222,10 @@ class ReviewDataset:
 
         saved_args = locals()
 
-        git_repo = self.REVIEW_MANAGER.get_repo()
         if "all" == id:
             # logging.info("Removing/reprocessing all records")
             os.remove(self.MAIN_REFERENCES_FILE)
-            git_repo.index.remove(
+            self.__git_repo.index.remove(
                 [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])],
                 working_tree=True,
             )
@@ -219,6 +260,7 @@ class ReviewDataset:
             "grobid-version",
             "dblp_key",
             "wos_accession_number",
+            "source_url",
             "author",
             "booktitle",
             "journal",
@@ -416,48 +458,6 @@ class ReviewDataset:
             temp_ID = next_unique_ID
 
         return temp_ID
-
-    def load_sources(self) -> list:
-        """Load the source details"""
-
-        if self.REVIEW_MANAGER.paths["SOURCES"].is_file():
-            with open(self.REVIEW_MANAGER.paths["SOURCES"]) as f:
-                sources_df = pd.json_normalize(safe_load(f))
-                sources = sources_df.to_dict("records")
-        else:
-            self.REVIEW_MANAGER.logger.debug(
-                "Sources file does not exist "
-                f'{self.REVIEW_MANAGER.paths["SOURCES"].name}'
-            )
-            sources = []
-        return sources
-
-    def save_sources(self, sources: list) -> None:
-        """Save the source details"""
-
-        sources_df = pd.DataFrame(sources)
-        orderedCols = [
-            "filename",
-            "search_type",
-            "source_name",
-            "source_url",
-            "search_parameters",
-            "comment",
-        ]
-        for x in [x for x in sources_df.columns if x not in orderedCols]:
-            orderedCols.append(x)
-        sources_df = sources_df.reindex(columns=orderedCols)
-
-        with open(self.REVIEW_MANAGER.paths["SOURCES"], "w") as f:
-            yaml.dump(
-                json.loads(sources_df.to_json(orient="records")),
-                f,
-                default_flow_style=False,
-                sort_keys=False,
-            )
-        git_repo = self.REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
-        return
 
     def __read_next_record_header_str(
         self, file_object=None, HEADER_LENGTH: int = 9
@@ -679,7 +679,7 @@ class ReviewDataset:
 
         return
 
-    def format_main_references(self) -> None:
+    def format_main_references(self) -> bool:
         from colrev_core.prep import Preparation
         from colrev_core.process import FormatProcess
 
@@ -715,12 +715,10 @@ class ReviewDataset:
 
         records = sorted(records, key=lambda d: d["ID"])
         self.save_records(records)
-        return
-
-    def add_record_changes(self) -> None:
-        git_repo = self.REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
-        return
+        CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
+            r.a_path for r in self.__git_repo.index.diff(None)
+        ]
+        return CHANGED
 
     def retrieve_data(self, prior: dict) -> dict:
         from colrev_core.process import ProcessModel
@@ -878,13 +876,14 @@ class ReviewDataset:
         import io
 
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-        git_repo = self.REVIEW_MANAGER.get_repo()
         revlist = (
             (
                 commit.hexsha,
                 (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            for commit in self.__git_repo.iter_commits(
+                paths=str(MAIN_REFERENCES_RELATIVE)
+            )
         )
         prior: dict = {"status": [], "persisted_IDs": [], "curated_records": []}
         filecontents = list(revlist)[0][1]
@@ -946,6 +945,8 @@ class ReviewDataset:
                     IDs.append(ID.lstrip())
                 line = f.readline()
         return IDs
+
+    # CHECKS --------------------------------------------------------------
 
     def check_main_references_duplicates(self, data: dict) -> None:
 
@@ -1312,6 +1313,62 @@ class ReviewDataset:
 
         return
 
+    # GIT operations -----------------------------------------------
+
+    def get_repo(self) -> git.Repo:
+        """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
+
+        if self.REVIEW_MANAGER.notified_next_process is None:
+            raise ReviewManagerNotNofiedError()
+        return self.__git_repo
+
+    def has_changes(self) -> bool:
+        # TODO : allow for optional path (check whether there are changes for that file)
+        return self.__git_repo.is_dirty()
+
+    def add_changes(self, path: str) -> None:
+        self.__git_repo.index.add([str(path)])
+        return
+
+    def create_commit(
+        self, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
+    ) -> None:
+        self.__git_repo.index.commit(
+            msg,
+            author=author,
+            committer=committer,
+            skip_hooks=hook_skipping,
+        )
+        return
+
+    def file_in_history(self, filepath: Path) -> bool:
+        return str(filepath) in [x.path for x in self.__git_repo.head.commit.tree]
+
+    def get_commit_message(self, commit_nr: int) -> str:
+        master = self.__git_repo.head.reference
+        assert commit_nr == 0  # TODO : implement other cases
+        if commit_nr == 0:
+            cmsg = master.commit.message
+        return cmsg
+
+    def add_record_changes(self) -> None:
+        self.__git_repo.index.add(
+            [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])]
+        )
+        return
+
+    def reset_log_if_no_changes(self) -> None:
+        if not self.__git_repo.is_dirty():
+            self.REVIEW_MANAGER.reset_log()
+        return
+
+    def get_last_commit_sha(self) -> str:
+        return str(self.__git_repo.head.commit.hexsha)
+
+    def get_tree_hash(self) -> str:
+        hash = self.__git_repo.git.execute(["git", "write-tree"])
+        return str(hash)
+
 
 class SearchDetailsError(Exception):
     def __init__(
@@ -1365,6 +1422,15 @@ class FieldError(Exception):
 class PropagatedIDChange(Exception):
     def __init__(self, notifications):
         self.message = "\n".join(notifications)
+        super().__init__(self.message)
+
+
+class ReviewManagerNotNofiedError(Exception):
+    def __init__(self):
+        self.message = (
+            "inform the review manager about the next process in advance"
+            + " to avoid conflicts (run review_manager.notify(processing_function))"
+        )
         super().__init__(self.message)
 
 

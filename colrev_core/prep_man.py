@@ -177,7 +177,7 @@ class PrepMan(PrepManProcess):
 
                 bib_db_changed = bib_db.entries
 
-        git_repo = self.REVIEW_MANAGER.get_repo()
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         revlist = (
             ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())

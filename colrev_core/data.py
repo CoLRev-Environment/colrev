@@ -184,7 +184,7 @@ class Data(DataProcess):
         return
 
     def authorship_heuristic(self) -> str:
-        git_repo = self.REVIEW_MANAGER.get_repo()
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         commits_list = list(git_repo.iter_commits())
         commits_authors = []
         for commit in commits_list:
@@ -352,7 +352,6 @@ class Data(DataProcess):
         from lxml.etree import XMLSyntaxError
 
         grobid_client.start_grobid()
-        git_repo = self.REVIEW_MANAGER.get_repo()
 
         for record in records:
             if "file" not in record:
@@ -377,7 +376,7 @@ class Data(DataProcess):
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
-                        git_repo.index.add([str(tei_path)])
+                        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(tei_path))
 
                 except (
                     etree.XMLSyntaxError,
@@ -481,17 +480,20 @@ class Data(DataProcess):
         else:
 
             DATA_FORMAT = self.REVIEW_MANAGER.config["DATA_FORMAT"]
-            git_repo = self.REVIEW_MANAGER.get_repo()
             if "TEI" in DATA_FORMAT:
                 records = self.update_tei(records, included)
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             if "MANUSCRIPT" in DATA_FORMAT:
                 records = self.update_manuscript(records, included)
-                git_repo.index.add([str(self.REVIEW_MANAGER.paths["PAPER_RELATIVE"])])
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                    self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]
+                )
             if "STRUCTURED" in DATA_FORMAT:
                 records = self.update_structured_data(records, included)
-                git_repo.index.add([str(self.REVIEW_MANAGER.paths["DATA_RELATIVE"])])
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                    self.REVIEW_MANAGER.paths["DATA_RELATIVE"]
+                )
 
             self.update_synthesized_status()
 

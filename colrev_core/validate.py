@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import itertools
-import multiprocessing as mp
 import os
 import typing
 from itertools import chain
@@ -11,6 +10,7 @@ import dictdiffer
 import git
 from bashplotlib.histogram import plot_hist
 from bibtexparser.customization import convert_to_unicode
+from p_tqdm import p_map
 
 from colrev_core import utils
 from colrev_core.process import Process
@@ -39,8 +39,7 @@ class Validate(Process):
 
         search_dir = self.REVIEW_MANAGER.paths["SEARCHDIR"]
 
-        pool = mp.Pool(self.CPUS)
-        records = pool.map(self.load_search_records, search_dir.glob("*.bib"))
+        records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
         records = list(chain(*records))
 
         return records
@@ -73,13 +72,13 @@ class Validate(Process):
 
         if 0 == len(change_diff):
             self.logger.info("No substantial differences found.")
-
-        plot_hist(
-            [sim for [e1, e2, sim] in change_diff],
-            bincount=100,
-            xlab=True,
-            showSummary=True,
-        )
+        else:
+            plot_hist(
+                [sim for [e1, e2, sim] in change_diff],
+                bincount=100,
+                xlab=True,
+                showSummary=True,
+            )
         input("continue")
 
         for eid, record_link, difference in change_diff:
@@ -204,7 +203,7 @@ class Validate(Process):
 
         from colrev_core.status import Status
 
-        git_repo = self.REVIEW_MANAGER.get_repo()
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name

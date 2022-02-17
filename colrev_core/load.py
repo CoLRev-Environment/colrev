@@ -579,8 +579,9 @@ class Loader(LoadProcess):
         return corresponding_bib_file
 
     def __add_sources(self) -> None:
-        git_repo = self.REVIEW_MANAGER.get_repo()
-        git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
+        )
         return
 
     def __get_currently_imported_origin_list(self) -> list:
@@ -654,10 +655,12 @@ class Loader(LoadProcess):
                     records, selected_IDs=[x["ID"] for x in search_records]
                 )
 
-            git_repo = self.REVIEW_MANAGER.get_repo()
-            git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES"])])
-            git_repo.index.add([str(corresponding_bib_file)])
-            git_repo.index.add([str(search_file)])
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                str(self.REVIEW_MANAGER.paths["SOURCES"])
+            )
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
+
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             self.REVIEW_MANAGER.create_commit(
                 f"Load {saved_args['file']}", saved_args=saved_args

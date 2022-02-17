@@ -919,7 +919,7 @@ class Status(CheckProcess):
                 repo["progress"] = -1
 
             repo["remote"] = False
-            git_repo = CHECK_PROCESS.REVIEW_MANAGER.get_repo()
+            git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
             for remote in git_repo.remotes:
                 if remote.url:
                     repo["remote"] = True

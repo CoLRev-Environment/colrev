@@ -576,7 +576,7 @@ class PDF_Preparation(PDFPreparationProcess):
         return
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def __remove_coverpage(self, record: dict) -> dict:
+    def __remove_coverpage(self, record: dict, PAD: int) -> dict:
         coverpages = self.__get_coverpages(record["file"])
         if [] == coverpages:
             return record

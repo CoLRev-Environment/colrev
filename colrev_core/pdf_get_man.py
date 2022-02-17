@@ -94,8 +94,7 @@ class PDFRetrievalMan(PDFManualRetrievalProcess):
         return
 
     def pdfs_retrieved_manually(self) -> bool:
-        git_repo = self.REVIEW_MANAGER.get_repo()
-        return git_repo.is_dirty()
+        return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 
 
 if __name__ == "__main__":

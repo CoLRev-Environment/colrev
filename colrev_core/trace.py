@@ -27,7 +27,7 @@ class Trace(Process):
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         DATA = self.REVIEW_MANAGER.paths["DATA"]
 
-        revlist = self.REVIEW_MANAGER.get_repo().iter_commits()
+        revlist = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo().iter_commits()
 
         pp = pprint.PrettyPrinter(indent=4)
 

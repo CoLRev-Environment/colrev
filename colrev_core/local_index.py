@@ -14,6 +14,7 @@ from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
 from tqdm import tqdm
 
+from colrev_core.process import CheckProcess
 from colrev_core.process import ExploreProcess
 from colrev_core.process import RecordState
 
@@ -32,8 +33,24 @@ class LocalIndex(ExploreProcess):
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
 
     def __init__(self):
+        from colrev_core.review_manager import ReviewManager
 
         super().__init__()
+
+        self.REVIEW_MANAGER = ReviewManager()
+
+        self.local_registry = self.REVIEW_MANAGER.load_local_registry()
+
+        self.local_repos = []
+        for source in [x for x in self.local_registry]:
+            CHECK_PROCESS = CheckProcess(path=source["source_url"])
+            shared_url = ""
+            git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+            repo = {"source_url": source["source_url"], "source_link": shared_url}
+            self.local_repos.append(repo)
 
     class RecordNotInIndexException(Exception):
         def __init__(self, id: str = None):
@@ -664,13 +681,10 @@ class LocalIndex(ExploreProcess):
         if self.toc_path.is_dir():
             shutil.rmtree(self.toc_path)
 
-        REVIEW_MANAGER = ReviewManager()
-
         # TODO: add web of science abbreviations (only when they are unique!?)
         # self.__download_resources()
 
-        local_registry = REVIEW_MANAGER.load_local_registry()
-        for source_url in [x["source_url"] for x in local_registry]:
+        for source_url in [x["source_url"] for x in self.local_registry]:
             if not Path(source_url).is_dir():
                 print(f"Warning {source_url} not a directory")
                 continue
@@ -775,6 +789,14 @@ class LocalIndex(ExploreProcess):
 
         self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
         return self.__prep_record_for_return(retrieved_record)
+
+    def set_source_url_link(self, record: dict) -> dict:
+        if "source_url" in record:
+            for local_repo in self.local_repos:
+                if local_repo["source_url"] == record["source_url"]:
+                    record["source_url"] = local_repo["source_link"].rstrip(".git")
+
+        return record
 
     def is_duplicate(self, record1: dict, record2: dict) -> str:
         """Convenience function to check whether two records are a duplicate"""

@@ -38,8 +38,6 @@ class PDFPrepMan(PDFManualPreparationProcess):
 
     def set_data(self, record: dict) -> None:
 
-        git_repo = self.REVIEW_MANAGER.get_repo()
-
         record.update(status=RecordState.pdf_prepared)
 
         if "pdf_prep_hints" in record:
@@ -55,13 +53,14 @@ class PDFPrepMan(PDFManualPreparationProcess):
         )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
-        git_repo.index.add([str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])])
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+        )
 
         return
 
     def pdfs_prepared_manually(self) -> bool:
-        git_repo = self.REVIEW_MANAGER.get_repo()
-        return git_repo.is_dirty()
+        return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 
     def pdf_prep_man_stats(self) -> None:
         import pandas as pd

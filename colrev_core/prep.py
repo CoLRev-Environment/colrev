@@ -1936,7 +1936,7 @@ class Preparation(PrepProcess):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
-        git_repo = self.REVIEW_MANAGER.get_repo()
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         revlist = (
             ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
