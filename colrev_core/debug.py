@@ -314,7 +314,7 @@ def get_non_unique_pdf_hashes() -> None:
     return df
 
 
-def local_index():
+def local_index(param):
     from colrev_core.local_index import LocalIndex
 
     LOCAL_INDEX = LocalIndex()
@@ -328,6 +328,11 @@ def local_index():
         "title": "Knowledge for the New Generation Computers",
         "volume": "1",
         "year": "1986",
+    }
+    record = {
+        "ID": "HovorkaRoweMarkusEtAl2019",
+        "ENTRYTYPE": "article",
+        "doi": "10.17705/1JAIS.00570",
     }
     record = LOCAL_INDEX.retrieve_record_from_index(record)
     pp.pprint(record)

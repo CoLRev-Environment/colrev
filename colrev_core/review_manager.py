@@ -112,6 +112,7 @@ class ReviewManager:
         local_colrev_config = Path.home().joinpath(".colrev")
         local_registry = "registry.yaml"
         status = "status.yaml"
+        corrections = ".corrections"
         return {
             "REPO_DIR": repository_dir,
             "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -137,6 +138,7 @@ class ReviewManager:
             "STATUS_RELATIVE": Path(status),
             "STATUS": repository_dir.joinpath(status),
             "LOCAL_REGISTRY": local_colrev_config.joinpath(local_registry),
+            "CORRECTIONS_PATH": repository_dir.joinpath(corrections),
         }
 
     def __load_config(self) -> dict:
@@ -640,15 +642,7 @@ class ReviewManager:
                 report = self.__get_commit_report("MANUAL", saved_args=None)
                 f.write(report)
 
-        if self.REVIEW_DATASET.file_in_history(self.paths["MAIN_REFERENCES_RELATIVE"]):
-            prior = self.REVIEW_DATASET.retrieve_prior()
-            self.logger.debug("prior")
-            self.logger.debug(self.pp.pformat(prior))
-        else:  # if MAIN_REFERENCES not yet in git history
-            prior = {}
-
-        data = self.REVIEW_DATASET.retrieve_data(prior)
-        self.REVIEW_DATASET.check_corrections_of_curated_records(prior, data)
+        self.REVIEW_DATASET.check_corrections_of_curated_records()
 
         return {"msg": "TODO", "status": 0}
 
@@ -881,7 +875,7 @@ class ReviewManager:
     def update_status_yaml(self) -> None:
         from colrev_core.status import Status
 
-        STATUS = Status()
+        STATUS = Status(path=self.path)
 
         status_freq = STATUS.get_status_freq()
         with open(self.paths["STATUS"], "w") as f:
@@ -1160,11 +1154,61 @@ class ReviewManager:
         logger.info(f"Registered path ({path_to_register})")
         return
 
-    def apply_corrections(self, indexed_record: dict, changes) -> None:
-        # TODO : default/other modes of accepting changes
-        # e.g., only-metadata, no-changes, all(including optional fields)
+    def apply_corrections(self) -> None:
 
-        # self.pp.pprint(indexed_record)
+        self.logger.info("Collect corrections for curated repositories")
+
+        # group by target-repo to bundle changes in a commit
+        change_list = {}  # type: ignore
+        for correction in self.paths["CORRECTIONS_PATH"].glob("*.json"):
+            with open(correction) as json_file:
+                output = json.load(json_file)
+            output["file"] = correction
+            if output["source_url"] in [x["source_url"] for x in change_list]:
+                change_list[output["source_url"]].append(output)
+            else:
+                change_list[output["source_url"]] = [output]
+
+        # self.pp.pprint(change_list)
+
+        for source_url, change_itemset in change_list.items():
+            self.logger.info(f"Apply corrections to {source_url}")
+            for item in change_itemset:
+                self.pp.pprint(item["changes"])
+            if "y" == input("\nConfirm changes? (y/n)"):
+                self.__apply_correction(source_url, change_itemset)
+
+        print(
+            "\nThank you for supporting other researchers "
+            "by sharing your corrections ❤\n"
+        )
+        return
+
+    def __apply_correction(self, source_url, change_list) -> None:
+        from colrev_core.process import CheckProcess
+        from bibtexparser.bibdatabase import BibDatabase
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+        import bibtexparser
+
+        # TBD: other modes of accepting changes?
+        # e.g., only-metadata, no-changes, all(including optional fields)
+        CHECK_PROCESS = CheckProcess(path=source_url)
+        git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        if git_repo.is_dirty():
+            return
+
+        update_branch_exists = False
+        for ref in git_repo.references:
+            if ref.name == "update":
+                update_branch_exists = True
+        if not update_branch_exists:
+            git_repo.git.branch("update")
+
+        remote = git_repo.remote()
+        prev_branch_name = git_repo.active_branch.name
+        git_repo.heads.update.checkout()
+
         essential_md_keys = [
             "title",
             "author",
@@ -1177,23 +1221,106 @@ class ReviewManager:
             "author",
             "doi",
         ]
-        for (type, key, change) in list(changes):
-            if key in ["status", "origin", "metadata_source", "file"]:
-                continue
-            if key not in essential_md_keys:
-                continue
-            # TODO : deal with add/remove
-            if type != "change":
+
+        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+        corrections_bib_path = CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR"] / Path(
+            "corrections.bib"
+        )
+        if corrections_bib_path.is_file():
+            with open(corrections_bib_path) as target_db:
+                corrections_bib = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
+                ).parse_file(target_db, partial=True)
+        else:
+            corrections_bib = BibDatabase()
+            new_record = {
+                "filename": str(corrections_bib_path.name),
+                "search_type": "OTHER",
+                "source_name": "corrections",
+                "source_url": str(corrections_bib_path.name),
+                "search_parameters": "",
+                "comment": "",
+            }
+
+            sources = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+            sources.append(new_record)
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
+
+        for change_item in change_list:
+            indexed_record = change_item["indexed_record"]
+
+            # TODO : we assume that dois match...!?!?
+            # Better: save the original IDs in the indexed records
+            # (even if multiple records are merged)
+            record_l = [
+                x for x in records if x.get("doi", "") == indexed_record.get("doi", "")
+            ]
+            if len(record_l) != 1:
+                print("record not found")
                 continue
 
-            # Note: the most important thing is to update the metadata.
-            # we can create a copy in the search results later.
-            self.REVIEW_DATASET.replace_field([indexed_record["ID"]], key, change[1])
+            record = record_l.pop()
 
-        # TODO : check if repo clean (otherwise: write to temporary file?)
-        # TODO : the ID may not be identical with the indexed one...
-        # add the previous version to a corrections-search-file?
+            # append original record to search/corrections.bib
+            # add ID as an origin to record
+            prior_rec = record.copy()
+            ID = max([int(cr["ID"]) for cr in corrections_bib.entries] + [0]) + 1
+            prior_rec["ID"] = f"{ID}".rjust(10, "0")
+            # TODO drop non-essential fields
+            del prior_rec["status"]
+            del prior_rec["origin"]
+            del prior_rec["metadata_source"]
+            corrections_bib.entries.append(prior_rec)
+            record["origin"] = (
+                record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
+            )
 
+            for (type, key, change) in list(change_item["changes"]):
+                if key in ["status", "origin", "metadata_source", "file"]:
+                    continue
+
+                # Note: the most important thing is to update the metadata.
+                # we can create a copy/duplicate representation (/search) later
+                if key not in essential_md_keys:
+                    continue
+                # TODO : deal with add/remove
+                if type != "change":
+                    continue
+
+                record[key] = change[1]
+
+        bibtex_str = bibtexparser.dumps(corrections_bib)
+
+        with open(corrections_bib_path, "w") as out:
+            out.write(bibtex_str)
+
+        crb_path = str(
+            CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
+            / Path("corrections.bib")
+        )
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(crb_path)
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
+        )
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        CHECK_PROCESS.REVIEW_MANAGER.create_commit("Updates")
+
+        git_repo.remotes.origin.push(refspec="update:update")
+
+        for head in git_repo.heads:
+            if head.name == prev_branch_name:
+                head.checkout()
+        if "github.com" in remote.url:
+            print(
+                "\nTo create a pull request for your changes go "
+                f"to {str(remote.url).rstrip('.git')}/compare/update"
+            )
+        # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
+        # TODO : handle cases where update branch already exists
         return
 
 

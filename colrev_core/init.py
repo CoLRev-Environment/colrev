@@ -97,7 +97,8 @@ class Initializer:
             + "manual_cleansing_statistics.csv\n"
             + "data.csv\n"
             + "venv\n"
-            + ".references_learned_settings"
+            + ".references_learned_settings\n"
+            + ".corrections"
         )
         f.close()
         return

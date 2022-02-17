@@ -20,7 +20,7 @@ from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
 from colrev_core import utils
-from colrev_core.local_index import LocalIndex
+from colrev_core.environment import LocalIndex
 from colrev_core.process import RecordState
 
 
@@ -132,7 +132,7 @@ class ReviewDataset:
             raise StatusFieldValueError(ID, "status", "NA")
         status = status[status.find("{") + 1 : status.rfind("}")]
 
-        excl_criteria, file = "", ""
+        excl_criteria, file, metadata_source = "", "", ""
         while items:
             item = items.pop(0)
 
@@ -145,7 +145,10 @@ class ReviewDataset:
             if "file" in item:
                 file = item[item.find("{") + 1 : item.rfind("}")]
 
-        return [ID, origin, status, excl_criteria, file]
+            if "metadata_source" in item:
+                metadata_source = item[item.find("{") + 1 : item.rfind("}")]
+
+        return [ID, origin, status, excl_criteria, file, metadata_source]
 
     def load_records(self, init: bool = False) -> typing.List[dict]:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
@@ -191,7 +194,7 @@ class ReviewDataset:
     def save_records(self, records: typing.List[dict]) -> None:
         """Save the records"""
 
-        # Casting to string (in particular the RecordState Enum)
+        # Cast to string (in particular the RecordState Enum)
         records = [{k: str(v) for k, v in r.items()} for r in records]
 
         records.sort(key=lambda x: x["ID"])
@@ -735,7 +738,6 @@ class ReviewDataset:
             "record_links_in_bib": [],
             "persisted_IDs": [],
             "origin_list": [],
-            "curated_records": [],
         }
 
         with open(self.MAIN_REFERENCES_FILE) as f:
@@ -834,13 +836,6 @@ class ReviewDataset:
                 else:
                     prior_status = []
 
-                if "LOCAL_INDEX" in record_string:
-                    parser = BibTexParser(customization=convert_to_unicode)
-                    db = bibtexparser.loads(record_string, parser=parser)
-                    r = db.entries[0]
-                    if r["ID"] == ID:
-                        data["curated_records"].append(r)
-
                 status_transition = {}
                 if len(prior_status) == 0:
                     status_transition[ID] = "load"
@@ -885,7 +880,7 @@ class ReviewDataset:
                 paths=str(MAIN_REFERENCES_RELATIVE)
             )
         )
-        prior: dict = {"status": [], "persisted_IDs": [], "curated_records": []}
+        prior: dict = {"status": [], "persisted_IDs": []}
         filecontents = list(revlist)[0][1]
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
@@ -906,12 +901,6 @@ class ReviewDataset:
 
             else:
                 logging.error(f"record without ID: {record_string}")
-            if "LOCAL_INDEX" in record_string:
-                parser = BibTexParser(customization=convert_to_unicode)
-                db = bibtexparser.loads(record_string, parser=parser)
-                r = db.entries[0]
-                if r["ID"] == ID:
-                    prior["curated_records"].append(r)
 
         return prior
 
@@ -1036,9 +1025,9 @@ class ReviewDataset:
     def __get_excl_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
-    def check_corrections_of_curated_records(self, prior: dict, data: dict) -> None:
-        from colrev_core.review_manager import ReviewManager
+    def check_corrections_of_curated_records(self) -> None:
         from dictdiffer import diff
+        import io
 
         self.LOCAL_INDEX = LocalIndex()
         essential_md_keys = [
@@ -1053,7 +1042,40 @@ class ReviewDataset:
             "author",
             "doi",
         ]
-        for curated_record in list(data["curated_records"]):
+
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in self.__git_repo.iter_commits(
+                paths=str(MAIN_REFERENCES_RELATIVE)
+            )
+        )
+
+        prior: dict = {"curated_records": []}
+        filecontents = list(revlist)[0][1]
+        prior_db_str = io.StringIO(filecontents.decode("utf-8"))
+        for record_string in self.__read_next_record_str(prior_db_str):
+
+            if "LOCAL_INDEX" in record_string:
+                parser = BibTexParser(customization=convert_to_unicode)
+                db = bibtexparser.loads(record_string, parser=parser)
+                r = db.entries[0]
+                prior["curated_records"].append(r)
+
+        curated_records = []
+        with open(self.MAIN_REFERENCES_FILE) as f:
+            for record_string in self.__read_next_record_str(f):
+
+                if "LOCAL_INDEX" in record_string:
+                    parser = BibTexParser(customization=convert_to_unicode)
+                    db = bibtexparser.loads(record_string, parser=parser)
+                    r = db.entries[0]
+                    curated_records.append(r)
+
+        for curated_record in curated_records:
             # identify curated records for which essential metadata is changed
             prior_crl = [
                 x for x in prior["curated_records"] if x["ID"] == curated_record["ID"]
@@ -1071,10 +1093,33 @@ class ReviewDataset:
                     curated_record
                 )
                 print(indexed_record["source_url"])
-                CUR_REPO_MANAGER = ReviewManager(indexed_record["source_url"])
+                if not Path(indexed_record["source_url"]).is_dir():
+                    indexed_record = self.LOCAL_INDEX.set_source_path(indexed_record)
+                if not Path(indexed_record["source_url"]).is_dir():
+                    print(
+                        "Source path of indexed record not available "
+                        f'({indexed_record["source_url"]})'
+                    )
+                    continue
+
+                # Cast to string for persistence
+                indexed_record = {k: str(v) for k, v in indexed_record.items()}
+                curated_record = {k: str(v) for k, v in curated_record.items()}
+
+                # TODO: export only essential changes?
                 changes = diff(indexed_record, curated_record)
-                # push changes to the other repo (update the record in main references
-                CUR_REPO_MANAGER.apply_corrections(indexed_record, changes)
+                dict_to_save = {
+                    "source_url": indexed_record["source_url"],
+                    "indexed_record": indexed_record,
+                    "changes": list(changes),
+                }
+                fp = self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"] / Path(
+                    f"{curated_record['ID']}.json"
+                )
+                fp.parent.mkdir(exist_ok=True)
+
+                with open(fp, "w", encoding="utf8") as corrections_file:
+                    json.dump(dict_to_save, corrections_file)
 
         return
 

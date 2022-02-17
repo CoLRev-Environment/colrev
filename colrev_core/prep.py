@@ -22,7 +22,7 @@ from p_tqdm import p_map
 from thefuzz import fuzz
 
 from colrev_core import utils
-from colrev_core.local_index import LocalIndex
+from colrev_core.environment import LocalIndex
 from colrev_core.process import PrepProcess
 from colrev_core.process import RecordState
 

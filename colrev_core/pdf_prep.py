@@ -27,7 +27,7 @@ from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-from colrev_core.local_index import LocalIndex
+from colrev_core.environment import LocalIndex
 from colrev_core.process import PDFPreparationProcess
 from colrev_core.process import RecordState
 

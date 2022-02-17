@@ -143,7 +143,7 @@ class PDF_Retrieval(PDFRetrievalProcess):
         return record
 
     def __get_pdf_from_local_index(self, record: dict) -> dict:
-        from colrev_core.local_index import LocalIndex
+        from colrev_core.environment import LocalIndex
 
         LOCAL_INDEX = LocalIndex()
         try:

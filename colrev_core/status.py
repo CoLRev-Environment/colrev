@@ -10,8 +10,8 @@ from colrev_core.process import CheckProcess
 
 
 class Status(CheckProcess):
-    def __init__(self, notify=True):
-        super().__init__(fun=None, notify=notify)
+    def __init__(self, notify=True, path=None):
+        super().__init__(fun=None, notify=notify, path=path)
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
@@ -61,6 +61,12 @@ class Status(CheckProcess):
             nr_record_links = origin.count(";")
             record_links += nr_record_links + 1
 
+        stat: dict = {"status": {}}
+        metadata_sources = [x[5] for x in record_header_list]
+        stat["status"]["LPI_recs"] = len(
+            [x for x in metadata_sources if "LOCAL_INDEX" == x]
+        )
+
         exclusion_statistics = {}
         if excl_criteria:
             criteria = self.get_excl_criteria(excl_criteria[0])
@@ -70,7 +76,6 @@ class Status(CheckProcess):
                     if crit + "=yes" in exclusion_case:
                         exclusion_statistics[crit] += 1
 
-        stat: dict = {"status": {}}
         stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
         stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
 
@@ -264,6 +269,13 @@ class Status(CheckProcess):
                     "cmd": f"colrev config --remove_from_registry {registered_path}",
                 }
                 environment_instructions.append(instruction)
+
+        if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
+            instruction = {
+                "msg": "Corrections to share with curated repositories.",
+                "cmd": "colrev environment --apply_corrections",
+            }
+            environment_instructions.append(instruction)
 
         return environment_instructions
 
@@ -743,7 +755,19 @@ class Status(CheckProcess):
                     "to prepare (manually)",
                     stat["currently"]["md_needs_manual_preparation"],
                 )
-            self.stat_print(True, "Records prepared", stat["overall"]["md_prepared"])
+            perc = 0
+            if stat["overall"]["md_prepared"] > 0:
+                perc = (
+                    statuts_info["status"]["LPI_recs"] / stat["overall"]["md_prepared"]
+                )
+            self.stat_print(
+                True,
+                "Records prepared",
+                stat["overall"]["md_prepared"],
+                "*",
+                f"curated ({round(perc*100, 2)}%)",
+                str(statuts_info["status"]["LPI_recs"]),
+            )
             if stat["currently"]["md_prepared"] > 0:
                 self.stat_print(
                     True,
@@ -887,7 +911,7 @@ class Status(CheckProcess):
         return
 
     def get_environment_details(self) -> dict:
-        from colrev_core.local_index import LocalIndex
+        from colrev_core.environment import LocalIndex
         import os
         import time
 

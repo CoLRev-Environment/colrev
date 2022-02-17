@@ -12,6 +12,7 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from nameparser import HumanName
+from thefuzz import fuzz
 from tqdm import tqdm
 
 from colrev_core.process import CheckProcess
@@ -34,6 +35,7 @@ class LocalIndex(ExploreProcess):
 
     def __init__(self):
         from colrev_core.review_manager import ReviewManager
+        from git.exc import NoSuchPathError
 
         super().__init__()
 
@@ -43,14 +45,20 @@ class LocalIndex(ExploreProcess):
 
         self.local_repos = []
         for source in [x for x in self.local_registry]:
-            CHECK_PROCESS = CheckProcess(path=source["source_url"])
-            shared_url = ""
-            git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-            for remote in git_repo.remotes:
-                if remote.url:
-                    shared_url = remote.url
-            repo = {"source_url": source["source_url"], "source_link": shared_url}
-            self.local_repos.append(repo)
+            try:
+                CHECK_PROCESS = CheckProcess(path=source["source_url"])
+                shared_url = ""
+                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                for remote in git_repo.remotes:
+                    if remote.url:
+                        shared_url = remote.url
+                repo = {
+                    "source_url": source["source_url"],
+                    "source_link": shared_url.rstrip(".git"),
+                }
+                self.local_repos.append(repo)
+            except NoSuchPathError:
+                pass
 
     class RecordNotInIndexException(Exception):
         def __init__(self, id: str = None):
@@ -214,7 +222,7 @@ class LocalIndex(ExploreProcess):
             out.write(bibtex_str)
         return
 
-    def __retrieve_from_index(self, hash: str) -> dict:
+    def __retrieve_from_index_based_on_hash(self, hash: str) -> dict:
         record_fp = self.__get_record_index_file(hash)
         with open(record_fp) as target_db:
             bib_db = BibTexParser(
@@ -247,7 +255,7 @@ class LocalIndex(ExploreProcess):
     def __amend_record(self, hash: str, record: dict) -> None:
 
         index_fpath = self.__get_record_index_file(hash)
-        saved_record = self.__retrieve_from_index(hash)
+        saved_record = self.__retrieve_from_index_based_on_hash(hash)
         # TODO: check key and increment hash if necessary?
 
         # Casting to string (in particular the RecordState Enum)
@@ -294,7 +302,7 @@ class LocalIndex(ExploreProcess):
                 self.__store_record(record, index_fpath)
                 break
             else:
-                saved_record = self.__retrieve_from_index(hash)
+                saved_record = self.__retrieve_from_index_based_on_hash(hash)
                 if string_representation == saved_record.get(
                     "hash_string_representation", ""
                 ):
@@ -354,16 +362,30 @@ class LocalIndex(ExploreProcess):
 
         return
 
-    def __toc_index(self, record) -> None:
-
-        if "article" == record.get("ENTRYTYPE", ""):
-            # Note : records are md_prepared, i.e., complete
-
+    def __get_toc_key(self, record: dict) -> str:
+        toc_key = "NA"
+        if "article" == record["ENTRYTYPE"]:
             toc_key = f"toc_key={record.get('journal', '').lower()}"
             if "volume" in record:
                 toc_key = toc_key + f"|{record['volume']}"
             if "number" in record:
                 toc_key = toc_key + f"|{record['number']}"
+        elif "inproceedings" == record["ENTRYTYPE"]:
+            toc_key = (
+                f"toc_key={record.get('booktitle', '').lower()}"
+                + f"|{record.get('year', '')}"
+            )
+
+        return toc_key
+
+    def __toc_index(self, record) -> None:
+
+        if "article" == record.get("ENTRYTYPE", ""):
+            # Note : records are md_prepared, i.e., complete
+
+            toc_key = self.__get_toc_key(record)
+            if "NA" == toc_key:
+                return
 
             # print(toc_key)
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
@@ -394,16 +416,14 @@ class LocalIndex(ExploreProcess):
         if "inproceedings" == record.get("ENTRYTYPE", ""):
             # Note : records are md_prepared, i.e., complete
 
-            toc_key = (
-                f"toc_key={record.get('booktitle', '').lower()}"
-                + f"|{record.get('year', '')}"
-            )
+            toc_key = self.__get_toc_key(record)
+            if "NA" == toc_key:
+                return
 
-            # print(toc_key)
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
             index_fpath = self.__get_toc_index_file(hash)
             record_string_repr = self.__get_string_representation(record)
-            print(index_fpath)
+
             while True:
                 if not index_fpath.is_file():
                     index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
@@ -604,7 +624,7 @@ class LocalIndex(ExploreProcess):
             if saved_dstring == string_representation_record:
                 break
             hash = self.__increment_hash(hash)
-        retrieved_record = self.__retrieve_from_index(
+        retrieved_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(associated_original.encode("utf-8")).hexdigest()
         )
         return self.__prep_record_for_return(retrieved_record)
@@ -640,7 +660,7 @@ class LocalIndex(ExploreProcess):
         if not retrieved:
             raise self.RecordNotInIndexException
 
-        indexed_record = self.__retrieve_from_index(
+        indexed_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
         )
         return indexed_record
@@ -651,6 +671,19 @@ class LocalIndex(ExploreProcess):
         if "hash_string_representation" in record:
             del record["hash_string_representation"]
         # del retrieved_record['source_url']
+        if "file" in record:
+            if not Path(record["file"]).is_file():
+                dir_path = Path(record["source_url"]) / Path(record["file"])
+                if dir_path.is_file():
+                    record["file"] = str(dir_path)
+                pdf_dir_path = (
+                    Path(record["source_url"])
+                    / self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                    / Path(record["file"])
+                )
+                if pdf_dir_path.is_file():
+                    record["file"] = str(pdf_dir_path)
+
         record["status"] = RecordState.md_prepared
         return record
 
@@ -665,7 +698,6 @@ class LocalIndex(ExploreProcess):
 
     def index_records(self) -> None:
         import shutil
-        from colrev_core.review_manager import ReviewManager
 
         self.logger.info("Called LocalIndex")
 
@@ -692,12 +724,12 @@ class LocalIndex(ExploreProcess):
             self.logger.info(f"Index records from {source_url}")
 
             # get ReviewManager for project (after chdir)
-            REVIEW_MANAGER = ReviewManager()
+            CHECK_PROCESS = CheckProcess()
 
-            if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+            if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue
 
-            records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
+            records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
             records = [
                 r
                 for r in records
@@ -735,6 +767,53 @@ class LocalIndex(ExploreProcess):
 
         return
 
+    def retrieve_record_from_toc_index(
+        self, record: dict, similarity_threshold: float
+    ) -> dict:
+        toc_key = self.__get_toc_key(record)
+
+        hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
+        index_fpath = self.__get_toc_index_file(hash)
+        record_string_repr = self.__get_string_representation(record)
+
+        saved_toc_record_str_reprs = []
+        while True:
+            if not index_fpath.is_file():
+                break
+            else:
+                res = self.__retrieve_from_toc_index_based_on_hash(hash)
+                saved_toc_key = res[0]
+                if saved_toc_key == toc_key:
+                    saved_toc_record_str_reprs = res[1:]
+                    break
+                else:
+                    # to handle the collision:
+                    print(f"Collision: {hash}")
+                    hash = self.__increment_hash(hash)
+                    index_fpath = self.__get_toc_index_file(hash)
+
+        if len(saved_toc_record_str_reprs) > 0:
+            sim_list = []
+            for saved_toc_record_str_repr in saved_toc_record_str_reprs:
+                # Note : using a simpler similarity measure
+                # because the publication outlet parameters are already identical
+                sv = fuzz.ratio(record_string_repr, saved_toc_record_str_repr) / 100
+                sim_list.append(sv)
+
+            if max(sim_list) > similarity_threshold:
+                saved_toc_record_str_repr = saved_toc_record_str_reprs[
+                    sim_list.index(max(sim_list))
+                ]
+
+                hash = hashlib.sha256(
+                    saved_toc_record_str_repr.encode("utf-8")
+                ).hexdigest()
+                record = self.__retrieve_from_index_based_on_hash(hash)
+
+                return self.__prep_record_for_return(record)
+
+        return record
+
     def retrieve_record_from_index(self, record: dict) -> dict:
         """
         Convenience function to retrieve the indexed record metadata
@@ -759,7 +838,7 @@ class LocalIndex(ExploreProcess):
         hash = self.__get_record_hash(record)
         while True:
             try:
-                retrieved_record = self.__retrieve_from_index(hash)
+                retrieved_record = self.__retrieve_from_index_based_on_hash(hash)
                 string_representation_retrieved_record = (
                     self.__get_string_representation(retrieved_record)
                 )
@@ -794,7 +873,15 @@ class LocalIndex(ExploreProcess):
         if "source_url" in record:
             for local_repo in self.local_repos:
                 if local_repo["source_url"] == record["source_url"]:
-                    record["source_url"] = local_repo["source_link"].rstrip(".git")
+                    record["source_url"] = local_repo["source_link"]
+
+        return record
+
+    def set_source_path(self, record: dict) -> dict:
+        if "source_url" in record:
+            for local_repo in self.local_repos:
+                if local_repo["source_link"] == record["source_url"]:
+                    record["source_url"] = local_repo["source_url"]
 
         return record
 
@@ -820,7 +907,6 @@ class LocalIndex(ExploreProcess):
         return "unknown"
 
     def analyze(self, threshold: float = 0.95) -> None:
-        from thefuzz import fuzz
         import pandas as pd
 
         changes = []
