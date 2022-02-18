@@ -138,6 +138,47 @@ def dblp_heuristic(filename: Path, data: str) -> bool:
     return False
 
 
+# Scopus ------------------------------------------------
+
+
+def scopus_heuristic(filename: Path, data: str) -> bool:
+    if "source={Scopus}," in data:
+        return True
+    return False
+
+
+def load_scopus_source(records: typing.List[dict]) -> typing.List[dict]:
+
+    # mapping = {}
+    # records = apply_field_mapping(records, mapping)
+
+    for record in records:
+        if "document_type" in record:
+            if record["document_type"] in ["Conference Paper", "Conference Review"]:
+                record["ENTRYTYPE"] = "inproceedings"
+                if "journal" in record:
+                    record["booktitle"] = record["journal"]
+                    del record["journal"]
+            if "Article" == record["document_type"]:
+                record["ENTRYTYPE"] = "article"
+            del record["document_type"]
+
+        if "Start_Page" in record and "End_Page" in record:
+            if record["Start_Page"] != "nan" and record["End_Page"] != "nan":
+                record["pages"] = record["Start_Page"] + "--" + record["End_Page"]
+                record["pages"] = record["pages"].replace(".0", "")
+                del record["Start_Page"]
+                del record["End_Page"]
+
+        if "author" in record:
+            record["author"] = record["author"].replace("; ", " and ")
+
+    drop = ["source"]
+    records = drop_fields(records, drop)
+
+    return records
+
+
 scripts: typing.List[typing.Dict[str, typing.Any]] = [
     {
         "source_name": "AISeLibrary",
@@ -156,6 +197,12 @@ scripts: typing.List[typing.Dict[str, typing.Any]] = [
         "source_url": "www.webofscience.com",
         "heuristic": wos_heuristic,
         "load_script": load_wos_source,
+    },
+    {
+        "source_name": "Scopus",
+        "source_url": "www.scopus.com",
+        "heuristic": scopus_heuristic,
+        "load_script": load_scopus_source,
     },
 ]
 
