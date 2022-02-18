@@ -685,6 +685,8 @@ class Preparation(PrepProcess):
                 if most_similar < similarity:
                     most_similar = similarity
                     most_similar_record = retrieved_record
+        except json.decoder.JSONDecodeError:
+            pass
         except requests.exceptions.ConnectionError:
             return [{}]
 
@@ -1304,6 +1306,8 @@ class Preparation(PrepProcess):
             retrieved_record = self.crossref_json_to_record(retrieved_json)
             record = self.__fuse_best_fields(record, retrieved_record)
 
+        except json.decoder.JSONDecodeError:
+            pass
         except requests.exceptions.HTTPError:
             pass
         except requests.exceptions.ReadTimeout:
