@@ -187,6 +187,9 @@ class Preparation(PrepProcess):
         if self.__is_complete(record) and not self.__has_inconsistent_fields(record):
             return record
 
+        if self.RETRIEVAL_SIMILARITY > 0.9:
+            return record
+
         if (
             "dissertation" in record.get("fulltext", "NA").lower()
             and record["ENTRYTYPE"] != "phdthesis"
@@ -381,11 +384,25 @@ class Preparation(PrepProcess):
         return record
 
     def __get_record_from_local_index(self, record: dict) -> dict:
+        from colrev_core.environment import RecordNotInIndexException
+
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
+            if "LOCAL_INDEX" != retrieved_record["metadata_source"]:
+                # Try similarity-based retrieval from toc
+                try:
+                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
+                        record, self.RETRIEVAL_SIMILARITY
+                    )
+                except RecordNotInIndexException:
+                    pass
+
             for k, v in retrieved_record.items():
                 if k in ["origin", "ID", "grobid-version"]:
                     continue
+                if "file" == k:
+                    if "file" in record:
+                        continue
                 record[k] = v
             record["metadata_source"] = "LOCAL_INDEX"
 
@@ -396,7 +413,8 @@ class Preparation(PrepProcess):
                 # detailed report (and is available for tracing errors)
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
-        except LocalIndex.RecordNotInIndexException:
+            record = self.LOCAL_INDEX.set_source_url_link(record)
+        except RecordNotInIndexException:
             pass
 
         return record
@@ -476,7 +494,7 @@ class Preparation(PrepProcess):
         if "title" in record:
             record["title"] = self.__title_if_mostly_upper(record["title"])
             record["title"] = record["title"].replace("\n", " ")
-        record.update(stauts=RecordState.md_prepared)
+        record.update(status=RecordState.md_prepared)
         return record
 
     def crossref_json_to_record(self, item: dict) -> dict:
@@ -785,7 +803,7 @@ class Preparation(PrepProcess):
                 self.logger.debug(f"crossref similarity: {similarity}")
                 if similarity > self.RETRIEVAL_SIMILARITY:
                     record = self.__fuse_best_fields(record, retrieved_record)
-                    record.update(stauts=RecordState.md_prepared)
+                    record.update(status=RecordState.md_prepared)
 
             except requests.exceptions.HTTPError:
                 pass
@@ -1180,7 +1198,7 @@ class Preparation(PrepProcess):
                 if similarity > self.RETRIEVAL_SIMILARITY:
                     record = self.__fuse_best_fields(record, retrieved_record)
                     record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
-                    record.update(stauts=RecordState.md_prepared)
+                    record.update(status=RecordState.md_prepared)
 
         except requests.exceptions.HTTPError:
             pass
@@ -1983,6 +2001,7 @@ class Preparation(PrepProcess):
     def polish(self) -> None:
         import collections
         from colrev_core.tei import TEI, TEI_Exception
+        from tqdm import tqdm
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
@@ -1994,23 +2013,21 @@ class Preparation(PrepProcess):
             except TEI_Exception:
                 pass
 
-        for record in records:
-            if "title" in record:
+        self.RETRIEVAL_SIMILARITY = 0.96
 
-                suffixes_to_remove = [
-                    " teaching cases",
-                    " research-in-progress",
-                    " research in progress paper",
-                    " research-in-progress paper",
-                    " complete paper",
-                    " research paper",
-                    " practitioner paper",
-                    " 1",
-                    " *",
-                ]
-                for suffix_to_remove in suffixes_to_remove:
-                    if record["title"].lower().endswith(suffix_to_remove):
-                        record["title"] = record["title"][: -len(suffix_to_remove)]
+        for record in tqdm(records):
+            previous_status = record["status"]
+            record = self.__get_record_from_local_index(record)
+            record["status"] = previous_status
+
+            continue
+            if "LOCAL_INDEX" == record.get("metadata_source", ""):
+                continue
+            if "doi" in record:
+                continue
+            print(record["ID"])
+
+            if "title" in record:
 
                 title_text = self.NER(record["title"])
                 for word in title_text.ents:
@@ -2020,13 +2037,22 @@ class Preparation(PrepProcess):
                                 word.text, word.text.title()
                             )
 
+            if "doi" not in record:
+                previous_status = record["status"]
+                record = self.get_md_from_crossref(record)
+                record["status"] = previous_status
+
+            if "dblp_key" not in record:
+                previous_status = record["status"]
+                record = self.get_md_from_dblp(record)
+                record["status"] = previous_status
+
             # polish based on TEI
             if record["status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
                 continue
-            self.logger.info(f'Polishing {record["ID"]}')
 
             title_variations = []
             journal_variations = []
@@ -2046,6 +2072,8 @@ class Preparation(PrepProcess):
             if len(journal_variations) > 2 and "journal" in record:
                 journal_counter = collections.Counter(journal_variations)
                 record["journal"] = journal_counter.most_common()[0][0]
+
+            # TODO : link with LOCAL_INDEX
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -2149,7 +2177,7 @@ class Preparation(PrepProcess):
             self.set_to_reprocess(reprocess_state)
 
         modes = [
-            {"name": "high_confidence", "similarity": 0.99},
+            {"name": "high_confidence", "similarity": 0.98},
             {"name": "medium_confidence", "similarity": 0.9},
             {"name": "low_confidence", "similarity": 0.80},
         ]

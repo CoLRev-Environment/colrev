@@ -372,9 +372,9 @@ class ReviewDataset:
         raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
-
         from colrev_core.prep import Preparation
-        from colrev_core.local_index import LocalIndex
+        from colrev_core.environment import LocalIndex
+        from colrev_core.environment import RecordNotInIndexException
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
@@ -392,7 +392,7 @@ class ReviewDataset:
         try:
             retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
             temp_ID = retrieved_record["ID"]
-        except LocalIndex.RecordNotInIndexException:
+        except RecordNotInIndexException:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
@@ -1026,6 +1026,7 @@ class ReviewDataset:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def check_corrections_of_curated_records(self) -> None:
+        from colrev_core.environment import RecordNotInIndexException
         from dictdiffer import diff
         import io
 
@@ -1089,10 +1090,14 @@ class ReviewDataset:
             ):
 
                 # retrieve record from index to identify origin repositories
-                indexed_record = self.LOCAL_INDEX.retrieve_record_from_index(
-                    curated_record
-                )
-                print(indexed_record["source_url"])
+                try:
+                    indexed_record = self.LOCAL_INDEX.retrieve_record_from_index(
+                        curated_record
+                    )
+                except RecordNotInIndexException:
+                    pass
+
+                # print(indexed_record["source_url"])
                 if not Path(indexed_record["source_url"]).is_dir():
                     indexed_record = self.LOCAL_INDEX.set_source_path(indexed_record)
                 if not Path(indexed_record["source_url"]).is_dir():
@@ -1106,12 +1111,30 @@ class ReviewDataset:
                 indexed_record = {k: str(v) for k, v in indexed_record.items()}
                 curated_record = {k: str(v) for k, v in curated_record.items()}
 
-                # TODO: export only essential changes?
                 changes = diff(indexed_record, curated_record)
+                change_items = list(changes)
+
+                # TODO: export only essential changes?
+                # TODO The following does not seem to work yet...
+
+                change_items = [
+                    (x[0], x[1], x[2])
+                    for x in change_items
+                    if x[1]
+                    not in [
+                        "excl_criteria",
+                        "status",
+                        "origin",
+                        "metadata_source",
+                        "source_url",
+                        "ID",
+                    ]
+                ]
+
                 dict_to_save = {
                     "source_url": indexed_record["source_url"],
                     "indexed_record": indexed_record,
-                    "changes": list(changes),
+                    "changes": change_items,
                 }
                 fp = self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"] / Path(
                     f"{curated_record['ID']}.json"
@@ -1121,6 +1144,8 @@ class ReviewDataset:
                 with open(fp, "w", encoding="utf8") as corrections_file:
                     json.dump(dict_to_save, corrections_file)
 
+        # for testing:
+        # raise KeyError
         return
 
     def check_main_references_screen(self, data: dict) -> None:

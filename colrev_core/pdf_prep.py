@@ -229,7 +229,7 @@ class PDF_Preparation(PDFPreparationProcess):
         if RecordState.pdf_imported != record["status"]:
             return record
 
-        from colrev_core.local_index import LocalIndex
+        from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         LOCAL_INDEX = LocalIndex()
 
@@ -248,7 +248,7 @@ class PDF_Preparation(PDFPreparationProcess):
                     return record
                 else:
                     print("pdf_hashes not matching")
-        except LocalIndex.RecordNotInIndexException:
+        except RecordNotInIndexException:
             pass
 
         if "text_from_pdf" not in record:

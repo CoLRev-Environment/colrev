@@ -724,7 +724,19 @@ class Status(CheckProcess):
             stat = statuts_info["status"]
 
             print(" Search")
-            self.stat_print(False, "Records retrieved", stat["overall"]["md_retrieved"])
+            perc_curated = 0
+            if stat["overall"]["md_prepared"] > 0:
+                perc_curated = (
+                    statuts_info["status"]["LPI_recs"] / stat["overall"]["md_prepared"]
+                )
+            self.stat_print(
+                False,
+                "Records retrieved",
+                stat["overall"]["md_retrieved"],
+                "*",
+                f"curated ({round(perc_curated*100, 2)}%)",
+                str(statuts_info["status"]["LPI_recs"]),
+            )
             print(" ______________________________________________________________")
             print(" | Metadata preparation                                         ")
             if stat["currently"]["md_retrieved"] > 0:
@@ -755,18 +767,10 @@ class Status(CheckProcess):
                     "to prepare (manually)",
                     stat["currently"]["md_needs_manual_preparation"],
                 )
-            perc = 0
-            if stat["overall"]["md_prepared"] > 0:
-                perc = (
-                    statuts_info["status"]["LPI_recs"] / stat["overall"]["md_prepared"]
-                )
             self.stat_print(
                 True,
                 "Records prepared",
                 stat["overall"]["md_prepared"],
-                "*",
-                f"curated ({round(perc*100, 2)}%)",
-                str(statuts_info["status"]["LPI_recs"]),
             )
             if stat["currently"]["md_prepared"] > 0:
                 self.stat_print(

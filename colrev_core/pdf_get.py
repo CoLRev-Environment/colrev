@@ -143,13 +143,13 @@ class PDF_Retrieval(PDFRetrievalProcess):
         return record
 
     def __get_pdf_from_local_index(self, record: dict) -> dict:
-        from colrev_core.environment import LocalIndex
+        from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         LOCAL_INDEX = LocalIndex()
         try:
             retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
             # pp.pprint(retrieved_record)
-        except LocalIndex.RecordNotInIndexException:
+        except RecordNotInIndexException:
             pass
             return record
 

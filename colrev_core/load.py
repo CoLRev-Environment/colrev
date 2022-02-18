@@ -196,6 +196,7 @@ class Loader(LoadProcess):
             record.update(number=record["issue"])
             del record["issue"]
 
+        record.update(metadata_source="ORIGINAL")
         record.update(status=RecordState.md_imported)
 
         return record
@@ -643,6 +644,7 @@ class Loader(LoadProcess):
             for sr in search_records:
                 sr = self.__import_record(sr)
 
+            self.logger.info("Save records to references.bib")
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(init=True)
             records += search_records
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
@@ -651,10 +653,12 @@ class Loader(LoadProcess):
             # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
 
             if not keep_ids:
+                self.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                     records, selected_IDs=[x["ID"] for x in search_records]
                 )
 
+            self.logger.info("Add changes and create commit")
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 str(self.REVIEW_MANAGER.paths["SOURCES"])
             )

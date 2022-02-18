@@ -315,7 +315,7 @@ def get_non_unique_pdf_hashes() -> None:
 
 
 def local_index(param):
-    from colrev_core.local_index import LocalIndex
+    from colrev_core.environment import LocalIndex
 
     LOCAL_INDEX = LocalIndex()
     # To Test retrieval of record:

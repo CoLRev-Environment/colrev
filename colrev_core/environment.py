@@ -60,14 +60,6 @@ class LocalIndex(ExploreProcess):
             except NoSuchPathError:
                 pass
 
-    class RecordNotInIndexException(Exception):
-        def __init__(self, id: str = None):
-            if id is not None:
-                self.message = f"Record not in index ({id})"
-            else:
-                self.message = "Record not in index"
-            super().__init__(self.message)
-
     def __robust_append(self, string_to_hash: str, to_append: str) -> str:
         to_append = to_append.replace("\n", " ").rstrip().lstrip().replace("–", " ")
         to_append = re.sub(r"[\.\:“”’]", "", to_append)
@@ -224,6 +216,8 @@ class LocalIndex(ExploreProcess):
 
     def __retrieve_from_index_based_on_hash(self, hash: str) -> dict:
         record_fp = self.__get_record_index_file(hash)
+        if not record_fp.is_file():
+            raise RecordNotInIndexException
         with open(record_fp) as target_db:
             bib_db = BibTexParser(
                 customization=convert_to_unicode,
@@ -294,7 +288,7 @@ class LocalIndex(ExploreProcess):
             # Note: we need the hash of retrieved_record (different from record)
             self.__amend_record(self.__get_record_hash(retrieved_record), record)
             return
-        except self.RecordNotInIndexException:
+        except RecordNotInIndexException:
             pass
 
         while True:
@@ -658,7 +652,7 @@ class LocalIndex(ExploreProcess):
                 pass
 
         if not retrieved:
-            raise self.RecordNotInIndexException
+            raise RecordNotInIndexException
 
         indexed_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
@@ -684,6 +678,8 @@ class LocalIndex(ExploreProcess):
                 if pdf_dir_path.is_file():
                     record["file"] = str(pdf_dir_path)
 
+        if "manual_non_duplicate" in record:
+            del record["manual_non_duplicate"]
         record["status"] = RecordState.md_prepared
         return record
 
@@ -864,7 +860,7 @@ class LocalIndex(ExploreProcess):
                 pass
 
         if not retrieved_record:
-            raise self.RecordNotInIndexException(record.get("ID", "no-key"))
+            raise RecordNotInIndexException(record.get("ID", "no-key"))
 
         self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
         return self.__prep_record_for_return(retrieved_record)
@@ -900,7 +896,7 @@ class LocalIndex(ExploreProcess):
                     return "yes"
                 else:
                     return "no"
-        except self.RecordNotInIndexException:
+        except RecordNotInIndexException:
             pass
             return "unknown"
 
@@ -947,6 +943,15 @@ class LocalIndex(ExploreProcess):
             o.write("\n".join(pdf_hashes_dupes))
         print("Export non-unique-pdf-hashes.txt")
         return
+
+
+class RecordNotInIndexException(Exception):
+    def __init__(self, id: str = None):
+        if id is not None:
+            self.message = f"Record not in index ({id})"
+        else:
+            self.message = "Record not in index"
+        super().__init__(self.message)
 
 
 if __name__ == "__main__":

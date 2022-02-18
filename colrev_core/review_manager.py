@@ -4,6 +4,7 @@ import configparser
 import importlib
 import inspect
 import io
+import itertools
 import json
 import logging
 import multiprocessing as mp
@@ -11,6 +12,7 @@ import os
 import pkgutil
 import pprint
 import re
+import string
 import subprocess
 import sys
 import tempfile
@@ -1088,12 +1090,17 @@ class ReviewManager:
                 git_author = git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"])
             else:
                 git_author = git.Actor(f"script:{script}", "")
-
+            if "apply_correction" in script:
+                cmsg = msg
+            else:
+                cmsg = (
+                    msg
+                    + self.__get_version_flag()
+                    + self.__get_commit_report(f"{script}", saved_args)
+                    + processing_report
+                )
             self.REVIEW_DATASET.create_commit(
-                msg
-                + self.__get_version_flag()
-                + self.__get_commit_report(f"{script}", saved_args)
-                + processing_report,
+                cmsg,
                 author=git_author,
                 committer=git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"]),
                 hook_skipping=hook_skipping,
@@ -1159,29 +1166,34 @@ class ReviewManager:
         self.logger.info("Collect corrections for curated repositories")
 
         # group by target-repo to bundle changes in a commit
-        change_list = {}  # type: ignore
+        change_sets = {}  # type: ignore
         for correction in self.paths["CORRECTIONS_PATH"].glob("*.json"):
             with open(correction) as json_file:
                 output = json.load(json_file)
             output["file"] = correction
-            if output["source_url"] in [x["source_url"] for x in change_list]:
-                change_list[output["source_url"]].append(output)
+            source_url = output["source_url"]
+
+            if len(change_sets) == 0:
+                change_sets[source_url] = [output]
+                continue
+            if source_url in [p for p, c in change_sets.items()]:
+                change_sets[source_url].append(output)
             else:
-                change_list[output["source_url"]] = [output]
+                change_sets[source_url] = [output]
 
-        # self.pp.pprint(change_list)
-
-        for source_url, change_itemset in change_list.items():
+        for source_url, change_itemset in change_sets.items():
+            print()
             self.logger.info(f"Apply corrections to {source_url}")
             for item in change_itemset:
                 self.pp.pprint(item["changes"])
             if "y" == input("\nConfirm changes? (y/n)"):
+                input(f"please pull the latest changes for {source_url}")
                 self.__apply_correction(source_url, change_itemset)
 
-        print(
-            "\nThank you for supporting other researchers "
-            "by sharing your corrections ❤\n"
-        )
+                print(
+                    "\nThank you for supporting other researchers "
+                    "by sharing your corrections ❤\n"
+                )
         return
 
     def __apply_correction(self, source_url, change_list) -> None:
@@ -1198,17 +1210,6 @@ class ReviewManager:
         if git_repo.is_dirty():
             return
 
-        update_branch_exists = False
-        for ref in git_repo.references:
-            if ref.name == "update":
-                update_branch_exists = True
-        if not update_branch_exists:
-            git_repo.git.branch("update")
-
-        remote = git_repo.remote()
-        prev_branch_name = git_repo.active_branch.name
-        git_repo.heads.update.checkout()
-
         essential_md_keys = [
             "title",
             "author",
@@ -1223,32 +1224,7 @@ class ReviewManager:
         ]
 
         records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-
-        corrections_bib_path = CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR"] / Path(
-            "corrections.bib"
-        )
-        if corrections_bib_path.is_file():
-            with open(corrections_bib_path) as target_db:
-                corrections_bib = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
-        else:
-            corrections_bib = BibDatabase()
-            new_record = {
-                "filename": str(corrections_bib_path.name),
-                "search_type": "OTHER",
-                "source_name": "corrections",
-                "source_url": str(corrections_bib_path.name),
-                "search_parameters": "",
-                "comment": "",
-            }
-
-            sources = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-            sources.append(new_record)
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
-
+        pull_request_msgs = []
         for change_item in change_list:
             indexed_record = change_item["indexed_record"]
 
@@ -1264,11 +1240,66 @@ class ReviewManager:
 
             record = record_l.pop()
 
+            record_branch_name = record["ID"]
+            counter = 1
+            new_record_branch_name = record_branch_name
+            while new_record_branch_name in [ref.name for ref in git_repo.references]:
+                new_record_branch_name = f"{record_branch_name}_{counter}"
+                counter += 1
+
+            record_branch_name = new_record_branch_name
+            git_repo.git.branch(record_branch_name)
+
+            remote = git_repo.remote()
+            prev_branch_name = git_repo.active_branch.name
+            for head in git_repo.heads:
+                if head.name == record_branch_name:
+                    head.checkout()
+            # git_repo.heads.update.checkout()
+
+            corrections_bib_path = CHECK_PROCESS.REVIEW_MANAGER.paths[
+                "SEARCHDIR"
+            ] / Path("corrections.bib")
+            if corrections_bib_path.is_file():
+                with open(corrections_bib_path) as target_db:
+                    corrections_bib = BibTexParser(
+                        customization=convert_to_unicode,
+                        ignore_nonstandard_types=False,
+                        common_strings=True,
+                    ).parse_file(target_db, partial=True)
+            else:
+                corrections_bib = BibDatabase()
+                new_record = {
+                    "filename": str(corrections_bib_path.name),
+                    "search_type": "OTHER",
+                    "source_name": "corrections",
+                    "source_url": str(corrections_bib_path.name),
+                    "search_parameters": "",
+                    "comment": "",
+                }
+
+                sources = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+                sources.append(new_record)
+                CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
+
             # append original record to search/corrections.bib
             # add ID as an origin to record
+            rec_for_reset = record.copy()
             prior_rec = record.copy()
-            ID = max([int(cr["ID"]) for cr in corrections_bib.entries] + [0]) + 1
-            prior_rec["ID"] = f"{ID}".rjust(10, "0")
+
+            order = 0
+            letters = list(string.ascii_lowercase)
+            temp_ID = prior_rec["ID"]
+            next_unique_ID = temp_ID
+            other_ids = [x["ID"] for x in corrections_bib.entries]
+            appends: list = []
+            while next_unique_ID in other_ids:
+                if len(appends) == 0:
+                    order += 1
+                    appends = [p for p in itertools.product(letters, repeat=order)]
+                next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
+            prior_rec["ID"] = next_unique_ID
+
             # TODO drop non-essential fields
             del prior_rec["status"]
             del prior_rec["origin"]
@@ -1292,33 +1323,51 @@ class ReviewManager:
 
                 record[key] = change[1]
 
-        bibtex_str = bibtexparser.dumps(corrections_bib)
-
-        with open(corrections_bib_path, "w") as out:
-            out.write(bibtex_str)
-
-        crb_path = str(
-            CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
-            / Path("corrections.bib")
-        )
-        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(crb_path)
-        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
-        )
-        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        CHECK_PROCESS.REVIEW_MANAGER.create_commit("Updates")
-
-        git_repo.remotes.origin.push(refspec="update:update")
-
-        for head in git_repo.heads:
-            if head.name == prev_branch_name:
-                head.checkout()
-        if "github.com" in remote.url:
-            print(
-                "\nTo create a pull request for your changes go "
-                f"to {str(remote.url).rstrip('.git')}/compare/update"
+            corrections_bib.entries = sorted(
+                corrections_bib.entries, key=lambda d: d["ID"]
             )
+
+            bibtex_str = bibtexparser.dumps(
+                corrections_bib, writer=self.REVIEW_DATASET.get_bibtex_writer()
+            )
+
+            with open(corrections_bib_path, "w") as out:
+                out.write(bibtex_str)
+
+            crb_path = str(
+                CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
+                / Path("corrections.bib")
+            )
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(crb_path)
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
+            )
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
+
+            git_repo.remotes.origin.push(
+                refspec=f"{record_branch_name}:{record_branch_name}"
+            )
+
+            for head in git_repo.heads:
+                if head.name == prev_branch_name:
+                    head.checkout()
+            if "github.com" in remote.url:
+                pull_request_msgs.append(
+                    "\nTo create a pull request for your changes go "
+                    f"to {str(remote.url).rstrip('.git')}/compare/{record_branch_name}"
+                )
+
+            # reset the record - each branch should have changes for one record
+            for k, v in rec_for_reset.items():
+                record[k] = v
+
+            if Path(change_item["file"]).is_file():
+                Path(change_item["file"]).unlink()
+
+        for pull_request_msg in pull_request_msgs:
+            print(pull_request_msg)
         # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
         # TODO : handle cases where update branch already exists
         return

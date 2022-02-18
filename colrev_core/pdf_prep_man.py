@@ -227,7 +227,7 @@ class PDFPrepMan(PDFManualPreparationProcess):
         return
 
     def extract_coverpage(self, filepath: Path) -> None:
-        from colrev_core.local_index import LocalIndex
+        from colrev_core.environment import LocalIndex
 
         cp_path = LocalIndex.local_index_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
