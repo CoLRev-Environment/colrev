@@ -23,11 +23,12 @@ from thefuzz import fuzz
 
 from colrev_core import utils
 from colrev_core.environment import LocalIndex
-from colrev_core.process import PrepProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class Preparation(PrepProcess):
+class Preparation(Process):
 
     ad = AlphabetDetector()
     PAD = 0
@@ -154,12 +155,19 @@ class Preparation(PrepProcess):
 
     def __init__(
         self,
+        REVIEW_MANAGER,
         similarity: float = 0.9,
         reprocess_state: RecordState = RecordState.md_imported,
         keep_ids: bool = False,
-        notify: bool = True,
+        notify_state_transition_process: bool = True,
     ):
-        super().__init__(fun=self.main, notify=notify)
+        super().__init__(
+            REVIEW_MANAGER,
+            type=ProcessType.prep,
+            fun=self.main,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+        self.notify_state_transition_process = notify_state_transition_process
 
         logging.getLogger("urllib3").setLevel(logging.ERROR)
 
@@ -178,9 +186,15 @@ class Preparation(PrepProcess):
             self.reprocess_state = reprocess_state
 
         self.keep_ids = keep_ids
-        self.LOCAL_INDEX = LocalIndex()
+        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         self.CPUS = self.CPUS * 5
         self.NER = spacy.load("en_core_web_sm")
+
+    def check_precondition(self) -> None:
+        if self.notify_state_transition_process:
+            super().require_clean_repo_general()
+            super().check_process_model_precondition()
+        return
 
     def __correct_recordtype(self, record: dict) -> dict:
 
@@ -1248,6 +1262,21 @@ class Preparation(PrepProcess):
 
         return default
 
+    def __select_best_journal(self, default: str, candidate: str) -> str:
+
+        default_upper = self.__percent_upper_chars(default)
+        candidate_upper = self.__percent_upper_chars(candidate)
+
+        # Simple heuristic to avoid abbreviations
+        if "." in default and "." not in candidate:
+            return candidate
+        # Relatively simple rule...
+        # catches cases when default is all upper or title case
+        if default_upper > candidate_upper:
+            return candidate
+
+        return default
+
     def __fuse_best_fields(self, record: dict, merging_record: dict) -> dict:
         """Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
@@ -1270,6 +1299,13 @@ class Preparation(PrepProcess):
                     if "title" in record:
                         record["title"] = self.__select_best_title(
                             record["title"], merging_record["title"]
+                        )
+                    else:
+                        record["pages"] = str(val)
+                elif "journal" == key:
+                    if "journal" in record:
+                        record["journal"] = self.__select_best_journal(
+                            record["journal"], merging_record["journal"]
                         )
                     else:
                         record["pages"] = str(val)
@@ -1921,7 +1957,7 @@ class Preparation(PrepProcess):
                 ):
                     break
 
-        PREP_MAN = PrepMan()
+        PREP_MAN = PrepMan(self.REVIEW_MANAGER)
         # TODO : double-check! resetting the prep does not necessarily mean
         # that wrong records were merged...
         # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
@@ -2012,7 +2048,7 @@ class Preparation(PrepProcess):
         refs = []
         for tei_file in Path("tei").glob("*.tei.xml"):
             try:
-                TEI_INSTANCE = TEI(tei_path=tei_file)
+                TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_file)
                 refs.extend(TEI_INSTANCE.get_bibliography())
             except TEI_Exception:
                 pass

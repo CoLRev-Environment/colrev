@@ -8,14 +8,26 @@ from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-from colrev_core.process import PDFManualPreparationProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class PDFPrepMan(PDFManualPreparationProcess):
-    def __init__(self, notify: bool = True):
+class PDFPrepMan(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
-        super().__init__(notify=notify)
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.pdf_prep_man,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+        )
+        super().check_process_model_precondition()
+        return
 
     def get_data(self) -> dict:
 

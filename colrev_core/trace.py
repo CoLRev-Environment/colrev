@@ -11,12 +11,16 @@ from colrev_core.process import ProcessType
 
 
 class Trace(Process):
-    def __init__(self):
+    def __init__(self, REVIEW_MANAGER):
 
-        super().__init__(ProcessType.check)
+        super().__init__(REVIEW_MANAGER, ProcessType.check)
+
         logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
-    def lpad_multiline(self, s: str, lpad: int) -> str:
+    def check_precondition(self) -> None:
+        return
+
+    def __lpad_multiline(self, s: str, lpad: int) -> str:
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
@@ -60,7 +64,7 @@ class Trace(Process):
                     diffs = list(dictdiffer.diff(prev_record, record))
                     if len(diffs) > 0:
                         for diff in diffs:
-                            print(self.lpad_multiline(pp.pformat(diff), 5))
+                            print(self.__lpad_multiline(pp.pformat(diff), 5))
                     prev_record = record
 
             if DATA in commit.tree:

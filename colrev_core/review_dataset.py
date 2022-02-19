@@ -20,12 +20,12 @@ from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
 from colrev_core import utils
-from colrev_core.environment import LocalIndex
 from colrev_core.process import RecordState
 
 
 class ReviewDataset:
     def __init__(self, REVIEW_MANAGER) -> None:
+
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.MAIN_REFERENCES_FILE = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
         self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
@@ -297,6 +297,7 @@ class ReviewDataset:
         ID_list = [record["ID"] for record in records]
 
         for record in records:
+            self.REVIEW_MANAGER.logger.info(f'Set ID for {record["ID"]}')
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
                     continue
@@ -376,6 +377,11 @@ class ReviewDataset:
         from colrev_core.environment import LocalIndex
         from colrev_core.environment import RecordNotInIndexException
 
+        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        self.PREPARATION = Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
         # (this would break the chain of evidence)
@@ -386,17 +392,14 @@ class ReviewDataset:
                     + f'propagated to {self.REVIEW_MANAGER.paths["DATA"]} '
                     + f'({record["ID"]})'
                 )
-
-        LOCAL_INDEX = LocalIndex()
-        PREPARATION = Preparation(notify=False)
         try:
-            retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+            retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
             temp_ID = retrieved_record["ID"]
         except RecordNotInIndexException:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
-                authors = PREPARATION.format_author_field(
+                authors = self.PREPARATION.format_author_field(
                     record.get("author", record.get("editor", "Anonymous"))
                 ).split(" and ")
             else:
@@ -686,9 +689,11 @@ class ReviewDataset:
         from colrev_core.prep import Preparation
         from colrev_core.process import FormatProcess
 
-        PREPARATION = Preparation(notify=False)
+        PREPARATION = Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
 
-        FormatProcess()  # to notify
+        FormatProcess(self.REVIEW_MANAGER)  # to notify
 
         records = self.load_records()
         for record in records:
@@ -1026,11 +1031,12 @@ class ReviewDataset:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def check_corrections_of_curated_records(self) -> None:
+        from colrev_core.environment import LocalIndex
         from colrev_core.environment import RecordNotInIndexException
         from dictdiffer import diff
         import io
 
-        self.LOCAL_INDEX = LocalIndex()
+        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         essential_md_keys = [
             "title",
             "author",

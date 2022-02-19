@@ -28,11 +28,12 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
 from colrev_core.environment import LocalIndex
-from colrev_core.process import PDFPreparationProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class PDF_Preparation(PDFPreparationProcess):
+class PDF_Preparation(Process):
 
     roman_pages_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?--"
@@ -43,9 +44,20 @@ class PDF_Preparation(PDFPreparationProcess):
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
     )
 
-    def __init__(self, reprocess: bool = False, notify: bool = True):
+    def __init__(
+        self,
+        REVIEW_MANAGER,
+        reprocess: bool = False,
+        notify_state_transition_process: bool = True,
+    ):
 
-        super().__init__(fun=self.main, notify=notify)
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.pdf_prep,
+            fun=self.main,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
 
         self.reprocess = reprocess
@@ -60,6 +72,11 @@ class PDF_Preparation(PDFPreparationProcess):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"] * 2
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general()
+        super().check_process_model_precondition()
+        return
 
     def __extract_text_by_page(self, record: dict, pages: list = None) -> str:
 
@@ -231,7 +248,7 @@ class PDF_Preparation(PDFPreparationProcess):
 
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
-        LOCAL_INDEX = LocalIndex()
+        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
         try:
             retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)

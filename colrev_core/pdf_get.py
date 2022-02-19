@@ -11,15 +11,27 @@ from pdfminer.high_level import extract_text
 
 from colrev_core import grobid_client
 from colrev_core import utils
-from colrev_core.process import PDFRetrievalProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 from colrev_core.tei import TEI
 
 
-class PDF_Retrieval(PDFRetrievalProcess):
-    def __init__(self, copy_to_repo: bool = False, rename: bool = False):
+class PDF_Retrieval(Process):
+    def __init__(
+        self,
+        REVIEW_MANAGER,
+        copy_to_repo: bool = False,
+        rename: bool = False,
+        notify_state_transition_process: bool = True,
+    ):
 
-        super().__init__(fun=self.main)
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.pdf_get,
+            fun=self.main,
+            notify_state_transition_process=notify_state_transition_process,
+        )
 
         self.copy_to_repo = copy_to_repo
         self.rename = rename
@@ -29,6 +41,13 @@ class PDF_Retrieval(PDFRetrievalProcess):
 
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+        )
+        super().check_process_model_precondition()
+        return
 
     def __copy_pdfs_to_repo(self) -> None:
         self.logger.info("Copy PDFs to dir")
@@ -145,7 +164,7 @@ class PDF_Retrieval(PDFRetrievalProcess):
     def __get_pdf_from_local_index(self, record: dict) -> dict:
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
-        LOCAL_INDEX = LocalIndex()
+        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         try:
             retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
             # pp.pprint(retrieved_record)
@@ -205,7 +224,7 @@ class PDF_Retrieval(PDFRetrievalProcess):
         for file in unlinked_pdfs:
             if file.stem not in IDs:
 
-                TEI_INSTANCE = TEI(pdf_path=file)
+                TEI_INSTANCE = TEI(self.REVIEW_MANAGER, pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:

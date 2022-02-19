@@ -24,14 +24,24 @@ class TEI(Process):
 
     GROBID_URL = "http://localhost:8070"
 
-    def __init__(self, pdf_path: Path = None, tei_path: Path = None):
+    def __init__(
+        self,
+        REVIEW_MANAGER,
+        pdf_path: Path = None,
+        tei_path: Path = None,
+        notify_state_transition_process: bool = True,
+    ):
         """Creates a TEI file
         modes of operation:
         - pdf_path: create TEI and temporarily store in self.data
         - pfd_path and tei_path: create TEI and save in tei_path
         - tei_path: read TEI from file
         """
-        super().__init__(ProcessType.data)
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.data,
+            notify_state_transition_process=notify_state_transition_process,
+        )
 
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
@@ -85,6 +95,9 @@ class TEI(Process):
             if "[BAD_INPUT_DATA]" in xml_string[:100]:
                 raise TEI_Exception()
             self.root = etree.fromstring(xml_string)
+
+    def check_precondition(self) -> None:
+        return
 
     def start_grobid(self) -> bool:
         import os

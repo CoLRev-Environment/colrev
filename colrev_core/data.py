@@ -15,19 +15,32 @@ from urllib3.exceptions import ProtocolError
 from yaml import safe_load
 
 from colrev_core import grobid_client
-from colrev_core.process import DataProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_TimeoutException
 
 
-class Data(DataProcess):
+class Data(Process):
     PAD = 0
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    def __init__(self, notify=True):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
-        super().__init__(fun=self.main, notify=notify)
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.data,
+            fun=self.main,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
+        )
+        super().check_process_model_precondition()
+        return
 
     def get_record_ids_for_synthesis(self, records: typing.List[dict]) -> list:
         return [
@@ -346,7 +359,7 @@ class Data(DataProcess):
                     continue
 
                 try:
-                    TEI(pdf_path=pdf_path, tei_path=tei_path)
+                    TEI(self.REVIEW_MANAGER, pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
@@ -374,7 +387,7 @@ class Data(DataProcess):
 
                 tei_path = Path(record["tei_file"])
                 try:
-                    TEI_INSTANCE = TEI(tei_path=tei_path)
+                    TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_path)
                     TEI_INSTANCE.mark_references(records)
                 except XMLSyntaxError:
                     pass
@@ -491,7 +504,7 @@ class Data(DataProcess):
     def update_synthesized_status(self) -> typing.List[dict]:
         from colrev_core.process import CheckProcess
 
-        CHECK_PROCESS = CheckProcess()
+        CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
         records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]

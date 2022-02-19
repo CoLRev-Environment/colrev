@@ -19,7 +19,7 @@ logger = logging.getLogger("colrev_core")
 
 class Distribute(Process):
     def __init__(self):
-        super().__init__(ProcessType.explore)
+        super().__init__(ProcessType.explore, notify_state_transition_process=False)
 
     def main(self, path_str: str, target: Path) -> None:
 

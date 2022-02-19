@@ -35,8 +35,10 @@ def debug_load() -> None:
     # then compare them to the original search_files
 
     from colrev_core.load import Loader
+    from colrev_core.review_manager import ReviewManager
 
-    LOADER = Loader(keep_ids=True)
+    REVIEW_MANAGER = ReviewManager()
+    LOADER = Loader(REVIEW_MANAGER, keep_ids=True)
 
     # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
     # origin_list = [x[1] for x in rec_header_lis]
@@ -87,6 +89,7 @@ def debug_load() -> None:
 def debug_prep(param: str) -> None:
 
     from colrev_core.prep import Preparation
+    from colrev_core.review_manager import ReviewManager
 
     # record = {
     #     "ENTRYTYPE": "article",
@@ -169,7 +172,9 @@ def debug_prep(param: str) -> None:
 
     # import colrev_core.dedupe as cc_dedupe
 
-    PREPARATION = Preparation()
+    REVIEW_MANAGER = ReviewManager()
+
+    PREPARATION = Preparation(REVIEW_MANAGER)
 
     # cc_dedupe.preparation_link_to_curated_record(record, record_list)
     # input("stop")
@@ -245,13 +250,16 @@ def debug_data():
 def debug_tei_tools(param) -> None:
     from colrev_core.tei import TEI
     from colrev_core import grobid_client
+    from colrev_core.review_manager import ReviewManager
+
+    REVIEW_MANAGER = ReviewManager()
 
     logger.debug("Start grobid")
     grobid_client.start_grobid()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    TEI_INSTANCE = TEI(pdf_path=filepath)
+    TEI_INSTANCE = TEI(REVIEW_MANAGER, pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
     return

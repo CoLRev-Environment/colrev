@@ -16,13 +16,26 @@ from yaml import safe_load
 import docker
 from colrev_core import grobid_client
 from colrev_core import load_custom
-from colrev_core.process import LoadProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class Loader(LoadProcess):
-    def __init__(self, keep_ids):
-        super().__init__(fun=self.main)
+class Loader(Process):
+    def __init__(
+        self,
+        REVIEW_MANAGER,
+        keep_ids,
+        notify=True,
+        notify_state_transition_process=True,
+    ):
+
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.load,
+            fun=self.main,
+            notify_state_transition_process=notify_state_transition_process,
+        )
 
         self.keep_ids = keep_ids
 
@@ -38,6 +51,16 @@ class Loader(LoadProcess):
             "pdf": self.__pdf2bib,
             "pdf_refs": self.__pdfRefs2bib,
         }
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[
+                self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
+                self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
+            ]
+        )
+        super().check_process_model_precondition()
+        return
 
     def get_search_files(self, restrict: list = None) -> typing.List[Path]:
         """ "Retrieve search files"""

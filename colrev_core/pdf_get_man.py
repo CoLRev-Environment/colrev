@@ -5,14 +5,26 @@ from pathlib import Path
 
 import pandas as pd
 
-from colrev_core.process import PDFManualRetrievalProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class PDFRetrievalMan(PDFManualRetrievalProcess):
-    def __init__(self):
+class PDFRetrievalMan(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
-        super().__init__()
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.pdf_get_man,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+        )
+        super().check_process_model_precondition()
+        return
 
     def get_pdf_get_man(self, records: typing.List[dict]) -> list:
         missing_records = []

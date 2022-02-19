@@ -79,6 +79,7 @@ class ReviewManager:
             self.report_logger = self.__setup_report_logger(logging.INFO)
             self.logger = self.__setup_logger(logging.INFO)
 
+        self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
         self.REVIEW_DATASET = ReviewDataset(self)
         self.sources = self.REVIEW_DATASET.load_sources()
 
@@ -91,8 +92,6 @@ class ReviewManager:
             )
             self.config["DATA_FORMAT"] = ["MANUSCRIPT"]
             pass
-
-        self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
         if self.config["DEBUG_MODE"]:
             print("\n\n")
@@ -338,8 +337,8 @@ class ReviewManager:
         try:
             if not self.__hooks_up_to_date(installed_hooks):
                 raise RepoSetupError(
-                    "Pre-commit hooks not up-to-date. "
-                    + "Use pre-commit autoupdate (--bleeding-edge)"
+                    "Pre-commit hooks not up-to-date. Use\n"
+                    + "colrev config --update_hooks"
                 )
                 # This could also be a warning, but hooks should not change often.
 
@@ -567,7 +566,7 @@ class ReviewManager:
             else:
                 from colrev_core.data import Data
 
-                DATA = Data(notify=False)
+                DATA = Data(self, notify_state_transition_process=False)
                 manuscript_checks = [
                     {
                         "script": DATA.check_new_record_source_tag,
@@ -655,7 +654,7 @@ class ReviewManager:
 
         from colrev_core.status import Status
 
-        STATUS = Status()
+        STATUS = Status(self)
         stat = STATUS.get_status_freq()
         collaboration_instructions = STATUS.get_collaboration_instructions(stat)
         status_code = all(
@@ -765,7 +764,7 @@ class ReviewManager:
         # url = g.execut['git', 'config', '--get remote.origin.url']
 
         # append status
-        STATUS = Status()
+        STATUS = Status(self)
         f = io.StringIO()
         with redirect_stdout(f):
             stat = STATUS.get_status_freq()
@@ -877,7 +876,7 @@ class ReviewManager:
     def update_status_yaml(self) -> None:
         from colrev_core.status import Status
 
-        STATUS = Status(path=self.path)
+        STATUS = Status(self)
 
         status_freq = STATUS.get_status_freq()
         with open(self.paths["STATUS"], "w") as f:
@@ -1205,7 +1204,7 @@ class ReviewManager:
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        CHECK_PROCESS = CheckProcess(path=source_url)
+        CHECK_PROCESS = CheckProcess(self)
         git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         if git_repo.is_dirty():
             return

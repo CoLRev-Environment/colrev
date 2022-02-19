@@ -5,14 +5,25 @@ import bibtexparser
 import pandas as pd
 
 from colrev_core import prep
-from colrev_core.process import PrepManProcess
+from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class PrepMan(PrepManProcess):
-    def __init__(self):
-        super().__init__(ProcessType.prep_man)
+class PrepMan(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.prep_man,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general(
+            ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+        )
+        super().check_process_model_precondition()
+        return
 
     def prep_man_stats(self) -> None:
 
@@ -156,7 +167,7 @@ class PrepMan(PrepManProcess):
 
     def apply_prep_man(self) -> None:
 
-        PREPARATION = prep.Preparation()
+        PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
 
         if Path("prep-references.csv").is_file():
             self.logger.info("Load prep-references.csv")
@@ -311,7 +322,7 @@ class PrepMan(PrepManProcess):
 
     def set_data(self, record, PAD: int = 40) -> None:
 
-        PREPARATION = prep.Preparation()
+        PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
 
         record.update(status=RecordState.md_prepared)
         record.update(metadata_source="MAN_PREP")

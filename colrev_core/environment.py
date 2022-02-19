@@ -16,11 +16,13 @@ from thefuzz import fuzz
 from tqdm import tqdm
 
 from colrev_core.process import CheckProcess
-from colrev_core.process import ExploreProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
+from colrev_core.review_manager import ReviewManager
 
 
-class LocalIndex(ExploreProcess):
+class LocalIndex(Process):
 
     global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
     max_len_sha256 = 2 ** 256
@@ -33,22 +35,22 @@ class LocalIndex(ExploreProcess):
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
 
-    def __init__(self):
-        from colrev_core.review_manager import ReviewManager
+    def __init__(self, REVIEW_MANAGER, notify: bool = True):
         from git.exc import NoSuchPathError
 
-        super().__init__()
-
-        self.REVIEW_MANAGER = ReviewManager()
+        super().__init__(
+            REVIEW_MANAGER, ProcessType.explore, notify_state_transition_process=False
+        )
 
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
 
         self.local_repos = []
         for source in [x for x in self.local_registry]:
             try:
-                CHECK_PROCESS = CheckProcess(path=source["source_url"])
+                cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
+                CheckProcess(cp_REVIEW_MANAGER)  # to notify
                 shared_url = ""
-                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
                 for remote in git_repo.remotes:
                     if remote.url:
                         shared_url = remote.url
@@ -59,6 +61,9 @@ class LocalIndex(ExploreProcess):
                 self.local_repos.append(repo)
             except NoSuchPathError:
                 pass
+
+    def check_precondition(self) -> None:
+        return
 
     def __robust_append(self, string_to_hash: str, to_append: str) -> str:
         to_append = to_append.replace("\n", " ").rstrip().lstrip().replace("–", " ")
@@ -523,7 +528,9 @@ class LocalIndex(ExploreProcess):
         from colrev_core.prep import Preparation
 
         # Note: preparation notifies of preparation processs...
-        PREPARATION = Preparation(notify=False)
+        PREPARATION = Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
 
         try:
             search_path = Path(records[0]["source_url"] + "/search/")
@@ -720,7 +727,7 @@ class LocalIndex(ExploreProcess):
             self.logger.info(f"Index records from {source_url}")
 
             # get ReviewManager for project (after chdir)
-            CHECK_PROCESS = CheckProcess()
+            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
 
             if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue

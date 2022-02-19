@@ -6,6 +6,8 @@ from enum import Enum
 import git
 from transitions import Machine
 
+# from colrev_core.review_manager import ReviewManager
+
 
 class ProcessType(Enum):
     load = auto()
@@ -52,21 +54,32 @@ class RecordState(Enum):
 
 
 class Process:
-    def __init__(self, type: ProcessType, fun=None, path=None):
-        from colrev_core.review_manager import ReviewManager
+    def __init__(
+        self,
+        REVIEW_MANAGER,
+        type: ProcessType,
+        fun=None,
+        notify_state_transition_process=True,
+    ):
 
-        self.REVIEW_MANAGER = ReviewManager(path)
-
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
-        self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
-
+        self.REVIEW_MANAGER = REVIEW_MANAGER
         self.type = type
         if fun is None:
             self.interactive = True
         else:
             self.interactive = False
         self.processing_function = fun
+
+        self.notify_state_transition_process = notify_state_transition_process
+        if notify_state_transition_process:
+            self.REVIEW_MANAGER.notify(self)
+        else:
+            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
+            self.REVIEW_MANAGER.notify(CHECK_PROCESS)
+
+        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
+        self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
+        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
 
         self.logger = self.REVIEW_MANAGER.logger
         self.report_logger = self.REVIEW_MANAGER.report_logger
@@ -173,162 +186,9 @@ class Process:
         return True
 
 
-class LoadProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.load, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[
-                self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
-                self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
-            ]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class PrepProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        self.notify = notify
-        super().__init__(ProcessType.prep, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        if self.notify:
-            super().require_clean_repo_general()
-            super().check_process_model_precondition()
-        return
-
-
-class PrepManProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.prep_man, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class DedupeProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.dedupe, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
-
-class PrescreenProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.prescreen, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class PDFRetrievalProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.pdf_get, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class PDFManualRetrievalProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.pdf_get_man, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class PDFPreparationProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.pdf_prep, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
-
-class PDFManualPreparationProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.pdf_prep_man, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
-class ScreenProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.screen, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
-
-class DataProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        self.notify = notify
-        super().__init__(ProcessType.data, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
-
 class FormatProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.format, fun, path)
+    def __init__(self, REVIEW_MANAGER, fun=None, notify: bool = True):
+        super().__init__(REVIEW_MANAGER, ProcessType.format, fun)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
@@ -337,20 +197,8 @@ class FormatProcess(Process):
 
 
 class CheckProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.check, fun, path)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
-
-    def check_precondition(self) -> None:
-        return
-
-
-class ExploreProcess(Process):
-    def __init__(self, fun=None, notify: bool = True, path=None):
-        super().__init__(ProcessType.explore, fun, path)
-
-        self.notify = notify
+    def __init__(self, REVIEW_MANAGER, fun=None, notify: bool = True):
+        super().__init__(REVIEW_MANAGER, ProcessType.check, fun)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 

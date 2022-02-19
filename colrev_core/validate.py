@@ -18,10 +18,14 @@ from colrev_core.process import ProcessType
 
 
 class Validate(Process):
-    def __init__(self):
+    def __init__(self, REVIEW_MANAGER):
 
-        super().__init__(ProcessType.check)
+        super().__init__(REVIEW_MANAGER, ProcessType.check)
+
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
+
+    def check_precondition(self) -> None:
+        return
 
     def load_search_records(self, bib_file: Path) -> list:
 
@@ -233,7 +237,7 @@ class Validate(Process):
             self.logger.error("Traceability of records".ljust(32, " ") + "NO")
             self.logger.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
 
-        STATUS = Status()
+        STATUS = Status(self.REVIEW_MANAGER)
         completeness_condition = STATUS.get_completeness_condition()
         if completeness_condition:
             self.logger.info(

@@ -1,13 +1,23 @@
 #! /usr/bin/env python
 import typing
 
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
-from colrev_core.process import ScreenProcess
 
 
-class Screen(ScreenProcess):
-    def __init__(self):
-        super().__init__()
+class Screen(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.screen,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general()
+        super().check_process_model_precondition()
+        return
 
     def include_all_in_screen(
         self,

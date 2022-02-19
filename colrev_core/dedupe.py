@@ -10,15 +10,26 @@ import pandas as pd
 from tqdm.contrib.concurrent import process_map
 
 from colrev_core import utils
-from colrev_core.process import DedupeProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class Dedupe(DedupeProcess):
-    def __init__(self):
+class Dedupe(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
-        super().__init__()
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.dedupe,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
         pd.options.mode.chained_assignment = None  # default='warn'
+
+    def check_precondition(self) -> None:
+        super().require_clean_repo_general()
+        super().check_process_model_precondition()
+        return
 
     ###########################################################################
 
@@ -771,7 +782,7 @@ class Dedupe(DedupeProcess):
     def __merge_crossref_linked_records(self) -> None:
         from colrev_core.prep import Preparation
 
-        PREPARATION = Preparation()
+        PREPARATION = Preparation(self.REVIEW_MANAGER)
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         for record in records:
             if "crossref" in record:

@@ -7,11 +7,16 @@ from pathlib import Path
 import git
 
 from colrev_core.process import CheckProcess
+from colrev_core.process import Process
+from colrev_core.process import ProcessType
 
 
-class Status(CheckProcess):
-    def __init__(self, notify=True, path=None):
-        super().__init__(fun=None, notify=notify, path=path)
+class Status(Process):
+    def __init__(self, REVIEW_MANAGER):
+        super().__init__(REVIEW_MANAGER, ProcessType.explore)
+
+    def check_precondition(self) -> None:
+        return
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
@@ -729,14 +734,19 @@ class Status(CheckProcess):
                 perc_curated = (
                     statuts_info["status"]["LPI_recs"] / stat["overall"]["md_prepared"]
                 )
-            self.stat_print(
-                False,
-                "Records retrieved",
-                stat["overall"]["md_retrieved"],
-                "*",
-                f"curated ({round(perc_curated*100, 2)}%)",
-                str(statuts_info["status"]["LPI_recs"]),
-            )
+            if stat["overall"]["md_prepared"] > 0:
+                self.stat_print(
+                    False,
+                    "Records retrieved",
+                    stat["overall"]["md_retrieved"],
+                    "*",
+                    f"curated ({round(perc_curated*100, 2)}%)",
+                    str(statuts_info["status"]["LPI_recs"]),
+                )
+            else:
+                self.stat_print(
+                    False, "Records retrieved", stat["overall"]["md_retrieved"]
+                )
             print(" ______________________________________________________________")
             print(" | Metadata preparation                                         ")
             if stat["currently"]["md_retrieved"] > 0:
@@ -936,7 +946,7 @@ class Status(CheckProcess):
         local_repos = self.REVIEW_MANAGER.load_local_registry()
 
         for repo in local_repos:
-            CHECK_PROCESS = CheckProcess(path=repo["source_url"])
+            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
             repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
             repo["size"] = repo_stat["status"]["overall"]["md_imported"]
             if repo_stat["atomic_steps"] != 0:

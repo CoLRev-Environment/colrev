@@ -6,8 +6,11 @@ from colrev_core.process import ProcessType
 
 
 class Paper(Process):
-    def __init__(self):
-        super().__init__(ProcessType.screen)
+    def __init__(self, REVIEW_MANAGER):
+        super().__init__(REVIEW_MANAGER, ProcessType.explore)
+
+    def check_precondition(self) -> None:
+        return
 
     def main(self) -> None:
         import os
