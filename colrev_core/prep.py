@@ -297,6 +297,11 @@ class Preparation(Process):
                             word.text, word.text.title()
                         )
 
+        if record.get("volume", "") == "ahead-of-print":
+            del record["volume"]
+        if record.get("number", "") == "ahead-of-print":
+            del record["number"]
+
         return record
 
     def __title_if_mostly_upper(self, input_string: str) -> str:

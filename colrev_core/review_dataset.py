@@ -1060,9 +1060,13 @@ class ReviewDataset:
                 paths=str(MAIN_REFERENCES_RELATIVE)
             )
         )
-
         prior: dict = {"curated_records": []}
-        filecontents = list(revlist)[0][1]
+
+        try:
+            filecontents = list(revlist)[0][1]
+        except IndexError:
+            pass
+            return
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 

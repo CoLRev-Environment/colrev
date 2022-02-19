@@ -2,6 +2,7 @@
 import itertools
 import re
 import shutil
+import string
 import typing
 from pathlib import Path
 
@@ -214,6 +215,8 @@ class Loader(Process):
                 )
         if "pages" in record:
             record["pages"] = record["pages"].replace("–", "--")
+            if record["pages"].count("-") == 1:
+                record["pages"] = record["pages"].replace("-", "--")
 
         if "number" not in record and "issue" in record:
             record.update(number=record["issue"])
@@ -602,6 +605,86 @@ class Loader(Process):
 
         return corresponding_bib_file
 
+    def get_unique_id(self, ID: str, ID_list: typing.List[str]) -> str:
+
+        order = 0
+        letters = list(string.ascii_lowercase)
+        temp_ID = ID
+        next_unique_ID = temp_ID
+        appends: list = []
+        while next_unique_ID in ID_list:
+            if len(appends) == 0:
+                order += 1
+                appends = [p for p in itertools.product(letters, repeat=order)]
+            next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
+
+        return next_unique_ID
+
+    def __inplace_change_second(
+        self, filename: Path, old_string: str, new_string: str
+    ) -> None:
+        new_file_lines = []
+        with open(filename) as f:
+            first_read = False
+            replaced = False
+            for line in f.readlines():
+                if old_string in line and not first_read:
+                    first_read = True
+                if old_string in line and first_read and not replaced:
+                    line = line.replace(old_string, new_string)
+                    replaced = True
+                new_file_lines.append(line)
+
+            # s = f.read()
+            # if old_string not in s:
+            #     return
+        with open(filename, "w") as f:
+            for s in new_file_lines:
+                f.write(s)
+        return
+
+    def resolve_non_unique_IDs(self, corresponding_bib_file: Path) -> None:
+
+        with open(corresponding_bib_file) as bibtex_file:
+            db = BibTexParser(
+                customization=convert_to_unicode,
+                ignore_nonstandard_types=True,
+                common_strings=True,
+            ).parse_file(bibtex_file, partial=True)
+
+        IDs_to_update = []
+        current_IDs = [x["ID"] for x in db.entries]
+        for record in db.entries:
+            if len([x for x in current_IDs if x == record["ID"]]) > 1:
+                new_id = self.get_unique_id(record["ID"], current_IDs)
+                IDs_to_update.append([record["ID"], new_id])
+                current_IDs.append(new_id)
+
+        if len(IDs_to_update) > 0:
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
+            self.REVIEW_MANAGER.create_commit(
+                f"Save original search file: {corresponding_bib_file.name}"
+            )
+
+            for old_id, new_id in IDs_to_update:
+                self.logger.info(
+                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                )
+                self.report_logger.info(
+                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                )
+                self.__inplace_change_second(
+                    corresponding_bib_file, f"{old_id},", f"{new_id},"
+                )
+            # with open(corresponding_bib_file, "w") as fi:
+            #     fi.write(bibtexparser.dumps(db))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
+            self.REVIEW_MANAGER.create_commit(
+                f"Resolve non-unique IDs in {corresponding_bib_file.name}"
+            )
+
+        return
+
     def __add_sources(self) -> None:
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
             str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
@@ -649,6 +732,8 @@ class Loader(Process):
             self.report_logger.info(f"Load {search_file.name}")
             self.logger.info(f"Load {search_file.name}")
             saved_args["file"] = search_file.name
+
+            self.resolve_non_unique_IDs(corresponding_bib_file)
 
             search_records = self.__load_records(corresponding_bib_file)
             nr_search_recs = len(search_records)
