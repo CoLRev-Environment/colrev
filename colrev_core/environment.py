@@ -35,8 +35,9 @@ class LocalIndex(Process):
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
 
-    def __init__(self, REVIEW_MANAGER, notify: bool = True):
+    def __init__(self, REVIEW_MANAGER):
         from git.exc import NoSuchPathError
+        from git.exc import InvalidGitRepositoryError
 
         super().__init__(
             REVIEW_MANAGER, ProcessType.explore, notify_state_transition_process=False
@@ -59,7 +60,7 @@ class LocalIndex(Process):
                     "source_link": shared_url.rstrip(".git"),
                 }
                 self.local_repos.append(repo)
-            except NoSuchPathError:
+            except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
 
     def __robust_append(self, string_to_hash: str, to_append: str) -> str:

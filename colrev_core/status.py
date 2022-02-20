@@ -260,12 +260,20 @@ class Status(Process):
         return [nr_commits_behind, nr_commits_ahead]
 
     def get_environment_instructions(self) -> list:
+        from colrev_core.review_manager import ReviewManager
+        from git.exc import NoSuchPathError
+        from git.exc import InvalidGitRepositoryError
+
         environment_instructions = []
 
         local_registry = self.REVIEW_MANAGER.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
         for registered_path in registered_paths:
-            if not registered_path.is_dir():
+
+            try:
+                ReviewManager(str(registered_path))
+            except (NoSuchPathError, InvalidGitRepositoryError):
+                pass
                 instruction = {
                     "msg": "Locally registered repo no longer exists.",
                     "cmd": f"colrev config --remove_from_registry {registered_path}",
@@ -923,8 +931,11 @@ class Status(Process):
 
     def get_environment_details(self) -> dict:
         from colrev_core.environment import LocalIndex
+        from colrev_core.review_manager import ReviewManager
         import os
         import time
+        from git.exc import NoSuchPathError
+        from git.exc import InvalidGitRepositoryError
 
         environment_details = {}
         record_index_files = list(LocalIndex.rind_path.glob("**/*"))
@@ -942,24 +953,36 @@ class Status(Process):
 
         local_repos = self.REVIEW_MANAGER.load_local_registry()
 
+        repos = []
+        broken_links = []
         for repo in local_repos:
-            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
-            repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
-            repo["size"] = repo_stat["status"]["overall"]["md_imported"]
-            if repo_stat["atomic_steps"] != 0:
-                repo["progress"] = round(
-                    repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"], 2
-                )
-            else:
-                repo["progress"] = -1
+            try:
+                cp_REVIEW_MANAGER = ReviewManager(path_str=repo["source_url"])
+                CHECK_PROCESS = CheckProcess(cp_REVIEW_MANAGER)
+                repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
+                repo["size"] = repo_stat["status"]["overall"]["md_imported"]
+                if repo_stat["atomic_steps"] != 0:
+                    repo["progress"] = round(
+                        repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
+                        2,
+                    )
+                else:
+                    repo["progress"] = -1
 
-            repo["remote"] = False
-            git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-            for remote in git_repo.remotes:
-                if remote.url:
-                    repo["remote"] = True
+                repo["remote"] = False
+                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                for remote in git_repo.remotes:
+                    if remote.url:
+                        repo["remote"] = True
+                repos.append(repo)
+            except (NoSuchPathError, InvalidGitRepositoryError):
+                broken_links.append(repo)
+                pass
 
-        environment_details["local_repos"] = {"repos": local_repos}
+        environment_details["local_repos"] = {
+            "repos": repos,
+            "broken_links": broken_links,
+        }
         return environment_details
 
 
