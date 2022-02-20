@@ -22,13 +22,6 @@ class PDFPrepMan(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
     def get_data(self) -> dict:
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()

@@ -96,9 +96,6 @@ class TEI(Process):
                 raise TEI_Exception()
             self.root = etree.fromstring(xml_string)
 
-    def check_precondition(self) -> None:
-        return
-
     def start_grobid(self) -> bool:
         import os
         import subprocess

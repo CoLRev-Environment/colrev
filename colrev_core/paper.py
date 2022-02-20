@@ -9,9 +9,6 @@ class Paper(Process):
     def __init__(self, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
-    def check_precondition(self) -> None:
-        return
-
     def main(self) -> None:
         import os
         import requests

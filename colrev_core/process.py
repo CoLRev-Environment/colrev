@@ -113,9 +113,76 @@ class Process:
     def run_process(self, *args):
         self.processing_function(*args)
 
-    # Note: process subtypes will override this function
     def check_precondition(self) -> None:
-        raise NotImplementedError()
+
+        if ProcessType.load == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[
+                    self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
+                    self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
+                ]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.prep == self.type:
+            if self.notify_state_transition_process:
+                self.require_clean_repo_general()
+                self.check_process_model_precondition()
+
+        elif ProcessType.prep_man == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.dedupe == self.type:
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
+
+        elif ProcessType.prescreen == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.pdf_get == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.pdf_get_man == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.pdf_prep == self.type:
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
+
+        elif ProcessType.pdf_prep_man == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.screen == self.type:
+            self.require_clean_repo_general()
+            self.check_process_model_precondition()
+
+        elif ProcessType.data == self.type:
+            self.require_clean_repo_general(
+                ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
+            )
+            self.check_process_model_precondition()
+
+        elif ProcessType.format == self.type:
+            pass
+        elif ProcessType.explore == self.type:
+            pass
+        elif ProcessType.check == self.type:
+            pass
 
     def check_process_model_precondition(self) -> None:
         PROCESS_MODEL = ProcessModel(

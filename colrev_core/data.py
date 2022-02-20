@@ -35,13 +35,6 @@ class Data(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
     def get_record_ids_for_synthesis(self, records: typing.List[dict]) -> list:
         return [
             x["ID"]

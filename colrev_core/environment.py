@@ -62,9 +62,6 @@ class LocalIndex(Process):
             except NoSuchPathError:
                 pass
 
-    def check_precondition(self) -> None:
-        return
-
     def __robust_append(self, string_to_hash: str, to_append: str) -> str:
         to_append = to_append.replace("\n", " ").rstrip().lstrip().replace("–", " ")
         to_append = re.sub(r"[\.\:“”’]", "", to_append)

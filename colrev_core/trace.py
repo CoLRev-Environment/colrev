@@ -17,9 +17,6 @@ class Trace(Process):
 
         logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
-    def check_precondition(self) -> None:
-        return
-
     def __lpad_multiline(self, s: str, lpad: int) -> str:
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])

@@ -14,6 +14,7 @@ class Initializer:
     ) -> None:
 
         saved_args = locals()
+
         if project_name is not None:
             self.project_name = project_name
         else:
@@ -65,7 +66,7 @@ class Initializer:
             self.__retrieve_package_file(rp, p)
 
         self.__inplace_change(
-            Path("readme.md"), "{{project_name}}", self.project_name.rstrip(" ")
+            Path("readme.md"), "{{project_title}}", self.project_name.rstrip(" ")
         )
 
         global_git_vars = self.__get_name_mail_from_global_git_config()

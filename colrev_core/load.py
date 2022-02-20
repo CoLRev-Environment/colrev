@@ -53,16 +53,6 @@ class Loader(Process):
             "pdf_refs": self.__pdfRefs2bib,
         }
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[
-                self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
-                self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
-            ]
-        )
-        super().check_process_model_precondition()
-        return
-
     def get_search_files(self, restrict: list = None) -> typing.List[Path]:
         """ "Retrieve search files"""
 

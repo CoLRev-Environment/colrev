@@ -24,9 +24,6 @@ class Validate(Process):
 
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
 
-    def check_precondition(self) -> None:
-        return
-
     def load_search_records(self, bib_file: Path) -> list:
 
         with open(bib_file) as bibtex_file:

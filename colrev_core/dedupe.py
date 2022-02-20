@@ -26,11 +26,6 @@ class Dedupe(Process):
 
         pd.options.mode.chained_assignment = None  # default='warn'
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
     ###########################################################################
 
     # Active-learning deduplication

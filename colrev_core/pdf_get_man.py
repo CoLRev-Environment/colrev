@@ -19,13 +19,6 @@ class PDFRetrievalMan(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
     def get_pdf_get_man(self, records: typing.List[dict]) -> list:
         missing_records = []
         for record in records:

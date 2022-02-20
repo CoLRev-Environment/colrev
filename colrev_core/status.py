@@ -15,9 +15,6 @@ class Status(Process):
     def __init__(self, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
-    def check_precondition(self) -> None:
-        return
-
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
         number_in_bib = 0

@@ -42,13 +42,6 @@ class PDF_Retrieval(Process):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
     def __copy_pdfs_to_repo(self) -> None:
         self.logger.info("Copy PDFs to dir")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()

@@ -190,12 +190,6 @@ class Preparation(Process):
         self.CPUS = self.CPUS * 5
         self.NER = spacy.load("en_core_web_sm")
 
-    def check_precondition(self) -> None:
-        if self.notify_state_transition_process:
-            super().require_clean_repo_general()
-            super().check_process_model_precondition()
-        return
-
     def __correct_recordtype(self, record: dict) -> dict:
 
         if self.__is_complete(record) and not self.__has_inconsistent_fields(record):

@@ -73,11 +73,6 @@ class PDF_Preparation(Process):
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"] * 2
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
     def __extract_text_by_page(self, record: dict, pages: list = None) -> str:
 
         text_list: list = []

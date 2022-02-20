@@ -14,11 +14,6 @@ class Screen(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        super().check_process_model_precondition()
-        return
-
     def include_all_in_screen(
         self,
     ) -> None:

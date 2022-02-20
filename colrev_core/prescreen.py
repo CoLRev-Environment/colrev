@@ -17,14 +17,6 @@ class Prescreen(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def check_precondition(self) -> None:
-
-        super().require_clean_repo_general(
-            ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
-        )
-        super().check_process_model_precondition()
-        return
-
     def export_table(self, export_table_format: str) -> None:
         self.logger.info("Loading records for export")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
