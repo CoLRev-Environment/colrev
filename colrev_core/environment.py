@@ -551,6 +551,8 @@ class LocalIndex(Process):
                         "record": record,
                     }
                 )
+        if len(duplicate_repr_list) == 0:
+            return
 
         origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
         non_identical_representations: typing.List[list] = []
@@ -593,7 +595,7 @@ class LocalIndex(Process):
                     non_identical_representations, unprepared_record, record
                 )
                 j_variations = self.__append_j_variation(
-                    j_variations, origin_record, record
+                    j_variations, unprepared_record, record
                 )
 
             if "dblp_key" in record:
@@ -602,7 +604,7 @@ class LocalIndex(Process):
                     non_identical_representations, unprepared_record, record
                 )
                 j_variations = self.__append_j_variation(
-                    j_variations, origin_record, record
+                    j_variations, unprepared_record, record
                 )
         # print(j_variations)
         # 2. add representations to index
@@ -725,7 +727,8 @@ class LocalIndex(Process):
             self.logger.info(f"Index records from {source_url}")
 
             # get ReviewManager for project (after chdir)
-            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
+            REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
+            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
 
             if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 continue
