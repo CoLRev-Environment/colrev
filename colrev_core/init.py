@@ -8,13 +8,16 @@ import git
 class Initializer:
     def __init__(
         self,
-        project_title: str,
+        project_name: str,
         SHARE_STAT_REQ: str,
         local_index_repo: bool = False,
     ) -> None:
 
         saved_args = locals()
-        self.project_title = project_title
+        if project_name is not None:
+            self.project_name = project_name
+        else:
+            self.project_name = str(Path.cwd().name)
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
 
@@ -37,9 +40,7 @@ class Initializer:
 
         report_logger = logging.getLogger("colrev_core_report")
         report_logger.info("Initialize review repository")
-        report_logger.info(
-            "Set project title:".ljust(30, " ") + f"{self.project_title}"
-        )
+        report_logger.info("Set project title:".ljust(30, " ") + f"{self.project_name}")
         report_logger.info(
             "Set SHARE_STAT_REQ:".ljust(30, " ") + f"{self.SHARE_STAT_REQ}"
         )
@@ -64,7 +65,7 @@ class Initializer:
             self.__retrieve_package_file(rp, p)
 
         self.__inplace_change(
-            Path("readme.md"), "{{project_title}}", self.project_title.rstrip(" ")
+            Path("readme.md"), "{{project_name}}", self.project_name.rstrip(" ")
         )
 
         global_git_vars = self.__get_name_mail_from_global_git_config()
