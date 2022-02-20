@@ -290,6 +290,13 @@ class ReviewDataset:
     ) -> typing.List[dict]:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
+        from colrev_core.prep import Preparation
+        from colrev_core.environment import LocalIndex
+
+        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        self.PREPARATION = Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
 
         if len(records) == 0:
             records = self.load_records()
@@ -297,7 +304,7 @@ class ReviewDataset:
         ID_list = [record["ID"] for record in records]
 
         for record in records:
-            self.REVIEW_MANAGER.logger.info(f'Set ID for {record["ID"]}')
+            self.REVIEW_MANAGER.logger.debug(f'Set ID for {record["ID"]}')
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
                     continue
@@ -373,14 +380,7 @@ class ReviewDataset:
         raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
-        from colrev_core.prep import Preparation
-        from colrev_core.environment import LocalIndex
         from colrev_core.environment import RecordNotInIndexException
-
-        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
-        self.PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
