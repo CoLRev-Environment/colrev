@@ -112,6 +112,7 @@ class Status(Process):
                     "dest": RecordState.md_imported,
                 }
             ]
+            # Go backward through the process model
             while predecessors:
                 predecessors = [
                     t
@@ -151,8 +152,6 @@ class Status(Process):
             non_completed += stat["status"]["currently"][str(current_state)]
 
         stat["status"]["currently"]["non_completed"] = non_completed
-        stat["atomic_steps"] = atomic_step_number * st_o[str(RecordState.md_imported)]
-        stat["completed_atomic_steps"] = completed_atomic_steps
 
         stat["status"]["currently"]["non_processed"] = (
             stat["status"]["currently"]["md_imported"]
@@ -182,6 +181,15 @@ class Status(Process):
             "currently"
         ]["rev_prescreen_included"]
 
+        # note: 10 steps
+        stat["atomic_steps"] = (
+            10 * st_o[str(RecordState.md_imported)]
+            - stat["status"]["currently"]["md_duplicates_removed"] * 8
+            - stat["status"]["currently"]["rev_prescreen_excluded"] * 7
+            - stat["status"]["currently"]["pdf_not_available"] * 6
+            - stat["status"]["currently"]["rev_excluded"]
+        )
+        stat["completed_atomic_steps"] = completed_atomic_steps
         self.REVIEW_MANAGER.logger.debug(
             f"stat: {self.REVIEW_MANAGER.pp.pformat(stat)}"
         )
@@ -326,6 +334,19 @@ class Status(Process):
             item.a_path for item in git_repo.index.diff(None)
         ] + [x.a_path for x in git_repo.head.commit.diff()]
 
+        try:
+            revlist = (
+                (
+                    commit.hexsha,
+                    (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                )
+                for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            )
+            filecontents = list(revlist)[0][1]
+        except IndexError:
+            pass
+            MAIN_REFS_CHANGED = False
+
         # If changes in MAIN_REFERENCES are staged, we need to detect the process type
         if MAIN_REFS_CHANGED:
             # Detect and validate transitions
@@ -335,14 +356,6 @@ class Status(Process):
 
             from colrev_core.process import ProcessModel
 
-            revlist = (
-                (
-                    commit.hexsha,
-                    (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
-                )
-                for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
-            )
-            filecontents = list(revlist)[0][1]
             committed_record_states_list = (
                 self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list_from_file_obj(
                     io.StringIO(filecontents.decode("utf-8"))
@@ -560,6 +573,7 @@ class Status(Process):
                 if nr_commits_behind > 0:
                     item = {
                         "title": "Remote changes available on the server",
+                        "level": "WARNING",
                         "msg": "Once you have committed your changes, get the latest "
                         + "remote changes",
                         "cmd_after": "git add FILENAME \n git commit -m 'MSG' \n "

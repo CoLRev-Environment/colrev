@@ -950,6 +950,33 @@ class LocalIndex(Process):
         return
 
 
+class Curations:
+
+    curations_path = Path.home().joinpath(".colrev/curated_metadata")
+
+    def __init__(self):
+        pass
+
+    def install_curated_resource(self, curated_resource: str) -> bool:
+        import git
+
+        # check if url else return False
+        # validators.url(curated_resource)
+        if "http" not in curated_resource:
+            curated_resource = "https://github.com/" + curated_resource
+        self.curations_path.mkdir(exist_ok=True, parents=True)
+        repo_dir = self.curations_path / Path(curated_resource.split("/")[-1])
+        if repo_dir.is_dir():
+            print(f"Repo already exists ({repo_dir})")
+            return False
+        print(f"Download curated resource from {curated_resource}")
+        git.Repo.clone_from(curated_resource, repo_dir)
+        REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
+        REVIEW_MANAGER.register_repo()
+
+        return True
+
+
 class RecordNotInIndexException(Exception):
     def __init__(self, id: str = None):
         if id is not None:

@@ -1143,7 +1143,7 @@ class ReviewManager:
 
         local_registry = self.load_local_registry()
         registered_paths = [x["source_url"] for x in local_registry]
-        path_to_register = Path.cwd()
+        path_to_register = self.path
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
                 logger.error(f"Path already registered: {path_to_register}")

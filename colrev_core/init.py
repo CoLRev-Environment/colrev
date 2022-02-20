@@ -101,6 +101,7 @@ class Initializer:
             + "venv\n"
             + ".references_learned_settings\n"
             + ".corrections"
+            + ".ipynb_checkpoints/"
         )
         f.close()
         return
