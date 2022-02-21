@@ -267,12 +267,46 @@ class Status(Process):
 
         return [nr_commits_behind, nr_commits_ahead]
 
-    def get_environment_instructions(self) -> list:
+    def get_environment_instructions(self, stat: dict) -> list:
         from colrev_core.review_manager import ReviewManager
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
 
         environment_instructions = []
+
+        if stat["status"]["currently"]["md_imported"] > 10:
+            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as r:
+                outlets = []
+                for line in r.readlines():
+
+                    if "journal" == line.lstrip()[:7]:
+                        journal = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(journal)
+                    if "booktitle" == line.lstrip()[:9]:
+                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(booktitle)
+            outlet_counter: typing.List[typing.Tuple[str, int]] = [
+                (j, x) for j, x in Counter(outlets).most_common(10) if x > 5
+            ]
+            selected = []
+            cumulative = 0.0
+            for candidate, freq in outlet_counter:
+                selected.append((candidate, freq))
+                cumulative += freq / len(outlets)
+                if cumulative > 0.7:
+                    break
+            if len(selected) > 0:
+                journals = "\n   - " + "\n   - ".join(
+                    [f"{candidate} ({round(freq, 2)}%)" for candidate, freq in selected]
+                )
+                instruction = {
+                    "msg": "Search and download curated metadata for your "
+                    "project (if available). \n  The most common journals in "
+                    f"your project are {journals}.\n"
+                    "  They may be available at "
+                    "https://github.com/topics/colrev-curated",
+                }
+                environment_instructions.append(instruction)
 
         local_registry = self.REVIEW_MANAGER.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
@@ -681,7 +715,7 @@ class Status(Process):
     def get_instructions(self, stat: dict) -> dict:
         instructions = {
             "review_instructions": self.get_review_instructions(stat),
-            "environment_instructions": self.get_environment_instructions(),
+            "environment_instructions": self.get_environment_instructions(stat),
             "collaboration_instructions": self.get_collaboration_instructions(stat),
         }
         self.REVIEW_MANAGER.logger.debug(
