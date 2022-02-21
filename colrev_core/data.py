@@ -539,6 +539,103 @@ class Data(Process):
                 file.write(filedata.decode("utf-8"))
         return
 
+    def __prep_references(self, records) -> pd.DataFrame:
+        for record in records:
+            record["outlet"] = record.get("journal", record.get("booktitle", "NA"))
+
+        references = pd.DataFrame.from_dict(records)
+
+        required_cols = [
+            "ID",
+            "ENTRYTYPE",
+            "author",
+            "title",
+            "journal",
+            "booktitle",
+            "outlet",
+            "year",
+            "volume",
+            "number",
+            "pages",
+            "doi",
+        ]
+        available_cols = references.columns.intersection(set(required_cols))
+        cols = [x for x in required_cols if x in available_cols]
+        references = references[cols]
+        return references
+
+    def __prep_observations(self, references: dict, records) -> pd.DataFrame:
+
+        included_papers = [
+            x["ID"]
+            for x in records
+            if x["status"] in [RecordState.rev_synthesized, RecordState.rev_included]
+        ]
+        observations = references[references["ID"].isin(included_papers)].copy()
+        observations.loc[:, "year"] = observations.loc[:, "year"].astype(int)
+        missing_outlet = observations[observations["outlet"].isnull()]["ID"].tolist()
+        if len(missing_outlet) > 0:
+            self.REVIEW_MANAGER.logger.info(f"No outlet: {missing_outlet}")
+        return observations
+
+    def profile(self) -> None:
+
+        self.REVIEW_MANAGER.logger.info("Create sample profile")
+
+        # if not status.get_completeness_condition():
+        #     self.REVIEW_MANAGER.logger.warning(
+        #  f"{colors.RED}Sample not completely processed!{colors.END}")
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+        output_dir = self.REVIEW_MANAGER.path / Path("output")
+        output_dir.mkdir(exist_ok=True)
+
+        references = self.__prep_references(records)
+        observations = self.__prep_observations(references, records)
+
+        if observations.empty:
+            self.REVIEW_MANAGER.logger.info("No sample/observations available")
+            return
+
+        # TODO: fill missing years
+        self.REVIEW_MANAGER.logger.info("Generate output/sample.csv")
+        observations.to_csv(output_dir / Path("sample.csv"), index=False)
+
+        tabulated = pd.pivot_table(
+            observations[["outlet", "year"]],
+            index=["outlet"],
+            columns=["year"],
+            aggfunc=len,
+            fill_value=0,
+            margins=True,
+        )
+        self.REVIEW_MANAGER.logger.info("Generate profile output/journals_years.csv")
+        tabulated.to_csv(output_dir / Path("journals_years.csv"))
+
+        tabulated = pd.pivot_table(
+            observations[["ENTRYTYPE", "year"]],
+            index=["ENTRYTYPE"],
+            columns=["year"],
+            aggfunc=len,
+            fill_value=0,
+            margins=True,
+        )
+        self.REVIEW_MANAGER.logger.info("Generate output/ENTRYTYPES.csv")
+        tabulated.to_csv(output_dir / Path("ENTRYTYPES.csv"))
+
+        self.REVIEW_MANAGER.logger.info(f"Files are available in {output_dir.name}")
+
+        return
+
+
+class colors:
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    ORANGE = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"
+
 
 class ManuscriptRecordSourceTagError(Exception):
     def __init__(self, msg):
