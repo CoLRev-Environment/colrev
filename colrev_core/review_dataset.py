@@ -941,6 +941,24 @@ class ReviewDataset:
                 line = f.readline()
         return IDs
 
+    def get_string_representation(self, record: dict) -> str:
+        string_representation = self.LOCAL_INDEX.get_string_representation(record)
+        return string_representation
+
+    def retrieve_by_string_representation(
+        self, indexed_record: dict, records: typing.List[typing.Dict]
+    ) -> dict:
+        from colrev_core.environment import LocalIndex
+
+        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        string_repr = self.get_string_representation(indexed_record)
+        record_l = [
+            x for x in records if self.get_string_representation(x) == string_repr
+        ]
+        if len(record_l) != 1:
+            raise RecordNotInRepoException
+        return record_l.pop()
+
     # CHECKS --------------------------------------------------------------
 
     def check_main_references_duplicates(self, data: dict) -> None:
@@ -1139,6 +1157,7 @@ class ReviewDataset:
                         "metadata_source",
                         "source_url",
                         "ID",
+                        "grobid-version",
                     ]
                 ]
 
@@ -1450,6 +1469,55 @@ class ReviewDataset:
         hash = self.__git_repo.git.execute(["git", "write-tree"])
         return str(hash)
 
+    def get_remote_commit_differences(self, git_repo: git.Repo) -> list:
+        from git.exc import GitCommandError
+
+        nr_commits_behind, nr_commits_ahead = -1, -1
+
+        origin = git_repo.remotes.origin
+        if origin.exists():
+            try:
+                origin.fetch()
+            except GitCommandError:
+                pass  # probably not online
+                return [-1, -1]
+
+        if git_repo.active_branch.tracking_branch() is not None:
+
+            branch_name = str(git_repo.active_branch)
+            tracking_branch_name = str(git_repo.active_branch.tracking_branch())
+            self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
+
+            behind_operation = branch_name + ".." + tracking_branch_name
+            commits_behind = git_repo.iter_commits(behind_operation)
+            nr_commits_behind = sum(1 for c in commits_behind)
+
+            ahead_operation = tracking_branch_name + ".." + branch_name
+            commits_ahead = git_repo.iter_commits(ahead_operation)
+            nr_commits_ahead = sum(1 for c in commits_ahead)
+
+        return [nr_commits_behind, nr_commits_ahead]
+
+    def behind_remote(self) -> bool:
+
+        CONNECTED_REMOTE = 0 != len(self.__git_repo.remotes)
+        if CONNECTED_REMOTE:
+            origin = self.__git_repo.remotes.origin
+            if origin.exists():
+                (
+                    nr_commits_behind,
+                    nr_commits_ahead,
+                ) = self.get_remote_commit_differences(self.__git_repo)
+        if nr_commits_behind > 0:
+            return True
+        return False
+
+    def pull_if_repo_clean(self):
+        if not self.__git_repo.is_dirty():
+            o = self.__git_repo.remotes.origin
+            o.pull()
+        return
+
 
 class SearchDetailsError(Exception):
     def __init__(
@@ -1512,6 +1580,15 @@ class ReviewManagerNotNofiedError(Exception):
             "inform the review manager about the next process in advance"
             + " to avoid conflicts (run review_manager.notify(processing_function))"
         )
+        super().__init__(self.message)
+
+
+class RecordNotInRepoException(Exception):
+    def __init__(self, id: str = None):
+        if id is not None:
+            self.message = f"Record not in index ({id})"
+        else:
+            self.message = "Record not in index"
         super().__init__(self.message)
 
 

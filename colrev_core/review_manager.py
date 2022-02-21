@@ -1085,6 +1085,8 @@ class ReviewManager:
             )
             if "Update pre-commit-config" in msg:
                 script = "pre-commit autoupdate"
+            if "__apply_correction" in script:
+                script = "apply_corrections"
 
             if manual_author:
                 git_author = git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"])
@@ -1187,7 +1189,6 @@ class ReviewManager:
             for item in change_itemset:
                 self.pp.pprint(item["changes"])
             if "y" == input("\nConfirm changes? (y/n)"):
-                input(f"please pull the latest changes for {source_url}")
                 self.__apply_correction(source_url, change_itemset)
 
                 print(
@@ -1202,11 +1203,21 @@ class ReviewManager:
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
         import bibtexparser
+        from colrev_core.review_dataset import RecordNotInRepoException
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        CHECK_PROCESS = CheckProcess(self)
-        git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        check_REVIEW_MANAGER = ReviewManager(path_str=source_url)
+        CHECK_PROCESS = CheckProcess(check_REVIEW_MANAGER)
+        REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
+        git_repo = REVIEW_DATASET.get_repo()
+        if REVIEW_DATASET.behind_remote():
+            self.logger.error(
+                "Repo behind remote. Pull first to avoid conflicts.\n"
+                f"colrev environment --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
+            )
+            return
+
         if git_repo.is_dirty():
             return
 
@@ -1223,22 +1234,19 @@ class ReviewManager:
             "doi",
         ]
 
-        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = REVIEW_DATASET.load_records()
         pull_request_msgs = []
         for change_item in change_list:
             indexed_record = change_item["indexed_record"]
 
-            # TODO : we assume that dois match...!?!?
-            # Better: save the original IDs in the indexed records
-            # (even if multiple records are merged)
-            record_l = [
-                x for x in records if x.get("doi", "") == indexed_record.get("doi", "")
-            ]
-            if len(record_l) != 1:
+            try:
+                record = REVIEW_DATASET.retrieve_by_string_representation(
+                    indexed_record, records
+                )
+            except RecordNotInRepoException:
+                pass
                 print("record not found")
                 continue
-
-            record = record_l.pop()
 
             record_branch_name = record["ID"]
             counter = 1
@@ -1278,9 +1286,9 @@ class ReviewManager:
                     "comment": "",
                 }
 
-                sources = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+                sources = REVIEW_DATASET.load_sources()
                 sources.append(new_record)
-                CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
+                REVIEW_DATASET.save_sources(sources)
 
             # append original record to search/corrections.bib
             # add ID as an origin to record
@@ -1301,9 +1309,20 @@ class ReviewManager:
             prior_rec["ID"] = next_unique_ID
 
             # TODO drop non-essential fields
-            del prior_rec["status"]
-            del prior_rec["origin"]
-            del prior_rec["metadata_source"]
+            if "status" in prior_rec:
+                del prior_rec["status"]
+            if "origin" in prior_rec:
+                del prior_rec["origin"]
+            if "metadata_source" in prior_rec:
+                del prior_rec["metadata_source"]
+            if "doi" in prior_rec:
+                del prior_rec["doi"]
+            if "pdf_hash" in prior_rec:
+                del prior_rec["pdf_hash"]
+            if "grobid-version" in prior_rec:
+                del prior_rec["grobid-version"]
+            if "file" in prior_rec:
+                del prior_rec["file"]
             corrections_bib.entries.append(prior_rec)
             record["origin"] = (
                 record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
@@ -1338,12 +1357,12 @@ class ReviewManager:
                 CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
                 / Path("corrections.bib")
             )
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(crb_path)
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            REVIEW_DATASET.add_changes(crb_path)
+            REVIEW_DATASET.add_changes(
                 str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
             )
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            REVIEW_DATASET.save_records(records)
+            REVIEW_DATASET.add_record_changes()
             CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
 
             git_repo.remotes.origin.push(

@@ -162,10 +162,11 @@ class Process:
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_prep_man == self.type:
-            self.require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
-            )
-            self.check_process_model_precondition()
+            # self.require_clean_repo_general(
+            #     ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
+            # )
+            # self.check_process_model_precondition()
+            pass
 
         elif ProcessType.screen == self.type:
             self.require_clean_repo_general()

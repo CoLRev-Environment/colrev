@@ -313,7 +313,7 @@ class Status(Process):
         for registered_path in registered_paths:
 
             try:
-                ReviewManager(str(registered_path))
+                REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
             except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
                 instruction = {
@@ -321,7 +321,14 @@ class Status(Process):
                     "cmd": f"colrev config --remove_from_registry {registered_path}",
                 }
                 environment_instructions.append(instruction)
-
+                continue
+            if "curated_metadata" in str(registered_path):
+                if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
+                    instruction = {
+                        "msg": "Updates available for curated repo.",
+                        "cmd": f"colrev environment --update {registered_path}",
+                    }
+                    environment_instructions.append(instruction)
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",

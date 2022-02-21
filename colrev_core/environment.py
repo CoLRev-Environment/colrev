@@ -143,7 +143,7 @@ class LocalIndex(Process):
             author_list.append(str(parsed_name))
         return " and ".join(author_list)
 
-    def __get_string_representation(self, record: dict) -> str:
+    def get_string_representation(self, record: dict) -> str:
 
         # TODO raise no-prepared error if status =! md_prepared
         # TODO distinguish ENTRYTYPES?
@@ -170,7 +170,7 @@ class LocalIndex(Process):
         return srep
 
     def __get_record_hash(self, record: dict) -> str:
-        string_to_hash = self.__get_string_representation(record)
+        string_to_hash = self.get_string_representation(record)
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, hash: str) -> str:
@@ -275,7 +275,7 @@ class LocalIndex(Process):
     def __record_index(self, record: dict) -> None:
         hash = self.__get_record_hash(record)
         index_fpath = self.__get_record_index_file(hash)
-        string_representation = self.__get_string_representation(record)
+        string_representation = self.get_string_representation(record)
         record["hash_string_representation"] = string_representation
 
         try:
@@ -284,9 +284,9 @@ class LocalIndex(Process):
             retrieved_record = self.retrieve_record_from_index(record)
 
             # if the string_representations are not identical: add to d_index
-            if not self.__get_string_representation(
+            if not self.get_string_representation(
                 retrieved_record
-            ) == self.__get_string_representation(record):
+            ) == self.get_string_representation(record):
                 self.__append_if_duplicate_repr(dupl, record, retrieved_record)
             # Note: we need the hash of retrieved_record (different from record)
             self.__amend_record(self.__get_record_hash(retrieved_record), record)
@@ -338,7 +338,7 @@ class LocalIndex(Process):
                     if not index_fpath.is_file():
                         index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
                         index_fpath.write_text(
-                            gid + "\n" + self.__get_string_representation(record)
+                            gid + "\n" + self.get_string_representation(record)
                         )
                         break
                     else:
@@ -387,7 +387,7 @@ class LocalIndex(Process):
             # print(toc_key)
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
             index_fpath = self.__get_toc_index_file(hash)
-            record_string_repr = self.__get_string_representation(record)
+            record_string_repr = self.get_string_representation(record)
             while True:
                 if not index_fpath.is_file():
                     index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
@@ -419,7 +419,7 @@ class LocalIndex(Process):
 
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
             index_fpath = self.__get_toc_index_file(hash)
-            record_string_repr = self.__get_string_representation(record)
+            record_string_repr = self.get_string_representation(record)
 
             while True:
                 if not index_fpath.is_file():
@@ -478,8 +478,8 @@ class LocalIndex(Process):
         ]
 
         if all(required_field in origin_record for required_field in required_fields):
-            orig_repr = self.__get_string_representation(origin_record)
-            main_repr = self.__get_string_representation(record)
+            orig_repr = self.get_string_representation(origin_record)
+            main_repr = self.get_string_representation(record)
             if orig_repr != main_repr:
                 non_identical_representations.append([orig_repr, main_repr])
 
@@ -614,7 +614,7 @@ class LocalIndex(Process):
 
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
 
-        string_representation_record = self.__get_string_representation(record)
+        string_representation_record = self.get_string_representation(record)
         hash = self.__get_record_hash(record)
         associated_original = ""
         while True:
@@ -826,7 +826,7 @@ class LocalIndex(Process):
 
         hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
         index_fpath = self.__get_toc_index_file(hash)
-        record_string_repr = self.__get_string_representation(record)
+        record_string_repr = self.get_string_representation(record)
 
         saved_toc_record_str_reprs = []
         while True:
@@ -886,13 +886,13 @@ class LocalIndex(Process):
             return self.__prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
-        string_representation_record = self.__get_string_representation(record)
+        string_representation_record = self.get_string_representation(record)
         hash = self.__get_record_hash(record)
         while True:
             try:
                 retrieved_record = self.__retrieve_from_index_based_on_hash(hash)
-                string_representation_retrieved_record = (
-                    self.__get_string_representation(retrieved_record)
+                string_representation_retrieved_record = self.get_string_representation(
+                    retrieved_record
                 )
                 if (
                     string_representation_retrieved_record
