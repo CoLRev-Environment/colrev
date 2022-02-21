@@ -750,8 +750,9 @@ class Status(Process):
             print(" Search")
             perc_curated = 0
             if stat["overall"]["md_prepared"] > 0:
-                perc_curated = (
-                    statuts_info["status"]["LPI_recs"] / stat["overall"]["md_prepared"]
+                perc_curated = statuts_info["status"]["LPI_recs"] / (
+                    stat["overall"]["md_prepared"]
+                    + stat["currently"]["md_needs_manual_preparation"]
                 )
             if stat["overall"]["md_prepared"] > 0:
                 self.stat_print(

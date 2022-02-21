@@ -401,7 +401,7 @@ class Preparation(Process):
 
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
-            if "LOCAL_INDEX" != retrieved_record["metadata_source"]:
+            if "LOCAL_INDEX" != retrieved_record.get("metadata_source", ""):
                 # Try similarity-based retrieval from toc
                 try:
                     retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
@@ -1079,6 +1079,9 @@ class Preparation(Process):
 
     def __get_dblp_venue(self, venue_string: str, type: str) -> str:
         # Note : venue_string should be like "behaviourIT"
+        # Note : journals that have been renamed seem to return the latest
+        # journal name. Example:
+        # https://dblp.org/db/journals/jasis/index.html
         venue = venue_string
         api_url = "https://dblp.org/search/venue/api?q="
         url = api_url + venue_string.replace(" ", "+") + "&format=json"
@@ -1472,7 +1475,7 @@ class Preparation(Process):
             return record
 
         # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-        d = re.match(r"^10.\d{4}/", record["doi"])
+        d = re.match(r"^10.\d{4,9}/", record["doi"])
         if not d:
             del record["doi"]
 
@@ -1658,6 +1661,9 @@ class Preparation(Process):
     def update_metadata_status(self, record: dict) -> dict:
         record = self.__check_potential_retracts(record)
         if "crossmark" in record:
+            return record
+        if "LOCAL_INDEX" == record["metadata_source"]:
+            record.update(status=RecordState.md_prepared)
             return record
 
         self.logger.debug(f'is_complete({record["ID"]}): {self.__is_complete(record)}')

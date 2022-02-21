@@ -55,6 +55,7 @@ class ReviewDataset:
             "source_name",
             "source_url",
             "search_parameters",
+            "last_sync",
             "comment",
         ]
         for x in [x for x in sources_df.columns if x not in orderedCols]:
@@ -63,7 +64,7 @@ class ReviewDataset:
 
         with open(self.REVIEW_MANAGER.paths["SOURCES"], "w") as f:
             yaml.dump(
-                json.loads(sources_df.to_json(orient="records")),
+                json.loads(sources_df.to_json(orient="records", default_handler=str)),
                 f,
                 default_flow_style=False,
                 sort_keys=False,

@@ -57,6 +57,7 @@ class ReviewManager:
         "LOCAL_PAPER_INDEX",
         "OTHER",
         "FEED",
+        "COLREV_REPO",
     ]
 
     notified_next_process = None

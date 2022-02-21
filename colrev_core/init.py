@@ -102,6 +102,7 @@ class Initializer:
             + ".references_learned_settings\n"
             + ".corrections"
             + ".ipynb_checkpoints/"
+            + "pdfs"
         )
         f.close()
         return

@@ -702,6 +702,109 @@ class Loader(Process):
 
         return number_in_bib
 
+    def update_colrev_repo_sources(self) -> None:
+        from colrev_core.review_manager import ReviewManager
+        from colrev_core.process import CheckProcess
+
+        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+        for source in [s for s in sources if "COLREV_REPO" == s["search_type"]]:
+            input(source)
+            SOURCE_REVIEW_MANAGER = ReviewManager(source["source_url"])
+            CHECK_PROCESS = CheckProcess(SOURCE_REVIEW_MANAGER)
+            last_sync = SOURCE_REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
+            if last_sync == source["source"]:
+                print(f'Source up to date: {source["source_url"]}')
+                continue
+            source["last_sync"] = last_sync
+            bib_file_path = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(
+                source["filename"]
+            )
+            self.__update_colrev_repo(CHECK_PROCESS, bib_file_path)
+            self.REVIEW_MANAGER.create_commit(
+                f"Update records from {bib_file_path.name}"
+            )
+
+        return
+
+    def __update_colrev_repo(self, CHECK_PROCESS, bib_file_path) -> None:
+
+        self.logger.info("Update records")
+        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        for record in records:
+            del record["origin"]
+            del record["status"]
+            record["metadata_source"] = "LOCAL_INDEX"
+            if "file" in record:
+                if not Path(record["file"]).is_file():
+                    if (
+                        CHECK_PROCESS.REVIEW_MANAGER.path / Path(record["file"])
+                    ).is_file():
+                        record["file"] = str(
+                            CHECK_PROCESS.REVIEW_MANAGER.path / Path(record["file"])
+                        )
+            if "excl_criteria" in record:
+                del record["excl_criteria"]
+            if "manual_non_duplicate" in record:
+                del record["manual_non_duplicate"]
+            if "manual_duplicate" in record:
+                del record["manual_duplicate"]
+
+        bib_db = BibDatabase()
+        bib_db.entries = records
+
+        bibtex_str = bibtexparser.dumps(
+            bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+        )
+
+        self.logger.info("Save source file")
+        bib_file_path.parent.mkdir(exist_ok=True)
+        with open(bib_file_path, "w") as out:
+            out.write(bibtex_str)
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(bib_file_path))
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            str(self.REVIEW_MANAGER.paths["SOURCES"])
+        )
+
+        return
+
+    def add_colrev_repo(self, repo_path_str: str) -> None:
+        from colrev_core.review_manager import ReviewManager
+        from colrev_core.process import CheckProcess
+
+        SOURCE_REVIEW_MANAGER = ReviewManager(repo_path_str)
+        CHECK_PROCESS = CheckProcess(SOURCE_REVIEW_MANAGER)
+
+        repo_path = Path(repo_path_str)
+        bib_file_path = (
+            self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
+            / repo_path.with_suffix(".bib").name
+        )
+        last_sync = SOURCE_REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
+
+        self.logger.info("Add source information")
+        new_record = {
+            "filename": bib_file_path.name,
+            "search_type": "COLREV_REPO",
+            "source_name": bib_file_path.name,
+            "source_url": repo_path,
+            "search_parameters": "",
+            "last_sync": last_sync,
+            "comment": "",
+        }
+
+        self.append_sources(new_record)
+
+        self.logger.info("Import records")
+        self.__update_colrev_repo(CHECK_PROCESS, bib_file_path)
+
+        saved_args = {"add_colrev_repo": repo_path_str}
+        self.REVIEW_MANAGER.create_commit(
+            f"Import records from {bib_file_path.name}", saved_args=saved_args
+        )
+
+        return
+
     def main(self, keep_ids: bool = False) -> None:
 
         saved_args = locals()
