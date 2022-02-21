@@ -701,8 +701,52 @@ class LocalIndex(Process):
 
     def index_records(self) -> None:
         import shutil
+        import collections
 
-        self.logger.info("Called LocalIndex")
+        self.logger.info("Start LocalIndex")
+
+        self.logger.info("Validate curated metadata")
+
+        curated_outlets = []
+        for source_url in [
+            x["source_url"]
+            for x in self.local_registry
+            if "colrev/curated_metadata/" in x["source_url"]
+        ]:
+            with open(f"{source_url}/readme.md") as f:
+                first_line = f.readline()
+            curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
+
+            with open(f"{source_url}/references.bib") as r:
+                outlets = []
+                for line in r.readlines():
+
+                    if "journal" == line.lstrip()[:7]:
+                        journal = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(journal)
+                    if "booktitle" == line.lstrip()[:9]:
+                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(booktitle)
+
+                if len(set(outlets)) != 1:
+                    self.logger.error(
+                        "Duplicate outlets in curated_metadata of "
+                        f"{source_url} : {','.join(outlets)}"
+                    )
+                    return
+
+        if len(curated_outlets) != len(set(curated_outlets)):
+            duplicated = [
+                item
+                for item, count in collections.Counter(curated_outlets).items()
+                if count > 1
+            ]
+            self.logger.error(
+                f"Duplicate outlets in curated_metadata : {','.join(duplicated)}"
+            )
+            return
+
+        self.logger.info("Start LocalIndex")
 
         self.logger.info("Reset record_index, gid_index, d_index")
         if self.rind_path.is_dir():
@@ -765,7 +809,11 @@ class LocalIndex(Process):
 
                 self.__record_index(record)
                 self.__gid_index(record)
-                self.__toc_index(record)
+
+                # Note : only use curated journal metadata for TOC indices
+                # otherwise, TOCs will be incomplete and affect retrieval
+                if ".colrev/curated_metadata" in source_url:
+                    self.__toc_index(record)
 
             self.__d_index(records)
 
@@ -904,6 +952,18 @@ class LocalIndex(Process):
                     return "yes"
                 else:
                     return "no"
+
+            # Note : We know that records are not duplicates when they are
+            # part of curated_metadata repositories and their IDs are not identical
+            # For the same journal, only deduplicated records are indexed
+            # We make sure that journals are only indexed once
+            if (
+                ".colrev/curated_metadata" in r1_index["source_url"]
+                and ".colrev/curated_metadata" in r2_index["source_url"]
+            ):
+                if r1_index["ID"] != r2_index["ID"]:
+                    return "no"
+
         except RecordNotInIndexException:
             pass
             return "unknown"
