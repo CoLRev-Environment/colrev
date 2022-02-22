@@ -297,19 +297,100 @@ class ReviewManager:
 
         return
 
-    def __check_software(self) -> None:
+    def __get_colrev_versions(self) -> typing.List[str]:
+
+        current_colrev_core_version = version("colrev_core")
+        last_colrev_core_version = current_colrev_core_version
+
         last_commit_message = self.REVIEW_DATASET.get_commit_message(0)
         cmsg_lines = last_commit_message.split("\n")
-        for cmsg_line in cmsg_lines[0:20]:
-            if "- colrev_core:" in cmsg_line:
+        for cmsg_line in cmsg_lines[0:100]:
+            if "colrev_core" in cmsg_line and "version" in cmsg_line:
                 last_colrev_core_version = cmsg_line[cmsg_line.find("version ") + 8 :]
-                current_colrev_core_version = version("colrev_core")
-                last_colrev_core_version == current_colrev_core_version
-                # TODO : how to deal with different versions of colrev_core?
-                # if last_colrev_core_version != current_colrev_core_version:
-                #     raise SoftwareUpgradeError(
-                #         last_colrev_core_version, last_colrev_core_version
-                #     )
+
+        return [last_colrev_core_version, current_colrev_core_version]
+
+    def __check_software(self) -> None:
+        last_version, current_version = self.__get_colrev_versions()
+        if last_version != current_version:
+            raise SoftwareUpgradeError(last_version, current_version)
+        return
+
+    def __inplace_change(
+        self, filename: Path, old_string: str, new_string: str
+    ) -> None:
+        with open(filename) as f:
+            s = f.read()
+            if old_string not in s:
+                logging.info(f'"{old_string}" not found in {filename}.')
+                return
+        with open(filename, "w") as f:
+            s = s.replace(old_string, new_string)
+            f.write(s)
+        return
+
+    def upgrade_colrev(self) -> None:
+        from colrev_core.process import CheckProcess
+
+        last_version, current_version = self.__get_colrev_versions()
+
+        if "+" in last_version:
+            last_version = last_version[: last_version.find("+")]
+        if "+" in current_version:
+            current_version = current_version[: current_version.find("+")]
+
+        cur_major = current_version[: current_version.rfind(".")]
+        next_minor = str(int(current_version[current_version.rfind(".") + 1 :]) + 1)
+        upcoming_version = cur_major + "." + next_minor
+
+        CheckProcess(self)  # to notify
+
+        def migrate_0_3_0(self) -> bool:
+            records = self.REVIEW_DATASET.load_records()
+            for record in records:
+                if "LOCAL_INDEX" == record.get("metadata_source", ""):
+                    record["metadata_source"] = "CURATED"
+
+            self.__inplace_change(
+                self.paths["SOURCES"], "search_type: LOCAL_PAPER_INDEX", "PDFS"
+            )
+            self.REVIEW_DATASET.add_changes(str(self.paths["SOURCES_RELATIVE"]))
+            self.REVIEW_DATASET.save_records(records)
+            self.REVIEW_DATASET.add_record_changes()
+            if self.REVIEW_DATASET.has_changes():
+                return True
+            return False
+
+        # next version should be:
+        # {'from': '0.3.0', "to": '0.4.0', 'script': migrate_0_3_0}
+        # {'from': '0.4.0', "to": upcoming_version, 'script': migrate_0_4_0}
+        migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+            {"from": "0.3.0", "to": upcoming_version, "script": migrate_0_3_0}
+        ]
+
+        while current_version in [x["from"] for x in migration_scripts]:
+            self.logger.info(f"Current CoLRev version: {current_version}")
+
+            migrator = [
+                x for x in migration_scripts if x["from"] == current_version
+            ].pop()
+
+            migration_script = migrator["script"]
+            updated = migration_script(self)
+            if updated:
+                self.logger.info(f"Updated to: {current_version}")
+            else:
+                self.logger.info("Nothing to do.")
+
+            # Note : the version in the commit message will be set to
+            # the current_version immediately. Therefore, use the migrator['to'] field.
+            last_version = migrator["to"]
+
+            if last_version == upcoming_version:
+                break
+
+        if self.REVIEW_DATASET.has_changes():
+            self.create_commit("Upgrade to CoLRev 0.3.0")
 
         return
 
@@ -1401,7 +1482,8 @@ class MissingDependencyError(Exception):
 class SoftwareUpgradeError(Exception):
     def __init__(self, old, new):
         self.message = (
-            f"Detected upgrade from {old} to {new}. Please use XXX to upgreade."
+            f"Detected upgrade from {old} to {new}. To upgrade use\n     "
+            "colrev config --upgrade"
         )
         super().__init__(self.message)
 

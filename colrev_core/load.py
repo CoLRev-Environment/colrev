@@ -846,7 +846,7 @@ class Loader(Process):
                 sr = self.__import_record(sr)
 
             self.logger.info("Save records to references.bib")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(init=True)
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
             records += search_records
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
 

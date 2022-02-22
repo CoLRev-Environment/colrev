@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import errno
 import itertools
 import json
 import logging
@@ -185,7 +184,7 @@ class ReviewDataset:
                         continue
         return prior_records
 
-    def load_records(self, init: bool = False) -> typing.List[dict]:
+    def load_records(self) -> typing.List[dict]:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
 
         if self.REVIEW_MANAGER.notified_next_process is None:
@@ -217,12 +216,7 @@ class ReviewDataset:
                 ]
 
         else:
-            if init:
-                records = []
-            else:
-                raise FileNotFoundError(
-                    errno.ENOENT, os.strerror(errno.ENOENT), self.MAIN_REFERENCES_FILE
-                )
+            records = []
 
         return records
 
