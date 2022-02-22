@@ -10,6 +10,8 @@ class Initializer:
         self,
         project_name: str,
         SHARE_STAT_REQ: str,
+        curated_metadata: bool = False,
+        url: str = "NA",
         local_index_repo: bool = False,
     ) -> None:
 
@@ -21,6 +23,8 @@ class Initializer:
             self.project_name = str(Path.cwd().name)
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
+        self.curated_metadata = curated_metadata
+        self.url = url
 
         self.__require_empty_directory()
         self.__setup_files()
@@ -65,6 +69,13 @@ class Initializer:
         for rp, p in files_to_retrieve:
             self.__retrieve_package_file(rp, p)
 
+        if self.curated_metadata:
+            # replace readme
+            self.__retrieve_package_file(
+                Path("template/readme_curated_repo.md"), Path("readme.md")
+            )
+            self.__inplace_change(Path("readme.md"), "{{url}}", self.url)
+
         self.__inplace_change(
             Path("readme.md"), "{{project_title}}", self.project_name.rstrip(" ")
         )
@@ -100,8 +111,8 @@ class Initializer:
             + "data.csv\n"
             + "venv\n"
             + ".references_learned_settings\n"
-            + ".corrections"
-            + ".ipynb_checkpoints/"
+            + ".corrections\n"
+            + ".ipynb_checkpoints/\n"
             + "pdfs"
         )
         f.close()
