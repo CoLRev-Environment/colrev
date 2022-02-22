@@ -60,7 +60,9 @@ class Process:
         type: ProcessType,
         fun=None,
         notify_state_transition_process=True,
+        debug=False,
     ):
+        import logging
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.type = type
@@ -78,6 +80,9 @@ class Process:
             self.REVIEW_MANAGER.notify(CHECK_PROCESS)
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
+        if debug:
+            self.REVIEW_MANAGER.config["DEBUG_MODE"] = True
+            self.REVIEW_MANAGER.logger.setLevel(logging.DEBUG)
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
 

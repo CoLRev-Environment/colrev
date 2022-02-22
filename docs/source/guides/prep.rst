@@ -59,6 +59,10 @@ Operating assumptions and principles:
     Based on the enhanced TEIs, it conducts a frequency analysis of the reference sections and checks how included and synthesized papers are cited.
     Titles and journals are set to the most frequent values.
 
+.. option:: --debug ID
+
+    Debug the preparation process to identify, trace and correct potential errors.
+
 
 When records cannot be prepared automatically, we recommend opening the references.bib with a reference manager (such as Jabref) and preparing the remaining records manually. For example, JabRef allows you to filter records for the *needs_manual_preparation* status:
 

@@ -32,14 +32,14 @@ class ReviewDataset:
 
     def load_sources(self) -> list:
         """Load the source details"""
-
         if self.REVIEW_MANAGER.paths["SOURCES"].is_file():
             with open(self.REVIEW_MANAGER.paths["SOURCES"]) as f:
                 sources_df = pd.json_normalize(safe_load(f))
                 sources = sources_df.to_dict("records")
         else:
             self.REVIEW_MANAGER.logger.debug(
-                "Sources file does not exist "
+                "Sources file does not exist: "
+                f"{self.REVIEW_MANAGER.path}/"
                 f'{self.REVIEW_MANAGER.paths["SOURCES"].name}'
             )
             sources = []
@@ -150,6 +150,40 @@ class ReviewDataset:
                 metadata_source = item[item.find("{") + 1 : item.rfind("}")]
 
         return [ID, origin, status, excl_criteria, file, metadata_source]
+
+    def retrieve_records_from_history(
+        self, original_records: typing.List[typing.Dict], condition_state: RecordState
+    ) -> typing.List:
+
+        prior_records = []
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        git_repo = self.__git_repo
+        revlist = (
+            (
+                commit.hexsha,
+                commit.message,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+        )
+
+        for commit_id, cmsg, filecontents in list(revlist):
+            prior_db = bibtexparser.loads(filecontents)
+            for prior_record in prior_db.entries:
+                if str(prior_record["status"]) != str(condition_state):
+                    continue
+                for original_record in original_records:
+
+                    if any(
+                        o in prior_record["origin"]
+                        for o in original_record["origin"].split(";")
+                    ):
+                        prior_record["status"] = RecordState[prior_record["status"]]
+                        prior_records.append(prior_record)
+                        # Note: only append the first one if origins were in
+                        # different records (after deduplication)
+                        continue
+        return prior_records
 
     def load_records(self, init: bool = False) -> typing.List[dict]:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
@@ -1499,7 +1533,7 @@ class ReviewDataset:
         return [nr_commits_behind, nr_commits_ahead]
 
     def behind_remote(self) -> bool:
-
+        nr_commits_behind = 0
         CONNECTED_REMOTE = 0 != len(self.__git_repo.remotes)
         if CONNECTED_REMOTE:
             origin = self.__git_repo.remotes.origin

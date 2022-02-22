@@ -86,128 +86,6 @@ def debug_load() -> None:
     return
 
 
-def debug_prep(param: str) -> None:
-
-    from colrev_core.prep import Preparation
-    from colrev_core.review_manager import ReviewManager
-
-    # record = {
-    #     "ENTRYTYPE": "article",
-    #     "ID": "NewmanRobeyNoYear",
-    #     "doi": "10.5465/amr.2011.59330932",
-    #     "author": "Newman, Michael and Robey, Daniel",
-    #     "journal": "MIS Quarterly",
-    #     "metadata_source": "ORIGINAL",
-    #     "number": "2",
-    #     "origin": "MISQ.bib/0000000826",
-    #     "status": RecordState.md_imported,
-    #     "title": "A Social Process Model of User-Analyst Relationships",
-    #     "volume": "16",
-    # }
-
-    # # Retract / crossmark restriction example:
-    # record = {
-    #     "ENTRYTYPE": "article",
-    #     "ID": "Assemi2015",
-    #     "author": "Assemi, B., and Schlagwein, D.",
-    #     "file": "/home/gerit/ownCloud/data/EG IS Planning (strategy investment "
-    #     "architecture digital)/Digitale Plattformen/PlatformLR_Paper/"
-    #     "papers-excluded/Assemi2015.pdf",
-    #     "journal": "Decision SupportSystems",
-    #     "metadata_source": "ORIGINAL",
-    #     "origin": "JSIS_Review.bib/Assemi2015",
-    #     "pages": "1-11",
-    #     "status": RecordState.md_imported,
-    #     "title": "Provider feedback information and customer choice decisions on "
-    #     + "crowdsourcing marketplaces: Evidence from two discrete choice "
-    #     "experiments",
-    #     "volume": "82",
-    #     "year": "2015",
-    # }
-
-    # record_list = [
-    #     {
-    #         "ID": "BarrettDavidsonPrabhuEtAl2016",
-    #         "ENTRYTYPE": "article",
-    #         "origin": "ais_services_outsourcing.bib/Barrett2015",
-    #         "status": "md_processed",
-    #         "metadata_source": "CROSSREF",
-    #         "doi": "10.25300/MISQ/2015/39:1.03",
-    #         "author": "Abbott, P and Zheng, Y and Du, Rong and Willcocks, Leslie P.",
-    #         "journal": "MIS Quarterly",
-    #         "title": "Service Innovation in the Digital Age: Key Contributionns",
-    #         "year": "2015",
-    #         "number": "1",
-    #         "pages": "135--154",
-    #         "volume": "39",
-    #         "url": "https://aisel.aisnet.org/misq/vol39/iss1/9",
-    #     },
-    # {   'ENTRYTYPE': 'article',
-    #     'ID': 'QiuTangWhinston2015',
-    #     'author': 'Qiu, Liangfei and Tang, Qian and Whinston, Andrew B.',
-    #     'doi': '10.1080/07421222.2015.1138368',
-    #     'grobid-version': 'lfoppiano/grobid:0.7.0',
-    #     'journal': 'Journal of Management Information Systems',
-    #     'metadata_source': 'DOI.ORG',
-    #     'number': '4',
-    #     'origin': 'JMIS.bib/0000000659',
-    #     'pages': '78--108',
-    #     'status': RecordState.md_imported,
-    #     'title': 'Two Formulas for Success in Social Media',
-    #     'volume': '32',
-    #     'year': '2015'},
-    # {   'ENTRYTYPE': 'article',
-    #     'ID': 'QuJiangNoYear',
-    #     'author': 'Qu, Shawn and Jiang, Zhengrui',
-    #     'doi': '10.25300/MISQ/2019/14804',
-    #     'grobid-version': 'lfoppiano/grobid:0.7.0',
-    #     'journal': 'MIS Quarterly',
-    #     'metadata_source': 'DOI.ORG',
-    #     'number': '4',
-    #     'origin': 'MISQ.bib/0000001196',
-    #     'status': RecordState.md_imported,
-    #     'title': 'A time-based dynamic synchronization policy',
-    #     'volume': '43'}
-    # ]
-
-    # import colrev_core.dedupe as cc_dedupe
-
-    REVIEW_MANAGER = ReviewManager()
-
-    PREPARATION = Preparation(REVIEW_MANAGER)
-
-    # cc_dedupe.preparation_link_to_curated_record(record, record_list)
-    # input("stop")
-
-    record = {
-        "ENTRYTYPE": "inproceedings",
-        "ID": "WagnerPrester2019",
-        "author": "Wagner, Gerit and Prester, Julian",
-        "booktitle": "International Conference on Information Systems",
-        "metadata_source": "ORIGINAL",
-        "origin": "ais_digital_labor_platform.bib/Wagner2019",
-        "status": RecordState.md_imported,
-        "title": "Information Systems Research on Digital Platforms for Knowledge Work",
-        "url": "https://aisel.aisnet.org/icis2019/future_of_work/future_work/2",
-        "year": "2019",
-    }
-
-    pp.pprint(record)
-    res = PREPARATION.get_md_from_doi(record)
-    # res = PREPARATION.get_md_from_crossref(record)
-    # res = PREPARATION.get_md_from_urls(record)
-    # res = PREPARATION.get_md_from_dblp(record)
-    # res = PREPARATION.get_doi_from_sem_scholar(record)
-    pp.pprint(res)
-
-    # TODO load record corresponding to param (ID)
-    # debug should be activated
-    # call PREPARATION.prepare(record)
-    # -> this should print out much more detailed information.
-
-    return
-
-
 def debug_pdf_get():
 
     from colrev_core.pdf_get import PDF_Retrieval
@@ -433,7 +311,6 @@ def main(operation: str, param):
 
     operations = {
         "load": debug_load,
-        "prep": debug_prep,
         "pdf_get": debug_pdf_get,
         "pdf_prep": debug_pdf_prep,
         "data": debug_data,

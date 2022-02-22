@@ -54,7 +54,7 @@ class ReviewManager:
         "TOC",
         "BACK_CIT",
         "FORW_CIT",
-        "LOCAL_PAPER_INDEX",
+        "PDFS",
         "OTHER",
         "FEED",
         "COLREV_REPO",
