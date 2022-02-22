@@ -65,8 +65,8 @@ class Status(Process):
 
         stat: dict = {"status": {}}
         metadata_sources = [x[5] for x in record_header_list]
-        stat["status"]["LPI_recs"] = len(
-            [x for x in metadata_sources if "LOCAL_INDEX" == x]
+        stat["status"]["CURATED_records"] = len(
+            [x for x in metadata_sources if "CURATED" == x]
         )
 
         exclusion_statistics = {}
@@ -297,7 +297,10 @@ class Status(Process):
                     break
             if len(selected) > 0:
                 journals = "\n   - " + "\n   - ".join(
-                    [f"{candidate} ({round(freq, 2)}%)" for candidate, freq in selected]
+                    [
+                        f"{candidate} ({round((freq/len(outlets))*100, 2)}%)"
+                        for candidate, freq in selected
+                    ]
                 )
                 instruction = {
                     "msg": "Search and download curated metadata for your "
@@ -791,7 +794,7 @@ class Status(Process):
             print(" Search")
             perc_curated = 0
             if stat["overall"]["md_prepared"] > 0:
-                perc_curated = statuts_info["status"]["LPI_recs"] / (
+                perc_curated = statuts_info["status"]["CURATED_records"] / (
                     stat["overall"]["md_prepared"]
                     + stat["currently"]["md_needs_manual_preparation"]
                 )
@@ -802,7 +805,7 @@ class Status(Process):
                     stat["overall"]["md_retrieved"],
                     "*",
                     f"curated ({round(perc_curated*100, 2)}%)",
-                    str(statuts_info["status"]["LPI_recs"]),
+                    str(statuts_info["status"]["CURATED_records"]),
                 )
             else:
                 self.stat_print(

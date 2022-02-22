@@ -733,7 +733,7 @@ class Loader(Process):
         for record in records:
             del record["origin"]
             del record["status"]
-            record["metadata_source"] = "LOCAL_INDEX"
+            record["metadata_source"] = "CURATED"
             if "file" in record:
                 if not Path(record["file"]).is_file():
                     if (

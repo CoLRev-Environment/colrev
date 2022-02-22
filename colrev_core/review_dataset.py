@@ -231,6 +231,9 @@ class ReviewDataset:
 
         # Cast to string (in particular the RecordState Enum)
         records = [{k: str(v) for k, v in r.items()} for r in records]
+        for record in records:
+            if "LOCAL_PAPER_INDEX" == record.get("metadata_source", ""):
+                record["metadata_source"] = "CURATED"
 
         records.sort(key=lambda x: x["ID"])
 
@@ -1123,7 +1126,7 @@ class ReviewDataset:
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 
-            if "LOCAL_INDEX" in record_string:
+            if "CURATED" in record_string:
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 r = db.entries[0]
@@ -1133,7 +1136,7 @@ class ReviewDataset:
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
 
-                if "LOCAL_INDEX" in record_string:
+                if "CURATED" in record_string:
                     parser = BibTexParser(customization=convert_to_unicode)
                     db = bibtexparser.loads(record_string, parser=parser)
                     r = db.entries[0]
@@ -1274,7 +1277,10 @@ class ReviewDataset:
             )
 
         if len(data["pdf_not_exists"]) > 0:
-            raise FieldError(f'record with broken file link: {data["pdf_not_exists"]}')
+            raise FieldError(
+                f"record with broken file link. Use\n    "
+                f'colrev pdf-get --relink_files {",".join(data["pdf_not_exists"])}'
+            )
 
         return
 

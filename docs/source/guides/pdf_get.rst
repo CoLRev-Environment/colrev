@@ -22,6 +22,10 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
     Automatically rename PDFs (to their local IDs)
 
+.. option:: --relink_files ID1,ID2
+
+    Search for the PDF (based on the pdf_hash) and update the file link accordingly. Useful when PDFs are renamed or moved to subdirectories.
+
 
 :program:`colrev pdf-get-man` goes through the list of missing PDFs and asks the researcher to retrieve it:
 

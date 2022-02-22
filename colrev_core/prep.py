@@ -404,7 +404,7 @@ class Preparation(Process):
 
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
-            if "LOCAL_INDEX" != retrieved_record.get("metadata_source", ""):
+            if "CURATED" != retrieved_record.get("metadata_source", ""):
                 # Try similarity-based retrieval from toc
                 try:
                     retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
@@ -420,7 +420,7 @@ class Preparation(Process):
                     if "file" in record:
                         continue
                 record[k] = v
-            record["metadata_source"] = "LOCAL_INDEX"
+            record["metadata_source"] = "CURATED"
 
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
@@ -504,7 +504,7 @@ class Preparation(Process):
         return input_string
 
     def get_md_from_doi(self, record: dict) -> dict:
-        if "doi" not in record or "LOCAL_INDEX" == record.get("metadata_source", ""):
+        if "doi" not in record or "CURATED" == record.get("metadata_source", ""):
             return record
         record = self.__retrieve_doi_metadata(record)
         if "title" in record:
@@ -619,6 +619,8 @@ class Preparation(Process):
                 if item["content-domain"]["crossmark"]:
                     record["crossmark"] = "True"
 
+        for k, v in record.items():
+            record[k] = v.replace("{", "").replace("}", "")
         return record
 
     def __crossref_query(
@@ -792,7 +794,7 @@ class Preparation(Process):
         return similarity
 
     def get_md_from_crossref(self, record: dict) -> dict:
-        if "title" not in record or "LOCAL_INDEX" == record.get("metadata_source", ""):
+        if "title" not in record or "CURATED" == record.get("metadata_source", ""):
             return record
 
         # To test the metadata provided for a particular DOI use:
@@ -1043,7 +1045,7 @@ class Preparation(Process):
                 "article",
                 "inproceedings",
             ]
-            or "LOCAL_INDEX" == record.get("metadata_source", "")
+            or "CURATED" == record.get("metadata_source", "")
         ):
             return record
 
@@ -1185,7 +1187,7 @@ class Preparation(Process):
                 retrieved_record["url"] = item["ee"]
 
         for k, v in retrieved_record.items():
-            retrieved_record[k] = html.unescape(v)
+            retrieved_record[k] = html.unescape(v).replace("{", "").replace("}", "")
 
         return retrieved_record
 
@@ -1724,7 +1726,7 @@ class Preparation(Process):
         record = self.__check_potential_retracts(record)
         if "crossmark" in record:
             return record
-        if "LOCAL_INDEX" == record["metadata_source"]:
+        if "CURATED" == record["metadata_source"]:
             record.update(status=RecordState.md_prepared)
             return record
 
@@ -2198,7 +2200,7 @@ class Preparation(Process):
             record["status"] = previous_status
 
             continue
-            if "LOCAL_INDEX" == record.get("metadata_source", ""):
+            if "CURATED" == record.get("metadata_source", ""):
                 continue
             if "doi" in record:
                 continue

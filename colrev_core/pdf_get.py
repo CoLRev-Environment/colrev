@@ -5,8 +5,10 @@ import shutil
 import typing
 from pathlib import Path
 
+import imagehash
 import requests
 from p_tqdm import p_map
+from pdf2image import convert_from_path
 from pdfminer.high_level import extract_text
 
 from colrev_core import grobid_client
@@ -198,6 +200,36 @@ class PDF_Retrieval(Process):
                 record.update(status=RecordState.pdf_needs_manual_retrieval)
 
         return record
+
+    def get_pdf_hash(self, path: Path) -> str:
+        return str(
+            imagehash.average_hash(
+                convert_from_path(path, first_page=0, last_page=1)[0],
+                hash_size=32,
+            )
+        )
+
+    def relink_files(self, ids_with_files_to_relink: typing.List[str]) -> None:
+        from tqdm import tqdm
+
+        self.logger.info(
+            "Checking PDFs in same directory and reassigning "
+            "when pdf_hash is identical"
+        )
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        for record in records:
+            if record["ID"] in ids_with_files_to_relink:
+                self.logger.info(record["ID"])
+                pdf_path = Path(record["file"]).parent
+                for pdf_candidate in tqdm(list(pdf_path.glob("**/*.pdf"))):
+                    if record["pdf_hash"] == self.get_pdf_hash(pdf_candidate):
+                        record["file"] = str(pdf_candidate)
+                        self.logger.info(f"Found and linked PDF: {pdf_candidate}")
+                        break
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
 
     def check_existing_unlinked_pdfs(
         self,
