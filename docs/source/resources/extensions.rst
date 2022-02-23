@@ -9,7 +9,7 @@ A few examples are summarized below.
 colrev_endpoint
 -----------------
 
-Aimed at making it easy to integrate other tools by operating endtpoints that support the export and loading of data.
+Aimed at making it easy to integrate other tools by operating endpoints that support the export and loading of data.
 For example, EndPoint supports the collaboration with Endnote (and other reference mangers) or `ASReview <https://github.com/asreview/asreview>`_ for the prescreen.
 
 Example:
