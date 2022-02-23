@@ -3,14 +3,14 @@ Colaborative Literature Reviews
 ========================================
 
 The Colaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
-A reliable and efficient process requires
+A reliable and efficient literature review process requires:
 
-- a standard data structure,
-- a shared model for the steps of the review process,
-- dedicated procedures for metadata and fulltext preparation,
-- principles for trustworthy use of algorithmic and crowdsourced changes,
-- a powerful versioning system (git) that makes changes transparent, and
-- collaboration principles that are monitored automatically.
+- a standard data structure
+- a shared model for the steps of the review process
+- dedicated procedures for metadata and fulltext preparation
+- principles for trustworthy use of algorithmic and crowdsourced changes
+- a powerful versioning system (git) that makes changes transparent
+- collaboration principles that are monitored automatically
 
 CoLRev aspires to be self-explanatory, to anticipate, prevent, and resolve errors, and thereby allow researchers to orchestrate researcher-crowd-machine ensembles with confidence.
 Simply `install the colrev environment <guides/installation.html>`_ and run
