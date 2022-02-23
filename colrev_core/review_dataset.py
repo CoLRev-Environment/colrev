@@ -1127,7 +1127,7 @@ class ReviewDataset:
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 
-            if "CURATED" in record_string:
+            if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 r = db.entries[0]
@@ -1137,7 +1137,7 @@ class ReviewDataset:
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
 
-                if "CURATED" in record_string:
+                if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
                     parser = BibTexParser(customization=convert_to_unicode)
                     db = bibtexparser.loads(record_string, parser=parser)
                     r = db.entries[0]
@@ -1156,23 +1156,28 @@ class ReviewDataset:
                 for k in essential_md_keys
             ):
 
-                # retrieve record from index to identify origin repositories
-                try:
-                    indexed_record = self.LOCAL_INDEX.retrieve_record_from_index(
-                        curated_record
-                    )
-                except RecordNotInIndexException:
-                    pass
+                if "CURATED" == curated_record["metadata_source"]:
+                    # retrieve record from index to identify origin repositories
+                    try:
+                        indexed_record = self.LOCAL_INDEX.retrieve_record_from_index(
+                            curated_record
+                        )
+                    except RecordNotInIndexException:
+                        pass
 
-                # print(indexed_record["source_url"])
-                if not Path(indexed_record["source_url"]).is_dir():
-                    indexed_record = self.LOCAL_INDEX.set_source_path(indexed_record)
-                if not Path(indexed_record["source_url"]).is_dir():
-                    print(
-                        "Source path of indexed record not available "
-                        f'({indexed_record["source_url"]})'
-                    )
-                    continue
+                    # print(indexed_record["source_url"])
+                    if not Path(indexed_record["source_url"]).is_dir():
+                        indexed_record = self.LOCAL_INDEX.set_source_path(
+                            indexed_record
+                        )
+                    if not Path(indexed_record["source_url"]).is_dir():
+                        print(
+                            "Source path of indexed record not available "
+                            f'({indexed_record["source_url"]})'
+                        )
+                        continue
+                if "DBLP" == curated_record["metadata_source"]:
+                    indexed_record = self.PREPARATION.get_md_from_dblp(curated_record)
 
                 # Cast to string for persistence
                 indexed_record = {k: str(v) for k, v in indexed_record.items()}
