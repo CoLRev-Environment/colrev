@@ -71,6 +71,13 @@ class ReviewDataset:
         self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
         return
 
+    def append_sources(self, new_record: dict):
+        """Append sources"""
+        sources = self.load_sources()
+        sources.append(new_record)
+        self.save_sources(sources)
+        return sources
+
     def get_record_state_list_from_file_obj(self, file_object) -> list:
         return [
             self.__get_record_status_item(record_header_str)

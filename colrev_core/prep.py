@@ -1752,51 +1752,6 @@ class Preparation(Process):
 
         return record
 
-    def update_fields_based_on_pdf_dirs(
-        self, record: dict, PDF_DIR_FORMAT: dict
-    ) -> dict:
-
-        if len(PDF_DIR_FORMAT) == 0:
-            return record
-
-        if "outlet" in PDF_DIR_FORMAT:
-            if PDF_DIR_FORMAT["outlet"] != "NA":
-                outlet, container_name = PDF_DIR_FORMAT["outlet"].split("=")
-                if "journal" == outlet:
-                    record["journal"] = container_name
-                    record["ENTRYTYPE"] = "article"
-                if "conference" == outlet:
-                    record["booktitle"] = container_name
-                    record["ENTRYTYPE"] = "inproceedings"
-
-        sub_dir_pattern = PDF_DIR_FORMAT["sub_dir_pattern"]
-
-        partial_path = Path(record["file"]).parents[0].stem
-        if "year" == sub_dir_pattern:
-            r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
-            partial_path = Path(record["file"]).parents[0].stem
-            # Note: for year-patterns, we allow subfolders (eg., conference tracks)
-            partial_path = str(Path(record["file"]).parents[0]).replace(
-                PDF_DIR_FORMAT["source_url"], ""
-            )
-            match = r_sub_dir_pattern.search(str(partial_path))
-            if match is not None:
-                year = match.group(1)
-                record["year"] = year
-
-        if "volume_number" == sub_dir_pattern:
-            r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
-
-            if "volume_number" == sub_dir_pattern:
-                match = r_sub_dir_pattern.search(str(partial_path))
-                if match is not None:
-                    volume = match.group(1)
-                    number = match.group(2)
-                    record["volume"] = volume
-                    record["number"] = number
-
-        return record
-
     def prepare(self, item: dict) -> dict:
 
         record = item["record"]
@@ -1829,10 +1784,6 @@ class Preparation(Process):
             {
                 "script": self.remove_broken_dois,
                 "params": [preparation_record],
-            },
-            {
-                "script": self.update_fields_based_on_pdf_dirs,
-                "params": [preparation_record, item["PDF_DIR_FORMAT"]],
             },
             {
                 "script": self.resolve_crossrefs,
@@ -1978,8 +1929,9 @@ class Preparation(Process):
             if "crossmark" in preparation_record:
                 record = self.log_notifications(record, unprepared_record)
 
-            for preparation_detail in preparation_details:
-                self.report_logger.info(preparation_detail)
+            # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
+            # for preparation_detail in preparation_details:
+            #     self.report_logger.info(preparation_detail)
 
         if "low_confidence" == item["mode"]["name"]:
             record = preparation_record.copy()
@@ -2310,24 +2262,6 @@ class Preparation(Process):
         return {}
 
     def __batch(self, items, mode: dict):
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-
-        PDF_INDICES = [
-            {
-                key: value
-                for key, value in source.items()
-                if "PDFS" == source["search_type"]
-                and key
-                in [
-                    "filename",
-                    "search_type",
-                    "source_url",
-                    "outlet",
-                    "sub_dir_pattern",
-                ]
-            }
-            for source in sources
-        ]
 
         batch = []
         for item in items:
@@ -2335,7 +2269,6 @@ class Preparation(Process):
                 {
                     "record": item,
                     "mode": mode,
-                    "PDF_DIR_FORMAT": self.__get_pdf_source_data(PDF_INDICES, item),
                 }
             )
         return batch

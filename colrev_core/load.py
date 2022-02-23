@@ -212,7 +212,8 @@ class Loader(Process):
             record.update(number=record["issue"])
             del record["issue"]
 
-        record.update(metadata_source="ORIGINAL")
+        if "metadata_source" not in record:
+            record.update(metadata_source="ORIGINAL")
         record.update(status=RecordState.md_imported)
 
         return record
@@ -237,17 +238,6 @@ class Loader(Process):
                 break
 
         return new_record
-
-    def append_sources(self, new_record: dict):
-        """Append sources"""
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        sources.append(new_record)
-        self.logger.debug(
-            f"Added infos to {self.REVIEW_MANAGER.paths['SOURCES']}:"
-            f" \n{self.pp.pformat(new_record)}"
-        )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
-        return sources
 
     def __bibutils_convert(self, script: str, data: str) -> str:
 
@@ -793,7 +783,11 @@ class Loader(Process):
             "comment": "",
         }
 
-        self.append_sources(new_record)
+        SOURCE_REVIEW_MANAGER.REVIEW_DATASET.append_sources(new_record)
+        self.logger.debug(
+            f"Added infos to {self.REVIEW_MANAGER.paths['SOURCES']}:"
+            f" \n{self.pp.pformat(new_record)}"
+        )
 
         self.logger.info("Import records")
         self.__update_colrev_repo(CHECK_PROCESS, bib_file_path)
