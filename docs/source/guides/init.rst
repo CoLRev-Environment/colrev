@@ -14,6 +14,14 @@ Init
 
     Name of the project
 
+.. option:: --curated_metadata
+
+    Use a template for curated metadata repositories.
+
+.. option:: --url
+
+    Url for the curated metadata repository.
+
 
 Once the repository is set up, you can share it with your team (see `instructions <overview.html#collaborate-in-a-team>`_).
 

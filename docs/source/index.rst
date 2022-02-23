@@ -48,22 +48,17 @@ After each processing step, make sure to `check the changes <guides/changes.html
    guides/screen
    guides/data
    guides/paper
+   guides/extensions
+   guides/best_practices
 
 .. toctree::
    :hidden:
-   :caption: Framework
+   :caption: Technical documentation
    :maxdepth: 1
 
-   framework/colrev
-   framework/extension_development
-   framework/roadmap
-
-.. toctree::
-   :hidden:
-   :caption: Resources
-   :maxdepth: 1
-
-   resources/extensions
-   resources/best_practices
+   technical_documentation/colrev
+   Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
    Github repository <https://github.com/geritwagner/colrev_core>
-   resources/about
+   technical_documentation/extension_development
+   technical_documentation/roadmap
+   technical_documentation/about
