@@ -23,7 +23,6 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfpage import PDFPage
 from pdfminer.pdfparser import PDFParser
-from pdfminer.pdfparser import PDFSyntaxError
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
@@ -108,11 +107,12 @@ class PDF_Preparation(Process):
         record["pages_in_file"] = pages_in_file
         return record
 
-    def get_text_from_pdf(self, record: dict, PAD: int) -> dict:
+    def get_text_from_pdf(self, record: dict, PAD: int = 30) -> dict:
+        from pdfminer.pdfparser import PDFSyntaxError
 
-        record = self.__get_pages_in_pdf(record)
-
+        record["text_from_pdf"] = ""
         try:
+            record = self.__get_pages_in_pdf(record)
             text = self.__extract_text_by_page(record, [0, 1, 2])
             record["text_from_pdf"] = text
 
@@ -131,7 +131,12 @@ class PDF_Preparation(Process):
             self.REVIEW_MANAGER.logger.error(msg)
             record.update(status=RecordState.pdf_needs_manual_preparation)
             pass
-
+        except PDFSyntaxError:
+            msg = f'{record["file"]}'.ljust(PAD, " ") + "PDFSyntaxError"
+            self.REVIEW_MANAGER.report_logger.error(msg)
+            self.REVIEW_MANAGER.logger.error(msg)
+            record.update(status=RecordState.pdf_needs_manual_preparation)
+            pass
         return record
 
     def __probability_english(self, text: str) -> float:
@@ -238,8 +243,83 @@ class PDF_Preparation(Process):
             pass
         return wo_ac
 
+    def validates_based_on_metadata(self, record: dict) -> dict:
+
+        validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
+
+        if "text_from_pdf" not in record:
+            record = self.get_text_from_pdf(record)
+
+        text = record["text_from_pdf"]
+        text = text.replace(" ", "").replace("\n", "").lower()
+        text = self.__remove_accents(text)
+        text = re.sub("[^a-zA-Z ]+", "", text)
+
+        title_words = re.sub("[^a-zA-Z ]+", "", record["title"]).lower().split()
+
+        match_count = 0
+        for title_word in title_words:
+            if title_word in text:
+                match_count += 1
+
+        if "title" not in record or len(title_words) == 0:
+            validation_info["msgs"].append(  # type: ignore
+                f"{record['ID']}: title not in record"
+            )
+            validation_info["pdf_prep_hints"].append(  # type: ignore
+                "title_not_in_record"
+            )
+            validation_info["validates"] = False
+            return validation_info
+        if "author" not in record:
+            validation_info["msgs"].append(  # type: ignore
+                f"{record['ID']}: author not in record"
+            )
+            validation_info["pdf_prep_hints"].append(  # type: ignore
+                "author_not_in_record"
+            )
+            validation_info["validates"] = False
+            return validation_info
+
+        if match_count / len(title_words) < 0.9:
+            validation_info["msgs"].append(  # type: ignore
+                f"{record['ID']}: title not found in first pages"
+            )
+            validation_info["pdf_prep_hints"].append(  # type: ignore
+                "title_not_in_first_pages"
+            )
+            validation_info["validates"] = False
+
+        text = text.replace("ue", "u").replace("ae", "a").replace("oe", "o")
+
+        # Editorials often have no author in the PDF (or on the last page)
+        if "editorial" not in title_words:
+
+            match_count = 0
+            for author_name in record.get("author", "").split(" and "):
+                author_name = author_name.split(",")[0].lower().replace(" ", "")
+                author_name = self.__remove_accents(author_name)
+                author_name = (
+                    author_name.replace("ue", "u").replace("ae", "a").replace("oe", "o")
+                )
+                author_name = re.sub("[^a-zA-Z ]+", "", author_name)
+                if author_name in text:
+                    match_count += 1
+
+            if match_count / len(record.get("author", "").split(" and ")) < 0.8:
+
+                validation_info["msgs"].append(  # type: ignore
+                    f"{record['file']}: author not found in first pages"
+                )
+                validation_info["pdf_prep_hints"].append(  # type: ignore
+                    "author_not_in_first_pages"
+                )
+                validation_info["validates"] = False
+
+        return validation_info
+
     @timeout_decorator.timeout(60, use_signals=False)
-    def __validate_pdf_metadata(self, record: dict, PAD: int) -> dict:
+    def validate_pdf_metadata(self, record: dict, PAD: int) -> dict:
 
         if RecordState.pdf_imported != record["status"]:
             return record
@@ -266,55 +346,14 @@ class PDF_Preparation(Process):
         except RecordNotInIndexException:
             pass
 
-        if "text_from_pdf" not in record:
-            record = self.get_text_from_pdf(record, PAD)
-
-        text = record["text_from_pdf"]
-        text = text.replace(" ", "").replace("\n", "").lower()
-        text = self.__remove_accents(text)
-        text = re.sub("[^a-zA-Z ]+", "", text)
-
-        title_words = re.sub("[^a-zA-Z ]+", "", record["title"]).lower().split()
-
-        match_count = 0
-        for title_word in title_words:
-            if title_word in text:
-                match_count += 1
-
-        if match_count / len(title_words) < 0.9:
-            msg = f'{record["ID"]}'.ljust(PAD, " ") + ": title not found in first pages"
-            self.REVIEW_MANAGER.report_logger.error(msg)
-            record["pdf_prep_hints"] = (
-                record.get("pdf_prep_hints", "") + "; title_not_in_first_pages"
-            )
-            record.update(status=RecordState.pdf_needs_manual_preparation)
-
-        text = text.replace("ue", "u").replace("ae", "a").replace("oe", "o")
-
-        # Editorials often have no author in the PDF (or on the last page)
-        if "editorial" in title_words:
-            return record
-
-        match_count = 0
-        for author_name in record.get("author", "").split(" and "):
-            author_name = author_name.split(",")[0].lower().replace(" ", "")
-            author_name = self.__remove_accents(author_name)
-            author_name = (
-                author_name.replace("ue", "u").replace("ae", "a").replace("oe", "o")
-            )
-            author_name = re.sub("[^a-zA-Z ]+", "", author_name)
-            if author_name in text:
-                match_count += 1
-
-        if match_count / len(record.get("author", "").split(" and ")) < 0.8:
-            msg = (
-                f'{record["file"]}'.ljust(PAD, " ")
-                + ": author not found in first pages"
-            )
-            self.REVIEW_MANAGER.report_logger.error(msg)
-            record["pdf_prep_hints"] = (
-                record.get("pdf_prep_hints", "") + "; author_not_in_first_pages"
-            )
+        validation_info = self.validates_based_on_metadata(record)
+        if not validation_info["validates"]:
+            for msg in validation_info["msgs"]:
+                self.REVIEW_MANAGER.report_logger.error(msg)
+            for hint in validation_info["pdf_prep_hints"]:
+                record["pdf_prep_hints"] = (
+                    record.get("pdf_prep_hints", "") + "; " + hint
+                )
             record.update(status=RecordState.pdf_needs_manual_preparation)
 
         return record
@@ -711,7 +750,7 @@ class PDF_Preparation(Process):
             {"script": self.__pdf_check_ocr, "params": [record, PAD]},
             {"script": self.__remove_coverpage, "params": [record, PAD]},
             {"script": self.__remove_last_page, "params": [record, PAD]},
-            {"script": self.__validate_pdf_metadata, "params": [record, PAD]},
+            {"script": self.validate_pdf_metadata, "params": [record, PAD]},
             {"script": self.__validate_completeness, "params": [record, PAD]},
         ]
 

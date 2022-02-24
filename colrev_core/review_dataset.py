@@ -1193,26 +1193,24 @@ class ReviewDataset:
                                     curated_record
                                 )
                             )
+                            # print(indexed_record["source_url"])
+                            if not Path(indexed_record["source_url"]).is_dir():
+                                indexed_record = self.LOCAL_INDEX.set_source_path(
+                                    indexed_record
+                                )
+                            if not Path(indexed_record["source_url"]).is_dir():
+                                print(
+                                    "Source path of indexed record not available "
+                                    f'({indexed_record["source_url"]})'
+                                )
+                                continue
                         except RecordNotInIndexException:
                             pass
-
-                        # print(indexed_record["source_url"])
-                        if not Path(indexed_record["source_url"]).is_dir():
-                            indexed_record = self.LOCAL_INDEX.set_source_path(
-                                indexed_record
-                            )
-                        if not Path(indexed_record["source_url"]).is_dir():
-                            print(
-                                "Source path of indexed record not available "
-                                f'({indexed_record["source_url"]})'
-                            )
                             continue
+
                     if "DBLP" == curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp
                         # because it will fuse_best_fields
-
-                        curated_record["source_url"] = "metadata_source=DBLP"
-
                         ret = requests.get(
                             curated_record["dblp_key"] + ".html?view=bibtex"
                         )
@@ -1226,9 +1224,10 @@ class ReviewDataset:
                                 k: v.replace("\n", " ")
                                 for k, v in indexed_record.items()
                             }
-
+                            indexed_record["source_url"] = "metadata_source=DBLP"
                         else:
                             continue
+
                         # Note : we don't want to correct the following fields:
                         if "booktitle" in curated_record:
                             indexed_record["booktitle"] = curated_record["booktitle"]

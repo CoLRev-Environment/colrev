@@ -9,6 +9,7 @@ import time
 import typing
 import urllib
 from pathlib import Path
+from urllib.parse import unquote
 
 import bibtexparser
 import dictdiffer
@@ -18,6 +19,7 @@ import spacy
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
+from bs4 import BeautifulSoup
 from nameparser import HumanName
 from p_tqdm import p_map
 from thefuzz import fuzz
@@ -193,6 +195,30 @@ class Preparation(Process):
         self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         self.CPUS = self.CPUS * 5
         self.NER = spacy.load("en_core_web_sm")
+
+    def __meta_redirect(self, content: str):
+        soup = BeautifulSoup(content, "lxml")
+        result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
+        if result:
+            wait, text = result["content"].split(";")
+            # print(text)
+            if "http" in text:
+                url = text[text.lower().find("http") :]
+                url = unquote(url, encoding="utf-8", errors="replace")
+                url = url[: url.find("?")]
+                return str(url)
+        return None
+
+    def get_link_from_doi(self, record: dict) -> dict:
+
+        url = f"https://www.doi.org/{record['doi']}"
+        ret = requests.get(url)
+        # follow the chain of redirects
+        while self.__meta_redirect(ret.content.decode("utf-8")):
+            url = self.__meta_redirect(ret.content.decode("utf-8"))
+            ret = requests.get(url, "GET")
+        record["url"] = url
+        return record
 
     def correct_recordtype(self, record: dict) -> dict:
 
@@ -507,10 +533,11 @@ class Preparation(Process):
     def get_md_from_doi(self, record: dict) -> dict:
         if "doi" not in record or "CURATED" == record.get("metadata_source", ""):
             return record
-        record = self.__retrieve_doi_metadata(record)
+        record = self.retrieve_doi_metadata(record)
         if "title" in record:
             record["title"] = self.__title_if_mostly_upper(record["title"])
             record["title"] = record["title"].replace("\n", " ")
+        record = self.get_link_from_doi(record)
         record.update(status=RecordState.md_prepared)
         record.update(metadata_source="DOI.ORG")
         return record
@@ -829,6 +856,7 @@ class Preparation(Process):
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
                     record = self.__fuse_best_fields(record, retrieved_record)
+                    record = self.get_link_from_doi(record)
                     record.update(status=RecordState.md_prepared)
                     record.update(metadata_source="CROSSREF")
 
@@ -1386,7 +1414,7 @@ class Preparation(Process):
 
         return record
 
-    def __retrieve_doi_metadata(self, record: dict) -> dict:
+    def retrieve_doi_metadata(self, record: dict) -> dict:
         if "doi" not in record:
             return record
 
@@ -1446,9 +1474,7 @@ class Preparation(Process):
                         return record
                     for doi, freq in ret_dois:
                         retrieved_record = {"doi": doi.upper(), "ID": record["ID"]}
-                        retrieved_record = self.__retrieve_doi_metadata(
-                            retrieved_record
-                        )
+                        retrieved_record = self.retrieve_doi_metadata(retrieved_record)
                         similarity = self.get_retrieval_similarity(
                             record.copy(), retrieved_record.copy()
                         )
