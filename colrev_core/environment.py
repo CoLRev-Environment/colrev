@@ -35,23 +35,33 @@ class LocalIndex(Process):
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
 
-    def __init__(self, REVIEW_MANAGER):
-        from git.exc import NoSuchPathError
-        from git.exc import InvalidGitRepositoryError
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
         super().__init__(
-            REVIEW_MANAGER, ProcessType.explore, notify_state_transition_process=False
+            REVIEW_MANAGER,
+            ProcessType.explore,
+            notify_state_transition_process=notify_state_transition_process,
         )
 
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
+        self.local_repos = self.__load_local_repos()
 
-        self.local_repos = []
-        for source in [x for x in self.local_registry]:
+    def __load_local_repos(self) -> typing.List:
+        from git.exc import NoSuchPathError
+        from git.exc import InvalidGitRepositoryError
+        import git
+
+        local_repo_list = []
+        sources = [x for x in self.local_registry]
+        for source in sources:
             try:
-                cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
-                CheckProcess(cp_REVIEW_MANAGER)  # to notify
-                shared_url = ""
-                git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                # cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
+                # CheckProcess(cp_REVIEW_MANAGER)  # to notify
+                # shared_url = ""
+                # git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                # print(source)
+                git_repo = git.Repo(source["source_url"])
+
                 for remote in git_repo.remotes:
                     if remote.url:
                         shared_url = remote.url
@@ -59,9 +69,12 @@ class LocalIndex(Process):
                     "source_url": source["source_url"],
                     "source_link": shared_url.rstrip(".git"),
                 }
-                self.local_repos.append(repo)
-            except (NoSuchPathError, InvalidGitRepositoryError):
+                local_repo_list.append(repo)
+            except (NoSuchPathError, InvalidGitRepositoryError) as e:
+                print(e)
                 pass
+                continue
+        return local_repo_list
 
     def __robust_append(self, string_to_hash: str, to_append: str) -> str:
         to_append = to_append.replace("\n", " ").rstrip().lstrip().replace("–", " ")
@@ -536,7 +549,7 @@ class LocalIndex(Process):
             pass
             return
 
-        self.logger.info(f"Create d_index for {search_path.parent}")
+        self.REVIEW_MANAGER.logger.info(f"Create d_index for {search_path.parent}")
 
         # records = [x for x in records if x['ID'] == 'BenbasatZmud1999']
 
@@ -703,9 +716,9 @@ class LocalIndex(Process):
         import shutil
         import collections
 
-        self.logger.info("Start LocalIndex")
+        self.REVIEW_MANAGER.logger.info("Start LocalIndex")
 
-        self.logger.info("Validate curated metadata")
+        self.REVIEW_MANAGER.logger.info("Validate curated metadata")
 
         curated_outlets = []
         for source_url in [
@@ -729,7 +742,7 @@ class LocalIndex(Process):
                         outlets.append(booktitle)
 
                 if len(set(outlets)) != 1:
-                    self.logger.error(
+                    self.REVIEW_MANAGER.logger.error(
                         "Duplicate outlets in curated_metadata of "
                         f"{source_url} : {','.join(outlets)}"
                     )
@@ -741,14 +754,14 @@ class LocalIndex(Process):
                 for item, count in collections.Counter(curated_outlets).items()
                 if count > 1
             ]
-            self.logger.error(
+            self.REVIEW_MANAGER.logger.error(
                 f"Duplicate outlets in curated_metadata : {','.join(duplicated)}"
             )
             return
 
-        self.logger.info("Start LocalIndex")
+        self.REVIEW_MANAGER.logger.info("Start LocalIndex")
 
-        self.logger.info("Reset record_index, gid_index, d_index")
+        self.REVIEW_MANAGER.logger.info("Reset record_index, gid_index, d_index")
         if self.rind_path.is_dir():
             shutil.rmtree(self.rind_path)
         if self.gind_path.is_dir():
@@ -768,7 +781,7 @@ class LocalIndex(Process):
                 print(f"Warning {source_url} not a directory")
                 continue
             os.chdir(source_url)
-            self.logger.info(f"Index records from {source_url}")
+            self.REVIEW_MANAGER.logger.info(f"Index records from {source_url}")
 
             # get ReviewManager for project (after chdir)
             REVIEW_MANAGER = ReviewManager(path_str=str(source_url))

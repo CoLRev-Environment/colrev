@@ -113,6 +113,7 @@ class Preparation(Process):
         "link",
         "url",
         "crossmark",
+        "warning",
     ]
     fields_to_drop = [
         "type",
@@ -207,7 +208,7 @@ class Preparation(Process):
         ):
             prior_e_type = record["ENTRYTYPE"]
             record.update(ENTRYTYPE="phdthesis")
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("dissertation" in fulltext link)'
@@ -219,7 +220,7 @@ class Preparation(Process):
         ):
             prior_e_type = record["ENTRYTYPE"]
             record.update(ENTRYTYPE="phdthesis")
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in fulltext link)'
@@ -231,7 +232,7 @@ class Preparation(Process):
         ):
             prior_e_type = record["ENTRYTYPE"]
             record.update(ENTRYTYPE="phdthesis")
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
@@ -381,7 +382,7 @@ class Preparation(Process):
                 and not re.match(r"^\d*--\d*$", record["pages"])
                 and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
             ):
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f' {record["ID"]}:'.ljust(self.PAD, " ")
                     + f'Unusual pages: {record["pages"]}'
                 )
@@ -511,6 +512,7 @@ class Preparation(Process):
             record["title"] = self.__title_if_mostly_upper(record["title"])
             record["title"] = record["title"].replace("\n", " ")
         record.update(status=RecordState.md_prepared)
+        record.update(metadata_source="DOI.ORG")
         return record
 
     def crossref_json_to_record(self, item: dict) -> dict:
@@ -659,11 +661,11 @@ class Preparation(Process):
         headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
         record_list = []
         try:
-            self.logger.debug(url)
+            self.REVIEW_MANAGER.logger.debug(url)
             ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             ret.raise_for_status()
             if ret.status_code != 200:
-                self.logger.debug(
+                self.REVIEW_MANAGER.logger.debug(
                     f"crossref_query failed with status {ret.status_code}"
                 )
                 return [{}]
@@ -800,7 +802,7 @@ class Preparation(Process):
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
-        self.logger.debug(f'get_md_from_crossref({record["ID"]})')
+        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({record["ID"]})')
         MAX_RETRIES_ON_ERROR = 3
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
         if len(record["title"]) > 35:
@@ -821,15 +823,17 @@ class Preparation(Process):
                     record.copy(), retrieved_record.copy()
                 )
                 if similarity > self.RETRIEVAL_SIMILARITY:
-                    self.logger.debug("Found matching record")
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug("Found matching record")
+                    self.REVIEW_MANAGER.logger.debug(
                         f"crossref similarity: {similarity} "
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
                     record = self.__fuse_best_fields(record, retrieved_record)
                     record.update(status=RecordState.md_prepared)
+                    record.update(metadata_source="CROSSREF")
+
                 else:
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug(
                         f"crossref similarity: {similarity} "
                         f"(<{self.RETRIEVAL_SIMILARITY})"
                     )
@@ -850,7 +854,7 @@ class Preparation(Process):
         ):
             return record
 
-        self.logger.debug(f'get_md_from_crossref({record["ID"]})')
+        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({record["ID"]})')
         MAX_RETRIES_ON_ERROR = 3
         try:
             modified_record = record.copy()
@@ -886,8 +890,8 @@ class Preparation(Process):
             if len(years) == 0:
                 return record
             most_common = max(years, key=years.count)
-            self.logger.debug(most_common)
-            self.logger.debug(years.count(most_common))
+            self.REVIEW_MANAGER.logger.debug(most_common)
+            self.REVIEW_MANAGER.logger.debug(years.count(most_common))
             if years.count(most_common) > 3:
                 record["year"] = most_common
                 record["metadata_source"] = "CROSSREF"
@@ -946,7 +950,7 @@ class Preparation(Process):
                 "https://api.semanticscholar.org/graph/v1/paper/search?query="
             )
             url = search_api_url + record.get("title", "").replace(" ", "+")
-            self.logger.debug(url)
+            self.REVIEW_MANAGER.logger.debug(url)
             headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
             ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             ret.raise_for_status()
@@ -962,7 +966,7 @@ class Preparation(Process):
             record_retrieval_url = (
                 "https://api.semanticscholar.org/v1/paper/" + paper_id
             )
-            self.logger.debug(record_retrieval_url)
+            self.REVIEW_MANAGER.logger.debug(record_retrieval_url)
             ret_ent = requests.get(
                 record_retrieval_url, headers=headers, timeout=self.TIMEOUT
             )
@@ -974,14 +978,14 @@ class Preparation(Process):
             for key in ["volume", "number", "number", "pages"]:
                 if key in red_record_copy:
                     del red_record_copy[key]
-            # self.pp.pprint(retrieved_record)
+            # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
 
             similarity = self.get_retrieval_similarity(
                 red_record_copy, retrieved_record.copy()
             )
             if similarity > self.RETRIEVAL_SIMILARITY:
-                self.logger.debug("Found matching record")
-                self.logger.debug(
+                self.REVIEW_MANAGER.logger.debug("Found matching record")
+                self.REVIEW_MANAGER.logger.debug(
                     f"scholar similarity: {similarity} "
                     f"(>{self.RETRIEVAL_SIMILARITY})"
                 )
@@ -991,7 +995,7 @@ class Preparation(Process):
                 if record.get("doi", "") == "NONE":
                     del record["doi"]
             else:
-                self.logger.debug(
+                self.REVIEW_MANAGER.logger.debug(
                     f"scholar similarity: {similarity} "
                     f"(<{self.RETRIEVAL_SIMILARITY})"
                 )
@@ -1002,7 +1006,7 @@ class Preparation(Process):
         except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
-            self.logger.error(
+            self.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
             pass
@@ -1070,7 +1074,7 @@ class Preparation(Process):
             url = url + "&title=" + title.replace(" ", "+")
             ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
             ret.raise_for_status()
-            self.logger.debug(url)
+            self.REVIEW_MANAGER.logger.debug(url)
 
             # if we have an exact match, we don't need to check the similarity
             if '"numFoundExact": true,' not in ret.text:
@@ -1092,7 +1096,7 @@ class Preparation(Process):
         except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
-            self.logger.error(
+            self.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
             pass
@@ -1213,7 +1217,7 @@ class Preparation(Process):
             query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
             url = api_url + query.replace(" ", "+") + "&format=json"
             headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
-            self.logger.debug(url)
+            self.REVIEW_MANAGER.logger.debug(url)
             ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             ret.raise_for_status()
             if ret.status_code == 500:
@@ -1229,15 +1233,15 @@ class Preparation(Process):
                 item = hit["info"]
 
                 retrieved_record = self.dblp_json_to_record(item)
-                # self.pp.pprint(retrieved_record)
+                # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
 
                 similarity = self.get_retrieval_similarity(
                     record.copy(), retrieved_record.copy()
                 )
 
                 if similarity > self.RETRIEVAL_SIMILARITY:
-                    self.logger.debug("Found matching record")
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug("Found matching record")
+                    self.REVIEW_MANAGER.logger.debug(
                         f"dblp similarity: {similarity} "
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
@@ -1245,7 +1249,7 @@ class Preparation(Process):
                     record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
                     record.update(status=RecordState.md_prepared)
                 else:
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug(
                         f"dblp similarity: {similarity} "
                         f"(<{self.RETRIEVAL_SIMILARITY})"
                     )
@@ -1277,7 +1281,7 @@ class Preparation(Process):
         if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
             best_author = candidate
 
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f"best_author({default}, \n"
             f"                                      {candidate}) = \n"
             f"                                      {best_author}"
@@ -1289,7 +1293,9 @@ class Preparation(Process):
         if "--" in candidate and "--" not in default:
             best_pages = candidate
 
-        self.logger.debug(f"best_pages({default}, {candidate}) = {best_pages}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"best_pages({default}, {candidate}) = {best_pages}"
+        )
 
         return best_pages
 
@@ -1304,7 +1310,7 @@ class Preparation(Process):
         if default_upper > candidate_upper:
             best_title = candidate
 
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f"best_title({default},\n"
             f"                                      {candidate}) = \n"
             f"                                      {best_title}"
@@ -1327,7 +1333,7 @@ class Preparation(Process):
         if default_upper > candidate_upper:
             best_journal = candidate
 
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f"best_journal({default}, \n"
             f"                                      {candidate}) = \n"
             f"                                      {best_journal}"
@@ -1339,10 +1345,10 @@ class Preparation(Process):
         """Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             "Fuse retrieved record " "(select fields with the highest quality)"
         )
-        self.logger.debug(self.pp.pformat(merging_record))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(merging_record))
         for key, val in merging_record.items():
             if val:
                 if "author" == key:
@@ -1392,12 +1398,12 @@ class Preparation(Process):
         orig_record = record.copy()
         try:
             url = "http://dx.doi.org/" + record["doi"]
-            self.logger.debug(url)
+            self.REVIEW_MANAGER.logger.debug(url)
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
             ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             ret.raise_for_status()
             if ret.status_code != 200:
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f' {record["ID"]}'.ljust(self.PAD, " ")
                     + "metadata for "
                     + f'doi  {record["doi"]} not (yet) available'
@@ -1424,7 +1430,7 @@ class Preparation(Process):
         url = record.get("url", record.get("fulltext", "NA"))
         if "NA" != url:
             try:
-                self.logger.debug(f"Retrieve doi-md from {url}")
+                self.REVIEW_MANAGER.logger.debug(f"Retrieve doi-md from {url}")
                 headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
                 ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
                 ret.raise_for_status()
@@ -1450,7 +1456,7 @@ class Preparation(Process):
                             for key, val in retrieved_record.items():
                                 record[key] = val
 
-                            self.report_logger.debug(
+                            self.REVIEW_MANAGER.report_logger.debug(
                                 "Retrieved metadata based on doi from"
                                 f' website: {record["doi"]}'
                             )
@@ -1521,7 +1527,7 @@ class Preparation(Process):
                 record.pop(key)
                 # warn if fields are dropped that are not in fields_to_drop
                 if key not in self.fields_to_drop:
-                    self.report_logger.info(f"Dropped {key} field")
+                    self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
         for key in list(record):
             if "" == record[key]:
                 del record[key]
@@ -1598,6 +1604,9 @@ class Preparation(Process):
         if retrieved_record.get("crossmark", "") == "True":
             record["status"] = RecordState.md_needs_manual_preparation
             record["man_prep_hints"] = "crossmark_restriction_potential_retract"
+        if retrieved_record.get("warning", "") == "Withdrawn (according to DBLP)":
+            record["status"] = RecordState.md_needs_manual_preparation
+            record["man_prep_hints"] = "Withdrawn (according to DBLP)"
         return record
 
     def __read_next_record_str(self) -> typing.Iterator[str]:
@@ -1650,13 +1659,13 @@ class Preparation(Process):
 
         change = 1 - utils.get_record_similarity(record.copy(), unprepared_record)
         if change > 0.1:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f"Change score: {round(change, 2)}"
             )
 
         if not self.__is_complete(record):
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f'{str(record["ENTRYTYPE"]).title()} '
                 f"missing {self.__missing_fields(record)}"
@@ -1664,7 +1673,7 @@ class Preparation(Process):
             msg += f"missing: {self.__missing_fields(record)}"
 
         if self.__has_inconsistent_fields(record):
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f'{str(record["ENTRYTYPE"]).title()} '
                 f"with {self.__get_inconsistencies(record)} field(s)"
@@ -1673,7 +1682,7 @@ class Preparation(Process):
             msg += f'; {record["ENTRYTYPE"]} but {self.__get_inconsistencies(record)}'
 
         if self.__has_incomplete_fields(record):
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
                 + f"Incomplete fields {self.__get_incomplete_fields(record)}"
             )
@@ -1730,13 +1739,15 @@ class Preparation(Process):
             record.update(status=RecordState.md_prepared)
             return record
 
-        self.logger.debug(f'is_complete({record["ID"]}): {self.__is_complete(record)}')
+        self.REVIEW_MANAGER.logger.debug(
+            f'is_complete({record["ID"]}): {self.__is_complete(record)}'
+        )
 
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f'has_inconsistent_fields({record["ID"]}): '
             f"{self.__has_inconsistent_fields(record)}"
         )
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f'has_incomplete_fields({record["ID"]}): '
             f"{self.__has_incomplete_fields(record)}"
         )
@@ -1875,14 +1886,16 @@ class Preparation(Process):
         preparation_details = []
         preparation_details.append(
             f'prepare({record["ID"]})'
-            + f" called with: \n{self.pp.pformat(short_form)}\n\n"
+            + f" called with: \n{self.REVIEW_MANAGER.pp.pformat(short_form)}\n\n"
         )
 
         for prep_script in prep_scripts:
 
             prior = preparation_record.copy()
 
-            self.logger.debug(f'{prep_script["script"].__name__}(...) called')
+            self.REVIEW_MANAGER.logger.debug(
+                f'{prep_script["script"].__name__}(...) called'
+            )
             if [] == prep_script["params"]:
                 prep_script["script"]()
             else:
@@ -1890,29 +1903,31 @@ class Preparation(Process):
 
             diffs = list(dictdiffer.diff(prior, preparation_record))
             if diffs:
-                # self.pp.pprint(preparation_record)
+                # self.REVIEW_MANAGER.pp.pprint(preparation_record)
                 change_report = (
                     f'{prep_script["script"].__name__}'
                     f'({prep_script["params"][0]["ID"]})'
-                    f" changed:\n{self.pp.pformat(diffs)}\n"
+                    f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
                 preparation_details.append(change_report)
-                self.logger.debug(change_report)
+                self.REVIEW_MANAGER.logger.debug(change_report)
                 if self.DEBUG_MODE:
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug(
                         "To correct errors in the script,"
                         " open an issue at "
                         "https://github.com/geritwagner/colrev_core/issues"
                     )
                     if "source_correction_hint" in prep_script:
-                        self.logger.debug(
+                        self.REVIEW_MANAGER.logger.debug(
                             "To correct potential errors at source,"
                             f" {prep_script['source_correction_hint']}"
                         )
                     input("Press Enter to continue")
                     print("\n")
             else:
-                self.logger.debug(f"{prep_script['script'].__name__} changed: -")
+                self.REVIEW_MANAGER.logger.debug(
+                    f"{prep_script['script'].__name__} changed: -"
+                )
                 if self.DEBUG_MODE:
                     print("\n")
                     time.sleep(0.7)
@@ -1931,7 +1946,7 @@ class Preparation(Process):
 
             # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
             # for preparation_detail in preparation_details:
-            #     self.report_logger.info(preparation_detail)
+            #     self.REVIEW_MANAGER.report_logger.info(preparation_detail)
 
         if "low_confidence" == item["mode"]["name"]:
             record = preparation_record.copy()
@@ -1950,7 +1965,9 @@ class Preparation(Process):
                 if record["status"] == RecordState.md_needs_manual_preparation
             ]
         )
-        self.report_logger.info(f"Statistics: {nr_recs} records not prepared")
+        self.REVIEW_MANAGER.report_logger.info(
+            f"Statistics: {nr_recs} records not prepared"
+        )
 
         nr_recs = len(
             [
@@ -1959,16 +1976,16 @@ class Preparation(Process):
                 if record["status"] == RecordState.rev_prescreen_excluded
             ]
         )
-        self.report_logger.info(
+        self.REVIEW_MANAGER.report_logger.info(
             f"Statistics: {nr_recs} records (prescreen) excluded "
             "(non-latin alphabet)"
         )
 
-        self.report_logger.info(
+        self.REVIEW_MANAGER.report_logger.info(
             "To reset the metdatata of records, use "
             "colrev prepare --reset-ID [ID1,ID2]"
         )
-        self.report_logger.info(
+        self.REVIEW_MANAGER.report_logger.info(
             "Further instructions are available in the " "documentation (TODO: link)"
         )
         return
@@ -1999,8 +2016,8 @@ class Preparation(Process):
                 f"{r['ID']}: status must be md_prepared/md_needs_manual_preparation "
                 + f'(is {r["status"]})'
             )
-            self.logger.error(msg)
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
 
         record_reset_list = [[record, record.copy()] for record in record_list]
 
@@ -2030,9 +2047,9 @@ class Preparation(Process):
                     if any(
                         o in prior_record["origin"] for o in record["origin"].split(";")
                     ):
-                        self.report_logger.info(
+                        self.REVIEW_MANAGER.report_logger.info(
                             f'reset({record["ID"]}) to'
-                            f"\n{self.pp.pformat(prior_record)}\n\n"
+                            f"\n{self.REVIEW_MANAGER.pp.pformat(prior_record)}\n\n"
                         )
                         # Note : we don't want to restore the old ID...
                         current_id = record_to_unmerge["ID"]
@@ -2235,7 +2252,7 @@ class Preparation(Process):
             "items": items,
             "prior_ids": prior_ids,
         }
-        self.logger.debug(self.pp.pformat(prep_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
     def set_to_reprocess(self, reprocess_state: RecordState):
@@ -2309,8 +2326,8 @@ class Preparation(Process):
 
         if self.DEBUG_MODE:
             print("\n\n\n")
-            self.logger.info("Start debug prep\n")
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info("Start debug prep\n")
+            self.REVIEW_MANAGER.logger.info(
                 "The script will replay the preparation procedures"
                 " step-by-step, allow you to identify potential errors, trace them to "
                 "their origin and correct them."
@@ -2333,24 +2350,24 @@ class Preparation(Process):
         ]
 
         for mode in modes:
-            self.logger.info(f"Prepare ({mode['name']})")
+            self.REVIEW_MANAGER.logger.info(f"Prepare ({mode['name']})")
 
             self.RETRIEVAL_SIMILARITY = mode["similarity"]  # type: ignore
             saved_args["similarity"] = self.RETRIEVAL_SIMILARITY
-            self.report_logger.debug(
+            self.REVIEW_MANAGER.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
 
             if self.DEBUG_MODE:
                 prepare_data = self.__load_prep_data_for_debug(debug_id)
                 if "high_confidence" == mode["name"]:
-                    self.logger.info(
+                    self.REVIEW_MANAGER.logger.info(
                         "In this round, we set "
                         "a very conservative similarity threshold "
                         f"({self.RETRIEVAL_SIMILARITY})"
                     )
                 else:
-                    self.logger.info(
+                    self.REVIEW_MANAGER.logger.info(
                         "In this round, we lower the similarity "
                         f"threshold ({self.RETRIEVAL_SIMILARITY})"
                     )
@@ -2358,7 +2375,8 @@ class Preparation(Process):
                 print("\n\n")
             else:
                 prepare_data = self.get_data()
-            # self.logger.debug(f"prepare_data: {self.pp.pformat(prepare_data)}")
+            # self.REVIEW_MANAGER.logger.debug(f"prepare_data: "
+            # f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}")
             self.PAD = prepare_data["PAD"]
 
             preparation_batch = self.__batch(prepare_data["items"], mode)

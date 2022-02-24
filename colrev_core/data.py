@@ -136,12 +136,12 @@ class Data(Process):
 
                     for missing_record in missing_records:
                         writer.write(missing_record)
-                        self.report_logger.info(
+                        self.REVIEW_MANAGER.report_logger.info(
                             f" {missing_record}".ljust(self.PAD, " ")
                             + f" added to {PAPER.name}"
                         )
 
-                        self.logger.info(
+                        self.REVIEW_MANAGER.logger.info(
                             f" {missing_record}".ljust(self.PAD, " ")
                             + f" added to {PAPER.name}"
                         )
@@ -171,8 +171,8 @@ class Data(Process):
                     + f"{PAPER.name}. Adding records at the end of "
                     + "the document."
                 )
-                self.report_logger.warning(msg)
-                self.logger.warning(msg)
+                self.REVIEW_MANAGER.report_logger.warning(msg)
+                self.REVIEW_MANAGER.logger.warning(msg)
 
                 if line != "\n":
                     writer.write("\n")
@@ -180,10 +180,10 @@ class Data(Process):
                 writer.write(marker)
                 for missing_record in missing_records:
                     writer.write(missing_record)
-                    self.report_logger.info(
+                    self.REVIEW_MANAGER.report_logger.info(
                         f" {missing_record}".ljust(self.PAD, " ") + " added"
                     )
-                    self.logger.info(
+                    self.REVIEW_MANAGER.logger.info(
                         f" {missing_record}".ljust(self.PAD, " ") + " added"
                     )
 
@@ -209,7 +209,9 @@ class Data(Process):
         with open(filename) as f:
             s = f.read()
             if old_string not in s:
-                self.logger.info(f'"{old_string}" not found in {filename}.')
+                self.REVIEW_MANAGER.logger.info(
+                    f'"{old_string}" not found in {filename}.'
+                )
                 return
         with open(filename, "w") as f:
             s = s.replace(old_string, new_string)
@@ -226,8 +228,8 @@ class Data(Process):
         if not PAPER.is_file():
             missing_records = included
 
-            self.report_logger.info("Creating manuscript")
-            self.logger.info("Creating manuscript")
+            self.REVIEW_MANAGER.report_logger.info("Creating manuscript")
+            self.REVIEW_MANAGER.logger.info("Creating manuscript")
 
             title = "Manuscript template"
             readme_file = self.REVIEW_MANAGER.paths["README"]
@@ -242,25 +244,33 @@ class Data(Process):
             self.retrieve_package_file(PAPER_resource_path, PAPER)
             self.__inplace_change(PAPER, "{{project_title}}", title)
             self.__inplace_change(PAPER, "{{author}}", author)
-            self.logger.info(f"Please update title and authors in {PAPER.name}")
+            self.REVIEW_MANAGER.logger.info(
+                f"Please update title and authors in {PAPER.name}"
+            )
 
-        self.report_logger.info("Updating manuscript")
-        self.logger.info("Updating manuscript")
+        self.REVIEW_MANAGER.report_logger.info("Updating manuscript")
+        self.REVIEW_MANAGER.logger.info("Updating manuscript")
         missing_records = self.get_data_page_missing(PAPER, included)
         missing_records = sorted(missing_records)
-        self.logger.debug(f"missing_records: {missing_records}")
+        self.REVIEW_MANAGER.logger.debug(f"missing_records: {missing_records}")
 
         if 0 == len(missing_records):
-            self.report_logger.info(f"All records included in {PAPER.name}")
-            self.logger.info(f"All records included in {PAPER.name}")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"All records included in {PAPER.name}"
+            )
+            self.REVIEW_MANAGER.logger.info(f"All records included in {PAPER.name}")
         else:
             self.add_missing_records_to_manuscript(
                 PAPER,
                 ["\n- @" + missing_record + "\n" for missing_record in missing_records],
             )
             nr_records_added = len(missing_records)
-            self.report_logger.info(f"{nr_records_added} records added to {PAPER.name}")
-            self.logger.info(f"{nr_records_added} records added to {PAPER.name}")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"{nr_records_added} records added to {PAPER.name}"
+            )
+            self.REVIEW_MANAGER.logger.info(
+                f"{nr_records_added} records added to {PAPER.name}"
+            )
 
         return records
 
@@ -320,8 +330,12 @@ class Data(Process):
                     default_flow_style=False,
                 )
 
-            self.report_logger.info(f"{nr_records_added} records added ({DATA})")
-            self.logger.info(f"{nr_records_added} records added ({DATA})")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"{nr_records_added} records added ({DATA})"
+            )
+            self.REVIEW_MANAGER.logger.info(
+                f"{nr_records_added} records added ({DATA})"
+            )
 
         return records
 
@@ -337,7 +351,7 @@ class Data(Process):
             if "file" not in record:
                 continue
             if "tei_file" not in record:
-                self.logger.info(f"Get tei for {record['ID']}")
+                self.REVIEW_MANAGER.logger.info(f"Get tei for {record['ID']}")
                 pdf_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / record["file"]
                 tei_path = Path(record["file"].replace("pdfs/", "tei/")).with_suffix(
                     ".tei.xml"
@@ -375,7 +389,7 @@ class Data(Process):
 
         # Enhance TEIs (link local IDs)
         for record in records:
-            self.logger.info(f"Enhance TEI for {record['ID']}")
+            self.REVIEW_MANAGER.logger.info(f"Enhance TEI for {record['ID']}")
             if "tei_file" in record:
 
                 tei_path = Path(record["tei_file"])
@@ -454,8 +468,12 @@ class Data(Process):
         included = self.get_record_ids_for_synthesis(records)
 
         if 0 == len(included):
-            self.report_logger.info("No records included yet (use colrev_core screen)")
-            self.logger.info("No records included yet (use colrev_core screen)")
+            self.REVIEW_MANAGER.report_logger.info(
+                "No records included yet (use colrev_core screen)"
+            )
+            self.REVIEW_MANAGER.logger.info(
+                "No records included yet (use colrev_core screen)"
+            )
 
         else:
 
@@ -520,10 +538,10 @@ class Data(Process):
                 continue
 
             record.update(status=RecordState.rev_synthesized)
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ") + "set status to synthesized"
             )
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ") + "set status to synthesized"
             )
 

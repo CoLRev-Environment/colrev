@@ -23,7 +23,7 @@ class Trace(Process):
 
     def main(self, ID: str) -> None:
 
-        self.logger.info(f"Trace record by ID: {ID}")
+        self.REVIEW_MANAGER.logger.info(f"Trace record by ID: {ID}")
 
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         DATA = self.REVIEW_MANAGER.paths["DATA"]

@@ -77,24 +77,27 @@ class PDF_Preparation(Process):
 
         text_list: list = []
         with open(record["file"], "rb") as fh:
-            for page in PDFPage.get_pages(
-                fh,
-                pagenos=pages,  # note: maybe skip potential cover pages?
-                caching=True,
-                check_extractable=True,
-            ):
-                resource_manager = PDFResourceManager()
-                fake_file_handle = io.StringIO()
-                converter = TextConverter(resource_manager, fake_file_handle)
-                page_interpreter = PDFPageInterpreter(resource_manager, converter)
-                page_interpreter.process_page(page)
+            try:
+                for page in PDFPage.get_pages(
+                    fh,
+                    pagenos=pages,  # note: maybe skip potential cover pages?
+                    caching=True,
+                    check_extractable=True,
+                ):
+                    resource_manager = PDFResourceManager()
+                    fake_file_handle = io.StringIO()
+                    converter = TextConverter(resource_manager, fake_file_handle)
+                    page_interpreter = PDFPageInterpreter(resource_manager, converter)
+                    page_interpreter.process_page(page)
 
-                text = fake_file_handle.getvalue()
-                text_list += text
+                    text = fake_file_handle.getvalue()
+                    text_list += text
 
-                # close open handles
-                converter.close()
-                fake_file_handle.close()
+                    # close open handles
+                    converter.close()
+                    fake_file_handle.close()
+            except TypeError:
+                pass
         return "".join(text_list)
 
     def __get_pages_in_pdf(self, record: dict) -> dict:
@@ -118,14 +121,14 @@ class PDF_Preparation(Process):
                 f'{record["file"]}'.ljust(PAD, " ")
                 + "PDF reader error: check whether is a pdf"
             )
-            self.report_logger.error(msg)
-            self.logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
+            self.REVIEW_MANAGER.logger.error(msg)
             record.update(status=RecordState.pdf_needs_manual_preparation)
             pass
         except PDFTextExtractionNotAllowed:
             msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
-            self.report_logger.error(msg)
-            self.logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
+            self.REVIEW_MANAGER.logger.error(msg)
             record.update(status=RecordState.pdf_needs_manual_preparation)
             pass
 
@@ -185,19 +188,19 @@ class PDF_Preparation(Process):
             return record
 
         if not any(lang.prob > 0.9 for lang in detect_langs(record["text_from_pdf"])):
-            self.report_logger.info(f'apply_ocr({record["ID"]})')
+            self.REVIEW_MANAGER.report_logger.info(f'apply_ocr({record["ID"]})')
             record = self.__apply_ocr(record, PAD)
 
         if not any(lang.prob > 0.9 for lang in detect_langs(record["text_from_pdf"])):
             msg = f'{record["ID"]}'.ljust(PAD, " ") + "Validation error (OCR problems)"
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
 
         if self.__probability_english(record["text_from_pdf"]) < 0.9:
             msg = (
                 f'{record["ID"]}'.ljust(PAD, " ")
                 + "Validation error (Language not English)"
             )
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
             record.update(status=RecordState.pdf_needs_manual_preparation)
 
         return record
@@ -254,7 +257,7 @@ class PDF_Preparation(Process):
             )
             if "pdf_hash" in retrieved_record:
                 if retrieved_record["pdf_hash"] == str(current_hash):
-                    self.logger.debug(
+                    self.REVIEW_MANAGER.logger.debug(
                         f"validated pdf metadata based on local_index ({record['ID']})"
                     )
                     return record
@@ -280,7 +283,7 @@ class PDF_Preparation(Process):
 
         if match_count / len(title_words) < 0.9:
             msg = f'{record["ID"]}'.ljust(PAD, " ") + ": title not found in first pages"
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; title_not_in_first_pages"
             )
@@ -308,7 +311,7 @@ class PDF_Preparation(Process):
                 f'{record["file"]}'.ljust(PAD, " ")
                 + ": author not found in first pages"
             )
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; author_not_in_first_pages"
             )
@@ -385,7 +388,7 @@ class PDF_Preparation(Process):
                 f'{record["ID"]}'.ljust(PAD - 1, " ")
                 + " Not the full version of the paper"
             )
-            self.report_logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; not_full_version"
             )
@@ -597,7 +600,9 @@ class PDF_Preparation(Process):
             record["file"] = record["file"].replace(".pdf", "_wo_cp.pdf")
             shutil.copy(prior, record["file"])
             self.__extract_pages(record, coverpages, type="coverpage")
-            self.report_logger.info(f'removed cover page for ({record["ID"]})')
+            self.REVIEW_MANAGER.report_logger.info(
+                f'removed cover page for ({record["ID"]})'
+            )
         return record
 
     def __get_last_pages(self, pdf):
@@ -670,7 +675,9 @@ class PDF_Preparation(Process):
             record["file"] = record["file"].replace(".pdf", "_wo_lp.pdf")
             shutil.copy(prior, record["file"])
             self.__extract_pages(record, last_pages, type="last_page")
-            self.report_logger.info(f'removed last page for ({record["ID"]})')
+            self.REVIEW_MANAGER.report_logger.info(
+                f'removed last page for ({record["ID"]})'
+            )
 
         return record
 
@@ -695,8 +702,8 @@ class PDF_Preparation(Process):
 
         if not Path(record["file"]).is_file():
             msg = f'{record["ID"]}'.ljust(PAD, " ") + "Linked file/pdf does not exist"
-            self.report_logger.error(msg)
-            self.logger.error(msg)
+            self.REVIEW_MANAGER.report_logger.error(msg)
+            self.REVIEW_MANAGER.logger.error(msg)
             return record
 
         prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
@@ -718,7 +725,9 @@ class PDF_Preparation(Process):
 
         # Note: if there are problems status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
-        self.report_logger.info(f'prepare({record["ID"]})')  # / {record["file"]}
+        self.REVIEW_MANAGER.report_logger.info(
+            f'prepare({record["ID"]})'
+        )  # / {record["file"]}
         for prep_script in prep_scripts:
             try:
                 # Note : the record should not be changed
@@ -732,7 +741,7 @@ class PDF_Preparation(Process):
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
             ) as err:
-                self.logger.error(
+                self.REVIEW_MANAGER.logger.error(
                     f'Error for {record["ID"]} '
                     f'(in {prep_script["script"].__name__} : {err})'
                 )
@@ -749,7 +758,7 @@ class PDF_Preparation(Process):
                 + " "
             )
             msg += "fail" if failed else "pass"
-            self.report_logger.info(msg)
+            self.REVIEW_MANAGER.report_logger.info(msg)
             if failed:
                 break
 
@@ -778,7 +787,7 @@ class PDF_Preparation(Process):
                     original_file.rename(backup_filename)
                     current_file.rename(original_filename)
                     record["file"] = str(original_file)
-                    self.report_logger.info(
+                    self.REVIEW_MANAGER.report_logger.info(
                         f"created backup after successful pdf-prep: {backup_filename}"
                     )
 
@@ -834,7 +843,7 @@ class PDF_Preparation(Process):
             "nr_tasks": nr_tasks,
             "items": items,
         }
-        self.logger.debug(self.pp.pformat(prep_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
     def __batch(self, items: dict):
@@ -889,7 +898,7 @@ class PDF_Preparation(Process):
         return record
 
     def update_hashes(self) -> None:
-        self.logger.info("Update hashes")
+        self.REVIEW_MANAGER.logger.info("Update hashes")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records = p_map(self.__update_hash, records)
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
@@ -907,7 +916,7 @@ class PDF_Preparation(Process):
         # TODO: temporary fix: remove all lines containint PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
-        self.logger.info("Prepare PDFs")
+        self.REVIEW_MANAGER.logger.info("Prepare PDFs")
 
         if reprocess:
             self.__set_to_reprocess()

@@ -18,7 +18,7 @@ class Prescreen(Process):
         )
 
     def export_table(self, export_table_format: str) -> None:
-        self.logger.info("Loading records for export")
+        self.REVIEW_MANAGER.logger.info("Loading records for export")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         tbl = []
@@ -81,12 +81,12 @@ class Prescreen(Process):
         if "csv" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_csv("screen_table.csv", index=False, quoting=csv.QUOTE_ALL)
-            self.logger.info("Created screen_table (csv)")
+            self.REVIEW_MANAGER.logger.info("Created screen_table (csv)")
 
         if "xlsx" == export_table_format.lower():
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel("screen_table.xlsx", index=False, sheet_name="screen")
-            self.logger.info("Created screen_table (xlsx)")
+            self.REVIEW_MANAGER.logger.info("Created screen_table (xlsx)")
 
         return
 
@@ -94,13 +94,15 @@ class Prescreen(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         if not Path(import_table_path).is_file():
-            self.logger.error(f"Did not find {import_table_path} - exiting.")
+            self.REVIEW_MANAGER.logger.error(
+                f"Did not find {import_table_path} - exiting."
+            )
             return
         screen_df = pd.read_csv(import_table_path)
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        self.logger.warning(
+        self.REVIEW_MANAGER.logger.warning(
             "import_table not completed (exclusion_criteria not yet imported)"
         )
 
@@ -141,7 +143,7 @@ class Prescreen(Process):
         for record in records:
             if record["status"] != RecordState.md_processed:
                 continue
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "Included in prescreen (automatically)"
             )
@@ -166,20 +168,20 @@ class Prescreen(Process):
             conditions=[{"status": RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.logger.debug(self.pp.pformat(prescreen_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
         return prescreen_data
 
     def set_data(self, record: dict, prescreen_inclusion: bool, PAD: int = 40) -> None:
 
         if prescreen_inclusion:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
                 [record["ID"]], "status", str(RecordState.rev_prescreen_included)
             )
         else:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(

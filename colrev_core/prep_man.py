@@ -20,12 +20,12 @@ class PrepMan(Process):
 
     def prep_man_stats(self) -> None:
 
-        self.logger.info(
+        self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
-        self.logger.info("Calculate statistics")
+        self.REVIEW_MANAGER.logger.info("Calculate statistics")
         stats: dict = {"ENTRYTYPE": {}}
         overall_types: dict = {"ENTRYTYPE": {}}
         prep_man_hints = []
@@ -83,15 +83,17 @@ class PrepMan(Process):
             # Transpose because we tend to have more error categories than search files.
             tabulated = tabulated.transpose()
             print(tabulated)
-            self.logger.info("Writing data to file: manual_preparation_statistics.csv")
+            self.REVIEW_MANAGER.logger.info(
+                "Writing data to file: manual_preparation_statistics.csv"
+            )
             tabulated.to_csv("manual_preparation_statistics.csv")
 
         # TODO : these should be combined in one dict and returned:
         print("Entry type statistics overall:")
-        self.pp.pprint(overall_types["ENTRYTYPE"])
+        self.REVIEW_MANAGER.pp.pprint(overall_types["ENTRYTYPE"])
 
         print("Entry type statistics (needs_manual_preparation):")
-        self.pp.pprint(stats["ENTRYTYPE"])
+        self.REVIEW_MANAGER.pp.pprint(stats["ENTRYTYPE"])
 
         return
 
@@ -113,7 +115,7 @@ class PrepMan(Process):
             print(f"Please rename file to avoid overwriting changes ({prep_bib_path})")
             return
 
-        self.logger.info(
+        self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
@@ -154,7 +156,7 @@ class PrepMan(Process):
         bib_db_df = bib_db_df[col_names]
 
         bib_db_df.to_csv(prep_csv_path, index=False)
-        self.logger.info(f"Created {prep_csv_path.name}")
+        self.REVIEW_MANAGER.logger.info(f"Created {prep_csv_path.name}")
 
         return
 
@@ -163,11 +165,11 @@ class PrepMan(Process):
         PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
 
         if Path("prep-references.csv").is_file():
-            self.logger.info("Load prep-references.csv")
+            self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
             bib_db_df = pd.read_csv("prep-references.csv")
             bib_db_changed = bib_db_df.to_dict("records")
         if Path("prep-references.bib").is_file():
-            self.logger.info("Load prep-references.bib")
+            self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
 
             from bibtexparser.bparser import BibTexParser
             from bibtexparser.customization import convert_to_unicode
@@ -310,7 +312,9 @@ class PrepMan(Process):
             "all_ids": all_ids,
             "PAD": PAD,
         }
-        self.logger.debug(self.pp.pformat(md_prep_man_data))
+        self.REVIEW_MANAGER.logger.debug(
+            self.REVIEW_MANAGER.pp.pformat(md_prep_man_data)
+        )
         return md_prep_man_data
 
     def set_data(self, record, PAD: int = 40) -> None:

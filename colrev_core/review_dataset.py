@@ -1090,10 +1090,22 @@ class ReviewDataset:
     def check_corrections_of_curated_records(self) -> None:
         from colrev_core.environment import LocalIndex
         from colrev_core.environment import RecordNotInIndexException
+        from colrev_core.prep import Preparation
         from dictdiffer import diff
         import io
+        import requests
+        import re
 
-        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        self.REVIEW_MANAGER.logger.debug("Start corrections")
+
+        self.LOCAL_INDEX = LocalIndex(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
+        self.PREPARATION = Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
         essential_md_keys = [
             "title",
             "author",
@@ -1107,6 +1119,7 @@ class ReviewDataset:
             "doi",
         ]
 
+        self.REVIEW_MANAGER.logger.debug("Retrieve prior bib")
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         revlist = (
             (
@@ -1124,6 +1137,8 @@ class ReviewDataset:
         except IndexError:
             pass
             return
+
+        self.REVIEW_MANAGER.logger.debug("Load prior bib")
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 
@@ -1133,6 +1148,7 @@ class ReviewDataset:
                 r = db.entries[0]
                 prior["curated_records"].append(r)
 
+        self.REVIEW_MANAGER.logger.debug("Load current bib")
         curated_records = []
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
@@ -1143,79 +1159,163 @@ class ReviewDataset:
                     r = db.entries[0]
                     curated_records.append(r)
 
-        for curated_record in curated_records:
+        for original_curated_record in curated_records:
+            curated_record = original_curated_record.copy()
             # identify curated records for which essential metadata is changed
             prior_crl = [
-                x for x in prior["curated_records"] if x["ID"] == curated_record["ID"]
-            ]
-            if len(prior_crl) != 1:
-                continue
-            prior_cr = prior_crl.pop()
-            if not all(
-                prior_cr.get(k, "NA") == curated_record.get(k, "NA")
-                for k in essential_md_keys
-            ):
-
-                if "CURATED" == curated_record["metadata_source"]:
-                    # retrieve record from index to identify origin repositories
-                    try:
-                        indexed_record = self.LOCAL_INDEX.retrieve_record_from_index(
-                            curated_record
-                        )
-                    except RecordNotInIndexException:
-                        pass
-
-                    # print(indexed_record["source_url"])
-                    if not Path(indexed_record["source_url"]).is_dir():
-                        indexed_record = self.LOCAL_INDEX.set_source_path(
-                            indexed_record
-                        )
-                    if not Path(indexed_record["source_url"]).is_dir():
-                        print(
-                            "Source path of indexed record not available "
-                            f'({indexed_record["source_url"]})'
-                        )
-                        continue
-                if "DBLP" == curated_record["metadata_source"]:
-                    indexed_record = self.PREPARATION.get_md_from_dblp(curated_record)
-
-                # Cast to string for persistence
-                indexed_record = {k: str(v) for k, v in indexed_record.items()}
-                curated_record = {k: str(v) for k, v in curated_record.items()}
-
-                changes = diff(indexed_record, curated_record)
-                change_items = list(changes)
-
-                # TODO: export only essential changes?
-                # TODO The following does not seem to work yet...
-
-                change_items = [
-                    (x[0], x[1], x[2])
-                    for x in change_items
-                    if x[1]
-                    not in [
-                        "excl_criteria",
-                        "status",
-                        "origin",
-                        "metadata_source",
-                        "source_url",
-                        "ID",
-                        "grobid-version",
-                    ]
-                ]
-
-                dict_to_save = {
-                    "source_url": indexed_record["source_url"],
-                    "indexed_record": indexed_record,
-                    "changes": change_items,
-                }
-                fp = self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"] / Path(
-                    f"{curated_record['ID']}.json"
+                x
+                for x in prior["curated_records"]
+                if any(
+                    y in curated_record["origin"].split(";")
+                    for y in x["origin"].split(";")
                 )
-                fp.parent.mkdir(exist_ok=True)
+            ]
+            if len(prior_crl) == 0:
+                self.REVIEW_MANAGER.logger.debug("No prior records found")
+                continue
+            for prior_cr in prior_crl:
+                if curated_record["ID"] == "Animesh2004a":
+                    self.REVIEW_MANAGER.logger.debug(
+                        f'Curated record: {curated_record["ID"]}'
+                    )
+                    self.REVIEW_MANAGER.logger.debug(f'Prior record: {prior_cr["ID"]}')
 
-                with open(fp, "w", encoding="utf8") as corrections_file:
-                    json.dump(dict_to_save, corrections_file)
+                if not all(
+                    prior_cr.get(k, "NA") == curated_record.get(k, "NA")
+                    for k in essential_md_keys
+                ):
+
+                    if "CURATED" == curated_record.get("metadata_source", ""):
+                        # retrieve record from index to identify origin repositories
+                        try:
+                            indexed_record = (
+                                self.LOCAL_INDEX.retrieve_record_from_index(
+                                    curated_record
+                                )
+                            )
+                        except RecordNotInIndexException:
+                            pass
+
+                        # print(indexed_record["source_url"])
+                        if not Path(indexed_record["source_url"]).is_dir():
+                            indexed_record = self.LOCAL_INDEX.set_source_path(
+                                indexed_record
+                            )
+                        if not Path(indexed_record["source_url"]).is_dir():
+                            print(
+                                "Source path of indexed record not available "
+                                f'({indexed_record["source_url"]})'
+                            )
+                            continue
+                    if "DBLP" == curated_record.get("metadata_source", ""):
+                        # Note : don't use PREPARATION.get_md_from_dblp
+                        # because it will fuse_best_fields
+
+                        curated_record["source_url"] = "metadata_source=DBLP"
+
+                        ret = requests.get(
+                            curated_record["dblp_key"] + ".html?view=bibtex"
+                        )
+                        bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
+                        gr = bibtex_regex.search(ret.text)
+                        if gr:
+                            bibtex_str = gr.group(0)[18:-6]
+                            dblp_bib = bibtexparser.loads(bibtex_str)
+                            indexed_record = dblp_bib.entries.pop()
+                            indexed_record = {
+                                k: v.replace("\n", " ")
+                                for k, v in indexed_record.items()
+                            }
+
+                        else:
+                            continue
+                        # Note : we don't want to correct the following fields:
+                        if "booktitle" in curated_record:
+                            indexed_record["booktitle"] = curated_record["booktitle"]
+                        if "editor" in indexed_record:
+                            del indexed_record["editor"]
+                        if "publisher" in indexed_record:
+                            del indexed_record["publisher"]
+                        if "bibsource" in indexed_record:
+                            del indexed_record["bibsource"]
+                        if "timestamp" in indexed_record:
+                            del indexed_record["timestamp"]
+                        if "biburl" in indexed_record:
+                            del indexed_record["biburl"]
+
+                    # Cast to string for persistence
+                    indexed_record = {k: str(v) for k, v in indexed_record.items()}
+                    curated_record = {k: str(v) for k, v in curated_record.items()}
+
+                    # Note : removing the fields is a temporary fix
+                    # because the subsetting of change_items does not seem to
+                    # work properly
+                    if "pages" in indexed_record:
+                        del indexed_record["pages"]
+                    if "pages" in curated_record:
+                        del curated_record["pages"]
+                    if "dblp_key" in curated_record:
+                        del curated_record["dblp_key"]
+                    if "metadata_source" in curated_record:
+                        del curated_record["metadata_source"]
+                    if "status" in curated_record:
+                        del curated_record["status"]
+                    if "origin" in curated_record:
+                        del curated_record["origin"]
+
+                    # TODO: export only essential changes?
+                    changes = diff(indexed_record, curated_record)
+                    change_items = list(changes)
+                    # print(change_items)
+
+                    # TODO The following does not seem to work yet...
+                    # change: the key is in x[1]
+                    change_items = [
+                        (x[0], x[1], x[2])
+                        for x in change_items
+                        if x[1]
+                        not in [
+                            "excl_criteria",
+                            "status",
+                            "origin",
+                            "metadata_source",
+                            "source_url",
+                            "ID",
+                            "grobid-version",
+                        ]
+                    ]
+
+                    # add: the key is in x[2][0]
+                    change_items = [
+                        (x[0], x[1], x[2])
+                        for x in change_items
+                        if x[2][0]
+                        not in [
+                            "excl_criteria",
+                            "status",
+                            "origin",
+                            "metadata_source",
+                            "source_url",
+                            "ID",
+                            "grobid-version",
+                        ]
+                    ]
+
+                    if len(change_items) == 0:
+                        continue
+
+                    dict_to_save = {
+                        "source_url": indexed_record.get("source_url"),
+                        "indexed_record": indexed_record,
+                        "changes": change_items,
+                    }
+                    fp = self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"] / Path(
+                        f"{curated_record['ID']}.json"
+                    )
+                    fp.parent.mkdir(exist_ok=True)
+
+                    with open(fp, "w", encoding="utf8") as corrections_file:
+                        json.dump(dict_to_save, corrections_file)
 
         # for testing:
         # raise KeyError

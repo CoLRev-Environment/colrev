@@ -15,8 +15,10 @@ class Paper(Process):
         import docker
 
         if not self.REVIEW_MANAGER.paths["PAPER"].is_file():
-            self.logger.error("File paper.md does not exist.")
-            self.logger.info("Complete processing and use colrev_core data")
+            self.REVIEW_MANAGER.logger.error("File paper.md does not exist.")
+            self.REVIEW_MANAGER.logger.info(
+                "Complete processing and use colrev_core data"
+            )
             return
 
         self.REVIEW_MANAGER.build_docker_images()
@@ -56,8 +58,8 @@ class Paper(Process):
             msg = (
                 "Running docker container created from " f"image {pandoc_u_latex_image}"
             )
-            self.report_logger.info(msg)
-            self.logger.info(msg)
+            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.REVIEW_MANAGER.logger.info(msg)
             client.containers.run(
                 image=pandoc_u_latex_image,
                 command=script,
@@ -65,7 +67,7 @@ class Paper(Process):
                 volumes=[os.getcwd() + ":/data"],
             )
         except docker.errors.ImageNotFound:
-            self.logger.error("Docker image not found")
+            self.REVIEW_MANAGER.logger.error("Docker image not found")
             pass
 
         return

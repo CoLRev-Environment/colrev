@@ -49,7 +49,7 @@ class Validate(Process):
         self, records: typing.List[dict], search_records: list
     ) -> None:
 
-        self.logger.info("Calculating preparation differences...")
+        self.REVIEW_MANAGER.logger.info("Calculating preparation differences...")
         change_diff = []
         for record in records:
             if "changed_in_target_commit" not in record:
@@ -72,7 +72,7 @@ class Validate(Process):
         change_diff.sort(key=lambda x: x[2], reverse=True)
 
         if 0 == len(change_diff):
-            self.logger.info("No substantial differences found.")
+            self.REVIEW_MANAGER.logger.info("No substantial differences found.")
         else:
             plot_hist(
                 [sim for [e1, e2, sim] in change_diff],
@@ -85,18 +85,20 @@ class Validate(Process):
         for eid, record_link, difference in change_diff:
             # Escape sequence to clear terminal output for each new comparison
             os.system("cls" if os.name == "nt" else "clear")
-            self.logger.info("Record with ID: " + eid)
+            self.REVIEW_MANAGER.logger.info("Record with ID: " + eid)
 
-            self.logger.info("Difference: " + str(round(difference, 4)) + "\n\n")
+            self.REVIEW_MANAGER.logger.info(
+                "Difference: " + str(round(difference, 4)) + "\n\n"
+            )
             record_1 = [x for x in search_records if record_link == x["origin"]]
-            self.pp.pprint(record_1[0])
+            self.REVIEW_MANAGER.pp.pprint(record_1[0])
             record_2 = [x for x in records if eid == x["ID"]]
-            self.pp.pprint(record_2[0])
+            self.REVIEW_MANAGER.pp.pprint(record_2[0])
 
             print("\n\n")
             for diff in list(dictdiffer.diff(record_1, record_2)):
                 # Note: may treat fields differently (e.g., status, ID, ...)
-                self.pp.pprint(diff)
+                self.REVIEW_MANAGER.pp.pprint(diff)
 
             if "n" == input("continue (y/n)?"):
                 break
@@ -109,7 +111,9 @@ class Validate(Process):
     ) -> None:
 
         os.system("cls" if os.name == "nt" else "clear")
-        self.logger.info("Calculating differences between merged records...")
+        self.REVIEW_MANAGER.logger.info(
+            "Calculating differences between merged records..."
+        )
         change_diff = []
         merged_records = False
         for record in records:
@@ -134,9 +138,9 @@ class Validate(Process):
 
         if 0 == len(change_diff):
             if merged_records:
-                self.logger.info("No substantial differences found.")
+                self.REVIEW_MANAGER.logger.info("No substantial differences found.")
             else:
-                self.logger.info("No merged records")
+                self.REVIEW_MANAGER.logger.info("No merged records")
 
         for el_1, el_2, difference in change_diff:
             # Escape sequence to clear terminal output for each new comparison
@@ -146,9 +150,9 @@ class Validate(Process):
                 "Differences between merged records:" + f" {round(difference, 4)}\n\n"
             )
             record_1 = [x for x in search_records if el_1 == x["origin"]]
-            self.pp.pprint(record_1[0])
+            self.REVIEW_MANAGER.pp.pprint(record_1[0])
             record_2 = [x for x in search_records if el_2 == x["origin"]]
-            self.pp.pprint(record_2[0])
+            self.REVIEW_MANAGER.pp.pprint(record_2[0])
 
             if "n" == input("continue (y/n)?"):
                 break
@@ -158,12 +162,12 @@ class Validate(Process):
     def load_records(self, target_commit: str = None) -> typing.List[dict]:
 
         if target_commit is None:
-            self.logger.info("Loading data...")
+            self.REVIEW_MANAGER.logger.info("Loading data...")
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
             [x.update(changed_in_target_commit="True") for x in records]
 
         else:
-            self.logger.info("Loading data from history...")
+            self.REVIEW_MANAGER.logger.info("Loading data from history...")
             git_repo = git.Repo()
 
             MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths[
@@ -208,40 +212,50 @@ class Validate(Process):
 
         cur_sha = git_repo.head.commit.hexsha
         cur_branch = git_repo.active_branch.name
-        self.logger.info(f" Current commit: {cur_sha} (branch {cur_branch})")
+        self.REVIEW_MANAGER.logger.info(
+            f" Current commit: {cur_sha} (branch {cur_branch})"
+        )
 
         if not target_commit:
             target_commit = cur_sha
         if git_repo.is_dirty() and not target_commit == cur_sha:
-            self.logger.error(
+            self.REVIEW_MANAGER.logger.error(
                 "Error: Need a clean repository to validate properties "
                 "of prior commit"
             )
             return
         if not target_commit == cur_sha:
-            self.logger.info(f"Check out target_commit = {target_commit}")
+            self.REVIEW_MANAGER.logger.info(
+                f"Check out target_commit = {target_commit}"
+            )
             git_repo.git.checkout(target_commit)
 
         ret = self.REVIEW_MANAGER.check_repo()
         if 0 == ret["status"]:
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 " Traceability of records".ljust(32, " ") + "YES (validated)"
             )
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 " Consistency (based on hooks)".ljust(32, " ") + "YES (validated)"
             )
         else:
-            self.logger.error("Traceability of records".ljust(32, " ") + "NO")
-            self.logger.error("Consistency (based on hooks)".ljust(32, " ") + "NO")
+            self.REVIEW_MANAGER.logger.error(
+                "Traceability of records".ljust(32, " ") + "NO"
+            )
+            self.REVIEW_MANAGER.logger.error(
+                "Consistency (based on hooks)".ljust(32, " ") + "NO"
+            )
 
         STATUS = Status(self.REVIEW_MANAGER)
         completeness_condition = STATUS.get_completeness_condition()
         if completeness_condition:
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 " Completeness of iteration".ljust(32, " ") + "YES (validated)"
             )
         else:
-            self.logger.error("Completeness of iteration".ljust(32, " ") + "NO")
+            self.REVIEW_MANAGER.logger.error(
+                "Completeness of iteration".ljust(32, " ") + "NO"
+            )
 
         git_repo.git.checkout(cur_branch, force=True)
 

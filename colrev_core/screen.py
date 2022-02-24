@@ -28,7 +28,7 @@ class Screen(Process):
         for record in records:
             if record["status"] != RecordState.pdf_prepared:
                 continue
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "Included in screen (automatically)"
             )
@@ -78,18 +78,18 @@ class Screen(Process):
             conditions=[{"status": RecordState.pdf_prepared}]
         )
         screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.logger.debug(self.pp.pformat(screen_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
         return screen_data
 
     def set_data(self, record: dict, PAD: int = 40) -> None:
 
         if RecordState.rev_included == record["status"]:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Included in screen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         else:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)

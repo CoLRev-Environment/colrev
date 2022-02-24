@@ -793,11 +793,14 @@ class Status(Process):
 
             print(" Search")
             perc_curated = 0
-            if stat["overall"]["md_prepared"] > 0:
-                perc_curated = statuts_info["status"]["CURATED_records"] / (
-                    stat["overall"]["md_prepared"]
-                    + stat["currently"]["md_needs_manual_preparation"]
-                )
+            denominator = (
+                stat["overall"]["md_prepared"]
+                + stat["currently"]["md_needs_manual_preparation"]
+                - stat["currently"]["md_duplicates_removed"]
+            )
+            if denominator > 0:
+
+                perc_curated = statuts_info["status"]["CURATED_records"] / (denominator)
             if stat["overall"]["md_prepared"] > 0:
                 self.stat_print(
                     False,

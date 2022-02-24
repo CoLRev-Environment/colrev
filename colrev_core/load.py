@@ -90,7 +90,7 @@ class Loader(Process):
             contents = bibtex_file.read()
             bib_r = re.compile(r"@.*{.*,", re.M)
             if len(re.findall(bib_r, contents)) == 0:
-                self.logger.error(f"Not a bib file? {file.name}")
+                self.REVIEW_MANAGER.logger.error(f"Not a bib file? {file.name}")
                 db = None
             if "Early Access Date" in contents:
                 raise BibFileFormatError(
@@ -110,21 +110,25 @@ class Loader(Process):
 
         search_records = self.__getbib(filepath)
 
-        self.logger.debug(f"Loaded {filepath.name} with {len(search_records)} records")
+        self.REVIEW_MANAGER.logger.debug(
+            f"Loaded {filepath.name} with {len(search_records)} records"
+        )
 
         if len(search_records) == 0:
             return []
 
         nr_in_bib = self.__get_nr_in_bib(filepath)
         if len(search_records) < nr_in_bib:
-            self.logger.error("broken bib file (not imported all records)")
+            self.REVIEW_MANAGER.logger.error(
+                "broken bib file (not imported all records)"
+            )
             with open(filepath) as f:
                 line = f.readline()
                 while line:
                     if "@" in line[:3]:
                         ID = line[line.find("{") + 1 : line.rfind(",")]
                         if ID not in [x["ID"] for x in search_records]:
-                            self.logger.error(f"{ID} not imported")
+                            self.REVIEW_MANAGER.logger.error(f"{ID} not imported")
                     line = f.readline()
 
         search_records = self.__unify_field_names(search_records, filepath.name)
@@ -163,8 +167,9 @@ class Loader(Process):
                 if not d:
                     del record["doi"]
 
-            self.logger.debug(
-                f'append record {record["ID"]} ' f"\n{self.pp.pformat(record)}\n\n"
+            self.REVIEW_MANAGER.logger.debug(
+                f'append record {record["ID"]} '
+                f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
             )
             record_list.append(record)
 
@@ -172,8 +177,9 @@ class Loader(Process):
 
     def __import_record(self, record: dict) -> dict:
 
-        self.logger.debug(
-            f'import_record {record["ID"]}: \n{self.pp.pformat(record)}\n\n'
+        self.REVIEW_MANAGER.logger.debug(
+            f'import_record {record["ID"]}: '
+            f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
         )
 
         if RecordState.md_retrieved != record["status"]:
@@ -250,7 +256,7 @@ class Loader(Process):
         try:
             container = client.create_container("bibutils", script, stdin_open=True)
         except docker.errors.ImageNotFound:
-            self.logger.info("Docker image not found")
+            self.REVIEW_MANAGER.logger.info("Docker image not found")
             pass
             return ""
 
@@ -273,7 +279,7 @@ class Loader(Process):
         with open(file) as reader:
             data = reader.read(4096)
         if "TY  - " not in data:
-            self.logger.error(f"Error: Not a ris file? {file.name}")
+            self.REVIEW_MANAGER.logger.error(f"Error: Not a ris file? {file.name}")
             return []
 
         with open(file) as reader:
@@ -289,7 +295,7 @@ class Loader(Process):
         with open(file) as reader:
             data = reader.read(4096)
         if "%T " not in data:
-            self.logger.error(f"Error: Not an end file? {file.name}")
+            self.REVIEW_MANAGER.logger.error(f"Error: Not an end file? {file.name}")
             return []
 
         with open(file) as reader:
@@ -371,7 +377,7 @@ class Loader(Process):
         try:
             data = pd.read_csv(file)
         except pd.errors.ParserError:
-            self.logger.error(f"Error: Not a csv file? {file.name}")
+            self.REVIEW_MANAGER.logger.error(f"Error: Not a csv file? {file.name}")
             pass
             return []
         data.columns = data.columns.str.replace(" ", "_")
@@ -385,7 +391,7 @@ class Loader(Process):
         try:
             data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
         except pd.errors.ParserError:
-            self.logger.error(f"Error: Not an xlsx file: {file.name}")
+            self.REVIEW_MANAGER.logger.error(f"Error: Not an xlsx file: {file.name}")
             pass
             return []
         data.columns = data.columns.str.replace(" ", "_")
@@ -422,16 +428,18 @@ class Loader(Process):
             db = bibtexparser.loads(r.text, parser=parser)
             return db.entries
         if 500 == r.status_code:
-            self.report_logger.error(f"Not a readable pdf file: {file.name}")
-            self.logger.error(f"Not a readable pdf file: {file.name}")
-            self.report_logger.debug(f"Grobid: {r.text}")
-            self.logger.debug(f"Grobid: {r.text}")
+            self.REVIEW_MANAGER.report_logger.error(
+                f"Not a readable pdf file: {file.name}"
+            )
+            self.REVIEW_MANAGER.logger.error(f"Not a readable pdf file: {file.name}")
+            self.REVIEW_MANAGER.report_logger.debug(f"Grobid: {r.text}")
+            self.REVIEW_MANAGER.logger.debug(f"Grobid: {r.text}")
             return []
 
-        self.report_logger.debug(f"Status: {r.status_code}")
-        self.logger.debug(f"Status: {r.status_code}")
-        self.report_logger.debug(f"Response: {r.text}")
-        self.logger.debug(f"Response: {r.text}")
+        self.REVIEW_MANAGER.report_logger.debug(f"Status: {r.status_code}")
+        self.REVIEW_MANAGER.logger.debug(f"Status: {r.status_code}")
+        self.REVIEW_MANAGER.report_logger.debug(f"Response: {r.text}")
+        self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
         return []
 
     def __pdfRefs2bib(self, file: Path) -> typing.List[dict]:
@@ -451,16 +459,18 @@ class Loader(Process):
                 rec["ID"] = rec.get("ID", "").rjust(3, "0")
             return db.entries
         if 500 == r.status_code:
-            self.report_logger.error(f"Not a readable pdf file: {file.name}")
-            self.logger.error(f"Not a readable pdf file: {file.name}")
-            self.report_logger.debug(f"Grobid: {r.text}")
-            self.logger.debug(f"Grobid: {r.text}")
+            self.REVIEW_MANAGER.report_logger.error(
+                f"Not a readable pdf file: {file.name}"
+            )
+            self.REVIEW_MANAGER.logger.error(f"Not a readable pdf file: {file.name}")
+            self.REVIEW_MANAGER.report_logger.debug(f"Grobid: {r.text}")
+            self.REVIEW_MANAGER.logger.debug(f"Grobid: {r.text}")
             return []
 
-        self.report_logger.debug(f"Status: {r.status_code}")
-        self.logger.debug(f"Status: {r.status_code}")
-        self.report_logger.debug(f"Response: {r.text}")
-        self.logger.debug(f"Response: {r.text}")
+        self.REVIEW_MANAGER.report_logger.debug(f"Status: {r.status_code}")
+        self.REVIEW_MANAGER.logger.debug(f"Status: {r.status_code}")
+        self.REVIEW_MANAGER.report_logger.debug(f"Response: {r.text}")
+        self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
         return []
 
     def __unify_field_names(
@@ -546,14 +556,18 @@ class Loader(Process):
             grobid_client.start_grobid()
 
         if filetype in self.conversion_scripts.keys():
-            self.report_logger.info(f"Loading {filetype}: {sfpath.name}")
-            self.logger.info(f"Loading {filetype}: {sfpath.name}")
+            self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
+            self.REVIEW_MANAGER.logger.info(f"Loading {filetype}: {sfpath.name}")
 
             cur_tag = docker.from_env().images.get("bibutils").tags[0]
-            self.report_logger.info(f"Running docker container created from {cur_tag}")
-            self.logger.info(f"Running docker container created from {cur_tag}")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Running docker container created from {cur_tag}"
+            )
+            self.REVIEW_MANAGER.logger.info(
+                f"Running docker container created from {cur_tag}"
+            )
 
-            self.logger.debug(
+            self.REVIEW_MANAGER.logger.debug(
                 f"Called {self.conversion_scripts[filetype].__name__}({sfpath})"
             )
             records = self.conversion_scripts[filetype](sfpath)
@@ -565,13 +579,13 @@ class Loader(Process):
             records = self.__drop_empty_fields(records)
 
             if len(records) == 0:
-                self.report_logger.error("No records loaded")
-                self.logger.error("No records loaded")
+                self.REVIEW_MANAGER.report_logger.error("No records loaded")
+                self.REVIEW_MANAGER.logger.error("No records loaded")
                 return corresponding_bib_file
 
             if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
                 if not corresponding_bib_file.is_file():
-                    self.logger.info(
+                    self.REVIEW_MANAGER.logger.info(
                         f"Loaded {len(records)} " f"records from {sfpath.name}"
                     )
                     db = BibDatabase()
@@ -579,8 +593,10 @@ class Loader(Process):
                     with open(corresponding_bib_file, "w") as fi:
                         fi.write(bibtexparser.dumps(db))
         else:
-            self.report_logger.info(f"Filetype not recognized: {sfpath.name}")
-            self.logger.info(f"Filetype not recognized: {sfpath.name}")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Filetype not recognized: {sfpath.name}"
+            )
+            self.REVIEW_MANAGER.logger.info(f"Filetype not recognized: {sfpath.name}")
             return corresponding_bib_file
 
         return corresponding_bib_file
@@ -647,10 +663,10 @@ class Loader(Process):
             )
 
             for old_id, new_id in IDs_to_update:
-                self.logger.info(
+                self.REVIEW_MANAGER.logger.info(
                     f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
                 )
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
                 )
                 self.__inplace_change_second(
@@ -718,7 +734,7 @@ class Loader(Process):
 
     def __update_colrev_repo(self, CHECK_PROCESS, bib_file_path) -> None:
 
-        self.logger.info("Update records")
+        self.REVIEW_MANAGER.logger.info("Update records")
         records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         for record in records:
             del record["origin"]
@@ -746,7 +762,7 @@ class Loader(Process):
             bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
         )
 
-        self.logger.info("Save source file")
+        self.REVIEW_MANAGER.logger.info("Save source file")
         bib_file_path.parent.mkdir(exist_ok=True)
         with open(bib_file_path, "w") as out:
             out.write(bibtex_str)
@@ -772,7 +788,7 @@ class Loader(Process):
         )
         last_sync = SOURCE_REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
 
-        self.logger.info("Add source information")
+        self.REVIEW_MANAGER.logger.info("Add source information")
         new_record = {
             "filename": bib_file_path.name,
             "search_type": "COLREV_REPO",
@@ -784,12 +800,12 @@ class Loader(Process):
         }
 
         SOURCE_REVIEW_MANAGER.REVIEW_DATASET.append_sources(new_record)
-        self.logger.debug(
+        self.REVIEW_MANAGER.logger.debug(
             f"Added infos to {self.REVIEW_MANAGER.paths['SOURCES']}:"
-            f" \n{self.pp.pformat(new_record)}"
+            f" \n{self.REVIEW_MANAGER.pp.pformat(new_record)}"
         )
 
-        self.logger.info("Import records")
+        self.REVIEW_MANAGER.logger.info("Import records")
         self.__update_colrev_repo(CHECK_PROCESS, bib_file_path)
 
         saved_args = {"add_colrev_repo": repo_path_str}
@@ -816,8 +832,8 @@ class Loader(Process):
             imported_origins = self.__get_currently_imported_origin_list()
             len_before = len(imported_origins)
 
-            self.report_logger.info(f"Load {search_file.name}")
-            self.logger.info(f"Load {search_file.name}")
+            self.REVIEW_MANAGER.report_logger.info(f"Load {search_file.name}")
+            self.REVIEW_MANAGER.logger.info(f"Load {search_file.name}")
             saved_args["file"] = search_file.name
 
             self.resolve_non_unique_IDs(corresponding_bib_file)
@@ -827,7 +843,9 @@ class Loader(Process):
 
             nr_in_bib = self.__get_nr_in_bib(corresponding_bib_file)
             if nr_in_bib != nr_search_recs:
-                self.logger.error(f"ERROR in bib file:  {corresponding_bib_file}")
+                self.REVIEW_MANAGER.logger.error(
+                    f"ERROR in bib file:  {corresponding_bib_file}"
+                )
 
             search_records = [
                 x for x in search_records if x["origin"] not in imported_origins
@@ -839,7 +857,7 @@ class Loader(Process):
             for sr in search_records:
                 sr = self.__import_record(sr)
 
-            self.logger.info("Save records to references.bib")
+            self.REVIEW_MANAGER.logger.info("Save records to references.bib")
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
             records += search_records
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
@@ -848,12 +866,12 @@ class Loader(Process):
             # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
 
             if not keep_ids:
-                self.logger.info("Set IDs")
+                self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                     records, selected_IDs=[x["ID"] for x in search_records]
                 )
 
-            self.logger.info("Add changes and create commit")
+            self.REVIEW_MANAGER.logger.info("Add changes and create commit")
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 str(self.REVIEW_MANAGER.paths["SOURCES"])
             )
@@ -870,14 +888,16 @@ class Loader(Process):
             imported = len_after - len_before
 
             if imported != to_import:
-                self.logger.error(
+                self.REVIEW_MANAGER.logger.error(
                     f"PROBLEM: delta: {to_import - imported} "
                     "records missing (negative: too much)"
                 )
-                self.logger.error(f"len_before: {len_before}")
-                self.logger.error(f"Records not yet imported: {to_import}")
-                self.logger.error(f"len_after: {len_after}")
-                self.logger.error([x["ID"] for x in search_records])
+                self.REVIEW_MANAGER.logger.error(f"len_before: {len_before}")
+                self.REVIEW_MANAGER.logger.error(
+                    f"Records not yet imported: {to_import}"
+                )
+                self.REVIEW_MANAGER.logger.error(f"len_after: {len_after}")
+                self.REVIEW_MANAGER.logger.error([x["ID"] for x in search_records])
 
             print("\n")
 

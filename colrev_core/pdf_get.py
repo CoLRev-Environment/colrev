@@ -45,7 +45,7 @@ class PDF_Retrieval(Process):
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
 
     def __copy_pdfs_to_repo(self) -> None:
-        self.logger.info("Copy PDFs to dir")
+        self.REVIEW_MANAGER.logger.info("Copy PDFs to dir")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         for record in records:
@@ -58,7 +58,7 @@ class PDF_Retrieval(Process):
                         record["ID"] + ".pdf"
                     )
                     if new_fpath.is_file():
-                        self.logger.warning(
+                        self.REVIEW_MANAGER.logger.warning(
                             f'PDF cannot be copied - already exits ({record["ID"]})'
                         )
                         continue
@@ -131,10 +131,10 @@ class PDF_Retrieval(Process):
                     with open(pdf_filepath, "wb") as f:
                         f.write(res.content)
                     if self.__is_pdf(pdf_filepath):
-                        self.report_logger.info(
+                        self.REVIEW_MANAGER.report_logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
-                        self.logger.info(
+                        self.REVIEW_MANAGER.logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
                         record.update(file=str(pdf_filepath))
@@ -142,7 +142,7 @@ class PDF_Retrieval(Process):
                     else:
                         os.remove(pdf_filepath)
                 else:
-                    self.logger.info(
+                    self.REVIEW_MANAGER.logger.info(
                         "Unpaywall retrieval error " f"{res.status_code}/{url}"
                     )
         return record
@@ -185,13 +185,13 @@ class PDF_Retrieval(Process):
         ]
 
         for retrieval_script in retrieval_scripts:
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f'{retrieval_script["script"].__name__}({record["ID"]}) called'
             )
 
             record = retrieval_script["script"](record)
             if "file" in record:
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f'{retrieval_script["script"].__name__}'
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
@@ -212,19 +212,21 @@ class PDF_Retrieval(Process):
     def relink_files(self, ids_with_files_to_relink: typing.List[str]) -> None:
         from tqdm import tqdm
 
-        self.logger.info(
+        self.REVIEW_MANAGER.logger.info(
             "Checking PDFs in same directory and reassigning "
             "when pdf_hash is identical"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         for record in records:
             if record["ID"] in ids_with_files_to_relink:
-                self.logger.info(record["ID"])
+                self.REVIEW_MANAGER.logger.info(record["ID"])
                 pdf_path = Path(record["file"]).parent
                 for pdf_candidate in tqdm(list(pdf_path.glob("**/*.pdf"))):
                     if record["pdf_hash"] == self.get_pdf_hash(pdf_candidate):
                         record["file"] = str(pdf_candidate)
-                        self.logger.info(f"Found and linked PDF: {pdf_candidate}")
+                        self.REVIEW_MANAGER.logger.info(
+                            f"Found and linked PDF: {pdf_candidate}"
+                        )
                         break
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -236,8 +238,12 @@ class PDF_Retrieval(Process):
         records: typing.List[dict],
     ) -> typing.List[dict]:
 
-        self.report_logger.info("Starting GROBID service to extract metadata from PDFs")
-        self.logger.info("Starting GROBID service to extract metadata from PDFs")
+        self.REVIEW_MANAGER.report_logger.info(
+            "Starting GROBID service to extract metadata from PDFs"
+        )
+        self.REVIEW_MANAGER.logger.info(
+            "Starting GROBID service to extract metadata from PDFs"
+        )
         grobid_client.start_grobid()
 
         IDs = [x["ID"] for x in records]
@@ -270,8 +276,12 @@ class PDF_Retrieval(Process):
                         max_sim_record.update(file=str(file))
                         max_sim_record.update(status=RecordState.pdf_imported)
 
-                        self.report_logger.info("linked unlinked pdf:" f" {file.name}")
-                        self.logger.info("linked unlinked pdf:" f" {file.name}")
+                        self.REVIEW_MANAGER.report_logger.info(
+                            "linked unlinked pdf:" f" {file.name}"
+                        )
+                        self.REVIEW_MANAGER.logger.info(
+                            "linked unlinked pdf:" f" {file.name}"
+                        )
                         # max_sim_record = \
                         #     pdf_prep.validate_pdf_metadata(max_sim_record)
                         # status = max_sim_record['status']
@@ -281,7 +291,7 @@ class PDF_Retrieval(Process):
         return records
 
     def __rename_pdfs(self, records: typing.List[dict]) -> typing.List[dict]:
-        self.logger.info("RENAME PDFs")
+        self.REVIEW_MANAGER.logger.info("RENAME PDFs")
         for record in records:
             if "file" in record and record["status"] == RecordState.pdf_imported:
                 file = Path(record["file"])
@@ -291,9 +301,11 @@ class PDF_Retrieval(Process):
                 try:
                     file.rename(new_filename)
                     record["file"] = str(new_filename)
-                    self.logger.info(f"rename {file.name} > {new_filename.name}")
+                    self.REVIEW_MANAGER.logger.info(
+                        f"rename {file.name} > {new_filename.name}"
+                    )
                 except FileNotFoundError:
-                    self.logger.error(
+                    self.REVIEW_MANAGER.logger.error(
                         f"Could not rename {record['ID']} - FileNotFoundError"
                     )
                     pass
@@ -323,7 +335,7 @@ class PDF_Retrieval(Process):
             "PAD": PAD,
             "items": items,
         }
-        self.logger.debug(self.pp.pformat(prep_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
     def __batch(self, items: typing.List[typing.Dict]):
@@ -351,7 +363,7 @@ class PDF_Retrieval(Process):
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
                         record["status"] = RecordState.pdf_imported
-                        self.logger.info(
+                        self.REVIEW_MANAGER.logger.info(
                             f'Set status to pdf_imported for {record["ID"]}'
                         )
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
@@ -365,17 +377,21 @@ class PDF_Retrieval(Process):
 
         print("TODO: download if there is a fulltext link in the record")
 
-        self.report_logger.info("Retrieve PDFs")
-        self.logger.info("Retrieve PDFs")
+        self.REVIEW_MANAGER.report_logger.info("Retrieve PDFs")
+        self.REVIEW_MANAGER.logger.info("Retrieve PDFs")
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records = self.__set_status_if_file_linked(records)
         records = self.check_existing_unlinked_pdfs(records)
 
         pdf_get_data = self.__get_data()
-        self.logger.debug(f"pdf_get_data: {self.pp.pformat(pdf_get_data)}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"pdf_get_data: {self.REVIEW_MANAGER.pp.pformat(pdf_get_data)}"
+        )
 
-        self.logger.debug(self.pp.pformat(pdf_get_data["items"]))
+        self.REVIEW_MANAGER.logger.debug(
+            self.REVIEW_MANAGER.pp.pformat(pdf_get_data["items"])
+        )
 
         i = 1
         for retrieval_batch in self.__batch(pdf_get_data["items"]):
@@ -401,7 +417,7 @@ class PDF_Retrieval(Process):
             self.REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args=saved_args)
 
         if i == 1:
-            self.logger.info("No additional pdfs to retrieve")
+            self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
 
         return
 

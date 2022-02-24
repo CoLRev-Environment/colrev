@@ -212,40 +212,48 @@ class ReviewManager:
     def __setup_logger(self, level=logging.INFO) -> logging.Logger:
         logger = logging.getLogger("colrev_core")
 
-        if not logger.handlers:
-            logger.setLevel(level)
+        if logger.handlers:
+            for handler in logger.handlers:
+                logger.removeHandler(handler)
 
-            formatter = logging.Formatter(
-                fmt="%(asctime)s [%(levelname)s] %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
-            handler = logging.StreamHandler()
-            handler.setFormatter(formatter)
+        logger.setLevel(level)
 
-            logger.addHandler(handler)
-            logger.propagate = False
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+
+        logger.addHandler(handler)
+        logger.propagate = False
+
         return logger
 
     def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
 
         report_logger = logging.getLogger("colrev_core_report")
 
-        if not report_logger.handlers:
-            report_logger.setLevel(level)
-            formatter = logging.Formatter(
-                fmt="%(asctime)s [%(levelname)s] %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
+        if report_logger.handlers:
+            for handler in report_logger.handlers:
+                report_logger.removeHandler(handler)
+
+        report_logger.setLevel(level)
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+
+        report_file_handler = logging.FileHandler("report.log", mode="a")
+        report_file_handler.setFormatter(formatter)
+
+        report_logger.addHandler(report_file_handler)
+
+        if logging.DEBUG == level:
             handler = logging.StreamHandler()
             handler.setFormatter(formatter)
-
-            report_file_handler = logging.FileHandler("report.log", mode="a")
-            report_file_handler.setFormatter(formatter)
-
-            report_logger.addHandler(report_file_handler)
-            if logging.DEBUG == level:
-                report_logger.addHandler(handler)
-            report_logger.propagate = False
+            report_logger.addHandler(handler)
+        report_logger.propagate = False
 
         return report_logger
 
@@ -1266,16 +1274,58 @@ class ReviewManager:
 
         for source_url, change_itemset in change_sets.items():
             print()
-            self.logger.info(f"Apply corrections to {source_url}")
+            if "metadata_source=" in source_url:
+                self.logger.info(f"Share corrections with {source_url}")
+            else:
+                self.logger.info(f"Apply corrections to {source_url}")
             for item in change_itemset:
                 self.pp.pprint(item["changes"])
             if "y" == input("\nConfirm changes? (y/n)"):
-                self.__apply_correction(source_url, change_itemset)
+                if "metadata_source=" in source_url:
+                    self.__share_correction(source_url, change_itemset)
+                else:
+                    self.__apply_correction(source_url, change_itemset)
 
                 print(
                     "\nThank you for supporting other researchers "
                     "by sharing your corrections ❤\n"
                 )
+        return
+
+    def __share_correction(self, source_url, change_list) -> None:
+
+        prepared_change_list = []
+        for change in change_list:
+            prepared_change_list.append(
+                {"record": change["indexed_record"], "changes": change["changes"]}
+            )
+
+        corrections = self.pp.pformat(prepared_change_list)
+
+        text = (
+            "Dear Sir or Madam,\n\nwe have noticed potential corrections and "
+            + "would like to share them with you.\nThe potentical changes are:\n\n"
+            + f"{corrections}\n\nBest regards\n\n"
+        )
+
+        if "metadata_source=DBLP" == source_url:
+            file_path = Path("dblp-corrections-mail.txt")
+            dblp_header = (
+                "Send to: dblp@dagstuhl.de\n\n"
+                + "Subject: Potential correction to DBLP metadata\n\n"
+            )
+
+            text = dblp_header + text
+            file_path.write_text(text)
+
+            print(f"\nPlease send the e-mail (prepared in the file {file_path})")
+            input("Press Enter to confirm")
+
+            for change_item in change_list:
+                if Path(change_item["file"]).is_file():
+                    Path(change_item["file"]).unlink()
+
+        # TODO : delete file if successful
         return
 
     def __apply_correction(self, source_url, change_list) -> None:

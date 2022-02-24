@@ -49,7 +49,9 @@ class PDFRetrievalMan(Process):
                 missing_pdf_files_csv, index=False, quoting=csv.QUOTE_ALL
             )
 
-            self.logger.info("Created missing_pdf_files.csv with paper details")
+            self.REVIEW_MANAGER.logger.info(
+                "Created missing_pdf_files.csv with paper details"
+            )
         return
 
     def get_data(self) -> dict:
@@ -69,27 +71,29 @@ class PDFRetrievalMan(Process):
             conditions=[{"status": RecordState.pdf_needs_manual_retrieval}]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
-        self.logger.debug(self.pp.pformat(pdf_get_man_data))
+        self.REVIEW_MANAGER.logger.debug(
+            self.REVIEW_MANAGER.pp.pformat(pdf_get_man_data)
+        )
         return pdf_get_man_data
 
     def set_data(self, record, filepath: Path, PAD: int = 40) -> None:
 
         if filepath is None:
             record.update(status=RecordState.pdf_not_available)
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
             )
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
             )
 
         else:
             record.update(status=RecordState.pdf_imported)
             record.update(file=str(filepath))
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
-            self.logger.info(
+            self.REVIEW_MANAGER.logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
 

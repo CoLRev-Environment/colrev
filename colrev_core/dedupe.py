@@ -147,7 +147,9 @@ class Dedupe(Process):
             str
         )
         references_dict = references.to_dict("records")
-        self.logger.debug(self.pp.pformat(references_dict))
+        self.REVIEW_MANAGER.logger.debug(
+            self.REVIEW_MANAGER.pp.pformat(references_dict)
+        )
 
         data_d = {}
 
@@ -221,7 +223,7 @@ class Dedupe(Process):
             training_file.unlink(missing_ok=True)
             settings_file.unlink(missing_ok=True)
 
-        self.logger.info("Importing data ...")
+        self.REVIEW_MANAGER.logger.info("Importing data ...")
 
         ret_dict = {}
 
@@ -243,7 +245,7 @@ class Dedupe(Process):
 
         else:
 
-            self.logger.debug(self.pp.pformat(data_d))
+            self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(data_d))
 
             def title_corpus():
                 for record in data_d.values():
@@ -286,7 +288,7 @@ class Dedupe(Process):
             # look for it and load it in.
             # __Note:__ if you want to train from scratch, delete the training_file
             if training_file.is_file():
-                self.logger.info(
+                self.REVIEW_MANAGER.logger.info(
                     f"Reading pre-labeled training data from {training_file.name}"
                 )
                 with open(training_file, "rb") as f:
@@ -352,7 +354,7 @@ class Dedupe(Process):
                     conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
                 else:
                     conf_details = ""
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f"Removed duplicate{conf_details}: "
                     + f'{main_record["ID"]} <- {dupe_record["ID"]}'
                 )
@@ -473,7 +475,7 @@ class Dedupe(Process):
                 else:
                     main_record["manual_duplicate"] = dupe_record["manual_duplicate"]
 
-            self.report_logger.info(
+            self.REVIEW_MANAGER.report_logger.info(
                 f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
             )
 
@@ -633,10 +635,10 @@ class Dedupe(Process):
             sim_details = utils.get_similarity_detailed(
                 references.iloc[base_record_i], references.iloc[-1]
             )
-            self.report_logger.debug(
+            self.REVIEW_MANAGER.report_logger.debug(
                 f"Similarity score: {sim_details['similarity_score']}"
             )
-            self.report_logger.debug(sim_details["details"])
+            self.REVIEW_MANAGER.report_logger.debug(sim_details["details"])
 
             references.iloc[base_record_i, sim_col] = sim_details["score"]
             references.iloc[base_record_i, details_col] = sim_details["details"]
@@ -649,7 +651,7 @@ class Dedupe(Process):
 
     def append_merges(self, batch_item: dict) -> list:
 
-        self.logger.debug(f'append_merges {batch_item["record"]}')
+        self.REVIEW_MANAGER.logger.debug(f'append_merges {batch_item["record"]}')
 
         references = batch_item["queue"]
 
@@ -681,7 +683,7 @@ class Dedupe(Process):
         if max_similarity <= batch_item["MERGING_NON_DUP_THRESHOLD"]:
             # Note: if no other record has a similarity exceeding the threshold,
             # it is considered a non-duplicate (in relation to all other records)
-            self.logger.debug(f"max_similarity ({max_similarity})")
+            self.REVIEW_MANAGER.logger.debug(f"max_similarity ({max_similarity})")
             return [
                 {
                     "ID1": batch_item["record"],
@@ -697,18 +699,18 @@ class Dedupe(Process):
         ):
 
             ID = references.loc[references["similarity"].idxmax()]["ID"]
-            self.logger.debug(
+            self.REVIEW_MANAGER.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
             )
             details = references.loc[references["similarity"].idxmax()]["details"]
-            self.logger.debug(details)
+            self.REVIEW_MANAGER.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (
                 f'{batch_item["record"]} - {ID}'.ljust(35, " ")
                 + f"  - potential duplicate (similarity: {max_similarity})"
             )
-            self.report_logger.info(msg)
-            self.logger.info(msg)
+            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.REVIEW_MANAGER.logger.info(msg)
             return [
                 {
                     "ID1": batch_item["record"],
@@ -723,17 +725,17 @@ class Dedupe(Process):
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
             ID = references.loc[references["similarity"].idxmax()]["ID"]
-            self.logger.debug(
+            self.REVIEW_MANAGER.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
             )
             details = references.loc[references["similarity"].idxmax()]["details"]
-            self.logger.debug(details)
+            self.REVIEW_MANAGER.logger.debug(details)
             msg = (
                 f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
                 + f" (similarity: {max_similarity})\nDetails: {details}"
             )
-            self.report_logger.info(msg)
-            self.logger.info(msg)
+            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.REVIEW_MANAGER.logger.info(msg)
             return [
                 {
                     "ID1": batch_item["record"],
@@ -770,7 +772,7 @@ class Dedupe(Process):
             "queue": processed_IDs + IDs_to_dedupe,
             "items_start": len(processed_IDs),
         }
-        self.logger.debug(self.pp.pformat(dedupe_data))
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(dedupe_data))
 
         return dedupe_data
 
@@ -785,7 +787,7 @@ class Dedupe(Process):
                 if crossref_rec is None:
                     continue
 
-                self.report_logger.info(
+                self.REVIEW_MANAGER.report_logger.info(
                     f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
                 )
                 self.apply_merges(
@@ -866,7 +868,9 @@ class Dedupe(Process):
 
         settings_file = Path(".references_learned_settings")
         if settings_file.is_file():
-            self.report_logger.info(f"Reading model from {settings_file.name}")
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Reading model from {settings_file.name}"
+            )
             with open(settings_file, "rb") as f:
                 deduper = dedupe.StaticDedupe(f)
                 refs = self.__readLinkData([record] + record_list)
@@ -890,10 +894,10 @@ class Dedupe(Process):
     def cluster_tuples(self, deduper, partition_threshold, auto_merge_threshold):
 
         report_logger = logging.getLogger("colrev_core_report")
-        self.logger.info("Clustering duplicates...")
+        self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
         data_d = self.__readData()
-        self.logger.info(f"Number of records: {len(data_d.items())}")
+        self.REVIEW_MANAGER.logger.info(f"Number of records: {len(data_d.items())}")
 
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
@@ -968,7 +972,7 @@ class Dedupe(Process):
 
                             if orig_propagated and dupe_propagated:
                                 # both_IDs_propagated
-                                self.logger.error(
+                                self.REVIEW_MANAGER.logger.error(
                                     f"Both IDs propagated: {orig_rec}, {dupe_rec}"
                                 )
                                 continue
@@ -1143,7 +1147,7 @@ class Dedupe(Process):
 
         saved_args = locals()
 
-        self.logger.info("Process duplicates")
+        self.REVIEW_MANAGER.logger.info("Process duplicates")
 
         self.__merge_crossref_linked_records()
 
@@ -1170,7 +1174,7 @@ class Dedupe(Process):
             )
 
         if 1 == i:
-            self.logger.info("No records to check for duplicates")
+            self.REVIEW_MANAGER.logger.info("No records to check for duplicates")
 
         return
 

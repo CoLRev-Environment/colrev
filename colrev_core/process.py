@@ -76,8 +76,10 @@ class Process:
         if notify_state_transition_process:
             self.REVIEW_MANAGER.notify(self)
         else:
-            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
-            self.REVIEW_MANAGER.notify(CHECK_PROCESS)
+            # Note : the DummyProcess does not call super()
+            # and thereby avoids infinite recursions
+            DUMMY_PROCESS = DummyProcess(self.REVIEW_MANAGER)
+            self.REVIEW_MANAGER.notify(DUMMY_PROCESS)
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         if debug:
@@ -86,10 +88,7 @@ class Process:
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
 
-        self.logger = self.REVIEW_MANAGER.logger
-        self.report_logger = self.REVIEW_MANAGER.report_logger
-        self.pp = self.REVIEW_MANAGER.pp
-        self.logger.debug(f"Created {self.type} process")
+        self.REVIEW_MANAGER.logger.debug(f"Created {self.type} process")
 
         # Note: we call REVIEW_MANAGER.notify() in the subclasses
         # to make sure that the REVIEW_MANAGER calls the right check_preconditions()
@@ -270,10 +269,22 @@ class FormatProcess(Process):
 
 
 class CheckProcess(Process):
-    def __init__(self, REVIEW_MANAGER, fun=None, notify: bool = True):
-        super().__init__(REVIEW_MANAGER, ProcessType.check, fun)
-        if notify:
-            self.REVIEW_MANAGER.notify(self)
+    def __init__(self, REVIEW_MANAGER, fun=None):
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.check,
+            fun,
+            notify_state_transition_process=False,
+        )
+
+    def check_precondition(self) -> None:
+        return
+
+
+class DummyProcess(Process):
+    def __init__(self, REVIEW_MANAGER, fun=None):
+        self.REVIEW_MANAGER = REVIEW_MANAGER
+        self.type = ProcessType.check
 
     def check_precondition(self) -> None:
         return
