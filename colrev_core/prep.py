@@ -201,7 +201,6 @@ class Preparation(Process):
         result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
         if result:
             wait, text = result["content"].split(";")
-            # print(text)
             if "http" in text:
                 url = text[text.lower().find("http") :]
                 url = unquote(url, encoding="utf-8", errors="replace")
@@ -212,12 +211,33 @@ class Preparation(Process):
     def get_link_from_doi(self, record: dict) -> dict:
 
         url = f"https://www.doi.org/{record['doi']}"
+
+        # TODO : retry for 50X
+        # from requests.adapters import HTTPAdapter
+        # from requests.adapters import Retry
+        # example for testing: ({'doi':'10.1177/02683962221086300'})
+        # s = requests.Session()
+        # headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
+        # retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
+        # s.mount('https://', HTTPAdapter(max_retries=retries))
+        # ret = s.get(url, headers=headers)
+        # print(ret)
+
         ret = requests.get(url)
-        # follow the chain of redirects
-        while self.__meta_redirect(ret.content.decode("utf-8")):
-            url = self.__meta_redirect(ret.content.decode("utf-8"))
-            ret = requests.get(url, "GET")
-        record["url"] = url
+        if 503 == ret.status_code:
+            return record
+        elif (
+            200 == ret.status_code
+            and "doi.org" not in ret.url
+            and "linkinghub" not in ret.url
+        ):
+            url = ret.url
+        else:
+            # follow the chain of redirects
+            while self.__meta_redirect(ret.content.decode("utf-8")):
+                url = self.__meta_redirect(ret.content.decode("utf-8"))
+                ret = requests.get(url, "GET")
+        record["url"] = str(url)
         return record
 
     def correct_recordtype(self, record: dict) -> dict:
@@ -546,17 +566,18 @@ class Preparation(Process):
         # Note: the format differst between crossref and doi.org
         record: dict = {}
 
-        if "link" in item:
-            fulltext_link_l = [
-                u["URL"] for u in item["link"] if "pdf" in u["content-type"]
-            ]
-            if len(fulltext_link_l) == 1:
-                record["fulltext"] = fulltext_link_l.pop()
-            item["link"] = [u for u in item["link"] if "pdf" not in u["content-type"]]
-            if len(item["link"]) >= 1:
-                link = item["link"][0]["URL"]
-                if link != record.get("fulltext", ""):
-                    record["link"] = link
+        # Note : better use the doi-link resolution
+        # if "link" in item:
+        #     fulltext_link_l = [
+        #         u["URL"] for u in item["link"] if "pdf" in u["content-type"]
+        #     ]
+        #     if len(fulltext_link_l) == 1:
+        #         record["fulltext"] = fulltext_link_l.pop()
+        #     item["link"] = [u for u in item["link"] if "pdf" not in u["content-type"]]
+        #     if len(item["link"]) >= 1:
+        #         link = item["link"][0]["URL"]
+        #         if link != record.get("fulltext", ""):
+        #             record["link"] = link
 
         if "title" in item:
             retrieved_title = item["title"]

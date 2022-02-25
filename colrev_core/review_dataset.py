@@ -1174,11 +1174,6 @@ class ReviewDataset:
                 self.REVIEW_MANAGER.logger.debug("No prior records found")
                 continue
             for prior_cr in prior_crl:
-                if curated_record["ID"] == "Animesh2004a":
-                    self.REVIEW_MANAGER.logger.debug(
-                        f'Curated record: {curated_record["ID"]}'
-                    )
-                    self.REVIEW_MANAGER.logger.debug(f'Prior record: {prior_cr["ID"]}')
 
                 if not all(
                     prior_cr.get(k, "NA") == curated_record.get(k, "NA")
@@ -1265,7 +1260,6 @@ class ReviewDataset:
                     # TODO: export only essential changes?
                     changes = diff(indexed_record, curated_record)
                     change_items = list(changes)
-                    # print(change_items)
 
                     # TODO The following does not seem to work yet...
                     # change: the key is in x[1]
