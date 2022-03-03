@@ -27,7 +27,6 @@ class Loader(Process):
         self,
         REVIEW_MANAGER,
         keep_ids,
-        notify=True,
         notify_state_transition_process=True,
     ):
 

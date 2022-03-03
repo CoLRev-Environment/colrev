@@ -355,16 +355,30 @@ class ReviewManager:
 
         def migrate_0_3_0(self) -> bool:
             records = self.REVIEW_DATASET.load_records()
-            for record in records:
-                if "LOCAL_INDEX" == record.get("metadata_source", ""):
-                    record["metadata_source"] = "CURATED"
+            if len(records) > 0:
+                for record in records:
+                    if "LOCAL_INDEX" == record.get("metadata_source", ""):
+                        record["metadata_source"] = "CURATED"
+
+                self.REVIEW_DATASET.save_records(records)
+                self.REVIEW_DATASET.add_record_changes()
 
             self.__inplace_change(
                 self.paths["SOURCES"], "search_type: LOCAL_PAPER_INDEX", "PDFS"
             )
             self.REVIEW_DATASET.add_changes(str(self.paths["SOURCES_RELATIVE"]))
-            self.REVIEW_DATASET.save_records(records)
-            self.REVIEW_DATASET.add_record_changes()
+            sources = self.REVIEW_DATASET.load_sources()
+            # print(self.pp.pformat(sources))
+            for source in sources:
+                if "FEED" == source["search_type"]:
+                    source["search_endpoint"] = source["search_parameters"][0][
+                        "endpoint"
+                    ]
+                    source["search_parameters"] = [
+                        source["search_parameters"][0]["params"]
+                    ]
+            # print(self.pp.pformat(sources))
+            self.REVIEW_DATASET.save_sources(sources)
             if self.REVIEW_DATASET.has_changes():
                 return True
             return False
