@@ -1046,7 +1046,7 @@ class Curations:
             print(f"Repo already exists ({repo_dir})")
             return False
         print(f"Download curated resource from {curated_resource}")
-        git.Repo.clone_from(curated_resource, repo_dir)
+        git.Repo.clone_from(curated_resource, repo_dir, depth=1)
         REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
         REVIEW_MANAGER.register_repo()
 
