@@ -1,3 +1,7 @@
+<p align="center">
+<img src="docs/figures/logo_small.png" width="400">
+</p>
+
 # CoLRev Framework
 
 [![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
