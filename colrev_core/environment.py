@@ -20,6 +20,8 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 from colrev_core.review_manager import ReviewManager
+from colrev_core.tei import TEI
+from colrev_core.tei import TEI_Exception
 
 
 class LocalIndex(Process):
@@ -34,6 +36,7 @@ class LocalIndex(Process):
     toc_path = local_index_path / Path(".toc_index/")
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
+    teiind_path = local_index_path / Path(".tei_index/")
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
@@ -228,6 +231,14 @@ class LocalIndex(Process):
         )
         with open(index_fpath, "w") as out:
             out.write(bibtex_str)
+
+        if "file" in record:
+            try:
+                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
+                TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
+            except TEI_Exception:
+                pass
+
         return
 
     def __retrieve_from_index_based_on_hash(self, hash: str) -> dict:
@@ -266,7 +277,6 @@ class LocalIndex(Process):
 
         index_fpath = self.__get_record_index_file(hash)
         saved_record = self.__retrieve_from_index_based_on_hash(hash)
-        # TODO: check key and increment hash if necessary?
 
         # Casting to string (in particular the RecordState Enum)
         record = {k: str(v) for k, v in record.items()}
@@ -282,6 +292,14 @@ class LocalIndex(Process):
         bibtex_str = bibtexparser.dumps(index_record_db)
         with open(index_fpath, "w") as out:
             out.write(bibtex_str)
+
+        if "file" in record:
+            try:
+                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
+                if not tei_path.exists():
+                    TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
+            except TEI_Exception:
+                pass
 
         return
 
@@ -772,6 +790,8 @@ class LocalIndex(Process):
             shutil.rmtree(self.jind_path)
         if self.toc_path.is_dir():
             shutil.rmtree(self.toc_path)
+        if self.teiind_path.is_dir():
+            shutil.rmtree(self.teiind_path)
 
         # TODO: add web of science abbreviations (only when they are unique!?)
         # self.__download_resources()
