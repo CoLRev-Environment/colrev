@@ -73,8 +73,7 @@ class LocalIndex(Process):
                     "source_link": shared_url.rstrip(".git"),
                 }
                 local_repo_list.append(repo)
-            except (NoSuchPathError, InvalidGitRepositoryError) as e:
-                print(e)
+            except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
                 continue
         return local_repo_list

@@ -1117,6 +1117,7 @@ class ReviewDataset:
             "issue",
             "author",
             "doi",
+            "origin",  # Note : for merges
         ]
 
         self.REVIEW_MANAGER.logger.debug("Retrieve prior bib")
@@ -1159,8 +1160,8 @@ class ReviewDataset:
                     r = db.entries[0]
                     curated_records.append(r)
 
-        for original_curated_record in curated_records:
-            curated_record = original_curated_record.copy()
+        for curated_record in curated_records:
+
             # identify curated records for which essential metadata is changed
             prior_crl = [
                 x
@@ -1179,86 +1180,99 @@ class ReviewDataset:
                     prior_cr.get(k, "NA") == curated_record.get(k, "NA")
                     for k in essential_md_keys
                 ):
-
-                    if "CURATED" == curated_record.get("metadata_source", ""):
+                    # after the previous condition, we know that the curated record
+                    # has been corrected
+                    corrected_curated_record = curated_record.copy()
+                    if "CURATED" == corrected_curated_record.get("metadata_source", ""):
                         # retrieve record from index to identify origin repositories
                         try:
-                            indexed_record = (
-                                self.LOCAL_INDEX.retrieve_record_from_index(
-                                    curated_record
-                                )
+                            original_curated_record = (
+                                self.LOCAL_INDEX.retrieve_record_from_index(prior_cr)
                             )
-                            # print(indexed_record["source_url"])
-                            if not Path(indexed_record["source_url"]).is_dir():
-                                indexed_record = self.LOCAL_INDEX.set_source_path(
-                                    indexed_record
+                            # print(original_curated_record["source_url"])
+                            if not Path(original_curated_record["source_url"]).is_dir():
+                                original_curated_record = (
+                                    self.LOCAL_INDEX.set_source_path(
+                                        original_curated_record
+                                    )
                                 )
-                            if not Path(indexed_record["source_url"]).is_dir():
+                            if not Path(original_curated_record["source_url"]).is_dir():
                                 print(
                                     "Source path of indexed record not available "
-                                    f'({indexed_record["source_url"]})'
+                                    f'({original_curated_record["source_url"]})'
                                 )
                                 continue
                         except RecordNotInIndexException:
                             pass
-                            continue
+                            original_curated_record = prior_cr.copy()
 
-                    if "DBLP" == curated_record.get("metadata_source", ""):
+                    if "DBLP" == corrected_curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp
                         # because it will fuse_best_fields
                         ret = requests.get(
-                            curated_record["dblp_key"] + ".html?view=bibtex"
+                            corrected_curated_record["dblp_key"] + ".html?view=bibtex"
                         )
                         bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
                         gr = bibtex_regex.search(ret.text)
                         if gr:
                             bibtex_str = gr.group(0)[18:-6]
                             dblp_bib = bibtexparser.loads(bibtex_str)
-                            indexed_record = dblp_bib.entries.pop()
-                            indexed_record = {
+                            original_curated_record = dblp_bib.entries.pop()
+                            original_curated_record = {
                                 k: v.replace("\n", " ")
-                                for k, v in indexed_record.items()
+                                for k, v in original_curated_record.items()
                             }
-                            indexed_record["source_url"] = "metadata_source=DBLP"
+                            original_curated_record[
+                                "source_url"
+                            ] = "metadata_source=DBLP"
                         else:
                             continue
 
                         # Note : we don't want to correct the following fields:
-                        if "booktitle" in curated_record:
-                            indexed_record["booktitle"] = curated_record["booktitle"]
-                        if "editor" in indexed_record:
-                            del indexed_record["editor"]
-                        if "publisher" in indexed_record:
-                            del indexed_record["publisher"]
-                        if "bibsource" in indexed_record:
-                            del indexed_record["bibsource"]
-                        if "timestamp" in indexed_record:
-                            del indexed_record["timestamp"]
-                        if "biburl" in indexed_record:
-                            del indexed_record["biburl"]
+                        if "booktitle" in corrected_curated_record:
+                            original_curated_record[
+                                "booktitle"
+                            ] = corrected_curated_record["booktitle"]
+                        if "editor" in original_curated_record:
+                            del original_curated_record["editor"]
+                        if "publisher" in original_curated_record:
+                            del original_curated_record["publisher"]
+                        if "bibsource" in original_curated_record:
+                            del original_curated_record["bibsource"]
+                        if "timestamp" in original_curated_record:
+                            del original_curated_record["timestamp"]
+                        if "biburl" in original_curated_record:
+                            del original_curated_record["biburl"]
 
                     # Cast to string for persistence
-                    indexed_record = {k: str(v) for k, v in indexed_record.items()}
-                    curated_record = {k: str(v) for k, v in curated_record.items()}
+                    original_curated_record = {
+                        k: str(v) for k, v in original_curated_record.items()
+                    }
+                    corrected_curated_record = {
+                        k: str(v) for k, v in corrected_curated_record.items()
+                    }
 
                     # Note : removing the fields is a temporary fix
                     # because the subsetting of change_items does not seem to
                     # work properly
-                    if "pages" in indexed_record:
-                        del indexed_record["pages"]
-                    if "pages" in curated_record:
-                        del curated_record["pages"]
-                    if "dblp_key" in curated_record:
-                        del curated_record["dblp_key"]
-                    if "metadata_source" in curated_record:
-                        del curated_record["metadata_source"]
-                    if "status" in curated_record:
-                        del curated_record["status"]
-                    if "origin" in curated_record:
-                        del curated_record["origin"]
+                    if "pages" in original_curated_record:
+                        del original_curated_record["pages"]
+                    if "pages" in corrected_curated_record:
+                        del corrected_curated_record["pages"]
+                    # if "dblp_key" in corrected_curated_record:
+                    #     del corrected_curated_record["dblp_key"]
+                    if "metadata_source" in corrected_curated_record:
+                        del corrected_curated_record["metadata_source"]
+                    if "status" in corrected_curated_record:
+                        del corrected_curated_record["status"]
+
+                    if "metadata_source" in original_curated_record:
+                        del original_curated_record["metadata_source"]
+                    if "status" in original_curated_record:
+                        del original_curated_record["status"]
 
                     # TODO: export only essential changes?
-                    changes = diff(indexed_record, curated_record)
+                    changes = diff(original_curated_record, corrected_curated_record)
                     change_items = list(changes)
 
                     # TODO The following does not seem to work yet...
@@ -1270,7 +1284,6 @@ class ReviewDataset:
                         not in [
                             "excl_criteria",
                             "status",
-                            "origin",
                             "metadata_source",
                             "source_url",
                             "ID",
@@ -1286,7 +1299,6 @@ class ReviewDataset:
                         not in [
                             "excl_criteria",
                             "status",
-                            "origin",
                             "metadata_source",
                             "source_url",
                             "ID",
@@ -1297,9 +1309,37 @@ class ReviewDataset:
                     if len(change_items) == 0:
                         continue
 
+                    if len(corrected_curated_record["origin"].split(";")) > len(
+                        original_curated_record["origin"].split(";")
+                    ):
+                        if (
+                            "dblp_key" in corrected_curated_record
+                            and "dblp_key" in original_curated_record
+                        ):
+                            if (
+                                corrected_curated_record["dblp_key"]
+                                != original_curated_record["dblp_key"]
+                            ):
+                                change_items = {  # type: ignore
+                                    "merge": [
+                                        corrected_curated_record["dblp_key"],
+                                        original_curated_record["dblp_key"],
+                                    ]
+                                }
+                        # else:
+                        #     change_items = {
+                        #         "merge": [
+                        #             corrected_curated_record["ID"],
+                        #             original_curated_record["ID"],
+                        #         ]
+                        #     }
+
+                    # Note: this is a quick fix:
+                    if "source_url" not in original_curated_record:
+                        original_curated_record["source_url"] = "DBLP"
                     dict_to_save = {
-                        "source_url": indexed_record.get("source_url"),
-                        "indexed_record": indexed_record,
+                        "source_url": original_curated_record.get("source_url"),
+                        "original_curated_record": original_curated_record,
                         "changes": change_items,
                     }
                     fp = self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"] / Path(
@@ -1309,6 +1349,8 @@ class ReviewDataset:
 
                     with open(fp, "w", encoding="utf8") as corrections_file:
                         json.dump(dict_to_save, corrections_file)
+
+                    # TODO : combine merge-record corrections
 
         # for testing:
         # raise KeyError

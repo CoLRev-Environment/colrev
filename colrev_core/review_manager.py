@@ -711,11 +711,12 @@ class ReviewManager:
                     else:
                         check_script["script"](check_script["params"])
                 self.logger.debug(f'{check_script["script"].__name__}: passed\n')
-
+        except PropagatedIDChange:
+            pass
         except (
             MissingDependencyError,
             GitConflictError,
-            PropagatedIDChange,
+            # PropagatedIDChange,
             DuplicatesError,
             OriginError,
             FieldError,
@@ -1311,7 +1312,10 @@ class ReviewManager:
         prepared_change_list = []
         for change in change_list:
             prepared_change_list.append(
-                {"record": change["indexed_record"], "changes": change["changes"]}
+                {
+                    "record": change["original_curated_record"],
+                    "changes": change["changes"],
+                }
             )
 
         corrections = self.pp.pformat(prepared_change_list)
@@ -1382,11 +1386,11 @@ class ReviewManager:
         records = REVIEW_DATASET.load_records()
         pull_request_msgs = []
         for change_item in change_list:
-            indexed_record = change_item["indexed_record"]
+            original_curated_record = change_item["original_curated_record"]
 
             try:
                 record = REVIEW_DATASET.retrieve_by_string_representation(
-                    indexed_record, records
+                    original_curated_record, records
                 )
             except RecordNotInRepoException:
                 pass

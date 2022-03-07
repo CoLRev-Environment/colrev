@@ -702,7 +702,11 @@ class Preparation(Process):
             container_title = re.sub(r"[\W]+", " ", record["journal"])
             params["query.container-title"] = container_title.replace("_", " ")
 
-            query_field = record["volume"] + "+" + record["number"]
+            query_field = ""
+            if "volume" in record:
+                query_field = record["volume"]
+            if "number" in record:
+                query_field = query_field + "+" + record["number"]
             params["query"] = query_field
 
         url = api_url + urllib.parse.urlencode(params)
@@ -931,9 +935,9 @@ class Preparation(Process):
             retrieved_records = [
                 r
                 for r in retrieved_records_list
-                if r.get("volume", "NA") == record["volume"]
-                and r.get("journal", "NA") == record["journal"]
-                and r.get("number", "NA") == record["number"]
+                if r.get("volume", "NA") == record.get("volume", "NA")
+                and r.get("journal", "NA") == record.get("journal", "NA")
+                and r.get("number", "NA") == record.get("number", "NA")
             ]
             years = [r["year"] for r in retrieved_records]
             if len(years) == 0:
