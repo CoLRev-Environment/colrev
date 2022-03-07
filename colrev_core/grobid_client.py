@@ -7,9 +7,6 @@ import time
 import requests
 
 GROBID_URL = "http://localhost:8070"
-# grobid_image = "grobid/grobid:0.7.1-SNAPSHOT"
-grobid_image = "lfoppiano/grobid:0.7.0"
-# grobid_image = "lfoppiano/grobid:0.6.2"
 
 
 def get_grobid_url() -> str:
@@ -34,7 +31,10 @@ def check_grobid_availability() -> None:
     return
 
 
-def start_grobid():
+def start_grobid(REVIEW_MANAGER) -> None:
+
+    grobid_image = REVIEW_MANAGER.docker_images["lfoppiano/grobid"]
+
     logging.info(f"Running docker container created from {grobid_image}")
     try:
         r = requests.get(GROBID_URL + "/api/isalive")

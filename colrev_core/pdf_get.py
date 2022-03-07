@@ -244,7 +244,7 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Starting GROBID service to extract metadata from PDFs"
         )
-        grobid_client.start_grobid()
+        grobid_client.start_grobid(self.REVIEW_MANAGER)
 
         IDs = [x["ID"] for x in records]
         linked_pdfs = [Path(x["file"]) for x in records if "file" in x]

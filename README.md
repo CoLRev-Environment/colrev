@@ -34,7 +34,7 @@ Dynamically loaded
 - [OCRmyPDF](https://github.com/jbarlow83/OCRmyPDF), which is available under a [Mozilla Public License 2.0 (MPL-2.0)](https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jbarlow83/OCRmyPDF?color=green&style=plastic)](https://github.com/jbarlow83/OCRmyPDF), which builds on
 - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract), which is available under an [Apache-2.0 License](https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE). [![docker-py](https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic)](https://github.com/tesseract-ocr/tesseract)
 - [pandoc](https://github.com/jgm/pandoc), which is available under a [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
-- [bibutils](http://bibutils.refbase.org/), which is available under a [GNU Public License (GPL)](http://bibutils.refbase.org/).
+- [Zotero translation services](https://github.com/zotero/translation-server), which are available under a [GNU Public License (GPL)](https://github.com/zotero/translation-server/blob/master/COPYING).
 
 For meta-data preparation and PDF retrieval, we rely on the following data sources
 

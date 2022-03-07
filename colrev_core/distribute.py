@@ -44,7 +44,7 @@ class Distribute(Process):
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
-                grobid_client.start_grobid()
+                grobid_client.start_grobid(self.REVIEW_MANAGER)
                 TEI_INSTANCE = TEI(
                     self.REVIEW_MANAGER,
                     path,

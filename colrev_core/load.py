@@ -7,6 +7,7 @@ import typing
 from pathlib import Path
 
 import bibtexparser
+import docker
 import pandas as pd
 import requests
 from bibtexparser.bibdatabase import BibDatabase
@@ -14,7 +15,6 @@ from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
-import docker
 from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
@@ -40,9 +40,14 @@ class Loader(Process):
         self.keep_ids = keep_ids
 
         self.conversion_scripts = {
-            "ris": self.__ris2bib,
-            "enl": self.__end2bib,
-            "end": self.__end2bib,
+            "ris": self.__zotero_translate,
+            "enl": self.__zotero_translate,
+            "end": self.__zotero_translate,
+            "rdf": self.__zotero_translate,
+            "json": self.__zotero_translate,
+            "mods": self.__zotero_translate,
+            "xml": self.__zotero_translate,
+            "marc": self.__zotero_translate,
             "txt": self.__txt2bib,
             "md": self.__txt2bib,
             "csv": self.__csv2bib,
@@ -244,66 +249,45 @@ class Loader(Process):
 
         return new_record
 
-    def __bibutils_convert(self, script: str, data: str) -> str:
+    def __start_zotero_translators(self) -> None:
+        import docker
 
-        if "xml2bib" == script:
-            script = script + " -b -w -sk "
-        else:
-            script = script + " -i unicode "
+        zotero_image = self.REVIEW_MANAGER.docker_images["zotero/translation-server"]
 
-        client = docker.APIClient()
-        try:
-            container = client.create_container("bibutils", script, stdin_open=True)
-        except docker.errors.ImageNotFound:
-            self.REVIEW_MANAGER.logger.info("Docker image not found")
-            pass
-            return ""
-
-        sock = client.attach_socket(
-            container, params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
+        client = docker.from_env()
+        for container in client.containers.list():
+            if zotero_image in str(container.image):
+                return
+        container = client.containers.run(
+            zotero_image,
+            ports={"1969/tcp": ("127.0.0.1", 1969)},
+            auto_remove=True,
+            detach=True,
         )
-        client.start(container)
+        return
 
-        sock._sock.send(data.encode())
-        sock._sock.close()
-        sock.close()
+    def __zotero_translate(self, file: Path) -> typing.List[dict]:
+        import requests
+        import json
+        import bibtexparser
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
 
-        client.wait(container)
-        stdout = client.logs(container, stderr=False).decode()
-        client.remove_container(container)
+        self.__start_zotero_translators()
 
-        return stdout
+        files = {"file": open(file, "rb")}
+        headers = {"Content-type": "text/plain"}
+        r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
+        headers = {"Content-type": "application/json"}
+        zotero_format = json.loads(r.content)
+        et = requests.post(
+            "http://127.0.0.1:1969/export?format=bibtex",
+            headers=headers,
+            json=zotero_format,
+        )
 
-    def __ris2bib(self, file: Path) -> typing.List[dict]:
-        with open(file) as reader:
-            data = reader.read(4096)
-        if "TY  - " not in data:
-            self.REVIEW_MANAGER.logger.error(f"Error: Not a ris file? {file.name}")
-            return []
-
-        with open(file) as reader:
-            data = reader.read()
-
-        data = self.__bibutils_convert("ris2xml", data)
-        data = self.__bibutils_convert("xml2bib", data)
-        parser = BibTexParser(customization=convert_to_unicode)
-        db = bibtexparser.loads(data, parser=parser)
-        return db.entries
-
-    def __end2bib(self, file: Path) -> typing.List[dict]:
-        with open(file) as reader:
-            data = reader.read(4096)
-        if "%T " not in data:
-            self.REVIEW_MANAGER.logger.error(f"Error: Not an end file? {file.name}")
-            return []
-
-        with open(file) as reader:
-            data = reader.read()
-
-        data = self.__bibutils_convert("end2xml", data)
-        data = self.__bibutils_convert("xml2bib", data)
-        parser = BibTexParser(customization=convert_to_unicode)
-        db = bibtexparser.loads(data, parser=parser)
+        parser = BibTexParser(customization=convert_to_unicode, common_strings=True)
+        db = bibtexparser.loads(et.content, parser=parser)
         return db.entries
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
@@ -552,13 +536,13 @@ class Loader(Process):
                 filetype = "pdf_refs"
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
-            grobid_client.start_grobid()
+            grobid_client.start_grobid(self.REVIEW_MANAGER)
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
             self.REVIEW_MANAGER.logger.info(f"Loading {filetype}: {sfpath.name}")
 
-            cur_tag = docker.from_env().images.get("bibutils").tags[0]
+            cur_tag = docker.from_env().images.get("zotero/translation-server").tags[0]
             self.REVIEW_MANAGER.report_logger.info(
                 f"Running docker container created from {cur_tag}"
             )

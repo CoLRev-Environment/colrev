@@ -36,7 +36,7 @@ Formats
 ---------------
 
 - Structured formats (csv, xlsx) are imported using standard Python libraries
-- Semi-structured formats are imported using bibtexparser or bibutils (.end and .ris)
+- Semi-structured formats are imported using bibtexparser or the zotero-translation services (see `supported import formats <https://www.zotero.org/support/kb/importing_standardized_formats>`_)
 - Unstructured formats are imported using Grobid (lists of references and pdf reference lists)
 
 

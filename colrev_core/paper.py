@@ -54,14 +54,12 @@ class Paper(Process):
 
         client = docker.from_env()
         try:
-            pandoc_u_latex_image = "pandoc/ubuntu-latex:2.14"
-            msg = (
-                "Running docker container created from " f"image {pandoc_u_latex_image}"
-            )
+            pandoc_img = self.REVIEW_MANAGER.docker_images["pandoc/ubuntu-latex"]
+            msg = "Running docker container created from " f"image {pandoc_img}"
             self.REVIEW_MANAGER.report_logger.info(msg)
             self.REVIEW_MANAGER.logger.info(msg)
             client.containers.run(
-                image=pandoc_u_latex_image,
+                image=pandoc_img,
                 command=script,
                 user=f"{uid}:{gid}",
                 volumes=[os.getcwd() + ":/data"],

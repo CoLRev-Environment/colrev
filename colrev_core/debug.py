@@ -133,7 +133,7 @@ def debug_tei_tools(param) -> None:
     REVIEW_MANAGER = ReviewManager()
 
     logger.debug("Start grobid")
-    grobid_client.start_grobid()
+    grobid_client.start_grobid(REVIEW_MANAGER)
     logger.debug("Started grobid")
 
     filepath = Path(param)

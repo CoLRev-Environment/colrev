@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import re
-import time
 from pathlib import Path
 
 import requests
@@ -21,8 +20,6 @@ class TEI(Process):
         "tei": "http://www.tei-c.org/ns/1.0",
         "w3": "http://www.w3.org/XML/1998/namespace",
     }
-
-    GROBID_URL = "http://localhost:8070"
 
     def __init__(
         self,
@@ -52,6 +49,7 @@ class TEI(Process):
             self.tei_path = tei_path
 
         if pdf_path is not None:
+            grobid_client.start_grobid(self.REVIEW_MANAGER)
             # Note: we have more control and transparency over the consolidation
             # if we do it in the colrev_core process
             options = {}
@@ -65,7 +63,7 @@ class TEI(Process):
 
             # Possible extension: get header only (should be more efficient)
             # r = requests.post(
-            #     self.GROBID_URL + "/api/processHeaderDocument",
+            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
             #     files=dict(input=open(filepath, "rb")),
             #     data=header_data,
             # )
@@ -95,40 +93,6 @@ class TEI(Process):
             if "[BAD_INPUT_DATA]" in xml_string[:100]:
                 raise TEI_Exception()
             self.root = etree.fromstring(xml_string)
-
-    def start_grobid(self) -> bool:
-        import os
-        import subprocess
-
-        r = requests.get(self.GROBID_URL + "/api/isalive")
-        if r.text == "true":
-            # print('Docker running')
-            return True
-        print("Starting grobid service...")
-        subprocess.Popen(
-            [
-                'docker run -t --rm -m "4g" -p 8070:8070 '
-                + "-p 8071:8071 lfoppiano/grobid:0.6.2"
-            ],
-            shell=True,
-            stdin=None,
-            stdout=open(os.devnull, "wb"),
-            stderr=None,
-            close_fds=True,
-        )
-        pass
-
-        i = 0
-        while True:
-            i += 1
-            time.sleep(1)
-            r = requests.get(self.GROBID_URL + "/api/isalive")
-            if r.text == "true":
-                print("Grobid service alive.")
-                return True
-            if i > 30:
-                break
-        return False
 
     def __get_paper_title(self) -> str:
         title_text = "NA"

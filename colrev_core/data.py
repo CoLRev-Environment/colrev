@@ -345,7 +345,7 @@ class Data(Process):
         from lxml import etree
         from lxml.etree import XMLSyntaxError
 
-        grobid_client.start_grobid()
+        grobid_client.start_grobid(self.REVIEW_MANAGER)
 
         for record in records:
             if "file" not in record:

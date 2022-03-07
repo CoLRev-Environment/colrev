@@ -9,7 +9,6 @@ import json
 import logging
 import multiprocessing as mp
 import os
-import pkgutil
 import pprint
 import re
 import string
@@ -21,12 +20,12 @@ from contextlib import redirect_stdout
 from importlib.metadata import version
 from pathlib import Path
 
+import docker
 import git
 import pandas as pd
 import yaml
 from yaml import safe_load
 
-import docker
 from colrev_core import review_dataset
 from colrev_core.data import ManuscriptRecordSourceTagError
 from colrev_core.process import Process
@@ -61,6 +60,13 @@ class ReviewManager:
     ]
 
     notified_next_process = None
+
+    docker_images = {
+        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
+        "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
+        "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
+        "zotero/translation-server": "zotero/translation-server:2.0.4",
+    }
 
     def __init__(self, path_str: str = None) -> None:
         from colrev_core.review_dataset import ReviewDataset
@@ -284,24 +290,18 @@ class ReviewManager:
         repo_tags = [image.tags for image in client.images.list()]
         repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
 
-        if "bibutils" not in repo_tags:
-            self.logger.info("Building bibutils Docker image...")
-            filedata = pkgutil.get_data(__name__, "../docker/bibutils/Dockerfile")
-            if filedata:
-                fileobj = io.BytesIO(filedata)
-                client.images.build(fileobj=fileobj, tag="bibutils:latest")
-            else:
-                self.logger.error("Cannot retrieve image bibutils")
-
         if "lfoppiano/grobid" not in repo_tags:
             self.logger.info("Pulling grobid Docker image...")
-            client.images.pull("lfoppiano/grobid:0.7.0")
+            client.images.pull(self.docker_images["lfoppiano/grobid"])
         if "pandoc/ubuntu-latex" not in repo_tags:
             self.logger.info("Pulling pandoc/ubuntu-latex image...")
-            client.images.pull("pandoc/ubuntu-latex:2.14")
+            client.images.pull(self.docker_images["pandoc/ubuntu-latex"])
         if "jbarlow83/ocrmypdf" not in repo_tags:
             self.logger.info("Pulling jbarlow83/ocrmypdf image...")
-            client.images.pull("jbarlow83/ocrmypdf:v13.3.0")
+            client.images.pull(self.docker_images["jbarlow83/ocrmypdf"])
+        if "zotero/translation-server" not in repo_tags:
+            self.logger.info("Pulling zotero/translation-server image...")
+            client.images.pull(self.docker_images["zotero/translation-server"])
 
         return
 
