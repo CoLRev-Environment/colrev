@@ -9,10 +9,8 @@ Conducting a full literature review should be as simple as running the following
       # Initialize the project
       colrev init
 
-      # Store search results in the search directory
-      # Example:
-      wget -p search https://bit.ly/33IZDnT
-      wget -p search https://bit.ly/3qAbk9D
+      colrev search --add "RETRIEVE * FROM crossref WHERE digital"
+      # Or store search results in the search directory
 
       # Load the seach results
       colrev load

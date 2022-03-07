@@ -39,6 +39,7 @@ After each processing step, make sure to `check the changes <guides/changes.html
    guides/installation
    guides/overview
    guides/init
+   guides/search
    guides/load
    guides/prep
    guides/dedupe
