@@ -58,9 +58,9 @@ class Search(Process):
                 "script": self.update_crossref,
             },
             {
-                "search_endpoint": "backward",
+                "search_endpoint": "backward_search",
                 "source_url": "",
-                "script": self.update_backward,
+                "script": self.update_backward_search,
             },
             {
                 "search_endpoint": "project",
@@ -376,7 +376,57 @@ class Search(Process):
 
         return
 
-    def update_backward(self) -> None:
+    def update_backward_search(self, params: dict, feed_file: Path) -> None:
+        from colrev_core.process import RecordState
+        from colrev_core import grobid_client
+
+        if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+            print("No records imported. Cannot run backward search yet.")
+            return
+
+        grobid_client.start_grobid(self.REVIEW_MANAGER)
+        print(params)
+        print(feed_file)
+        print(
+            "TODO: one or multiple source entries? "
+            "(general search query vs individual source descriptions...) \n "
+            "Or maybe use a pattern to link? e.g., files=backward_search*.bib "
+            "(this would allow us to avoid redundant queries...)"
+        )
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+        # default: rev_included/rev_synthesized and no selection clauses
+        for record in records:
+            if record["status"] not in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                continue
+            print(record["ID"])
+
+            if not Path(record["file"]).is_file():
+                print(f'File not found for {record["ID"]}')
+                continue
+
+            options = {"consolidateHeader": "0", "consolidateCitations": "0"}
+            r = requests.post(
+                grobid_client.get_grobid_url() + "/api/processReferences",
+                files=dict(input=open(record["file"], "rb")),
+                data=options,
+                headers={"Accept": "application/x-bibtex"},
+            )
+
+            bib_filename = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(
+                f"backward_search_{record['ID']}.bib"
+            )
+            bib_content = r.text.encode("utf-8")
+            with open(bib_filename, "wb") as f:
+                f.write(bib_content)
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(bib_filename))
+
+        self.REVIEW_MANAGER.create_commit("Backward search")
 
         return
 
@@ -465,7 +515,10 @@ class Search(Process):
         params = {}
         selection_str = query
         if "WHERE " in query:
-            selection_str = query[query.find("WHERE ") + 6 : query.find("SCOPE ")]
+            if "SCOPE " in query:
+                selection_str = query[query.find("WHERE ") + 6 : query.find("SCOPE ")]
+            else:
+                selection_str = query[query.find("WHERE ") + 6 :]
             if "[" not in selection_str:
                 # parse simple selection
                 selection = re.split(" AND | OR ", selection_str)
@@ -598,8 +651,9 @@ class Search(Process):
             params = self.parse_parameters(search_param)
             script["script"](params, feed_file)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_file))
-            self.REVIEW_MANAGER.create_commit("Run search")
+            if feed_file.is_file():
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_file))
+                self.REVIEW_MANAGER.create_commit("Run search")
 
         return
 
