@@ -34,6 +34,7 @@ class LocalIndex(Process):
     gind_path = local_index_path / Path(".gid_index/")
     dind_path = local_index_path / Path(".d_index/")
     toc_path = local_index_path / Path(".toc_index/")
+    toc_overview = local_index_path / Path(".toc_index/readme.md")
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
     teiind_path = local_index_path / Path(".tei_index/")
@@ -64,14 +65,15 @@ class LocalIndex(Process):
                 # git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
                 # print(source)
                 git_repo = git.Repo(source["source_url"])
-
+                repo = {
+                    "source_url": source["source_url"],
+                }
                 for remote in git_repo.remotes:
                     if remote.url:
                         shared_url = remote.url
-                repo = {
-                    "source_url": source["source_url"],
-                    "source_link": shared_url.rstrip(".git"),
-                }
+                        repo["source_link"] = shared_url.rstrip(".git")
+                        break
+
                 local_repo_list.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
@@ -233,8 +235,18 @@ class LocalIndex(Process):
 
         if "file" in record:
             try:
-                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
-                TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
+                tei_path = (
+                    self.teiind_path
+                    / index_fpath.parent.stem
+                    / index_fpath.with_suffix(".tei.xml").name
+                )
+                if Path(record["file"]).is_file():
+                    TEI(
+                        self.REVIEW_MANAGER,
+                        pdf_path=Path(record["file"]),
+                        tei_path=tei_path,
+                        notify_state_transition_process=False,
+                    )
             except TEI_Exception:
                 pass
 
@@ -294,9 +306,18 @@ class LocalIndex(Process):
 
         if "file" in record:
             try:
-                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
-                if not tei_path.exists():
-                    TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
+                tei_path = (
+                    self.teiind_path
+                    / index_fpath.parent.stem
+                    / index_fpath.with_suffix(".tei.xml").name
+                )
+                if not tei_path.exists() and Path(record["file"]).is_file():
+                    TEI(
+                        self.REVIEW_MANAGER,
+                        pdf_path=Path(record["file"]),
+                        tei_path=tei_path,
+                        notify_state_transition_process=False,
+                    )
             except TEI_Exception:
                 pass
 
@@ -397,6 +418,8 @@ class LocalIndex(Process):
                 toc_key = toc_key + f"|{record['volume']}"
             if "number" in record:
                 toc_key = toc_key + f"|{record['number']}"
+            else:
+                toc_key = toc_key + "|"
         elif "inproceedings" == record["ENTRYTYPE"]:
             toc_key = (
                 f"toc_key={record.get('booktitle', '').lower()}"
@@ -422,6 +445,10 @@ class LocalIndex(Process):
                 if not index_fpath.is_file():
                     index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
                     index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
+                    with self.toc_overview.open("a") as f:
+                        f.write(
+                            f"- [{toc_key.replace('toc_key=', '')}]({index_fpath})\n"
+                        )
                     break
                 else:
                     res = self.__retrieve_from_toc_index_based_on_hash(hash)
@@ -455,6 +482,10 @@ class LocalIndex(Process):
                 if not index_fpath.is_file():
                     index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
                     index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
+                    with self.toc_overview.open("a") as f:
+                        f.write(
+                            f"- [{toc_key.replace('toc_key=', '')}]({index_fpath})\n"
+                        )
                     break
                 else:
                     res = self.__retrieve_from_toc_index_based_on_hash(hash)
@@ -620,13 +651,16 @@ class LocalIndex(Process):
         # also include the doi/dblp representations
         for record in tqdm(records):
             if "doi" in record:
-                unprepared_record = PREPARATION.get_md_from_doi(record.copy())
-                non_identical_representations = self.__append_if_duplicate_repr(
-                    non_identical_representations, unprepared_record, record
-                )
-                j_variations = self.__append_j_variation(
-                    j_variations, unprepared_record, record
-                )
+                try:
+                    unprepared_record = PREPARATION.get_md_from_doi(record.copy())
+                    non_identical_representations = self.__append_if_duplicate_repr(
+                        non_identical_representations, unprepared_record, record
+                    )
+                    j_variations = self.__append_j_variation(
+                        j_variations, unprepared_record, record
+                    )
+                except AttributeError:
+                    pass
 
             if "dblp_key" in record:
                 unprepared_record = PREPARATION.get_md_from_dblp(record.copy())
@@ -761,7 +795,7 @@ class LocalIndex(Process):
                 if len(set(outlets)) != 1:
                     self.REVIEW_MANAGER.logger.error(
                         "Duplicate outlets in curated_metadata of "
-                        f"{source_url} : {','.join(outlets)}"
+                        f"{source_url} : {','.join(list(set(outlets)))}"
                     )
                     return
 
@@ -895,7 +929,7 @@ class LocalIndex(Process):
                 record = self.__retrieve_from_index_based_on_hash(hash)
 
                 return self.__prep_record_for_return(record)
-
+        raise RecordNotInIndexException()
         return record
 
     def retrieve_record_from_index(self, record: dict) -> dict:
@@ -957,7 +991,8 @@ class LocalIndex(Process):
         if "source_url" in record:
             for local_repo in self.local_repos:
                 if local_repo["source_url"] == record["source_url"]:
-                    record["source_url"] = local_repo["source_link"]
+                    if "source_link" in local_repo:
+                        record["source_url"] = local_repo["source_link"]
 
         return record
 

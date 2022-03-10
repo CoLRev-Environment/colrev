@@ -33,25 +33,25 @@ def check_grobid_availability() -> None:
 
 def start_grobid(REVIEW_MANAGER) -> None:
 
-    grobid_image = REVIEW_MANAGER.docker_images["lfoppiano/grobid"]
-
-    logging.info(f"Running docker container created from {grobid_image}")
     try:
-        r = requests.get(GROBID_URL + "/api/isalive")
-        if r.text == "true":
-            logging.debug("Docker running")
-            return
+        check_grobid_availability()
     except requests.exceptions.ConnectionError:
+        pass
+
+        grobid_image = REVIEW_MANAGER.docker_images["lfoppiano/grobid"]
+
+        logging.info(f"Running docker container created from {grobid_image}")
+
         logging.info("Starting grobid service...")
+        start_cmd = (
+            f'docker run -t --rm -m "4g" -p 8070:8070 -p 8071:8071 {grobid_image}'
+        )
         subprocess.Popen(
-            [
-                'docker run -t --rm -m "4g" -p 8070:8070 '
-                + f"-p 8071:8071 {grobid_image}"
-            ],
+            [start_cmd],
             shell=True,
             stdin=None,
             stdout=open(os.devnull, "wb"),
             stderr=None,
             close_fds=True,
         )
-        pass
+        check_grobid_availability()

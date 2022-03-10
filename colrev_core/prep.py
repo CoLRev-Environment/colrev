@@ -116,12 +116,12 @@ class Preparation(Process):
         "url",
         "crossmark",
         "warning",
+        "note",
     ]
     fields_to_drop = [
         "type",
         "organization",
         "issn",
-        "note",
         "unique-id",
         "month",
         "researcherid-numbers",
@@ -449,16 +449,33 @@ class Preparation(Process):
     def get_record_from_local_index(self, record: dict) -> dict:
         from colrev_core.environment import RecordNotInIndexException
 
+        retrieved = False
         try:
-            retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
-            if "CURATED" != retrieved_record.get("metadata_source", ""):
-                # Try similarity-based retrieval from toc
-                try:
-                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
-                        record, self.RETRIEVAL_SIMILARITY
+            if "CURATED" != record.get("metadata_source", ""):
+                # Note: use similarity-based retrieval from toc first
+                # To give precedence to the curated_metadata versions
+                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
+                    record, self.RETRIEVAL_SIMILARITY
+                )
+                retrieved = True
+            else:
+                if "source_url" in record:  # Note: do not change to other sources
+                    # TODO : update based on same record
+                    retrieved_record = record
+                else:
+                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(
+                        record
                     )
-                except RecordNotInIndexException:
-                    pass
+                retrieved = True
+        except RecordNotInIndexException:
+            pass
+            try:
+                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
+                retrieved = True
+            except RecordNotInIndexException:
+                pass
+
+        if retrieved:
 
             for k, v in retrieved_record.items():
                 if k in ["origin", "ID", "grobid-version"]:
@@ -467,7 +484,21 @@ class Preparation(Process):
                     if "file" in record:
                         continue
                 record[k] = v
-            record["metadata_source"] = "CURATED"
+
+            git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
+            cur_project_source_paths = [str(self.REVIEW_MANAGER.path)]
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+                    shared_url = shared_url.rstrip(".git")
+                    cur_project_source_paths.append(shared_url)
+                    break
+
+            if not any(
+                x in cur_project_source_paths
+                for x in retrieved_record.get("source_url", "").split(";")
+            ):
+                record["metadata_source"] = "CURATED"
 
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
@@ -476,9 +507,8 @@ class Preparation(Process):
                 # detailed report (and is available for tracing errors)
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
+
             record = self.LOCAL_INDEX.set_source_url_link(record)
-        except RecordNotInIndexException:
-            pass
 
         return record
 
@@ -671,6 +701,7 @@ class Preparation(Process):
 
         for k, v in record.items():
             record[k] = v.replace("{", "").replace("}", "")
+
         return record
 
     def __crossref_query(
@@ -1418,6 +1449,8 @@ class Preparation(Process):
                             record["pages"] = self.__select_best_pages(
                                 record["pages"], merging_record["pages"]
                             )
+                    else:
+                        record["pages"] = str(val)
                 elif "title" == key:
                     if "title" in record:
                         if record["title"] != merging_record["title"]:
@@ -1425,7 +1458,7 @@ class Preparation(Process):
                                 record["title"], merging_record["title"]
                             )
                     else:
-                        record["pages"] = str(val)
+                        record["title"] = str(val)
                 elif "journal" == key:
                     if "journal" in record:
                         if record["journal"] != merging_record["journal"]:
@@ -1433,7 +1466,7 @@ class Preparation(Process):
                                 record["journal"], merging_record["journal"]
                             )
                     else:
-                        record["pages"] = str(val)
+                        record["journal"] = str(val)
                 else:
                     record[key] = str(val)
 
@@ -1596,7 +1629,7 @@ class Preparation(Process):
             return record
 
         # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-        d = re.match(r"^10.\d{4,9}/", record["doi"])
+        d = re.match(r"^10.\d{4,9}\/", record["doi"])
         if not d:
             del record["doi"]
 
@@ -2197,7 +2230,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
         return
 
-    def polish(self) -> None:
+    def polish(self, input_sim: float = 0.7) -> None:
         import collections
         from colrev_core.tei import TEI, TEI_Exception
         from tqdm import tqdm
@@ -2212,10 +2245,12 @@ class Preparation(Process):
             except TEI_Exception:
                 pass
 
-        self.RETRIEVAL_SIMILARITY = 0.9
+        self.RETRIEVAL_SIMILARITY = input_sim
 
         for record in tqdm(records):
+
             previous_status = record["status"]
+            # TODO : the source_url should be a list (with newlines)?
             record = self.get_record_from_local_index(record)
             record["status"] = previous_status
 
@@ -2305,6 +2340,79 @@ class Preparation(Process):
         }
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
+
+    def retrieve_md_from_url(self, url: str) -> dict:
+        from colrev_core.load import Loader
+
+        LOADER = Loader(
+            self.REVIEW_MANAGER, keep_ids=True, notify_state_transition_process=False
+        )
+        LOADER.start_zotero_translators()
+
+        headers = {"Content-type": "text/plain"}
+        et = requests.post(
+            "http://127.0.0.1:1969/web",
+            headers=headers,
+            data=url,
+        )
+
+        record: typing.Dict = {}
+        try:
+            items = json.loads(et.content.decode())
+            if len(items) == 0:
+                return record
+            item = items[0]
+            # self.REVIEW_MANAGER.pp.pprint(item)
+            record["ID"] = item["key"]
+            if "journalArticle" == item.get("itemType", ""):
+                record["ENTRYTYPE"] = "article"
+                if "publicationTitle" in item:
+                    record["journal"] = item["publicationTitle"]
+                # TODO : number/issue, conferences
+                if "volume" in item:
+                    record["volume"] = item["volume"]
+            if "creators" in item:
+                author_str = ""
+                for creator in item["creators"]:
+                    author_str += (
+                        " and "
+                        + creator.get("lastName", "")
+                        + ", "
+                        + creator.get("firstName", "")
+                    )
+                author_str = author_str[5:]  # drop the first " and "
+                record["author"] = author_str
+            if "title" in item:
+                record["title"] = (
+                    item["title"]
+                    .replace("<b>", "")
+                    .replace("</b>", "")
+                    .replace("<i>", "")
+                    .replace("</i>", "")
+                )
+            if "doi" in item:
+                record["doi"] = item["doi"]
+            if "date" in item:
+                year = re.search(r"\d{4}", item["date"])
+                if year:
+                    record["year"] = year.group(0)
+        except json.decoder.JSONDecodeError:
+            pass
+        except KeyError:
+            pass
+        return record
+
+    def print_doi_metadata(self, doi: str) -> None:
+
+        record = self.get_md_from_doi({"doi": doi})
+        self.REVIEW_MANAGER.pp.pprint(record)
+
+        if "url" in record:
+            print("Metadata retrieved from website:")
+            retrieved_record = self.retrieve_md_from_url(record["url"])
+            self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+
+        return
 
     def set_to_reprocess(self, reprocess_state: RecordState):
         # Note: resetting needs_manual_preparation to imported would also be

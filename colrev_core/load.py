@@ -167,7 +167,7 @@ class Loader(Process):
                     doi=record["doi"].replace("http://dx.doi.org/", "").upper()
                 )
                 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-                d = re.match(r"^10.\d{4}/", record["doi"])
+                d = re.match(r"^10.\d{4,9}\/", record["doi"])
                 if not d:
                     del record["doi"]
 
@@ -249,7 +249,7 @@ class Loader(Process):
 
         return new_record
 
-    def __start_zotero_translators(self) -> None:
+    def start_zotero_translators(self) -> None:
         import docker
 
         zotero_image = self.REVIEW_MANAGER.docker_images["zotero/translation-server"]
@@ -273,7 +273,7 @@ class Loader(Process):
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
 
-        self.__start_zotero_translators()
+        self.start_zotero_translators()
 
         files = {"file": open(file, "rb")}
         headers = {"Content-type": "text/plain"}

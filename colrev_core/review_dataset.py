@@ -1225,6 +1225,7 @@ class ReviewDataset:
                             original_curated_record[
                                 "source_url"
                             ] = "metadata_source=DBLP"
+                            original_curated_record["origin"] = prior_cr["origin"]
                         else:
                             continue
 

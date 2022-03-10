@@ -41,12 +41,12 @@ class TEI(Process):
         )
 
         assert pdf_path is not None or tei_path is not None
+        self.pdf_path = pdf_path
+        self.tei_path = tei_path
         if pdf_path is not None:
             assert pdf_path.is_file()
-            self.pdf_path = pdf_path
-        if tei_path is not None:
-            assert tei_path.is_file()
-            self.tei_path = tei_path
+        else:
+            assert tei_path.is_file()  # type: ignore
 
         if pdf_path is not None:
             grobid_client.start_grobid(self.REVIEW_MANAGER)
@@ -55,38 +55,44 @@ class TEI(Process):
             options = {}
             options["consolidateHeader"] = "0"
             options["consolidateCitations"] = "0"
-            r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processFulltextDocument",
-                files={"input": open(str(pdf_path), "rb")},
-                data=options,
-            )
+            try:
+                r = requests.post(
+                    grobid_client.get_grobid_url() + "/api/processFulltextDocument",
+                    files={"input": open(str(pdf_path), "rb")},
+                    data=options,
+                )
 
-            # Possible extension: get header only (should be more efficient)
-            # r = requests.post(
-            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
-            #     files=dict(input=open(filepath, "rb")),
-            #     data=header_data,
-            # )
+                # Possible extension: get header only (should be more efficient)
+                # r = requests.post(
+                #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+                #     files=dict(input=open(filepath, "rb")),
+                #     data=header_data,
+                # )
 
-            if r.status_code != 200:
-                raise TEI_Exception()
+                if r.status_code != 200:
+                    raise TEI_Exception()
 
-            if b"[TIMEOUT]" in r.content:
-                raise TEI_TimeoutException()
+                if b"[TIMEOUT]" in r.content:
+                    raise TEI_TimeoutException()
 
-            self.root = etree.fromstring(r.content)
+                self.root = etree.fromstring(r.content)
 
-            if tei_path is not None:
-                with open(tei_path, "wb") as tf:
-                    tf.write(r.content)
+                if tei_path is not None:
+                    tei_path.parent.mkdir(exist_ok=True, parents=True)
+                    with open(tei_path, "wb") as tf:
+                        tf.write(r.content)
 
-                # Note : reopen/write to prevent format changes in the enhancement
-                with open(tei_path, "rb") as tf:
-                    xml_fstring = tf.read()
-                self.root = etree.fromstring(xml_fstring)
+                    # Note : reopen/write to prevent format changes in the enhancement
+                    with open(tei_path, "rb") as tf:
+                        xml_fstring = tf.read()
+                    self.root = etree.fromstring(xml_fstring)
 
-                tree = etree.ElementTree(self.root)
-                tree.write(tei_path, pretty_print=True, encoding="utf-8")
+                    tree = etree.ElementTree(self.root)
+                    tree.write(str(tei_path), pretty_print=True, encoding="utf-8")
+            except requests.exceptions.ConnectionError as e:
+                print(e)
+                print(str(pdf_path))
+                pass
         elif tei_path is not None:
             with open(tei_path) as ts:
                 xml_string = ts.read()
