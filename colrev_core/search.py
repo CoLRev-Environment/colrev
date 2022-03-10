@@ -152,12 +152,13 @@ class Search(Process):
                 if item["DOI"].upper() not in available_ids:
                     record = self.PREPARATION.crossref_json_to_record(item)
 
-                    if "query" in params:
+                    if "selection_clause" in params:
                         res = []
                         try:
                             rec_df = pd.DataFrame.from_records([record])
                             print(rec_df)
-                            query = f"SELECT * FROM rec_df WHERE {params['query']}"
+                            query = "SELECT * FROM rec_df WHERE"
+                            f"{params['selection_clause']}"
                             res = ps.sqldf(query, locals())
                         except PandaSQLException as e:
                             print(e)
@@ -379,7 +380,70 @@ class Search(Process):
 
         return
 
-    def update_project(self) -> None:
+    def update_project(self, params: dict, feed_file: Path) -> None:
+        from colrev_core.review_manager import ReviewManager
+        from colrev_core.load import Loader
+
+        if not feed_file.is_file():
+            feed_db = BibDatabase()
+            records = []
+            imported_ids = []
+        else:
+            with open(feed_file) as bibtex_file:
+                feed_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=True,
+                    common_strings=True,
+                ).parse_file(bibtex_file, partial=True)
+                records = feed_db.entries
+            imported_ids = [x["ID"] for x in records]
+
+        PROJECT_REVIEW_MANAGER = ReviewManager(params["scope"]["url"])
+        Loader(
+            PROJECT_REVIEW_MANAGER,
+            keep_ids=False,
+            notify_state_transition_process=False,
+        )
+        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records_to_import = [
+            x for x in records_to_import if x["ID"] not in imported_ids
+        ]
+        records_to_import = [
+            {k: str(v) for k, v in r.items()} for r in records_to_import
+        ]
+        for record_to_import in records_to_import:
+            if "selection_clause" in params:
+                res = []
+                try:
+                    rec_df = pd.DataFrame.from_records([record_to_import])
+                    query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+                    res = ps.sqldf(query, locals())
+                except PandaSQLException as e:
+                    print(e)
+                    pass
+
+                if len(res) == 0:
+                    continue
+            records = records + [record_to_import]
+
+        # records = records + records_to_import
+        keys_to_drop = [
+            "status",
+            "origin",
+            "excl_criteria",
+            "manual_non_duplicate",
+            "excl_criteria",
+            "metadata_source",
+        ]
+        records = [
+            {key: item[key] for key in item.keys() if key not in keys_to_drop}
+            for item in records
+        ]
+
+        feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+        feed_db.entries = records
+        with open(feed_file, "w") as fi:
+            fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
 
         return
 
@@ -395,18 +459,20 @@ class Search(Process):
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
-    def parse_parameters(self, query: str) -> dict:
+    def parse_parameters(self, search_params: dict) -> dict:
+
+        query = search_params["params"]
         params = {}
         selection_str = query
         if "WHERE " in query:
-            selection_str = query[query.find("WHERE ") + 6 :]
+            selection_str = query[query.find("WHERE ") + 6 : query.find("SCOPE ")]
             if "[" not in selection_str:
                 # parse simple selection
                 selection = re.split(" AND | OR ", selection_str)
                 selection_str = " ".join(
                     [
-                        f"(lower(title) LIKE '%{x.lower()}%' OR "
-                        f"lower(abstract) LIKE '%{x.lower()}%)"
+                        f"(lower(title) LIKE '%{x.lstrip().rstrip().lower()}%' OR "
+                        f"lower(abstract) LIKE '%{x.lstrip().rstrip().lower()}%')"
                         if (
                             x not in ["AND", "OR"]
                             and not any(
@@ -421,20 +487,21 @@ class Search(Process):
             # else: parse complex selection
             params["selection_clause"] = selection_str
 
-        if "SCOPE " in selection_str:
-            selection_str = selection_str[: selection_str.find("SCOPE ")]
+        if "SCOPE " in query:
+            # selection_str = selection_str[: selection_str.find("SCOPE ")]
             scope_part_str = query[query.find("SCOPE ") + 6 :]
             params["scope"] = {}  # type: ignore
             for scope_item in scope_part_str.split(" AND "):
                 key, value = scope_item.split("=")
                 if "url" in key:
-                    params["scope"]["venue_key"] = (  # type: ignore
-                        value.replace("/index.html", "")
-                        .replace("https://dblp.org/db/", "")
-                        .replace("url=", "")
-                        .replace("'", "")
-                    )
-                    continue
+                    if "dblp" == search_params["endpoint"]:
+                        params["scope"]["venue_key"] = (  # type: ignore
+                            value.replace("/index.html", "")
+                            .replace("https://dblp.org/db/", "")
+                            .replace("url=", "")
+                            .replace("'", "")
+                        )
+                        continue
                 params["scope"][key] = value.rstrip("'").lstrip("'")  # type: ignore
 
         return params
@@ -450,6 +517,9 @@ class Search(Process):
         # https://medlinetranspose.github.io/documentation.html
         # https://sr-accelerator.com/#/help/polyglot
 
+        # Zotero connector:
+        # https://github.com/urschrei/pyzotero
+
         # Start with basic query
         # RETRIEVE * FROM crossref,dblp WHERE digital AND platform
         # Note: corresponds to "digital[all] AND platform[all]"
@@ -460,7 +530,7 @@ class Search(Process):
         # TODO : check whether url exists (dblp, project, ...)
         sources = self.parse_sources(query)
         if "WHERE " in query:
-            selection = query[query.find("WHERE ") + 6 :]
+            selection = query[query.find("WHERE ") :]
         elif "SCOPE " in query:
             selection = query[query.find("SCOPE ") :]
         else:
@@ -470,7 +540,7 @@ class Search(Process):
         for source in sources:
             # TODO : check whether it already exists
             source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-            filename = f"{source}_query"
+            filename = f"{source}_query.bib"
             i = 0
             while filename in [x["filename"] for x in source_details]:
                 i += 1
@@ -492,9 +562,11 @@ class Search(Process):
                 f"Add search source {filename}", saved_args=saved_args
             )
 
+        self.update()
+
         return
 
-    def update(self, selection_str: str) -> None:
+    def update(self, selection_str: str = "") -> None:
 
         # TODO: if selection: --selected DBLP,CROSSREF,...
         # iterate over self.sources and call update_crossref(), update_dblp(), ...
@@ -523,8 +595,11 @@ class Search(Process):
                 for s in self.search_scripts
                 if s["search_endpoint"] == search_param["endpoint"]
             ].pop()
-            params = self.parse_parameters(search_param["params"])
+            params = self.parse_parameters(search_param)
             script["script"](params, feed_file)
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_file))
+            self.REVIEW_MANAGER.create_commit("Run search")
 
         return
 
