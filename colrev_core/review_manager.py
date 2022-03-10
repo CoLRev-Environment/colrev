@@ -186,6 +186,15 @@ class ReviewManager:
         )
         return config
 
+    def get_remote_url(self):
+        git_repo = self.REVIEW_DATASET.get_repo()
+        for remote in git_repo.remotes:
+            if remote.url:
+                remote_url = remote.url.rstrip(".git")
+                return remote_url
+
+        return None
+
     def __get_name_mail_from_global_git_config(self) -> list:
         ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = []

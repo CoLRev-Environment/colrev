@@ -453,7 +453,7 @@ class Preparation(Process):
         try:
             if "CURATED" != record.get("metadata_source", ""):
                 # Note: use similarity-based retrieval from toc first
-                # To give precedence to the curated_metadata versions
+                # To give precedence to the record_from_local_indexed_metadata versions
                 retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
                     record, self.RETRIEVAL_SIMILARITY
                 )
@@ -499,6 +499,15 @@ class Preparation(Process):
                 for x in retrieved_record.get("source_url", "").split(";")
             ):
                 record["metadata_source"] = "CURATED"
+
+            # Note : don't list the same repository as its own source_url
+            # (source_url s should point to other/external repos)
+            for cur_project_source_path in cur_project_source_paths:
+                record["source_url"] = record["source_url"].replace(
+                    cur_project_source_path, ""
+                )
+            if record["source_url"] == "":
+                del record["source_url"]
 
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
@@ -2230,7 +2239,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
         return
 
-    def polish(self, input_sim: float = 0.7) -> None:
+    def polish(self, input_sim: float = 0.9) -> None:
         import collections
         from colrev_core.tei import TEI, TEI_Exception
         from tqdm import tqdm

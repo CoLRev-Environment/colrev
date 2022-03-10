@@ -53,27 +53,19 @@ class LocalIndex(Process):
     def __load_local_repos(self) -> typing.List:
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
-        import git
 
         local_repo_list = []
         sources = [x for x in self.local_registry]
         for source in sources:
             try:
-                # cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
-                # CheckProcess(cp_REVIEW_MANAGER)  # to notify
-                # shared_url = ""
-                # git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-                # print(source)
-                git_repo = git.Repo(source["source_url"])
+                cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
+                CheckProcess(cp_REVIEW_MANAGER)  # to notify
                 repo = {
-                    "source_url": source["source_url"],
+                    "source_url": str(cp_REVIEW_MANAGER.path),
                 }
-                for remote in git_repo.remotes:
-                    if remote.url:
-                        shared_url = remote.url
-                        repo["source_link"] = shared_url.rstrip(".git")
-                        break
-
+                remote_url = cp_REVIEW_MANAGER.get_remote_url()
+                if remote_url is not None:
+                    repo["source_link"] = remote_url
                 local_repo_list.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
@@ -692,7 +684,29 @@ class LocalIndex(Process):
         retrieved_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(associated_original.encode("utf-8")).hexdigest()
         )
+
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+
         return self.__prep_record_for_return(retrieved_record)
+
+    def __retrieve_from_record_index(self, record: dict) -> dict:
+
+        string_representation_record = self.get_string_representation(record)
+        hash = self.__get_record_hash(record)
+        while True:  # Note : while breaks with RecordNotInIndexException
+            retrieved_record = self.__retrieve_from_index_based_on_hash(hash)
+            string_representation_retrieved_record = self.get_string_representation(
+                retrieved_record
+            )
+            if string_representation_retrieved_record == string_representation_record:
+                break
+            hash = self.__increment_hash(hash)
+
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+
+        return retrieved_record
 
     def __retrieve_from_gid_index(self, record: dict) -> dict:
         """Convenience function to retrieve a record based on a global ID"""
@@ -728,6 +742,10 @@ class LocalIndex(Process):
         indexed_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
         )
+
+        if indexed_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+
         return indexed_record
 
     def __prep_record_for_return(self, record: dict) -> dict:
@@ -952,23 +970,12 @@ class LocalIndex(Process):
             return self.__prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
-        string_representation_record = self.get_string_representation(record)
-        hash = self.__get_record_hash(record)
-        while True:
+
+        if not retrieved_record:
             try:
-                retrieved_record = self.__retrieve_from_index_based_on_hash(hash)
-                string_representation_retrieved_record = self.get_string_representation(
-                    retrieved_record
-                )
-                if (
-                    string_representation_retrieved_record
-                    == string_representation_record
-                ):
-                    break
-                hash = self.__increment_hash(hash)
+                retrieved_record = self.__retrieve_from_record_index(record)
             except FileNotFoundError:
                 pass
-                break
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
