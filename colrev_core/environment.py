@@ -668,56 +668,6 @@ class LocalIndex(Process):
 
         return
 
-    def __extract_constructs(self, content: str, construct_list) -> str:
-        # TODO : this is a very simple implementation...
-        constructs = ", ".join(
-            [x for x in construct_list if x.lower() in content.lower()]
-        )
-        return constructs
-
-    def __extract_theories(self, content: str, theory_list) -> str:
-        # TODO : this is a very simple implementation...
-        theories = ", ".join([x for x in theory_list if x.lower() in content.lower()])
-        return theories
-
-    def __enrich(self) -> None:
-
-        construct_list = ["intention to use", "ease of use"]
-        theory_list = [
-            "Representation Theory",
-            "Technology Acceptance Model",
-            "IS Success Model",
-        ]
-
-        for tei_file in self.teiind_path.glob("*/*.tei.xml"):
-
-            record_path = self.rind_path / tei_file.parent.stem / tei_file.name
-            record_path = Path(str(record_path).replace(".tei.xml", ".bib"))
-
-            with open(record_path) as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
-                record_to_enrich = bib_db.entries[0]
-
-            content = tei_file.read_text()
-
-            record_to_enrich["constructs"] = self.__extract_constructs(
-                content, construct_list
-            )
-            record_to_enrich["theories"] = self.__extract_theories(content, theory_list)
-
-            with open(record_path, "w") as fi:
-                fi.write(
-                    bibtexparser.dumps(
-                        bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
-                    )
-                )
-
-        return
-
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
 
         string_representation_record = self.get_string_representation(record)
@@ -950,7 +900,6 @@ class LocalIndex(Process):
                     self.__toc_index(record)
 
             self.__d_index(records)
-            self.__enrich()
 
         return
 
