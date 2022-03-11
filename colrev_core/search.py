@@ -50,27 +50,27 @@ class Search(Process):
             {
                 "search_endpoint": "dblp",
                 "source_url": "https://dblp.org/",
-                "script": self.update_dblp,
+                "script": self.search_dblp,
             },
             {
                 "search_endpoint": "crossref",
                 "source_url": "https://crossref.org/",
-                "script": self.update_crossref,
+                "script": self.search_crossref,
             },
             {
                 "search_endpoint": "backward_search",
                 "source_url": "",
-                "script": self.update_backward_search,
+                "script": self.search_backward,
             },
             {
                 "search_endpoint": "project",
                 "source_url": "",
-                "script": self.update_project,
+                "script": self.search_project,
             },
             {
                 "search_endpoint": "index",
                 "source_url": "",
-                "script": self.update_index,
+                "script": self.search_index,
             },
         ]
 
@@ -108,7 +108,7 @@ class Search(Process):
         writer.indent = "  "
         return writer
 
-    def update_crossref(self, params, feed_file):
+    def search_crossref(self, params, feed_file):
 
         if "journal_issn" not in params:
             print("Error: journal_issn not in params")
@@ -160,8 +160,8 @@ class Search(Process):
                             query = "SELECT * FROM rec_df WHERE"
                             f"{params['selection_clause']}"
                             res = ps.sqldf(query, locals())
-                        except PandaSQLException as e:
-                            print(e)
+                        except PandaSQLException:
+                            # print(e)
                             pass
 
                         if len(res) == 0:
@@ -235,7 +235,7 @@ class Search(Process):
 
         return venue_abbrev
 
-    def update_dblp(self, params, feed_file):
+    def search_dblp(self, params, feed_file):
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -376,7 +376,7 @@ class Search(Process):
 
         return
 
-    def update_backward_search(self, params: dict, feed_file: Path) -> None:
+    def search_backward(self, params: dict, feed_file: Path) -> None:
         from colrev_core.process import RecordState
         from colrev_core import grobid_client
 
@@ -430,7 +430,7 @@ class Search(Process):
 
         return
 
-    def update_project(self, params: dict, feed_file: Path) -> None:
+    def search_project(self, params: dict, feed_file: Path) -> None:
         from colrev_core.review_manager import ReviewManager
         from colrev_core.load import Loader
 
@@ -468,8 +468,8 @@ class Search(Process):
                     rec_df = pd.DataFrame.from_records([record_to_import])
                     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
                     res = ps.sqldf(query, locals())
-                except PandaSQLException as e:
-                    print(e)
+                except PandaSQLException:
+                    # print(e)
                     pass
 
                 if len(res) == 0:
@@ -497,7 +497,100 @@ class Search(Process):
 
         return
 
-    def update_index(self) -> None:
+    def search_index(self, params: dict, feed_file: Path) -> None:
+
+        if not feed_file.is_file():
+            feed_db = BibDatabase()
+            records = []
+            imported_ids = []
+        else:
+            with open(feed_file) as bibtex_file:
+                feed_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=True,
+                    common_strings=True,
+                ).parse_file(bibtex_file, partial=True)
+                records = feed_db.entries
+            imported_ids = [x["ID"] for x in records]
+
+        from colrev_core.environment import LocalIndex
+        from p_tqdm import p_map
+
+        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+
+        def retrieve_from_index(rec_path) -> dict:
+
+            with open(rec_path) as target_db:
+                bib_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
+                ).parse_file(target_db, partial=True)
+                record_to_import = bib_db.entries[0]
+
+            if "selection_clause" in params:
+                if "fulltext" in params["selection_clause"]:
+                    fulltext_path = (
+                        LOCAL_INDEX.teiind_path
+                        / rec_path.parent.stem
+                        / rec_path.with_suffix(".tei.xml").name
+                    )
+                    if fulltext_path.is_file():
+                        record_to_import["fulltext"] = fulltext_path.read_text()
+                    else:
+                        record_to_import["fulltext"] = "NOT_AVAILABLE"
+                        return {}
+
+                res = []
+                try:
+                    rec_df = pd.DataFrame.from_records([record_to_import])
+                    query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+                    res = ps.sqldf(query, locals())
+                except PandaSQLException:
+                    # print(e)
+                    pass
+
+                if len(res) == 0:
+                    return {}
+                if "fulltext" in record_to_import:
+                    del record_to_import["fulltext"]
+
+            return LOCAL_INDEX.prep_record_for_return(record_to_import)
+
+        records_to_import = p_map(
+            retrieve_from_index, list(LOCAL_INDEX.rind_path.glob("*/*.bib"))
+        )
+
+        # for rec_path in LOCAL_INDEX.rind_path.glob("*/*.bib"):
+        #   records_to_import.append(retrieve_from_index(rec_path))
+
+        records_to_import = [r for r in records_to_import if r]
+
+        records_to_import = [
+            x for x in records_to_import if x["ID"] not in imported_ids
+        ]
+        records = records + records_to_import
+
+        keys_to_drop = [
+            "status",
+            "origin",
+            "excl_criteria",
+            "manual_non_duplicate",
+            "excl_criteria",
+            "metadata_source",
+        ]
+        records = [
+            {key: item[key] for key in item.keys() if key not in keys_to_drop}
+            for item in records
+        ]
+
+        if len(records) > 0:
+            feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            feed_db.entries = records
+            with open(feed_file, "w") as fi:
+                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+        else:
+            print("No records found")
 
         return
 
@@ -519,8 +612,9 @@ class Search(Process):
                 selection_str = query[query.find("WHERE ") + 6 : query.find("SCOPE ")]
             else:
                 selection_str = query[query.find("WHERE ") + 6 :]
-            if "[" not in selection_str:
-                # parse simple selection
+            if "[" in selection_str:
+                # parse simple selection, e.g.,
+                # digital[title] AND platform[all]
                 selection = re.split(" AND | OR ", selection_str)
                 selection_str = " ".join(
                     [
@@ -537,7 +631,7 @@ class Search(Process):
                         for x in selection
                     ]
                 )
-            # else: parse complex selection
+            # else: parse complex selection (no need to parse!?)
             params["selection_clause"] = selection_str
 
         if "SCOPE " in query:
@@ -622,7 +716,7 @@ class Search(Process):
     def update(self, selection_str: str = "") -> None:
 
         # TODO: if selection: --selected DBLP,CROSSREF,...
-        # iterate over self.sources and call update_crossref(), update_dblp(), ...
+        # iterate over self.sources and call search_crossref(), search_dblp(), ...
 
         # TODO: when the search_file has been filled only query the last years
         # in the next calls?"

@@ -658,7 +658,7 @@ class LocalIndex(Process):
         retrieved_record = self.__retrieve_from_index_based_on_hash(
             hashlib.sha256(associated_original.encode("utf-8")).hexdigest()
         )
-        return self.__prep_record_for_return(retrieved_record)
+        return self.prep_record_for_return(retrieved_record)
 
     def __retrieve_from_gid_index(self, record: dict) -> dict:
         """Convenience function to retrieve a record based on a global ID"""
@@ -696,7 +696,7 @@ class LocalIndex(Process):
         )
         return indexed_record
 
-    def __prep_record_for_return(self, record: dict) -> dict:
+    def prep_record_for_return(self, record: dict) -> dict:
         from colrev_core.process import RecordState
 
         if "hash_string_representation" in record:
@@ -894,7 +894,7 @@ class LocalIndex(Process):
                 ).hexdigest()
                 record = self.__retrieve_from_index_based_on_hash(hash)
 
-                return self.__prep_record_for_return(record)
+                return self.prep_record_for_return(record)
 
         return record
 
@@ -915,7 +915,7 @@ class LocalIndex(Process):
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
-            return self.__prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
         string_representation_record = self.get_string_representation(record)
@@ -938,7 +938,7 @@ class LocalIndex(Process):
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
-            return self.__prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record)
 
         # 3. Try the duplicate representation index
         if not retrieved_record:
@@ -951,7 +951,7 @@ class LocalIndex(Process):
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
         self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
-        return self.__prep_record_for_return(retrieved_record)
+        return self.prep_record_for_return(retrieved_record)
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:

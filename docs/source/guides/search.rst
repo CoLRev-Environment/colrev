@@ -24,11 +24,13 @@ Search
 
     colrev search -a "RETRIEVE * FROM crossref, dblp WHERE Digital AND Platform"
 
-    colrev search -a "RETRIEVE * FROM dblp SCOPE venue_key='conf/hicss' AND journal_abbreviation='hicss'"
-
-    colrev search -a "RETRIEVE * FROM dblp SCOPE url='https://dblp.org/db/journals/dss/index.html' AND journal_abbreviation='Decis. Support Syst."
+    colrev search -a "RETRIEVE * FROM dblp SCOPE venue_key='journals/dss' AND journal_abbreviation='Decis. Support Syst.'"
 
     colrev search -a "RETRIEVE * FROM project SCOPE url='/home/gerit/ownCloud/data/theory'"
+
+    colrev search -a "RETRIEVE * FROM backward_search"
+
+    colrev search -a "RETRIEVE * FROM index WHERE lower(fulltext) like '%digital platform%'"
 
 .. option:: --selected TEXT
 
