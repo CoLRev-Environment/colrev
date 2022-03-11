@@ -1159,9 +1159,24 @@ class Curations:
             return False
         print(f"Download curated resource from {curated_resource}")
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
-        REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
-        REVIEW_MANAGER.register_repo()
 
+        if (repo_dir / Path("references.bib")).is_file():
+            REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
+            REVIEW_MANAGER.register_repo()
+        elif (repo_dir / Path("readme.md")).is_file():
+            text = Path(repo_dir / "readme.md").read_text()
+            for line in [
+                x for x in text.splitlines() if "colrev environment --install" in x
+            ]:
+                if line == curated_resource:
+                    continue
+                self.install_curated_resource(
+                    line.replace("colrev environment --install ", "")
+                )
+        else:
+            print(
+                f"Error: repo does not contain a references.bib/linked repos {repo_dir}"
+            )
         return True
 
 
