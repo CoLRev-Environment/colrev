@@ -32,44 +32,6 @@ Example:
 Link to the repository: `colrev_endpoint <https://github.com/geritwagner/colrev_endpoint>`_.
 
 
-paper-feed
------------------
-
-Aimed at providing a continuous feed of recent research by retrieving (new) papers from databases like Crossref and DBLP.
-It's vision is to facilitate **living reviews** in which researchers can efficiently disseminate the latest publications and distribute them to their local topic (CoLRev) repositories and projects.
-
-Example:
-
-.. code-block:: sh
-
-    # In a colrev repository, run
-    paper_feed init --fname ISR.bib --qname "Information Systems Research" --jissn '15369323'
-
-    # To update the feed by retrieving all /the latest papers:
-    paper_feed update
-
-Link to the repository: `paper_feed <https://github.com/geritwagner/paper_feed>`_.
-
-
-local-paper-index
--------------------
-
-Aimed at indexing PDFs on a local machine, allowing any other local CoLRev project to retrieve them.
-
-
-Example:
-
-.. code-block:: sh
-
-    # In a colrev repository, add a directory containing PDFs:
-    local_paper_index index --add-path /home/user/journals/PLOS
-
-    # Index PDFs:
-    local_paper_index index
-
-Link to the repository: `local_paper_index <https://github.com/geritwagner/local_paper_index>`_.
-
-
 colrev_cml_assistant
 -----------------------
 

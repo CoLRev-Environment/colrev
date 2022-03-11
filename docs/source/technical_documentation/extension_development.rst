@@ -20,12 +20,15 @@ Python
 .. code-block:: python
 
     import logging
+    from colrev_core.review_manager import ReviewManager
     from colrev_core.process import PrepProcess
 
-    # Initialize the process and notify the ReviewManager
-    PREP_PROCESS = PrepProcess()
+    # Initialize the ReviewManager
+    REVIEW_MANAGER = ReviewManager()
 
-    REVIEW_MANAGER= PREP_PROCESS.REVIEW_MANAGER
+    # Initialize the process and notify the ReviewManager
+    PREP_PROCESS = PrepProcess(REVIEW_MANAGER)
+
     REVIEW_DATASET = REVIEW_MANAGER.REVIEW_DATASET
 
     # Load the records and apply changes
@@ -61,9 +64,12 @@ For extensions aimed at changing records
     library(reticulate)
     colrev_core <- reticulate::import("colrev_core")
 
-     # Initialize the ReviewManager and notify about upcoming process
-    PREP_PROCESS <- colrev_core$process$PrepProcess()
-    REVIEW_MANAGER = PREP_PROCESS$REVIEW_MANAGER
+    # Initialize the ReviewManager
+    REVIEW_MANAGER <- colrev_core$review_manager$ReviewManager()
+
+    # Initialize the PrepProcess and notify about upcoming process
+    PREP_PROCESS <- colrev_core$process$PrepProcess(REVIEW_MANAGER)
+
     REVIEW_DATASET = PREP_PROCESS$REVIEW_DATASET
 
     # Load the records and apply changes
