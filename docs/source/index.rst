@@ -29,7 +29,44 @@ After each processing step, make sure to `check the changes <guides/changes.html
    :width: 700
    :alt: Workflow cycle
 
-Further details are provided in the `user documentation <guides/overview.html>`_.
+Conducting a full literature review should be as simple as running the following commands:
+
+.. code-block:: bash
+
+      # Initialize the project
+      colrev init
+
+      colrev search --add "RETRIEVE * FROM crossref WHERE digital"
+      # Or store search results in the search directory
+
+      # Load the seach results
+      colrev load
+
+      # Prepare the metadata
+      colrev prep
+
+      # Identify and merge duplicates
+      colrev dedupe
+
+      # Conduct a prescreen
+      colrev prescreen
+
+      # Get the PDFs for included papers
+      colrev pdf-get
+
+      # Prepare the PDFs
+      colrev pdf-prep
+
+      # Conduct a screen (using specific criteria)
+      colrev screen
+
+      # Complete the data analysis/synthesis
+      colrev data
+
+      # Build the paper
+      colrev paper
+
+Further details are provided in the `user documentation <guides/user_documentation.html>`_.
 
 .. toctree::
    :hidden:
@@ -41,18 +78,7 @@ Further details are provided in the `user documentation <guides/overview.html>`_
    :maxdepth: 1
    :caption: Guidelines
 
-   guides/installation
-   guides/overview
-   guides/init
-   guides/load
-   guides/prep
-   guides/dedupe
-   guides/prescreen
-   guides/pdf_get
-   guides/pdf_prep
-   guides/screen
-   guides/data
-   guides/paper
+   guides/user_documentation
    guides/extensions
    guides/best_practices
 
