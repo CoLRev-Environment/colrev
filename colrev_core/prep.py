@@ -2249,7 +2249,11 @@ class Preparation(Process):
         refs = []
         for tei_file in Path("tei").glob("*.tei.xml"):
             try:
-                TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_file)
+                TEI_INSTANCE = TEI(
+                    self.REVIEW_MANAGER,
+                    tei_path=tei_file,
+                    notify_state_transition_process=False,
+                )
                 refs.extend(TEI_INSTANCE.get_bibliography())
             except TEI_Exception:
                 pass
