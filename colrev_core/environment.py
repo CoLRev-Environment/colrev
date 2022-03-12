@@ -38,6 +38,7 @@ class LocalIndex(Process):
     jind_path = local_index_path / Path(".j_index/")
     wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
     teiind_path = local_index_path / Path(".tei_index/")
+    annotators_path = Path.home().joinpath(".colrev/annotators")
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
@@ -901,6 +902,14 @@ class LocalIndex(Process):
 
             self.__d_index(records)
 
+        for annotator in self.annotators_path.glob("*/annotate.py"):
+            print(f"Load {annotator}")
+            import imp
+
+            annotator_module = imp.load_source("annotator_module", str(annotator))
+            annotate = getattr(annotator_module, "annotate")
+            annotate(self)
+
         return
 
     def retrieve_record_from_toc_index(
@@ -1087,15 +1096,17 @@ class LocalIndex(Process):
         return
 
 
-class Curations:
+class Resources:
 
     curations_path = Path.home().joinpath(".colrev/curated_metadata")
+    annotators_path = Path.home().joinpath(".colrev/annotators")
 
     def __init__(self):
         pass
 
     def install_curated_resource(self, curated_resource: str) -> bool:
         import git
+        import shutil
 
         # check if url else return False
         # validators.url(curated_resource)
@@ -1103,6 +1114,7 @@ class Curations:
             curated_resource = "https://github.com/" + curated_resource
         self.curations_path.mkdir(exist_ok=True, parents=True)
         repo_dir = self.curations_path / Path(curated_resource.split("/")[-1])
+        annotator_dir = self.annotators_path / Path(curated_resource.split("/")[-1])
         if repo_dir.is_dir():
             print(f"Repo already exists ({repo_dir})")
             return False
@@ -1112,6 +1124,8 @@ class Curations:
         if (repo_dir / Path("references.bib")).is_file():
             REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
             REVIEW_MANAGER.register_repo()
+        elif (repo_dir / Path("annotate.py")).is_file():
+            shutil.move(str(repo_dir), str(annotator_dir))
         elif (repo_dir / Path("readme.md")).is_file():
             text = Path(repo_dir / "readme.md").read_text()
             for line in [
