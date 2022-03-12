@@ -72,6 +72,11 @@ class Search(Process):
                 "source_url": "",
                 "script": self.search_index,
             },
+            {
+                "search_endpoint": "pdfs_directory",
+                "source_url": "",
+                "script": self.search_pdfs_dir,
+            },
         ]
 
     def check_precondition(self) -> None:
@@ -594,11 +599,494 @@ class Search(Process):
 
         return
 
+    def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
+
+        from collections import Counter
+        from p_tqdm import p_map
+        import imagehash
+        from pdf2image import convert_from_path
+        from colrev_core import grobid_client
+        from pathos.multiprocessing import ProcessingPool as Pool
+
+        from colrev_core.tei import TEI
+        from colrev_core.tei import TEI_Exception
+        from pdfminer.pdfdocument import PDFDocument
+        from pdfminer.pdfinterp import resolve1
+        from pdfminer.pdfparser import PDFParser
+        from colrev_core.pdf_prep import PDF_Preparation
+
+        from colrev_core.process import RecordState
+
+        skip_duplicates = True
+
+        self.PDF_PREPARATION = PDF_Preparation(
+            self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
+        def update_if_pdf_renamed(
+            x: dict, records: typing.List[typing.Dict], search_source: Path
+        ) -> bool:
+            UPDATED = True
+            NOT_UPDATED = False
+
+            c_rec_l = [
+                r
+                for r in records
+                if f"{search_source}/{x['ID']}" in r["origin"].split(";")
+            ]
+            if len(c_rec_l) == 1:
+                c_rec = c_rec_l.pop()
+                if "pdf_hash" in c_rec:
+                    pdf_hash = c_rec["pdf_hash"]
+                    pdf_path = Path(x["file"]).parents[0]
+                    potential_pdfs = pdf_path.glob("*.pdf")
+                    # print(f'search pdf_hash {pdf_hash}')
+                    for potential_pdf in potential_pdfs:
+                        hash_potential_pdf = str(
+                            imagehash.average_hash(
+                                convert_from_path(
+                                    potential_pdf, first_page=0, last_page=1
+                                )[0],
+                                hash_size=32,
+                            )
+                        )
+                        # print(f'hash_potential_pdf {hash_potential_pdf}')
+                        if pdf_hash == hash_potential_pdf:
+                            x["file"] = str(potential_pdf)
+                            c_rec["file"] = str(potential_pdf)
+                            return UPDATED
+            return NOT_UPDATED
+
+        def remove_records_if_pdf_no_longer_exists() -> None:
+
+            self.REVIEW_MANAGER.logger.debug("Checking for PDFs that no longer exist")
+
+            if not feed_file.is_file():
+                return
+            writer = self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+
+            with open(feed_file) as target_db:
+                search_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
+                ).parse_file(target_db, partial=True)
+
+            records = []
+            if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+            to_remove: typing.List[str] = []
+            for x in search_db.entries:
+                if not Path(x["file"]).is_file():
+                    if records:
+                        updated = update_if_pdf_renamed(x, records, feed_file)
+                        print(updated)
+                        if updated:
+                            continue
+                    to_remove = to_remove + [
+                        f"{feed_file.name}/{x['ID']}" for x in search_db.entries
+                    ]
+
+            search_db.entries = [
+                x for x in search_db.entries if Path(x["file"]).is_file()
+            ]
+            if len(search_db.entries) != 0:
+                bibtex_str = bibtexparser.dumps(search_db, writer)
+                with open(feed_file, "w") as f:
+                    f.write(bibtex_str)
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                str(feed_file.parent / feed_file.name)
+            )
+
+            if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                # Note : origins may contain multiple links
+                # but that should not be a major issue in indexing repositories
+
+                to_remove = []
+                source_ids = [x["ID"] for x in search_db.entries]
+                for record in records:
+                    if str(feed_file.name) in record["origin"]:
+                        if (
+                            record["origin"].split(";")[0].split("/")[1]
+                            not in source_ids
+                        ):
+                            print("REMOVE " + record["origin"])
+                            to_remove.append(record["origin"])
+
+                for r in to_remove:
+                    self.REVIEW_MANAGER.logger.debug(
+                        f"remove from index (PDF path no longer exists): {r}"
+                    )
+                    self.REVIEW_MANAGER.report_logger.info(
+                        f"remove from index (PDF path no longer exists): {r}"
+                    )
+
+                records = [x for x in records if x["origin"] not in to_remove]
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+            return
+
+        def get_pdf_links(bib_file: Path) -> list:
+            pdf_list = []
+            if bib_file.is_file():
+                with open(bib_file) as f:
+                    line = f.readline()
+                    while line:
+                        if "file" == line.lstrip()[:4]:
+                            file = line[line.find("{") + 1 : line.rfind("}")]
+                            pdf_list.append(Path(file))
+                        line = f.readline()
+            return pdf_list
+
+        if not feed_file.is_file():
+            feed_db = BibDatabase()
+            records = []
+        else:
+            with open(feed_file) as bibtex_file:
+                feed_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=True,
+                    common_strings=True,
+                ).parse_file(bibtex_file, partial=True)
+                records = feed_db.entries
+
+        path = Path(params["scope"]["path"])
+
+        remove_records_if_pdf_no_longer_exists()
+
+        indexed_pdf_paths = get_pdf_links(feed_file)
+        #  + get_pdf_links(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"])
+
+        indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
+        self.REVIEW_MANAGER.logger.debug(f"indexed_pdf_paths: {indexed_pdf_path_str}")
+
+        overall_pdfs = path.glob("**/*.pdf")
+
+        # Note: sets are more efficient:
+        pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
+
+        def get_pdf_hash(path) -> typing.List[str]:
+            current_hash = imagehash.average_hash(
+                convert_from_path(str(path), first_page=0, last_page=1)[0],
+                hash_size=32,
+            )
+            return [str(path), str(current_hash)]
+
+        if skip_duplicates:
+            pdfs_hashed = p_map(get_pdf_hash, pdfs_to_index)
+            pdf_hashes = [x[1] for x in pdfs_hashed]
+            duplicate_hashes = [
+                item for item, count in Counter(pdf_hashes).items() if count > 1
+            ]
+            duplicate_pdfs = [
+                str(path) for path, hash in pdfs_hashed if hash in duplicate_hashes
+            ]
+            pdfs_to_index = [p for p in pdfs_to_index if str(p) not in duplicate_pdfs]
+
+        broken_filepaths = [str(x) for x in pdfs_to_index if ";" in str(x)]
+        if len(broken_filepaths) > 0:
+            broken_filepath_str = "\n ".join(broken_filepaths)
+            self.REVIEW_MANAGER.logger.error(
+                f'skipping PDFs with ";" in filepath: {broken_filepath_str}'
+            )
+            pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
+
+        filepaths_to_skip = [
+            str(x)
+            for x in pdfs_to_index
+            if "_ocr.pdf" == str(x)[-8:]
+            or "_wo_cp.pdf" == str(x)[-10:]
+            or "_wo_lp.pdf" == str(x)[-10:]
+            or "_backup.pdf" == str(x)[-11:]
+        ]
+        if len(filepaths_to_skip) > 0:
+            fp_to_skip_str = "\n ".join(filepaths_to_skip)
+            self.REVIEW_MANAGER.logger.info(
+                f"Skipping PDFs with _ocr.pdf/_wo_cp.pdf: {fp_to_skip_str}"
+            )
+            pdfs_to_index = [
+                x for x in pdfs_to_index if str(x) not in filepaths_to_skip
+            ]
+
+        # pdfs_to_index = list(set(overall_pdfs) - set(indexed_pdf_paths))
+        # pdfs_to_index = ['/home/path/file.pdf']
+        pdfs_to_index_str = "\n  ".join([str(x) for x in pdfs_to_index])
+        self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
+
+        if len(pdfs_to_index) > 0:
+            grobid_client.start_grobid(self.REVIEW_MANAGER)
+        else:
+            self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
+            return
+
+        def update_fields_based_on_pdf_dirs(record: dict) -> dict:
+
+            if "params" not in params:
+                return record
+
+            if "journal" in params["params"]:
+                record["journal"] = params["params"]["journal"]
+                record["ENTRYTYPE"] = "article"
+
+            if "conference" in params["params"]:
+                record["booktitle"] = params["params"]["conference"]
+                record["ENTRYTYPE"] = "inproceedings"
+
+            if "sub_dir_pattern" in params["params"]:
+                sub_dir_pattern = params["params"]["sub_dir_pattern"]
+                assert sub_dir_pattern in ["NA", "volume_number", "year", "volume"]
+
+                partial_path = Path(record["file"]).parents[0].stem
+                if "year" == sub_dir_pattern:
+                    r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
+                    partial_path = Path(record["file"]).parents[0].stem
+                    # Note: for year-patterns, we allow subfolders
+                    # (eg., conference tracks)
+                    partial_path = str(Path(record["file"]).parents[0]).replace(
+                        params["scope"]["path"], ""
+                    )
+                    match = r_sub_dir_pattern.search(str(partial_path))
+                    if match is not None:
+                        year = match.group(1)
+                        record["year"] = year
+
+                if "volume_number" == sub_dir_pattern:
+                    r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
+                    match = r_sub_dir_pattern.search(str(partial_path))
+                    if match is not None:
+                        volume = match.group(1)
+                        number = match.group(2)
+                        record["volume"] = volume
+                        record["number"] = number
+                    else:
+                        # sometimes, journals switch...
+                        r_sub_dir_pattern = re.compile("([0-9]{1,3})")
+                        match = r_sub_dir_pattern.search(str(partial_path))
+                        if match is not None:
+                            volume = match.group(1)
+                            record["volume"] = volume
+
+                if "volume" == sub_dir_pattern:
+                    r_sub_dir_pattern = re.compile("([0-9]{1,4})")
+                    match = r_sub_dir_pattern.search(str(partial_path))
+                    if match is not None:
+                        volume = match.group(1)
+                        record["volume"] = volume
+
+            return record
+
+        # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
+        # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
+        # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
+        def get_record_from_pdf_grobid(record) -> dict:
+            if RecordState.md_prepared == record.get("status", "NA"):
+                return record
+            grobid_client.check_grobid_availability()
+
+            pdf_path = Path(record["file"])
+
+            # Note: activate the following when new grobid version is released (> 0.7)
+            # Note: we have more control and transparency over the consolidation
+            # if we do it in the colrev_core process
+            # header_data = {"consolidateHeader": "0"}
+
+            # # https://github.com/kermitt2/grobid/issues/837
+            # r = requests.post(
+            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            #     headers={"Accept": "application/x-bibtex"},
+            #     params=header_data,
+            #     files=dict(input=open(pdf_path, "rb")),
+            # )
+
+            # if 200 == r.status_code:
+            #     parser = BibTexParser(customization=convert_to_unicode)
+            #     db = bibtexparser.loads(r.text, parser=parser)
+            #     record = db.entries[0]
+            #     return record
+            # if 500 == r.status_code:
+            #     self.REVIEW_MANAGER.logger.error(f"Not a readable
+            #           pdf file: {pdf_path.name}")
+            #     print(f"Grobid: {r.text}")
+            #     return {}
+
+            # print(f"Status: {r.status_code}")
+            # print(f"Response: {r.text}")
+            # return {}
+
+            TEI_INSTANCE = TEI(
+                self.REVIEW_MANAGER,
+                pdf_path=pdf_path,
+                notify_state_transition_process=False,
+            )
+
+            extracted_record = TEI_INSTANCE.get_metadata()
+
+            for key, val in extracted_record.items():
+                if val:
+                    record[key] = str(val)
+
+            fp = open(pdf_path, "rb")
+            parser = PDFParser(fp)
+            doc = PDFDocument(parser)
+
+            if record.get("title", "NA") in ["NA", ""]:
+                if "Title" in doc.info[0]:
+                    try:
+                        record["title"] = doc.info[0]["Title"].decode("utf-8")
+                    except UnicodeDecodeError:
+                        pass
+            if record.get("author", "NA") in ["NA", ""]:
+                if "Author" in doc.info[0]:
+                    try:
+                        pdf_md_author = doc.info[0]["Author"].decode("utf-8")
+                        if (
+                            "Mirko Janc" not in pdf_md_author
+                            and "wendy" != pdf_md_author
+                            and "yolanda" != pdf_md_author
+                        ):
+                            record["author"] = pdf_md_author
+                    except UnicodeDecodeError:
+                        pass
+
+            if "abstract" in record:
+                del record["abstract"]
+            if "keywords" in record:
+                del record["keywords"]
+
+            # to allow users to update/reindex with newer version:
+            record["grobid-version"] = self.REVIEW_MANAGER.docker_images[
+                "lfoppiano/grobid"
+            ]
+            return record
+
+        def index_pdf(pdf_path: Path) -> dict:
+
+            self.REVIEW_MANAGER.report_logger.info(pdf_path)
+            self.REVIEW_MANAGER.logger.info(pdf_path)
+
+            record: typing.Dict[str, typing.Any] = {
+                "file": str(pdf_path),
+                "ENTRYTYPE": "misc",
+            }
+            try:
+                record = get_record_from_pdf_grobid(record)
+
+                file = open(pdf_path, "rb")
+                parser = PDFParser(file)
+                document = PDFDocument(parser)
+                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+                if pages_in_file < 6:
+                    record = self.PDF_PREPARATION.get_text_from_pdf(record, PAD=40)
+                    if "text_from_pdf" in record:
+                        text: str = record["text_from_pdf"]
+                        if "bookreview" in text.replace(" ", "").lower():
+                            record["ENTRYTYPE"] = "misc"
+                            record["note"] = "Book review"
+                        if "erratum" in text.replace(" ", "").lower():
+                            record["ENTRYTYPE"] = "misc"
+                            record["note"] = "Erratum"
+                        if "correction" in text.replace(" ", "").lower():
+                            record["ENTRYTYPE"] = "misc"
+                            record["note"] = "Correction"
+                        if "contents" in text.replace(" ", "").lower():
+                            record["ENTRYTYPE"] = "misc"
+                            record["note"] = "Contents"
+                        if "withdrawal" in text.replace(" ", "").lower():
+                            record["ENTRYTYPE"] = "misc"
+                            record["note"] = "Withdrawal"
+                        del record["text_from_pdf"]
+                    # else:
+                    #     print(f'text extraction error in {record["ID"]}')
+                    if "pages_in_file" in record:
+                        del record["pages_in_file"]
+
+                record = {k: v for k, v in record.items() if v is not None}
+                record = {k: v for k, v in record.items() if v != "NA"}
+
+                record["file"] = str(pdf_path)
+
+                # add details based on path
+                record = update_fields_based_on_pdf_dirs(record)
+
+            except TEI_Exception:
+                pass
+
+            return record
+
+        def get_last_ID(bib_file: Path) -> str:
+            current_ID = "1"
+            if bib_file.is_file():
+                with open(bib_file) as f:
+                    line = f.readline()
+                    while line:
+                        if "@" in line[:3]:
+                            current_ID = line[line.find("{") + 1 : line.rfind(",")]
+                        line = f.readline()
+            return current_ID
+
+        batch_size = 10
+        pdf_batches = [
+            pdfs_to_index[i * batch_size : (i + 1) * batch_size]
+            for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
+        ]
+
+        for pdf_batch in pdf_batches:
+
+            print("\n")
+            lenrec = len(indexed_pdf_paths)
+            if len(list(overall_pdfs)) > 0:
+                self.REVIEW_MANAGER.logger.info(
+                    f"Number of indexed records: {lenrec} of {len(list(overall_pdfs))} "
+                    f"({round(lenrec/len(list(overall_pdfs))*100, 2)}%)"
+                )
+
+            new_records = []
+
+            if self.REVIEW_MANAGER.config["DEBUG_MODE"]:
+                for pdf_path in pdf_batch:
+                    new_records.append(index_pdf(pdf_path))
+            else:
+                # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
+                p = Pool(ncpus=4)
+                new_records = p.map(index_pdf, pdf_batch)
+
+            if 0 != len(new_records):
+                ID = int(get_last_ID(feed_file))
+                for new_r in new_records:
+                    indexed_pdf_paths.append(new_r["file"])
+                    ID += 1
+                    new_r["ID"] = f"{ID}".rjust(10, "0")
+
+                    if "status" in new_r:
+                        if "CURATED" != new_r.get("metadata_source", "NA"):
+                            del new_r["status"]
+                        else:
+                            new_r["status"] = str(new_r["status"])
+
+            records = records + new_records
+
+        if len(records) > 0:
+            feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            feed_db.entries = records
+            with open(feed_file, "w") as fi:
+                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+        else:
+            print("No records found")
+
+        return
+
     def parse_sources(self, query: str) -> list:
         if "WHERE " in query:
             sources = query[query.find("FROM ") + 5 : query.find(" WHERE")].split(",")
         elif "SCOPE " in query:
             sources = query[query.find("FROM ") + 5 : query.find(" SCOPE")].split(",")
+        elif "WITH " in query:
+            sources = query[query.find("FROM ") + 5 : query.find(" WITH")].split(",")
+        else:
+            sources = query[query.find("FROM ") + 5 :].split(",")
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
@@ -608,10 +1096,12 @@ class Search(Process):
         params = {}
         selection_str = query
         if "WHERE " in query:
+            selection_str = query[query.find("WHERE ") + 6 :]
             if "SCOPE " in query:
-                selection_str = query[query.find("WHERE ") + 6 : query.find("SCOPE ")]
-            else:
-                selection_str = query[query.find("WHERE ") + 6 :]
+                selection_str = selection_str[: selection_str.find("SCOPE ")]
+            if "WITH " in query:
+                selection_str = selection_str[: selection_str.find(" WITH")]
+
             if "[" in selection_str:
                 # parse simple selection, e.g.,
                 # digital[title] AND platform[all]
@@ -637,6 +1127,8 @@ class Search(Process):
         if "SCOPE " in query:
             # selection_str = selection_str[: selection_str.find("SCOPE ")]
             scope_part_str = query[query.find("SCOPE ") + 6 :]
+            if "WITH " in query:
+                scope_part_str = scope_part_str[: scope_part_str.find(" WITH")]
             params["scope"] = {}  # type: ignore
             for scope_item in scope_part_str.split(" AND "):
                 key, value = scope_item.split("=")
@@ -650,6 +1142,13 @@ class Search(Process):
                         )
                         continue
                 params["scope"][key] = value.rstrip("'").lstrip("'")  # type: ignore
+
+        if "WITH " in query:
+            scope_part_str = query[query.find("WITH ") + 5 :]
+            params["params"] = {}  # type: ignore
+            for scope_item in scope_part_str.split(" AND "):
+                key, value = scope_item.split("=")
+                params["params"][key] = value.rstrip("'").lstrip("'")  # type: ignore
 
         return params
 
@@ -680,6 +1179,8 @@ class Search(Process):
             selection = query[query.find("WHERE ") :]
         elif "SCOPE " in query:
             selection = query[query.find("SCOPE ") :]
+        elif "WITH" in query:
+            selection = query[query.find("WITH ") :]
         else:
             print("Error: missing WHERE or SCOPE clause in query")
             return
