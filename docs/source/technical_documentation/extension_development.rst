@@ -2,7 +2,7 @@
 Extension development
 ==================================
 
-Developing extensions for CoLRev in Python/R is easy. Examples are available online (e.g., `1 <https://github.com/geritwagner/colrev_endpoint>`_, `2 <https://github.com/geritwagner/local_paper_index>`_, and `3 <https://github.com/geritwagner/paper_feed>`_). We provide examples and instructions below.
+Developing extensions for CoLRev in Python/R is easy. Examples are available online (e.g., `1 <https://github.com/geritwagner/colrev_endpoint>`_). We provide examples and instructions below.
 
 **Recommendations**:
 

@@ -113,7 +113,7 @@ Local review environments
 ------------------------------------
 
 - Elements (include a figure and explanation):
-    - paper_feed/local_paper_index (update & distribute)
+    - feed repositories (update & distribute)
     - local topic repositories (e.g., zettelkasten) (often private)
     - paper projects (often shared)
 - Best practices for collaboration and sharing setups with students/colleagues

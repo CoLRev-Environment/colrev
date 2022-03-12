@@ -322,7 +322,7 @@ PDF get
 :program:`colrev pdf-get` retrieves PDFs based on
 
 - unpaywall.org
-- any other local CoLRev repository (including `local_paper_index <extensions/local_paper_index.html>`_)
+- any other local CoLRev repository
 
 This may retrieve up to 80 or 90% of the PDFs, especially when larger PDF collections are stored locally and when multiple authors use :program:`colrev pdf-get` to collect PDFs from their local machines.
 When PDFs cannot be retrieved automatically, CoLRev provides an interactive convenience function :program:`colrev pdf-get-man`.
