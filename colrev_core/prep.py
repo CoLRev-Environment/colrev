@@ -2127,7 +2127,7 @@ class Preparation(Process):
 
         for commit_id, cmsg, filecontents in list(revlist):
             cmsg_l1 = str(cmsg).split("\n")[0]
-            if "colrev load" not in cmsg and "local_paper_index index" not in cmsg:
+            if "colrev load" not in cmsg:
                 print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
                 continue
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
