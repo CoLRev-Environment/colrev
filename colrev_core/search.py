@@ -51,31 +51,43 @@ class Search(Process):
                 "search_endpoint": "dblp",
                 "source_url": "https://dblp.org/",
                 "script": self.search_dblp,
+                "validate_params": self.validate_dblp_params,
+                "mode": "all",
             },
             {
                 "search_endpoint": "crossref",
                 "source_url": "https://crossref.org/",
                 "script": self.search_crossref,
+                "validate_params": self.validate_crossref_params,
+                "mode": "all",
             },
             {
                 "search_endpoint": "backward_search",
                 "source_url": "",
                 "script": self.search_backward,
+                "validate_params": self.validate_backwardsearch_params,
+                "mode": "individual",
             },
             {
                 "search_endpoint": "project",
                 "source_url": "",
                 "script": self.search_project,
+                "validate_params": self.validate_project_params,
+                "mode": "individual",
             },
             {
                 "search_endpoint": "index",
                 "source_url": "",
                 "script": self.search_index,
+                "validate_params": self.validate_index_params,
+                "mode": "individual",
             },
             {
                 "search_endpoint": "pdfs_directory",
                 "source_url": "",
                 "script": self.search_pdfs_dir,
+                "validate_params": self.validate_pdfs_dir_params,
+                "mode": "individual",
             },
         ]
 
@@ -1152,6 +1164,109 @@ class Search(Process):
 
         return params
 
+    def validate_dblp_params(self, query: str) -> None:
+
+        if " SCOPE " not in query:
+            raise InvalidQueryException("DBLP queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "venue_key" not in scope:
+            raise InvalidQueryException(
+                "DBLP queries require a venue_key in the SCOPE section"
+            )
+        if "journal_abbreviated" not in scope:
+            raise InvalidQueryException(
+                "DBLP queries require a journal_abbreviated field in the SCOPE section"
+            )
+
+        return
+
+    def validate_crossref_params(self, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("CROSSREF queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "journal_issn" not in scope:
+            raise InvalidQueryException(
+                "CROSSREF queries require a journal_issn field in the SCOPE section"
+            )
+
+        return
+
+    def validate_backwardsearch_params(self, query: str) -> None:
+        return
+
+    def validate_project_params(self, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("PROJECT queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "url" not in scope:
+            raise InvalidQueryException(
+                "PROJECT queries require a url field in the SCOPE section"
+            )
+
+        return
+
+    def validate_index_params(self, query: str) -> None:
+        return
+
+    def validate_pdfs_dir_params(self, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("PDFS_DIR queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "path" not in scope:
+            raise InvalidQueryException(
+                "PDFS_DIR queries require a path field in the SCOPE section"
+            )
+
+        # Note: WITH .. is optional.
+
+        return
+
+    def validate_query(self, query: str) -> None:
+
+        if " FROM " not in query:
+            raise InvalidQueryException('Query missing "FROM" clause')
+
+        sources = self.parse_sources(query)
+
+        available_source_types = [x["search_endpoint"] for x in self.search_scripts]
+        if not all(source in available_source_types for source in sources):
+            violation = [
+                source for source in sources if source not in available_source_types
+            ]
+            raise InvalidQueryException(
+                f"source {violation} not in available sources "
+                f"({available_source_types})"
+            )
+
+        if len(sources) > 1:
+            individual_sources = [
+                s["search_endpoint"]
+                for s in self.search_scripts
+                if "individual" == s["mode"]
+            ]
+            if any(source in individual_sources for source in sources):
+                violations = [
+                    source for source in sources if source in individual_sources
+                ]
+                raise InvalidQueryException(
+                    "Multiple query sources include a source that can only be"
+                    f" used individually: {violations}"
+                )
+
+        for source in sources:
+            script = [s for s in self.search_scripts if s["search_endpoint"] == source][
+                0
+            ]
+            script["validate_params"](query)
+
+        # TODO : parse params (which may also raise errors)
+
+        return
+
     def add_source(self, query: str) -> None:
 
         # TODO : parse query (input format changed to sql-like string)
@@ -1172,6 +1287,8 @@ class Search(Process):
 
         saved_args = {"add": f'"{query}"'}
         query = query.replace("RETRIEVE ", "SELECT ")
+
+        self.validate_query(query)
 
         # TODO : check whether url exists (dblp, project, ...)
         sources = self.parse_sources(query)
@@ -1242,7 +1359,7 @@ class Search(Process):
                 s
                 for s in self.search_scripts
                 if s["search_endpoint"] == search_param["endpoint"]
-            ].pop()
+            ][0]
             params = self.parse_parameters(search_param)
             script["script"](params, feed_file)
 
@@ -1251,6 +1368,12 @@ class Search(Process):
                 self.REVIEW_MANAGER.create_commit("Run search")
 
         return
+
+
+class InvalidQueryException(Exception):
+    def __init__(self, msg: str):
+        self.message = msg
+        super().__init__(self.message)
 
 
 if __name__ == "__main__":
