@@ -127,7 +127,7 @@ class Search(Process):
 
     def search_crossref(self, params, feed_file):
 
-        if "journal_issn" not in params:
+        if "journal_issn" not in params["scope"]:
             print("Error: journal_issn not in params")
             return
         print(f"Retrieve Crossref: {params}")
@@ -143,7 +143,7 @@ class Search(Process):
         journals = Journals()
         # t = journals.journal('1526-5536')
         # input(feed_item['search_parameters'].split('=')[1])
-        w1 = journals.works(params["journal_issn"]).query()
+        w1 = journals.works(params["scope"]["journal_issn"]).query()
         # for it in t:
         #     pp.pprint(it)
         #     input('stop')
@@ -183,6 +183,10 @@ class Search(Process):
 
                         if len(res) == 0:
                             continue
+
+                    # Note : do not download "empty" records
+                    if "" == record.get("author", "") and "" == record.get("title", ""):
+                        continue
 
                     print(record["doi"])
                     record["ID"] = str(max_id).rjust(6, "0")
@@ -1327,14 +1331,11 @@ class Search(Process):
                 f"Add search source {filename}", saved_args=saved_args
             )
 
-        self.update()
+        self.update(selection_str="all")
 
         return
 
-    def update(self, selection_str: str = "") -> None:
-
-        # TODO: if selection: --selected DBLP,CROSSREF,...
-        # iterate over self.sources and call search_crossref(), search_dblp(), ...
+    def update(self, selection_str: str) -> None:
 
         # TODO: when the search_file has been filled only query the last years
         # in the next calls?"
@@ -1354,6 +1355,11 @@ class Search(Process):
                     f'Endpoint not supported: {feed_item["search_endpoint"]} (skipping)'
                 )
                 continue
+
+            if selection_str is not None:
+                if "all" != selection_str:
+                    if search_param["endpoint"] not in selection_str:
+                        continue
 
             script = [
                 s
