@@ -140,17 +140,17 @@ Search
 
     Examples:
 
-    colrev search -a "RETRIEVE * FROM crossref, dblp WHERE Digital AND Platform SCOPE journal_issn='1506-2941'"
+    colrev search -a "FROM crossref, dblp WHERE Digital AND Platform SCOPE journal_issn='1506-2941'"
 
-    colrev search -a "RETRIEVE * FROM dblp SCOPE venue_key='journals/dss' AND journal_abbreviation='Decis. Support Syst.'"
+    colrev search -a "FROM dblp SCOPE venue_key='journals/dss' AND journal_abbreviation='Decis. Support Syst.'"
 
-    colrev search -a "RETRIEVE * FROM project SCOPE url='/home/projects/review9'"
+    colrev search -a "FROM project SCOPE url='/home/projects/review9'"
 
-    colrev search -a "RETRIEVE * FROM backward_search"
+    colrev search -a "FROM backward_search"
 
-    colrev search -a "RETRIEVE * FROM index WHERE lower(fulltext) like '%digital platform%'"
+    colrev search -a "FROM index WHERE lower(fulltext) like '%digital platform%'"
 
-    colrev search -a "RETRIEVE * FROM pdfs_directory SCOPE path='/home/journals/PLOS' WITH sub_dir_pattern='volume_number' AND journal='PLOS One'"
+    colrev search -a "FROM pdfs_directory SCOPE path='/home/journals/PLOS' WITH sub_dir_pattern='volume_number' AND journal='PLOS One'"
 
 .. option:: --selected TEXT
 

@@ -29,7 +29,7 @@ Conducting a full literature review should be as simple as running the following
       # Initialize the project
       colrev init
 
-      colrev search --add "RETRIEVE * FROM crossref WHERE digital"
+      colrev search --add "FROM crossref WHERE digital"
       # Or store search results in the search directory
 
       # Load the seach results
