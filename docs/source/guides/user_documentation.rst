@@ -156,6 +156,8 @@ Search
 
     Run selected search
 
+Note: the query syntax is based on sqlite (`pandasql <https://www.sqlite.org/lang.html>`_). You can test and debug your queries `here <https://sqliteonline.com/>`_.
+
 .. _Load:
 
 Load
