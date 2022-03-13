@@ -22,14 +22,14 @@ To use the colrev command-line interface, run
 
    colrev status
 
-The colrev status command displays the current state of the review and guides you to the next steps (see `guidelines <guides/overview.html>`_).
+The colrev status command displays the current state of the review and guides you to the next steps (see `guidelines <guides/user_documentation.html>`_).
 After each processing step, make sure to `check the changes <guides/changes.html>`_, effectively following a three-step cycle:
 
 .. figure:: ../figures/workflow-cycle.svg
    :width: 700
    :alt: Workflow cycle
 
-Conducting a full literature review should be as simple as running the following commands:
+Conducting a full literature review should be as simple as running the following commands (each one followed by `git status`/`gitk` and `colrev status`):
 
 .. code-block:: bash
 
