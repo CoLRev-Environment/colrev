@@ -9,21 +9,14 @@ The core proposition is that the transparent collaboration model of git, combine
 Getting started
 -----------------
 
-CoLRev is implemented in Python and should be compatible with Windows, MacOS, and Linux.
-To install the CoLRev command-line interface, install `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_ and run
-
-.. code-block::
-
-   pip install colrev
-
-To use the colrev command-line interface, run
+After `installing CoLRev <guides/user_documentation.html#installation>`_, use the command-line interface by running
 
 .. code-block::
 
    colrev status
 
-The colrev status command displays the current state of the review and guides you to the next steps (see `guidelines <guides/user_documentation.html>`_).
-After each processing step, make sure to `check the changes <guides/changes.html>`_, effectively following a three-step cycle:
+The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/user_documentation.html>`_).
+After each step, make sure to `check the changes <guides/user_documentation.html#analyze-changes>`_, effectively following a three-step cycle:
 
 .. figure:: ../figures/workflow-cycle.svg
    :width: 700
@@ -65,6 +58,15 @@ Conducting a full literature review should be as simple as running the following
 
       # Build the paper
       colrev paper
+
+A key feature of CoLRev is that reuse of community-curated data is built into each step:
+
+.. figure:: ../figures/reuse-vision.svg
+   :width: 700
+   :alt: Reuse vision
+
+For (CoLRev) curated data, the prep/dedupe/pdf-get/pdf-prep steps are not needed (or simplified).
+When most records are curated, a CoLRev literature review can focus on the search, prescreen/screen and synthesis.
 
 Further details are provided in the `user documentation <guides/user_documentation.html>`_.
 
