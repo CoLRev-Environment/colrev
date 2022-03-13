@@ -1290,7 +1290,7 @@ class Search(Process):
         # Note: corresponds to "digital[all] AND platform[all]"
 
         saved_args = {"add": f'"{query}"'}
-        query = query.replace("RETRIEVE ", "SELECT ")
+        query = f"SELECT * {query}"
 
         self.validate_query(query)
 
