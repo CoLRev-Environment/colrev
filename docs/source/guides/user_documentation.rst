@@ -2,6 +2,10 @@
 User Documentation
 ==================================
 
+Installation:
+
+- :any:`Installation`
+
 Workflow:
 
 - :any:`Analyze changes`
@@ -21,6 +25,17 @@ Processing operations:
 - :any:`Data`
 - :any:`Paper`
 
+.. _Installation:
+
+Installation
+-------------------------
+
+CoLRev is implemented in Python and should be compatible with Windows, MacOS, and Linux.
+To install the CoLRev command-line interface, install `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_ and run
+
+.. code-block::
+
+   pip install colrev
 
 .. _Analyze changes:
 
@@ -34,6 +49,21 @@ After each step, check and validate the changes using git status, gitk, and colr
       git status
       gitk
       colrev status
+
+Using a git `client of your choice <https://git-scm.com/downloads/guis>`_, you can validate the individual changes and the commit report for each version.
+Instructions on how to correct and trace errors are available in the guidelines for the respective step.
+
+CoLRev also ensures that the git-diffs are readable:
+
+.. figure:: ../../figures/change_example1.png
+   :width: 700
+   :alt: Changes example
+
+A git commit report is also generated:
+
+.. figure:: ../../figures/commit_report.png
+   :width: 700
+   :alt: Example commit report
 
 
 .. _Curated repositories:
