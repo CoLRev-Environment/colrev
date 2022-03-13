@@ -49,7 +49,7 @@ Search available curations on `Github <https://github.com/topics/colrev-curation
       colrev local-index add --url https://github.com/u_name/repo_name
       colrev local-index
 
-See `reuse of community-curated data <../framework/colrev.html#reuse>`_ for details.
+See `reuse of community-curated data <../technical_documentation/colrev.html#reuse>`_ for details.
 
 .. _Init:
 
