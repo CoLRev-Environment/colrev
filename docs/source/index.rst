@@ -9,7 +9,7 @@ The core proposition is that the transparent collaboration model of version cont
 Getting started
 -----------------
 
-After `installing CoLRev <guides/user_documentation.html#installation>`_, use the command-line interface by running
+After `installing CoLRev <guides/user_documentation.html#installation>`_, use the command-line interface
 
 .. code-block::
 

@@ -8,6 +8,7 @@ Installation:
 
 Workflow:
 
+- :any:`CoLRev status`
 - :any:`Analyze changes`
 - :any:`Curated repositories`
 
@@ -25,6 +26,8 @@ Processing operations:
 - :any:`Data`
 - :any:`Paper`
 
+Hint: `colrev status` should provide all necessary instructions for you project.
+
 .. _Installation:
 
 Installation
@@ -36,6 +39,23 @@ To install the CoLRev command-line interface, install `git <https://git-scm.com/
 .. code-block::
 
    pip install colrev
+
+
+.. _CoLRev status:
+
+CoLRev status
+-------------------------
+
+The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
+It consists of the following (as shown in the screenshot below):
+
+- A checks section, which validates data structures and formats
+- A status section, which provides an overview of the review project
+- An instructions section (next steps), which provides situational instructions on the next steps of the review project, versioning and collaboration, and the local CoLRev environment
+
+.. figure:: ../../figures/status.png
+   :width: 700
+   :alt: CoLRev status
 
 .. _Analyze changes:
 
@@ -156,7 +176,7 @@ Search
 
     Run selected search
 
-Note: the query syntax is based on sqlite (`pandasql <https://www.sqlite.org/lang.html>`_). You can test and debug your queries `here <https://sqliteonline.com/>`_.
+Note: the query syntax is based on `sqlite <https://www.sqlite.org/lang.html>`_ (pandasql). You can test and debug your queries `here <https://sqliteonline.com/>`_.
 
 .. _Load:
 
