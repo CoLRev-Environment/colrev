@@ -72,7 +72,6 @@ class PDFPrepMan(Process):
     def pdf_prep_man_stats(self) -> None:
         import pandas as pd
 
-        # TODO : this function mixes return values and saving to files.
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )

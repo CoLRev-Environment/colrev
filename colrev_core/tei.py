@@ -293,7 +293,6 @@ class TEI(Process):
 
                     author_string = " and ".join(author_list)
 
-                    # TODO: deduplicate
                     if author_string is None:
                         author_string = "NA"
                     if "" == author_string.replace(" ", "").replace(",", "").replace(
@@ -378,7 +377,6 @@ class TEI(Process):
             .replace("|", "")
         )
 
-        # TODO: deduplicate
         if author_string is None:
             author_string = "NA"
         if "" == author_string.replace(" ", "").replace(",", "").replace(";", ""):

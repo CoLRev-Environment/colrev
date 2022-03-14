@@ -30,7 +30,6 @@ class Paper(Process):
         WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])
         WORD_TEMPLATE_FILENAME = WORD_TEMPLATE_URL.name
 
-        # TODO: maybe update?
         if not Path(WORD_TEMPLATE_FILENAME).is_file():
 
             url = WORD_TEMPLATE_URL

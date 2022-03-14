@@ -794,8 +794,6 @@ class ReviewDataset:
                     "NA",
                 )
 
-                # TODO: this can be done more efficiently
-                # because we fixed the order of the first rows.
                 for line in record_string.split("\n"):
                     if "@Comment" in line:
                         ID = "Comment"
@@ -821,7 +819,6 @@ class ReviewDataset:
                 for org in origin.split(";"):
                     data["origin_list"].append([ID, org])
 
-                # TODO: determine succeeding states from state machine
                 if status in [
                     str(RecordState.md_processed),
                     str(RecordState.rev_prescreen_excluded),
@@ -850,7 +847,6 @@ class ReviewDataset:
 
                 data["status_fields"].append(status)
 
-                # TODO: determine succeeding states from state machine
                 # excluding pdf_not_available
                 file_required_status = [
                     str(RecordState.pdf_imported),
@@ -1043,8 +1039,7 @@ class ReviewDataset:
                 if org in non_unique_origins:
                     raise OriginError(f'Non-unique origin: origin="{org}"')
 
-        # Check for removed origins
-        # TODO !!!!
+        # TODO : Check for removed origins
         # Raise an exception if origins were removed
         # prior_origins = [x[0] for x in prior['status']]
         # current_origins = [x[1] for x in data['origin_list']]
@@ -1605,7 +1600,7 @@ class ReviewDataset:
         return self.__git_repo
 
     def has_changes(self) -> bool:
-        # TODO : allow for optional path (check whether there are changes for that file)
+        # Extension : allow for optional path (check changes for that file)
         return self.__git_repo.is_dirty()
 
     def add_changes(self, path: str) -> None:
@@ -1628,7 +1623,7 @@ class ReviewDataset:
 
     def get_commit_message(self, commit_nr: int) -> str:
         master = self.__git_repo.head.reference
-        assert commit_nr == 0  # TODO : implement other cases
+        assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
             cmsg = master.commit.message
         return cmsg

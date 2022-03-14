@@ -34,8 +34,7 @@ class Distribute(Process):
     def main(self, path_str: str, target: Path) -> None:
         from colrev_core.tei import TEI
 
-        # TODO: path_str or repo (possibly with conditions)
-        # - if no options are given, take the current path/repo
+        # if no options are given, take the current path/repo
         # optional: target-repo-path
         # path_str: could also be a url
         # option: chdir (to target repo)?

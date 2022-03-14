@@ -1292,7 +1292,6 @@ class Preparation(Process):
         if "dblp_key" in record:
             return record
 
-        # TODO: check if the url/dblp_key already points to a dblp page?
         try:
             api_url = "https://dblp.org/search/publ/api?q="
             query = ""
@@ -2050,7 +2049,6 @@ class Preparation(Process):
 
     def __log_details(self, preparation_batch: list) -> None:
 
-        # TODO print nr prepared
         nr_recs = len(
             [
                 record
@@ -2078,9 +2076,7 @@ class Preparation(Process):
             "To reset the metdatata of records, use "
             "colrev prepare --reset-ID [ID1,ID2]"
         )
-        self.REVIEW_MANAGER.report_logger.info(
-            "Further instructions are available in the " "documentation (TODO: link)"
-        )
+
         return
 
     def reset(self, record_list: typing.List[dict]):
@@ -2310,7 +2306,6 @@ class Preparation(Process):
                         title_variations.append(ref["title"])
                     if "journal" in ref:
                         journal_variations.append(ref["journal"])
-                    # TODO : other fields...
 
             if len(title_variations) > 2:
                 title_counter = collections.Counter(title_variations)
@@ -2320,11 +2315,11 @@ class Preparation(Process):
                 journal_counter = collections.Counter(journal_variations)
                 record["journal"] = journal_counter.most_common()[0][0]
 
-            # TODO : link with LOCAL_INDEX
+        if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_MANAGER.create_commit("Polish metadata")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Polish metadata")
         return
 
     def get_data(self):

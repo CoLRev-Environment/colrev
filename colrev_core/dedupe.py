@@ -844,14 +844,12 @@ class Dedupe(Process):
         return references
 
     def record_pairs(self, refs):
-        # input(refs)
         yield from refs.items()
 
         # for i, row in enumerate(refs):
         #     a_record_id, a_record, b_record_id, b_record = row
         #     record_a = (a_record_id, json.loads(a_record))
         #     record_b = (b_record_id, json.loads(b_record))
-
         #     yield record_a, record_b
 
     def preparation_link_to_curated_record(
@@ -883,7 +881,6 @@ class Dedupe(Process):
                     input("stop")
                     clustered_dupes = deduper.partition(refs, partition_threshold)
                     print(clustered_dupes)
-                    # TODO : return ind
                 except dedupe.core.BlockingError:
                     pass
 

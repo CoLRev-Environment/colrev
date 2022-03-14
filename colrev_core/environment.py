@@ -155,11 +155,6 @@ class LocalIndex(Process):
 
     def get_string_representation(self, record: dict) -> str:
 
-        # TODO raise no-prepared error if status =! md_prepared
-        # TODO distinguish ENTRYTYPES?
-
-        srep = ""
-
         # Including the version of the hash_function prevents cases
         # in which almost all hash_ids are identical (and very few hash_ids change)
         # when updatingthe hash function
@@ -845,7 +840,6 @@ class LocalIndex(Process):
         if self.teiind_path.is_dir():
             shutil.rmtree(self.teiind_path)
 
-        # TODO: add web of science abbreviations (only when they are unique!?)
         # self.__download_resources()
 
         for source_url in [x["source_url"] for x in self.local_registry]:

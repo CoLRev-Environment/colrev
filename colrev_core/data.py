@@ -382,10 +382,10 @@ class Data(Process):
                         del record["tei_file"]
                     pass
 
-        # TODO : only create a commit if there are changes.
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Create TEIs")
+        if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_MANAGER.create_commit("Create TEIs")
 
         # Enhance TEIs (link local IDs)
         for record in records:
@@ -423,27 +423,33 @@ class Data(Process):
 
     def enlit_heuristic(self):
 
-        # TODO : warn if teis are missing for some files
-        tei_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("tei")
-
         enlit_list = []
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        relevant_records = self.get_record_ids_for_synthesis(records)
-        for relevant_record in relevant_records:
+        for relevant_record_id in self.get_record_ids_for_synthesis(records):
             enlit_status = str(
-                [x["status"] for x in records if x["ID"] == relevant_record].pop()
+                [x["status"] for x in records if x["ID"] == relevant_record_id].pop()
             )
             enlit_status = enlit_status.replace("rev_included", "").replace(
                 "rev_synthesized", "synthesized"
             )
             enlit_list.append(
                 {
-                    "ID": relevant_record,
+                    "ID": relevant_record_id,
                     "score": 0,
                     "score_intensity": 0,
                     "status": enlit_status,
                 }
             )
+
+        tei_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("tei")
+        required_records_ids = self.get_record_ids_for_synthesis(records)
+        missing = [
+            x
+            for x in list(tei_path.glob("*.tei.xml"))
+            if not any(i in x for i in required_records_ids)
+        ]
+        if len(missing) > 0:
+            print(f"Records with missing tei file: {missing}")
 
         for tei_file in tei_path.glob("*.tei.xml"):
             data = tei_file.read_text()
@@ -628,6 +634,7 @@ class Data(Process):
             fill_value=0,
             margins=True,
         )
+
         self.REVIEW_MANAGER.logger.info("Generate profile output/journals_years.csv")
         tabulated.to_csv(output_dir / Path("journals_years.csv"))
 

@@ -88,7 +88,6 @@ class PrepMan(Process):
             )
             tabulated.to_csv("manual_preparation_statistics.csv")
 
-        # TODO : these should be combined in one dict and returned:
         print("Entry type statistics overall:")
         self.REVIEW_MANAGER.pp.pprint(overall_types["ENTRYTYPE"])
 
@@ -326,17 +325,6 @@ class PrepMan(Process):
         record = PREPARATION.drop_fields(record)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
-
-        # TODO : maybe update the IDs when we have a replace_record procedure
-        # set_IDs
-        # that can handle changes in IDs
-        # record.update(
-        #     ID=REVIEW_MANAGER.generate_ID_blacklist(
-        #         record, all_ids, record_in_bib_db=True, raise_error=False
-        #     )
-        # )
-        # all_ids.append(record["ID"])
-
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return

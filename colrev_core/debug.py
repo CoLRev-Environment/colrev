@@ -307,8 +307,6 @@ def local_index(param):
 
 def main(operation: str, param):
 
-    # TODO : helper-function to load entries from any bib-file (based on ID or origin)
-
     operations = {
         "load": debug_load,
         "pdf_get": debug_pdf_get,

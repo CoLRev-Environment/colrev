@@ -1352,7 +1352,6 @@ class ReviewManager:
                 if Path(change_item["file"]).is_file():
                     Path(change_item["file"]).unlink()
 
-        # TODO : delete file if successful
         return
 
     def __apply_correction(self, source_url, change_list) -> None:
