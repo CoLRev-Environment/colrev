@@ -2,14 +2,14 @@
 Extensions
 ====================================
 
-Extensions of CoLRev are available on `Github <https://github.com/topics/colrev-extension>`_ and guidelines on extension development are available in `this section <architecture/extension_development.html>`_.
+Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_ and guidelines on extension development are available in `this section <architecture/extension_development.html>`_.
 A few examples are summarized below.
 
 
 colrev_endpoint
 -----------------
 
-Aimed at making it easy to integrate other tools by operating endpoints that support the export and loading of data.
+Aimed at making it easy to integrate with other tools by operating endpoints that support the export and loading of data.
 For example, EndPoint supports the collaboration with Endnote (and other reference mangers) or `ASReview <https://github.com/asreview/asreview>`_ for the prescreen.
 
 Example:

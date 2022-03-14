@@ -6,7 +6,7 @@ Collaborate in a team
 -------------------------
 
 
-Collaborative reviews based on a shared git repository (repositories can be hosted at `Github <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
+Collaborative reviews based on a shared git repository (repositories can be hosted at `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
 .. code-block:: bash
 
@@ -18,7 +18,7 @@ Collaborative reviews based on a shared git repository (repositories can be host
       # To submit your local changes to the shared repository
       git push
 
-      # To retrieve changes from coauthors
+      # To retrieve changes from co-authors
       git pull
 
       # Inspect the changes in a git client, such as gitk
@@ -29,8 +29,8 @@ Collaborative reviews based on a shared git repository (repositories can be host
       git commit -m 'resolve'
 
 
-Merging different versions of the same repository is challenging, but git uses powerful heutistics and successfully merges different versions (branches) most of the time.
-This allows us to work on review project in distributed and asynchronous settings.
+Merging different versions of the same repository is challenging, but git uses powerful heuristics and successfully merges different versions (branches) most of the time.
+This allows us to work on a review project in distributed and asynchronous settings.
 
 In some situations, it is impossible to define (automated) rules to decide which change is the right one for the merged version.
 For example, two researchers could change the title field of the same record.
@@ -129,7 +129,7 @@ References
 
 .. [AguinisRamaniAlabduljader2020] Aguinis, H. and Ramani, R. S. and Alabduljader, N. (2020) Best-practice recommendations for producers, evaluators, and users of methodological literature reviews. Organizational Research Methods.
 .. [ArkseyOMalley2005] Arksey, H. and O'Malley, L. (2005) Scoping studies: Towards a methodological framework. International Journal of Social Research Methodology. 8(1), p.19-32.
-.. [GrantBooth2009] Grant, M. J., and Booth, A. (2009) A typology of review: An analysis of 14 review types and associated methodologies. Health Infomration & Library Journal. 26(2), p.91-108.
+.. [GrantBooth2009] Grant, M. J., and Booth, A. (2009) A typology of review: An analysis of 14 review types and associated methodologies. Health Information & Library Journal. 26(2), p.91-108.
 .. [GreenJohnsonAdams2006] Green, B. N. and Johnson, C. D. and Adams, A. (2006) Writing narrative literature reviews for peer-reviewed journals: Secrets of the trade. Journal of Chiropractic Medicine. 5(3), p.101-107.
 .. [HigginsGreen2008] Higgins, J. P. T. and Green, S. (2008) Cochrane Handbook for Systematic Reviews of Interventions.
 .. [MachiMcEvoy2016] Machi, L. A. and McEvoy, B. T. (2016) The literature review: Six steps to success. Corwin Press.
