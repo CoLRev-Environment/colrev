@@ -2,7 +2,7 @@
 The CoLRev Framework
 ====================================
 
-The Colaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
+The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
 This document consists of the following sections:
 
@@ -63,10 +63,10 @@ CoLRev relies on a modular and extensible platform. It consists of the following
 - `CoLRev-hooks`_ : a pre-commit hooks allowing the platform engine to validate compliance with CoLRev
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <resources/extensions.html>`_ and on `Github <https://github.com/topics/colrev-extension>`_.
+Extensions are available in the `extensions section <resources/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 
-The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in completing the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
+The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
 Essentially, the ReviewManager operates in three modes:
 
 - Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
@@ -151,7 +151,7 @@ BibTeX:
 - BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
 - BibTeX can be augmented (including additional fields for the record origin, status, etc.)
 - BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
-- Uppwer/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple.
+- Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple.
 - Current policy (may change): don't use the crossref field (i.e., resolve it in the preparation). Efficient abbreviation of conference proceedings, can be accomplished through the pandoc `citation abbreviation options <https://pandoc.org/MANUAL.html#option--citation-abbreviations>`_. In addition, the crossreferenced record would not be displayed next to the original record, making it harder to visually validate (preparation) changes. The crossref-fields would also require special treatment in the deduplication process, the retrieval (across repositories) and operations reading records from the disk.
 - The order of the first fields is fixed to enable efficient status checks (reading the first n lines of each record instead of parsing the whole file).
 
@@ -167,7 +167,7 @@ Versioning and collaboration principles
 
 - CoLRev builds on git as the most capable collaborative versioning system currently available.
 - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
-- Git is used most effectively as line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
+- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
 - A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
 - A commit corresponds to an individual processing step
 - Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)

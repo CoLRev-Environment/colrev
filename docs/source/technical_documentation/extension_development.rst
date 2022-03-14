@@ -8,10 +8,10 @@ Developing extensions for CoLRev in Python/R is easy. Examples are available onl
 
 - Get paths (as shown in :program:`colrev config`) from REVIEW_MANAGER.paths
 - Use the logger (report vs tool/extension)
-    - colrev_report logger: infos that are helpful to examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available
-    - extension logger: logg infos on the progress. The output should be relatively short and allow users to see the progress and judge whether any errors occurred
+    - colrev_report logger: log info that are helpful to examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available
+    - extension logger: log info on the progress. The output should be relatively short and allow users to see the progress and judge whether any errors occurred
 
-- `Add <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics>`_ the ```colrev-extension``` `topic tag on Github <https://github.com/topics/colrev-extension>`_ to allow others to find and use your work
+- `Add <https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/classifying-your-repository-with-topics>`_ the ```colrev-extension``` `topic tag on GitHub <https://github.com/topics/colrev-extension>`_ to allow others to find and use your work
 
 
 Python

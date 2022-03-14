@@ -3,7 +3,7 @@ Collaborative Literature Reviews
 ========================================
 
 CoLRev (Collaborative Literature Reviews) aims at facilitating highly collaborative literature reviews involving teams of researchers, state-of-the-art algorithms, and content curated by the research community.
-The core proposition is that the transparent collaboration model of git, combined with a robust content-based identification scheme, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
+The core proposition is that the transparent collaboration model of version control systems such as git, combined with a robust content-based identification scheme, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
 
 
 Getting started
@@ -32,7 +32,7 @@ Conducting a full literature review should be as simple as running the following
       colrev search --add "FROM crossref WHERE digital"
       # Or store search results in the search directory
 
-      # Load the seach results
+      # Load the search results
       colrev load
 
       # Prepare the metadata
@@ -56,7 +56,7 @@ Conducting a full literature review should be as simple as running the following
       # Complete the data analysis/synthesis
       colrev data
 
-      # Build the paper
+      # Build a draft of the paper
       colrev paper
 
 A key feature of CoLRev is that reuse of community-curated data is built into each step:
@@ -66,7 +66,7 @@ A key feature of CoLRev is that reuse of community-curated data is built into ea
    :alt: Reuse vision
 
 For (CoLRev) curated data, the prep/dedupe/pdf-get/pdf-prep steps are not needed (or simplified).
-When most records are curated, a CoLRev literature review can focus on the search, prescreen/screen and synthesis.
+The more records are curated, the more a CoLRev literature review can focus on the search, prescreen/screen and synthesis.
 
 Further details are provided in the `user documentation <guides/user_documentation.html>`_.
 
@@ -91,7 +91,7 @@ Further details are provided in the `user documentation <guides/user_documentati
 
    technical_documentation/colrev
    Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
-   Github repository <https://github.com/geritwagner/colrev_core>
+   GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extension_development
    technical_documentation/roadmap
    technical_documentation/about
