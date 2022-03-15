@@ -39,15 +39,6 @@ from colrev_core.review_dataset import PropagatedIDChange
 
 class ReviewManager:
 
-    csl_fallback = (
-        "https://raw.githubusercontent.com/citation-style-language/"
-        + "styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl"
-    )
-
-    word_template_url_fallback = (
-        "https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx"
-    )
-
     search_type_opts = [
         "DB",
         "TOC",
@@ -157,6 +148,15 @@ class ReviewManager:
         if self.paths["PRIVATE_CONFIG"].is_file():
             confs.append(self.paths["PRIVATE_CONFIG"])
         local_config.read(confs)
+
+        csl_fallback = (
+            "https://raw.githubusercontent.com/citation-style-language/"
+            + "styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl"
+        )
+
+        word_template_url_fallback = (
+            "https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx"
+        )
         config = dict(
             DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
                 "general", "DELAY_AUTOMATED_PROCESSING", fallback=True
@@ -179,9 +179,9 @@ class ReviewManager:
             ID_PATTERN=local_config.get(
                 "general", "ID_PATTERN", fallback="THREE_AUTHORS_YEAR"
             ),
-            CSL=local_config.get("general", "CSL", fallback=self.csl_fallback),
+            CSL=local_config.get("general", "CSL", fallback=csl_fallback),
             WORD_TEMPLATE_URL=local_config.get(
-                "general", "WORD_TEMPLATE_URL", fallback=self.word_template_url_fallback
+                "general", "WORD_TEMPLATE_URL", fallback=word_template_url_fallback
             ),
         )
         return config
@@ -376,18 +376,7 @@ class ReviewManager:
                 self.paths["SOURCES"], "search_type: LOCAL_PAPER_INDEX", "PDFS"
             )
             self.REVIEW_DATASET.add_changes(str(self.paths["SOURCES_RELATIVE"]))
-            sources = self.REVIEW_DATASET.load_sources()
-            # print(self.pp.pformat(sources))
-            for source in sources:
-                if "FEED" == source["search_type"]:
-                    source["search_endpoint"] = source["search_parameters"][0][
-                        "endpoint"
-                    ]
-                    source["search_parameters"] = [
-                        source["search_parameters"][0]["params"]
-                    ]
-            # print(self.pp.pformat(sources))
-            self.REVIEW_DATASET.save_sources(sources)
+
             if self.REVIEW_DATASET.has_changes():
                 return True
             return False

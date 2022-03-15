@@ -1288,15 +1288,35 @@ class Preparation(Process):
 
         return retrieved_record
 
+    def __retrieve_dblp_items(self, query: str) -> list:
+
+        api_url = "https://dblp.org/search/publ/api?q="
+        items = []
+
+        query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
+        url = api_url + query.replace(" ", "+") + "&format=json"
+        headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+        self.REVIEW_MANAGER.logger.debug(url)
+        ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+        ret.raise_for_status()
+        if ret.status_code == 500:
+            return []
+
+        data = json.loads(ret.text)
+        if "hits" not in data["result"]:
+            return []
+        if "hit" not in data["result"]["hits"]:
+            return []
+        hits = data["result"]["hits"]["hit"]
+        items = [hit["info"] for hit in hits]
+        return items
+
     def get_md_from_dblp(self, record: dict) -> dict:
         if "dblp_key" in record:
             return record
 
         try:
-            api_url = "https://dblp.org/search/publ/api?q="
-            query = ""
-            if "title" in record:
-                query = query + record["title"].replace("-", "_")
+            query = "" + record.get("title", "").replace("-", "_")
             # Note: queries combining title+author/journal do not seem to work any more
             # if "author" in record:
             #     query = query + "_" + record["author"].split(",")[0]
@@ -1306,24 +1326,13 @@ class Preparation(Process):
             #     query = query + "_" + record["journal"]
             # if "year" in record:
             #     query = query + "_" + record["year"]
-            query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-            url = api_url + query.replace(" ", "+") + "&format=json"
-            headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
-            self.REVIEW_MANAGER.logger.debug(url)
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-            ret.raise_for_status()
-            if ret.status_code == 500:
+
+            items = self.__retrieve_dblp_items(query)
+
+            if len(items) == 0:
                 return record
 
-            data = json.loads(ret.text)
-            if "hits" not in data["result"]:
-                return record
-            if "hit" not in data["result"]["hits"]:
-                return record
-            hits = data["result"]["hits"]["hit"]
-            for hit in hits:
-                item = hit["info"]
-
+            for item in items:
                 retrieved_record = self.dblp_json_to_record(item)
                 # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
 
@@ -2372,6 +2381,7 @@ class Preparation(Process):
             item = items[0]
             # self.REVIEW_MANAGER.pp.pprint(item)
             record["ID"] = item["key"]
+            record["ENTRYTYPE"] = "article"  # default
             if "journalArticle" == item.get("itemType", ""):
                 record["ENTRYTYPE"] = "article"
                 if "publicationTitle" in item:
