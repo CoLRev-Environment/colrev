@@ -108,7 +108,7 @@ class ReviewManager:
         readme = "readme.md"
         report = "report.log"
         search_dir = "search"
-        local_colrev_config = Path.home().joinpath(".colrev")
+        local_colrev_config = Path.home().joinpath("colrev")
         local_registry = "registry.yaml"
         status = "status.yaml"
         corrections = ".corrections"

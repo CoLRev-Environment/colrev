@@ -48,7 +48,13 @@ class TEI(Process):
         else:
             assert tei_path.is_file()  # type: ignore
 
-        if pdf_path is not None:
+        load_from_tei = False
+        if tei_path is not None:
+            if tei_path.is_file():
+                load_from_tei = True
+
+        if pdf_path is not None and not load_from_tei:
+
             grobid_client.start_grobid(self.REVIEW_MANAGER)
             # Note: we have more control and transparency over the consolidation
             # if we do it in the colrev_core process
@@ -99,6 +105,9 @@ class TEI(Process):
             if "[BAD_INPUT_DATA]" in xml_string[:100]:
                 raise TEI_Exception()
             self.root = etree.fromstring(xml_string)
+
+    def get_tei_str(self) -> str:
+        return etree.tostring(self.root).decode("utf-8")
 
     def __get_paper_title(self) -> str:
         title_text = "NA"

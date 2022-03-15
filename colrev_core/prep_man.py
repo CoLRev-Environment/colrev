@@ -241,7 +241,7 @@ class PrepMan(Process):
         record_to_unmerge = record_to_unmerge_original.copy()
         record = record_original.copy()
 
-        non_dupe_db_path = Path.home().joinpath(".colrev") / Path("non_duplicates.bib")
+        non_dupe_db_path = Path.home().joinpath("colrev") / Path("non_duplicates.bib")
 
         non_dupe_db_path.parents[0].mkdir(parents=True, exist_ok=True)
 

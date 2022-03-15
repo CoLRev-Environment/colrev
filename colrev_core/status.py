@@ -994,18 +994,21 @@ class Status(Process):
     def get_environment_details(self) -> dict:
         from colrev_core.environment import LocalIndex
         from colrev_core.review_manager import ReviewManager
-        import os
-        import time
+
+        # import os
+        # import time
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
 
         environment_details = {}
-        record_index_files = list(LocalIndex.rind_path.glob("**/*"))
-        list_of_files = sorted(record_index_files, key=os.path.getmtime)
-        file_last_modified = list_of_files[0]
-        last_modified = time.strftime(
-            "%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(file_last_modified))
-        )
+        # record_index_files = list(LocalIndex.rind_path.glob("**/*"))
+        # list_of_files = sorted(record_index_files, key=os.path.getmtime)
+        # file_last_modified = list_of_files[0]
+        # last_modified = time.strftime(
+        #     "%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(file_last_modified))
+        # )
+        record_index_files = ["test", "test"]
+        last_modified = "TODO"
 
         environment_details["index"] = {
             "size": len(record_index_files),

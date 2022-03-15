@@ -37,7 +37,7 @@ Dynamically loaded
 - [Tesseract OCR](https://github.com/tesseract-ocr/tesseract), which is available under an [Apache-2.0 License](https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE). [![docker-py](https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic)](https://github.com/tesseract-ocr/tesseract)
 - [pandoc](https://github.com/jgm/pandoc), which is available under a [GNU Public License 2 (GPL 2)](https://github.com/jgm/pandoc/blob/master/COPYRIGHT). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/jgm/pandoc?color=green&style=plastic)](https://github.com/jgm/pandoc)
 - [CSL](https://github.com/citation-style-language/styles), which is available under the [Creative Commons Attribution-ShareAlike 3.0 Unported license](https://github.com/citation-style-language/styles). [![ocrmypdf](https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic)](https://github.com/citation-style-language/styles)
-
+- [Elasticsearch](https://github.com/elastic/elasticsearch), which is available under the [(i) a dual license under the Server Side Public License, v 1 and the Elastic License 2.0 or (ii) an Apache License 2.0 compatible license or (iii) solely under the Elastic License 2.0](https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt). [![elasticsearch](https://img.shields.io/github/commit-activity/y/elastic/elasticsearch?color=green&style=plastic)](https://github.com/elastic/elasticsearch)
 
 
 For meta-data preparation and PDF retrieval, we rely on the following data sources
