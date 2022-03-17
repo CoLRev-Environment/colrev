@@ -14,8 +14,6 @@ Upcoming
 
 - Extension colrev_endpoint
 - Extension colrev_cml_assistant
-- Extension local_paper_index
-- Extension paper_feed
 - Extension backward_search
 - Extension exploring_literature
 - Templates for review_types

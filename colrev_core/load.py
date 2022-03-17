@@ -48,7 +48,7 @@ class Loader(Process):
             "mods": self.__zotero_translate,
             "xml": self.__zotero_translate,
             "marc": self.__zotero_translate,
-            "txt": self.__txt2bib,
+            "txt": self.__zotero_translate,  # __txt2bib,
             "md": self.__txt2bib,
             "csv": self.__csv2bib,
             "xlsx": self.__xlsx2bib,
@@ -167,7 +167,7 @@ class Loader(Process):
                     doi=record["doi"].replace("http://dx.doi.org/", "").upper()
                 )
                 # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-                d = re.match(r"^10.\d{4}/", record["doi"])
+                d = re.match(r"^10.\d{4,9}\/", record["doi"])
                 if not d:
                     del record["doi"]
 
@@ -249,7 +249,7 @@ class Loader(Process):
 
         return new_record
 
-    def __start_zotero_translators(self) -> None:
+    def start_zotero_translators(self) -> None:
         import docker
 
         zotero_image = self.REVIEW_MANAGER.docker_images["zotero/translation-server"]
@@ -264,6 +264,15 @@ class Loader(Process):
             auto_remove=True,
             detach=True,
         )
+        i = 0
+        while i < 120:
+            try:
+                r = requests.get("http://127.0.0.1:1969/")
+                print(r)
+            except requests.exceptions.ConnectionError as e:
+                print(e)
+                pass
+            i += 1
         return
 
     def __zotero_translate(self, file: Path) -> typing.List[dict]:
@@ -273,21 +282,31 @@ class Loader(Process):
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
 
-        self.__start_zotero_translators()
+        self.start_zotero_translators()
 
         files = {"file": open(file, "rb")}
         headers = {"Content-type": "text/plain"}
         r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
         headers = {"Content-type": "application/json"}
-        zotero_format = json.loads(r.content)
-        et = requests.post(
-            "http://127.0.0.1:1969/export?format=bibtex",
-            headers=headers,
-            json=zotero_format,
-        )
+        if "No suitable translators found" == r.content.decode("utf-8"):
+            raise ImportException(
+                "Zotero translators: No suitable import translators found"
+            )
 
-        parser = BibTexParser(customization=convert_to_unicode, common_strings=True)
-        db = bibtexparser.loads(et.content, parser=parser)
+        try:
+            zotero_format = json.loads(r.content)
+            et = requests.post(
+                "http://127.0.0.1:1969/export?format=bibtex",
+                headers=headers,
+                json=zotero_format,
+            )
+
+            parser = BibTexParser(customization=convert_to_unicode, common_strings=True)
+            db = bibtexparser.loads(et.content, parser=parser)
+        except Exception as e:
+            pass
+            raise ImportException(f"Zotero import translators failed ({e})")
+
         return db.entries
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
@@ -536,19 +555,25 @@ class Loader(Process):
                 filetype = "pdf_refs"
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
+            self.REVIEW_MANAGER.logger.info("Start grobid")
             grobid_client.start_grobid(self.REVIEW_MANAGER)
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
             self.REVIEW_MANAGER.logger.info(f"Loading {filetype}: {sfpath.name}")
 
-            cur_tag = docker.from_env().images.get("zotero/translation-server").tags[0]
-            self.REVIEW_MANAGER.report_logger.info(
-                f"Running docker container created from {cur_tag}"
-            )
-            self.REVIEW_MANAGER.logger.info(
-                f"Running docker container created from {cur_tag}"
-            )
+            try:
+                cur_tag = (
+                    docker.from_env().images.get("zotero/translation-server").tags[0]
+                )
+                self.REVIEW_MANAGER.report_logger.info(
+                    f"Running docker container created from {cur_tag}"
+                )
+                self.REVIEW_MANAGER.logger.info(
+                    f"Running docker container created from {cur_tag}"
+                )
+            except docker.errors.ImageNotFound:
+                pass
 
             self.REVIEW_MANAGER.logger.debug(
                 f"Called {self.conversion_scripts[filetype].__name__}({sfpath})"
@@ -912,6 +937,11 @@ class UnsupportedImportFormatError(Exception):
 
 
 class BibFileFormatError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+class ImportException(Exception):
     def __init__(self, message):
         super().__init__(message)
 

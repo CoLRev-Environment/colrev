@@ -312,11 +312,6 @@ non_processing_transitions = [
 ]
 
 
-# TODO : check_process_model_precondition should be done
-# by reviewmanager based on processmodel (previously record)
-# -> really?!?!?
-
-
 class ProcessModel:
 
     transitions = transitions = [

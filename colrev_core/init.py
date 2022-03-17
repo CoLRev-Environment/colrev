@@ -65,6 +65,10 @@ class Initializer:
             [Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")],
             [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
             [Path("template/.gitattributes"), Path(".gitattributes")],
+            [
+                Path("template/docker-compose.yml"),
+                Path.home() / Path("colrev/docker-compose.yml"),
+            ],
         ]
         for rp, p in files_to_retrieve:
             self.__retrieve_package_file(rp, p)
@@ -196,7 +200,7 @@ class Initializer:
 
         import os
 
-        local_index_path = Path.home().joinpath(".colrev/local_index")
+        local_index_path = Path.home().joinpath("colrev/local_index")
         curdir = Path.cwd()
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)

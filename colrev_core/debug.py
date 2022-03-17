@@ -117,7 +117,7 @@ def debug_data():
     from colrev_core.data import Data
 
     DATA = Data()
-    records = DATA.REVIEW_MANAGER.load_records()
+    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records()
     included = DATA.get_records_for_synthesis(records)
 
     DATA.update_manuscript(records, included)
@@ -306,8 +306,6 @@ def local_index(param):
 
 
 def main(operation: str, param):
-
-    # TODO : helper-function to load entries from any bib-file (based on ID or origin)
 
     operations = {
         "load": debug_load,

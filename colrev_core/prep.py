@@ -116,12 +116,12 @@ class Preparation(Process):
         "url",
         "crossmark",
         "warning",
+        "note",
     ]
     fields_to_drop = [
         "type",
         "organization",
         "issn",
-        "note",
         "unique-id",
         "month",
         "researcherid-numbers",
@@ -449,16 +449,33 @@ class Preparation(Process):
     def get_record_from_local_index(self, record: dict) -> dict:
         from colrev_core.environment import RecordNotInIndexException
 
+        retrieved = False
         try:
-            retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
-            if "CURATED" != retrieved_record.get("metadata_source", ""):
-                # Try similarity-based retrieval from toc
-                try:
-                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
-                        record, self.RETRIEVAL_SIMILARITY
+            if "CURATED" != record.get("metadata_source", ""):
+                # Note: use similarity-based retrieval from toc first
+                # To give precedence to the record_from_local_indexed_metadata versions
+                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
+                    record, self.RETRIEVAL_SIMILARITY
+                )
+                retrieved = True
+            else:
+                if "source_url" in record:  # Note: do not change to other sources
+                    # TODO : update based on same record
+                    retrieved_record = record
+                else:
+                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(
+                        record
                     )
-                except RecordNotInIndexException:
-                    pass
+                retrieved = True
+        except RecordNotInIndexException:
+            pass
+            try:
+                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
+                retrieved = True
+            except RecordNotInIndexException:
+                pass
+
+        if retrieved:
 
             for k, v in retrieved_record.items():
                 if k in ["origin", "ID", "grobid-version"]:
@@ -467,7 +484,30 @@ class Preparation(Process):
                     if "file" in record:
                         continue
                 record[k] = v
-            record["metadata_source"] = "CURATED"
+
+            git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
+            cur_project_source_paths = [str(self.REVIEW_MANAGER.path)]
+            for remote in git_repo.remotes:
+                if remote.url:
+                    shared_url = remote.url
+                    shared_url = shared_url.rstrip(".git")
+                    cur_project_source_paths.append(shared_url)
+                    break
+
+            if not any(
+                x in cur_project_source_paths
+                for x in retrieved_record.get("source_url", "").split(";")
+            ):
+                record["metadata_source"] = "CURATED"
+
+            # Note : don't list the same repository as its own source_url
+            # (source_url s should point to other/external repos)
+            for cur_project_source_path in cur_project_source_paths:
+                record["source_url"] = record["source_url"].replace(
+                    cur_project_source_path, ""
+                )
+            if record["source_url"] == "":
+                del record["source_url"]
 
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
@@ -476,9 +516,8 @@ class Preparation(Process):
                 # detailed report (and is available for tracing errors)
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
+
             record = self.LOCAL_INDEX.set_source_url_link(record)
-        except RecordNotInIndexException:
-            pass
 
         return record
 
@@ -671,6 +710,7 @@ class Preparation(Process):
 
         for k, v in record.items():
             record[k] = v.replace("{", "").replace("}", "")
+
         return record
 
     def __crossref_query(
@@ -1248,16 +1288,35 @@ class Preparation(Process):
 
         return retrieved_record
 
+    def __retrieve_dblp_items(self, query: str) -> list:
+
+        api_url = "https://dblp.org/search/publ/api?q="
+        items = []
+
+        query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
+        url = api_url + query.replace(" ", "+") + "&format=json"
+        headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+        self.REVIEW_MANAGER.logger.debug(url)
+        ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+        ret.raise_for_status()
+        if ret.status_code == 500:
+            return []
+
+        data = json.loads(ret.text)
+        if "hits" not in data["result"]:
+            return []
+        if "hit" not in data["result"]["hits"]:
+            return []
+        hits = data["result"]["hits"]["hit"]
+        items = [hit["info"] for hit in hits]
+        return items
+
     def get_md_from_dblp(self, record: dict) -> dict:
         if "dblp_key" in record:
             return record
 
-        # TODO: check if the url/dblp_key already points to a dblp page?
         try:
-            api_url = "https://dblp.org/search/publ/api?q="
-            query = ""
-            if "title" in record:
-                query = query + record["title"].replace("-", "_")
+            query = "" + record.get("title", "").replace("-", "_")
             # Note: queries combining title+author/journal do not seem to work any more
             # if "author" in record:
             #     query = query + "_" + record["author"].split(",")[0]
@@ -1267,24 +1326,13 @@ class Preparation(Process):
             #     query = query + "_" + record["journal"]
             # if "year" in record:
             #     query = query + "_" + record["year"]
-            query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-            url = api_url + query.replace(" ", "+") + "&format=json"
-            headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
-            self.REVIEW_MANAGER.logger.debug(url)
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-            ret.raise_for_status()
-            if ret.status_code == 500:
+
+            items = self.__retrieve_dblp_items(query)
+
+            if len(items) == 0:
                 return record
 
-            data = json.loads(ret.text)
-            if "hits" not in data["result"]:
-                return record
-            if "hit" not in data["result"]["hits"]:
-                return record
-            hits = data["result"]["hits"]["hit"]
-            for hit in hits:
-                item = hit["info"]
-
+            for item in items:
                 retrieved_record = self.dblp_json_to_record(item)
                 # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
 
@@ -1418,6 +1466,8 @@ class Preparation(Process):
                             record["pages"] = self.__select_best_pages(
                                 record["pages"], merging_record["pages"]
                             )
+                    else:
+                        record["pages"] = str(val)
                 elif "title" == key:
                     if "title" in record:
                         if record["title"] != merging_record["title"]:
@@ -1425,7 +1475,7 @@ class Preparation(Process):
                                 record["title"], merging_record["title"]
                             )
                     else:
-                        record["pages"] = str(val)
+                        record["title"] = str(val)
                 elif "journal" == key:
                     if "journal" in record:
                         if record["journal"] != merging_record["journal"]:
@@ -1433,7 +1483,7 @@ class Preparation(Process):
                                 record["journal"], merging_record["journal"]
                             )
                     else:
-                        record["pages"] = str(val)
+                        record["journal"] = str(val)
                 else:
                     record[key] = str(val)
 
@@ -1596,7 +1646,7 @@ class Preparation(Process):
             return record
 
         # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-        d = re.match(r"^10.\d{4,9}/", record["doi"])
+        d = re.match(r"^10.\d{4,9}\/", record["doi"])
         if not d:
             del record["doi"]
 
@@ -2008,7 +2058,6 @@ class Preparation(Process):
 
     def __log_details(self, preparation_batch: list) -> None:
 
-        # TODO print nr prepared
         nr_recs = len(
             [
                 record
@@ -2036,9 +2085,7 @@ class Preparation(Process):
             "To reset the metdatata of records, use "
             "colrev prepare --reset-ID [ID1,ID2]"
         )
-        self.REVIEW_MANAGER.report_logger.info(
-            "Further instructions are available in the " "documentation (TODO: link)"
-        )
+
         return
 
     def reset(self, record_list: typing.List[dict]):
@@ -2085,7 +2132,7 @@ class Preparation(Process):
 
         for commit_id, cmsg, filecontents in list(revlist):
             cmsg_l1 = str(cmsg).split("\n")[0]
-            if "colrev load" not in cmsg and "local_paper_index index" not in cmsg:
+            if "colrev load" not in cmsg:
                 print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
                 continue
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
@@ -2197,7 +2244,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
         return
 
-    def polish(self) -> None:
+    def polish(self, input_sim: float = 0.9) -> None:
         import collections
         from colrev_core.tei import TEI, TEI_Exception
         from tqdm import tqdm
@@ -2207,15 +2254,21 @@ class Preparation(Process):
         refs = []
         for tei_file in Path("tei").glob("*.tei.xml"):
             try:
-                TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_file)
+                TEI_INSTANCE = TEI(
+                    self.REVIEW_MANAGER,
+                    tei_path=tei_file,
+                    notify_state_transition_process=False,
+                )
                 refs.extend(TEI_INSTANCE.get_bibliography())
             except TEI_Exception:
                 pass
 
-        self.RETRIEVAL_SIMILARITY = 0.9
+        self.RETRIEVAL_SIMILARITY = input_sim
 
         for record in tqdm(records):
+
             previous_status = record["status"]
+            # TODO : the source_url should be a list (with newlines)?
             record = self.get_record_from_local_index(record)
             record["status"] = previous_status
 
@@ -2262,7 +2315,6 @@ class Preparation(Process):
                         title_variations.append(ref["title"])
                     if "journal" in ref:
                         journal_variations.append(ref["journal"])
-                    # TODO : other fields...
 
             if len(title_variations) > 2:
                 title_counter = collections.Counter(title_variations)
@@ -2272,11 +2324,11 @@ class Preparation(Process):
                 journal_counter = collections.Counter(journal_variations)
                 record["journal"] = journal_counter.most_common()[0][0]
 
-            # TODO : link with LOCAL_INDEX
+        if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_MANAGER.create_commit("Polish metadata")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Polish metadata")
         return
 
     def get_data(self):
@@ -2305,6 +2357,80 @@ class Preparation(Process):
         }
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
+
+    def retrieve_md_from_url(self, url: str) -> dict:
+        from colrev_core.load import Loader
+
+        LOADER = Loader(
+            self.REVIEW_MANAGER, keep_ids=True, notify_state_transition_process=False
+        )
+        LOADER.start_zotero_translators()
+
+        headers = {"Content-type": "text/plain"}
+        et = requests.post(
+            "http://127.0.0.1:1969/web",
+            headers=headers,
+            data=url,
+        )
+
+        record: typing.Dict = {}
+        try:
+            items = json.loads(et.content.decode())
+            if len(items) == 0:
+                return record
+            item = items[0]
+            # self.REVIEW_MANAGER.pp.pprint(item)
+            record["ID"] = item["key"]
+            record["ENTRYTYPE"] = "article"  # default
+            if "journalArticle" == item.get("itemType", ""):
+                record["ENTRYTYPE"] = "article"
+                if "publicationTitle" in item:
+                    record["journal"] = item["publicationTitle"]
+                # TODO : number/issue, conferences
+                if "volume" in item:
+                    record["volume"] = item["volume"]
+            if "creators" in item:
+                author_str = ""
+                for creator in item["creators"]:
+                    author_str += (
+                        " and "
+                        + creator.get("lastName", "")
+                        + ", "
+                        + creator.get("firstName", "")
+                    )
+                author_str = author_str[5:]  # drop the first " and "
+                record["author"] = author_str
+            if "title" in item:
+                record["title"] = (
+                    item["title"]
+                    .replace("<b>", "")
+                    .replace("</b>", "")
+                    .replace("<i>", "")
+                    .replace("</i>", "")
+                )
+            if "doi" in item:
+                record["doi"] = item["doi"]
+            if "date" in item:
+                year = re.search(r"\d{4}", item["date"])
+                if year:
+                    record["year"] = year.group(0)
+        except json.decoder.JSONDecodeError:
+            pass
+        except KeyError:
+            pass
+        return record
+
+    def print_doi_metadata(self, doi: str) -> None:
+
+        record = self.get_md_from_doi({"doi": doi})
+        self.REVIEW_MANAGER.pp.pprint(record)
+
+        if "url" in record:
+            print("Metadata retrieved from website:")
+            retrieved_record = self.retrieve_md_from_url(record["url"])
+            self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+
+        return
 
     def set_to_reprocess(self, reprocess_state: RecordState):
         # Note: resetting needs_manual_preparation to imported would also be

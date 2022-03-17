@@ -187,7 +187,7 @@ class PDF_Preparation(Process):
         return record
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def __pdf_check_ocr(self, record: dict, PAD: int) -> dict:
+    def pdf_check_ocr(self, record: dict, PAD: int) -> dict:
 
         if RecordState.pdf_imported != record["status"]:
             return record
@@ -412,7 +412,7 @@ class PDF_Preparation(Process):
         return nr_pages_metadata
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def __validate_completeness(self, record: dict, PAD: int) -> dict:
+    def validate_completeness(self, record: dict, PAD: int) -> dict:
 
         if RecordState.pdf_imported != record["status"]:
             return record
@@ -630,7 +630,7 @@ class PDF_Preparation(Process):
         return
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def __remove_coverpage(self, record: dict, PAD: int) -> dict:
+    def remove_coverpage(self, record: dict, PAD: int) -> dict:
         coverpages = self.__get_coverpages(record["file"])
         if [] == coverpages:
             return record
@@ -704,7 +704,7 @@ class PDF_Preparation(Process):
 
         return list(set(last_pages))
 
-    def __remove_last_page(self, record, PAD):
+    def remove_last_page(self, record, PAD):
 
         last_pages = self.__get_last_pages(record["file"])
         if [] == last_pages:
@@ -747,11 +747,11 @@ class PDF_Preparation(Process):
 
         prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"script": self.get_text_from_pdf, "params": [record, PAD]},
-            {"script": self.__pdf_check_ocr, "params": [record, PAD]},
-            {"script": self.__remove_coverpage, "params": [record, PAD]},
-            {"script": self.__remove_last_page, "params": [record, PAD]},
+            {"script": self.pdf_check_ocr, "params": [record, PAD]},
+            {"script": self.remove_coverpage, "params": [record, PAD]},
+            {"script": self.remove_last_page, "params": [record, PAD]},
             {"script": self.validate_pdf_metadata, "params": [record, PAD]},
-            {"script": self.__validate_completeness, "params": [record, PAD]},
+            {"script": self.validate_completeness, "params": [record, PAD]},
         ]
 
         # TODO
@@ -830,23 +830,17 @@ class PDF_Preparation(Process):
                         f"created backup after successful pdf-prep: {backup_filename}"
                     )
 
-                # TODO : cover/test relative file paths!
-                # for relative:
-                # linked_file = REPO_DIR / record["file"]
-
         # Backup:
         # Create a copy of the original PDF if users cannot
         # restore it from git
         # linked_file.rename(str(linked_file).replace(".pdf", "_backup.pdf"))
 
-        # TODO: the following should be a private_config variable?
         rm_temp_if_successful = False
         if rm_temp_if_successful:
             # Remove temporary PDFs when processing has succeeded
             target_fname = self.REPO_DIR / Path(f'{record["ID"]}.pdf')
             linked_file = self.REPO_DIR / record["file"]
 
-            # TODO : we may have to consider different subdirectories?
             if target_fname.name != Path(record["file"]).name:
                 if target_fname.is_file():
                     os.remove(target_fname)
@@ -964,14 +958,14 @@ class PDF_Preparation(Process):
 
         pdf_prep_batch = self.__batch(pdf_prep_data_batch["items"])
 
-        # Note : for debugging:
-        # for item in pdf_prep_batch:
-        #     record = item['record']
-        #     print(record['ID'])
-        #     record = prepare_pdf(item)
-        #     REVIEW_MANAGER.save_record_list_by_ID([record])
-
-        pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
+        if self.DEBUG_MODE:
+            for item in pdf_prep_batch:
+                record = item["record"]
+                print(record["ID"])
+                record = self.prepare_pdf(item)
+                self.REVIEW_MANAGER.save_record_list_by_ID([record])
+        else:
+            pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(pdf_prep_batch)
 

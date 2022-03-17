@@ -2,7 +2,7 @@
 The CoLRev Framework
 ====================================
 
-The Colaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
+The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
 This document consists of the following sections:
 
@@ -21,32 +21,32 @@ This document consists of the following sections:
 Definitions
 ---------------
 
-A **literature review** is a collaborative process involving researcher-crowd-machine ensembles, which takes records (search results in the form of metadata) and full-text documents as qualitative, semi-structured input to develop a synthesis. The result can take the form of a codified standalone review paper, a published as a web repository, or a locally curated living review.
+A **literature review** is a collaborative process involving researcher-crowd-machine ensembles, which takes records (search results in the form of metadata) and full-text documents as qualitative, semi-structured input to develop a synthesis. The result can take different forms, including codified standalone review papers, published web repositories, or a locally curated living reviews.
 
 .. _assumptions:
 
 Assumptions
 ------------
 
-Processes generating the metadata, references, fulltext documents are inherently decentralized and error prone and as a result, each record (metadata or PDF) can have multiple **data quality problems**.
-For example, there are errors in the reference sections of primary papers, in the database indices, or in the machine-readability of PDFs.
+Processes generating the metadata, references, full-text documents are inherently decentralized and error prone, and, as a result, each record (metadata or PDF) can have multiple **data quality issues**.
+For example, there can be errors in the reference sections of primary papers, in the database indices, or in the machine-readability of PDFs.
 As a direct implication, metadata and PDFs, like data in any other research method, require dedicated preparation steps.
 
 There is **variance in how accurately authors, crowds and algorithms perform** (e.g., performance of duplicate detection algorithms or disagreements in the screening process).
 As an implication, control of process reliability (and constant improvement of algorithms) is needed, which requires transparency of atomic changes.
 As an implication of error-prone data generation processes and variance in processing accuracy, efficient error-tracing and debugging functionality must be built-in.
 
-With ever growing volumes and heterogeneity of research, there is a growing **need to allocate efforts rationally and based on evidence**.
+With ever growing volumes and heterogeneity of research, there is a growing **need to allocate efforts rationally and evidence-based**.
 Literature reviews, in their current form, do not effectively leverage data from prior reviews (e.g., in the duplicate detection process, the preparation of metadata and PDFs, or the classification of documents).
-As an implication, a clear vision for effectively leveraging evidence and establishing reuse paths (crowdsourcing) is needed.
+As an implication, a clear vision for effectively leveraging evidence and establishing reuse paths (e.g., crowdsourcing) is needed.
 
-Efficient and transparent access to changes is of critical importance to
+Efficient and transparent access to changes is of critical importance to:
 
-1. develop confidence in the review process,
-2. communicate and justify the trustworthiness of the results,
-3. improve individual contributions (e.g., train research assistants, to validate algorithms),
-4. be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced,
-5. efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
+- develop confidence in the review process
+- communicate and justify the trustworthiness of the results
+- improve individual contributions (e.g., train research assistants, to validate algorithms)
+- be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
+- efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
 .. figure:: ../../figures/macro_framework.svg
    :alt: Macro framework
@@ -63,10 +63,10 @@ CoLRev relies on a modular and extensible platform. It consists of the following
 - `CoLRev-hooks`_ : a pre-commit hooks allowing the platform engine to validate compliance with CoLRev
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <resources/extensions.html>`_ and on `Github <https://github.com/topics/colrev-extension>`_.
+Extensions are available in the `extensions section <resources/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 
-The **ReviewManager**, as the main interface to he CoLRev engine, supports reviewers in completing the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
+The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
 Essentially, the ReviewManager operates in three modes:
 
 - Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
@@ -80,8 +80,8 @@ In addition, the ReviewManager keeps a detailed `report <../guides/changes.html#
 Generic user workflow
 -------------------------
 
-In its basic form, the workflow consists of iteratively calling ```colrev status``` > ```colrev process``` > ```git process```
-It is self-explanatory with ```colrev status``` recommending the next ```colrev process``` or ```git process```
+In its basic form, the workflow consists of iteratively calling ```colrev status``` > ```colrev [process]``` > ```git [process]```
+It is self-explanatory with ```colrev status``` recommending the next ```colrev [process]``` or ```git [process]```
 
 .. figure:: ../../figures/workflow-cycle.svg
    :width: 700
@@ -92,9 +92,9 @@ It is self-explanatory with ```colrev status``` recommending the next ```colrev 
 Shared model for the steps of the review process
 -------------------------------------------------------------------
 
-Effectively synchronizing work across teams of researchers, applying algorithms, and incorporating crowd-sourced changes requires a model definign a shared understanding steps of the review process.
-The model is envorced by the platform engine and the command-line interface provides convenience access to the reference implementation.
-The overview defines the micro-level steps and situates them in the three macro-level processes of metadata preparation, fulltext preparation and the main review process.
+Effectively synchronizing work across teams of researchers, applying algorithms, and incorporating crowd-sourced changes requires a model defining a shared understanding of the review process.
+The model is enforced by the platform engine and the command-line interface provides convenience access to the reference implementation.
+The overview defines the micro-level steps and situates them in the three macro-level processes of metadata preparation, full-text preparation and the main review process.
 Each step can effect a state transition for a record, as recorded in the *status* field.
 Key considerations are documented in the guides for the reference implementation.
 
@@ -107,8 +107,8 @@ Key considerations are documented in the guides for the reference implementation
 Standardized data structures
 ---------------------------------
 
-The CoLRev framework is based on an opinionated and well-justified selection of data structures, file-paths and operating principles.
-Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) without any side-effects on the analysis and synthesis process/outcomes.
+The CoLRev framework is based on an opinionated and scientifically grounded selection of data structures, file-paths and operating principles.
+Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) freeing time and mental energy for literature analysis and synthesis.
 
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
 Examples of transparent changes and a commit report are available in the `changes section <../guides/changes.html>`_.
@@ -122,8 +122,10 @@ To accomplish these goals, CoLRev tracks a status for each record (see :any:`Sha
 - An underlying assumption is that different types of reviews share the same process model (with different parameters) and that the main differences are in the data extraction and analysis stages (e.g., requiring structured or unstructured data formats).
 
 Raw data sources
-- Transformed to BibTex by CoLRev to facilitate more efficient processing
-- Can be immutable (e.g., results extracted from databases) * Exception: fixing incompatibilities with BibTex Standard
+
+- Major reference formats supported (e.g., RIS, BibTeX, Endnote)
+- Transformed to BibTeX by CoLRev to facilitate more efficient processing
+- Can be immutable (e.g., results extracted from databases) * Exception: fixing incompatibilities with BibTeX Standard
 - Can be in append-mode or even update-mode (e.g., for feeds that regularly query databases or indices like Crossref)
 
 The MAIN_REFERENCES contain all records.
@@ -142,14 +144,14 @@ Individual records in the MAIN_REFERENCES are augmented with
 - the ```status``` field to track the current state of each record in the review process and to facilitate efficient analyses of changes (without jumping between a references file and a screening sheet/data sheet/manuscript)
 - the ```origin``` field to enable traceability and analyses (in both directions)
 
-BibTex:
+BibTeX:
 
 - Quasi-standard format that is supported by most reference managers and literature review tools for input/output [1](https://en.wikipedia.org/wiki/Comparison_of_reference_management_software).
-- BibTex is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS).
-- BibTex is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
-- BibTex can be augmented (including additional fields for the record origin, status, etc.)
-- BibTex is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
-- Uppwer/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple.
+- BibTeX is easier for humans to analyze in git-diffs because field names are not abbreviated (this is not the case for Endnote .enl or .ris formats), it is line-based (column-based formats like csv are hard to analyze in git diffs), and it contains less syntactic markup that makes it difficult to read (e.g., XML or MODS).
+- BibTeX is easy to edit manually (in contrast to JSON) and does not force users to prepare the whole dataset at a very granular level (like CSL-JSON/YAML, which requires each author name to be split into the first, middle, and last name).
+- BibTeX can be augmented (including additional fields for the record origin, status, etc.)
+- BibTeX is more flexible (allowing for new record types to be defined) compared to structured formats (e.g., SQL)
+- Upper/lower-case variations of DOIs are not meaningful because DOIs are `case insensitive <https://www.doi.org/doi_handbook/2_Numbering.html>`_. DOIs are converted to upper case to keep the git history simple.
 - Current policy (may change): don't use the crossref field (i.e., resolve it in the preparation). Efficient abbreviation of conference proceedings, can be accomplished through the pandoc `citation abbreviation options <https://pandoc.org/MANUAL.html#option--citation-abbreviations>`_. In addition, the crossreferenced record would not be displayed next to the original record, making it harder to visually validate (preparation) changes. The crossref-fields would also require special treatment in the deduplication process, the retrieval (across repositories) and operations reading records from the disk.
 - The order of the first fields is fixed to enable efficient status checks (reading the first n lines of each record instead of parsing the whole file).
 
@@ -165,7 +167,7 @@ Versioning and collaboration principles
 
 - CoLRev builds on git as the most capable collaborative versioning system currently available.
 - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
-- Git is used most effectively as line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
+- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
 - A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
 - A commit corresponds to an individual processing step
 - Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
@@ -184,10 +186,10 @@ Reuse
 Reuse of community-curated data is a built-in feature of CoLRev, aimed at saving efforts across projects as well as increasing accuracy and richness of the process.
 Per default, every CoLRev repository that is registered locally makes its data accessible to all other local repositories.
 This means that all general operations (e.g., preparing metadata or linking PDFs) are completed automatically once indexed.
-Of course, reuse is the most powerful when sharing curated content (such as reviews, topic or journal-related repositories) within teams or publicly.
+Of course, reuse is the most powerful when curated content (such as reviews, topic or journal-related repositories) is shared within teams or publicly.
 
 CoLRev builds on a comprehensive vision of reusing community-curated data, as illustrated in the figure.
-This includes
+This includes:
 
 - assigning shared IDs in the load process
 - curated record metadata in the preparation process

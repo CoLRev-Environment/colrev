@@ -3,14 +3,19 @@ import binascii
 import hashlib
 import os
 import re
+import subprocess
+import time
 import typing
 import unicodedata
 from pathlib import Path
+from subprocess import PIPE
 
-import bibtexparser
-from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
+from elastic_transport import ConnectionError
+from elasticsearch import Elasticsearch
+from elasticsearch import NotFoundError
+from git.exc import InvalidGitRepositoryError
 from nameparser import HumanName
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -26,17 +31,14 @@ from colrev_core.tei import TEI_Exception
 
 class LocalIndex(Process):
 
-    global_keys = ["ID", "doi", "dblp_key", "pdf_hash", "file"]
+    global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
     max_len_sha256 = 2 ** 256
 
-    local_index_path = Path.home().joinpath(".colrev")
-    rind_path = local_index_path / Path(".record_index/")
-    gind_path = local_index_path / Path(".gid_index/")
-    dind_path = local_index_path / Path(".d_index/")
-    toc_path = local_index_path / Path(".toc_index/")
-    jind_path = local_index_path / Path(".j_index/")
-    wos_j_abbrev = local_index_path / Path(".wos_abbrev_table.csv")
+    local_index_path = Path.home().joinpath("colrev")
+    toc_overview = local_index_path / Path(".toc_index/readme.md")
     teiind_path = local_index_path / Path(".tei_index/")
+    annotators_path = local_index_path / Path("annotators")
+    elastic_index = local_index_path / Path("index")
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
@@ -49,29 +51,48 @@ class LocalIndex(Process):
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
         self.local_repos = self.__load_local_repos()
 
+        subprocess.call(
+            ["docker-compose", "up", "-d"],
+            stdin=PIPE,
+            stdout=PIPE,
+            stderr=PIPE,
+            cwd=self.local_index_path,
+        )
+
+        self.es = Elasticsearch("http://localhost:9200")
+        i = 0
+        time.sleep(10)
+        while i < 20:
+            try:
+                time.sleep(3)
+                self.es.get(index="record-index", id="test")
+                break
+            except ConnectionError:
+                print("Waiting until ES instance is available")
+                pass
+            except NotFoundError:
+                pass
+                break
+        # If not available after 120s: raise error
+        self.es.info()
+        # self.REVIEW_MANAGER.pp.pprint(self.es.info())
+
     def __load_local_repos(self) -> typing.List:
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
-        import git
 
         local_repo_list = []
         sources = [x for x in self.local_registry]
         for source in sources:
             try:
-                # cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
-                # CheckProcess(cp_REVIEW_MANAGER)  # to notify
-                # shared_url = ""
-                # git_repo = cp_REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-                # print(source)
-                git_repo = git.Repo(source["source_url"])
-
-                for remote in git_repo.remotes:
-                    if remote.url:
-                        shared_url = remote.url
+                cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
+                CheckProcess(cp_REVIEW_MANAGER)  # to notify
                 repo = {
-                    "source_url": source["source_url"],
-                    "source_link": shared_url.rstrip(".git"),
+                    "source_url": str(cp_REVIEW_MANAGER.path),
                 }
+                remote_url = cp_REVIEW_MANAGER.get_remote_url()
+                if remote_url is not None:
+                    repo["source_link"] = remote_url
                 local_repo_list.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):
                 pass
@@ -91,14 +112,14 @@ class LocalIndex(Process):
         Return the base character of char, by "removing" any
         diacritics like accents or curls and strokes and the like.
         """
-        desc = unicodedata.name(char)
-        cutoff = desc.find(" WITH ")
-        if cutoff != -1:
-            desc = desc[:cutoff]
-            try:
+        try:
+            desc = unicodedata.name(char)
+            cutoff = desc.find(" WITH ")
+            if cutoff != -1:
+                desc = desc[:cutoff]
                 char = unicodedata.lookup(desc)
-            except KeyError:
-                pass  # removing "WITH ..." produced an invalid name
+        except (KeyError, ValueError):
+            pass  # removing "WITH ..." produced an invalid name
         return char
 
     def __remove_accents(self, input_str: str) -> str:
@@ -160,18 +181,13 @@ class LocalIndex(Process):
 
     def get_string_representation(self, record: dict) -> str:
 
-        # TODO raise no-prepared error if status =! md_prepared
-        # TODO distinguish ENTRYTYPES?
-
-        srep = ""
-
         # Including the version of the hash_function prevents cases
         # in which almost all hash_ids are identical (and very few hash_ids change)
         # when updatingthe hash function
         # (this may look like an anomaly and be hard to identify)
         srep = "v0.1"
         author = record.get("author", "")
-        srep = self.__robust_append(srep, record["ENTRYTYPE"].lower())
+        srep = self.__robust_append(srep, record.get("ENTRYTYPE", "NA").lower())
         srep = self.__robust_append(srep, self.__format_author_field(author))
         srep = self.__robust_append(srep, record.get("year", ""))
         title_str = re.sub("[^0-9a-zA-Z]+", " ", record.get("title", ""))
@@ -205,80 +221,44 @@ class LocalIndex(Process):
 
         return new_hex.decode("utf-8")
 
-    def __get_record_index_file(self, hash: str) -> Path:
-        return self.local_index_path / Path(f".record_index/{hash[:2]}/{hash[2:]}.bib")
+    def __get_tei_index_file(self, hash: str) -> Path:
+        return self.local_index_path / Path(f".tei_index/{hash[:2]}/{hash[2:]}.tei.xml")
 
-    def __get_global_id_index_file(self, hash: str) -> Path:
-        return self.local_index_path / Path(f".gid_index/{hash[:2]}/{hash[2:]}.txt")
-
-    def __get_d_index_file(self, hash: str) -> Path:
-        return self.local_index_path / Path(f".d_index/{hash[:2]}/{hash[2:]}.txt")
-
-    def __get_toc_index_file(self, hash: str) -> Path:
-        return self.local_index_path / Path(f".toc_index/{hash[:2]}/{hash[2:]}.txt")
-
-    def __store_record(self, record: dict, index_fpath: Path) -> None:
-        index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
+    def __store_record(self, hash: str, record: dict) -> None:
 
         # Casting to string (in particular the RecordState Enum)
         record = {k: str(v) for k, v in record.items()}
-
-        index_record_db = BibDatabase()
-        index_record_db.entries = [record]
-        bibtex_str = bibtexparser.dumps(
-            index_record_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
-        )
-        with open(index_fpath, "w") as out:
-            out.write(bibtex_str)
 
         if "file" in record:
             try:
-                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
-                TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
-            except TEI_Exception:
+                tei_path = self.__get_tei_index_file(hash)
+                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                if Path(record["file"]).is_file():
+                    TEI_INSTANCE = TEI(
+                        self.REVIEW_MANAGER,
+                        pdf_path=Path(record["file"]),
+                        tei_path=tei_path,
+                        notify_state_transition_process=False,
+                    )
+                    record["fulltext"] = TEI_INSTANCE.get_tei_str()
+            except (TEI_Exception, AttributeError):
                 pass
 
+        self.es.index(index="record-index", id=hash, document=record)
+
         return
-
-    def __retrieve_from_index_based_on_hash(self, hash: str) -> dict:
-        record_fp = self.__get_record_index_file(hash)
-        if not record_fp.is_file():
-            raise RecordNotInIndexException
-        with open(record_fp) as target_db:
-            bib_db = BibTexParser(
-                customization=convert_to_unicode,
-                ignore_nonstandard_types=False,
-                common_strings=True,
-            ).parse_file(target_db, partial=True)
-            record = bib_db.entries[0]
-        return record
-
-    def __retrieve_from_gid_index_based_on_hash(self, hash: str) -> list:
-        gid_fpath = self.__get_global_id_index_file(hash)
-        res = gid_fpath.read_text().splitlines()
-        return res
-
-    def __retrieve_from_d_index_based_on_hash(self, hash: str) -> list:
-        d_fpath = self.__get_d_index_file(hash)
-        return d_fpath.read_text().splitlines()
 
     def __retrieve_from_toc_index_based_on_hash(self, hash: str) -> list:
-        toc_fpath = self.__get_toc_index_file(hash)
-        res = toc_fpath.read_text().splitlines()
-        return res
 
-    def __amend_toc(self, index_fpath: Path, string_repr: str) -> None:
-        with open(index_fpath, "a") as out:
-            out.write(f"{string_repr}\n")
-        return
+        toc_item_response = self.es.get(index="toc-index", id=hash)
+        toc_item = toc_item_response["_source"]
+
+        return toc_item
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
-        index_fpath = self.__get_record_index_file(hash)
-        saved_record = self.__retrieve_from_index_based_on_hash(hash)
-
-        # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) for k, v in record.items()}
+        saved_record_response = self.es.get(index="record-index", id=hash)
+        saved_record = saved_record_response["_source"]
 
         # amend saved record
         for k, v in record.items():
@@ -286,52 +266,54 @@ class LocalIndex(Process):
                 continue
             saved_record[k] = v
 
-        index_record_db = BibDatabase()
-        index_record_db.entries = [saved_record]
-        bibtex_str = bibtexparser.dumps(index_record_db)
-        with open(index_fpath, "w") as out:
-            out.write(bibtex_str)
-
-        if "file" in record:
+        if "file" in record and "fulltext" not in saved_record:
             try:
-                tei_path = self.teiind_path / index_fpath.parent.stem / index_fpath.name
-                if not tei_path.exists():
-                    TEI(self.REVIEW_MANAGER, pdf_path=record["file"], tei_path=tei_path)
-            except TEI_Exception:
+                tei_path = self.__get_tei_index_file(hash)
+                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                if Path(record["file"]).is_file():
+                    TEI_INSTANCE = TEI(
+                        self.REVIEW_MANAGER,
+                        pdf_path=Path(record["file"]),
+                        tei_path=tei_path,
+                        notify_state_transition_process=False,
+                    )
+                    saved_record["fulltext"] = TEI_INSTANCE.get_tei_str()
+            except (TEI_Exception, AttributeError):
                 pass
 
+        self.es.update(index="record-index", id=hash, doc=saved_record)
         return
 
     def __record_index(self, record: dict) -> None:
+        record = {k: str(v) for k, v in record.items()}
         hash = self.__get_record_hash(record)
-        index_fpath = self.__get_record_index_file(hash)
+
         string_representation = self.get_string_representation(record)
         record["hash_string_representation"] = string_representation
 
         try:
-            dupl: typing.List[str] = []
-            # check if the record is already indexed (based on gid/d)
+            # check if the record is already indexed (based on d)
             retrieved_record = self.retrieve_record_from_index(record)
 
             # if the string_representations are not identical: add to d_index
             if not self.get_string_representation(
                 retrieved_record
             ) == self.get_string_representation(record):
-                self.__append_if_duplicate_repr(dupl, record, retrieved_record)
-            # Note: we need the hash of retrieved_record (different from record)
-            self.__amend_record(self.__get_record_hash(retrieved_record), record)
-            return
+                # Note: we need the hash of the retrieved_record (different from record)
+                self.__amend_record(self.__get_record_hash(retrieved_record), record)
+                return
         except RecordNotInIndexException:
             pass
 
         while True:
-            if not index_fpath.is_file():
-                self.__store_record(record, index_fpath)
+            if not self.es.exists(index="record-index", id=hash):
+                self.__store_record(hash, record)
                 break
             else:
-                saved_record = self.__retrieve_from_index_based_on_hash(hash)
-                if string_representation == saved_record.get(
-                    "hash_string_representation", ""
+                saved_record_response = self.es.get(index="record-index", id=hash)
+                saved_record = saved_record_response["_source"]
+                if string_representation == self.get_string_representation(
+                    saved_record
                 ):
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
@@ -341,73 +323,33 @@ class LocalIndex(Process):
                 else:
                     # to handle the collision:
                     print(f"Collision: {hash}")
+                    print(string_representation)
+                    print(self.get_string_representation(saved_record))
+                    print(saved_record)
                     hash = self.__increment_hash(hash)
-                    index_fpath = self.__get_record_index_file(hash)
-        return
-
-    def __gid_index(self, record: dict) -> None:
-
-        for global_key in self.global_keys:
-            if global_key in record:
-
-                if "file" == global_key:
-                    record["file"] = str(Path(record["file"]).resolve())
-                    if not Path(record["file"]).is_file():
-                        if Path(record["source_url"] + "/" + record["file"]).is_file():
-                            record["file"] = record["source_url"] + "/" + record["file"]
-                        else:
-                            print(f'File not available for gid index: {record["file"]}')
-                            continue
-
-                # print(f"{global_key}={record[global_key]}")
-
-                gid = f"{global_key}={record[global_key]}"
-                hash = hashlib.sha256(gid.encode("utf-8")).hexdigest()
-                index_fpath = self.__get_global_id_index_file(hash)
-                while True:
-                    if not index_fpath.is_file():
-                        index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
-                        index_fpath.write_text(
-                            gid + "\n" + self.get_string_representation(record)
-                        )
-                        break
-                    else:
-                        (
-                            saved_gid,
-                            string_representation,
-                        ) = self.__retrieve_from_gid_index_based_on_hash(hash)
-                        if saved_gid == gid:
-                            # ok - no collision, update the record
-                            # Note : do not update (the record from the first repository
-                            #  should take precedence - reset the index to update)
-                            break
-                        else:
-                            # to handle the collision:
-                            print(f"Collision: {hash}")
-                            hash = self.__increment_hash(hash)
-                            index_fpath = self.__get_global_id_index_file(hash)
 
         return
 
     def __get_toc_key(self, record: dict) -> str:
         toc_key = "NA"
         if "article" == record["ENTRYTYPE"]:
-            toc_key = f"toc_key={record.get('journal', '').lower()}"
+            toc_key = f"{record.get('journal', '').lower()}"
             if "volume" in record:
                 toc_key = toc_key + f"|{record['volume']}"
             if "number" in record:
                 toc_key = toc_key + f"|{record['number']}"
+            else:
+                toc_key = toc_key + "|"
         elif "inproceedings" == record["ENTRYTYPE"]:
             toc_key = (
-                f"toc_key={record.get('booktitle', '').lower()}"
-                + f"|{record.get('year', '')}"
+                f"{record.get('booktitle', '').lower()}" + f"|{record.get('year', '')}"
             )
 
         return toc_key
 
     def __toc_index(self, record) -> None:
 
-        if "article" == record.get("ENTRYTYPE", ""):
+        if record.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
             # Note : records are md_prepared, i.e., complete
 
             toc_key = self.__get_toc_key(record)
@@ -416,62 +358,32 @@ class LocalIndex(Process):
 
             # print(toc_key)
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
-            index_fpath = self.__get_toc_index_file(hash)
             record_string_repr = self.get_string_representation(record)
             while True:
-                if not index_fpath.is_file():
-                    index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
-                    index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
+                if not self.es.exists(index="toc-index", id=hash):
+                    toc_item = {
+                        "toc_key": toc_key,
+                        "string_representations": [record_string_repr],
+                    }
+                    self.es.index(index="toc-index", id=hash, document=toc_item)
                     break
                 else:
-                    res = self.__retrieve_from_toc_index_based_on_hash(hash)
-                    saved_toc_key = res[0]
-                    saved_toc_content = res[1:]
-                    if saved_toc_key == toc_key:
+                    toc_item_response = self.es.get(index="toc-index", id=hash)
+                    toc_item = toc_item_response["_source"]
+                    if toc_item["toc_key"] == toc_key:
                         # ok - no collision, update the record
                         # Note : do not update (the record from the first repository
                         #  should take precedence - reset the index to update)
-                        if record_string_repr not in saved_toc_content:
-                            self.__amend_toc(index_fpath, record_string_repr)
+                        if record_string_repr not in toc_item["string_representations"]:
+                            toc_item["string_representations"].append(  # type: ignore
+                                record_string_repr
+                            )
+                            self.es.update(index="toc-index", id=hash, doc=toc_item)
                         break
                     else:
                         # to handle the collision:
                         print(f"Collision: {hash}")
                         hash = self.__increment_hash(hash)
-                        index_fpath = self.__get_toc_index_file(hash)
-
-        if "inproceedings" == record.get("ENTRYTYPE", ""):
-            # Note : records are md_prepared, i.e., complete
-
-            toc_key = self.__get_toc_key(record)
-            if "NA" == toc_key:
-                return
-
-            hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
-            index_fpath = self.__get_toc_index_file(hash)
-            record_string_repr = self.get_string_representation(record)
-
-            while True:
-                if not index_fpath.is_file():
-                    index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
-                    index_fpath.write_text(f"{toc_key}\n{record_string_repr}\n")
-                    break
-                else:
-                    res = self.__retrieve_from_toc_index_based_on_hash(hash)
-                    saved_toc_key = res[0]
-                    saved_toc_content = res[1:]
-                    if saved_toc_key == toc_key:
-                        # ok - no collision, update the record
-                        # Note : do not update (the record from the first repository
-                        #  should take precedence - reset the index to update)
-                        if record_string_repr not in saved_toc_content:
-                            self.__amend_toc(index_fpath, record_string_repr)
-                        break
-                    else:
-                        # to handle the collision:
-                        print(f"Collision: {hash}")
-                        hash = self.__increment_hash(hash)
-                        index_fpath = self.__get_toc_index_file(hash)
 
         return
 
@@ -525,40 +437,43 @@ class LocalIndex(Process):
                 non_identical_representation,
                 orig_record_string,
             ) in non_identical_representations:
-                hash = hashlib.sha256(
-                    non_identical_representation.encode("utf-8")
-                ).hexdigest()
-                index_fpath = self.__get_d_index_file(hash)
+
+                hash = hashlib.sha256(orig_record_string.encode("utf-8")).hexdigest()
                 while True:
-                    if not index_fpath.is_file():
-                        index_fpath.parents[0].mkdir(exist_ok=True, parents=True)
-                        index_fpath.write_text(
-                            non_identical_representation + "\n" + orig_record_string
-                        )
+                    if not self.es.exists(index="record-index", id=hash):
+                        # Note : this should happen rarely/never
                         break
                     else:
-                        (
-                            saved_dstring,
-                            associated_original,
-                        ) = self.__retrieve_from_d_index_based_on_hash(hash)
-                        if saved_dstring == non_identical_representation:
+                        response = self.es.get(index="record-index", id=hash)
+                        saved_record = response["_source"]
+                        saved_original_string_repr = saved_record[
+                            "hash_string_representation"
+                        ]
+
+                        if saved_original_string_repr == orig_record_string:
                             # ok - no collision
+                            if non_identical_representation not in saved_record.get(
+                                "duplicate_reprs", []
+                            ):
+                                if "duplicate_reprs" in saved_record:
+                                    saved_record["duplicate_reprs"].append(
+                                        non_identical_representation
+                                    )
+                                else:
+                                    saved_record["duplicate_reprs"] = [
+                                        non_identical_representation
+                                    ]
+                                self.es.update(
+                                    index="record-index", id=hash, doc=saved_record
+                                )
                             break
                         else:
                             # to handle the collision:
                             print(f"Collision: {hash}")
                             hash = self.__increment_hash(hash)
-                            index_fpath = self.__get_d_index_file(hash)
         return
 
     def __d_index(self, records: typing.List[dict]) -> None:
-
-        from colrev_core.prep import Preparation
-
-        # Note: preparation notifies of preparation processs...
-        PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
 
         try:
             search_path = Path(records[0]["source_url"] + "/search/")
@@ -567,8 +482,6 @@ class LocalIndex(Process):
             return
 
         self.REVIEW_MANAGER.logger.info(f"Create d_index for {search_path.parent}")
-
-        # records = [x for x in records if x['ID'] == 'BenbasatZmud1999']
 
         # Note : records are at least md_processed.
         duplicate_repr_list = []
@@ -581,6 +494,7 @@ class LocalIndex(Process):
                         "record": record,
                     }
                 )
+
         if len(duplicate_repr_list) == 0:
             return
 
@@ -590,7 +504,7 @@ class LocalIndex(Process):
         for origin_source in origin_sources:
             os_fp = search_path / Path(origin_source)
             if not os_fp.is_file():
-                print(f"source not fount {os_fp}")
+                print(f"source not found {os_fp}")
             else:
                 with open(os_fp) as target_db:
                     bib_db = BibTexParser(
@@ -601,15 +515,18 @@ class LocalIndex(Process):
 
                     origin_source_records = bib_db.entries
                 for duplicate_repr in duplicate_repr_list:
+                    if duplicate_repr["origin_source"] != origin_source:
+                        continue
+
                     record = duplicate_repr["record"]
                     origin_record_list = [
                         x
                         for x in origin_source_records
                         if x["ID"] == duplicate_repr["origin_id"]
                     ]
-                    if len(origin_record_list) == 0:
+                    if len(origin_record_list) != 1:
                         continue
-                    origin_record = origin_record_list.pop()
+                    origin_record = origin_record_list[0]
                     non_identical_representations = self.__append_if_duplicate_repr(
                         non_identical_representations, origin_record, record
                     )
@@ -617,26 +534,6 @@ class LocalIndex(Process):
                         j_variations, origin_record, record
                     )
 
-        # also include the doi/dblp representations
-        for record in tqdm(records):
-            if "doi" in record:
-                unprepared_record = PREPARATION.get_md_from_doi(record.copy())
-                non_identical_representations = self.__append_if_duplicate_repr(
-                    non_identical_representations, unprepared_record, record
-                )
-                j_variations = self.__append_j_variation(
-                    j_variations, unprepared_record, record
-                )
-
-            if "dblp_key" in record:
-                unprepared_record = PREPARATION.get_md_from_dblp(record.copy())
-                non_identical_representations = self.__append_if_duplicate_repr(
-                    non_identical_representations, unprepared_record, record
-                )
-                j_variations = self.__append_j_variation(
-                    j_variations, unprepared_record, record
-                )
-        # print(j_variations)
         # 2. add representations to index
         self.__add_to_d_index(non_identical_representations)
 
@@ -645,56 +542,45 @@ class LocalIndex(Process):
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
 
         string_representation_record = self.get_string_representation(record)
-        hash = self.__get_record_hash(record)
-        associated_original = ""
-        while True:
-            (
-                saved_dstring,
-                associated_original,
-            ) = self.__retrieve_from_d_index_based_on_hash(hash)
-            if saved_dstring == string_representation_record:
-                break
-            hash = self.__increment_hash(hash)
-        retrieved_record = self.__retrieve_from_index_based_on_hash(
-            hashlib.sha256(associated_original.encode("utf-8")).hexdigest()
-        )
-        return self.prep_record_for_return(retrieved_record)
 
-    def __retrieve_from_gid_index(self, record: dict) -> dict:
-        """Convenience function to retrieve a record based on a global ID"""
+        try:
+            # match_phrase := exact match
+            resp = self.es.search(
+                index="record-index",
+                query={
+                    "match_phrase": {"duplicate_reprs": string_representation_record}
+                },
+            )
+            retrieved_record = resp["hits"]["hits"][0]["_source"]
 
-        string_representation = ""
-        retrieved = False
-        for k, v in record.items():
-            if k not in self.global_keys or "ID" == k:
-                continue
-
-            gid = f"{k}={v}"
-            hash = hashlib.sha256(gid.encode("utf-8")).hexdigest()
-            # Note: catch exceptions to make sure that all global IDs are considered
-            try:
-                while True:
-                    (
-                        saved_gid,
-                        string_representation,
-                    ) = self.__retrieve_from_gid_index_based_on_hash(hash)
-                    if saved_gid == gid:
-                        # ok - no collision,
-                        retrieved = True
-                        break
-                    else:
-                        # to handle the collision:
-                        hash = self.__increment_hash(hash)
-            except FileNotFoundError:
-                pass
-
-        if not retrieved:
+        except IndexError:
+            pass
             raise RecordNotInIndexException
 
-        indexed_record = self.__retrieve_from_index_based_on_hash(
-            hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
-        )
-        return indexed_record
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+
+        return self.prep_record_for_return(retrieved_record)
+
+    def __retrieve_from_record_index(self, record: dict) -> dict:
+
+        string_representation = self.get_string_representation(record)
+        hash = hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
+
+        while True:  # Note : while breaks with NotFoundError
+            res = self.es.get(index="record-index", id=hash)
+            retrieved_record = res["_source"]
+            if (
+                self.get_string_representation(retrieved_record)
+                == string_representation
+            ):
+                break
+            hash = self.__increment_hash(hash)
+
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+
+        return retrieved_record
 
     def prep_record_for_return(self, record: dict) -> dict:
         from colrev_core.process import RecordState
@@ -720,20 +606,8 @@ class LocalIndex(Process):
         record["status"] = RecordState.md_prepared
         return record
 
-    def __download_resources(self) -> None:
-        import requests
-
-        if not self.wos_j_abbrev.is_file():
-            url = "https://su.figshare.com/ndownloader/files/5212423"
-            r = requests.get(url, allow_redirects=True)
-            open(self.wos_j_abbrev, "wb").write(r.content)
-        return
-
-    def index_records(self) -> None:
-        import shutil
+    def duplicate_outlets(self) -> bool:
         import collections
-
-        self.REVIEW_MANAGER.logger.info("Start LocalIndex")
 
         self.REVIEW_MANAGER.logger.info("Validate curated metadata")
 
@@ -761,9 +635,9 @@ class LocalIndex(Process):
                 if len(set(outlets)) != 1:
                     self.REVIEW_MANAGER.logger.error(
                         "Duplicate outlets in curated_metadata of "
-                        f"{source_url} : {','.join(outlets)}"
+                        f"{source_url} : {','.join(list(set(outlets)))}"
                     )
-                    return
+                    return True
 
         if len(curated_outlets) != len(set(curated_outlets)):
             duplicated = [
@@ -774,80 +648,96 @@ class LocalIndex(Process):
             self.REVIEW_MANAGER.logger.error(
                 f"Duplicate outlets in curated_metadata : {','.join(duplicated)}"
             )
-            return
+            return True
+
+        return False
+
+    def index_records(self) -> None:
+        # import shutil
 
         self.REVIEW_MANAGER.logger.info("Start LocalIndex")
 
-        self.REVIEW_MANAGER.logger.info("Reset record_index, gid_index, d_index")
-        if self.rind_path.is_dir():
-            shutil.rmtree(self.rind_path)
-        if self.gind_path.is_dir():
-            shutil.rmtree(self.gind_path)
-        if self.dind_path.is_dir():
-            shutil.rmtree(self.dind_path)
-        if self.jind_path.is_dir():
-            shutil.rmtree(self.jind_path)
-        if self.toc_path.is_dir():
-            shutil.rmtree(self.toc_path)
-        if self.teiind_path.is_dir():
-            shutil.rmtree(self.teiind_path)
+        if self.duplicate_outlets():
+            return
 
-        # TODO: add web of science abbreviations (only when they are unique!?)
-        # self.__download_resources()
+        self.REVIEW_MANAGER.logger.info("Reset record-index and toc-index")
+        # if self.teiind_path.is_dir():
+        #     shutil.rmtree(self.teiind_path)
+
+        self.elastic_index.mkdir(exist_ok=True, parents=True)
+        if "record-index" in self.es.indices.get_alias().keys():
+            self.es.indices.delete(index="record-index", ignore=[400, 404])
+        if "toc-index" in self.es.indices.get_alias().keys():
+            self.es.indices.delete(index="toc-index", ignore=[400, 404])
+        self.es.indices.create(index="record-index")
+        self.es.indices.create(index="toc-index")
 
         for source_url in [x["source_url"] for x in self.local_registry]:
-            if not Path(source_url).is_dir():
-                print(f"Warning {source_url} not a directory")
-                continue
-            os.chdir(source_url)
-            self.REVIEW_MANAGER.logger.info(f"Index records from {source_url}")
 
-            # get ReviewManager for project (after chdir)
-            REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
-            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
+            try:
+                if not Path(source_url).is_dir():
+                    print(f"Warning {source_url} not a directory")
+                    continue
+                os.chdir(source_url)
+                self.REVIEW_MANAGER.logger.info(f"Index records from {source_url}")
 
-            if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-                continue
+                # get ReviewManager for project (after chdir)
+                REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
+                CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
 
-            records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-            records = [
-                r
-                for r in records
-                if r["status"]
-                not in [
-                    RecordState.md_retrieved,
-                    RecordState.md_imported,
-                    RecordState.md_prepared,
-                    RecordState.md_needs_manual_preparation,
+                if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                    continue
+
+                records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+                records = [
+                    r
+                    for r in records
+                    if r["status"]
+                    not in [
+                        RecordState.md_retrieved,
+                        RecordState.md_imported,
+                        RecordState.md_prepared,
+                        RecordState.md_needs_manual_preparation,
+                    ]
                 ]
-            ]
 
-            for record in tqdm(records):
-                record["source_url"] = source_url
-                if "excl_criteria" in record:
-                    del record["excl_criteria"]
-                # Note: if the pdf_hash has not been checked,
-                # we cannot use it for retrieval or preparation.
-                if record["status"] not in [
-                    RecordState.pdf_prepared,
-                    RecordState.rev_excluded,
-                    RecordState.rev_included,
-                    RecordState.rev_synthesized,
-                ]:
-                    if "pdf_hash" in record:
-                        del record["pdf_hash"]
+                for record in tqdm(records):
+                    record["source_url"] = source_url
+                    if "excl_criteria" in record:
+                        del record["excl_criteria"]
+                    # Note: if the pdf_hash has not been checked,
+                    # we cannot use it for retrieval or preparation.
+                    if record["status"] not in [
+                        RecordState.pdf_prepared,
+                        RecordState.rev_excluded,
+                        RecordState.rev_included,
+                        RecordState.rev_synthesized,
+                    ]:
+                        if "pdf_hash" in record:
+                            del record["pdf_hash"]
 
-                del record["status"]
+                    del record["status"]
 
-                self.__record_index(record)
-                self.__gid_index(record)
+                    self.__record_index(record)
 
-                # Note : only use curated journal metadata for TOC indices
-                # otherwise, TOCs will be incomplete and affect retrieval
-                if ".colrev/curated_metadata" in source_url:
-                    self.__toc_index(record)
+                    # Note : only use curated journal metadata for TOC indices
+                    # otherwise, TOCs will be incomplete and affect retrieval
+                    if "colrev/curated_metadata" in source_url:
+                        self.__toc_index(record)
 
-            self.__d_index(records)
+                self.__d_index(records)
+            except InvalidGitRepositoryError:
+                print(f"InvalidGitRepositoryError: {source_url}")
+                pass
+
+        # for annotator in self.annotators_path.glob("*/annotate.py"):
+        #     print(f"Load {annotator}")
+        #     import imp
+
+        #     annotator_module = imp.load_source("annotator_module", str(annotator))
+        #     annotate = getattr(annotator_module, "annotate")
+        #     annotate(self)
+        # TODO : es.update can use functions applied to each record (for the update)
 
         return
 
@@ -856,47 +746,49 @@ class LocalIndex(Process):
     ) -> dict:
         toc_key = self.__get_toc_key(record)
 
+        # 1. get TOC
         hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
-        index_fpath = self.__get_toc_index_file(hash)
-        record_string_repr = self.get_string_representation(record)
-
-        saved_toc_record_str_reprs = []
+        toc_items = []
         while True:
-            if not index_fpath.is_file():
+            if not self.es.exists(index="toc-index", id=hash):
                 break
             else:
                 res = self.__retrieve_from_toc_index_based_on_hash(hash)
-                saved_toc_key = res[0]
-                if saved_toc_key == toc_key:
-                    saved_toc_record_str_reprs = res[1:]
+                if toc_key == res["toc_key"]:  # type: ignore
+                    toc_items = res["string_representations"]  # type: ignore
                     break
                 else:
                     # to handle the collision:
                     print(f"Collision: {hash}")
                     hash = self.__increment_hash(hash)
-                    index_fpath = self.__get_toc_index_file(hash)
 
-        if len(saved_toc_record_str_reprs) > 0:
+        # 2. get most similar record
+        record_string_repr = self.get_string_representation(record)
+        if len(toc_items) > 0:
             sim_list = []
-            for saved_toc_record_str_repr in saved_toc_record_str_reprs:
+            for saved_toc_record_str_repr in toc_items:
                 # Note : using a simpler similarity measure
                 # because the publication outlet parameters are already identical
                 sv = fuzz.ratio(record_string_repr, saved_toc_record_str_repr) / 100
                 sim_list.append(sv)
 
             if max(sim_list) > similarity_threshold:
-                saved_toc_record_str_repr = saved_toc_record_str_reprs[
-                    sim_list.index(max(sim_list))
-                ]
+                saved_toc_record_str_repr = toc_items[sim_list.index(max(sim_list))]
 
                 hash = hashlib.sha256(
                     saved_toc_record_str_repr.encode("utf-8")
                 ).hexdigest()
-                record = self.__retrieve_from_index_based_on_hash(hash)
-
+                res = self.es.get(index="record-index", id=str(hash))
+                record = res["_source"]  # type: ignore
                 return self.prep_record_for_return(record)
 
+        raise RecordNotInIndexException()
         return record
+
+    def get_from_index_exact_match(self, index_name, key, value) -> dict:
+        resp = self.es.search(index=index_name, query={"match_phrase": {key: value}})
+        res = resp["hits"]["hits"][0]["_source"]
+        return res
 
     def retrieve_record_from_index(self, record: dict) -> dict:
         """
@@ -906,35 +798,29 @@ class LocalIndex(Process):
 
         retrieved_record: typing.Dict = dict()
 
-        # 1. Try the global-id index
+        # 1. Try using global-ids
         if not retrieved_record:
-            try:
-                retrieved_record = self.__retrieve_from_gid_index(record)
-            except FileNotFoundError:
-                pass
+            for k, v in record.items():
+                if k not in self.global_keys or "ID" == k:
+                    continue
+                try:
+                    retrieved_record = self.get_from_index_exact_match(
+                        "record-index", k, v
+                    )
+                except IndexError:
+                    pass
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
             return self.prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
-        string_representation_record = self.get_string_representation(record)
-        hash = self.__get_record_hash(record)
-        while True:
+
+        if not retrieved_record:
             try:
-                retrieved_record = self.__retrieve_from_index_based_on_hash(hash)
-                string_representation_retrieved_record = self.get_string_representation(
-                    retrieved_record
-                )
-                if (
-                    string_representation_retrieved_record
-                    == string_representation_record
-                ):
-                    break
-                hash = self.__increment_hash(hash)
-            except FileNotFoundError:
+                retrieved_record = self.__retrieve_from_record_index(record)
+            except (NotFoundError, RecordNotInIndexException):
                 pass
-                break
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
@@ -957,7 +843,8 @@ class LocalIndex(Process):
         if "source_url" in record:
             for local_repo in self.local_repos:
                 if local_repo["source_url"] == record["source_url"]:
-                    record["source_url"] = local_repo["source_link"]
+                    if "source_link" in local_repo:
+                        record["source_url"] = local_repo["source_link"]
 
         return record
 
@@ -990,8 +877,8 @@ class LocalIndex(Process):
             # For the same journal, only deduplicated records are indexed
             # We make sure that journals are only indexed once
             if (
-                ".colrev/curated_metadata" in r1_index["source_url"]
-                and ".colrev/curated_metadata" in r2_index["source_url"]
+                "colrev/curated_metadata" in r1_index["source_url"]
+                and "colrev/curated_metadata" in r2_index["source_url"]
             ):
                 if r1_index["ID"] != r2_index["ID"]:
                     return "no"
@@ -1003,57 +890,63 @@ class LocalIndex(Process):
         return "unknown"
 
     def analyze(self, threshold: float = 0.95) -> None:
-        import pandas as pd
 
-        changes = []
-        for d_file in self.dind_path.rglob("*.txt"):
-            str1, str2 = d_file.read_text().split("\n")
-            similarity = fuzz.ratio(str1, str2) / 100
-            if similarity < threshold:
-                changes.append(
-                    {"similarity": similarity, "str": str1, "fname": str(d_file)}
-                )
-                changes.append(
-                    {"similarity": similarity, "str": str2, "fname": str(d_file)}
-                )
+        # TODO : update based on es index
+        # import pandas as pd
 
-        df = pd.DataFrame(changes)
-        df = df.sort_values(by=["similarity", "fname"])
-        df.to_csv("changes.csv", index=False)
-        print("Exported changes.csv")
+        # changes = []
+        # for d_file in self.dind_path.rglob("*.txt"):
+        #     str1, str2 = d_file.read_text().split("\n")
+        #     similarity = fuzz.ratio(str1, str2) / 100
+        #     if similarity < threshold:
+        #         changes.append(
+        #             {"similarity": similarity, "str": str1, "fname": str(d_file)}
+        #         )
+        #         changes.append(
+        #             {"similarity": similarity, "str": str2, "fname": str(d_file)}
+        #         )
 
-        pdf_hashes = []
-        for r_file in self.rind_path.rglob("*.bib"):
+        # df = pd.DataFrame(changes)
+        # df = df.sort_values(by=["similarity", "fname"])
+        # df.to_csv("changes.csv", index=False)
+        # print("Exported changes.csv")
 
-            with open(r_file) as f:
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    if "pdf_hash" in line[:9]:
-                        pdf_hashes.append(line[line.find("{") + 1 : line.rfind("}")])
+        # pdf_hashes = []
+        # https://bit.ly/3tbypkd
+        # for r_file in self.rind_path.rglob("*.bib"):
 
-        import collections
+        #     with open(r_file) as f:
+        #         while True:
+        #             line = f.readline()
+        #             if not line:
+        #                 break
+        #             if "pdf_hash" in line[:9]:
+        #                 pdf_hashes.append(line[line.find("{") + 1 : line.rfind("}")])
 
-        pdf_hashes_dupes = [
-            item for item, count in collections.Counter(pdf_hashes).items() if count > 1
-        ]
+        # import collections
 
-        with open("non-unique-pdf-hashes.txt", "w") as o:
-            o.write("\n".join(pdf_hashes_dupes))
-        print("Export non-unique-pdf-hashes.txt")
+        # pdf_hashes_dupes = [
+        #     item for item, count in
+        #       collections.Counter(pdf_hashes).items() if count > 1
+        # ]
+
+        # with open("non-unique-pdf-hashes.txt", "w") as o:
+        #     o.write("\n".join(pdf_hashes_dupes))
+        # print("Export non-unique-pdf-hashes.txt")
         return
 
 
-class Curations:
+class Resources:
 
-    curations_path = Path.home().joinpath(".colrev/curated_metadata")
+    curations_path = Path.home().joinpath("colrev/curated_metadata")
+    annotators_path = Path.home().joinpath("colrev/annotators")
 
     def __init__(self):
         pass
 
     def install_curated_resource(self, curated_resource: str) -> bool:
         import git
+        import shutil
 
         # check if url else return False
         # validators.url(curated_resource)
@@ -1061,14 +954,32 @@ class Curations:
             curated_resource = "https://github.com/" + curated_resource
         self.curations_path.mkdir(exist_ok=True, parents=True)
         repo_dir = self.curations_path / Path(curated_resource.split("/")[-1])
+        annotator_dir = self.annotators_path / Path(curated_resource.split("/")[-1])
         if repo_dir.is_dir():
             print(f"Repo already exists ({repo_dir})")
             return False
         print(f"Download curated resource from {curated_resource}")
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
-        REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
-        REVIEW_MANAGER.register_repo()
 
+        if (repo_dir / Path("references.bib")).is_file():
+            REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
+            REVIEW_MANAGER.register_repo()
+        elif (repo_dir / Path("annotate.py")).is_file():
+            shutil.move(str(repo_dir), str(annotator_dir))
+        elif (repo_dir / Path("readme.md")).is_file():
+            text = Path(repo_dir / "readme.md").read_text()
+            for line in [
+                x for x in text.splitlines() if "colrev environment --install" in x
+            ]:
+                if line == curated_resource:
+                    continue
+                self.install_curated_resource(
+                    line.replace("colrev environment --install ", "")
+                )
+        else:
+            print(
+                f"Error: repo does not contain a references.bib/linked repos {repo_dir}"
+            )
         return True
 
 

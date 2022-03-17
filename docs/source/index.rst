@@ -1,30 +1,74 @@
 
-Colaborative Literature Reviews
+Collaborative Literature Reviews
 ========================================
 
-The Colaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
-A reliable and efficient process requires
+CoLRev (Collaborative Literature Reviews) aims at facilitating highly collaborative literature reviews involving teams of researchers, state-of-the-art algorithms, and content curated by the research community.
+The core proposition is that the transparent collaboration model of version control systems such as git, combined with a robust content-based identification scheme, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
 
-- a standard data structure,
-- a shared model for the steps of the review process,
-- dedicated procedures for metadata and fulltext preparation,
-- principles for trustworthy use of algorithmic and crowdsourced changes,
-- a powerful versioning system (git) that makes changes transparent, and
-- collaboration principles that are monitored automatically.
 
-CoLRev aspires to be self-explanatory, to anticipate, prevent, and resolve errors, and thereby allow researchers to orchestrate researcher-crowd-machine ensembles with confidence.
-Simply `install the colrev environment <guides/installation.html>`_ and run
+Getting started
+-----------------
+
+After `installing CoLRev <guides/user_documentation.html#installation>`_, use the command-line interface
 
 .. code-block::
 
    colrev status
 
-This command displays the current state of the review and guides you to the next steps (see `guidelines <guides/overview.html>`_).
-After each processing step, make sure to `check the changes <guides/changes.html>`_, effectively following a three-step cycle:
+The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/user_documentation.html>`_).
+After each step, make sure to `check the changes <guides/user_documentation.html#analyze-changes>`_, effectively following a three-step cycle:
 
 .. figure:: ../figures/workflow-cycle.svg
    :width: 700
    :alt: Workflow cycle
+
+Conducting a full literature review should be as simple as running the following commands (each one followed by `git status`/`gitk` and `colrev status`):
+
+.. code-block:: bash
+
+      # Initialize the project
+      colrev init
+
+      colrev search --add "FROM crossref WHERE digital"
+      # Or store search results in the search directory
+
+      # Load the search results
+      colrev load
+
+      # Prepare the metadata
+      colrev prep
+
+      # Identify and merge duplicates
+      colrev dedupe
+
+      # Conduct a prescreen
+      colrev prescreen
+
+      # Get the PDFs for included papers
+      colrev pdf-get
+
+      # Prepare the PDFs
+      colrev pdf-prep
+
+      # Conduct a screen (using specific criteria)
+      colrev screen
+
+      # Complete the data analysis/synthesis
+      colrev data
+
+      # Build a draft of the paper
+      colrev paper
+
+A key feature of CoLRev is that reuse of community-curated data is built into each step:
+
+.. figure:: ../figures/reuse-vision.svg
+   :width: 700
+   :alt: Reuse vision
+
+For (CoLRev) curated data, the prep/dedupe/pdf-get/pdf-prep steps are not needed (or simplified).
+The more records are curated, the more a CoLRev literature review can focus on the search, prescreen/screen and synthesis.
+
+Further details are provided in the `user documentation <guides/user_documentation.html>`_.
 
 .. toctree::
    :hidden:
@@ -36,35 +80,18 @@ After each processing step, make sure to `check the changes <guides/changes.html
    :maxdepth: 1
    :caption: Guidelines
 
-   guides/installation
-   guides/overview
-   guides/init
-   guides/search
-   guides/load
-   guides/prep
-   guides/dedupe
-   guides/prescreen
-   guides/pdf_get
-   guides/pdf_prep
-   guides/screen
-   guides/data
-   guides/paper
+   guides/user_documentation
+   guides/extensions
+   guides/best_practices
 
 .. toctree::
    :hidden:
-   :caption: Framework
+   :caption: Technical documentation
    :maxdepth: 1
 
-   framework/colrev
-   framework/extension_development
-   framework/roadmap
-
-.. toctree::
-   :hidden:
-   :caption: Resources
-   :maxdepth: 1
-
-   resources/extensions
-   resources/best_practices
-   Github repository <https://github.com/geritwagner/colrev_core>
-   resources/about
+   technical_documentation/colrev
+   Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
+   GitHub repository <https://github.com/geritwagner/colrev_core>
+   technical_documentation/extension_development
+   technical_documentation/roadmap
+   technical_documentation/about
