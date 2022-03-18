@@ -624,6 +624,8 @@ class LocalIndex(Process):
 
         if "manual_non_duplicate" in record:
             del record["manual_non_duplicate"]
+        if "duplicate_reprs" in record:
+            del record["duplicate_reprs"]
         record["status"] = RecordState.md_prepared
         return record
 

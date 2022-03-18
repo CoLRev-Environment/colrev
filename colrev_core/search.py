@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import hashlib
 import json
 import re
 import typing
@@ -541,14 +542,19 @@ class Search(Process):
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
 
-            query = f"SELECT * FROM record_index WHERE {params['selection_clause']}"
+            query = (
+                "SELECT hash_string_representation FROM record_index "
+                f"WHERE {params['selection_clause']}"
+            )
             resp = LOCAL_INDEX.es.sql.query(body={"query": query})
+            IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
+
             records_to_import = []
+            for ID_to_retrieve in IDs_to_retrieve:
 
-            for record_row in resp["rows"]:
-
-                d = zip([c["name"] for c in resp["columns"]], record_row)
-                record_to_import = dict(d)
+                hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
+                res = LOCAL_INDEX.es.get(index="record_index", id=hash)
+                record_to_import = res["_source"]
                 record_to_import = {k: str(v) for k, v in record_to_import.items()}
                 record_to_import = {
                     k: v for k, v in record_to_import.items() if "None" != v
@@ -560,11 +566,7 @@ class Search(Process):
 
         records_to_import = retrieve_from_index(params)
 
-        # for rec_path in LOCAL_INDEX.rind_path.glob("*/*.bib"):
-        #   records_to_import.append(retrieve_from_index(rec_path))
-
         records_to_import = [r for r in records_to_import if r]
-
         records_to_import = [
             x for x in records_to_import if x["ID"] not in imported_ids
         ]

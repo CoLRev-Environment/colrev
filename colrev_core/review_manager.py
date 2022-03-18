@@ -52,12 +52,13 @@ class ReviewManager:
 
     notified_next_process = None
 
+    esv = "docker.elastic.co/elasticsearch/elasticsearch:8.1.0"
     docker_images = {
         "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
         "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
         "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
         "zotero/translation-server": "zotero/translation-server:2.0.4",
-        "docker.elastic.co/elasticsearch/elasticsearch": "docker.elastic.co/elasticsearch/elasticsearch:8.1.0",
+        "docker.elastic.co/elasticsearch/elasticsearch": esv,
     }
 
     def __init__(self, path_str: str = None) -> None:
