@@ -162,7 +162,7 @@ class Search(Process):
                 ).parse_file(bibtex_file, partial=True)
                 records = feed_db.entries
             available_ids = [x["doi"] for x in records if "doi" in x]
-            max_id = max([int(x["ID"]) for x in records] + [1]) + 1
+            max_id = max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
 
         for item in w1:
             if "DOI" in item:
@@ -282,7 +282,7 @@ class Search(Process):
                 ).parse_file(bibtex_file, partial=True)
                 records = feed_db.entries
             available_ids = [x["dblp_key"] for x in records if "dblp_key" in x]
-            max_id = max([int(x["ID"]) for x in records] + [1]) + 1
+            max_id = max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
 
         try:
             api_url = "https://dblp.org/search/publ/api?q="
