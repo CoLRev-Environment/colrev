@@ -553,7 +553,7 @@ class LocalIndex(Process):
             )
             retrieved_record = resp["hits"]["hits"][0]["_source"]
 
-        except IndexError:
+        except (IndexError, NotFoundError):
             pass
             raise RecordNotInIndexException
 
@@ -653,7 +653,7 @@ class LocalIndex(Process):
         return False
 
     def index_records(self) -> None:
-        import shutil
+        # import shutil
 
         self.REVIEW_MANAGER.logger.info("Start LocalIndex")
 
@@ -807,7 +807,7 @@ class LocalIndex(Process):
                     retrieved_record = self.get_from_index_exact_match(
                         "record-index", k, v
                     )
-                except IndexError:
+                except (IndexError, NotFoundError):
                     pass
 
         if retrieved_record:
