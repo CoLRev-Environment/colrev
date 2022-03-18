@@ -130,7 +130,6 @@ class Search(Process):
         if "journal_issn" not in params["scope"]:
             print("Error: journal_issn not in params")
             return
-        print(f"Retrieve Crossref: {params}")
 
         # works = Works()
         # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
@@ -520,6 +519,8 @@ class Search(Process):
 
     def search_index(self, params: dict, feed_file: Path) -> None:
 
+        assert "selection_clause" in params
+
         if not feed_file.is_file():
             feed_db = BibDatabase()
             records = []
@@ -535,52 +536,29 @@ class Search(Process):
             imported_ids = [x["ID"] for x in records]
 
         from colrev_core.environment import LocalIndex
-        from p_tqdm import p_map
 
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
-        def retrieve_from_index(rec_path) -> dict:
+        def retrieve_from_index(params) -> typing.List[typing.Dict]:
 
-            with open(rec_path) as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
-                record_to_import = bib_db.entries[0]
+            query = f"SELECT * FROM record_index WHERE {params['selection_clause']}"
+            resp = LOCAL_INDEX.es.sql.query(body={"query": query})
+            records_to_import = []
 
-            if "selection_clause" in params:
-                if "fulltext" in params["selection_clause"]:
-                    fulltext_path = (
-                        LOCAL_INDEX.teiind_path
-                        / rec_path.parent.stem
-                        / rec_path.with_suffix(".tei.xml").name
-                    )
-                    if fulltext_path.is_file():
-                        record_to_import["fulltext"] = fulltext_path.read_text()
-                    else:
-                        record_to_import["fulltext"] = "NOT_AVAILABLE"
-                        return {}
+            for record_row in resp["rows"]:
 
-                res = []
-                try:
-                    rec_df = pd.DataFrame.from_records([record_to_import])
-                    query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-                    res = ps.sqldf(query, locals())
-                except PandaSQLException:
-                    # print(e)
-                    pass
+                d = zip([c["name"] for c in resp["columns"]], record_row)
+                record_to_import = dict(d)
+                record_to_import = {k: str(v) for k, v in record_to_import.items()}
+                record_to_import = {
+                    k: v for k, v in record_to_import.items() if "None" != v
+                }
+                record_to_import = LOCAL_INDEX.prep_record_for_return(record_to_import)
+                records_to_import.append(record_to_import)
 
-                if len(res) == 0:
-                    return {}
-                if "fulltext" in record_to_import:
-                    del record_to_import["fulltext"]
+            return records_to_import
 
-            return LOCAL_INDEX.prep_record_for_return(record_to_import)
-
-        records_to_import = p_map(
-            retrieve_from_index, list(LOCAL_INDEX.rind_path.glob("*/*.bib"))
-        )
+        records_to_import = retrieve_from_index(params)
 
         # for rec_path in LOCAL_INDEX.rind_path.glob("*/*.bib"):
         #   records_to_import.append(retrieve_from_index(rec_path))
@@ -616,13 +594,11 @@ class Search(Process):
         return
 
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
-
         from collections import Counter
         from p_tqdm import p_map
         import imagehash
         from pdf2image import convert_from_path
         from colrev_core import grobid_client
-        from pathos.multiprocessing import ProcessingPool as Pool
 
         from colrev_core.tei import TEI
         from colrev_core.tei import TEI_Exception
@@ -1061,13 +1037,14 @@ class Search(Process):
 
             new_records = []
 
-            if self.REVIEW_MANAGER.config["DEBUG_MODE"]:
-                for pdf_path in pdf_batch:
-                    new_records.append(index_pdf(pdf_path))
-            else:
-                # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
-                p = Pool(ncpus=4)
-                new_records = p.map(index_pdf, pdf_batch)
+            for pdf_path in pdf_batch:
+                new_records.append(index_pdf(pdf_path))
+            # if self.REVIEW_MANAGER.config["DEBUG_MODE"]:
+            # else:
+            #     # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
+            #     # p = Pool(ncpus=4)
+            #     # new_records = p.map(index_pdf, pdf_batch)
+            #     new_records = p_map(index_pdf, pdf_batch)
 
             if 0 != len(new_records):
                 ID = int(get_last_ID(feed_file))
@@ -1344,7 +1321,6 @@ class Search(Process):
         search_dir = Path.cwd() / Path("search")
         feed_paths = [x for x in sources if "FEED" == x["search_type"]]
         for feed_item in feed_paths:
-            # self.REVIEW_MANAGER.pp.pprint(feed_item)
 
             feed_file = search_dir / Path(feed_item["filename"])
             search_param = feed_item["search_parameters"][0]
@@ -1367,12 +1343,25 @@ class Search(Process):
                 if s["search_endpoint"] == search_param["endpoint"]
             ][0]
             params = self.parse_parameters(search_param)
+
+            print(f"Retrieve from {search_param['endpoint']}: {params}")
+
             script["script"](params, feed_file)
 
             if feed_file.is_file():
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_file))
                 self.REVIEW_MANAGER.create_commit("Run search")
 
+        return
+
+    def view_sources(self) -> None:
+        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+        for source in sources:
+            self.REVIEW_MANAGER.pp.pprint(source)
+
+        print("\n\n\nOptions:")
+        options = ", ".join([s["search_endpoint"] for s in self.search_scripts])
+        print(f"- endpoints (FEED): {options}")
         return
 
 
