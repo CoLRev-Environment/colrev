@@ -1285,9 +1285,24 @@ class Search(Process):
             print("Error: missing WHERE or SCOPE clause in query")
             return
 
+        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+
         for source in sources:
+
+            duplicate_source = [
+                x
+                for x in source_details
+                if source == x["search_parameters"][0]["endpoint"]
+                and selection == x["search_parameters"][0]["params"]
+            ]
+            if len(duplicate_source) > 0:
+                print(
+                    "Source already exists: "
+                    f"RETRIEVE * FROM {source} {selection}\nSkipping.\n"
+                )
+                continue
+
             # TODO : check whether it already exists
-            source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
             filename = f"{source}_query.bib"
             i = 0
             while filename in [x["filename"] for x in source_details]:
