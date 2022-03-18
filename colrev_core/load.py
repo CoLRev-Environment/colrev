@@ -716,48 +716,6 @@ class Loader(Process):
 
         return number_in_bib
 
-    def __update_colrev_repo(self, CHECK_PROCESS, bib_file_path) -> None:
-
-        self.REVIEW_MANAGER.logger.info("Update records")
-        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
-            del record["origin"]
-            del record["status"]
-            record["metadata_source"] = "CURATED"
-            if "file" in record:
-                if not Path(record["file"]).is_file():
-                    if (
-                        CHECK_PROCESS.REVIEW_MANAGER.path / Path(record["file"])
-                    ).is_file():
-                        record["file"] = str(
-                            CHECK_PROCESS.REVIEW_MANAGER.path / Path(record["file"])
-                        )
-            if "excl_criteria" in record:
-                del record["excl_criteria"]
-            if "manual_non_duplicate" in record:
-                del record["manual_non_duplicate"]
-            if "manual_duplicate" in record:
-                del record["manual_duplicate"]
-
-        bib_db = BibDatabase()
-        bib_db.entries = records
-
-        bibtex_str = bibtexparser.dumps(
-            bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
-        )
-
-        self.REVIEW_MANAGER.logger.info("Save source file")
-        bib_file_path.parent.mkdir(exist_ok=True)
-        with open(bib_file_path, "w") as out:
-            out.write(bibtex_str)
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(bib_file_path))
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            str(self.REVIEW_MANAGER.paths["SOURCES"])
-        )
-
-        return
-
     def main(self, keep_ids: bool = False) -> None:
 
         saved_args = locals()

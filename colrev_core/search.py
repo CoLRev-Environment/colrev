@@ -503,6 +503,7 @@ class Search(Process):
             "origin",
             "excl_criteria",
             "manual_non_duplicate",
+            "manual_duplicate",
             "excl_criteria",
             "metadata_source",
         ]
