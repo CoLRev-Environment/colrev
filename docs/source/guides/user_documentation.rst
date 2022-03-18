@@ -204,14 +204,6 @@ Load
 
     Do not change the record IDs. Useful when importing an existing sample.
 
-.. option:: --add_colrev_repo PATH
-
-    Path to a CoLRev repo that should be imported.
-
-.. option:: ----update_colrev_repo_sources
-
-    Update records from CoLRev repos.
-
 Formats
 
 - Structured formats (csv, xlsx) are imported using standard Python libraries
