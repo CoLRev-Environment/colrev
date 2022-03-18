@@ -552,7 +552,7 @@ class LocalIndex(Process):
             )
             retrieved_record = resp["hits"]["hits"][0]["_source"]
 
-        except IndexError:
+        except (IndexError, NotFoundError):
             pass
             raise RecordNotInIndexException
 
@@ -806,7 +806,7 @@ class LocalIndex(Process):
                     retrieved_record = self.get_from_index_exact_match(
                         "record_index", k, v
                     )
-                except IndexError:
+                except (IndexError, NotFoundError):
                     pass
 
         if retrieved_record:
