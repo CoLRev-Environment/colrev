@@ -3,13 +3,12 @@ import binascii
 import hashlib
 import os
 import re
-import subprocess
 import time
 import typing
 import unicodedata
 from pathlib import Path
-from subprocess import PIPE
 
+import docker
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from elastic_transport import ConnectionError
@@ -51,13 +50,36 @@ class LocalIndex(Process):
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
         self.local_repos = self.__load_local_repos()
 
-        subprocess.call(
-            ["docker-compose", "up", "-d"],
-            stdin=PIPE,
-            stdout=PIPE,
-            stderr=PIPE,
-            cwd=self.local_index_path,
-        )
+        es_image = self.REVIEW_MANAGER.docker_images[
+            "docker.elastic.co/elasticsearch/elasticsearch"
+        ]
+
+        client = docker.from_env()
+        try:
+            client.containers.run(
+                es_image,
+                name="elasticsearch",
+                ports={"9200/tcp": ("127.0.0.1", 9200)},
+                auto_remove=True,
+                detach=True,
+                environment={
+                    "bootstrap.memory_lock": "true",
+                    "ES_JAVA_OPTS": "-Xms512m -Xmx512m",
+                    "discovery.type": "single-node",
+                    "ingest.geoip.downloader.enabled": "false",
+                    "xpack.security.enabled": "false",
+                    "xpack.security.http.ssl.enabled": "false",
+                    "xpack.security.transport.ssl.enabled": "false",
+                },
+                volumes={
+                    str(self.elastic_index): {
+                        "bind": "/usr/share/elasticsearch/data",
+                        "mode": "rw",
+                    }
+                },
+            )
+        except docker.errors.APIError:
+            pass
 
         self.es = Elasticsearch("http://localhost:9200")
         i = 0
