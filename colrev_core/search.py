@@ -676,7 +676,6 @@ class Search(Process):
                 if not Path(x["file"]).is_file():
                     if records:
                         updated = update_if_pdf_renamed(x, records, feed_file)
-                        print(updated)
                         if updated:
                             continue
                     to_remove = to_remove + [
