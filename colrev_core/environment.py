@@ -44,12 +44,10 @@ class LocalIndex(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.explore,
-            notify_state_transition_process=notify_state_transition_process,
+            notify_state_transition_process=False,
         )
-
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
         self.local_repos = self.__load_local_repos()
-
         es_image = self.REVIEW_MANAGER.docker_images[
             "docker.elastic.co/elasticsearch/elasticsearch"
         ]
@@ -107,6 +105,8 @@ class LocalIndex(Process):
         sources = [x for x in self.local_registry]
         for source in sources:
             try:
+                if not Path(source["source_url"]).is_dir():
+                    continue
                 cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
                 CheckProcess(cp_REVIEW_MANAGER)  # to notify
                 repo = {

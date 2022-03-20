@@ -52,12 +52,13 @@ class ReviewManager:
 
     notified_next_process = None
 
+    els = "docker.elastic.co/elasticsearch/elasticsearch:8.1.0"
     docker_images = {
         "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
         "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
         "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
         "zotero/translation-server": "zotero/translation-server:2.0.4",
-        "docker.elastic.co/elasticsearch/elasticsearch": "docker.elastic.co/elasticsearch/elasticsearch:8.1.0",
+        "docker.elastic.co/elasticsearch/elasticsearch": els,
     }
 
     def __init__(self, path_str: str = None) -> None:
@@ -226,13 +227,16 @@ class ReviewManager:
         return local_registry
 
     def __setup_logger(self, level=logging.INFO) -> logging.Logger:
-        logger = logging.getLogger("colrev_core")
+        # for debugging:
+        # from logging_tree import printout
+        # printout()
+        logger = logging.getLogger(f"colrev_core{str(self.path).replace('/', '_')}")
+
+        logger.setLevel(level)
 
         if logger.handlers:
             for handler in logger.handlers:
                 logger.removeHandler(handler)
-
-        logger.setLevel(level)
 
         formatter = logging.Formatter(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
@@ -240,6 +244,7 @@ class ReviewManager:
         )
         handler = logging.StreamHandler()
         handler.setFormatter(formatter)
+        handler.setLevel(level)
 
         logger.addHandler(handler)
         logger.propagate = False
@@ -247,7 +252,7 @@ class ReviewManager:
         return logger
 
     def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
-
+        # TODO : the following may also need to include {self.path}
         report_logger = logging.getLogger("colrev_core_report")
 
         if report_logger.handlers:
@@ -794,10 +799,11 @@ class ReviewManager:
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
-    def notify(self, process: Process) -> None:
+    def notify(self, process: Process, state_transition=True) -> None:
         """Notify the REVIEW_MANAGER about the next process"""
 
-        process.check_precondition()
+        if state_transition:
+            process.check_precondition()
         self.notified_next_process = process.type
         self.REVIEW_DATASET.reset_log_if_no_changes()
 
@@ -1245,16 +1251,15 @@ class ReviewManager:
         return
 
     def register_repo(self):
-        logger = logging.getLogger("colrev_core")
 
         local_registry = self.load_local_registry()
         registered_paths = [x["source_url"] for x in local_registry]
         path_to_register = self.path
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
-                logger.error(f"Path already registered: {path_to_register}")
+                logging.error(f"Path already registered: {path_to_register}")
         else:
-            logger.error(f"Creating {self.paths['LOCAL_REGISTRY']}")
+            logging.error(f"Creating {self.paths['LOCAL_REGISTRY']}")
 
         new_record = {
             "filename": path_to_register.stem,
@@ -1263,7 +1268,7 @@ class ReviewManager:
         }
         local_registry.append(new_record)
         self.save_local_registry(local_registry)
-        logger.info(f"Registered path ({path_to_register})")
+        logging.info(f"Registered path ({path_to_register})")
         return
 
     def apply_corrections(self) -> None:

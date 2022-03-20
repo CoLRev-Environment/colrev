@@ -1994,9 +1994,10 @@ class Preparation(Process):
 
             prior = preparation_record.copy()
 
-            self.REVIEW_MANAGER.logger.debug(
-                f'{prep_script["script"].__name__}(...) called'
-            )
+            if self.DEBUG_MODE:
+                self.REVIEW_MANAGER.logger.info(
+                    f'{prep_script["script"].__name__}(...) called'
+                )
             if [] == prep_script["params"]:
                 prep_script["script"]()
             else:
@@ -2011,15 +2012,15 @@ class Preparation(Process):
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
                 preparation_details.append(change_report)
-                self.REVIEW_MANAGER.logger.debug(change_report)
                 if self.DEBUG_MODE:
-                    self.REVIEW_MANAGER.logger.debug(
+                    self.REVIEW_MANAGER.logger.info(change_report)
+                    self.REVIEW_MANAGER.logger.info(
                         "To correct errors in the script,"
                         " open an issue at "
                         "https://github.com/geritwagner/colrev_core/issues"
                     )
                     if "source_correction_hint" in prep_script:
-                        self.REVIEW_MANAGER.logger.debug(
+                        self.REVIEW_MANAGER.logger.info(
                             "To correct potential errors at source,"
                             f" {prep_script['source_correction_hint']}"
                         )

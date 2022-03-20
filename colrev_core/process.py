@@ -62,7 +62,6 @@ class Process:
         notify_state_transition_process=True,
         debug=False,
     ):
-        import logging
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.type = type
@@ -76,19 +75,16 @@ class Process:
         if notify_state_transition_process:
             self.REVIEW_MANAGER.notify(self)
         else:
-            # Note : the DummyProcess does not call super()
-            # and thereby avoids infinite recursions
-            DUMMY_PROCESS = DummyProcess(self.REVIEW_MANAGER)
-            self.REVIEW_MANAGER.notify(DUMMY_PROCESS)
-
+            self.REVIEW_MANAGER.notify(self, state_transition=False)
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         if debug:
             self.REVIEW_MANAGER.config["DEBUG_MODE"] = True
-            self.REVIEW_MANAGER.logger.setLevel(logging.DEBUG)
+            # self.REVIEW_MANAGER.logger.setLevel(logging.DEBUG)
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
 
-        self.REVIEW_MANAGER.logger.debug(f"Created {self.type} process")
+        # Note: the following call seems to block the flow (if debug is enabled)
+        # self.REVIEW_MANAGER.logger.debug(f"Created {self.type} process")
 
         # Note: we call REVIEW_MANAGER.notify() in the subclasses
         # to make sure that the REVIEW_MANAGER calls the right check_preconditions()
@@ -129,6 +125,7 @@ class Process:
             self.check_process_model_precondition()
 
         elif ProcessType.prep == self.type:
+
             if self.notify_state_transition_process:
                 self.require_clean_repo_general()
                 self.check_process_model_precondition()
@@ -276,15 +273,6 @@ class CheckProcess(Process):
             fun,
             notify_state_transition_process=False,
         )
-
-    def check_precondition(self) -> None:
-        return
-
-
-class DummyProcess(Process):
-    def __init__(self, REVIEW_MANAGER, fun=None):
-        self.REVIEW_MANAGER = REVIEW_MANAGER
-        self.type = ProcessType.check
 
     def check_precondition(self) -> None:
         return
@@ -458,9 +446,10 @@ class ProcessModel:
         return preceding_states
 
     def check_process_precondition(self, process: Process) -> None:
-        cur_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set()
-        self.REVIEW_MANAGER.logger.debug(f"cur_state_list: {cur_state_list}")
+
         if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+            cur_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set()
+            self.REVIEW_MANAGER.logger.debug(f"cur_state_list: {cur_state_list}")
             self.REVIEW_MANAGER.logger.debug(f"precondition: {self.state}")
             required_absent = {str(x) for x in self.get_preceding_states(self.state)}
             self.REVIEW_MANAGER.logger.debug(f"required_absent: {required_absent}")
