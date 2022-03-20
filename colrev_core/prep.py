@@ -1872,6 +1872,9 @@ class Preparation(Process):
 
         record = item["record"]
 
+        if "CURATED" == record.get("metadata_source", ""):
+            return record
+
         # if RecordState.md_imported != record["status"]:
         if record["status"] not in [
             RecordState.md_imported,
