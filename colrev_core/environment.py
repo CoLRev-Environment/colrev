@@ -81,11 +81,10 @@ class LocalIndex(Process):
 
         self.es = Elasticsearch("http://localhost:9200")
         i = 0
-        time.sleep(10)
         while i < 20:
             try:
-                time.sleep(3)
                 self.es.get(index="record_index", id="test")
+                time.sleep(3)
                 break
             except ConnectionError:
                 print("Waiting until ES instance is available")
@@ -503,7 +502,7 @@ class LocalIndex(Process):
             pass
             return
 
-        self.REVIEW_MANAGER.logger.info(f"Create d_index for {search_path.parent}")
+        self.REVIEW_MANAGER.logger.info(f"Update d_index for {search_path.parent}")
 
         # Note : records are at least md_processed.
         duplicate_repr_list = []
@@ -582,7 +581,7 @@ class LocalIndex(Process):
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
             raise RecordNotInIndexException
 
-        return self.__prep_record_for_return(retrieved_record)
+        return self.prep_record_for_return(retrieved_record)
 
     def __retrieve_from_record_index(self, record: dict) -> dict:
 
@@ -604,7 +603,7 @@ class LocalIndex(Process):
 
         return retrieved_record
 
-    def __prep_record_for_return(self, record: dict) -> dict:
+    def prep_record_for_return(self, record: dict) -> dict:
         from colrev_core.process import RecordState
 
         if "hash_string_representation" in record:
@@ -804,7 +803,7 @@ class LocalIndex(Process):
                 ).hexdigest()
                 res = self.es.get(index="record_index", id=str(hash))
                 record = res["_source"]  # type: ignore
-                return self.__prep_record_for_return(record)
+                return self.prep_record_for_return(record)
 
         raise RecordNotInIndexException()
         return record
@@ -837,7 +836,7 @@ class LocalIndex(Process):
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
-            return self.__prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record)
 
         # 2. Try the record index
 
@@ -849,7 +848,7 @@ class LocalIndex(Process):
 
         if retrieved_record:
             self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
-            return self.__prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record)
 
         # 3. Try the duplicate representation index
         if not retrieved_record:
@@ -862,7 +861,7 @@ class LocalIndex(Process):
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
         self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
-        return self.__prep_record_for_return(retrieved_record)
+        return self.prep_record_for_return(retrieved_record)
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:
