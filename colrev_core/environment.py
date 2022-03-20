@@ -266,20 +266,20 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError):
                 pass
 
-        self.es.index(index="record-index", id=hash, document=record)
+        self.es.index(index="record_index", id=hash, document=record)
 
         return
 
     def __retrieve_from_toc_index_based_on_hash(self, hash: str) -> list:
 
-        toc_item_response = self.es.get(index="toc-index", id=hash)
+        toc_item_response = self.es.get(index="toc_index", id=hash)
         toc_item = toc_item_response["_source"]
 
         return toc_item
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
-        saved_record_response = self.es.get(index="record-index", id=hash)
+        saved_record_response = self.es.get(index="record_index", id=hash)
         saved_record = saved_record_response["_source"]
 
         # amend saved record
@@ -303,7 +303,7 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError):
                 pass
 
-        self.es.update(index="record-index", id=hash, doc=saved_record)
+        self.es.update(index="record_index", id=hash, doc=saved_record)
         return
 
     def __record_index(self, record: dict) -> None:
@@ -328,11 +328,11 @@ class LocalIndex(Process):
             pass
 
         while True:
-            if not self.es.exists(index="record-index", id=hash):
+            if not self.es.exists(index="record_index", id=hash):
                 self.__store_record(hash, record)
                 break
             else:
-                saved_record_response = self.es.get(index="record-index", id=hash)
+                saved_record_response = self.es.get(index="record_index", id=hash)
                 saved_record = saved_record_response["_source"]
                 if string_representation == self.get_string_representation(
                     saved_record
@@ -382,15 +382,15 @@ class LocalIndex(Process):
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
             record_string_repr = self.get_string_representation(record)
             while True:
-                if not self.es.exists(index="toc-index", id=hash):
+                if not self.es.exists(index="toc_index", id=hash):
                     toc_item = {
                         "toc_key": toc_key,
                         "string_representations": [record_string_repr],
                     }
-                    self.es.index(index="toc-index", id=hash, document=toc_item)
+                    self.es.index(index="toc_index", id=hash, document=toc_item)
                     break
                 else:
-                    toc_item_response = self.es.get(index="toc-index", id=hash)
+                    toc_item_response = self.es.get(index="toc_index", id=hash)
                     toc_item = toc_item_response["_source"]
                     if toc_item["toc_key"] == toc_key:
                         # ok - no collision, update the record
@@ -400,7 +400,7 @@ class LocalIndex(Process):
                             toc_item["string_representations"].append(  # type: ignore
                                 record_string_repr
                             )
-                            self.es.update(index="toc-index", id=hash, doc=toc_item)
+                            self.es.update(index="toc_index", id=hash, doc=toc_item)
                         break
                     else:
                         # to handle the collision:
@@ -462,11 +462,11 @@ class LocalIndex(Process):
 
                 hash = hashlib.sha256(orig_record_string.encode("utf-8")).hexdigest()
                 while True:
-                    if not self.es.exists(index="record-index", id=hash):
+                    if not self.es.exists(index="record_index", id=hash):
                         # Note : this should happen rarely/never
                         break
                     else:
-                        response = self.es.get(index="record-index", id=hash)
+                        response = self.es.get(index="record_index", id=hash)
                         saved_record = response["_source"]
                         saved_original_string_repr = saved_record[
                             "hash_string_representation"
@@ -486,7 +486,7 @@ class LocalIndex(Process):
                                         non_identical_representation
                                     ]
                                 self.es.update(
-                                    index="record-index", id=hash, doc=saved_record
+                                    index="record_index", id=hash, doc=saved_record
                                 )
                             break
                         else:
@@ -568,7 +568,7 @@ class LocalIndex(Process):
         try:
             # match_phrase := exact match
             resp = self.es.search(
-                index="record-index",
+                index="record_index",
                 query={
                     "match_phrase": {"duplicate_reprs": string_representation_record}
                 },
@@ -590,7 +590,7 @@ class LocalIndex(Process):
         hash = hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
-            res = self.es.get(index="record-index", id=hash)
+            res = self.es.get(index="record_index", id=hash)
             retrieved_record = res["_source"]
             if (
                 self.get_string_representation(retrieved_record)
@@ -625,6 +625,8 @@ class LocalIndex(Process):
 
         if "manual_non_duplicate" in record:
             del record["manual_non_duplicate"]
+        if "duplicate_reprs" in record:
+            del record["duplicate_reprs"]
         record["status"] = RecordState.md_prepared
         return record
 
@@ -682,17 +684,17 @@ class LocalIndex(Process):
         if self.duplicate_outlets():
             return
 
-        self.REVIEW_MANAGER.logger.info("Reset record-index and toc-index")
+        self.REVIEW_MANAGER.logger.info("Reset record_index and toc_index")
         # if self.teiind_path.is_dir():
         #     shutil.rmtree(self.teiind_path)
 
         self.elastic_index.mkdir(exist_ok=True, parents=True)
-        if "record-index" in self.es.indices.get_alias().keys():
-            self.es.indices.delete(index="record-index", ignore=[400, 404])
-        if "toc-index" in self.es.indices.get_alias().keys():
-            self.es.indices.delete(index="toc-index", ignore=[400, 404])
-        self.es.indices.create(index="record-index")
-        self.es.indices.create(index="toc-index")
+        if "record_index" in self.es.indices.get_alias().keys():
+            self.es.indices.delete(index="record_index", ignore=[400, 404])
+        if "toc_index" in self.es.indices.get_alias().keys():
+            self.es.indices.delete(index="toc_index", ignore=[400, 404])
+        self.es.indices.create(index="record_index")
+        self.es.indices.create(index="toc_index")
 
         for source_url in [x["source_url"] for x in self.local_registry]:
 
@@ -772,7 +774,7 @@ class LocalIndex(Process):
         hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
         toc_items = []
         while True:
-            if not self.es.exists(index="toc-index", id=hash):
+            if not self.es.exists(index="toc_index", id=hash):
                 break
             else:
                 res = self.__retrieve_from_toc_index_based_on_hash(hash)
@@ -800,7 +802,7 @@ class LocalIndex(Process):
                 hash = hashlib.sha256(
                     saved_toc_record_str_repr.encode("utf-8")
                 ).hexdigest()
-                res = self.es.get(index="record-index", id=str(hash))
+                res = self.es.get(index="record_index", id=str(hash))
                 record = res["_source"]  # type: ignore
                 return self.__prep_record_for_return(record)
 
@@ -827,8 +829,9 @@ class LocalIndex(Process):
                     continue
                 try:
                     retrieved_record = self.get_from_index_exact_match(
-                        "record-index", k, v
+                        "record_index", k, v
                     )
+                    break
                 except (IndexError, NotFoundError):
                     pass
 

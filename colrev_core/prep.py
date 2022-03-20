@@ -20,12 +20,14 @@ from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
+from elasticsearch import NotFoundError
 from nameparser import HumanName
 from p_tqdm import p_map
 from thefuzz import fuzz
 
 from colrev_core import utils
 from colrev_core.environment import LocalIndex
+from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
@@ -192,7 +194,6 @@ class Preparation(Process):
             self.reprocess_state = reprocess_state
 
         self.keep_ids = keep_ids
-        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         self.CPUS = self.CPUS * 5
         self.NER = spacy.load("en_core_web_sm")
 
@@ -223,21 +224,24 @@ class Preparation(Process):
         # ret = s.get(url, headers=headers)
         # print(ret)
 
-        ret = requests.get(url)
-        if 503 == ret.status_code:
-            return record
-        elif (
-            200 == ret.status_code
-            and "doi.org" not in ret.url
-            and "linkinghub" not in ret.url
-        ):
-            url = ret.url
-        else:
-            # follow the chain of redirects
-            while self.__meta_redirect(ret.content.decode("utf-8")):
-                url = self.__meta_redirect(ret.content.decode("utf-8"))
-                ret = requests.get(url, "GET")
-        record["url"] = str(url)
+        try:
+            ret = requests.get(url)
+            if 503 == ret.status_code:
+                return record
+            elif (
+                200 == ret.status_code
+                and "doi.org" not in ret.url
+                and "linkinghub" not in ret.url
+            ):
+                url = ret.url
+            else:
+                # follow the chain of redirects
+                while self.__meta_redirect(ret.content.decode("utf-8")):
+                    url = self.__meta_redirect(ret.content.decode("utf-8"))
+                    ret = requests.get(url, "GET")
+            record["url"] = str(url)
+        except requests.exceptions.ConnectionError:
+            pass
         return record
 
     def correct_recordtype(self, record: dict) -> dict:
@@ -447,32 +451,32 @@ class Preparation(Process):
         return record
 
     def get_record_from_local_index(self, record: dict) -> dict:
-        from colrev_core.environment import RecordNotInIndexException
+
+        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
         retrieved = False
         try:
-            if "CURATED" != record.get("metadata_source", ""):
-                # Note: use similarity-based retrieval from toc first
-                # To give precedence to the record_from_local_indexed_metadata versions
-                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_toc_index(
-                    record, self.RETRIEVAL_SIMILARITY
-                )
-                retrieved = True
-            else:
-                if "source_url" in record:  # Note: do not change to other sources
-                    # TODO : update based on same record
-                    retrieved_record = record
-                else:
-                    retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(
-                        record
-                    )
-                retrieved = True
-        except RecordNotInIndexException:
+            # TODO: To give precedence to the record_from_local_indexed_metadata version
+            retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+            retrieved = True
+        except (RecordNotInIndexException, NotFoundError):
             pass
             try:
-                retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
-                retrieved = True
-            except RecordNotInIndexException:
+                if "CURATED" != record.get("metadata_source", ""):
+                    retrieved_record = LOCAL_INDEX.retrieve_record_from_toc_index(
+                        record, self.RETRIEVAL_SIMILARITY
+                    )
+                    retrieved = True
+                else:
+                    if "source_url" in record:  # Note: do not change to other sources
+                        # TODO : update based on same record
+                        retrieved_record = record
+                    else:
+                        retrieved_record = LOCAL_INDEX.retrieve_record_from_index(
+                            record
+                        )
+                    retrieved = True
+            except (RecordNotInIndexException, NotFoundError):
                 pass
 
         if retrieved:
@@ -517,7 +521,7 @@ class Preparation(Process):
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
 
-            record = self.LOCAL_INDEX.set_source_url_link(record)
+            record = LOCAL_INDEX.set_source_url_link(record)
 
         return record
 
