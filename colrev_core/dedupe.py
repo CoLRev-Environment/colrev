@@ -520,7 +520,6 @@ class Dedupe(Process):
         saved_args = locals()
 
         dupe_file = Path("duplicates_to_validate.xlsx")
-        non_dupe_file = Path("non_duplicates_to_validate.xlsx")
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
         if dupe_file.is_file():
             dupes = pd.read_excel(dupe_file)
@@ -594,14 +593,25 @@ class Dedupe(Process):
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        if non_dupe_file.is_file():
-            non_dupes = pd.read_excel(non_dupe_file)
-            non_dupes.fillna("", inplace=True)
-            c_to_correct = non_dupes.loc[
-                non_dupes["error"] != "", "cluster_id"
-            ].to_list()
-            non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
-            IDs_to_merge = non_dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+        non_dupe_file_xlsx = Path("non_duplicates_to_validate.xlsx")
+        non_dupe_file_txt = Path("dupes.txt")
+        if non_dupe_file_xlsx.is_file() or non_dupe_file_txt.is_file():
+            IDs_to_merge = []
+            if non_dupe_file_xlsx.is_file():
+                non_dupes = pd.read_excel(non_dupe_file_xlsx)
+                non_dupes.fillna("", inplace=True)
+                c_to_correct = non_dupes.loc[
+                    non_dupes["error"] != "", "cluster_id"
+                ].to_list()
+                non_dupes = non_dupes[non_dupes["cluster_id"].isin(c_to_correct)]
+                IDs_to_merge = (
+                    non_dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
+                )
+            if non_dupe_file_txt.is_file():
+                content = non_dupe_file_txt.read_text()
+                IDs_to_merge = [x.split(",") for x in content.splitlines()]
+                for ID1, ID2 in IDs_to_merge:
+                    print(ID1 + ID2)
 
             # TODO : there could be more than two IDs in the list!
             # change the apply_manual_deduplication_decisions() to accept a list of IDs
@@ -617,7 +627,11 @@ class Dedupe(Process):
                     )
                 self.apply_manual_deduplication_decisions(auto_dedupe)
 
-        if dupe_file.is_file() or non_dupe_file.is_file():
+        if (
+            dupe_file.is_file()
+            or non_dupe_file_xlsx.is_file()
+            or non_dupe_file_txt.is_file()
+        ):
             self.REVIEW_MANAGER.create_commit(
                 "Validate and correct duplicates",
                 manual_author=True,
