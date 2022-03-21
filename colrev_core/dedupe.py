@@ -405,6 +405,7 @@ class Dedupe(Process):
             if "duplicate" == x["decision"]:
                 dupe_list.append([x["ID1"], x["ID2"]])
 
+        # Set manual_non_duplicate marks
         for non_dupe_1, non_dupe_2 in non_dupe_list:
             record = [x for x in records if x["ID"] == non_dupe_1].pop()
             if "manual_non_duplicate" in record:
@@ -413,7 +414,6 @@ class Dedupe(Process):
                 record["manual_non_duplicate"] = ";".join(id_list)
             else:
                 record["manual_non_duplicate"] = non_dupe_2
-
             record = [x for x in records if x["ID"] == non_dupe_2].pop()
             if "manual_non_duplicate" in record:
                 id_list = record["manual_non_duplicate"].split(";") + [non_dupe_1]
@@ -424,8 +424,22 @@ class Dedupe(Process):
 
             # Note : no need to consider "manual_duplicate" (it stays the same)
 
-        for main_rec_id, dupe_rec_id in dupe_list:
-            main_record = [x for x in records if x["ID"] == main_rec_id].pop()
+        removed_duplicates = []
+        for ID1, ID2 in dupe_list:
+            rec_ID1 = [x for x in records if x["ID"] == ID1].pop()
+            rec_ID2 = [x for x in records if x["ID"] == ID2].pop()
+
+            # Heuristic: Merge into curated record
+            if "CURATED" == rec_ID2.get("metadata_source", ""):
+                main_record = rec_ID2
+                dupe_record = rec_ID1
+            else:
+                main_record = rec_ID1
+                dupe_record = rec_ID2
+
+            dupe_rec_id = dupe_record["ID"]
+            main_rec_id = main_record["ID"]
+
             # Simple way of implementing the closure
             # cases where the main_record has already been merged into another record
             if "MOVED_DUPE" in main_record:
@@ -433,9 +447,7 @@ class Dedupe(Process):
                     x for x in records if x["ID"] == main_record["MOVED_DUPE"]
                 ].pop()
 
-            dupe_record = [x for x in records if x["ID"] == dupe_rec_id].pop()
-
-            dupe_record["MOVED_DUPE"] = main_rec_id
+            dupe_record["MOVED_DUPE"] = main_record["ID"]
 
             origins = main_record["origin"].split(";") + dupe_record["origin"].split(
                 ";"
@@ -484,8 +496,9 @@ class Dedupe(Process):
             self.REVIEW_MANAGER.report_logger.info(
                 f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
             )
+            removed_duplicates.append(dupe_rec_id)
 
-        records = [x for x in records if x["ID"] not in [d[1] for d in dupe_list]]
+        records = [x for x in records if x["ID"] not in removed_duplicates]
 
         records = [{k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in records]
 
