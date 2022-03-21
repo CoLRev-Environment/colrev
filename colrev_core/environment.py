@@ -584,8 +584,18 @@ class LocalIndex(Process):
         return self.prep_record_for_return(retrieved_record)
 
     def __retrieve_from_record_index(self, record: dict) -> dict:
-
         string_representation = self.get_string_representation(record)
+        retrieved_record = self.__retrieve_from_record_index_string_repr(
+            string_representation
+        )
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
+        return retrieved_record
+
+    def __retrieve_from_record_index_string_repr(
+        self, string_representation: str
+    ) -> dict:
+
         hash = hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
@@ -597,9 +607,6 @@ class LocalIndex(Process):
             ):
                 break
             hash = self.__increment_hash(hash)
-
-        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
-            raise RecordNotInIndexException
 
         return retrieved_record
 
@@ -880,7 +887,7 @@ class LocalIndex(Process):
 
         return record
 
-    def is_duplicate(self, record1: dict, record2: dict) -> str:
+    def is_duplicate(self, record1_string_repr: str, record2_string_repr: str) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
         # Note : the retrieve_record_from_index also checks the d_index, i.e.,
@@ -888,8 +895,12 @@ class LocalIndex(Process):
         # record1 and record2 have been mapped to the same record
         # if record1 and record2 in index (and same source_url): return 'no'
         try:
-            r1_index = self.retrieve_record_from_index(record1)
-            r2_index = self.retrieve_record_from_index(record2)
+            r1_index = self.__retrieve_from_record_index_string_repr(
+                record1_string_repr
+            )
+            r2_index = self.__retrieve_from_record_index_string_repr(
+                record2_string_repr
+            )
             if r1_index["source_url"] == r2_index["source_url"]:
                 if r1_index["ID"] == r2_index["ID"]:
                     return "yes"
@@ -907,7 +918,7 @@ class LocalIndex(Process):
                 if r1_index["ID"] != r2_index["ID"]:
                     return "no"
 
-        except RecordNotInIndexException:
+        except (RecordNotInIndexException, NotFoundError):
             pass
             return "unknown"
 
