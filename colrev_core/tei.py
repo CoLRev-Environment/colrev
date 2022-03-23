@@ -344,6 +344,13 @@ class TEI(Process):
 
         return record
 
+    def get_paper_keywords(self) -> list:
+        keywords = []
+        for keyword_list in self.root.iter(self.ns["tei"] + "keywords"):
+            for keyword in keyword_list.iter(self.ns["tei"] + "term"):
+                keywords.append(keyword.text)
+        return keywords
+
     # (individual) bibliography-reference elements  ----------------------------
 
     def __get_reference_bibliography_id(self, reference) -> str:

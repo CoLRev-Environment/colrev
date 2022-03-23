@@ -345,45 +345,54 @@ class Data(Process):
         from lxml import etree
         from lxml.etree import XMLSyntaxError
 
+        # from p_tqdm import p_map
+        from colrev_core.tei import TEI_Exception
+
         grobid_client.start_grobid(self.REVIEW_MANAGER)
 
-        for record in records:
+        def create_tei(record: dict) -> None:
             if "file" not in record:
-                continue
+                return
             if "tei_file" not in record:
                 self.REVIEW_MANAGER.logger.info(f"Get tei for {record['ID']}")
-                pdf_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / record["file"]
-                tei_path = Path(record["file"].replace("pdfs/", "tei/")).with_suffix(
-                    ".tei.xml"
-                )
-                tei_path = (
-                    self.REVIEW_MANAGER.paths["REPO_DIR"]
-                    / Path("tei")
-                    / Path(record["ID"] + ".tei.xml")
-                )
+                if Path(record["file"]).is_file():
+                    pdf_path = Path(record["file"])
+                else:
+                    pdf_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / record["file"]
+                    if not pdf_path.is_file():
+                        print(f"file not available: {record['file']}")
+                        return
+
+                tei_path = Path("tei") / Path(record["ID"] + ".tei.xml")
                 tei_path.parents[0].mkdir(exist_ok=True)
                 if tei_path.is_file():
-                    continue
+                    record["tei_file"] = str(tei_path)
+                    return
 
                 try:
                     TEI(self.REVIEW_MANAGER, pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
-                        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(tei_path))
 
                 except (
                     etree.XMLSyntaxError,
                     ProtocolError,
                     requests.exceptions.ConnectionError,
                     TEI_TimeoutException,
+                    TEI_Exception,
                 ):
                     if "tei_file" in record:
                         del record["tei_file"]
                     pass
+            return
 
+        for record in records:
+            create_tei(record)
+        # p_map(create_tei, records, num_cpus=6)
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             self.REVIEW_MANAGER.create_commit("Create TEIs")
 
