@@ -34,7 +34,7 @@ requirements = [
     "PyPDF2==1.26.0",
     "PyYAML==6.0",
     "p_tqdm==1.3.3",
-    "requests==2.22.0",
+    "requests==2.27.1",
     "thefuzz==0.19.0",
     "tqdm==4.61.1",
     "transitions==0.8.10",
