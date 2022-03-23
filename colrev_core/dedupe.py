@@ -340,14 +340,20 @@ class Dedupe(Process):
 
         for dupe in [x for x in results if "duplicate" == x["decision"]]:
             try:
-                main_record_list = [x for x in records if x["ID"] == dupe["ID1"]]
-                if len(main_record_list) == 0:
+
+                rec_ID1_list = [x for x in records if x["ID"] == dupe["ID1"]]
+                rec_ID2_list = [x for x in records if x["ID"] == dupe["ID2"]]
+                if len(rec_ID1_list) == 0 or len(rec_ID2_list) == 0:
                     continue
-                main_record = main_record_list.pop()
-                dupe_record_list = [x for x in records if x["ID"] == dupe["ID2"]]
-                if len(dupe_record_list) == 0:
-                    continue
-                dupe_record = dupe_record_list.pop()
+
+                # Heuristic: Merge into curated record
+                if "CURATED" == rec_ID2_list[0].get("metadata_source", ""):
+                    main_record = rec_ID2_list[0]
+                    dupe_record = rec_ID1_list[0]
+                else:
+                    main_record = rec_ID1_list[0]
+                    dupe_record = rec_ID2_list[0]
+
                 origins = main_record["origin"].split(";") + dupe_record[
                     "origin"
                 ].split(";")
@@ -364,10 +370,9 @@ class Dedupe(Process):
                     f"Removed duplicate{conf_details}: "
                     + f'{main_record["ID"]} <- {dupe_record["ID"]}'
                 )
-                # main_record["status"] = str(RecordState.md_processed)
+
                 records = [x for x in records if x["ID"] != dupe_record["ID"]]
-                # REVIEW_MANAGER.update_record_by_ID(main_record)
-                # REVIEW_MANAGER.update_record_by_ID(dupe_record, delete=True)
+
             except StopIteration:
                 # TODO : check whether this is valid.
                 pass
@@ -1172,6 +1177,36 @@ class Dedupe(Process):
             non_duplicates_df.to_excel("non_duplicates_to_validate.xlsx", index=False)
 
         return
+
+    def view_info(self) -> dict:
+        import itertools
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+        origins = [record["origin"].split(";") for record in records]
+        origins = [item.split("/")[0] for sublist in origins for item in sublist]
+        origins = list(set(origins))
+
+        cuts = {}
+        for L in range(1, len(origins) + 1):
+            for subset in itertools.combinations(origins, L):
+                cuts["/".join(list(subset))] = {"origins": list(subset), "records": []}
+
+        for record in records:
+            rec_origins = list({x.split("/")[0] for x in record["origin"].split(";")})
+            cut_list = [x for k, x in cuts.items() if x["origins"] == rec_origins]
+            if len(cut_list) != 1:
+                print(record["ID"])
+                continue
+            cut = cut_list[0]
+            cut["records"].append(record["ID"])
+
+        total = len(records)
+        for k, det in cuts.items():
+            det["size"] = len(det["records"])  # type: ignore
+            det["fraction"] = det["size"] / total * 100  # type: ignore
+
+        return cuts
 
     def main(self) -> None:
 
