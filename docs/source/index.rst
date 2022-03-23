@@ -2,8 +2,8 @@
 Collaborative Literature Reviews
 ========================================
 
-CoLRev (Collaborative Literature Reviews) aims at facilitating highly collaborative literature reviews involving teams of researchers, state-of-the-art algorithms, and content curated by the research community.
-The core proposition is that the transparent collaboration model of version control systems such as git, combined with a robust content-based identification scheme, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
+This project aims at facilitating highly collaborative literature reviews involving teams of researchers, state-of-the-art algorithms, and content curated by the research community.
+The core proposition is that the transparent collaboration model of git, combined with robust content-based identification schemes, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
 
 
 Getting started
@@ -18,11 +18,11 @@ After `installing CoLRev <guides/user_documentation.html#installation>`_, use th
 The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/user_documentation.html>`_).
 After each step, make sure to `check the changes <guides/user_documentation.html#analyze-changes>`_, effectively following a three-step cycle:
 
-.. figure:: ../figures/workflow-cycle.svg
-   :width: 700
+.. figure:: ../figures/workflow-simple.svg
+   :width: 450
    :alt: Workflow cycle
 
-Conducting a full literature review should be as simple as running the following commands (each one followed by `git status`/`gitk` and `colrev status`):
+Conducting a literature review should be as simple as running the following operations (each one followed by `gitk`/`git status` and `colrev status`):
 
 .. code-block:: bash
 
@@ -62,20 +62,19 @@ Conducting a full literature review should be as simple as running the following
 A key feature of CoLRev is that reuse of community-curated data is built into each step:
 
 .. figure:: ../figures/reuse-vision.svg
-   :width: 700
+   :width: 800
    :alt: Reuse vision
 
-For (CoLRev) curated data, the prep/dedupe/pdf-get/pdf-prep steps are not needed (or simplified).
-The more records are curated, the more a CoLRev literature review can focus on the search, prescreen/screen and synthesis.
-
-Further details are provided in the `user documentation <guides/user_documentation.html>`_.
+For CoLRev curated data, the efforts required for the preparation steps is reduced significantly.
+The more records are curated, the more you can focus on the search, prescreen/screen and synthesis.
+Further details are provided in the `documentation <guides/user_documentation.html>`_.
 
 Credits
 -----------------
 
 CoLRev builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 
-.. |gitpyhonactivity| image:: https://img.shields.io/github/commit-activity/y/gitpython-developers/GitPython?color=green&style=plastic
+.. |gitactivity| image:: https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic
    :height: 12pt
 
 .. |precommitactivity| image:: https://img.shields.io/github/commit-activity/y/pre-commit/pre-commit?color=green&style=plastic
@@ -91,15 +90,6 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
    :height: 12pt
 
 .. |pdfmineractivity| image:: https://img.shields.io/github/commit-activity/y/pdfminer/pdfminer.six?color=green&style=plastic
-   :height: 12pt
-
-.. |bibtexparseractivity| image:: https://img.shields.io/github/commit-activity/y/sciunto-org/python-bibtexparser?color=green&style=plastic
-   :height: 12pt
-
-.. |gitactivity| image:: https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic
-   :height: 12pt
-
-.. |zoteroservicesactivity| image:: https://img.shields.io/github/commit-activity/y/zotero/translation-server?color=green&style=plastic
    :height: 12pt
 
 .. |zoterotranslatoractivity| image:: https://img.shields.io/github/commit-activity/y/zotero/translators?color=green&style=plastic
@@ -130,52 +120,43 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
    * - Project and functionality
      - License
      - Activity
-   * - `git <https://github.com/git/git>`_ *: versioning and collaboration
+   * - `git <https://github.com/git/git>`_ \*: versioning and collaboration
      - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`_
      - |gitactivity|
-   * - `GitPython <https://github.com/gitpython-developers/GitPython>`_ : versioning and collaboration
-     - `BSD 3 <https://github.com/gitpython-developers/GitPython/blob/main/LICENSE>`_
-     - |gitpyhonactivity|
    * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
      - `MIT <https://github.com/pre-commit/pre-commit/blob/master/LICENSE>`_
      - |precommitactivity|
    * - `docker-py <https://github.com/docker/docker-py>`_ : accessing other microservices
      - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`_
      - |dockerpyactivity|
-   * - `bibtexparser <https://github.com/sciunto-org/python-bibtexparser>`_ : record management
-     - `BSD <https://github.com/sciunto-org/python-bibtexparser/blob/master/COPYING>`_
-     - |bibtexparseractivity|
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
      - `BSD 3 <https://github.com/pandas-dev/pandas/blob/master/LICENSE>`_
      - |pandasactivity|
-   * - `Zotero translators <https://github.com/zotero/translators>`_ *: record import
+   * - `Zotero translators <https://github.com/zotero/translators>`_ \*: record import
      - `GPL <https://github.com/zotero/translators/blob/master/COPYING>`_
      - |zoterotranslatoractivity|
-   * - `Zotero translation services <https://github.com/zotero/translation-server>`_ *
-     - `GPL <https://github.com/zotero/translation-server/blob/master/COPYING>`_
-     - |zoteroservicesactivity|
    * - `PDFMiner.six <https://github.com/pdfminer/pdfminer.six>`_ : PDF management
      - `MIT <https://github.com/pdfminer/pdfminer.six/blob/develop/LICENSE>`_
-     - |gitpyhonactivity|
-   * - `OCRmyPDF <https://github.com/jbarlow83/OCRmyPDF>`_ *: OCR tasks
+     - |pdfmineractivity|
+   * - `OCRmyPDF <https://github.com/jbarlow83/OCRmyPDF>`_ \*: OCR tasks
      - `MPL-2.0 <https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE>`_
      - |ocrmypdfactivity|
-   * - `Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ *: OCR tasks
+   * - `Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ \*: OCR tasks
      - `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`_
      - |tesseractactivity|
-   * - `GROBID <https://github.com/kermitt2/grobid>`_ *: parsing annotated PDF content
+   * - `GROBID <https://github.com/kermitt2/grobid>`_ \*: parsing annotated PDF content
      - `Apache 2.0 <https://github.com/kermitt2/grobid/blob/master/LICENSE>`_
      - |grobidactivity|
    * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification
      - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`_
      - |dedupeioactivity|
-   * - `pandoc <https://github.com/jgm/pandoc>`_ *: creating manuscripts
+   * - `pandoc <https://github.com/jgm/pandoc>`_ \*: creating manuscripts
      - `GPL 2 <https://github.com/jgm/pandoc/blob/master/COPYRIGHT>`_
      - |pandocactivity|
-   * - `CSL <https://github.com/citation-style-language/styles>`_ *: formatting citations
+   * - `CSL <https://github.com/citation-style-language/styles>`_ \*: formatting citations
      - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_
      - |cslactivity|
-   * - `Elasticsearch <https://github.com/elastic/elasticsearch>`_ *: searching local projects
+   * - `Elasticsearch <https://github.com/elastic/elasticsearch>`_ \*: searching local projects
      - `multiple <https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt>`_
      - |elasticsearchactivity|
 
@@ -201,6 +182,21 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
    * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
      - Cross-discipline
      - > 30,000,000
+
+How to cite
+-----------------
+
+Please refer to the present GitHub project:
+
+.. code-block:: BibTeX
+
+   @misc{colrev,
+   author = {Wagner, G. and Prester, J.},
+   title = {CoLRev - A Framework for Colaborative Literature Reviews},
+   howpublished = {\url{https://github.com/geritwagner/colrev_core}},
+   publisher = {GitHub},
+   year = {2022},
+   }
 
 .. toctree::
    :hidden:
