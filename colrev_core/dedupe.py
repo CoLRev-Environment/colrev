@@ -16,6 +16,19 @@ from colrev_core.process import RecordState
 
 
 class Dedupe(Process):
+
+    md_keys = [
+        "author",
+        "title",
+        "year",
+        "journal",
+        "booktitle",
+        "volume",
+        "number",
+        "pages",
+    ]
+    complementary_keys = ["doi", "url", "abstract", "dblk_key"]
+
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
@@ -307,6 +320,32 @@ class Dedupe(Process):
 
         return ret_dict
 
+    def merge_r1_r2(self, main_record: dict, dupe_record: dict) -> dict:
+
+        origins = main_record["origin"].split(";") + dupe_record["origin"].split(";")
+        main_record["origin"] = ";".join(list(set(origins)))
+
+        if "CURATED" != main_record.get("metadata_source", ""):
+            for k in self.md_keys:
+                if k in dupe_record and k not in main_record:
+                    main_record[k] = dupe_record[k]
+
+        if "pages" in dupe_record and "pages" not in main_record:
+            main_record["pages"] = dupe_record["pages"]
+
+        for k in self.complementary_keys:
+            if k in dupe_record and k not in main_record:
+                main_record[k] = dupe_record[k]
+
+        if "file" in main_record and "file" in dupe_record:
+            main_record["file"] = (
+                main_record["file"] + ";" + dupe_record.get("file", "")
+            )
+        elif "file" in dupe_record and "file" not in main_record:
+            main_record["file"] = dupe_record["file"]
+
+        return main_record
+
     def apply_merges(self, results: list):
         """Apply automated deduplication decisions
 
@@ -354,14 +393,8 @@ class Dedupe(Process):
                     main_record = rec_ID1_list[0]
                     dupe_record = rec_ID2_list[0]
 
-                origins = main_record["origin"].split(";") + dupe_record[
-                    "origin"
-                ].split(";")
-                main_record["origin"] = ";".join(list(set(origins)))
-                if "file" in main_record and "file" in dupe_record:
-                    main_record["file"] = (
-                        main_record["file"] + ";" + dupe_record.get("file", "")
-                    )
+                main_record = self.merge_r1_r2(main_record, dupe_record)
+
                 if "score" in dupe:
                     conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
                 else:
@@ -431,8 +464,13 @@ class Dedupe(Process):
 
         removed_duplicates = []
         for ID1, ID2 in dupe_list:
-            rec_ID1 = [x for x in records if x["ID"] == ID1].pop()
-            rec_ID2 = [x for x in records if x["ID"] == ID2].pop()
+            rec_ID1_l = [x for x in records if x["ID"] == ID1]
+            rec_ID2_l = [x for x in records if x["ID"] == ID2]
+            if len(rec_ID1_l) != 1 or len(rec_ID2_l) != 1:
+                continue
+
+            rec_ID1 = rec_ID1_l[0]
+            rec_ID2 = rec_ID2_l[0]
 
             # Heuristic: Merge into curated record
             if "CURATED" == rec_ID2.get("metadata_source", ""):
@@ -454,17 +492,7 @@ class Dedupe(Process):
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
 
-            origins = main_record["origin"].split(";") + dupe_record["origin"].split(
-                ";"
-            )
-            main_record["origin"] = ";".join(list(set(origins)))
-
-            if "file" in main_record and "file" in dupe_record:
-                main_record["file"] = ";".join(
-                    [main_record["file"], dupe_record["file"]]
-                )
-            if "file" in dupe_record and "file" not in main_record:
-                main_record["file"] = dupe_record["file"]
+            main_record = self.merge_r1_r2(main_record, dupe_record)
 
             if "manual_duplicate" in main_record:
                 main_record["manual_duplicate"] = (
@@ -1181,6 +1209,26 @@ class Dedupe(Process):
     def view_info(self) -> dict:
         import itertools
 
+        def __get_toc_key(record: dict) -> str:
+            toc_key = "NA"
+            if "article" == record["ENTRYTYPE"]:
+                toc_key = f"{record.get('journal', '').lower()}"
+                if "year" in record:
+                    toc_key = toc_key + f"|{record['year']}"
+                if "volume" in record:
+                    toc_key = toc_key + f"|{record['volume']}"
+                if "number" in record:
+                    toc_key = toc_key + f"|{record['number']}"
+                else:
+                    toc_key = toc_key + "|"
+            elif "inproceedings" == record["ENTRYTYPE"]:
+                toc_key = (
+                    f"{record.get('booktitle', '').lower()}"
+                    + f"|{record.get('year', '')}"
+                )
+
+            return toc_key
+
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         origins = [record["origin"].split(";") for record in records]
@@ -1201,12 +1249,21 @@ class Dedupe(Process):
             cut = cut_list[0]
             cut["records"].append(record["ID"])
 
+            if "toc_items" not in cut:
+                cut["toc_items"] = {}  # type: ignore
+            toc_i = __get_toc_key(record)
+            if toc_i in cut["toc_items"]:
+                cut["toc_items"][toc_i] = cut["toc_items"][toc_i] + 1  # type: ignore
+            else:
+                cut["toc_items"][toc_i] = 1  # type: ignore
+
         total = len(records)
         for k, det in cuts.items():
             det["size"] = len(det["records"])  # type: ignore
             det["fraction"] = det["size"] / total * 100  # type: ignore
 
-        return cuts
+        info = {"cuts": cuts}
+        return info
 
     def main(self) -> None:
 
