@@ -96,8 +96,8 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
 
 .. code-block:: bash
 
-      colrev local-index add --url https://github.com/u_name/repo_name
-      colrev local-index
+      colrev environment add --url https://github.com/u_name/repo_name
+      colrev environment
 
 See `reuse of community-curated data <../technical_documentation/colrev.html#reuse>`_ for details.
 
@@ -514,4 +514,4 @@ Links and references for standalone literature reviews are available in the `bes
 References
 --------------
 
-.. [WagnerEtAl2020] Wagner, G. and Empl, P. and Schryen, G. (2020). Designing a novel strategy for exploring literature corpora. Proceedings of the European Conference on Information Sytems.
+.. [WagnerEtAl2020] Wagner, G. and Empl, P. and Schryen, G. (2020). Designing a novel strategy for exploring literature corpora. *Proceedings of the European Conference on Information Sytems*.
