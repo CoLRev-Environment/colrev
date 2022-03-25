@@ -4,15 +4,53 @@ Document Identifiers
 
 Core architecture and design of identifiers for source documents
 
-**Version** 0.1
+**Version** 0.1 (in progress)
 
 **Status** preliminary
 
 ..
+  Comments/TODOs:
+
+  very useful comparison: https://arks.org/about/the-ark-origin-story/
+
    - TODO: explain how variations of journals/abbreviations are handled
    - TODO: describe how the properties (e.g., erroneous merges) were evaluated
    - TODO: explicitly mention that the same source document may have multiple metadata representations and identifiers - the data storage and retrieval processes should ensure that identifiers pointing to the same source document are resolved (based on manually verified links)
    Maybe refer to decentralized source identifiers?
+  - No call home principle: https://www.w3.org/TR/did-use-cases/#noCallHome
+  - Survives issuing organization mortality https://www.w3.org/TR/did-use-cases/
+
+  Decentralized identifiers
+  alsoKnownAs (instead of duplicate_repr)
+  https://www.w3.org/TR/did-use-cases/#accessingServiceEndpoints
+
+  Perhaps the most salient point about Decentralized Identifiers is that there are no "Identity Providers". Instead, this role is subsumed in the decentralized systems that Controllers use to manage DIDs and, in turn, Requesting Parties use to apply DIDs. These decentralized systems, which we refer to as DID registries, are designed to operate independently from any particular service provider and hence, free from any given platform authority. It is anticipated that DIDs will be registered using distributed ledger technology (DLT).
+  -> based on a (distributed) data registry
+
+  https://arks.org/
+  https://arks.org/about/
+  https://arks.org/about/comparing-arks-and-other-identifiers/
+   - be able to create identifiers without metadata!?!?!
+  https://en.wikipedia.org/wiki/Universally_unique_identifier
+
+  I) It is important that metadata is unique (not just DOIs)
+  II) IDs should **NOT** be DID/DLT-based (multiple representations, not a simgle owner, collaborative curation/enrichment)
+  III) IDs should be efficient (not too long, robust against non-meaningful variation in representations)
+  IV) IDs should be universal/content-based, verifiable, durable, sustainable
+
+  Think about enabling option of individual-paper repositories (discovery would start by checking whether an individual paper repo is available)
+
+  oci illustrates the challenges of database-specific identifiers (they have to be translated/associated every time when switching databases... this would be solved with doci)
+  -> if databases and analyses mostly focus on doi/crossref/..., the insufficient coverage/universality of dois may not seem to be a big issue
+
+  https://en.wikipedia.org/wiki/Uniform_Resource_Name
+  https://en.wikipedia.org/wiki/Dynamic_Delegation_Discovery_System
+
+
+  We may use the identifiers for citations:
+  Open Citation Identifier
+  https://figshare.com/articles/journal_contribution/Open_Citation_Identifier_Definition/7127816
+
 
 Contents:
 
@@ -140,3 +178,5 @@ Appendix: Resources
 `W3C, Decentralized Identifiers (DIDs) v1.0 <https://www.w3.org/TR/did-core/>`_
 
 `Silvio PeroniSilvio Peroni, David Shotton, Open Citation Identifier <https://figshare.com/articles/journal_contribution/Open_Citation_Identifier_Definition/7127816>`_
+
+`ARK <https://arks.org/about/>`_

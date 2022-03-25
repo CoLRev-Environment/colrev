@@ -218,7 +218,7 @@ Please refer to the present GitHub project:
    :maxdepth: 1
 
    technical_documentation/colrev
-   technical_documentation/colrev_identifiers
+   technical_documentation/identification
    Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
    GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extension_development
