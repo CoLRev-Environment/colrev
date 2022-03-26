@@ -26,7 +26,6 @@ class Loader(Process):
     def __init__(
         self,
         REVIEW_MANAGER,
-        keep_ids,
         notify_state_transition_process=True,
     ):
 
@@ -36,8 +35,6 @@ class Loader(Process):
             fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
-
-        self.keep_ids = keep_ids
 
         self.conversion_scripts = {
             "ris": self.__zotero_translate,
@@ -803,9 +800,6 @@ class Loader(Process):
             print("\n")
 
         return
-
-    def run(self):
-        self.REVIEW_MANAGER.run_process(self, self.keep_ids)
 
 
 class NoSearchResultsAvailableError(Exception):

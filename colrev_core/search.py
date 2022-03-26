@@ -472,7 +472,6 @@ class Search(Process):
         PROJECT_REVIEW_MANAGER = ReviewManager(params["scope"]["url"])
         Loader(
             PROJECT_REVIEW_MANAGER,
-            keep_ids=False,
             notify_state_transition_process=False,
         )
         records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records()

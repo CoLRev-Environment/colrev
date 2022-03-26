@@ -421,9 +421,6 @@ class PDF_Retrieval(Process):
 
         return
 
-    def run(self):
-        self.REVIEW_MANAGER.run_process(self, self.copy_to_repo, self.rename)
-
 
 if __name__ == "__main__":
     pass

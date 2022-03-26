@@ -2,7 +2,6 @@
 import ast
 import configparser
 import importlib
-import inspect
 import io
 import itertools
 import json
@@ -806,26 +805,6 @@ class ReviewManager:
             process.check_precondition()
         self.notified_next_process = process.type
         self.REVIEW_DATASET.reset_log_if_no_changes()
-
-    def run_process(self, process: Process, *args) -> None:
-        """Pass a process to the REVIEW_MANAGER for execution"""
-
-        proc_fun = inspect.getmodule(process.processing_function)
-        if proc_fun:
-            function_name = (
-                f"{proc_fun.__name__}." + f"{process.processing_function.__name__}"
-            )
-        else:
-            function_name = "NA"
-
-        self.report_logger.info(
-            f"ReviewManager: check_precondition({function_name}, "
-            + f"a {process.type.name} process)"
-        )
-        self.notify(process)
-        self.report_logger.info(f"ReviewManager: run {function_name}()")
-        process.run_process(*args)
-        self.notified_next_process = None
 
     def __get_commit_report(
         self, script_name: str = None, saved_args: dict = None

@@ -977,9 +977,6 @@ class PDF_Preparation(Process):
 
         return
 
-    def run(self):
-        self.REVIEW_MANAGER.run_process(self, self.reprocess)
-
 
 if __name__ == "__main__":
     pass

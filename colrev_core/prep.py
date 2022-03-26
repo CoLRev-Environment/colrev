@@ -164,7 +164,6 @@ class Preparation(Process):
         REVIEW_MANAGER,
         similarity: float = 0.9,
         reprocess_state: RecordState = RecordState.md_imported,
-        keep_ids: bool = False,
         notify_state_transition_process: bool = True,
         debug: str = "NA",
     ):
@@ -193,7 +192,6 @@ class Preparation(Process):
         else:
             self.reprocess_state = reprocess_state
 
-        self.keep_ids = keep_ids
         self.CPUS = self.CPUS * 5
         self.NER = spacy.load("en_core_web_sm")
 
@@ -2369,9 +2367,7 @@ class Preparation(Process):
     def retrieve_md_from_url(self, url: str) -> dict:
         from colrev_core.load import Loader
 
-        LOADER = Loader(
-            self.REVIEW_MANAGER, keep_ids=True, notify_state_transition_process=False
-        )
+        LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
         LOADER.start_zotero_translators()
 
         headers = {"Content-type": "text/plain"}
@@ -2602,13 +2598,6 @@ class Preparation(Process):
             self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
 
         return
-
-    def run(
-        self,
-        reprocess_state: RecordState = RecordState.md_imported,
-        debug_ids: str = "NA",
-    ):
-        self.REVIEW_MANAGER.run_process(self, reprocess_state, self.keep_ids, debug_ids)
 
 
 if __name__ == "__main__":
