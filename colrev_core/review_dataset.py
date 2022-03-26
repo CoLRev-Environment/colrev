@@ -432,7 +432,7 @@ class ReviewDataset:
                     + f'({record["ID"]})'
                 )
         try:
-            retrieved_record = self.LOCAL_INDEX.retrieve_record_from_index(record)
+            retrieved_record = self.LOCAL_INDEX.retrieve(record)
             temp_ID = retrieved_record["ID"]
         except RecordNotInIndexException:
             pass
@@ -1181,8 +1181,8 @@ class ReviewDataset:
                     if "CURATED" == corrected_curated_record.get("metadata_source", ""):
                         # retrieve record from index to identify origin repositories
                         try:
-                            original_curated_record = (
-                                self.LOCAL_INDEX.retrieve_record_from_index(prior_cr)
+                            original_curated_record = self.LOCAL_INDEX.retrieve(
+                                prior_cr
                             )
                             # print(original_curated_record["source_url"])
                             if not Path(original_curated_record["source_url"]).is_dir():

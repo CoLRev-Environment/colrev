@@ -220,14 +220,14 @@ def local_index(param):
         "ENTRYTYPE": "article",
         "doi": "10.17705/1JAIS.00570",
     }
-    record = LOCAL_INDEX.retrieve_record_from_index(record)
+    record = LOCAL_INDEX.retrieve(record)
     pp.pprint(record)
 
     # To Test retrieval of global ID
     # record = {
     #     'doi' : '10.17705/1JAIS.00598',
     # }
-    # record = LOCAL_INDEX.retrieve_record_from_index(record)
+    # record = LOCAL_INDEX.retrieve(record)
     # pp.pprint(record)
 
     # record = {
@@ -235,7 +235,7 @@ def local_index(param):
     #     "pdf_hash": "fffffffffcffffffe027ffffc0020",
     # }
 
-    # res = LOCAL_INDEX.retrieve_record_from_index(record)
+    # res = LOCAL_INDEX.retrieve(record)
     # print(res)
 
     # To test the duplicate convenience function:
@@ -297,9 +297,9 @@ def local_index(param):
     # print(LOCAL_INDEX.is_duplicate(record3, record4))
 
     # To test the duplicate representation function:
-    # record3 = LOCAL_INDEX.retrieve_record_from_index(record3)
+    # record3 = LOCAL_INDEX.retrieve(record3)
     # pp.pprint(record3)
-    # record4 = LOCAL_INDEX.retrieve_record_from_index(record4)
+    # record4 = LOCAL_INDEX.retrieve(record4)
     # pp.pprint(record4)
 
     return

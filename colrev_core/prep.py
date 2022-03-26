@@ -454,25 +454,23 @@ class Preparation(Process):
 
         retrieved = False
         try:
-            # TODO: To give precedence to the record_from_local_indexed_metadata version
-            retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+            retrieved_record = LOCAL_INDEX.retrieve(record)
             retrieved = True
         except (RecordNotInIndexException, NotFoundError):
             pass
             try:
-                if "CURATED" != record.get("metadata_source", ""):
-                    retrieved_record = LOCAL_INDEX.retrieve_record_from_toc_index(
-                        record, self.RETRIEVAL_SIMILARITY
-                    )
-                    retrieved = True
-                else:
-                    if "source_url" in record:  # Note: do not change to other sources
+                if "CURATED" == record.get("metadata_source", ""):
+                    if "source_url" in record:  # do not change to other source
                         # TODO : update based on same record
                         retrieved_record = record
                     else:
-                        retrieved_record = LOCAL_INDEX.retrieve_record_from_index(
-                            record
-                        )
+                        # update record metadata
+                        retrieved_record = LOCAL_INDEX.retrieve(record)
+                    retrieved = True
+                else:
+                    retrieved_record = LOCAL_INDEX.retrieve_from_toc(
+                        record, self.RETRIEVAL_SIMILARITY
+                    )
                     retrieved = True
             except (RecordNotInIndexException, NotFoundError):
                 pass

@@ -329,7 +329,7 @@ class PDF_Preparation(Process):
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
         try:
-            retrieved_record = LOCAL_INDEX.retrieve_record_from_index(record)
+            retrieved_record = LOCAL_INDEX.retrieve(record)
 
             current_hash = imagehash.average_hash(
                 convert_from_path(record["file"], first_page=0, last_page=1)[0],

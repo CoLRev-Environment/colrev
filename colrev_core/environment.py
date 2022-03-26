@@ -397,7 +397,7 @@ class LocalIndex(Process):
 
         try:
             # check if the record is already indexed (based on d)
-            retrieved_record = self.retrieve_record_from_index(record)
+            retrieved_record = self.retrieve(record)
 
             # if the string_representations are not identical: add to d_index
             if not self.get_string_representation(
@@ -854,9 +854,7 @@ class LocalIndex(Process):
 
         return
 
-    def retrieve_record_from_toc_index(
-        self, record: dict, similarity_threshold: float
-    ) -> dict:
+    def retrieve_from_toc(self, record: dict, similarity_threshold: float) -> dict:
         toc_key = self.__get_toc_key(record)
 
         # 1. get TOC
@@ -903,7 +901,7 @@ class LocalIndex(Process):
         res = resp["hits"]["hits"][0]["_source"]
         return res
 
-    def retrieve_record_from_index(self, record: dict) -> dict:
+    def retrieve(self, record: dict) -> dict:
         """
         Convenience function to retrieve the indexed record metadata
         based on another record
@@ -973,7 +971,7 @@ class LocalIndex(Process):
     def is_duplicate(self, record1_string_repr: str, record2_string_repr: str) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
-        # Note : the retrieve_record_from_index also checks the d_index, i.e.,
+        # Note : the retrieve(record) also checks the d_index, i.e.,
         # if the IDs and source_urls are identical,
         # record1 and record2 have been mapped to the same record
         # if record1 and record2 in index (and same source_url): return 'no'
