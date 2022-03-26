@@ -866,7 +866,7 @@ class ReviewDataset:
                     ec_case = [ID, status, excl_crit]
                     data["exclusion_criteria_list"].append(ec_case)
 
-                # TODO: the origins of an record could be in multiple status
+                # TODO: the origins of a record could be in multiple states
                 if "status" in prior:
                     prior_status = [
                         stat

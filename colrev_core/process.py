@@ -197,10 +197,6 @@ class Process:
         self, git_repo: git.Repo = None, ignore_pattern: list = None
     ) -> bool:
 
-        # TODO: we may want to be more specific,
-        # i.e.,allow staged/unstaged changes (e.g., in readme.md, ...)
-        # TBD : require changes in .pre-commit-config.yaml to be in a separate commit?
-
         if git_repo is None:
             git_repo = git.Repo()
 
@@ -406,8 +402,7 @@ class ProcessModel:
                 for x in self.transitions
                 if str(process) == x["trigger"]
             ]
-            # TODO: check whether start_states are all the same
-            self.state = start_states.pop()
+            self.state = start_states[0]
         elif state is not None:
             self.state = state
         else:

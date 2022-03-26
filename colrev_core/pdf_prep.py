@@ -754,12 +754,6 @@ class PDF_Preparation(Process):
             {"script": self.validate_completeness, "params": [record, PAD]},
         ]
 
-        # TODO
-        # Remove protection
-        # from process-paper.py
-        # pdf_tools.has_copyright_stamp(filepath):
-        # pdf_tools.remove_copyright_stamp(filepath)
-
         original_filename = record["file"]
 
         # Note: if there are problems status is set to pdf_needs_manual_preparation
@@ -946,7 +940,7 @@ class PDF_Preparation(Process):
 
         saved_args = locals()
 
-        # TODO: temporary fix: remove all lines containint PDFType1Font from log.
+        # temporary fix: remove all lines containing PDFType1Font from log.
         # https://github.com/pdfminer/pdfminer.six/issues/282
 
         self.REVIEW_MANAGER.logger.info("Prepare PDFs")

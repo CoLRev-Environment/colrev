@@ -461,8 +461,25 @@ class Preparation(Process):
             try:
                 if "CURATED" == record.get("metadata_source", ""):
                     if "source_url" in record:  # do not change to other source
-                        # TODO : update based on same record
-                        retrieved_record = record
+
+                        ind_rec = LOCAL_INDEX.retrieve(record.copy())
+                        if ind_rec["source_url"] == record["source_url"]:
+                            # Keep all fields of the original record
+                            retrieved_record = record
+                            # Update the essential metadata
+                            for key in self.fields_to_keep:
+                                if key in ind_rec:
+                                    retrieved_record = ind_rec[key]
+                            # Add complementary fields if they are not yet avilable
+                            for k, v in ind_rec.items():
+                                if k not in retrieved_record:
+                                    retrieved_record[k] = v
+                        else:
+                            self.REVIEW_MANAGER.logger.error(
+                                "Error: curated record has other "
+                                f'source_url in LocalIndex ({record["ID"]})'
+                            )
+
                     else:
                         # update record metadata
                         retrieved_record = LOCAL_INDEX.retrieve(record)
