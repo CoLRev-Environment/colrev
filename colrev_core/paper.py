@@ -26,9 +26,9 @@ class Paper(Process):
         uid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
         gid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
 
-        CSL_FILE = Path(self.REVIEW_MANAGER.config["CSL"])
-        WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])
-        WORD_TEMPLATE_FILENAME = WORD_TEMPLATE_URL.name
+        CSL_FILE = self.REVIEW_MANAGER.config["CSL"]
+        WORD_TEMPLATE_URL = self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"]
+        WORD_TEMPLATE_FILENAME = Path(WORD_TEMPLATE_URL).name
 
         if not Path(WORD_TEMPLATE_FILENAME).is_file():
 
@@ -36,13 +36,8 @@ class Paper(Process):
             r = requests.get(str(url))
             with open(WORD_TEMPLATE_FILENAME, "wb") as output:
                 output.write(r.content)
-
-        if "github.com" not in str(CSL_FILE) and not CSL_FILE.is_file():
-            CSL_FILE = Path(
-                "https://raw.githubusercontent.com/citation-style-"
-                + "language/styles/6152ccea8b7d7a472910d36524d1bf3557"
-                + "a83bfc/mis-quarterly.csl"
-            )
+        else:
+            WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])
 
         script = (
             "paper.md --citeproc --bibliography references.bib "
