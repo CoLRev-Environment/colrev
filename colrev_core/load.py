@@ -524,7 +524,7 @@ class Loader(Process):
             }
         return records
 
-    def __validate_file_formats(self) -> None:
+    def validate_file_formats(self) -> None:
         search_files = self.get_search_files()
         for sfp in search_files:
             if not any(

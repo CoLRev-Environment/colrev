@@ -15,6 +15,7 @@ from elastic_transport import ConnectionError
 from elasticsearch import Elasticsearch
 from elasticsearch import NotFoundError
 from git.exc import InvalidGitRepositoryError
+from lxml.etree import SerialisationError
 from nameparser import HumanName
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -54,7 +55,7 @@ class EnvironmentStatus(Process):
         try:
             size = LOCAL_INDEX.es.cat.count(
                 index="record_index", params={"format": "json"}
-            )
+            )[0]["count"]
             # TODO:
             # LOCAL_INDEX.es.search(
             # index='my_index',
@@ -62,7 +63,7 @@ class EnvironmentStatus(Process):
             # sort='my_timestamp:desc'
             # )
             # last_modified = "TODO"
-        except NotFoundError:
+        except (NotFoundError, IndexError):
             pass
 
         environment_details["index"] = {
@@ -90,10 +91,13 @@ class EnvironmentStatus(Process):
                     repo["progress"] = -1
 
                 repo["remote"] = False
-                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
+                git_repo = REVIEW_DATASET.get_repo()
                 for remote in git_repo.remotes:
                     if remote.url:
                         repo["remote"] = True
+                repo["behind_remote"] = REVIEW_DATASET.behind_remote()
+
                 repos.append(repo)
             except (NoSuchPathError, InvalidGitRepositoryError):
                 broken_links.append(repo)
@@ -342,7 +346,7 @@ class LocalIndex(Process):
                         notify_state_transition_process=False,
                     )
                     record["fulltext"] = TEI_INSTANCE.get_tei_str()
-            except (TEI_Exception, AttributeError):
+            except (TEI_Exception, AttributeError, SerialisationError):
                 pass
 
         self.es.index(index="record_index", id=hash, document=record)

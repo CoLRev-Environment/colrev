@@ -128,6 +128,10 @@ class Initializer:
         from subprocess import STDOUT
 
         git_repo = git.Repo.init()
+
+        # To check if git actors are set
+        self.__get_name_mail_from_global_git_config()
+
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [
             ["pre-commit", "install"],
