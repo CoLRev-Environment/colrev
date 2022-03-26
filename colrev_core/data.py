@@ -631,7 +631,6 @@ class Data(Process):
             self.REVIEW_MANAGER.logger.info("No sample/observations available")
             return
 
-        # TODO: fill missing years
         self.REVIEW_MANAGER.logger.info("Generate output/sample.csv")
         observations.to_csv(output_dir / Path("sample.csv"), index=False)
 
@@ -643,6 +642,17 @@ class Data(Process):
             fill_value=0,
             margins=True,
         )
+        # Fill missing years with 0 columns
+        years = range(
+            min(e for e in tabulated.columns if isinstance(e, int)),
+            max(e for e in tabulated.columns if isinstance(e, int)) + 1,
+        )
+        for year in years:
+            if year not in tabulated.columns:
+                tabulated[year] = 0
+        nc = list(years)
+        nc.extend(["All"])  # type: ignore
+        tabulated = tabulated[nc]
 
         self.REVIEW_MANAGER.logger.info("Generate profile output/journals_years.csv")
         tabulated.to_csv(output_dir / Path("journals_years.csv"))

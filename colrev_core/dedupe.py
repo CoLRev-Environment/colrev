@@ -177,7 +177,6 @@ class Dedupe(Process):
         return data_d
 
     def __preProcess(self, k, column):
-        # From dedupe (TODO : integrate)
         """
         Do a little bit of data cleaning with the help of Unidecode and Regex.
         Things like casing, extra spaces, quotes and new lines can be ignored.
@@ -193,7 +192,9 @@ class Dedupe(Process):
             column = None
             return column
 
-        # TODO : compare whether unidecode or rmdiacritics/remove_accents works better.
+        # Note unidecode may be an alternative to rmdiacritics/remove_accents.
+        # It would be important to operate on a per-character basis
+        # instead of throwing an exception when processing whole strings
         # column = unidecode(column)
         column = re.sub("  +", " ", column)
         column = re.sub("\n", " ", column)
@@ -216,8 +217,6 @@ class Dedupe(Process):
             if x["status"]
             not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
         ]
-
-        # TODO : do not consider md_prescreen_excluded (non-latin alphabets)
 
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         for r in records_queue:
@@ -246,17 +245,8 @@ class Dedupe(Process):
 
         ret_dict = {}
 
-        # TODO : in the readData, we may want to append the status
-        # to use Gazetteer (dedupe_io) if applicable
-
-        # TODO  We need to calculate the training data (and prepare it)
-        #       from colrev-history
-        # -> feed the "old training data", pre-calculated indices into the
-        #    active-learning
-        # -> see dedupe.py/setup_active_learning_dedupe (end of function)
-
-        # TODO TBD do we assume that MAIN_REFERENCES/post-md_processed
-        # does not have duplicates?
+        # Possible extension: in the readData, we may want to append the status
+        # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
         data_d = self.__readData()
         if len(data_d) < 50:
@@ -378,37 +368,32 @@ class Dedupe(Process):
             non_dupe_record.update(status=RecordState.md_processed)
 
         for dupe in [x for x in results if "duplicate" == x["decision"]]:
-            try:
 
-                rec_ID1_list = [x for x in records if x["ID"] == dupe["ID1"]]
-                rec_ID2_list = [x for x in records if x["ID"] == dupe["ID2"]]
-                if len(rec_ID1_list) == 0 or len(rec_ID2_list) == 0:
-                    continue
+            rec_ID1_list = [x for x in records if x["ID"] == dupe["ID1"]]
+            rec_ID2_list = [x for x in records if x["ID"] == dupe["ID2"]]
+            if len(rec_ID1_list) == 0 or len(rec_ID2_list) == 0:
+                continue
 
-                # Heuristic: Merge into curated record
-                if "CURATED" == rec_ID2_list[0].get("metadata_source", ""):
-                    main_record = rec_ID2_list[0]
-                    dupe_record = rec_ID1_list[0]
-                else:
-                    main_record = rec_ID1_list[0]
-                    dupe_record = rec_ID2_list[0]
+            # Heuristic: Merge into curated record
+            if "CURATED" == rec_ID2_list[0].get("metadata_source", ""):
+                main_record = rec_ID2_list[0]
+                dupe_record = rec_ID1_list[0]
+            else:
+                main_record = rec_ID1_list[0]
+                dupe_record = rec_ID2_list[0]
 
-                main_record = self.merge_r1_r2(main_record, dupe_record)
+            main_record = self.merge_r1_r2(main_record, dupe_record)
 
-                if "score" in dupe:
-                    conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
-                else:
-                    conf_details = ""
-                self.REVIEW_MANAGER.report_logger.info(
-                    f"Removed duplicate{conf_details}: "
-                    + f'{main_record["ID"]} <- {dupe_record["ID"]}'
-                )
+            if "score" in dupe:
+                conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
+            else:
+                conf_details = ""
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Removed duplicate{conf_details}: "
+                + f'{main_record["ID"]} <- {dupe_record["ID"]}'
+            )
 
-                records = [x for x in records if x["ID"] != dupe_record["ID"]]
-
-            except StopIteration:
-                # TODO : check whether this is valid.
-                pass
+            records = [x for x in records if x["ID"] != dupe_record["ID"]]
 
         # Set remaining records to md_processed (not duplicate) because all records
         # have been considered by dedupe
@@ -646,8 +631,6 @@ class Dedupe(Process):
                 for ID1, ID2 in IDs_to_merge:
                     print(ID1 + ID2)
 
-            # TODO : there could be more than two IDs in the list!
-            # change the apply_manual_deduplication_decisions() to accept a list of IDs
             if len(IDs_to_merge) > 0:
                 auto_dedupe = []
                 for ID1, ID2 in IDs_to_merge:
@@ -1107,9 +1090,7 @@ class Dedupe(Process):
                             break
                         if val != prev_row[j]:
                             df.at[i, j] = df.at[i, j] + "; font-weight: bold"
-                            # TODO : also mark the preceding cell in bold
-                            # df.at[(i-1), j] = df.at[(i-1    ), j] +
-                            # "; font-weight: bold"
+
                 prev_row = row
 
             return df

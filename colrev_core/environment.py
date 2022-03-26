@@ -57,12 +57,11 @@ class EnvironmentStatus(Process):
                 index="record_index", params={"format": "json"}
             )[0]["count"]
             # TODO:
-            # LOCAL_INDEX.es.search(
+            # last_modified = LOCAL_INDEX.es.search(
             # index='my_index',
             # size=1,
             # sort='my_timestamp:desc'
             # )
-            # last_modified = "TODO"
         except (NotFoundError, IndexError):
             pass
 
@@ -851,7 +850,7 @@ class LocalIndex(Process):
         #     annotator_module = imp.load_source("annotator_module", str(annotator))
         #     annotate = getattr(annotator_module, "annotate")
         #     annotate(self)
-        # TODO : es.update can use functions applied to each record (for the update)
+        # Note : es.update can use functions applied to each record (for the update)
 
         return
 

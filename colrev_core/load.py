@@ -234,7 +234,7 @@ class Loader(Process):
         if original.suffix == ".pdf":
             new_record["source_name"] = "PDF"
         data = ""
-        # TODO : tbd: how we deal with misleading file extensions.
+        # TODO : deal with misleading file extensions.
         try:
             data = original.read_text()
         except UnicodeDecodeError:
@@ -333,12 +333,23 @@ class Loader(Process):
         return db.entries
 
     def __preprocess_records(self, data: list) -> list:
+        ID = 1
         for x in data:
-            # TODO: more sophisticated setting of ENTRYTYPE, ID is needed.
-            # could also use simple numbers as IDs...
-            x["ENTRYTYPE"] = "article"
-            if "citation_key" in x.keys():
-                x["ID"] = x.pop("citation_key")
+            if "ENTRYTYPE" not in x:
+                if "" != x.get("journal", ""):
+                    x["ENTRYTYPE"] = "article"
+                if "" != x.get("booktitle", ""):
+                    x["ENTRYTYPE"] = "inproceedings"
+                else:
+                    x["ENTRYTYPE"] = "misc"
+
+            if "ID" not in x:
+                if "citation_key" in x:
+                    x["ID"] = x["citation_key"]
+                else:
+                    x["ID"] = ID
+                    ID += 1
+
             for k, v in x.items():
                 x[k] = str(v)
 
