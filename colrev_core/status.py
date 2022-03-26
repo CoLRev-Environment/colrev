@@ -329,13 +329,13 @@ class Status(Process):
                 if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
                     instruction = {
                         "msg": "Updates available for curated repo.",
-                        "cmd": f"colrev environment --update {registered_path}",
+                        "cmd": f"colrev env --update {registered_path}",
                     }
                     environment_instructions.append(instruction)
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
-                "cmd": "colrev environment --apply_corrections",
+                "cmd": "colrev env --apply_corrections",
             }
             environment_instructions.append(instruction)
 

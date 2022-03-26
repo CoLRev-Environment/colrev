@@ -1349,7 +1349,7 @@ class ReviewManager:
         if REVIEW_DATASET.behind_remote():
             self.logger.error(
                 "Repo behind remote. Pull first to avoid conflicts.\n"
-                f"colrev environment --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
+                f"colrev env --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
             )
             return
 

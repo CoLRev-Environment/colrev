@@ -1005,14 +1005,10 @@ class Resources:
             shutil.move(str(repo_dir), str(annotator_dir))
         elif (repo_dir / Path("readme.md")).is_file():
             text = Path(repo_dir / "readme.md").read_text()
-            for line in [
-                x for x in text.splitlines() if "colrev environment --install" in x
-            ]:
+            for line in [x for x in text.splitlines() if "colrev env --install" in x]:
                 if line == curated_resource:
                     continue
-                self.install_curated_resource(
-                    line.replace("colrev environment --install ", "")
-                )
+                self.install_curated_resource(line.replace("colrev env --install ", ""))
         else:
             print(
                 f"Error: repo does not contain a references.bib/linked repos {repo_dir}"
