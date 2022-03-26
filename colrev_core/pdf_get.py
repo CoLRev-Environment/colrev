@@ -23,8 +23,6 @@ class PDF_Retrieval(Process):
     def __init__(
         self,
         REVIEW_MANAGER,
-        copy_to_repo: bool = False,
-        rename: bool = False,
         notify_state_transition_process: bool = True,
     ):
 
@@ -34,9 +32,6 @@ class PDF_Retrieval(Process):
             fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
-
-        self.copy_to_repo = copy_to_repo
-        self.rename = rename
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
