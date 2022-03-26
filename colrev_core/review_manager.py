@@ -1078,13 +1078,17 @@ class ReviewManager:
             item_details.sort(key=lambda x: x[0])
             ordered_items = "".join([x[1] for x in item_details])
 
-        formatted_report = (
-            "".join(firsts)
-            + "\nDetailed report\n"
-            + ordered_items.lstrip("\n")
-            + "\n\n"
-            + "".join(items)
-        )
+        if len(ordered_items) > 0 or len(items) > 0:
+            formatted_report = (
+                "".join(firsts)
+                + "\nDetailed report\n"
+                + ordered_items.lstrip("\n")
+                + "\n\n"
+                + "".join(items)
+            )
+        else:
+            formatted_report = "".join(firsts)
+
         with open("report.log", "w") as f:
             f.write(formatted_report)
 

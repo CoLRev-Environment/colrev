@@ -2071,9 +2071,10 @@ class Preparation(Process):
                 if record["status"] == RecordState.md_needs_manual_preparation
             ]
         )
-        self.REVIEW_MANAGER.report_logger.info(
-            f"Statistics: {nr_recs} records not prepared"
-        )
+        if nr_recs > 0:
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Statistics: {nr_recs} records not prepared"
+            )
 
         nr_recs = len(
             [
@@ -2082,15 +2083,11 @@ class Preparation(Process):
                 if record["status"] == RecordState.rev_prescreen_excluded
             ]
         )
-        self.REVIEW_MANAGER.report_logger.info(
-            f"Statistics: {nr_recs} records (prescreen) excluded "
-            "(non-latin alphabet)"
-        )
-
-        self.REVIEW_MANAGER.report_logger.info(
-            "To reset the metdatata of records, use "
-            "colrev prepare --reset-ID [ID1,ID2]"
-        )
+        if nr_recs > 0:
+            self.REVIEW_MANAGER.report_logger.info(
+                f"Statistics: {nr_recs} records (prescreen) excluded "
+                "(non-latin alphabet)"
+            )
 
         return
 

@@ -86,8 +86,10 @@ class LocalIndex(Process):
                 self.es.get(index="record_index", id="test")
                 break
             except ConnectionError:
+                if i == 0:
+                    print("Start LocalIndex")
                 time.sleep(3)
-                print("Waiting until ES instance is available")
+                print("Waiting until LocalIndex is available")
                 pass
             except NotFoundError:
                 pass
