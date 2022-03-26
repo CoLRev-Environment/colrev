@@ -28,6 +28,84 @@ from colrev_core.tei import TEI
 from colrev_core.tei import TEI_Exception
 
 
+class EnvironmentStatus(Process):
+    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
+
+        super().__init__(
+            REVIEW_MANAGER,
+            ProcessType.explore,
+            notify_state_transition_process=False,
+        )
+
+    def get_environment_details(self) -> dict:
+        from colrev_core.environment import LocalIndex
+        from colrev_core.review_manager import ReviewManager
+
+        from git.exc import NoSuchPathError
+        from git.exc import InvalidGitRepositoryError
+        from elasticsearch import NotFoundError
+
+        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+
+        environment_details = {}
+
+        size = 0
+        last_modified = "NOT_INITIATED"
+        try:
+            size = LOCAL_INDEX.es.cat.count(
+                index="record_index", params={"format": "json"}
+            )
+            # TODO:
+            # LOCAL_INDEX.es.search(
+            # index='my_index',
+            # size=1,
+            # sort='my_timestamp:desc'
+            # )
+            # last_modified = "TODO"
+        except NotFoundError:
+            pass
+
+        environment_details["index"] = {
+            "size": size,
+            "last_modified": last_modified,
+            "path": str(LocalIndex.local_index_path),
+        }
+
+        local_repos = self.REVIEW_MANAGER.load_local_registry()
+
+        repos = []
+        broken_links = []
+        for repo in local_repos:
+            try:
+                cp_REVIEW_MANAGER = ReviewManager(path_str=repo["source_url"])
+                CHECK_PROCESS = CheckProcess(cp_REVIEW_MANAGER)
+                repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
+                repo["size"] = repo_stat["status"]["overall"]["md_processed"]
+                if repo_stat["atomic_steps"] != 0:
+                    repo["progress"] = round(
+                        repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
+                        2,
+                    )
+                else:
+                    repo["progress"] = -1
+
+                repo["remote"] = False
+                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+                for remote in git_repo.remotes:
+                    if remote.url:
+                        repo["remote"] = True
+                repos.append(repo)
+            except (NoSuchPathError, InvalidGitRepositoryError):
+                broken_links.append(repo)
+                pass
+
+        environment_details["local_repos"] = {
+            "repos": repos,
+            "broken_links": broken_links,
+        }
+        return environment_details
+
+
 class LocalIndex(Process):
 
     global_keys = ["doi", "dblp_key", "pdf_hash", "url"]

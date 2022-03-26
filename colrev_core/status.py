@@ -6,7 +6,6 @@ from pathlib import Path
 
 import git
 
-from colrev_core.process import CheckProcess
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -990,65 +989,6 @@ class Status(Process):
             print("_______________________________________________________________")
 
         return
-
-    def get_environment_details(self) -> dict:
-        from colrev_core.environment import LocalIndex
-        from colrev_core.review_manager import ReviewManager
-
-        # import os
-        # import time
-        from git.exc import NoSuchPathError
-        from git.exc import InvalidGitRepositoryError
-
-        environment_details = {}
-        # record_index_files = list(LocalIndex.rind_path.glob("**/*"))
-        # list_of_files = sorted(record_index_files, key=os.path.getmtime)
-        # file_last_modified = list_of_files[0]
-        # last_modified = time.strftime(
-        #     "%Y-%m-%d %H:%M", time.gmtime(os.path.getmtime(file_last_modified))
-        # )
-        record_index_files = ["test", "test"]
-        last_modified = "TODO"
-
-        environment_details["index"] = {
-            "size": len(record_index_files),
-            "last_modified": last_modified,
-            "path": str(LocalIndex.local_index_path),
-        }
-
-        local_repos = self.REVIEW_MANAGER.load_local_registry()
-
-        repos = []
-        broken_links = []
-        for repo in local_repos:
-            try:
-                cp_REVIEW_MANAGER = ReviewManager(path_str=repo["source_url"])
-                CHECK_PROCESS = CheckProcess(cp_REVIEW_MANAGER)
-                repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
-                repo["size"] = repo_stat["status"]["overall"]["md_imported"]
-                if repo_stat["atomic_steps"] != 0:
-                    repo["progress"] = round(
-                        repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
-                        2,
-                    )
-                else:
-                    repo["progress"] = -1
-
-                repo["remote"] = False
-                git_repo = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-                for remote in git_repo.remotes:
-                    if remote.url:
-                        repo["remote"] = True
-                repos.append(repo)
-            except (NoSuchPathError, InvalidGitRepositoryError):
-                broken_links.append(repo)
-                pass
-
-        environment_details["local_repos"] = {
-            "repos": repos,
-            "broken_links": broken_links,
-        }
-        return environment_details
 
 
 if __name__ == "__main__":
