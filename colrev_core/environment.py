@@ -11,9 +11,9 @@ from pathlib import Path
 import docker
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from elastic_transport import ConnectionError
-from elasticsearch import Elasticsearch
-from elasticsearch import NotFoundError
+from opensearchpy import ConnectionError
+from opensearchpy import OpenSearch
+from opensearchpy import NotFoundError
 from git.exc import InvalidGitRepositoryError
 from lxml.etree import SerialisationError
 from nameparser import HumanName
@@ -44,7 +44,7 @@ class EnvironmentStatus(Process):
 
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
-        from elasticsearch import NotFoundError
+        from opensearchpy import NotFoundError
 
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
@@ -53,11 +53,11 @@ class EnvironmentStatus(Process):
         size = 0
         last_modified = "NOT_INITIATED"
         try:
-            size = LOCAL_INDEX.es.cat.count(
+            size = LOCAL_INDEX.os.cat.count(
                 index="record_index", params={"format": "json"}
             )[0]["count"]
             # TODO:
-            # last_modified = LOCAL_INDEX.es.search(
+            # last_modified = LOCAL_INDEX.os.search(
             # index='my_index',
             # size=1,
             # sort='my_timestamp:desc'
@@ -114,11 +114,11 @@ class LocalIndex(Process):
     global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
     max_len_sha256 = 2 ** 256
 
-    local_index_path = Path.home().joinpath("colrev")
+    local_index_path = Path.home().joinpath(".colrev")
     toc_overview = local_index_path / Path(".toc_index/readme.md")
     teiind_path = local_index_path / Path(".tei_index/")
     annotators_path = local_index_path / Path("annotators")
-    elastic_index = local_index_path / Path("index")
+    opensearch_index = local_index_path / Path("index")
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
@@ -129,42 +129,62 @@ class LocalIndex(Process):
         )
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
         self.local_repos = self.__load_local_repos()
-        es_image = self.REVIEW_MANAGER.docker_images[
-            "docker.elastic.co/elasticsearch/elasticsearch"
+        os_image = self.REVIEW_MANAGER.docker_images[
+            "opensearchproject/opensearch"
+        ]
+        os_dashboard_image = self.REVIEW_MANAGER.docker_images[
+            "opensearchproject/opensearch-dashboards"
         ]
 
         client = docker.from_env()
         try:
+            if not client.networks.list(names=["opensearch-net"]):
+                client.networks.create("opensearch-net")
             client.containers.run(
-                es_image,
-                name="elasticsearch",
-                ports={"9200/tcp": ("127.0.0.1", 9200)},
+                os_image,
+                name="opensearch-node",
+                ports={"9200/tcp": 9200, "9600/tcp": 9600},
                 auto_remove=True,
                 detach=True,
                 environment={
+                    "cluster.name": "opensearch-cluster",
+                    "node.name": "opensearch-node",
                     "bootstrap.memory_lock": "true",
-                    "ES_JAVA_OPTS": "-Xms512m -Xmx512m",
+                    "OPENSEARCH_JAVA_OPTS": "-Xms512m -Xmx512m",
+                    "DISABLE_INSTALL_DEMO_CONFIG": "true",
+                    "DISABLE_SECURITY_PLUGIN": "true",
                     "discovery.type": "single-node",
-                    "ingest.geoip.downloader.enabled": "false",
-                    "xpack.security.enabled": "false",
-                    "xpack.security.http.ssl.enabled": "false",
-                    "xpack.security.transport.ssl.enabled": "false",
                 },
                 volumes={
-                    str(self.elastic_index): {
-                        "bind": "/usr/share/elasticsearch/data",
+                    str(self.opensearch_index): {
+                        "bind": "/usr/share/opensearch/data",
                         "mode": "rw",
                     }
                 },
+                ulimits=[docker.types.Ulimit(name="memlock", soft=-1, hard=-1), docker.types.Ulimit(name="nofile", soft=65536, hard=65536)],
+                network="opensearch-net",
+            )
+            client.containers.run(
+                os_dashboard_image,
+                name="opensearch-dashboards",
+                ports={"5601/tcp": 5601},
+                auto_remove=True,
+                detach=True,
+                environment={
+                    "OPENSEARCH_HOSTS": "[\"http://opensearch-node:9200\"]",
+                    "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
+                },
+                network="opensearch-net",
             )
         except docker.errors.APIError:
             pass
 
-        self.es = Elasticsearch("http://localhost:9200")
+        self.os = OpenSearch("http://localhost:9200")
         i = 0
         while i < 20:
+            i += 1
             try:
-                self.es.get(index="record_index", id="test")
+                self.os.get(index="record_index", id="test")
                 break
             except ConnectionError:
                 if i == 0:
@@ -176,8 +196,8 @@ class LocalIndex(Process):
                 pass
                 break
         # If not available after 120s: raise error
-        self.es.info()
-        # self.REVIEW_MANAGER.pp.pprint(self.es.info())
+        self.os.info()
+        # self.REVIEW_MANAGER.pp.pprint(self.os.info())
 
     def __load_local_repos(self) -> typing.List:
         from git.exc import NoSuchPathError
@@ -348,20 +368,20 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError, SerialisationError):
                 pass
 
-        self.es.index(index="record_index", id=hash, document=record)
+        self.os.index(index="record_index", id=hash, body=record)
 
         return
 
     def __retrieve_from_toc_index_based_on_hash(self, hash: str) -> list:
 
-        toc_item_response = self.es.get(index="toc_index", id=hash)
+        toc_item_response = self.os.get(index="toc_index", id=hash)
         toc_item = toc_item_response["_source"]
 
         return toc_item
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
-        saved_record_response = self.es.get(index="record_index", id=hash)
+        saved_record_response = self.os.get(index="record_index", id=hash)
         saved_record = saved_record_response["_source"]
 
         # amend saved record
@@ -385,7 +405,7 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError):
                 pass
 
-        self.es.update(index="record_index", id=hash, doc=saved_record)
+        self.os.update(index="record_index", id=hash, doc=saved_record)
         return
 
     def __record_index(self, record: dict) -> None:
@@ -410,11 +430,11 @@ class LocalIndex(Process):
             pass
 
         while True:
-            if not self.es.exists(index="record_index", id=hash):
+            if not self.os.exists(index="record_index", id=hash):
                 self.__store_record(hash, record)
                 break
             else:
-                saved_record_response = self.es.get(index="record_index", id=hash)
+                saved_record_response = self.os.get(index="record_index", id=hash)
                 saved_record = saved_record_response["_source"]
                 if string_representation == self.get_string_representation(
                     saved_record
@@ -464,15 +484,15 @@ class LocalIndex(Process):
             hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
             record_string_repr = self.get_string_representation(record)
             while True:
-                if not self.es.exists(index="toc_index", id=hash):
+                if not self.os.exists(index="toc_index", id=hash):
                     toc_item = {
                         "toc_key": toc_key,
                         "string_representations": [record_string_repr],
                     }
-                    self.es.index(index="toc_index", id=hash, document=toc_item)
+                    self.os.index(index="toc_index", id=hash, body=toc_item)
                     break
                 else:
-                    toc_item_response = self.es.get(index="toc_index", id=hash)
+                    toc_item_response = self.os.get(index="toc_index", id=hash)
                     toc_item = toc_item_response["_source"]
                     if toc_item["toc_key"] == toc_key:
                         # ok - no collision, update the record
@@ -482,7 +502,7 @@ class LocalIndex(Process):
                             toc_item["string_representations"].append(  # type: ignore
                                 record_string_repr
                             )
-                            self.es.update(index="toc_index", id=hash, doc=toc_item)
+                            self.os.update(index="toc_index", id=hash, doc=toc_item)
                         break
                     else:
                         # to handle the collision:
@@ -544,11 +564,11 @@ class LocalIndex(Process):
 
                 hash = hashlib.sha256(orig_record_string.encode("utf-8")).hexdigest()
                 while True:
-                    if not self.es.exists(index="record_index", id=hash):
+                    if not self.os.exists(index="record_index", id=hash):
                         # Note : this should happen rarely/never
                         break
                     else:
-                        response = self.es.get(index="record_index", id=hash)
+                        response = self.os.get(index="record_index", id=hash)
                         saved_record = response["_source"]
                         saved_original_string_repr = saved_record[
                             "hash_string_representation"
@@ -567,7 +587,7 @@ class LocalIndex(Process):
                                     saved_record["duplicate_reprs"] = [
                                         non_identical_representation
                                     ]
-                                self.es.update(
+                                self.os.update(
                                     index="record_index", id=hash, doc=saved_record
                                 )
                             break
@@ -649,10 +669,12 @@ class LocalIndex(Process):
 
         try:
             # match_phrase := exact match
-            resp = self.es.search(
+            resp = self.os.search(
                 index="record_index",
-                query={
-                    "match_phrase": {"duplicate_reprs": string_representation_record}
+                body={
+                    "query": {
+                        "match_phrase": {"duplicate_reprs": string_representation_record}
+                    }
                 },
             )
             retrieved_record = resp["hits"]["hits"][0]["_source"]
@@ -682,7 +704,7 @@ class LocalIndex(Process):
         hash = hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
-            res = self.es.get(index="record_index", id=hash)
+            res = self.os.get(index="record_index", id=hash)
             retrieved_record = res["_source"]
             if (
                 self.get_string_representation(retrieved_record)
@@ -777,13 +799,13 @@ class LocalIndex(Process):
         # if self.teiind_path.is_dir():
         #     shutil.rmtree(self.teiind_path)
 
-        self.elastic_index.mkdir(exist_ok=True, parents=True)
-        if "record_index" in self.es.indices.get_alias().keys():
-            self.es.indices.delete(index="record_index", ignore=[400, 404])
-        if "toc_index" in self.es.indices.get_alias().keys():
-            self.es.indices.delete(index="toc_index", ignore=[400, 404])
-        self.es.indices.create(index="record_index")
-        self.es.indices.create(index="toc_index")
+        self.opensearch_index.mkdir(exist_ok=True, parents=True)
+        if "record_index" in self.os.indices.get_alias().keys():
+            self.os.indices.delete(index="record_index", ignore=[400, 404])
+        if "toc_index" in self.os.indices.get_alias().keys():
+            self.os.indices.delete(index="toc_index", ignore=[400, 404])
+        self.os.indices.create(index="record_index")
+        self.os.indices.create(index="toc_index")
 
         for source_url in [x["source_url"] for x in self.local_registry]:
 
@@ -861,7 +883,7 @@ class LocalIndex(Process):
         hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
         toc_items = []
         while True:
-            if not self.es.exists(index="toc_index", id=hash):
+            if not self.os.exists(index="toc_index", id=hash):
                 break
             else:
                 res = self.__retrieve_from_toc_index_based_on_hash(hash)
@@ -889,7 +911,7 @@ class LocalIndex(Process):
                 hash = hashlib.sha256(
                     saved_toc_record_str_repr.encode("utf-8")
                 ).hexdigest()
-                res = self.es.get(index="record_index", id=str(hash))
+                res = self.os.get(index="record_index", id=str(hash))
                 record = res["_source"]  # type: ignore
                 return self.prep_record_for_return(record)
 
@@ -897,7 +919,7 @@ class LocalIndex(Process):
         return record
 
     def get_from_index_exact_match(self, index_name, key, value) -> dict:
-        resp = self.es.search(index=index_name, query={"match_phrase": {key: value}})
+        resp = self.os.search(index=index_name, body={"query": {"match_phrase": {key: value}}})
         res = resp["hits"]["hits"][0]["_source"]
         return res
 

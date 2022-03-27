@@ -546,14 +546,14 @@ class Search(Process):
                 "SELECT hash_string_representation FROM record_index "
                 f"WHERE {params['selection_clause']}"
             )
-            resp = LOCAL_INDEX.es.sql.query(body={"query": query})
+            resp = LOCAL_INDEX.os.sql.query(body={"query": query})
             IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
 
             records_to_import = []
             for ID_to_retrieve in IDs_to_retrieve:
 
                 hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-                res = LOCAL_INDEX.es.get(index="record_index", id=hash)
+                res = LOCAL_INDEX.os.get(index="record_index", id=hash)
                 record_to_import = res["_source"]
                 record_to_import = {k: str(v) for k, v in record_to_import.items()}
                 record_to_import = {
