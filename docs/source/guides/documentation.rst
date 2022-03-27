@@ -1,5 +1,5 @@
 
-User Documentation
+Documentation
 ==================================
 
 Installation:

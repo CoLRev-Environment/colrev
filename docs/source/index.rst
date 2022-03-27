@@ -9,14 +9,14 @@ The core proposition is that the transparent collaboration model of git, combine
 Getting started
 -----------------
 
-After `installing CoLRev <guides/user_documentation.html#installation>`_, use the command-line interface
+After `installing CoLRev <guides/documentation.html#installation>`_, use the command-line interface
 
 .. code-block::
 
    colrev status
 
-The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/user_documentation.html>`_).
-After each step, make sure to `check the changes <guides/user_documentation.html#analyze-changes>`_, effectively following a three-step cycle:
+The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/documentation.html>`_).
+After each step, make sure to `check the changes <guides/documentation.html#analyze-changes>`_, effectively following a three-step cycle:
 
 .. figure:: ../figures/workflow-simple.svg
    :width: 450
@@ -67,7 +67,7 @@ A key feature of CoLRev is that reuse of community-curated data is built into ea
 
 For CoLRev curated data, the efforts required for the preparation steps is reduced significantly.
 The more records are curated, the more you can focus on the search, prescreen/screen and synthesis.
-Further details are provided in the `documentation <guides/user_documentation.html>`_.
+Further details are provided in the `documentation <guides/documentation.html>`_.
 
 Credits
 -----------------
@@ -208,7 +208,7 @@ Please refer to the present GitHub project:
    :maxdepth: 1
    :caption: Guidelines
 
-   guides/user_documentation
+   guides/documentation
    guides/extensions
    guides/best_practices
 
