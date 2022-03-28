@@ -20,8 +20,8 @@ from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
-from opensearchpy import NotFoundError
 from nameparser import HumanName
+from opensearchpy import NotFoundError
 from p_tqdm import p_map
 from thefuzz import fuzz
 

@@ -11,12 +11,12 @@ from pathlib import Path
 import docker
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from opensearchpy import ConnectionError
-from opensearchpy import OpenSearch
-from opensearchpy import NotFoundError
 from git.exc import InvalidGitRepositoryError
 from lxml.etree import SerialisationError
 from nameparser import HumanName
+from opensearchpy import ConnectionError
+from opensearchpy import NotFoundError
+from opensearchpy import OpenSearch
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -114,7 +114,7 @@ class LocalIndex(Process):
     global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
     max_len_sha256 = 2 ** 256
 
-    local_index_path = Path.home().joinpath(".colrev")
+    local_index_path = Path.home().joinpath("colrev")
     toc_overview = local_index_path / Path(".toc_index/readme.md")
     teiind_path = local_index_path / Path(".tei_index/")
     annotators_path = local_index_path / Path("annotators")
@@ -129,12 +129,12 @@ class LocalIndex(Process):
         )
         self.local_registry = self.REVIEW_MANAGER.load_local_registry()
         self.local_repos = self.__load_local_repos()
-        os_image = self.REVIEW_MANAGER.docker_images[
-            "opensearchproject/opensearch"
-        ]
+        os_image = self.REVIEW_MANAGER.docker_images["opensearchproject/opensearch"]
         os_dashboard_image = self.REVIEW_MANAGER.docker_images[
             "opensearchproject/opensearch-dashboards"
         ]
+
+        self.opensearch_index.mkdir(exist_ok=True, parents=True)
 
         client = docker.from_env()
         try:
@@ -161,7 +161,10 @@ class LocalIndex(Process):
                         "mode": "rw",
                     }
                 },
-                ulimits=[docker.types.Ulimit(name="memlock", soft=-1, hard=-1), docker.types.Ulimit(name="nofile", soft=65536, hard=65536)],
+                ulimits=[
+                    docker.types.Ulimit(name="memlock", soft=-1, hard=-1),
+                    docker.types.Ulimit(name="nofile", soft=65536, hard=65536),
+                ],
                 network="opensearch-net",
             )
             client.containers.run(
@@ -171,12 +174,13 @@ class LocalIndex(Process):
                 auto_remove=True,
                 detach=True,
                 environment={
-                    "OPENSEARCH_HOSTS": "[\"http://opensearch-node:9200\"]",
+                    "OPENSEARCH_HOSTS": '["http://opensearch-node:9200"]',
                     "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
                 },
                 network="opensearch-net",
             )
-        except docker.errors.APIError:
+        except docker.errors.APIError as e:
+            print(e)
             pass
 
         self.os = OpenSearch("http://localhost:9200")
@@ -187,7 +191,7 @@ class LocalIndex(Process):
                 self.os.get(index="record_index", id="test")
                 break
             except ConnectionError:
-                if i == 0:
+                if i == 1:
                     print("Start LocalIndex")
                 time.sleep(3)
                 print("Waiting until LocalIndex is available")
@@ -405,7 +409,7 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError):
                 pass
 
-        self.os.update(index="record_index", id=hash, doc=saved_record)
+        self.os.update(index="record_index", id=hash, body={"doc": saved_record})
         return
 
     def __record_index(self, record: dict) -> None:
@@ -502,7 +506,9 @@ class LocalIndex(Process):
                             toc_item["string_representations"].append(  # type: ignore
                                 record_string_repr
                             )
-                            self.os.update(index="toc_index", id=hash, doc=toc_item)
+                            self.os.update(
+                                index="toc_index", id=hash, body={"doc": toc_item}
+                            )
                         break
                     else:
                         # to handle the collision:
@@ -588,7 +594,9 @@ class LocalIndex(Process):
                                         non_identical_representation
                                     ]
                                 self.os.update(
-                                    index="record_index", id=hash, doc=saved_record
+                                    index="record_index",
+                                    id=hash,
+                                    body={"doc": saved_record},
                                 )
                             break
                         else:
@@ -673,7 +681,9 @@ class LocalIndex(Process):
                 index="record_index",
                 body={
                     "query": {
-                        "match_phrase": {"duplicate_reprs": string_representation_record}
+                        "match_phrase": {
+                            "duplicate_reprs": string_representation_record
+                        }
                     }
                 },
             )
@@ -919,7 +929,9 @@ class LocalIndex(Process):
         return record
 
     def get_from_index_exact_match(self, index_name, key, value) -> dict:
-        resp = self.os.search(index=index_name, body={"query": {"match_phrase": {key: value}}})
+        resp = self.os.search(
+            index=index_name, body={"query": {"match_phrase": {key: value}}}
+        )
         res = resp["hits"]["hits"][0]["_source"]
         return res
 
