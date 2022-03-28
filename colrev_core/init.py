@@ -35,7 +35,9 @@ class Initializer:
             self.__create_local_index()
 
     def __register_repo(self) -> None:
-        self.REVIEW_MANAGER.register_repo()
+        from colrev_core.environment import EnvironmentManager
+
+        EnvironmentManager.register_repo(Path.cwd())
         return
 
     def __create_commit(self, saved_args: dict) -> None:
@@ -57,6 +59,7 @@ class Initializer:
 
     def __setup_files(self) -> None:
         import configparser
+        from colrev_core.environment import EnvironmentManager
 
         Path("search").mkdir()
 
@@ -84,7 +87,8 @@ class Initializer:
             Path("readme.md"), "{{project_title}}", self.project_name.rstrip(" ")
         )
 
-        global_git_vars = self.__get_name_mail_from_global_git_config()
+        global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
             return
@@ -127,10 +131,12 @@ class Initializer:
         from subprocess import DEVNULL
         from subprocess import STDOUT
 
+        from colrev_core.environment import EnvironmentManager
+
         git_repo = git.Repo.init()
 
         # To check if git actors are set
-        self.__get_name_mail_from_global_git_config()
+        EnvironmentManager.get_name_mail_from_global_git_config()
 
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [
@@ -187,17 +193,6 @@ class Initializer:
             with open(target, "w") as file:
                 file.write(filedata.decode("utf-8"))
         return
-
-    def __get_name_mail_from_global_git_config(self) -> list:
-        ggit_conf_path = Path.home() / Path(".gitconfig")
-        global_conf_details = []
-        if ggit_conf_path.is_file():
-            glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
-            global_conf_details = [
-                glob_git_conf.get("user", "name"),
-                glob_git_conf.get("user", "email"),
-            ]
-        return global_conf_details
 
     def __create_local_index(self) -> None:
         from colrev_core.environment import LocalIndex

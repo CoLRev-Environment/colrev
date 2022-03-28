@@ -405,7 +405,7 @@ class Search(Process):
             print("No records imported. Cannot run backward search yet.")
             return
 
-        grobid_client.start_grobid(self.REVIEW_MANAGER)
+        grobid_client.start_grobid()
         print(params)
         print(feed_file)
         print(
@@ -538,7 +538,7 @@ class Search(Process):
 
         from colrev_core.environment import LocalIndex
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
             # Note: we retrieve colrev_IDs and full records afterwards
@@ -812,7 +812,7 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            grobid_client.start_grobid(self.REVIEW_MANAGER)
+            grobid_client.start_grobid()
         else:
             self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
@@ -877,6 +877,8 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(record) -> dict:
+            from colrev_core.environment import EnvironmentManager
+
             if RecordState.md_prepared == record.get("status", "NA"):
                 return record
             grobid_client.check_grobid_availability()
@@ -912,7 +914,6 @@ class Search(Process):
             # return {}
 
             TEI_INSTANCE = TEI(
-                self.REVIEW_MANAGER,
                 pdf_path=pdf_path,
                 notify_state_transition_process=False,
             )
@@ -952,7 +953,7 @@ class Search(Process):
                 del record["keywords"]
 
             # to allow users to update/reindex with newer version:
-            record["grobid-version"] = self.REVIEW_MANAGER.docker_images[
+            record["grobid-version"] = EnvironmentManager.docker_images[
                 "lfoppiano/grobid"
             ]
             return record

@@ -6,12 +6,10 @@ import requests
 from lxml import etree
 
 from colrev_core import grobid_client
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
 
-class TEI(Process):
+class TEI:
     ns = {
         "tei": "{http://www.tei-c.org/ns/1.0}",
         "w3": "{http://www.w3.org/XML/1998/namespace}",
@@ -23,7 +21,6 @@ class TEI(Process):
 
     def __init__(
         self,
-        REVIEW_MANAGER,
         pdf_path: Path = None,
         tei_path: Path = None,
         notify_state_transition_process: bool = True,
@@ -34,11 +31,6 @@ class TEI(Process):
         - pfd_path and tei_path: create TEI and save in tei_path
         - tei_path: read TEI from file
         """
-        super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.data,
-            notify_state_transition_process=notify_state_transition_process,
-        )
 
         assert pdf_path is not None or tei_path is not None
         self.pdf_path = pdf_path
@@ -55,7 +47,7 @@ class TEI(Process):
 
         if pdf_path is not None and not load_from_tei:
 
-            grobid_client.start_grobid(self.REVIEW_MANAGER)
+            grobid_client.start_grobid()
             # Note: we have more control and transparency over the consolidation
             # if we do it in the colrev_core process
             options = {}

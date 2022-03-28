@@ -348,7 +348,7 @@ class Data(Process):
         # from p_tqdm import p_map
         from colrev_core.tei import TEI_Exception
 
-        grobid_client.start_grobid(self.REVIEW_MANAGER)
+        grobid_client.start_grobid()
 
         def create_tei(record: dict) -> None:
             if "file" not in record:
@@ -370,7 +370,7 @@ class Data(Process):
                     return
 
                 try:
-                    TEI(self.REVIEW_MANAGER, pdf_path=pdf_path, tei_path=tei_path)
+                    TEI(pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)

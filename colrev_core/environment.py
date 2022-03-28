@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import binascii
 import hashlib
+import logging
 import os
 import re
 import time
@@ -21,22 +22,162 @@ from thefuzz import fuzz
 from tqdm import tqdm
 
 from colrev_core.process import CheckProcess
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
-from colrev_core.review_manager import ReviewManager
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_Exception
 
 
-class EnvironmentStatus(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
+class EnvironmentManager:
 
-        super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.explore,
-            notify_state_transition_process=False,
-        )
+    colrev_path = Path.home().joinpath("colrev")
+    registry = "registry.yaml"
+
+    paths = {"REGISTRY": colrev_path.joinpath(registry)}
+
+    os_db = "opensearchproject/opensearch-dashboards:1.3.0"
+
+    docker_images = {
+        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
+        "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
+        "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
+        "zotero/translation-server": "zotero/translation-server:2.0.4",
+        "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
+        "opensearchproject/opensearch-dashboards": os_db,
+    }
+
+    def __init__(self):
+        self.local_registry = self.load_local_registry()
+
+    @classmethod
+    def load_local_registry(cls) -> list:
+        from yaml import safe_load
+        import pandas as pd
+
+        local_registry_path = EnvironmentManager.paths["REGISTRY"]
+        local_registry = []
+        if local_registry_path.is_file():
+            with open(local_registry_path) as f:
+                local_registry_df = pd.json_normalize(safe_load(f))
+                local_registry = local_registry_df.to_dict("records")
+
+        return local_registry
+
+    @classmethod
+    def save_local_registry(cls, updated_registry: list) -> None:
+        import pandas as pd
+        import json
+        import yaml
+
+        local_registry_path = cls.paths["REGISTRY"]
+
+        updated_registry_df = pd.DataFrame(updated_registry)
+        orderedCols = [
+            "filename",
+            "source_name",
+            "source_url",
+        ]
+        for x in [x for x in updated_registry_df.columns if x not in orderedCols]:
+            orderedCols.append(x)
+        updated_registry_df = updated_registry_df.reindex(columns=orderedCols)
+
+        local_registry_path.parents[0].mkdir(parents=True, exist_ok=True)
+        with open(local_registry_path, "w") as f:
+            yaml.dump(
+                json.loads(
+                    updated_registry_df.to_json(orient="records", default_handler=str)
+                ),
+                f,
+                default_flow_style=False,
+                sort_keys=False,
+            )
+        return
+
+    @classmethod
+    def register_repo(cls, path_to_register: Path) -> None:
+
+        local_registry = cls.load_local_registry()
+        registered_paths = [x["source_url"] for x in local_registry]
+
+        if registered_paths != []:
+            if str(path_to_register) in registered_paths:
+                print(f"Error: Path already registered: {path_to_register}")
+        else:
+            print(f"Error: Creating {cls.paths['LOCAL_REGISTRY']}")
+
+        new_record = {
+            "filename": path_to_register.stem,
+            "source_name": path_to_register.stem,
+            "source_url": path_to_register,
+        }
+        local_registry.append(new_record)
+        cls.save_local_registry(local_registry)
+        print(f"Registered path ({path_to_register})")
+        return
+
+    @classmethod
+    def get_name_mail_from_global_git_config(cls) -> list:
+        import git
+
+        ggit_conf_path = Path.home() / Path(".gitconfig")
+        global_conf_details = []
+        if ggit_conf_path.is_file():
+            glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
+            global_conf_details = [
+                glob_git_conf.get("user", "name"),
+                glob_git_conf.get("user", "email"),
+            ]
+        return global_conf_details
+
+    @classmethod
+    def build_docker_images(cls) -> None:
+
+        client = docker.from_env()
+
+        repo_tags = [image.tags for image in client.images.list()]
+        repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
+
+        if "lfoppiano/grobid" not in repo_tags:
+            print("Pulling grobid Docker image...")
+            client.images.pull(cls.docker_images["lfoppiano/grobid"])
+        if "pandoc/ubuntu-latex" not in repo_tags:
+            print("Pulling pandoc/ubuntu-latex image...")
+            client.images.pull(cls.docker_images["pandoc/ubuntu-latex"])
+        if "jbarlow83/ocrmypdf" not in repo_tags:
+            print("Pulling jbarlow83/ocrmypdf image...")
+            client.images.pull(cls.docker_images["jbarlow83/ocrmypdf"])
+        if "zotero/translation-server" not in repo_tags:
+            print("Pulling zotero/translation-server image...")
+            client.images.pull(cls.docker_images["zotero/translation-server"])
+
+        return
+
+    @classmethod
+    def check_git_installed(cls) -> None:
+        import subprocess
+        from colrev_core.review_manager import MissingDependencyError
+
+        try:
+            null = open("/dev/null", "w")
+            subprocess.Popen("git", stdout=null, stderr=null)
+            null.close()
+        except OSError:
+            pass
+            raise MissingDependencyError("git")
+        return
+
+    @classmethod
+    def check_docker_installed(cls) -> None:
+        import subprocess
+        from colrev_core.review_manager import MissingDependencyError
+
+        try:
+            null = open("/dev/null", "w")
+            subprocess.Popen("docker", stdout=null, stderr=null)
+            null.close()
+        except OSError:
+            pass
+            raise MissingDependencyError("docker")
+        return
 
     def get_environment_details(self) -> dict:
         from colrev_core.environment import LocalIndex
@@ -46,7 +187,7 @@ class EnvironmentStatus(Process):
         from git.exc import InvalidGitRepositoryError
         from opensearchpy import NotFoundError
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         environment_details = {}
 
@@ -71,7 +212,7 @@ class EnvironmentStatus(Process):
             "path": str(LocalIndex.local_environment_path),
         }
 
-        local_repos = self.REVIEW_MANAGER.load_local_registry()
+        local_repos = self.load_local_registry()
 
         repos = []
         broken_links = []
@@ -109,7 +250,7 @@ class EnvironmentStatus(Process):
         return environment_details
 
 
-class LocalIndex(Process):
+class LocalIndex:
 
     global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
     max_len_sha256 = 2 ** 256
@@ -129,70 +270,72 @@ class LocalIndex(Process):
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
 
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
-
-        super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.explore,
-            notify_state_transition_process=False,
-        )
-        self.local_registry = self.REVIEW_MANAGER.load_local_registry()
-        self.local_repos = self.__load_local_repos()
-        os_image = self.REVIEW_MANAGER.docker_images["opensearchproject/opensearch"]
-        os_dashboard_image = self.REVIEW_MANAGER.docker_images[
-            "opensearchproject/opensearch-dashboards"
-        ]
-
-        self.opensearch_index.mkdir(exist_ok=True, parents=True)
-
-        client = docker.from_env()
-        try:
-            if not client.networks.list(names=["opensearch-net"]):
-                client.networks.create("opensearch-net")
-            client.containers.run(
-                os_image,
-                name="opensearch-node",
-                ports={"9200/tcp": 9200, "9600/tcp": 9600},
-                auto_remove=True,
-                detach=True,
-                environment={
-                    "cluster.name": "opensearch-cluster",
-                    "node.name": "opensearch-node",
-                    "bootstrap.memory_lock": "true",
-                    "OPENSEARCH_JAVA_OPTS": "-Xms512m -Xmx512m",
-                    "DISABLE_INSTALL_DEMO_CONFIG": "true",
-                    "DISABLE_SECURITY_PLUGIN": "true",
-                    "discovery.type": "single-node",
-                },
-                volumes={
-                    str(self.opensearch_index): {
-                        "bind": "/usr/share/opensearch/data",
-                        "mode": "rw",
-                    }
-                },
-                ulimits=[
-                    docker.types.Ulimit(name="memlock", soft=-1, hard=-1),
-                    docker.types.Ulimit(name="nofile", soft=65536, hard=65536),
-                ],
-                network="opensearch-net",
-            )
-            client.containers.run(
-                os_dashboard_image,
-                name="opensearch-dashboards",
-                ports={"5601/tcp": 5601},
-                auto_remove=True,
-                detach=True,
-                environment={
-                    "OPENSEARCH_HOSTS": '["http://opensearch-node:9200"]',
-                    "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
-                },
-                network="opensearch-net",
-            )
-        except docker.errors.APIError as e:
-            print(e)
-            pass
+    def __init__(self):
 
         self.os = OpenSearch("http://localhost:9200")
+
+        self.opensearch_index.mkdir(exist_ok=True, parents=True)
+        self.start_opensearch_docker()
+        self.check_opensearch_docker_available()
+
+        logging.getLogger("opensearch").setLevel(logging.ERROR)
+
+    def start_opensearch_docker(self) -> None:
+        os_image = EnvironmentManager.docker_images["opensearchproject/opensearch"]
+        os_dashboard_image = EnvironmentManager.docker_images[
+            "opensearchproject/opensearch-dashboards"
+        ]
+        client = docker.from_env()
+        if not any(
+            "opensearch" in container.name for container in client.containers.list()
+        ):
+            try:
+                print("Start LocalIndex")
+
+                if not client.networks.list(names=["opensearch-net"]):
+                    client.networks.create("opensearch-net")
+                client.containers.run(
+                    os_image,
+                    name="opensearch-node",
+                    ports={"9200/tcp": 9200, "9600/tcp": 9600},
+                    auto_remove=True,
+                    detach=True,
+                    environment={
+                        "cluster.name": "opensearch-cluster",
+                        "node.name": "opensearch-node",
+                        "bootstrap.memory_lock": "true",
+                        "OPENSEARCH_JAVA_OPTS": "-Xms512m -Xmx512m",
+                        "DISABLE_INSTALL_DEMO_CONFIG": "true",
+                        "DISABLE_SECURITY_PLUGIN": "true",
+                        "discovery.type": "single-node",
+                    },
+                    volumes={
+                        str(self.opensearch_index): {
+                            "bind": "/usr/share/opensearch/data",
+                            "mode": "rw",
+                        }
+                    },
+                    ulimits=[
+                        docker.types.Ulimit(name="memlock", soft=-1, hard=-1),
+                        docker.types.Ulimit(name="nofile", soft=65536, hard=65536),
+                    ],
+                    network="opensearch-net",
+                )
+                client.containers.run(
+                    os_dashboard_image,
+                    name="opensearch-dashboards",
+                    ports={"5601/tcp": 5601},
+                    auto_remove=True,
+                    detach=True,
+                    environment={
+                        "OPENSEARCH_HOSTS": '["http://opensearch-node:9200"]',
+                        "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
+                    },
+                    network="opensearch-net",
+                )
+            except docker.errors.APIError as e:
+                print(e)
+                pass
         i = 0
         while i < 20:
             i += 1
@@ -200,41 +343,18 @@ class LocalIndex(Process):
                 self.os.get(index=self.RECORD_INDEX, id="test")
                 break
             except ConnectionError:
-                if i == 1:
-                    print("Start LocalIndex")
                 time.sleep(3)
                 print("Waiting until LocalIndex is available")
                 pass
             except NotFoundError:
                 pass
                 break
+        return
+
+    def check_opensearch_docker_available(self) -> None:
         # If not available after 120s: raise error
         self.os.info()
-        # self.REVIEW_MANAGER.pp.pprint(self.os.info())
-
-    def __load_local_repos(self) -> typing.List:
-        from git.exc import NoSuchPathError
-        from git.exc import InvalidGitRepositoryError
-
-        local_repo_list = []
-        sources = [x for x in self.local_registry]
-        for source in sources:
-            try:
-                if not Path(source["source_url"]).is_dir():
-                    continue
-                cp_REVIEW_MANAGER = ReviewManager(path_str=source["source_url"])
-                CheckProcess(cp_REVIEW_MANAGER)  # to notify
-                repo = {
-                    "source_url": str(cp_REVIEW_MANAGER.path),
-                }
-                remote_url = cp_REVIEW_MANAGER.get_remote_url()
-                if remote_url is not None:
-                    repo["source_link"] = remote_url
-                local_repo_list.append(repo)
-            except (NoSuchPathError, InvalidGitRepositoryError):
-                pass
-                continue
-        return local_repo_list
+        return
 
     def __robust_append(self, input_string: str, to_append: str) -> str:
         input_string = str(input_string)
@@ -373,7 +493,6 @@ class LocalIndex(Process):
                 tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                 if Path(record["file"]).is_file():
                     TEI_INSTANCE = TEI(
-                        self.REVIEW_MANAGER,
                         pdf_path=Path(record["file"]),
                         tei_path=tei_path,
                         notify_state_transition_process=False,
@@ -395,32 +514,34 @@ class LocalIndex(Process):
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
-        saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
-        saved_record = saved_record_response["_source"]
+        try:
+            saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
+            saved_record = saved_record_response["_source"]
 
-        # amend saved record
-        for k, v in record.items():
-            # Note : the record from the first repository should take precedence)
-            if k in saved_record:
-                continue
-            saved_record[k] = v
+            # amend saved record
+            for k, v in record.items():
+                # Note : the record from the first repository should take precedence)
+                if k in saved_record:
+                    continue
+                saved_record[k] = v
 
-        if "file" in record and "fulltext" not in saved_record:
-            try:
-                tei_path = self.__get_tei_index_file(hash)
-                tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                if Path(record["file"]).is_file():
-                    TEI_INSTANCE = TEI(
-                        self.REVIEW_MANAGER,
-                        pdf_path=Path(record["file"]),
-                        tei_path=tei_path,
-                        notify_state_transition_process=False,
-                    )
-                    saved_record["fulltext"] = TEI_INSTANCE.get_tei_str()
-            except (TEI_Exception, AttributeError):
-                pass
+            if "file" in record and "fulltext" not in saved_record:
+                try:
+                    tei_path = self.__get_tei_index_file(hash)
+                    tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+                    if Path(record["file"]).is_file():
+                        TEI_INSTANCE = TEI(
+                            pdf_path=Path(record["file"]),
+                            tei_path=tei_path,
+                            notify_state_transition_process=False,
+                        )
+                        saved_record["fulltext"] = TEI_INSTANCE.get_tei_str()
+                except (TEI_Exception, AttributeError, SerialisationError):
+                    pass
 
-        self.os.update(index=self.RECORD_INDEX, id=hash, body={"doc": saved_record})
+            self.os.update(index=self.RECORD_INDEX, id=hash, body={"doc": saved_record})
+        except NotFoundError:
+            pass
         return
 
     def __record_index(self, record: dict) -> None:
@@ -576,37 +697,42 @@ class LocalIndex(Process):
             main_colrev_ID,
         ) in alsoKnownAs_Instances:
 
-            hash = hashlib.sha256(main_colrev_ID.encode("utf-8")).hexdigest()
-            while True:
-                if self.os.exists(index=self.RECORD_INDEX, id=hash):
-                    # Note : this should happen rarely/never
-                    # but we have to make sure that the while loop breaks
-                    break
-                else:
-                    response = self.os.get(index=self.RECORD_INDEX, id=hash)
-                    saved_record = response["_source"]
-                    saved_original_string_repr = saved_record["colrev_ID"]
-
-                    if saved_original_string_repr == main_colrev_ID:
-                        # ok - no collision
-                        if alsoKnownAs_colrev_ID not in saved_record.get(
-                            "alsoKnownAs", []
-                        ):
-                            if "alsoKnownAs" in saved_record:
-                                saved_record["alsoKnownAs"].append(
-                                    alsoKnownAs_colrev_ID
-                                )
-                            else:
-                                saved_record["alsoKnownAs"] = [alsoKnownAs_colrev_ID]
-                            self.os.update(
-                                index=self.RECORD_INDEX,
-                                id=hash,
-                                body={"doc": saved_record},
-                            )
+            try:
+                hash = hashlib.sha256(main_colrev_ID.encode("utf-8")).hexdigest()
+                while True:
+                    if self.os.exists(index=self.RECORD_INDEX, id=hash):
+                        # Note : this should happen rarely/never
+                        # but we have to make sure that the while loop breaks
                         break
                     else:
-                        print(f"Collision: {hash}")
-                        hash = self.__increment_hash(hash)
+                        response = self.os.get(index=self.RECORD_INDEX, id=hash)
+                        saved_record = response["_source"]
+                        saved_original_string_repr = saved_record["colrev_ID"]
+
+                        if saved_original_string_repr == main_colrev_ID:
+                            # ok - no collision
+                            if alsoKnownAs_colrev_ID not in saved_record.get(
+                                "alsoKnownAs", []
+                            ):
+                                if "alsoKnownAs" in saved_record:
+                                    saved_record["alsoKnownAs"].append(
+                                        alsoKnownAs_colrev_ID
+                                    )
+                                else:
+                                    saved_record["alsoKnownAs"] = [
+                                        alsoKnownAs_colrev_ID
+                                    ]
+                                self.os.update(
+                                    index=self.RECORD_INDEX,
+                                    id=hash,
+                                    body={"doc": saved_record},
+                                )
+                            break
+                        else:
+                            print(f"Collision: {hash}")
+                            hash = self.__increment_hash(hash)
+            except NotFoundError:
+                pass
 
         return
 
@@ -618,7 +744,7 @@ class LocalIndex(Process):
             pass
             return
 
-        self.REVIEW_MANAGER.logger.info(f"Update alsoKnownAs for {search_path.parent}")
+        print(f"Update alsoKnownAs fields for {search_path.parent}")
 
         # Note : records are at least md_processed.
         duplicate_repr_list = []
@@ -733,10 +859,8 @@ class LocalIndex(Process):
                 dir_path = Path(record["source_url"]) / Path(record["file"])
                 if dir_path.is_file():
                     record["file"] = str(dir_path)
-                pdf_dir_path = (
-                    Path(record["source_url"])
-                    / self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-                    / Path(record["file"])
+                pdf_dir_path = Path(record["source_url"]) / Path(
+                    "pdfs" + record["file"]
                 )
                 if pdf_dir_path.is_file():
                     record["file"] = str(pdf_dir_path)
@@ -751,12 +875,12 @@ class LocalIndex(Process):
     def duplicate_outlets(self) -> bool:
         import collections
 
-        self.REVIEW_MANAGER.logger.info("Validate curated metadata")
+        print("Validate curated metadata")
 
         curated_outlets = []
         for source_url in [
             x["source_url"]
-            for x in self.local_registry
+            for x in EnvironmentManager.load_local_registry()
             if "colrev/curated_metadata/" in x["source_url"]
         ]:
             with open(f"{source_url}/readme.md") as f:
@@ -775,8 +899,8 @@ class LocalIndex(Process):
                         outlets.append(booktitle)
 
                 if len(set(outlets)) != 1:
-                    self.REVIEW_MANAGER.logger.error(
-                        "Duplicate outlets in curated_metadata of "
+                    print(
+                        "Error: Duplicate outlets in curated_metadata of "
                         f"{source_url} : {','.join(list(set(outlets)))}"
                     )
                     return True
@@ -787,8 +911,8 @@ class LocalIndex(Process):
                 for item, count in collections.Counter(curated_outlets).items()
                 if count > 1
             ]
-            self.REVIEW_MANAGER.logger.error(
-                f"Duplicate outlets in curated_metadata : {','.join(duplicated)}"
+            print(
+                f"Error: Duplicate outlets in curated_metadata : {','.join(duplicated)}"
             )
             return True
 
@@ -796,15 +920,14 @@ class LocalIndex(Process):
 
     def index_records(self) -> None:
         # import shutil
+        from colrev_core.review_manager import ReviewManager
 
-        self.REVIEW_MANAGER.logger.info("Start LocalIndex")
+        print("Start LocalIndex")
 
         if self.duplicate_outlets():
             return
 
-        self.REVIEW_MANAGER.logger.info(
-            f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}"
-        )
+        print(f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}")
         # if self.teiind_path.is_dir():
         #     shutil.rmtree(self.teiind_path)
 
@@ -816,14 +939,16 @@ class LocalIndex(Process):
         self.os.indices.create(index=self.RECORD_INDEX)
         self.os.indices.create(index=self.TOC_INDEX)
 
-        for source_url in [x["source_url"] for x in self.local_registry]:
+        for source_url in [
+            x["source_url"] for x in EnvironmentManager.load_local_registry()
+        ]:
 
             try:
                 if not Path(source_url).is_dir():
                     print(f"Warning {source_url} not a directory")
                     continue
                 os.chdir(source_url)
-                self.REVIEW_MANAGER.logger.info(f"Index records from {source_url}")
+                print(f"Index records from {source_url}")
 
                 # get ReviewManager for project (after chdir)
                 REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
@@ -860,6 +985,10 @@ class LocalIndex(Process):
                         if "pdf_hash" in record:
                             del record["pdf_hash"]
 
+                    if "pdf_prep_hints" in record:
+                        del record["pdf_prep_hints"]
+                    if "pdf_processed" in record:
+                        del record["pdf_processed"]
                     del record["status"]
 
                     self.__record_index(record)
@@ -938,7 +1067,6 @@ class LocalIndex(Process):
                 pass
 
         if retrieved_record:
-            self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
             return self.prep_record_for_return(retrieved_record)
 
         # 2. Try using global-ids
@@ -955,7 +1083,6 @@ class LocalIndex(Process):
                     pass
 
         if retrieved_record:
-            self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
             return self.prep_record_for_return(retrieved_record)
 
         # 3. Try alsoKnownAs
@@ -968,12 +1095,11 @@ class LocalIndex(Process):
         if not retrieved_record:
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
-        self.REVIEW_MANAGER.logger.debug("Retrieved from d index")
         return self.prep_record_for_return(retrieved_record)
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:
-            for local_repo in self.local_repos:
+            for local_repo in EnvironmentManager.load_local_registry():
                 if local_repo["source_url"] == record["source_url"]:
                     if "source_link" in local_repo:
                         record["source_url"] = local_repo["source_link"]
@@ -982,7 +1108,7 @@ class LocalIndex(Process):
 
     def set_source_path(self, record: dict) -> dict:
         if "source_url" in record:
-            for local_repo in self.local_repos:
+            for local_repo in EnvironmentManager.load_local_registry():
                 if local_repo["source_link"] == record["source_url"]:
                     record["source_url"] = local_repo["source_url"]
 
@@ -1094,8 +1220,7 @@ class Resources:
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
         if (repo_dir / Path("references.bib")).is_file():
-            REVIEW_MANAGER = ReviewManager(path_str=str(repo_dir))
-            REVIEW_MANAGER.register_repo()
+            EnvironmentManager.register_repo(repo_dir)
         elif (repo_dir / Path("annotate.py")).is_file():
             shutil.move(str(repo_dir), str(annotator_dir))
         elif (repo_dir / Path("readme.md")).is_file():

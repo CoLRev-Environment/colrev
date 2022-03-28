@@ -154,7 +154,7 @@ class PDF_Retrieval(Process):
     def __get_pdf_from_local_index(self, record: dict) -> dict:
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)
             # pp.pprint(retrieved_record)
@@ -239,7 +239,7 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Starting GROBID service to extract metadata from PDFs"
         )
-        grobid_client.start_grobid(self.REVIEW_MANAGER)
+        grobid_client.start_grobid()
 
         IDs = [x["ID"] for x in records]
         linked_pdfs = [Path(x["file"]) for x in records if "file" in x]
@@ -250,7 +250,7 @@ class PDF_Retrieval(Process):
         for file in unlinked_pdfs:
             if file.stem not in IDs:
 
-                TEI_INSTANCE = TEI(self.REVIEW_MANAGER, pdf_path=file)
+                TEI_INSTANCE = TEI(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:

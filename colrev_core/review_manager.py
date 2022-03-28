@@ -11,7 +11,6 @@ import os
 import pprint
 import re
 import string
-import subprocess
 import sys
 import tempfile
 import typing
@@ -19,11 +18,8 @@ from contextlib import redirect_stdout
 from importlib.metadata import version
 from pathlib import Path
 
-import docker
 import git
-import pandas as pd
 import yaml
-from yaml import safe_load
 
 from colrev_core import review_dataset
 from colrev_core.data import ManuscriptRecordSourceTagError
@@ -38,29 +34,7 @@ from colrev_core.review_dataset import PropagatedIDChange
 
 class ReviewManager:
 
-    search_type_opts = [
-        "DB",
-        "TOC",
-        "BACK_CIT",
-        "FORW_CIT",
-        "PDFS",
-        "OTHER",
-        "FEED",
-        "COLREV_REPO",
-    ]
-
     notified_next_process = None
-
-    os_db = "opensearchproject/opensearch-dashboards:1.3.0"
-
-    docker_images = {
-        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
-        "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
-        "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
-        "zotero/translation-server": "zotero/translation-server:2.0.4",
-        "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
-        "opensearchproject/opensearch-dashboards": os_db,
-    }
 
     def __init__(self, path_str: str = None) -> None:
         from colrev_core.review_dataset import ReviewDataset
@@ -111,8 +85,6 @@ class ReviewManager:
         readme = "readme.md"
         report = "report.log"
         search_dir = "search"
-        local_colrev_config = Path.home().joinpath("colrev")
-        local_registry = "registry.yaml"
         status = "status.yaml"
         corrections = ".corrections"
         return {
@@ -139,7 +111,6 @@ class ReviewManager:
             "SEARCHDIR": repository_dir.joinpath(search_dir),
             "STATUS_RELATIVE": Path(status),
             "STATUS": repository_dir.joinpath(status),
-            "LOCAL_REGISTRY": local_colrev_config.joinpath(local_registry),
             "CORRECTIONS_PATH": repository_dir.joinpath(corrections),
         }
 
@@ -198,34 +169,17 @@ class ReviewManager:
 
         return None
 
-    def __get_name_mail_from_global_git_config(self) -> list:
-        ggit_conf_path = Path.home() / Path(".gitconfig")
-        global_conf_details = []
-        if ggit_conf_path.is_file():
-            glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
-            global_conf_details = [
-                glob_git_conf.get("user", "name"),
-                glob_git_conf.get("user", "email"),
-            ]
-        return global_conf_details
-
     def __actor_fallback(self) -> str:
-        name = self.__get_name_mail_from_global_git_config()[0]
+        from colrev_core.environment import EnvironmentManager
+
+        name = EnvironmentManager.get_name_mail_from_global_git_config()[0]
         return name
 
     def __email_fallback(self) -> str:
-        email = self.__get_name_mail_from_global_git_config()[1]
+        from colrev_core.environment import EnvironmentManager
+
+        email = EnvironmentManager.get_name_mail_from_global_git_config()[1]
         return email
-
-    def load_local_registry(self) -> list:
-        local_registry_path = self.paths["LOCAL_REGISTRY"]
-        local_registry = []
-        if local_registry_path.is_file():
-            with open(local_registry_path) as f:
-                local_registry_df = pd.json_normalize(safe_load(f))
-                local_registry = local_registry_df.to_dict("records")
-
-        return local_registry
 
     def __setup_logger(self, level=logging.INFO) -> logging.Logger:
         # for debugging:
@@ -279,48 +233,6 @@ class ReviewManager:
 
         return report_logger
 
-    def __check_git_installed(self) -> None:
-        try:
-            null = open("/dev/null", "w")
-            subprocess.Popen("git", stdout=null, stderr=null)
-            null.close()
-        except OSError:
-            pass
-            raise MissingDependencyError("git")
-        return
-
-    def __check_docker_installed(self) -> None:
-        try:
-            null = open("/dev/null", "w")
-            subprocess.Popen("docker", stdout=null, stderr=null)
-            null.close()
-        except OSError:
-            pass
-            raise MissingDependencyError("docker")
-        return
-
-    def build_docker_images(self) -> None:
-
-        client = docker.from_env()
-
-        repo_tags = [image.tags for image in client.images.list()]
-        repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
-
-        if "lfoppiano/grobid" not in repo_tags:
-            self.logger.info("Pulling grobid Docker image...")
-            client.images.pull(self.docker_images["lfoppiano/grobid"])
-        if "pandoc/ubuntu-latex" not in repo_tags:
-            self.logger.info("Pulling pandoc/ubuntu-latex image...")
-            client.images.pull(self.docker_images["pandoc/ubuntu-latex"])
-        if "jbarlow83/ocrmypdf" not in repo_tags:
-            self.logger.info("Pulling jbarlow83/ocrmypdf image...")
-            client.images.pull(self.docker_images["jbarlow83/ocrmypdf"])
-        if "zotero/translation-server" not in repo_tags:
-            self.logger.info("Pulling zotero/translation-server image...")
-            client.images.pull(self.docker_images["zotero/translation-server"])
-
-        return
-
     def __get_colrev_versions(self) -> typing.List[str]:
 
         current_colrev_core_version = version("colrev_core")
@@ -340,19 +252,6 @@ class ReviewManager:
             raise SoftwareUpgradeError(last_version, current_version)
         return
 
-    def __inplace_change(
-        self, filename: Path, old_string: str, new_string: str
-    ) -> None:
-        with open(filename) as f:
-            s = f.read()
-            if old_string not in s:
-                logging.info(f'"{old_string}" not found in {filename}.')
-                return
-        with open(filename, "w") as f:
-            s = s.replace(old_string, new_string)
-            f.write(s)
-        return
-
     def upgrade_colrev(self) -> None:
         from colrev_core.process import CheckProcess
 
@@ -369,6 +268,17 @@ class ReviewManager:
 
         CheckProcess(self)  # to notify
 
+        def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
+            with open(filename) as f:
+                s = f.read()
+                if old_string not in s:
+                    logging.info(f'"{old_string}" not found in {filename}.')
+                    return
+            with open(filename, "w") as f:
+                s = s.replace(old_string, new_string)
+                f.write(s)
+            return
+
         def migrate_0_3_0(self) -> bool:
             records = self.REVIEW_DATASET.load_records()
             if len(records) > 0:
@@ -379,7 +289,7 @@ class ReviewManager:
                 self.REVIEW_DATASET.save_records(records)
                 self.REVIEW_DATASET.add_record_changes()
 
-            self.__inplace_change(
+            inplace_change(
                 self.paths["SOURCES"], "search_type: LOCAL_PAPER_INDEX", "PDFS"
             )
             self.REVIEW_DATASET.add_changes(str(self.paths["SOURCES_RELATIVE"]))
@@ -591,14 +501,16 @@ class ReviewManager:
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.
 
+        from colrev_core.environment import EnvironmentManager
+
         # We work with exceptions because each issue may be raised in different checks.
         self.notified_next_process = ProcessType.check
         PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"script": self.__check_git_installed, "params": []},
-            {"script": self.__check_docker_installed, "params": []},
+            {"script": EnvironmentManager.check_git_installed, "params": []},
+            {"script": EnvironmentManager.check_docker_installed, "params": []},
+            {"script": EnvironmentManager.build_docker_images, "params": []},
             {"script": self.__check_git_conflicts, "params": []},
-            {"script": self.build_docker_images, "params": []},
             {"script": self.__check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},
         ]
@@ -1213,52 +1125,6 @@ class ReviewManager:
             return True
         else:
             return False
-
-    def save_local_registry(self, local_registry: list) -> None:
-        local_registry_path = self.paths["LOCAL_REGISTRY"]
-
-        local_registry_df = pd.DataFrame(local_registry)
-        orderedCols = [
-            "filename",
-            "source_name",
-            "source_url",
-        ]
-        for x in [x for x in local_registry_df.columns if x not in orderedCols]:
-            orderedCols.append(x)
-        local_registry_df = local_registry_df.reindex(columns=orderedCols)
-
-        local_registry_path.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(local_registry_path, "w") as f:
-            yaml.dump(
-                json.loads(
-                    local_registry_df.to_json(orient="records", default_handler=str)
-                ),
-                f,
-                default_flow_style=False,
-                sort_keys=False,
-            )
-        return
-
-    def register_repo(self):
-
-        local_registry = self.load_local_registry()
-        registered_paths = [x["source_url"] for x in local_registry]
-        path_to_register = self.path
-        if registered_paths != []:
-            if str(path_to_register) in registered_paths:
-                logging.error(f"Path already registered: {path_to_register}")
-        else:
-            logging.error(f"Creating {self.paths['LOCAL_REGISTRY']}")
-
-        new_record = {
-            "filename": path_to_register.stem,
-            "source_name": path_to_register.stem,
-            "source_url": path_to_register,
-        }
-        local_registry.append(new_record)
-        self.save_local_registry(local_registry)
-        logging.info(f"Registered path ({path_to_register})")
-        return
 
     def apply_corrections(self) -> None:
 

@@ -450,7 +450,7 @@ class Preparation(Process):
 
     def get_record_from_local_index(self, record: dict) -> dict:
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         retrieved = False
         try:

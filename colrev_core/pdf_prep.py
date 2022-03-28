@@ -326,7 +326,7 @@ class PDF_Preparation(Process):
 
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)

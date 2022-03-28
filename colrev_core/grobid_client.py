@@ -31,14 +31,15 @@ def check_grobid_availability() -> None:
     return
 
 
-def start_grobid(REVIEW_MANAGER) -> None:
+def start_grobid() -> None:
+    from colrev_core.environment import EnvironmentManager
 
     try:
         check_grobid_availability()
     except requests.exceptions.ConnectionError:
         pass
 
-        grobid_image = REVIEW_MANAGER.docker_images["lfoppiano/grobid"]
+        grobid_image = EnvironmentManager.docker_images["lfoppiano/grobid"]
 
         logging.info(f"Running docker container created from {grobid_image}")
 
