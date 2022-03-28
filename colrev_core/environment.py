@@ -120,6 +120,12 @@ class LocalIndex(Process):
     annotators_path = local_index_path / Path("annotators")
     opensearch_index = local_index_path / Path("index")
 
+    # Note : records are indexed by id = hash(colrev_ID)
+    # to ensure that the indexing-ids do not exceed limits
+    # such as the opensearch limit of 512 bytes.
+    # This enables efficient retrieval based on id=hash(colrev_ID)
+    # but also search-based retrieval using only colrev_IDs
+
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
         super().__init__(
@@ -227,13 +233,16 @@ class LocalIndex(Process):
                 continue
         return local_repo_list
 
-    def __robust_append(self, string_to_hash: str, to_append: str) -> str:
-        to_append = to_append.replace("\n", " ").rstrip().lstrip().replace("–", " ")
+    def __robust_append(self, input_string: str, to_append: str) -> str:
+        input_string = str(input_string)
+        to_append = (
+            str(to_append).replace("\n", " ").rstrip().lstrip().replace("–", " ")
+        )
         to_append = re.sub(r"[\.\:“”’]", "", to_append)
         to_append = re.sub(r"\s+", " ", to_append)
         to_append = to_append.lower()
-        string_to_hash = string_to_hash + "|" + to_append
-        return string_to_hash
+        input_string = input_string + "|" + to_append
+        return input_string
 
     def __rmdiacritics(self, char):
         """
@@ -291,8 +300,8 @@ class LocalIndex(Process):
         author_list = []
         for name in names:
             parsed_name = HumanName(name)
-            # Note: do not set this as a global constant to preserve consistent
-            # creation of hash_ids
+            # Note: do not set parsed_name.string_format as a global constant
+            # to preserve consistent creation of identifiers
             parsed_name.string_format = "{last}, {first} {middle}"
             if len(parsed_name.middle) > 0:
                 parsed_name.middle = parsed_name.middle[:1]
@@ -307,11 +316,12 @@ class LocalIndex(Process):
             author_list.append(str(parsed_name))
         return " and ".join(author_list)
 
-    def get_string_representation(self, record: dict) -> str:
+    def get_colrev_ID(self, record: dict) -> str:
 
-        # Including the version of the hash_function prevents cases
-        # in which almost all hash_ids are identical (and very few hash_ids change)
-        # when updatingthe hash function
+        # Including the version of the identifier prevents cases
+        # in which almost all identifiers are identical
+        # (and very few identifiers change)
+        # when updating the identifier function function
         # (this may look like an anomaly and be hard to identify)
         srep = "v0.1"
         author = record.get("author", "")
@@ -329,7 +339,7 @@ class LocalIndex(Process):
         return srep
 
     def __get_record_hash(self, record: dict) -> str:
-        string_to_hash = self.get_string_representation(record)
+        string_to_hash = self.get_colrev_ID(record)
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, hash: str) -> str:
@@ -354,9 +364,6 @@ class LocalIndex(Process):
 
     def __store_record(self, hash: str, record: dict) -> None:
 
-        # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) for k, v in record.items()}
-
         if "file" in record:
             try:
                 tei_path = self.__get_tei_index_file(hash)
@@ -376,9 +383,9 @@ class LocalIndex(Process):
 
         return
 
-    def __retrieve_from_toc_index_based_on_hash(self, hash: str) -> list:
+    def __retrieve_toc_index(self, toc_key: str) -> list:
 
-        toc_item_response = self.os.get(index="toc_index", id=hash)
+        toc_item_response = self.os.get(index="toc_index", id=toc_key)
         toc_item = toc_item_response["_source"]
 
         return toc_item
@@ -390,6 +397,7 @@ class LocalIndex(Process):
 
         # amend saved record
         for k, v in record.items():
+            # Note : the record from the first repository should take precedence)
             if k in saved_record:
                 continue
             saved_record[k] = v
@@ -413,21 +421,25 @@ class LocalIndex(Process):
         return
 
     def __record_index(self, record: dict) -> None:
+        # Casting to string (in particular the RecordState Enum)
         record = {k: str(v) for k, v in record.items()}
-        hash = self.__get_record_hash(record)
+        if record.get("year", "NA").isdigit():
+            record["year"] = int(record["year"])
+        elif "year" in record:
+            del record["year"]
 
-        string_representation = self.get_string_representation(record)
-        record["hash_string_representation"] = string_representation
+        record["colrev_ID"] = self.get_colrev_ID(record)
+
+        hash = self.__get_record_hash(record)
 
         try:
             # check if the record is already indexed (based on d)
             retrieved_record = self.retrieve(record)
 
             # if the string_representations are not identical: add to d_index
-            if not self.get_string_representation(
-                retrieved_record
-            ) == self.get_string_representation(record):
-                # Note: we need the hash of the retrieved_record (different from record)
+            if not retrieved_record["colrev_ID"] == record["colrev_ID"]:
+                # Note: we need the colrev_ID of the retrieved_record
+                # (may be different from record)
                 self.__amend_record(self.__get_record_hash(retrieved_record), record)
                 return
         except RecordNotInIndexException:
@@ -440,9 +452,7 @@ class LocalIndex(Process):
             else:
                 saved_record_response = self.os.get(index="record_index", id=hash)
                 saved_record = saved_record_response["_source"]
-                if string_representation == self.get_string_representation(
-                    saved_record
-                ):
+                if saved_record["colrev_ID"] == record["colrev_ID"]:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
                     # should take precedence - reset the index to update)
@@ -451,10 +461,12 @@ class LocalIndex(Process):
                 else:
                     # to handle the collision:
                     print(f"Collision: {hash}")
-                    print(string_representation)
-                    print(self.get_string_representation(saved_record))
+                    print(record["colrev_ID"])
+                    print(saved_record["colrev_ID"])
                     print(saved_record)
                     hash = self.__increment_hash(hash)
+                    # Note: alsoKnownAs field should be covered
+                    # in the previous try/except block
 
         return
 
@@ -485,35 +497,28 @@ class LocalIndex(Process):
                 return
 
             # print(toc_key)
-            hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
-            record_string_repr = self.get_string_representation(record)
-            while True:
-                if not self.os.exists(index="toc_index", id=hash):
-                    toc_item = {
-                        "toc_key": toc_key,
-                        "string_representations": [record_string_repr],
-                    }
-                    self.os.index(index="toc_index", id=hash, body=toc_item)
-                    break
-                else:
-                    toc_item_response = self.os.get(index="toc_index", id=hash)
-                    toc_item = toc_item_response["_source"]
-                    if toc_item["toc_key"] == toc_key:
-                        # ok - no collision, update the record
-                        # Note : do not update (the record from the first repository
-                        #  should take precedence - reset the index to update)
-                        if record_string_repr not in toc_item["string_representations"]:
-                            toc_item["string_representations"].append(  # type: ignore
-                                record_string_repr
-                            )
-                            self.os.update(
-                                index="toc_index", id=hash, body={"doc": toc_item}
-                            )
-                        break
-                    else:
-                        # to handle the collision:
-                        print(f"Collision: {hash}")
-                        hash = self.__increment_hash(hash)
+            record["colrev_ID"] = self.get_colrev_ID(record)
+
+            if not self.os.exists(index="toc_index", id=toc_key):
+                toc_item = {
+                    "toc_key": toc_key,
+                    "string_representations": [record["colrev_ID"]],
+                }
+                self.os.index(index="toc_index", id=toc_key, body=toc_item)
+            else:
+                toc_item_response = self.os.get(index="toc_index", id=toc_key)
+                toc_item = toc_item_response["_source"]
+                if toc_item["toc_key"] == toc_key:
+                    # ok - no collision, update the record
+                    # Note : do not update (the record from the first repository
+                    #  should take precedence - reset the index to update)
+                    if record["colrev_ID"] not in toc_item["string_representations"]:
+                        toc_item["string_representations"].append(  # type: ignore
+                            record["colrev_ID"]
+                        )
+                        self.os.update(
+                            index="toc_index", id=toc_key, body={"doc": toc_item}
+                        )
 
         return
 
@@ -550,62 +555,59 @@ class LocalIndex(Process):
         ]
 
         if all(required_field in origin_record for required_field in required_fields):
-            orig_repr = self.get_string_representation(origin_record)
-            main_repr = self.get_string_representation(record)
+            orig_repr = self.get_colrev_ID(origin_record)
+            main_repr = self.get_colrev_ID(record)
             if orig_repr != main_repr:
                 non_identical_representations.append([orig_repr, main_repr])
 
         return non_identical_representations
 
-    def __add_to_d_index(self, non_identical_representations: list) -> None:
-        non_identical_representations = [
-            list(x) for x in {tuple(x) for x in non_identical_representations}
+    def __update_alsoKnownAs(self, alsoKnownAs_Instances: list) -> None:
+
+        alsoKnownAs_Instances = [
+            list(x) for x in {tuple(x) for x in alsoKnownAs_Instances}
         ]
-        if len(non_identical_representations) > 0:
 
-            for (
-                non_identical_representation,
-                orig_record_string,
-            ) in non_identical_representations:
+        for (
+            alsoKnownAs_colrev_ID,
+            main_colrev_ID,
+        ) in alsoKnownAs_Instances:
 
-                hash = hashlib.sha256(orig_record_string.encode("utf-8")).hexdigest()
-                while True:
-                    if not self.os.exists(index="record_index", id=hash):
-                        # Note : this should happen rarely/never
+            hash = hashlib.sha256(main_colrev_ID.encode("utf-8")).hexdigest()
+            while True:
+                if self.os.exists(index="record_index", id=hash):
+                    # Note : this should happen rarely/never
+                    # but we have to make sure that the while loop breaks
+                    break
+                else:
+                    response = self.os.get(index="record_index", id=hash)
+                    saved_record = response["_source"]
+                    saved_original_string_repr = saved_record["colrev_ID"]
+
+                    if saved_original_string_repr == main_colrev_ID:
+                        # ok - no collision
+                        if alsoKnownAs_colrev_ID not in saved_record.get(
+                            "alsoKnownAs", []
+                        ):
+                            if "alsoKnownAs" in saved_record:
+                                saved_record["alsoKnownAs"].append(
+                                    alsoKnownAs_colrev_ID
+                                )
+                            else:
+                                saved_record["alsoKnownAs"] = [alsoKnownAs_colrev_ID]
+                            self.os.update(
+                                index="record_index",
+                                id=hash,
+                                body={"doc": saved_record},
+                            )
                         break
                     else:
-                        response = self.os.get(index="record_index", id=hash)
-                        saved_record = response["_source"]
-                        saved_original_string_repr = saved_record[
-                            "hash_string_representation"
-                        ]
+                        print(f"Collision: {hash}")
+                        hash = self.__increment_hash(hash)
 
-                        if saved_original_string_repr == orig_record_string:
-                            # ok - no collision
-                            if non_identical_representation not in saved_record.get(
-                                "duplicate_reprs", []
-                            ):
-                                if "duplicate_reprs" in saved_record:
-                                    saved_record["duplicate_reprs"].append(
-                                        non_identical_representation
-                                    )
-                                else:
-                                    saved_record["duplicate_reprs"] = [
-                                        non_identical_representation
-                                    ]
-                                self.os.update(
-                                    index="record_index",
-                                    id=hash,
-                                    body={"doc": saved_record},
-                                )
-                            break
-                        else:
-                            # to handle the collision:
-                            print(f"Collision: {hash}")
-                            hash = self.__increment_hash(hash)
         return
 
-    def __d_index(self, records: typing.List[dict]) -> None:
+    def __alsoKnownAs_index(self, records: typing.List[dict]) -> None:
 
         try:
             search_path = Path(records[0]["source_url"] + "/search/")
@@ -613,7 +615,7 @@ class LocalIndex(Process):
             pass
             return
 
-        self.REVIEW_MANAGER.logger.info(f"Update d_index for {search_path.parent}")
+        self.REVIEW_MANAGER.logger.info(f"Update alsoKnownAs for {search_path.parent}")
 
         # Note : records are at least md_processed.
         duplicate_repr_list = []
@@ -631,7 +633,7 @@ class LocalIndex(Process):
             return
 
         origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
-        non_identical_representations: typing.List[list] = []
+        alsoKnownAsInstances: typing.List[list] = []
         j_variations: typing.List[list] = []
         for origin_source in origin_sources:
             os_fp = search_path / Path(origin_source)
@@ -659,21 +661,21 @@ class LocalIndex(Process):
                     if len(origin_record_list) != 1:
                         continue
                     origin_record = origin_record_list[0]
-                    non_identical_representations = self.__append_if_duplicate_repr(
-                        non_identical_representations, origin_record, record
+                    alsoKnownAsInstances = self.__append_if_duplicate_repr(
+                        alsoKnownAsInstances, origin_record, record
                     )
                     j_variations = self.__append_j_variation(
                         j_variations, origin_record, record
                     )
 
-        # 2. add representations to index
-        self.__add_to_d_index(non_identical_representations)
+        # 2. add alsoKnownAs to index
+        self.__update_alsoKnownAs(alsoKnownAsInstances)
 
         return
 
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
 
-        string_representation_record = self.get_string_representation(record)
+        string_representation_record = self.get_colrev_ID(record)
 
         try:
             # match_phrase := exact match
@@ -681,9 +683,7 @@ class LocalIndex(Process):
                 index="record_index",
                 body={
                     "query": {
-                        "match_phrase": {
-                            "duplicate_reprs": string_representation_record
-                        }
+                        "match_phrase": {"alsoKnownAs": string_representation_record}
                     }
                 },
             )
@@ -699,37 +699,31 @@ class LocalIndex(Process):
         return self.prep_record_for_return(retrieved_record)
 
     def __retrieve_from_record_index(self, record: dict) -> dict:
-        string_representation = self.get_string_representation(record)
-        retrieved_record = self.__retrieve_from_record_index_string_repr(
-            string_representation
+        retrieved_record = self.__retrieve_based_on_colrev_ID(
+            self.get_colrev_ID(record)
         )
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
             raise RecordNotInIndexException
         return retrieved_record
 
-    def __retrieve_from_record_index_string_repr(
-        self, string_representation: str
-    ) -> dict:
+    def __retrieve_based_on_colrev_ID(self, colrev_ID: str) -> dict:
 
-        hash = hashlib.sha256(string_representation.encode("utf-8")).hexdigest()
+        hash = hashlib.sha256(colrev_ID.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
             res = self.os.get(index="record_index", id=hash)
             retrieved_record = res["_source"]
-            if (
-                self.get_string_representation(retrieved_record)
-                == string_representation
-            ):
+            if self.get_colrev_ID(retrieved_record) == colrev_ID:
                 break
-            hash = self.__increment_hash(hash)
+            else:
+                # Collision
+                hash = self.__increment_hash(hash)
 
         return retrieved_record
 
     def prep_record_for_return(self, record: dict) -> dict:
         from colrev_core.process import RecordState
 
-        if "hash_string_representation" in record:
-            del record["hash_string_representation"]
         # del retrieved_record['source_url']
         if "file" in record:
             if not Path(record["file"]).is_file():
@@ -746,8 +740,8 @@ class LocalIndex(Process):
 
         if "manual_non_duplicate" in record:
             del record["manual_non_duplicate"]
-        if "duplicate_reprs" in record:
-            del record["duplicate_reprs"]
+        if "alsoKnownAs" in record:
+            del record["alsoKnownAs"]
         record["status"] = RecordState.md_prepared
         return record
 
@@ -870,7 +864,7 @@ class LocalIndex(Process):
                     if "colrev/curated_metadata" in source_url:
                         self.__toc_index(record)
 
-                self.__d_index(records)
+                self.__alsoKnownAs_index(records)
             except InvalidGitRepositoryError:
                 print(f"InvalidGitRepositoryError: {source_url}")
                 pass
@@ -890,37 +884,24 @@ class LocalIndex(Process):
         toc_key = self.__get_toc_key(record)
 
         # 1. get TOC
-        hash = hashlib.sha256(toc_key.encode("utf-8")).hexdigest()
         toc_items = []
-        while True:
-            if not self.os.exists(index="toc_index", id=hash):
-                break
-            else:
-                res = self.__retrieve_from_toc_index_based_on_hash(hash)
-                if toc_key == res["toc_key"]:  # type: ignore
-                    toc_items = res["string_representations"]  # type: ignore
-                    break
-                else:
-                    # to handle the collision:
-                    print(f"Collision: {hash}")
-                    hash = self.__increment_hash(hash)
+        if self.os.exists(index="toc_index", id=toc_key):
+            res = self.__retrieve_toc_index(toc_key)
+            toc_items = res["string_representations"]  # type: ignore
 
         # 2. get most similar record
-        record_string_repr = self.get_string_representation(record)
         if len(toc_items) > 0:
+            record["colrev_ID"] = self.get_colrev_ID(record)
             sim_list = []
-            for saved_toc_record_str_repr in toc_items:
+            for toc_records_colrev_ID in toc_items:
                 # Note : using a simpler similarity measure
                 # because the publication outlet parameters are already identical
-                sv = fuzz.ratio(record_string_repr, saved_toc_record_str_repr) / 100
+                sv = fuzz.ratio(record["colrev_ID"], toc_records_colrev_ID) / 100
                 sim_list.append(sv)
 
             if max(sim_list) > similarity_threshold:
-                saved_toc_record_str_repr = toc_items[sim_list.index(max(sim_list))]
-
-                hash = hashlib.sha256(
-                    saved_toc_record_str_repr.encode("utf-8")
-                ).hexdigest()
+                toc_records_colrev_ID = toc_items[sim_list.index(max(sim_list))]
+                hash = hashlib.sha256(toc_records_colrev_ID.encode("utf-8")).hexdigest()
                 res = self.os.get(index="record_index", id=str(hash))
                 record = res["_source"]  # type: ignore
                 return self.prep_record_for_return(record)
@@ -943,7 +924,19 @@ class LocalIndex(Process):
 
         retrieved_record: typing.Dict = dict()
 
-        # 1. Try using global-ids
+        # 1. Try the record index
+
+        if not retrieved_record:
+            try:
+                retrieved_record = self.__retrieve_from_record_index(record)
+            except (NotFoundError, RecordNotInIndexException):
+                pass
+
+        if retrieved_record:
+            self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
+            return self.prep_record_for_return(retrieved_record)
+
+        # 2. Try using global-ids
         if not retrieved_record:
             for k, v in record.items():
                 if k not in self.global_keys or "ID" == k:
@@ -960,19 +953,7 @@ class LocalIndex(Process):
             self.REVIEW_MANAGER.logger.debug("Retrieved from g_id index")
             return self.prep_record_for_return(retrieved_record)
 
-        # 2. Try the record index
-
-        if not retrieved_record:
-            try:
-                retrieved_record = self.__retrieve_from_record_index(record)
-            except (NotFoundError, RecordNotInIndexException):
-                pass
-
-        if retrieved_record:
-            self.REVIEW_MANAGER.logger.debug("Retrieved from record index")
-            return self.prep_record_for_return(retrieved_record)
-
-        # 3. Try the duplicate representation index
+        # 3. Try alsoKnownAs
         if not retrieved_record:
             try:
                 retrieved_record = self.__retrieve_record_from_d_index(record)
@@ -1002,7 +983,7 @@ class LocalIndex(Process):
 
         return record
 
-    def is_duplicate(self, record1_string_repr: str, record2_string_repr: str) -> str:
+    def is_duplicate(self, record1_colrev_ID: str, record2_colrev_ID: str) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
         # Note : the retrieve(record) also checks the d_index, i.e.,
@@ -1010,12 +991,8 @@ class LocalIndex(Process):
         # record1 and record2 have been mapped to the same record
         # if record1 and record2 in index (and same source_url): return 'no'
         try:
-            r1_index = self.__retrieve_from_record_index_string_repr(
-                record1_string_repr
-            )
-            r2_index = self.__retrieve_from_record_index_string_repr(
-                record2_string_repr
-            )
+            r1_index = self.__retrieve_based_on_colrev_ID(record1_colrev_ID)
+            r2_index = self.__retrieve_based_on_colrev_ID(record2_colrev_ID)
             if r1_index["source_url"] == r2_index["source_url"]:
                 if r1_index["ID"] == r2_index["ID"]:
                     return "yes"
@@ -1030,7 +1007,7 @@ class LocalIndex(Process):
                 "colrev/curated_metadata" in r1_index["source_url"]
                 and "colrev/curated_metadata" in r2_index["source_url"]
             ):
-                if r1_index["ID"] != r2_index["ID"]:
+                if r1_index["colrev_ID"] != r2_index["colrev_ID"]:
                     return "no"
 
         except (RecordNotInIndexException, NotFoundError):

@@ -975,23 +975,21 @@ class ReviewDataset:
                 line = f.readline()
         return IDs
 
-    def get_string_representation(self, record: dict) -> str:
-        string_representation = self.LOCAL_INDEX.get_string_representation(record)
-        return string_representation
-
-    def retrieve_by_string_representation(
+    def retrieve_by_colrev_ID(
         self, indexed_record: dict, records: typing.List[typing.Dict]
     ) -> dict:
         from colrev_core.environment import LocalIndex
 
         self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
-        string_repr = self.get_string_representation(indexed_record)
+        indexed_record_colrev_ID = self.LOCAL_INDEX.get_colrev_ID(indexed_record)
         record_l = [
-            x for x in records if self.get_string_representation(x) == string_repr
+            x
+            for x in records
+            if self.LOCAL_INDEX.get_colrev_ID(x) == indexed_record_colrev_ID
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
-        return record_l.pop()
+        return record_l[0]
 
     # CHECKS --------------------------------------------------------------
 

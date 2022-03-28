@@ -543,7 +543,7 @@ class Search(Process):
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
 
             query = (
-                "SELECT hash_string_representation FROM record_index "
+                "SELECT colrev_ID FROM record_index "
                 f"WHERE {params['selection_clause']}"
             )
             resp = LOCAL_INDEX.os.sql.query(body={"query": query})
