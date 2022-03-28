@@ -541,9 +541,11 @@ class Search(Process):
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
-
+            # Note: we retrieve colrev_IDs and full records afterwards
+            # because the os.sql.query throws errors when selecting
+            # complex fields like lists of alsoKnownAs fields
             query = (
-                "SELECT colrev_ID FROM record_index "
+                f"SELECT colrev_ID FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
             resp = LOCAL_INDEX.os.sql.query(body={"query": query})
@@ -553,7 +555,7 @@ class Search(Process):
             for ID_to_retrieve in IDs_to_retrieve:
 
                 hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-                res = LOCAL_INDEX.os.get(index="record_index", id=hash)
+                res = LOCAL_INDEX.os.get(index=LOCAL_INDEX.RECORD_INDEX, id=hash)
                 record_to_import = res["_source"]
                 record_to_import = {k: str(v) for k, v in record_to_import.items()}
                 record_to_import = {

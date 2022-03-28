@@ -54,7 +54,7 @@ class EnvironmentStatus(Process):
         last_modified = "NOT_INITIATED"
         try:
             size = LOCAL_INDEX.os.cat.count(
-                index="record_index", params={"format": "json"}
+                index=LOCAL_INDEX.RECORD_INDEX, params={"format": "json"}
             )[0]["count"]
             # TODO:
             # last_modified = LOCAL_INDEX.os.search(
@@ -68,7 +68,7 @@ class EnvironmentStatus(Process):
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
-            "path": str(LocalIndex.local_index_path),
+            "path": str(LocalIndex.local_environment_path),
         }
 
         local_repos = self.REVIEW_MANAGER.load_local_registry()
@@ -114,17 +114,20 @@ class LocalIndex(Process):
     global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
     max_len_sha256 = 2 ** 256
 
-    local_index_path = Path.home().joinpath("colrev")
-    toc_overview = local_index_path / Path(".toc_index/readme.md")
-    teiind_path = local_index_path / Path(".tei_index/")
-    annotators_path = local_index_path / Path("annotators")
-    opensearch_index = local_index_path / Path("index")
+    local_environment_path = Path.home().joinpath("colrev")
+
+    opensearch_index = local_environment_path / Path("index")
+    teiind_path = local_environment_path / Path(".tei_index/")
+    annotators_path = local_environment_path / Path("annotators")
 
     # Note : records are indexed by id = hash(colrev_ID)
     # to ensure that the indexing-ids do not exceed limits
     # such as the opensearch limit of 512 bytes.
     # This enables efficient retrieval based on id=hash(colrev_ID)
     # but also search-based retrieval using only colrev_IDs
+
+    RECORD_INDEX = "record_index"
+    TOC_INDEX = "toc_index"
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=False):
 
@@ -194,7 +197,7 @@ class LocalIndex(Process):
         while i < 20:
             i += 1
             try:
-                self.os.get(index="record_index", id="test")
+                self.os.get(index=self.RECORD_INDEX, id="test")
                 break
             except ConnectionError:
                 if i == 1:
@@ -360,7 +363,7 @@ class LocalIndex(Process):
         return new_hex.decode("utf-8")
 
     def __get_tei_index_file(self, hash: str) -> Path:
-        return self.local_index_path / Path(f".tei_index/{hash[:2]}/{hash[2:]}.tei.xml")
+        return self.teiind_path / Path(f"{hash[:2]}/{hash[2:]}.tei.xml")
 
     def __store_record(self, hash: str, record: dict) -> None:
 
@@ -379,20 +382,20 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError, SerialisationError):
                 pass
 
-        self.os.index(index="record_index", id=hash, body=record)
+        self.os.index(index=self.RECORD_INDEX, id=hash, body=record)
 
         return
 
     def __retrieve_toc_index(self, toc_key: str) -> list:
 
-        toc_item_response = self.os.get(index="toc_index", id=toc_key)
+        toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
         toc_item = toc_item_response["_source"]
 
         return toc_item
 
     def __amend_record(self, hash: str, record: dict) -> None:
 
-        saved_record_response = self.os.get(index="record_index", id=hash)
+        saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
         saved_record = saved_record_response["_source"]
 
         # amend saved record
@@ -417,7 +420,7 @@ class LocalIndex(Process):
             except (TEI_Exception, AttributeError):
                 pass
 
-        self.os.update(index="record_index", id=hash, body={"doc": saved_record})
+        self.os.update(index=self.RECORD_INDEX, id=hash, body={"doc": saved_record})
         return
 
     def __record_index(self, record: dict) -> None:
@@ -446,11 +449,11 @@ class LocalIndex(Process):
             pass
 
         while True:
-            if not self.os.exists(index="record_index", id=hash):
+            if not self.os.exists(index=self.RECORD_INDEX, id=hash):
                 self.__store_record(hash, record)
                 break
             else:
-                saved_record_response = self.os.get(index="record_index", id=hash)
+                saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
                 saved_record = saved_record_response["_source"]
                 if saved_record["colrev_ID"] == record["colrev_ID"]:
                     # ok - no collision, update the record
@@ -499,14 +502,14 @@ class LocalIndex(Process):
             # print(toc_key)
             record["colrev_ID"] = self.get_colrev_ID(record)
 
-            if not self.os.exists(index="toc_index", id=toc_key):
+            if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
                 toc_item = {
                     "toc_key": toc_key,
                     "string_representations": [record["colrev_ID"]],
                 }
-                self.os.index(index="toc_index", id=toc_key, body=toc_item)
+                self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
             else:
-                toc_item_response = self.os.get(index="toc_index", id=toc_key)
+                toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
                 toc_item = toc_item_response["_source"]
                 if toc_item["toc_key"] == toc_key:
                     # ok - no collision, update the record
@@ -517,7 +520,7 @@ class LocalIndex(Process):
                             record["colrev_ID"]
                         )
                         self.os.update(
-                            index="toc_index", id=toc_key, body={"doc": toc_item}
+                            index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
                         )
 
         return
@@ -575,12 +578,12 @@ class LocalIndex(Process):
 
             hash = hashlib.sha256(main_colrev_ID.encode("utf-8")).hexdigest()
             while True:
-                if self.os.exists(index="record_index", id=hash):
+                if self.os.exists(index=self.RECORD_INDEX, id=hash):
                     # Note : this should happen rarely/never
                     # but we have to make sure that the while loop breaks
                     break
                 else:
-                    response = self.os.get(index="record_index", id=hash)
+                    response = self.os.get(index=self.RECORD_INDEX, id=hash)
                     saved_record = response["_source"]
                     saved_original_string_repr = saved_record["colrev_ID"]
 
@@ -596,7 +599,7 @@ class LocalIndex(Process):
                             else:
                                 saved_record["alsoKnownAs"] = [alsoKnownAs_colrev_ID]
                             self.os.update(
-                                index="record_index",
+                                index=self.RECORD_INDEX,
                                 id=hash,
                                 body={"doc": saved_record},
                             )
@@ -680,7 +683,7 @@ class LocalIndex(Process):
         try:
             # match_phrase := exact match
             resp = self.os.search(
-                index="record_index",
+                index=self.RECORD_INDEX,
                 body={
                     "query": {
                         "match_phrase": {"alsoKnownAs": string_representation_record}
@@ -711,7 +714,7 @@ class LocalIndex(Process):
         hash = hashlib.sha256(colrev_ID.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
-            res = self.os.get(index="record_index", id=hash)
+            res = self.os.get(index=self.RECORD_INDEX, id=hash)
             retrieved_record = res["_source"]
             if self.get_colrev_ID(retrieved_record) == colrev_ID:
                 break
@@ -799,17 +802,19 @@ class LocalIndex(Process):
         if self.duplicate_outlets():
             return
 
-        self.REVIEW_MANAGER.logger.info("Reset record_index and toc_index")
+        self.REVIEW_MANAGER.logger.info(
+            f"Reset {self.RECORD_INDEX} and {self.TOC_INDEX}"
+        )
         # if self.teiind_path.is_dir():
         #     shutil.rmtree(self.teiind_path)
 
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
-        if "record_index" in self.os.indices.get_alias().keys():
-            self.os.indices.delete(index="record_index", ignore=[400, 404])
-        if "toc_index" in self.os.indices.get_alias().keys():
-            self.os.indices.delete(index="toc_index", ignore=[400, 404])
-        self.os.indices.create(index="record_index")
-        self.os.indices.create(index="toc_index")
+        if self.RECORD_INDEX in self.os.indices.get_alias().keys():
+            self.os.indices.delete(index=self.RECORD_INDEX, ignore=[400, 404])
+        if self.TOC_INDEX in self.os.indices.get_alias().keys():
+            self.os.indices.delete(index=self.TOC_INDEX, ignore=[400, 404])
+        self.os.indices.create(index=self.RECORD_INDEX)
+        self.os.indices.create(index=self.TOC_INDEX)
 
         for source_url in [x["source_url"] for x in self.local_registry]:
 
@@ -885,7 +890,7 @@ class LocalIndex(Process):
 
         # 1. get TOC
         toc_items = []
-        if self.os.exists(index="toc_index", id=toc_key):
+        if self.os.exists(index=self.TOC_INDEX, id=toc_key):
             res = self.__retrieve_toc_index(toc_key)
             toc_items = res["string_representations"]  # type: ignore
 
@@ -902,7 +907,7 @@ class LocalIndex(Process):
             if max(sim_list) > similarity_threshold:
                 toc_records_colrev_ID = toc_items[sim_list.index(max(sim_list))]
                 hash = hashlib.sha256(toc_records_colrev_ID.encode("utf-8")).hexdigest()
-                res = self.os.get(index="record_index", id=str(hash))
+                res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
                 record = res["_source"]  # type: ignore
                 return self.prep_record_for_return(record)
 
@@ -943,7 +948,7 @@ class LocalIndex(Process):
                     continue
                 try:
                     retrieved_record = self.get_from_index_exact_match(
-                        "record_index", k, v
+                        self.RECORD_INDEX, k, v
                     )
                     break
                 except (IndexError, NotFoundError):

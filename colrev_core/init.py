@@ -200,11 +200,12 @@ class Initializer:
         return global_conf_details
 
     def __create_local_index(self) -> None:
-        self.REVIEW_MANAGER.report_logger.handlers = []
-
+        from colrev_core.environment import LocalIndex
         import os
 
-        local_index_path = Path.home().joinpath("colrev/local_index")
+        self.REVIEW_MANAGER.report_logger.handlers = []
+
+        local_index_path = LocalIndex.local_environment_path / Path("local_index")
         curdir = Path.cwd()
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
