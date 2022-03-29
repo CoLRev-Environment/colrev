@@ -270,6 +270,7 @@ class Status(Process):
         from colrev_core.review_manager import ReviewManager
         from git.exc import NoSuchPathError
         from git.exc import InvalidGitRepositoryError
+        from colrev_core.environment import EnvironmentManager
 
         environment_instructions = []
 
@@ -310,7 +311,7 @@ class Status(Process):
                 }
                 environment_instructions.append(instruction)
 
-        local_registry = self.REVIEW_MANAGER.load_local_registry()
+        local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
         for registered_path in registered_paths:
 
@@ -320,7 +321,7 @@ class Status(Process):
                 pass
                 instruction = {
                     "msg": "Locally registered repo no longer exists.",
-                    "cmd": f"colrev config --remove_from_registry {registered_path}",
+                    "cmd": f"colrev env --unregister {registered_path}",
                 }
                 environment_instructions.append(instruction)
                 continue

@@ -61,10 +61,10 @@ class PDF_Preparation(Process):
 
         self.reprocess = reprocess
 
-        self.cp_path = LocalIndex.local_index_path / Path(".coverpages")
+        self.cp_path = LocalIndex.local_environment_path / Path(".coverpages")
         self.cp_path.mkdir(exist_ok=True)
 
-        self.lp_path = LocalIndex.local_index_path / Path(".lastpages")
+        self.lp_path = LocalIndex.local_environment_path / Path(".lastpages")
         self.lp_path.mkdir(exist_ok=True)
 
         self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
@@ -326,7 +326,7 @@ class PDF_Preparation(Process):
 
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)

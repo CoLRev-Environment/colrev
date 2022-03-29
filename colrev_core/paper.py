@@ -14,6 +14,8 @@ class Paper(Process):
         import requests
         import docker
 
+        from colrev_core.environment import EnvironmentManager
+
         if not self.REVIEW_MANAGER.paths["PAPER"].is_file():
             self.REVIEW_MANAGER.logger.error("File paper.md does not exist.")
             self.REVIEW_MANAGER.logger.info(
@@ -21,7 +23,7 @@ class Paper(Process):
             )
             return
 
-        self.REVIEW_MANAGER.build_docker_images()
+        EnvironmentManager.build_docker_images()
 
         uid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
         gid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
@@ -48,7 +50,7 @@ class Paper(Process):
 
         client = docker.from_env()
         try:
-            pandoc_img = self.REVIEW_MANAGER.docker_images["pandoc/ubuntu-latex"]
+            pandoc_img = EnvironmentManager.docker_images["pandoc/ubuntu-latex"]
             msg = "Running docker container created from " f"image {pandoc_img}"
             self.REVIEW_MANAGER.report_logger.info(msg)
             self.REVIEW_MANAGER.logger.info(msg)

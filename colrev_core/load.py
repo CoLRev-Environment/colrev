@@ -248,8 +248,9 @@ class Loader(Process):
 
     def start_zotero_translators(self) -> None:
         import docker
+        from colrev_core.environment import EnvironmentManager
 
-        zotero_image = self.REVIEW_MANAGER.docker_images["zotero/translation-server"]
+        zotero_image = EnvironmentManager.docker_images["zotero/translation-server"]
 
         client = docker.from_env()
         for container in client.containers.list():
@@ -564,7 +565,7 @@ class Loader(Process):
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
             self.REVIEW_MANAGER.logger.info("Start grobid")
-            grobid_client.start_grobid(self.REVIEW_MANAGER)
+            grobid_client.start_grobid()
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")

@@ -128,16 +128,13 @@ def debug_data():
 def debug_tei_tools(param) -> None:
     from colrev_core.tei import TEI
     from colrev_core import grobid_client
-    from colrev_core.review_manager import ReviewManager
-
-    REVIEW_MANAGER = ReviewManager()
 
     logger.debug("Start grobid")
-    grobid_client.start_grobid(REVIEW_MANAGER)
+    grobid_client.start_grobid()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    TEI_INSTANCE = TEI(REVIEW_MANAGER, pdf_path=filepath)
+    TEI_INSTANCE = TEI(pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
     return

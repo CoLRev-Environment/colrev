@@ -20,8 +20,8 @@ from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
-from elasticsearch import NotFoundError
 from nameparser import HumanName
+from opensearchpy import NotFoundError
 from p_tqdm import p_map
 from thefuzz import fuzz
 
@@ -450,7 +450,7 @@ class Preparation(Process):
 
     def get_record_from_local_index(self, record: dict) -> dict:
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         retrieved = False
         try:

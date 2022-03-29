@@ -23,6 +23,18 @@ from colrev_core.process import RecordState
 
 
 class ReviewDataset:
+
+    search_type_opts = [
+        "DB",
+        "TOC",
+        "BACK_CIT",
+        "FORW_CIT",
+        "PDFS",
+        "OTHER",
+        "FEED",
+        "COLREV_REPO",
+    ]
+
     def __init__(self, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
@@ -332,7 +344,7 @@ class ReviewDataset:
         from colrev_core.prep import Preparation
         from colrev_core.environment import LocalIndex
 
-        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        self.LOCAL_INDEX = LocalIndex()
         self.PREPARATION = Preparation(
             self.REVIEW_MANAGER, notify_state_transition_process=False
         )
@@ -975,23 +987,21 @@ class ReviewDataset:
                 line = f.readline()
         return IDs
 
-    def get_string_representation(self, record: dict) -> str:
-        string_representation = self.LOCAL_INDEX.get_string_representation(record)
-        return string_representation
-
-    def retrieve_by_string_representation(
+    def retrieve_by_colrev_ID(
         self, indexed_record: dict, records: typing.List[typing.Dict]
     ) -> dict:
         from colrev_core.environment import LocalIndex
 
-        self.LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
-        string_repr = self.get_string_representation(indexed_record)
+        self.LOCAL_INDEX = LocalIndex()
+        indexed_record_colrev_ID = self.LOCAL_INDEX.get_colrev_ID(indexed_record)
         record_l = [
-            x for x in records if self.get_string_representation(x) == string_repr
+            x
+            for x in records
+            if self.LOCAL_INDEX.get_colrev_ID(x) == indexed_record_colrev_ID
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
-        return record_l.pop()
+        return record_l[0]
 
     # CHECKS --------------------------------------------------------------
 
@@ -1093,9 +1103,7 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
-        self.LOCAL_INDEX = LocalIndex(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
+        self.LOCAL_INDEX = LocalIndex()
 
         self.PREPARATION = Preparation(
             self.REVIEW_MANAGER, notify_state_transition_process=False
@@ -1528,7 +1536,7 @@ class ReviewDataset:
 
         SOURCES = self.REVIEW_MANAGER.paths["SOURCES"]
         SEARCHDIR = self.REVIEW_MANAGER.paths["SEARCHDIR"]
-        search_type_opts = self.REVIEW_MANAGER.search_type_opts
+        search_type_opts = self.search_type_opts
 
         if not SOURCES.is_file():
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), SOURCES)

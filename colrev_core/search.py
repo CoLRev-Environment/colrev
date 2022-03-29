@@ -405,7 +405,7 @@ class Search(Process):
             print("No records imported. Cannot run backward search yet.")
             return
 
-        grobid_client.start_grobid(self.REVIEW_MANAGER)
+        grobid_client.start_grobid()
         print(params)
         print(feed_file)
         print(
@@ -538,22 +538,24 @@ class Search(Process):
 
         from colrev_core.environment import LocalIndex
 
-        LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
+        LOCAL_INDEX = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
-
+            # Note: we retrieve colrev_IDs and full records afterwards
+            # because the os.sql.query throws errors when selecting
+            # complex fields like lists of alsoKnownAs fields
             query = (
-                "SELECT hash_string_representation FROM record_index "
+                f"SELECT colrev_ID FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
-            resp = LOCAL_INDEX.es.sql.query(body={"query": query})
+            resp = LOCAL_INDEX.os.sql.query(body={"query": query})
             IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
 
             records_to_import = []
             for ID_to_retrieve in IDs_to_retrieve:
 
                 hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-                res = LOCAL_INDEX.es.get(index="record_index", id=hash)
+                res = LOCAL_INDEX.os.get(index=LOCAL_INDEX.RECORD_INDEX, id=hash)
                 record_to_import = res["_source"]
                 record_to_import = {k: str(v) for k, v in record_to_import.items()}
                 record_to_import = {
@@ -810,7 +812,7 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            grobid_client.start_grobid(self.REVIEW_MANAGER)
+            grobid_client.start_grobid()
         else:
             self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
@@ -875,6 +877,8 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(record) -> dict:
+            from colrev_core.environment import EnvironmentManager
+
             if RecordState.md_prepared == record.get("status", "NA"):
                 return record
             grobid_client.check_grobid_availability()
@@ -910,7 +914,6 @@ class Search(Process):
             # return {}
 
             TEI_INSTANCE = TEI(
-                self.REVIEW_MANAGER,
                 pdf_path=pdf_path,
                 notify_state_transition_process=False,
             )
@@ -950,7 +953,7 @@ class Search(Process):
                 del record["keywords"]
 
             # to allow users to update/reindex with newer version:
-            record["grobid-version"] = self.REVIEW_MANAGER.docker_images[
+            record["grobid-version"] = EnvironmentManager.docker_images[
                 "lfoppiano/grobid"
             ]
             return record
