@@ -176,7 +176,11 @@ Search
 
     Run selected search
 
-Note: the query syntax is based on `sqlite <https://www.sqlite.org/lang.html>`_ (pandasql). You can test and debug your queries `here <https://sqliteonline.com/>`_.
+Note:
+
+- The query syntax is based on `sqlite <https://www.sqlite.org/lang.html>`_ (pandasql). You can test and debug your queries `here <https://sqliteonline.com/>`_.
+- Journal ISSNs for crossref searches can be retrieved from the `ISSN Portal <https://portal.issn.org/>`_
+
 
 .. _Load:
 

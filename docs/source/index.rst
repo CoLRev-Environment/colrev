@@ -72,7 +72,9 @@ Further details are provided in the `documentation <guides/documentation.html>`_
 Credits
 -----------------
 
-CoLRev builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
+The broader vision is better tool-support for the literature review process. To achieve this, CoLRev adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- select custom tools or rely on the powerful reference implementation of CoLRev.
+
+The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 
 .. |gitactivity| image:: https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic
    :height: 12pt
@@ -113,7 +115,7 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
 .. |elasticsearchactivity| image:: https://img.shields.io/github/commit-activity/y/elastic/elasticsearch?color=green&style=plastic
    :height: 12pt
 
-.. list-table:: Open source projects included (* dynamically loaded)
+.. list-table::
    :widths: 54 24 22
    :header-rows: 1
 
@@ -126,7 +128,7 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
    * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
      - `MIT <https://github.com/pre-commit/pre-commit/blob/master/LICENSE>`_
      - |precommitactivity|
-   * - `docker-py <https://github.com/docker/docker-py>`_ : accessing other microservices
+   * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
      - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`_
      - |dockerpyactivity|
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
@@ -159,6 +161,8 @@ CoLRev builds on the shoulders of amazing projects (growing giants) and benefits
    * - `Elasticsearch <https://github.com/elastic/elasticsearch>`_ \*: searching local projects
      - `multiple <https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt>`_
      - |elasticsearchactivity|
+
+\* dynamically loaded
 
 .. list-table:: Sources for metadata preparation and PDF retrieval
    :widths: 54 24 22
