@@ -100,9 +100,10 @@ class EnvironmentManager:
 
         if registered_paths != []:
             if str(path_to_register) in registered_paths:
-                print(f"Error: Path already registered: {path_to_register}")
+                print(f"Warning: Path already registered: {path_to_register}")
+                return
         else:
-            print(f"Error: Creating {cls.paths['LOCAL_REGISTRY']}")
+            print(f"Creating {cls.paths['REGISTRY']}")
 
         new_record = {
             "filename": path_to_register.stem,
