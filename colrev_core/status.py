@@ -328,8 +328,9 @@ class Status(Process):
             if "curated_metadata" in str(registered_path):
                 if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
                     instruction = {
-                        "msg": "Updates available for curated repo.",
-                        "cmd": f"colrev env --update {registered_path}",
+                        "msg": "Updates available for curated repo "
+                        f"({registered_path}).",
+                        "cmd": "colrev env --update",
                     }
                     environment_instructions.append(instruction)
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
