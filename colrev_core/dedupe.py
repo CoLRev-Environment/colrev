@@ -526,11 +526,8 @@ class Dedupe(Process):
 
         import bibtexparser
 
-        report_logger = logging.getLogger("colrev_core_report")
-        logger = logging.getLogger("colrev_core")
-
-        report_logger.info("Dedupe: fix errors")
-        logger.info("Dedupe: fix errors")
+        self.REVIEW_MANAGER.report_logger.info("Dedupe: fix errors")
+        self.REVIEW_MANAGER.logger.info("Dedupe: fix errors")
         saved_args = locals()
 
         dupe_file = Path("duplicates_to_validate.xlsx")
@@ -563,7 +560,7 @@ class Dedupe(Process):
 
                     unmerged = []
                     for ID_list_to_unmerge in IDs_to_unmerge:
-                        report_logger.info(
+                        self.REVIEW_MANAGER.report_logger.info(
                             f'Undo merge: {",".join(ID_list_to_unmerge)}'
                         )
 
@@ -597,7 +594,9 @@ class Dedupe(Process):
                                         )
                                     r["status"] = RecordState.md_processed
                                     records.append(r)
-                                    logger.info(f'Restored {r["ID"]}')
+                                    self.REVIEW_MANAGER.logger.info(
+                                        f'Restored {r["ID"]}'
+                                    )
                         else:
                             unmerged.append(ID_list_to_unmerge)
 
@@ -650,12 +649,11 @@ class Dedupe(Process):
                 saved_args=saved_args,
             )
         else:
-            logger.error("No file with potential errors found.")
+            self.REVIEW_MANAGER.logger.error("No file with potential errors found.")
         return
 
     def cluster_tuples(self, deduper, partition_threshold, auto_merge_threshold):
 
-        report_logger = logging.getLogger("colrev_core_report")
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
         data_d = self.__readData()
@@ -664,10 +662,14 @@ class Dedupe(Process):
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
 
-        report_logger.info(f"set partition_threshold: {partition_threshold}")
+        self.REVIEW_MANAGER.report_logger.info(
+            f"set partition_threshold: {partition_threshold}"
+        )
 
         clustered_dupes = deduper.partition(data_d, partition_threshold)
-        report_logger.info(f"Number of duplicate sets {len(clustered_dupes)}")
+        self.REVIEW_MANAGER.report_logger.info(
+            f"Number of duplicate sets {len(clustered_dupes)}"
+        )
 
         # Results
         cluster_membership = {}
@@ -693,7 +695,9 @@ class Dedupe(Process):
 
         auto_dedupe = []
         ID_list = []
-        report_logger.info(f"set auto_merge_threshold: {auto_merge_threshold}")
+        self.REVIEW_MANAGER.report_logger.info(
+            f"set auto_merge_threshold: {auto_merge_threshold}"
+        )
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:

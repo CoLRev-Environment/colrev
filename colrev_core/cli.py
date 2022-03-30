@@ -1,4 +1,3 @@
-import logging
 import os
 import pprint
 
@@ -6,8 +5,6 @@ import click
 import click_completion.core
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-
-logger = logging.getLogger("colrev_core_report")
 
 
 # Note: autocompletion needs bash/... activation:
@@ -48,17 +45,13 @@ def main(ctx):
 def debug(ctx, activate, deactivate):
     """Debug"""
     from colrev_core import debug
-    from colrev_core import review_manager
-
-    review_manager.setup_logger()
-    logger = logging.getLogger("colrev_core_report")
 
     if activate:
-        logger.info("Debugging activated")
+        print("Debugging activated")
         debug.set_debug_mode(True)
 
     elif deactivate:
-        logger.info("Debugging deactivated")
+        print("Debugging deactivated")
         debug.set_debug_mode(False)
     else:
         debug.main()

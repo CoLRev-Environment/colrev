@@ -220,13 +220,8 @@ class Preparation(Process):
         # ret = s.get(url, headers=headers)
         # print(ret)
 
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-        }
-
         try:
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
             if 503 == ret.status_code:
                 return record
             elif (
@@ -240,7 +235,7 @@ class Preparation(Process):
                 while self.__meta_redirect(ret.content.decode("utf-8")):
                     url = self.__meta_redirect(ret.content.decode("utf-8"))
                     ret = requests.get(
-                        url, "GET", headers=headers, timeout=self.TIMEOUT
+                        url, "GET", headers=self.requests_headers, timeout=self.TIMEOUT
                     )
             record["url"] = str(url)
         except requests.exceptions.ConnectionError:
@@ -862,8 +857,6 @@ class Preparation(Process):
         return min_len
 
     def get_retrieval_similarity(self, record: dict, retrieved_record: dict) -> float:
-
-        # TODO: also replace special characters (e.g., &amp;)
 
         if self.__container_is_abbreviated(record):
             min_len = self.__get_abbrev_container_min_len(record)
@@ -2406,7 +2399,8 @@ class Preparation(Process):
         LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
         LOADER.start_zotero_translators()
 
-        headers = {"Content-type": "text/plain"}
+        content_type_header = {"Content-type": "text/plain"}
+        headers = {**self.requests_headers, **content_type_header}
         et = requests.post(
             "http://127.0.0.1:1969/web",
             headers=headers,
@@ -2419,16 +2413,21 @@ class Preparation(Process):
             if len(items) == 0:
                 return record
             item = items[0]
-            # self.REVIEW_MANAGER.pp.pprint(item)
+            self.REVIEW_MANAGER.pp.pprint(item)
             record["ID"] = item["key"]
             record["ENTRYTYPE"] = "article"  # default
             if "journalArticle" == item.get("itemType", ""):
                 record["ENTRYTYPE"] = "article"
                 if "publicationTitle" in item:
                     record["journal"] = item["publicationTitle"]
-                # TODO : number/issue, conferences
                 if "volume" in item:
                     record["volume"] = item["volume"]
+                if "issue" in item:
+                    record["number"] = item["issue"]
+            if "conferencePaper" == item.get("itemType", ""):
+                record["ENTRYTYPE"] = "inproceedings"
+                if "proceedingsTitle" in item:
+                    record["booktitle"] = item["proceedingsTitle"]
             if "creators" in item:
                 author_str = ""
                 for creator in item["creators"]:
@@ -2454,6 +2453,21 @@ class Preparation(Process):
                 year = re.search(r"\d{4}", item["date"])
                 if year:
                     record["year"] = year.group(0)
+            if "pages" in item:
+                record["pages"] = item["pages"]
+            if "url" in item:
+                if "https://doi.org/" in item["url"]:
+                    record["doi"] = item["url"].replace("https://doi.org/", "")
+                    ret_rec = self.get_link_from_doi({"doi": record["doi"]})
+                    if "https://doi.org/" not in ret_rec["url"]:
+                        record["url"] = ret_rec["url"]
+                else:
+                    record["url"] = item["url"]
+
+            if "tags" in item:
+                if len(item["tags"]) > 0:
+                    keywords = ", ".join([k["tag"] for k in item["tags"]])
+                    record["keywords"] = keywords
         except json.decoder.JSONDecodeError:
             pass
         except KeyError:

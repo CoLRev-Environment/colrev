@@ -395,9 +395,6 @@ class Status(Process):
         if MAIN_REFS_CHANGED:
             # Detect and validate transitions
 
-            # TODO : we may need to trace records based on their origins
-            # (IDs can change)
-
             from colrev_core.process import ProcessModel
 
             committed_record_states_list = (
@@ -413,14 +410,14 @@ class Status(Process):
             ]
             transitioned_records = []
             for item in record_state_items:
+                # TODO : we should match the current and committed records based
+                # on their origins because IDs may change (e.g., in the preparation)
                 transitioned_record = {"ID": item[0], "dest": item[1]}
 
                 source_state = [
                     rec[1] for rec in committed_record_states_list if rec[0] == item[0]
                 ]
                 if len(source_state) != 1:
-                    # TODO : we should match the current and committed records based
-                    # on their origins because IDs may change (e.g., in the preparation)
 
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
@@ -626,7 +623,7 @@ class Status(Process):
                     collaboration_instructions["items"].append(item)
 
                 if nr_commits_ahead > 0:
-                    # TODO: suggest detailed commands
+                    # TODO : suggest detailed commands
                     # (depending on the working directory/index)
                     item = {
                         "title": "Local changes not yet on the server",
@@ -646,7 +643,7 @@ class Status(Process):
                         # if they didn't pass, the message wouldn't be displayed
                     }
 
-                # TODO all the following: should all search results be imported?!
+                # TODO : all the following: should all search results be imported?!
                 if SHARE_STAT_REQ == "PROCESSED":
                     if 0 == stat["status"]["currently"]["non_processed"]:
                         collaboration_instructions["status"] = {

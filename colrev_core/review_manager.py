@@ -207,7 +207,7 @@ class ReviewManager:
         return logger
 
     def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
-        # TODO : the following may also need to include {self.path}
+        # TODO : the colrev_core_report may also need to include {self.path}
         report_logger = logging.getLogger("colrev_core_report")
 
         if report_logger.handlers:
@@ -1315,7 +1315,6 @@ class ReviewManager:
                 next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
             prior_rec["ID"] = next_unique_ID
 
-            # TODO drop non-essential fields
             if "status" in prior_rec:
                 del prior_rec["status"]
             if "origin" in prior_rec:

@@ -401,7 +401,7 @@ class ReviewDataset:
             if ID in data["ID"].tolist():
                 propagated = True
 
-        # TODO: also check data_pages?
+        # TODO : also check data_pages?
 
         return propagated
 
@@ -878,7 +878,7 @@ class ReviewDataset:
                     ec_case = [ID, status, excl_crit]
                     data["exclusion_criteria_list"].append(ec_case)
 
-                # TODO: the origins of a record could be in multiple states
+                # TODO : the origins of a record could be in multiple states
                 if "status" in prior:
                     prior_status = [
                         stat
@@ -1275,11 +1275,11 @@ class ReviewDataset:
                     if "status" in original_curated_record:
                         del original_curated_record["status"]
 
-                    # TODO: export only essential changes?
+                    # TODO : export only essential changes?
                     changes = diff(original_curated_record, corrected_curated_record)
                     change_items = list(changes)
 
-                    # TODO The following does not seem to work yet...
+                    # TODO : The export of corrections/changes does not seem to work yet
                     # change: the key is in x[1]
                     change_items = [
                         (x[0], x[1], x[2])

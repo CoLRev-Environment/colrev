@@ -1189,7 +1189,7 @@ class LocalIndex:
 
     def analyze(self, threshold: float = 0.95) -> None:
 
-        # TODO : update based on es index
+        # TODO : update analyze() functionality based on es index
         # import pandas as pd
 
         # changes = []

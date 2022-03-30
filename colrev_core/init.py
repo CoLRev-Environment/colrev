@@ -45,10 +45,11 @@ class Initializer:
 
         self.REVIEW_MANAGER = ReviewManager()
 
-        report_logger = logging.getLogger("colrev_core_report")
-        report_logger.info("Initialize review repository")
-        report_logger.info("Set project title:".ljust(30, " ") + f"{self.project_name}")
-        report_logger.info(
+        self.REVIEW_MANAGER.report_logger.info("Initialize review repository")
+        self.REVIEW_MANAGER.report_logger.info(
+            "Set project title:".ljust(30, " ") + f"{self.project_name}"
+        )
+        self.REVIEW_MANAGER.report_logger.info(
             "Set SHARE_STAT_REQ:".ljust(30, " ") + f"{self.SHARE_STAT_REQ}"
         )
         del saved_args["local_index_repo"]
