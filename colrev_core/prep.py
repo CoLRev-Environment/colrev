@@ -160,6 +160,7 @@ class Preparation(Process):
     def __init__(
         self,
         REVIEW_MANAGER,
+        force=False,
         similarity: float = 0.9,
         reprocess_state: RecordState = RecordState.md_imported,
         notify_state_transition_process: bool = True,
@@ -174,6 +175,7 @@ class Preparation(Process):
         )
         self.notify_state_transition_process = notify_state_transition_process
 
+        self.force_mode = force
         logging.getLogger("urllib3").setLevel(logging.ERROR)
 
         self.RETRIEVAL_SIMILARITY = similarity
@@ -2547,6 +2549,67 @@ class Preparation(Process):
         }
         return prep_data
 
+    def check_DBs_availability(self) -> None:
+        from urllib3.exceptions import NewConnectionError
+        from requests.exceptions import ConnectionError
+
+        test_rec = {
+            "doi": "10.17705/1cais.04607",
+            "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+            "and Paré, Guy",
+            "title": "A Knowledge Development Perspective on Literature Reviews: "
+            "Validation of a new Typology in the IS Field",
+            "ID": "SchryenEtAl2021",
+            "journal": "Communications of the Association for Information Systems",
+        }
+        returned_rec = self.__crossref_query(test_rec.copy())[0]
+        if 0 != len(returned_rec):
+            assert returned_rec["title"] == test_rec["title"]
+            assert returned_rec["author"] == test_rec["author"]
+        else:
+            if not self.force_mode:
+                raise ServiceNotAvailableException("CROSSREF")
+
+        test_rec = {
+            "doi": "10.17705/1cais.04607",
+            "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+            "and Paré, Guy",
+            "title": "A Knowledge Development Perspective on Literature Reviews - "
+            "Validation of a new Typology in the IS Field.",
+            "ID": "SchryenEtAl2021",
+            "journal": "Communications of the Association for Information Systems",
+            "volume": "46",
+            "year": "2020",
+        }
+        returned_rec = self.get_md_from_dblp(test_rec.copy())
+        if 0 != len(returned_rec):
+            assert returned_rec["title"] == test_rec["title"]
+            assert returned_rec["author"] == test_rec["author"]
+        else:
+            if not self.force_mode:
+                raise ServiceNotAvailableException("DBLP")
+
+        test_rec = {
+            "ENTRYTYPE": "book",
+            "isbn": "9781446201435",
+            # 'author': 'Ridley, Diana',
+            "title": "The Literature Review A Stepbystep Guide For Students",
+            "ID": "Ridley2012",
+            "year": "2012",
+        }
+        try:
+            url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
+            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
+            if ret.status_code != 200:
+                if not self.force_mode:
+                    raise ServiceNotAvailableException("OPENLIBRARY")
+        except (ConnectionError, NewConnectionError):
+            pass
+            if not self.force_mode:
+                raise ServiceNotAvailableException("OPENLIBRARY")
+
+        return
+
     def main(
         self,
         reprocess_state: RecordState = RecordState.md_imported,
@@ -2554,6 +2617,8 @@ class Preparation(Process):
         debug_id: str = "NA",
     ) -> None:
         saved_args = locals()
+
+        self.check_DBs_availability()
 
         if self.DEBUG_MODE:
             print("\n\n\n")
@@ -2648,6 +2713,12 @@ class Preparation(Process):
             self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
 
         return
+
+
+class ServiceNotAvailableException(Exception):
+    def __init__(self, msg: str):
+        self.message = msg
+        super().__init__(f"Service not available: {self.message}")
 
 
 if __name__ == "__main__":
