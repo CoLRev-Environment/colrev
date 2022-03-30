@@ -123,12 +123,10 @@ class Preparation(Process):
     fields_to_drop = [
         "type",
         "organization",
-        "issn",
         "unique-id",
         "month",
         "researcherid-numbers",
         "orcid-numbers",
-        "eissn",
         "article-number",
         "author_keywords",
         "source",
@@ -222,8 +220,13 @@ class Preparation(Process):
         # ret = s.get(url, headers=headers)
         # print(ret)
 
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
+        }
+
         try:
-            ret = requests.get(url)
+            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
             if 503 == ret.status_code:
                 return record
             elif (
@@ -236,7 +239,9 @@ class Preparation(Process):
                 # follow the chain of redirects
                 while self.__meta_redirect(ret.content.decode("utf-8")):
                     url = self.__meta_redirect(ret.content.decode("utf-8"))
-                    ret = requests.get(url, "GET")
+                    ret = requests.get(
+                        url, "GET", headers=headers, timeout=self.TIMEOUT
+                    )
             record["url"] = str(url)
         except requests.exceptions.ConnectionError:
             pass
@@ -324,7 +329,7 @@ class Preparation(Process):
         for field in fields_to_process:
             if field in record:
                 record[field] = (
-                    record[field]
+                    str(record[field])
                     .replace("\n", " ")
                     .rstrip()
                     .lstrip()
@@ -652,6 +657,7 @@ class Preparation(Process):
             if isinstance(container_title, list):
                 if container_title:
                     container_title = container_title[0]
+            container_title = container_title.replace("&amp;", "&")
 
         if "type" in item:
             if "journal-article" == item.get("type", "NA"):
@@ -726,7 +732,7 @@ class Preparation(Process):
                     record["crossmark"] = "True"
 
         for k, v in record.items():
-            record[k] = v.replace("{", "").replace("}", "")
+            record[k] = str(v).replace("{", "").replace("}", "")
 
         return record
 
@@ -1152,49 +1158,65 @@ class Preparation(Process):
 
     def get_md_from_open_library(self, record: dict) -> dict:
 
-        # only consider entries that are not journal or conference papers
-        if (
-            record.get("ENTRYTYPE", "NA")
-            in [
-                "article",
-                "inproceedings",
-            ]
-            or "CURATED" == record.get("metadata_source", "")
+        if record.get("ENTRYTYPE", "NA") != "book" or "CURATED" == record.get(
+            "metadata_source", ""
         ):
             return record
 
         try:
-            base_url = "https://openlibrary.org/search.json?"
-            url = ""
-            if record.get("author", "NA").split(",")[0]:
-                url = base_url + "&author=" + record.get("author", "NA").split(",")[0]
-            if "inbook" == record["ENTRYTYPE"] and "editor" in record:
-                if record.get("editor", "NA").split(",")[0]:
+            if "isbn" in record:
+                isbn = record["isbn"].replace("-", "").replace(" ", "")
+                url = f"https://openlibrary.org/isbn/{isbn}.json"
+                ret = requests.get(
+                    url, headers=self.requests_headers, timeout=self.TIMEOUT
+                )
+                ret.raise_for_status()
+                self.REVIEW_MANAGER.logger.debug(url)
+                if '"error": "notfound"' in ret.text:
+                    del record["isbn"]
+
+                item = json.loads(ret.text)
+
+            if "isbn" not in record:
+                base_url = "https://openlibrary.org/search.json?"
+                url = ""
+                if record.get("author", "NA").split(",")[0]:
                     url = (
-                        base_url + "&author=" + record.get("editor", "NA").split(",")[0]
+                        base_url + "&author=" + record.get("author", "NA").split(",")[0]
                     )
-            if base_url not in url:
-                return record
+                if "inbook" == record["ENTRYTYPE"] and "editor" in record:
+                    if record.get("editor", "NA").split(",")[0]:
+                        url = (
+                            base_url
+                            + "&author="
+                            + record.get("editor", "NA").split(",")[0]
+                        )
+                if base_url not in url:
+                    return record
 
-            title = record.get("title", record.get("booktitle", "NA"))
-            if len(title) < 10:
-                return record
-            if ":" in title:
-                title = title[: title.find(":")]  # To catch sub-titles
-            url = url + "&title=" + title.replace(" ", "+")
-            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
-            ret.raise_for_status()
-            self.REVIEW_MANAGER.logger.debug(url)
+                title = record.get("title", record.get("booktitle", "NA"))
+                if len(title) < 10:
+                    return record
+                if ":" in title:
+                    title = title[: title.find(":")]  # To catch sub-titles
+                url = url + "&title=" + title.replace(" ", "+")
+                ret = requests.get(
+                    url, headers=self.requests_headers, timeout=self.TIMEOUT
+                )
+                ret.raise_for_status()
+                self.REVIEW_MANAGER.logger.debug(url)
 
-            # if we have an exact match, we don't need to check the similarity
-            if '"numFoundExact": true,' not in ret.text:
-                return record
+                # if we have an exact match, we don't need to check the similarity
+                if '"numFoundExact": true,' not in ret.text:
+                    return record
 
-            data = json.loads(ret.text)
-            items = data["docs"]
-            if not items:
-                return record
-            retrieved_record = self.__open_library_json_to_record(items[0])
+                data = json.loads(ret.text)
+                items = data["docs"]
+                if not items:
+                    return record
+                item = items[0]
+
+            retrieved_record = self.__open_library_json_to_record(item)
 
             for key, val in retrieved_record.items():
                 record[key] = val
@@ -1649,23 +1671,25 @@ class Preparation(Process):
         for key in list(record):
             if "" == record[key]:
                 del record[key]
-        if "article" == record["ENTRYTYPE"] or "inproceedings" == record["ENTRYTYPE"]:
-            if "publisher" in record:
-                del record["publisher"]
+
         if "publisher" in record:
             if "researchgate.net" == record["publisher"]:
                 del record["publisher"]
         return record
 
-    def remove_broken_dois(self, record: dict) -> dict:
+    def remove_broken_IDs(self, record: dict) -> dict:
 
-        if "doi" not in record:
-            return record
-
-        # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-        d = re.match(r"^10.\d{4,9}\/", record["doi"])
-        if not d:
-            del record["doi"]
+        if "doi" in record:
+            # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
+            d = re.match(r"^10.\d{4,9}\/", record["doi"])
+            if not d:
+                del record["doi"]
+        if "isbn" in record:
+            isbn = record["isbn"].replace("-", "").replace(" ", "")
+            url = f"https://openlibrary.org/isbn/{isbn}.json"
+            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
+            if '"error": "notfound"' in ret.text:
+                del record["isbn"]
 
         return record
 
@@ -1914,7 +1938,7 @@ class Preparation(Process):
                 "params": [preparation_record],
             },
             {
-                "script": self.remove_broken_dois,
+                "script": self.remove_broken_IDs,
                 "params": [preparation_record],
             },
             {

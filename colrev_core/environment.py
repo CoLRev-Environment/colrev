@@ -193,16 +193,23 @@ class EnvironmentManager:
 
         size = 0
         last_modified = "NOT_INITIATED"
+
+        def get_last_modified() -> str:
+            import os
+            import datetime
+
+            list_of_files = LOCAL_INDEX.opensearch_index.glob(
+                "**/*"
+            )  # * means all if need specific format then *.csv
+            latest_file = max(list_of_files, key=os.path.getmtime)
+            last_mod = datetime.datetime.fromtimestamp(latest_file.lstat().st_mtime)
+            return last_mod.strftime("%Y-%m-%d %H:%M")
+
         try:
             size = LOCAL_INDEX.os.cat.count(
                 index=LOCAL_INDEX.RECORD_INDEX, params={"format": "json"}
             )[0]["count"]
-            # TODO:
-            # last_modified = LOCAL_INDEX.os.search(
-            # index='my_index',
-            # size=1,
-            # sort='my_timestamp:desc'
-            # )
+            last_modified = get_last_modified()
         except (NotFoundError, IndexError):
             pass
 
@@ -280,11 +287,45 @@ class LocalIndex:
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
-    def start_opensearch_docker(self) -> None:
-        os_image = EnvironmentManager.docker_images["opensearchproject/opensearch"]
+    def start_opensearch_docker_dashboards(self) -> None:
+
+        self.start_opensearch_docker()
+
         os_dashboard_image = EnvironmentManager.docker_images[
             "opensearchproject/opensearch-dashboards"
         ]
+
+        client = docker.from_env()
+        if not any(
+            "opensearch-dashboards" in container.name
+            for container in client.containers.list()
+        ):
+            try:
+                print("Start OpenSearch Dashboards")
+
+                if not client.networks.list(names=["opensearch-net"]):
+                    client.networks.create("opensearch-net")
+
+                client.containers.run(
+                    os_dashboard_image,
+                    name="opensearch-dashboards",
+                    ports={"5601/tcp": 5601},
+                    auto_remove=True,
+                    detach=True,
+                    environment={
+                        "OPENSEARCH_HOSTS": '["http://opensearch-node:9200"]',
+                        "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
+                    },
+                    network="opensearch-net",
+                )
+            except docker.errors.APIError as e:
+                print(e)
+                pass
+
+        return
+
+    def start_opensearch_docker(self) -> None:
+        os_image = EnvironmentManager.docker_images["opensearchproject/opensearch"]
         client = docker.from_env()
         if not any(
             "opensearch" in container.name for container in client.containers.list()
@@ -319,18 +360,6 @@ class LocalIndex:
                         docker.types.Ulimit(name="memlock", soft=-1, hard=-1),
                         docker.types.Ulimit(name="nofile", soft=65536, hard=65536),
                     ],
-                    network="opensearch-net",
-                )
-                client.containers.run(
-                    os_dashboard_image,
-                    name="opensearch-dashboards",
-                    ports={"5601/tcp": 5601},
-                    auto_remove=True,
-                    detach=True,
-                    environment={
-                        "OPENSEARCH_HOSTS": '["http://opensearch-node:9200"]',
-                        "DISABLE_SECURITY_DASHBOARDS_PLUGIN": "true",
-                    },
                     network="opensearch-net",
                 )
             except docker.errors.APIError as e:
@@ -853,6 +882,9 @@ class LocalIndex:
     def prep_record_for_return(self, record: dict) -> dict:
         from colrev_core.process import RecordState
 
+        # Casting to string (in particular the RecordState Enum)
+        record = {k: str(v) for k, v in record.items()}
+
         # del retrieved_record['source_url']
         if "file" in record:
             if not Path(record["file"]).is_file():
@@ -867,9 +899,17 @@ class LocalIndex:
 
         if "manual_non_duplicate" in record:
             del record["manual_non_duplicate"]
+        if "manual_duplicate" in record:
+            del record["manual_duplicate"]
         if "alsoKnownAs" in record:
             del record["alsoKnownAs"]
+        if "fulltext" in record:
+            del record["fulltext"]
+        if "tei_file" in record:
+            del record["tei_file"]
+
         record["status"] = RecordState.md_prepared
+
         return record
 
     def duplicate_outlets(self) -> bool:
