@@ -2,9 +2,8 @@
 Collaborative Literature Reviews
 ========================================
 
-This project aims at facilitating highly collaborative literature reviews involving teams of researchers, state-of-the-art algorithms, and content curated by the research community.
-The core proposition is that the transparent collaboration model of git, combined with robust content-based identification schemes, and a content curation model can enable literature review processes that are more trustworthy, more efficient, and richer.
-
+This project aims at improving the literature review process in terms of efficiency, trustworthiness, and richness.
+To accomplish this, CoLRev combines the transparent collaboration model of git with robust content-based identification schemes, and a model for content curation and reuse.
 
 Getting started
 -----------------
