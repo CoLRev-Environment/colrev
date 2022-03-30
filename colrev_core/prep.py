@@ -119,6 +119,7 @@ class Preparation(Process):
         "crossmark",
         "warning",
         "note",
+        "issn",
     ]
     fields_to_drop = [
         "type",
@@ -648,13 +649,14 @@ class Preparation(Process):
             elif isinstance(retrieved_title, str):
                 record.update(title=retrieved_title)
 
-        container_title = None
+        container_title = ""
         if "container-title" in item:
-            container_title = item["container-title"]
-            if isinstance(container_title, list):
-                if container_title:
+            if isinstance(item["container-title"], list):
+                if len(container_title) > 0:
                     container_title = container_title[0]
-            container_title = container_title.replace("&amp;", "&")
+                elif isinstance(item["container-title"], str):
+                    container_title = item["container-title"]
+            container_title = str(container_title).replace("&amp;", "&")
 
         if "type" in item:
             if "journal-article" == item.get("type", "NA"):
@@ -2553,39 +2555,49 @@ class Preparation(Process):
         from urllib3.exceptions import NewConnectionError
         from requests.exceptions import ConnectionError
 
-        test_rec = {
-            "doi": "10.17705/1cais.04607",
-            "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-            "and Paré, Guy",
-            "title": "A Knowledge Development Perspective on Literature Reviews: "
-            "Validation of a new Typology in the IS Field",
-            "ID": "SchryenEtAl2021",
-            "journal": "Communications of the Association for Information Systems",
-        }
-        returned_rec = self.__crossref_query(test_rec.copy())[0]
-        if 0 != len(returned_rec):
-            assert returned_rec["title"] == test_rec["title"]
-            assert returned_rec["author"] == test_rec["author"]
-        else:
+        try:
+            test_rec = {
+                "doi": "10.17705/1cais.04607",
+                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                "Validation of a new Typology in the IS Field",
+                "ID": "SchryenEtAl2021",
+                "journal": "Communications of the Association for Information Systems",
+            }
+            returned_rec = self.__crossref_query(test_rec.copy())[0]
+            if 0 != len(returned_rec):
+                assert returned_rec["title"] == test_rec["title"]
+                assert returned_rec["author"] == test_rec["author"]
+            else:
+                if not self.force_mode:
+                    raise ServiceNotAvailableException("CROSSREF")
+        except (ConnectionError, NewConnectionError):
+            pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("CROSSREF")
 
-        test_rec = {
-            "doi": "10.17705/1cais.04607",
-            "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-            "and Paré, Guy",
-            "title": "A Knowledge Development Perspective on Literature Reviews - "
-            "Validation of a new Typology in the IS Field.",
-            "ID": "SchryenEtAl2021",
-            "journal": "Communications of the Association for Information Systems",
-            "volume": "46",
-            "year": "2020",
-        }
-        returned_rec = self.get_md_from_dblp(test_rec.copy())
-        if 0 != len(returned_rec):
-            assert returned_rec["title"] == test_rec["title"]
-            assert returned_rec["author"] == test_rec["author"]
-        else:
+        try:
+            test_rec = {
+                "doi": "10.17705/1cais.04607",
+                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                "title": "A Knowledge Development Perspective on Literature Reviews - "
+                "Validation of a new Typology in the IS Field.",
+                "ID": "SchryenEtAl2021",
+                "journal": "Communications of the Association for Information Systems",
+                "volume": "46",
+                "year": "2020",
+            }
+            returned_rec = self.get_md_from_dblp(test_rec.copy())
+            if 0 != len(returned_rec):
+                assert returned_rec["title"] == test_rec["title"]
+                assert returned_rec["author"] == test_rec["author"]
+            else:
+                if not self.force_mode:
+                    raise ServiceNotAvailableException("DBLP")
+        except (ConnectionError, NewConnectionError):
+            pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("DBLP")
 
