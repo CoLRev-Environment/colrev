@@ -871,7 +871,7 @@ class Dedupe(Process):
 
         duplicates_df = duplicates_df.groupby("cluster_id").filter(lambda x: len(x) > 1)
         duplicates_df = duplicates_df.sort_values(
-            ["confidence_score", "cluster_id"], ascending=(False, False)
+            ["confidence_score", "cluster_id"], ascending=(True, False)
         )
         duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(4)
         # to adjust column widths in ExcelWriter:
@@ -903,7 +903,7 @@ class Dedupe(Process):
                 lambda x: len(x) > 1
             )
             non_duplicates_df = non_duplicates_df.sort_values(
-                ["confidence_score", "cluster_id"], ascending=(False, False)
+                ["confidence_score", "cluster_id"], ascending=(True, False)
             )
             non_duplicates_df["confidence_score"] = non_duplicates_df[
                 "confidence_score"
