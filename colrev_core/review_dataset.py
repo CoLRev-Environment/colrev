@@ -66,7 +66,6 @@ class ReviewDataset:
             "source_name",
             "source_url",
             "search_parameters",
-            "last_sync",
             "comment",
         ]
         for x in [x for x in sources_df.columns if x not in orderedCols]:
