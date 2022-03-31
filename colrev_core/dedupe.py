@@ -214,6 +214,16 @@ class Dedupe(Process):
             not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
         ]
 
+        # Do not merge records with non_latin_alphabets:
+        records_queue = [
+            x
+            for x in records_queue
+            if not (
+                RecordState.prescreen_excluded == x["status"]
+                and "script:non_latin_alphabet" == x.get("prescreen_exclusion", "")
+            )
+        ]
+
         LOCAL_INDEX = LocalIndex(self.REVIEW_MANAGER)
         for r in records_queue:
             r["colrev_ID"] = LOCAL_INDEX.get_colrev_ID(r)
