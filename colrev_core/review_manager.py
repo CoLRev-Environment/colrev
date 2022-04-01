@@ -182,7 +182,7 @@ class ReviewManager:
         return email
 
     def __setup_logger(self, level=logging.INFO) -> logging.Logger:
-        # for debugging:
+        # for logger debugging:
         # from logging_tree import printout
         # printout()
         logger = logging.getLogger(f"colrev_core{str(self.path).replace('/', '_')}")
@@ -207,8 +207,9 @@ class ReviewManager:
         return logger
 
     def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
-        # TODO : the colrev_core_report may also need to include {self.path}
-        report_logger = logging.getLogger("colrev_core_report")
+        report_logger = logging.getLogger(
+            f"colrev_core_report{str(self.path).replace('/', '_')}"
+        )
 
         if report_logger.handlers:
             for handler in report_logger.handlers:

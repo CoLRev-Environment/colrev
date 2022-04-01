@@ -639,24 +639,22 @@ class Preparation(Process):
         #             record["link"] = link
 
         if "title" in item:
-            retrieved_title = item["title"]
-            if isinstance(retrieved_title, list):
-                if len(retrieved_title) > 0:
-                    retrieved_title = retrieved_title[0]
+            if isinstance(item["title"], list):
+                if len(item["title"]) > 0:
+                    retrieved_title = item["title"][0]
                     retrieved_title = re.sub(r"\s+", " ", str(retrieved_title))
                     retrieved_title = retrieved_title.replace("\n", " ")
                     record.update(title=retrieved_title)
-            elif isinstance(retrieved_title, str):
+            elif isinstance(item["title"], str):
                 record.update(title=retrieved_title)
 
         container_title = ""
         if "container-title" in item:
             if isinstance(item["container-title"], list):
-                if len(container_title) > 0:
-                    container_title = container_title[0]
-                elif isinstance(item["container-title"], str):
-                    container_title = item["container-title"]
-            container_title = str(container_title).replace("&amp;", "&")
+                if len(item["container-title"]) > 0:
+                    container_title = item["container-title"][0]
+            elif isinstance(item["container-title"], str):
+                container_title = item["container-title"]
 
         if "type" in item:
             if "journal-article" == item.get("type", "NA"):
@@ -722,7 +720,6 @@ class Preparation(Process):
                 retrieved_abstract = re.sub(r"\s+", " ", retrieved_abstract)
                 retrieved_abstract = str(retrieved_abstract).replace("\n", "")
                 retrieved_abstract = retrieved_abstract.lstrip().rstrip()
-                retrieved_abstract = html.unescape(retrieved_abstract)
                 record.update(abstract=retrieved_abstract)
 
         if "content-domain" in item:
@@ -731,7 +728,7 @@ class Preparation(Process):
                     record["crossmark"] = "True"
 
         for k, v in record.items():
-            record[k] = str(v).replace("{", "").replace("}", "")
+            record[k] = html.unescape(v).replace("{", "").replace("}", "")
 
         return record
 
@@ -785,7 +782,6 @@ class Preparation(Process):
                 return [{}]
 
             data = json.loads(ret.text)
-
             items = data["message"]["items"]
             most_similar = 0
             most_similar_record = {}
@@ -1277,16 +1273,14 @@ class Preparation(Process):
             lpos = item["key"].find("/") + 1
             rpos = item["key"].rfind("/")
             jour = item["key"][lpos:rpos]
-            retrieved_record["journal"] = html.unescape(
-                self.__get_dblp_venue(jour, "Journal")
-            )
+            retrieved_record["journal"] = self.__get_dblp_venue(jour, "Journal")
         if "Conference and Workshop Papers" == item["type"]:
             retrieved_record["ENTRYTYPE"] = "inproceedings"
-            retrieved_record["booktitle"] = html.unescape(
-                self.__get_dblp_venue(item["venue"], "Conference or Workshop")
+            retrieved_record["booktitle"] = self.__get_dblp_venue(
+                item["venue"], "Conference or Workshop"
             )
         if "title" in item:
-            retrieved_record["title"] = html.unescape(item["title"].rstrip("."))
+            retrieved_record["title"] = item["title"].rstrip(".")
         if "year" in item:
             retrieved_record["year"] = item["year"]
         if "volume" in item:
