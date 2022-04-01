@@ -634,7 +634,7 @@ class Dedupe(Process):
                 content = non_dupe_file_txt.read_text()
                 IDs_to_merge = [x.split(",") for x in content.splitlines()]
                 for ID1, ID2 in IDs_to_merge:
-                    print(ID1 + ID2)
+                    print(f"{ID1} - {ID2}")
 
             if len(IDs_to_merge) > 0:
                 auto_dedupe = []
