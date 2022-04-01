@@ -1421,9 +1421,13 @@ class ReviewDataset:
             )
 
         if len(data["pdf_not_exists"]) > 0:
+            if len(data["pdf_not_exists"]) < 10:
+                non_existent_pdfs = ",".join(data["pdf_not_exists"])
+            else:
+                non_existent_pdfs = ",".join(data["pdf_not_exists"][0:10] + ["..."])
             raise FieldError(
-                f"record with broken file link. Use\n    "
-                f'colrev pdf-get --relink_files {",".join(data["pdf_not_exists"])}'
+                f"record with broken file link ({non_existent_pdfs}). Use\n    "
+                "colrev pdf-get --relink_files"
             )
 
         return

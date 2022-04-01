@@ -204,27 +204,106 @@ class PDF_Retrieval(Process):
             )
         )
 
-    def relink_files(self, ids_with_files_to_relink: typing.List[str]) -> None:
-        from tqdm import tqdm
+    def relink_files(self) -> None:
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+        import bibtexparser
 
-        self.REVIEW_MANAGER.logger.info(
-            "Checking PDFs in same directory and reassigning "
-            "when pdf_hash is identical"
-        )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
-            if record["ID"] in ids_with_files_to_relink:
+        def relink_pdf_files(records):
+
+            # Relink files in source file
+            sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+            feeds = [x for x in sources if "FEED" == x["search_type"]]
+            feed_filename = ""
+            feed_filepath = ""
+            source_records = []
+            for feed in feeds:
+                if "pdfs_directory" == feed["search_parameters"][0]["endpoint"]:
+                    feed_filepath = Path("search/" + feed["filename"])
+                    if feed_filepath.is_file():
+                        feed_filename = feed["filename"]
+                        with open(Path("search/" + feed["filename"])) as target_db:
+                            bib_db = BibTexParser(
+                                customization=convert_to_unicode,
+                                ignore_nonstandard_types=False,
+                                common_strings=True,
+                            ).parse_file(target_db, partial=True)
+
+                        source_records = bib_db.entries
+
+            self.REVIEW_MANAGER.logger.info("Calculate pdf_hashes")
+            pdf_candidates = {
+                pdf_candidate: self.get_pdf_hash(pdf_candidate)
+                for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
+            }
+
+            for record in records:
+                if "file" not in record:
+                    continue
+
+                # Note: we check the source_records based on the pdf_hashes
+                # in the record because pdf_hashes are not stored in the source_record
+                # (pdf hashes may change after import/preparation)
+                source_rec = {}
+                if feed_filename != "":
+                    source_origin_l = [
+                        o for o in record["origin"].split(";") if feed_filename in o
+                    ]
+                    if len(source_origin_l) == 1:
+                        source_origin = source_origin_l[0]
+                        source_origin = source_origin.replace(f"{feed_filename}/", "")
+                        source_rec_l = [
+                            s for s in source_records if s["ID"] == source_origin
+                        ]
+                        if len(source_rec_l) == 1:
+                            source_rec = source_rec_l[0]
+
+                if source_rec:
+                    if (
+                        Path(record["file"]).is_file()
+                        and Path(source_rec["file"]).is_file()
+                    ):
+                        continue
+                else:
+                    if Path(record["file"]).is_file():
+                        continue
+
                 self.REVIEW_MANAGER.logger.info(record["ID"])
-                pdf_path = Path(record["file"]).parent
-                for pdf_candidate in tqdm(list(pdf_path.glob("**/*.pdf"))):
-                    if record["pdf_hash"] == self.get_pdf_hash(pdf_candidate):
+
+                for pdf_candidate, pdf_hash in pdf_candidates.items():
+                    if record.get("pdf_hash", "") == pdf_hash:
                         record["file"] = str(pdf_candidate)
+                        source_rec["file"] = str(pdf_candidate)
+
                         self.REVIEW_MANAGER.logger.info(
                             f"Found and linked PDF: {pdf_candidate}"
                         )
+
                         break
+
+            if len(source_records) > 0:
+                bib_db.entries = source_records
+                bibtex_str = bibtexparser.dumps(
+                    bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+                )
+
+                with open(feed_filepath, "w") as out:
+                    out.write(bibtex_str)
+
+            if feed_filepath != "":
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_filepath))
+            return records
+
+        self.REVIEW_MANAGER.logger.info(
+            "Checking PDFs in same directory to reassig when pdf_hash is identical"
+        )
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = relink_pdf_files(records)
+
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.REVIEW_MANAGER.create_commit("Relink PDFs")
 
         return
 
