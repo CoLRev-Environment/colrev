@@ -179,7 +179,7 @@ def debug_pdf_prep():
     return
 
 
-def get_non_unique_pdf_hashes() -> None:
+def get_non_unique_colrev_pdf_ids() -> None:
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
@@ -187,13 +187,15 @@ def get_non_unique_pdf_hashes() -> None:
 
     import collections
 
-    pdf_hashes = [x["pdf_hash"] for x in records if "pdf_hash" in x]
-    pdf_hashes = [
-        item for item, count in collections.Counter(pdf_hashes).items() if count > 1
+    colrev_pdf_ids = [
+        x["colrev_pdf_id"].split(":")[1] for x in records if "colrev_pdf_id" in x
     ]
-    df = pd.DataFrame(pdf_hashes, columns=["pdf_hashes"])
+    colrev_pdf_ids = [
+        item for item, count in collections.Counter(colrev_pdf_ids).items() if count > 1
+    ]
+    df = pd.DataFrame(colrev_pdf_ids, columns=["colrev_pdf_ids"])
 
-    df.to_csv("pdf_hashes.csv", index=False)
+    df.to_csv("colrev_pdf_ids.csv", index=False)
     return df
 
 
@@ -229,7 +231,7 @@ def local_index(param):
 
     # record = {
     #     "ENTRYTYPE": "article",
-    #     "pdf_hash": "fffffffffcffffffe027ffffc0020",
+    #     "colrev_pdf_id": "cpid1:ffeadde..",
     # }
 
     # res = LOCAL_INDEX.retrieve(record)
@@ -318,7 +320,7 @@ def main(operation: str, param):
 
     # remove_needs_manual_preparation_records()
 
-    # get_non_unique_pdf_hashes()
+    # get_non_unique_colrev_pdf_ids()
 
     return
 

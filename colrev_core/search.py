@@ -604,12 +604,18 @@ class Search(Process):
 
         return
 
-    def get_pdf_hash(self, path) -> typing.List[str]:
-        current_hash = imagehash.average_hash(
-            convert_from_path(str(path), first_page=1, last_page=1)[0],
-            hash_size=32,
+    def get_pdf_cpid_path(self, path) -> typing.List[str]:
+        cpid = self.get_colrev_pdf_id(path)
+        return [str(path), str(cpid)]
+
+    def get_colrev_pdf_id(self, path: Path) -> str:
+        cpid1 = "cpid1:" + str(
+            imagehash.average_hash(
+                convert_from_path(path, first_page=1, last_page=1)[0],
+                hash_size=32,
+            )
         )
-        return [str(path), str(current_hash)]
+        return cpid1
 
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
         from collections import Counter
@@ -644,16 +650,16 @@ class Search(Process):
             ]
             if len(c_rec_l) == 1:
                 c_rec = c_rec_l.pop()
-                if "pdf_hash" in c_rec:
-                    pdf_hash = c_rec["pdf_hash"]
+                if "colrev_pdf_id" in c_rec:
+                    cpid = c_rec["colrev_pdf_id"]
                     pdf_path = Path(x["file"]).parents[0]
                     potential_pdfs = pdf_path.glob("*.pdf")
-                    # print(f'search pdf_hash {pdf_hash}')
+                    # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
-                        hash_potential_pdf = self.get_pdf_hash(potential_pdf)
+                        cpid_potential_pdf = self.get_colrev_pdf_id(potential_pdf)
 
-                        # print(f'hash_potential_pdf {hash_potential_pdf}')
-                        if pdf_hash == hash_potential_pdf:
+                        # print(f'cpid_potential_pdf {cpid_potential_pdf}')
+                        if cpid == cpid_potential_pdf:
                             x["file"] = str(potential_pdf)
                             c_rec["file"] = str(potential_pdf)
                             return UPDATED
@@ -770,13 +776,13 @@ class Search(Process):
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
         if skip_duplicates:
-            pdfs_hashed = p_map(self.get_pdf_hash, pdfs_to_index)
-            pdf_hashes = [x[1] for x in pdfs_hashed]
-            duplicate_hashes = [
-                item for item, count in Counter(pdf_hashes).items() if count > 1
+            pdfs_path_cpid = p_map(self.get_pdf_cpid_path, pdfs_to_index)
+            pdfs_cpid = [x[1] for x in pdfs_path_cpid]
+            duplicate_cpids = [
+                item for item, count in Counter(pdfs_cpid).items() if count > 1
             ]
             duplicate_pdfs = [
-                str(path) for path, hash in pdfs_hashed if hash in duplicate_hashes
+                str(path) for path, cpid in pdfs_path_cpid if cpid in duplicate_cpids
             ]
             pdfs_to_index = [p for p in pdfs_to_index if str(p) not in duplicate_pdfs]
 

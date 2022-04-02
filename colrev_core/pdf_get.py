@@ -196,13 +196,14 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def get_pdf_hash(self, path: Path) -> str:
-        return str(
+    def get_colrev_pdf_id(self, path: Path) -> str:
+        cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
                 hash_size=32,
             )
         )
+        return cpid1
 
     def relink_files(self) -> None:
         from bibtexparser.bparser import BibTexParser
@@ -231,9 +232,9 @@ class PDF_Retrieval(Process):
 
                         source_records = bib_db.entries
 
-            self.REVIEW_MANAGER.logger.info("Calculate pdf_hashes")
+            self.REVIEW_MANAGER.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {
-                pdf_candidate: self.get_pdf_hash(pdf_candidate)
+                pdf_candidate: self.get_colrev_pdf_id(pdf_candidate)
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
@@ -241,8 +242,8 @@ class PDF_Retrieval(Process):
                 if "file" not in record:
                     continue
 
-                # Note: we check the source_records based on the pdf_hashes
-                # in the record because pdf_hashes are not stored in the source_record
+                # Note: we check the source_records based on the cpids
+                # in the record because cpids are not stored in the source_record
                 # (pdf hashes may change after import/preparation)
                 source_rec = {}
                 if feed_filename != "":
@@ -270,8 +271,8 @@ class PDF_Retrieval(Process):
 
                 self.REVIEW_MANAGER.logger.info(record["ID"])
 
-                for pdf_candidate, pdf_hash in pdf_candidates.items():
-                    if record.get("pdf_hash", "") == pdf_hash:
+                for pdf_candidate, cpid in pdf_candidates.items():
+                    if record.get("colrev_pdf_id", "") == cpid:
                         record["file"] = str(pdf_candidate)
                         source_rec["file"] = str(pdf_candidate)
 
@@ -295,7 +296,7 @@ class PDF_Retrieval(Process):
             return records
 
         self.REVIEW_MANAGER.logger.info(
-            "Checking PDFs in same directory to reassig when pdf_hash is identical"
+            "Checking PDFs in same directory to reassig when the cpid is identical"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records = relink_pdf_files(records)

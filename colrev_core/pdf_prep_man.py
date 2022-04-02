@@ -43,13 +43,14 @@ class PDFPrepMan(Process):
         )
         return pdf_prep_man_data
 
-    def get_pdf_hash(self, path: Path) -> str:
-        return str(
+    def get_colrev_pdf_id(self, path: Path) -> str:
+        cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
                 hash_size=32,
             )
         )
+        return cpid1
 
     def set_data(self, record: dict) -> None:
 
@@ -58,7 +59,7 @@ class PDFPrepMan(Process):
         if "pdf_prep_hints" in record:
             del record["pdf_prep_hints"]
 
-        record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
+        record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(

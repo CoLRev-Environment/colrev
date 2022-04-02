@@ -286,6 +286,9 @@ class ReviewManager:
                 for record in records:
                     if "LOCAL_INDEX" == record.get("metadata_source", ""):
                         record["metadata_source"] = "CURATED"
+                    if "pdf_hash" in record:
+                        record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
+                        del record["pdf_hash"]
 
                 self.REVIEW_DATASET.save_records(records)
                 self.REVIEW_DATASET.add_record_changes()
@@ -1324,8 +1327,8 @@ class ReviewManager:
                 del prior_rec["metadata_source"]
             if "doi" in prior_rec:
                 del prior_rec["doi"]
-            if "pdf_hash" in prior_rec:
-                del prior_rec["pdf_hash"]
+            if "colrev_pdf_id" in prior_rec:
+                del prior_rec["colrev_pdf_id"]
             if "grobid-version" in prior_rec:
                 del prior_rec["grobid-version"]
             if "file" in prior_rec:

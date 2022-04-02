@@ -331,16 +331,16 @@ class PDF_Preparation(Process):
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)
 
-            current_hash = self.get_pdf_hash(Path(record["file"]))
+            current_cpid = self.get_colrev_pdf_id(Path(record["file"]))
 
-            if "pdf_hash" in retrieved_record:
-                if retrieved_record["pdf_hash"] == str(current_hash):
+            if "colrev_pdf_id" in retrieved_record:
+                if retrieved_record["colrev_pdf_id"] == str(current_cpid):
                     self.REVIEW_MANAGER.logger.debug(
                         f"validated pdf metadata based on local_index ({record['ID']})"
                     )
                     return record
                 else:
-                    print("pdf_hashes not matching")
+                    print("colrev_pdf_ids not matching")
         except RecordNotInIndexException:
             pass
 
@@ -800,7 +800,7 @@ class PDF_Preparation(Process):
 
         if RecordState.pdf_imported == record["status"]:
             record.update(status=RecordState.pdf_prepared)
-            record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
+            record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
 
             # status == pdf_imported : means successful
             # create *_backup.pdf if record['file'] was changed
@@ -896,26 +896,27 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         return
 
-    def get_pdf_hash(self, path: Path) -> str:
-        return str(
+    def get_colrev_pdf_id(self, path: Path) -> str:
+        cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
                 hash_size=32,
             )
         )
+        return cpid1
 
-    def __update_hash(self, record: dict) -> dict:
+    def __update_colrev_pdf_ids(self, record: dict) -> dict:
         if "file" in record:
-            record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
+            record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
         return record
 
-    def update_hashes(self) -> None:
-        self.REVIEW_MANAGER.logger.info("Update hashes")
+    def update_colrev_pdf_ids(self) -> None:
+        self.REVIEW_MANAGER.logger.info("Update colrev_pdf_ids")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        records = p_map(self.__update_hash, records)
+        records = p_map(self.__update_colrev_pdf_ids, records)
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Update PDF hashes")
+        self.REVIEW_MANAGER.create_commit("Update colrev_pdf_ids")
         return
 
     def main(

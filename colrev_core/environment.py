@@ -264,7 +264,7 @@ class EnvironmentManager:
 
 class LocalIndex:
 
-    global_keys = ["doi", "dblp_key", "pdf_hash", "url"]
+    global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url"]
     max_len_sha256 = 2 ** 256
 
     local_environment_path = Path.home().joinpath("colrev")
@@ -912,6 +912,8 @@ class LocalIndex:
             del record["fulltext"]
         if "tei_file" in record:
             del record["tei_file"]
+        if "colrev_id" in record:
+            del record["colrev_id"]
 
         record["status"] = RecordState.md_prepared
 
@@ -1019,7 +1021,7 @@ class LocalIndex:
                     record["source_url"] = source_url
                     if "excl_criteria" in record:
                         del record["excl_criteria"]
-                    # Note: if the pdf_hash has not been checked,
+                    # Note: if the colrev_pdf_id has not been checked,
                     # we cannot use it for retrieval or preparation.
                     if record["status"] not in [
                         RecordState.pdf_prepared,
@@ -1027,8 +1029,8 @@ class LocalIndex:
                         RecordState.rev_included,
                         RecordState.rev_synthesized,
                     ]:
-                        if "pdf_hash" in record:
-                            del record["pdf_hash"]
+                        if "colrev_pdf_id" in record:
+                            del record["colrev_pdf_id"]
 
                     if "pdf_prep_hints" in record:
                         del record["pdf_prep_hints"]
@@ -1217,7 +1219,7 @@ class LocalIndex:
         # df.to_csv("changes.csv", index=False)
         # print("Exported changes.csv")
 
-        # pdf_hashes = []
+        # colrev_pdf_ids = []
         # https://bit.ly/3tbypkd
         # for r_file in self.rind_path.rglob("*.bib"):
 
@@ -1226,19 +1228,20 @@ class LocalIndex:
         #             line = f.readline()
         #             if not line:
         #                 break
-        #             if "pdf_hash" in line[:9]:
-        #                 pdf_hashes.append(line[line.find("{") + 1 : line.rfind("}")])
+        #             if "colrev_pdf_id" in line[:9]:
+        #                 val = line[line.find("{") + 1 : line.rfind("}")]
+        #                 colrev_pdf_ids.append(val)
 
         # import collections
 
-        # pdf_hashes_dupes = [
+        # colrev_pdf_ids_dupes = [
         #     item for item, count in
-        #       collections.Counter(pdf_hashes).items() if count > 1
+        #       collections.Counter(colrev_pdf_ids).items() if count > 1
         # ]
 
-        # with open("non-unique-pdf-hashes.txt", "w") as o:
-        #     o.write("\n".join(pdf_hashes_dupes))
-        # print("Export non-unique-pdf-hashes.txt")
+        # with open("non-unique-cpids.txt", "w") as o:
+        #     o.write("\n".join(colrev_pdf_ids_dupes))
+        # print("Export non-unique-cpids.txt")
         return
 
 

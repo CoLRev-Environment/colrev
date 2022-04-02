@@ -112,7 +112,7 @@ class Preparation(Process):
         "crossref",
         "date",
         "grobid-version",
-        "pdf_hash",
+        "colrev_pdf_id",
         "wos_accession_number",
         "link",
         "url",
