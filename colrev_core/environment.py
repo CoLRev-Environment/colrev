@@ -884,7 +884,7 @@ class LocalIndex:
 
         return retrieved_record
 
-    def prep_record_for_return(self, record: dict) -> dict:
+    def prep_record_for_return(self, record: dict, include_file: bool = False) -> dict:
         from colrev_core.process import RecordState
 
         # Casting to string (in particular the RecordState Enum)
@@ -910,6 +910,10 @@ class LocalIndex:
             del record["tei_file"]
         if "colrev_id" in record:
             del record["colrev_id"]
+
+        if not include_file:
+            if "file" in record:
+                del record["file"]
 
         record["status"] = RecordState.md_prepared
 
@@ -1066,7 +1070,9 @@ class LocalIndex:
 
         return
 
-    def retrieve_from_toc(self, record: dict, similarity_threshold: float) -> dict:
+    def retrieve_from_toc(
+        self, record: dict, similarity_threshold: float, include_file=False
+    ) -> dict:
         toc_key = self.__get_toc_key(record)
 
         # 1. get TOC
@@ -1090,7 +1096,7 @@ class LocalIndex:
                 hash = hashlib.sha256(toc_records_colrev_ID.encode("utf-8")).hexdigest()
                 res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
                 record = res["_source"]  # type: ignore
-                return self.prep_record_for_return(record)
+                return self.prep_record_for_return(record, include_file)
 
         raise RecordNotInIndexException()
         return record
@@ -1102,7 +1108,7 @@ class LocalIndex:
         res = resp["hits"]["hits"][0]["_source"]
         return res
 
-    def retrieve(self, record: dict) -> dict:
+    def retrieve(self, record: dict, include_file: bool = False) -> dict:
         """
         Convenience function to retrieve the indexed record metadata
         based on another record
@@ -1119,7 +1125,7 @@ class LocalIndex:
                 pass
 
         if retrieved_record:
-            return self.prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record, include_file)
 
         # 2. Try using global-ids
         if not retrieved_record:
@@ -1135,7 +1141,7 @@ class LocalIndex:
                     pass
 
         if retrieved_record:
-            return self.prep_record_for_return(retrieved_record)
+            return self.prep_record_for_return(retrieved_record, include_file)
 
         # 3. Try alsoKnownAs
         if not retrieved_record:
@@ -1147,7 +1153,7 @@ class LocalIndex:
         if not retrieved_record:
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
-        return self.prep_record_for_return(retrieved_record)
+        return self.prep_record_for_return(retrieved_record, include_file)
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:

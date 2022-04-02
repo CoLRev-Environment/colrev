@@ -165,6 +165,18 @@ class PDF_Retrieval(Process):
         if "file" in retrieved_record:
             record["file"] = retrieved_record["file"]
 
+            new_fp = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+                record["file"]
+            )
+            original_fp = Path(record["file"])
+            if "SYMLINK" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+                new_fp.symlink_to(original_fp)
+                record["file"] = str(new_fp)
+            elif "COPY" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+                shutil.copyfile(original_fp, new_fp.resolve())
+                record["file"] = str(new_fp)
+            # Note : else: leave absolute paths
+
         return record
 
     def retrieve_pdf(self, item: dict) -> dict:

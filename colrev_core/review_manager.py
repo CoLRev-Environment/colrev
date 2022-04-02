@@ -157,6 +157,9 @@ class ReviewManager:
             WORD_TEMPLATE_URL=local_config.get(
                 "general", "WORD_TEMPLATE_URL", fallback=word_template_url_fallback
             ),
+            PDF_PATH_TYPE=local_config.get(
+                "general", "PDF_PATH_TYPE", fallback="SYMLINK"
+            ),
         )
         return config
 

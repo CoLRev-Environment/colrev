@@ -569,7 +569,10 @@ class Search(Process):
                 record_to_import = {
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
-                record_to_import = LOCAL_INDEX.prep_record_for_return(record_to_import)
+                record_to_import = LOCAL_INDEX.prep_record_for_return(
+                    record_to_import, include_file=False
+                )
+
                 records_to_import.append(record_to_import)
 
             return records_to_import

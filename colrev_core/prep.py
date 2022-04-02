@@ -457,7 +457,7 @@ class Preparation(Process):
 
         retrieved = False
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(record)
+            retrieved_record = LOCAL_INDEX.retrieve(record, include_file=False)
             retrieved = True
         except (RecordNotInIndexException, NotFoundError):
             pass
@@ -465,7 +465,9 @@ class Preparation(Process):
                 if "CURATED" == record.get("metadata_source", ""):
                     if "source_url" in record:  # do not change to other source
 
-                        ind_rec = LOCAL_INDEX.retrieve(record.copy())
+                        ind_rec = LOCAL_INDEX.retrieve(
+                            record.copy(), include_file=False
+                        )
                         if ind_rec["source_url"] == record["source_url"]:
                             # Keep all fields of the original record
                             retrieved_record = record
@@ -485,11 +487,13 @@ class Preparation(Process):
 
                     else:
                         # update record metadata
-                        retrieved_record = LOCAL_INDEX.retrieve(record)
+                        retrieved_record = LOCAL_INDEX.retrieve(
+                            record, include_file=False
+                        )
                     retrieved = True
                 else:
                     retrieved_record = LOCAL_INDEX.retrieve_from_toc(
-                        record, self.RETRIEVAL_SIMILARITY
+                        record, self.RETRIEVAL_SIMILARITY, include_file=False
                     )
                     retrieved = True
             except (RecordNotInIndexException, NotFoundError):
