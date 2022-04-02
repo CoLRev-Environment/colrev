@@ -355,13 +355,10 @@ class Data(Process):
                 return
             if "tei_file" not in record:
                 self.REVIEW_MANAGER.logger.info(f"Get tei for {record['ID']}")
-                if Path(record["file"]).is_file():
-                    pdf_path = Path(record["file"])
-                else:
-                    pdf_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / record["file"]
-                    if not pdf_path.is_file():
-                        print(f"file not available: {record['file']}")
-                        return
+                pdf_path = self.REVIEW_MANAGER.path / record["file"]
+                if not Path(pdf_path).is_file():
+                    print(f"file not available: {record['file']}")
+                    return
 
                 tei_path = Path("tei") / Path(record["ID"] + ".tei.xml")
                 tei_path.parents[0].mkdir(exist_ok=True)

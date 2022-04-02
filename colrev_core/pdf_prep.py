@@ -75,7 +75,8 @@ class PDF_Preparation(Process):
     def __extract_text_by_page(self, record: dict, pages: list = None) -> str:
 
         text_list: list = []
-        with open(record["file"], "rb") as fh:
+        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        with open(pdf_path, "rb") as fh:
             try:
                 for page in PDFPage.get_pages(
                     fh,
@@ -100,7 +101,8 @@ class PDF_Preparation(Process):
         return "".join(text_list)
 
     def __get_pages_in_pdf(self, record: dict) -> dict:
-        with open(record["file"], "rb") as file:
+        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        with open(pdf_path, "rb") as file:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
@@ -152,11 +154,12 @@ class PDF_Preparation(Process):
         return probability_english
 
     def __apply_ocr(self, record: dict, PAD: int) -> dict:
-        pdf = Path(record["file"])
-        ocred_filename = Path(record["file"].replace(".pdf", "_ocr.pdf"))
 
-        if pdf.is_file():
-            orig_path = pdf.parents[0]
+        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        ocred_filename = Path(pdf_path.replace(".pdf", "_ocr.pdf"))
+
+        if pdf_path.is_file():
+            orig_path = pdf_path.parents[0]
         else:
             orig_path = self.PDF_DIRECTORY
 
@@ -172,7 +175,7 @@ class PDF_Preparation(Process):
             + ':/home/docker" jbarlow83/ocrmypdf --force-ocr '
             + options
             + ' -l eng "'
-            + str(docker_home_path / pdf.name)
+            + str(docker_home_path / pdf_path.name)
             + '"  "'
             + str(docker_home_path / ocred_filename.name)
             + '"'
@@ -181,7 +184,7 @@ class PDF_Preparation(Process):
 
         record["pdf_processed"] = "OCRMYPDF"
 
-        record["file"] = str(ocred_filename)
+        record["file"] = str(ocred_filename.relative_to(self.REVIEW_MANAGER.path))
         record = self.get_text_from_pdf(record, PAD)
 
         return record
@@ -331,7 +334,8 @@ class PDF_Preparation(Process):
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)
 
-            current_cpid = self.get_colrev_pdf_id(Path(record["file"]))
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            current_cpid = self.get_colrev_pdf_id(pdf_path)
 
             if "colrev_pdf_id" in retrieved_record:
                 if retrieved_record["colrev_pdf_id"] == str(current_cpid):
@@ -604,25 +608,25 @@ class PDF_Preparation(Process):
         return list(set(coverpages))
 
     def __extract_pages(self, record: dict, pages: list, type: str) -> None:
-        pdf = record["file"]
-        pdfReader = PdfFileReader(pdf, strict=False)
+        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        pdfReader = PdfFileReader(pdf_path, strict=False)
         writer = PdfFileWriter()
         for i in range(0, pdfReader.getNumPages()):
             if i in pages:
                 continue
             writer.addPage(pdfReader.getPage(i))
-        with open(pdf, "wb") as outfile:
+        with open(pdf_path, "wb") as outfile:
             writer.write(outfile)
         if type == "coverpage":
             writer_cp = PdfFileWriter()
             writer_cp.addPage(pdfReader.getPage(0))
-            filepath = Path(pdf)
+            filepath = Path(pdf_path)
             with open(self.cp_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)
         if type == "last_page":
             writer_lp = PdfFileWriter()
             writer_lp.addPage(pdfReader.getPage(pdfReader.getNumPages()))
-            filepath = Path(pdf)
+            filepath = Path(pdf_path)
             with open(self.lp_path / filepath.name, "wb") as outfile:
                 writer_lp.write(outfile)
         return
@@ -633,9 +637,11 @@ class PDF_Preparation(Process):
         if [] == coverpages:
             return record
         if coverpages:
-            prior = record["file"]
-            record["file"] = record["file"].replace(".pdf", "_wo_cp.pdf")
-            shutil.copy(prior, record["file"])
+            original = self.REVIEW_MANAGER.path / Path(record["file"])
+            file_copy = self.REVIEW_MANAGER.path / Path(
+                record["file"].replace(".pdf", "_wo_cp.pdf")
+            )
+            shutil.copy(original, file_copy)
             self.__extract_pages(record, coverpages, type="coverpage")
             self.REVIEW_MANAGER.report_logger.info(
                 f'removed cover page for ({record["ID"]})'
@@ -708,9 +714,12 @@ class PDF_Preparation(Process):
         if [] == last_pages:
             return record
         if last_pages:
-            prior = record["file"]
-            record["file"] = record["file"].replace(".pdf", "_wo_lp.pdf")
-            shutil.copy(prior, record["file"])
+            original = self.REVIEW_MANAGER.path / Path(record["file"])
+            file_copy = self.REVIEW_MANAGER.path / Path(
+                record["file"].replace(".pdf", "_wo_lp.pdf")
+            )
+            shutil.copy(original, file_copy)
+
             self.__extract_pages(record, last_pages, type="last_page")
             self.REVIEW_MANAGER.report_logger.info(
                 f'removed last page for ({record["ID"]})'
@@ -737,7 +746,8 @@ class PDF_Preparation(Process):
 
         PAD = len(record["ID"]) + 35
 
-        if not Path(record["file"]).is_file():
+        pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+        if not Path(pdf_path).is_file():
             msg = f'{record["ID"]}'.ljust(PAD, " ") + "Linked file/pdf does not exist"
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
@@ -756,9 +766,7 @@ class PDF_Preparation(Process):
 
         # Note: if there are problems status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
-        self.REVIEW_MANAGER.report_logger.info(
-            f'prepare({record["ID"]})'
-        )  # / {record["file"]}
+        self.REVIEW_MANAGER.report_logger.info(f'prepare({record["ID"]})')
         for prep_script in prep_scripts:
             try:
                 # Note : the record should not be changed
@@ -800,21 +808,27 @@ class PDF_Preparation(Process):
 
         if RecordState.pdf_imported == record["status"]:
             record.update(status=RecordState.pdf_prepared)
-            record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
 
             # status == pdf_imported : means successful
-            # create *_backup.pdf if record['file'] was changed
+            # create *_backup.pdf if record["file"] was changed
             if original_filename != record["file"]:
 
-                current_file = Path(record["file"])
-                original_file = Path(original_filename)
+                current_file = self.REVIEW_MANAGER.path / Path(record["file"])
+                original_file = self.REVIEW_MANAGER.path / Path(original_filename)
                 if current_file.is_file() and original_file.is_file():
-                    backup_filename = original_filename.replace(".pdf", "_backup.pdf")
+                    backup_filename = self.REVIEW_MANAGER.path / Path(
+                        original_filename.replace(".pdf", "_backup.pdf")
+                    )
                     original_file.rename(backup_filename)
                     current_file.rename(original_filename)
-                    record["file"] = str(original_file)
+                    record["file"] = str(
+                        original_file.relative_to(self.REVIEW_MANAGER.path)
+                    )
+                    bfp = backup_filename.relative_to(self.REVIEW_MANAGER.path)
                     self.REVIEW_MANAGER.report_logger.info(
-                        f"created backup after successful pdf-prep: {backup_filename}"
+                        f"created backup after successful pdf-prep: {bfp}"
                     )
 
         # Backup:
@@ -825,14 +839,14 @@ class PDF_Preparation(Process):
         rm_temp_if_successful = False
         if rm_temp_if_successful:
             # Remove temporary PDFs when processing has succeeded
-            target_fname = self.REPO_DIR / Path(f'{record["ID"]}.pdf')
-            linked_file = self.REPO_DIR / record["file"]
+            target_fname = self.REVIEW_MANAGER.path / Path(f'{record["ID"]}.pdf')
+            linked_file = self.REVIEW_MANAGER.path / Path(record["file"])
 
-            if target_fname.name != Path(record["file"]).name:
+            if target_fname.name != linked_file.name:
                 if target_fname.is_file():
                     os.remove(target_fname)
                 linked_file.rename(target_fname)
-                record["file"] = target_fname
+                record["file"] = str(target_fname.relative_to(self.REVIEW_MANAGER.path))
 
             if not self.DEBUG_MODE:
                 # Delete temporary PDFs for which processing has failed:
@@ -907,7 +921,8 @@ class PDF_Preparation(Process):
 
     def __update_colrev_pdf_ids(self, record: dict) -> dict:
         if "file" in record:
-            record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
         return record
 
     def update_colrev_pdf_ids(self) -> None:

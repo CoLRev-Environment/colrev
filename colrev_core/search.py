@@ -433,14 +433,15 @@ class Search(Process):
                 continue
             print(record["ID"])
 
-            if not Path(record["file"]).is_file():
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            if not Path(pdf_path).is_file():
                 print(f'File not found for {record["ID"]}')
                 continue
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
                 grobid_client.get_grobid_url() + "/api/processReferences",
-                files=dict(input=open(record["file"], "rb")),
+                files=dict(input=open(pdf_path, "rb")),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -652,7 +653,8 @@ class Search(Process):
                 c_rec = c_rec_l.pop()
                 if "colrev_pdf_id" in c_rec:
                     cpid = c_rec["colrev_pdf_id"]
-                    pdf_path = Path(x["file"]).parents[0]
+                    pdf_fp = self.REVIEW_MANAGER.path / Path(x["file"])
+                    pdf_path = pdf_fp.parents[0]
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
@@ -660,8 +662,12 @@ class Search(Process):
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
-                            x["file"] = str(potential_pdf)
-                            c_rec["file"] = str(potential_pdf)
+                            x["file"] = str(
+                                potential_pdf.relative_to(self.REVIEW_MANAGER.path)
+                            )
+                            c_rec["file"] = str(
+                                potential_pdf.relative_to(self.REVIEW_MANAGER.path)
+                            )
                             return UPDATED
             return NOT_UPDATED
 
@@ -686,7 +692,8 @@ class Search(Process):
 
             to_remove: typing.List[str] = []
             for x in search_db.entries:
-                if not Path(x["file"]).is_file():
+                x_pdf_path = self.REVIEW_MANAGER.path / Path(x["file"])
+                if not x_pdf_path.is_file():
                     if records:
                         updated = update_if_pdf_renamed(x, records, feed_file)
                         if updated:
@@ -695,9 +702,7 @@ class Search(Process):
                         f"{feed_file.name}/{x['ID']}" for x in search_db.entries
                     ]
 
-            search_db.entries = [
-                x for x in search_db.entries if Path(x["file"]).is_file()
-            ]
+            search_db.entries = [x for x in search_db.entries if x_pdf_path.is_file()]
             if len(search_db.entries) != 0:
                 bibtex_str = bibtexparser.dumps(search_db, writer)
                 with open(feed_file, "w") as f:
@@ -839,15 +844,13 @@ class Search(Process):
                 sub_dir_pattern = params["params"]["sub_dir_pattern"]
                 assert sub_dir_pattern in ["NA", "volume_number", "year", "volume"]
 
+                # Note : no file access here (just parsing the patterns)
+                # no absolute paths needed
                 partial_path = Path(record["file"]).parents[0].stem
                 if "year" == sub_dir_pattern:
                     r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
-                    partial_path = Path(record["file"]).parents[0].stem
                     # Note: for year-patterns, we allow subfolders
                     # (eg., conference tracks)
-                    partial_path = str(Path(record["file"]).parents[0]).replace(
-                        params["scope"]["path"], ""
-                    )
                     match = r_sub_dir_pattern.search(str(partial_path))
                     if match is not None:
                         year = match.group(1)
@@ -888,7 +891,7 @@ class Search(Process):
                 return record
             grobid_client.check_grobid_availability()
 
-            pdf_path = Path(record["file"])
+            pdf_path = self.REVIEW_MANAGER / Path(record["file"])
 
             # Note: activate the following when new grobid version is released (> 0.7)
             # Note: we have more control and transparency over the consolidation
@@ -1007,7 +1010,7 @@ class Search(Process):
                 record = {k: v for k, v in record.items() if v is not None}
                 record = {k: v for k, v in record.items() if v != "NA"}
 
-                record["file"] = str(pdf_path)
+                record["file"] = str(pdf_path.relative_to(self.REVIEW_MANAGER.path))
 
                 # add details based on path
                 record = update_fields_based_on_pdf_dirs(record)

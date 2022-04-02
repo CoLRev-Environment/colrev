@@ -59,7 +59,8 @@ class PDFPrepMan(Process):
         if "pdf_prep_hints" in record:
             del record["pdf_prep_hints"]
 
-        record.update(colrev_pdf_id=self.get_colrev_pdf_id(Path(record["file"])))
+        pdf_path = Path(self.REVIEW_MANAGER.path + record["file"])
+        record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(

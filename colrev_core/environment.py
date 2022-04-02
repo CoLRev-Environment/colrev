@@ -891,16 +891,12 @@ class LocalIndex:
         record = {k: str(v) for k, v in record.items()}
 
         # del retrieved_record['source_url']
+
+        # Note: record['file'] should be an absolute path by definition
+        # when stored in the LocalIndex
         if "file" in record:
             if not Path(record["file"]).is_file():
-                dir_path = Path(record["source_url"]) / Path(record["file"])
-                if dir_path.is_file():
-                    record["file"] = str(dir_path)
-                pdf_dir_path = Path(record["source_url"]) / Path(
-                    "pdfs" + record["file"]
-                )
-                if pdf_dir_path.is_file():
-                    record["file"] = str(pdf_dir_path)
+                del record["file"]
 
         if "manual_non_duplicate" in record:
             del record["manual_non_duplicate"]
@@ -1036,6 +1032,15 @@ class LocalIndex:
                         del record["pdf_prep_hints"]
                     if "pdf_processed" in record:
                         del record["pdf_processed"]
+
+                    # Note : file paths should be absolute when added to the LocalIndex
+                    if "file" in record:
+                        pdf_path = source_url / Path(record["file"])
+                        if pdf_path.is_file:
+                            record["file"] = str(pdf_path)
+                        else:
+                            del record["file"]
+
                     del record["status"]
 
                     self.__record_index(record)

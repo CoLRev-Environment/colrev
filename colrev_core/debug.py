@@ -160,8 +160,7 @@ def debug_pdf_prep():
         "ENTRYTYPE": "article",
         "ID": "GuoLiuNault2021",
         "author": "Bødker, Mads",
-        "file": "/home/gerit/ownCloud/data/journals/"
-        + "MISQ/42_1/Hua2018_User Service Innovatio.pdf",
+        "file": "pdfs/42_1/Hua2018_User Service Innovatio.pdf",
         "journal": "MIS Quarterly",
         "metadata_source": "ORIGINAL",
         "number": "1",

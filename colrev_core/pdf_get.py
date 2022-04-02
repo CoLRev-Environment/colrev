@@ -45,7 +45,7 @@ class PDF_Retrieval(Process):
 
         for record in records:
             if "file" in record:
-                fpath = Path(record["file"]).resolve()
+                fpath = self.REVIEW_MANAGER.path / Path(record["file"])
                 if fpath.is_file() and not str(
                     self.REVIEW_MANAGER.paths["REPO_DIR"]
                 ) in str(fpath):
@@ -234,7 +234,9 @@ class PDF_Retrieval(Process):
 
             self.REVIEW_MANAGER.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {
-                pdf_candidate: self.get_colrev_pdf_id(pdf_candidate)
+                pdf_candidate.relative_to(
+                    self.REVIEW_MANAGER.path
+                ): self.get_colrev_pdf_id(pdf_candidate)
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
@@ -260,13 +262,12 @@ class PDF_Retrieval(Process):
                             source_rec = source_rec_l[0]
 
                 if source_rec:
-                    if (
-                        Path(record["file"]).is_file()
-                        and Path(source_rec["file"]).is_file()
-                    ):
+                    if (self.REVIEW_MANAGER.path / Path(record["file"])).is_file() and (
+                        self.REVIEW_MANAGER.path / Path(source_rec["file"])
+                    ).is_file():
                         continue
                 else:
-                    if Path(record["file"]).is_file():
+                    if (self.REVIEW_MANAGER.path / Path(record["file"])).is_file():
                         continue
 
                 self.REVIEW_MANAGER.logger.info(record["ID"])
@@ -369,13 +370,17 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info("RENAME PDFs")
         for record in records:
             if "file" in record and record["status"] == RecordState.pdf_imported:
-                file = Path(record["file"])
-                new_filename = self.REVIEW_MANAGER.paths[
-                    "PDF_DIRECTORY_RELATIVE"
-                ] / Path(f"{record['ID']}.pdf")
+                file = self.REVIEW_MANAGER / Path(record["file"])
+                new_filename = (
+                    self.REVIEW_MANAGER
+                    / self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                    / Path(f"{record['ID']}.pdf")
+                )
                 try:
                     file.rename(new_filename)
-                    record["file"] = str(new_filename)
+                    record["file"] = str(
+                        new_filename.relative_to(self.REVIEW_MANAGER.path)
+                    )
                     self.REVIEW_MANAGER.logger.info(
                         f"rename {file.name} > {new_filename.name}"
                     )
@@ -435,7 +440,8 @@ class PDF_Retrieval(Process):
             if record["status"] == RecordState.rev_prescreen_included:
                 if "file" in record:
                     if any(
-                        Path(fpath).is_file() for fpath in record["file"].split(";")
+                        (self.REVIEW_MANAGER.path / Path(fpath)).is_file()
+                        for fpath in record["file"].split(";")
                     ):
                         record["status"] = RecordState.pdf_imported
                         self.REVIEW_MANAGER.logger.info(
