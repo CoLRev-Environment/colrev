@@ -917,8 +917,9 @@ class Dedupe(Process):
 
         return
 
-    def view_info(self) -> dict:
+    def get_info(self) -> dict:
         import itertools
+        from collections import Counter
 
         def __get_toc_key(record: dict) -> str:
             toc_key = "NA"
@@ -947,15 +948,33 @@ class Dedupe(Process):
         origins = list(set(origins))
 
         cuts = {}
+        same_source_merges = []
         for L in range(1, len(origins) + 1):
             for subset in itertools.combinations(origins, L):
                 cuts["/".join(list(subset))] = {"origins": list(subset), "records": []}
 
         for record in records:
-            rec_origins = list({x.split("/")[0] for x in record["origin"].split(";")})
-            cut_list = [x for k, x in cuts.items() if x["origins"] == rec_origins]
+
+            rec_sources = [x.split("/")[0] for x in record["origin"].split(";")]
+
+            duplicated_sources = [
+                item for item, count in Counter(rec_sources).items() if count > 1
+            ]
+            if len(duplicated_sources) > 0:
+                all_cases = []
+                for ds in duplicated_sources:
+                    cases = [
+                        o.split("/")[1] for o in record["origin"].split(";") if ds in o
+                    ]
+                    all_cases.append(f"{ds}: {cases}")
+                same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
+
+            cut_list = [
+                x for k, x in cuts.items() if set(x["origins"]) == set(rec_sources)
+            ]
             if len(cut_list) != 1:
-                print(record["ID"])
+                print(cut_list)
+                print(record["ID"], record["origin"])
                 continue
             cut = cut_list[0]
             cut["records"].append(record["ID"])
@@ -973,7 +992,7 @@ class Dedupe(Process):
             det["size"] = len(det["records"])  # type: ignore
             det["fraction"] = det["size"] / total * 100  # type: ignore
 
-        info = {"cuts": cuts}
+        info = {"cuts": cuts, "same_source_merges": same_source_merges}
         return info
 
 
