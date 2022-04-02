@@ -646,6 +646,7 @@ class Preparation(Process):
                     retrieved_title = retrieved_title.replace("\n", " ")
                     record.update(title=retrieved_title)
             elif isinstance(item["title"], str):
+                retrieved_title = item["title"]
                 record.update(title=retrieved_title)
 
         container_title = ""
