@@ -1726,7 +1726,7 @@ class Preparation(Process):
                             "man_prep_hints"
                         ] = f"Disagreement with url metadata ({k}: {v})"
 
-        self.REVIEW_MANAGER.pp.pprint(record)
+        # self.REVIEW_MANAGER.pp.pprint(record)
 
         return record
 

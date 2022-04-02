@@ -549,11 +549,11 @@ class Search(Process):
         LOCAL_INDEX = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
-            # Note: we retrieve colrev_IDs and full records afterwards
+            # Note: we retrieve colrev_ids and full records afterwards
             # because the os.sql.query throws errors when selecting
             # complex fields like lists of alsoKnownAs fields
             query = (
-                f"SELECT colrev_ID FROM {LOCAL_INDEX.RECORD_INDEX} "
+                f"SELECT colrev_id FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
             resp = LOCAL_INDEX.os.sql.query(body={"query": query})

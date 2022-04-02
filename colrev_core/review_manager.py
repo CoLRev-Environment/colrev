@@ -1254,7 +1254,7 @@ class ReviewManager:
             original_curated_record = change_item["original_curated_record"]
 
             try:
-                record = REVIEW_DATASET.retrieve_by_colrev_ID(
+                record = REVIEW_DATASET.retrieve_by_colrev_id(
                     original_curated_record, records
                 )
             except RecordNotInRepoException:

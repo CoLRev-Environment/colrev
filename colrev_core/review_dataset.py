@@ -986,17 +986,17 @@ class ReviewDataset:
                 line = f.readline()
         return IDs
 
-    def retrieve_by_colrev_ID(
+    def retrieve_by_colrev_id(
         self, indexed_record: dict, records: typing.List[typing.Dict]
     ) -> dict:
         from colrev_core.environment import LocalIndex
 
         self.LOCAL_INDEX = LocalIndex()
-        indexed_record_colrev_ID = self.LOCAL_INDEX.get_colrev_ID(indexed_record)
+        indexed_record_colrev_id = self.LOCAL_INDEX.get_colrev_id(indexed_record)
         record_l = [
             x
             for x in records
-            if self.LOCAL_INDEX.get_colrev_ID(x) == indexed_record_colrev_ID
+            if self.LOCAL_INDEX.get_colrev_id(x) == indexed_record_colrev_id
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException

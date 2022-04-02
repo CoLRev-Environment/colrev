@@ -273,11 +273,11 @@ class LocalIndex:
     teiind_path = local_environment_path / Path(".tei_index/")
     annotators_path = local_environment_path / Path("annotators")
 
-    # Note : records are indexed by id = hash(colrev_ID)
+    # Note : records are indexed by id = hash(colrev_id)
     # to ensure that the indexing-ids do not exceed limits
     # such as the opensearch limit of 512 bytes.
-    # This enables efficient retrieval based on id=hash(colrev_ID)
-    # but also search-based retrieval using only colrev_IDs
+    # This enables efficient retrieval based on id=hash(colrev_id)
+    # but also search-based retrieval using only colrev_ids
 
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
@@ -473,7 +473,7 @@ class LocalIndex:
             author_list.append(str(parsed_name))
         return " and ".join(author_list)
 
-    def get_colrev_ID(self, record: dict) -> str:
+    def get_colrev_id(self, record: dict) -> str:
 
         # Including the version of the identifier prevents cases
         # in which almost all identifiers are identical
@@ -496,7 +496,7 @@ class LocalIndex:
         return srep
 
     def __get_record_hash(self, record: dict) -> str:
-        string_to_hash = self.get_colrev_ID(record)
+        string_to_hash = self.get_colrev_id(record)
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, hash: str) -> str:
@@ -586,7 +586,7 @@ class LocalIndex:
         elif "year" in record:
             del record["year"]
 
-        record["colrev_ID"] = self.get_colrev_ID(record)
+        record["colrev_id"] = self.get_colrev_id(record)
 
         hash = self.__get_record_hash(record)
 
@@ -595,8 +595,8 @@ class LocalIndex:
             retrieved_record = self.retrieve(record)
 
             # if the string_representations are not identical: add to d_index
-            if not retrieved_record["colrev_ID"] == record["colrev_ID"]:
-                # Note: we need the colrev_ID of the retrieved_record
+            if not retrieved_record["colrev_id"] == record["colrev_id"]:
+                # Note: we need the colrev_id of the retrieved_record
                 # (may be different from record)
                 self.__amend_record(self.__get_record_hash(retrieved_record), record)
                 return
@@ -610,7 +610,7 @@ class LocalIndex:
             else:
                 saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
                 saved_record = saved_record_response["_source"]
-                if saved_record["colrev_ID"] == record["colrev_ID"]:
+                if saved_record["colrev_id"] == record["colrev_id"]:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
                     # should take precedence - reset the index to update)
@@ -619,8 +619,8 @@ class LocalIndex:
                 else:
                     # to handle the collision:
                     print(f"Collision: {hash}")
-                    print(record["colrev_ID"])
-                    print(saved_record["colrev_ID"])
+                    print(record["colrev_id"])
+                    print(saved_record["colrev_id"])
                     print(saved_record)
                     hash = self.__increment_hash(hash)
                     # Note: alsoKnownAs field should be covered
@@ -655,12 +655,12 @@ class LocalIndex:
                 return
 
             # print(toc_key)
-            record["colrev_ID"] = self.get_colrev_ID(record)
+            record["colrev_id"] = self.get_colrev_id(record)
 
             if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
                 toc_item = {
                     "toc_key": toc_key,
-                    "string_representations": [record["colrev_ID"]],
+                    "string_representations": [record["colrev_id"]],
                 }
                 self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
             else:
@@ -670,9 +670,9 @@ class LocalIndex:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
                     #  should take precedence - reset the index to update)
-                    if record["colrev_ID"] not in toc_item["string_representations"]:
+                    if record["colrev_id"] not in toc_item["string_representations"]:
                         toc_item["string_representations"].append(  # type: ignore
-                            record["colrev_ID"]
+                            record["colrev_id"]
                         )
                         self.os.update(
                             index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
@@ -713,8 +713,8 @@ class LocalIndex:
         ]
 
         if all(required_field in origin_record for required_field in required_fields):
-            orig_repr = self.get_colrev_ID(origin_record)
-            main_repr = self.get_colrev_ID(record)
+            orig_repr = self.get_colrev_id(origin_record)
+            main_repr = self.get_colrev_id(record)
             if orig_repr != main_repr:
                 non_identical_representations.append([orig_repr, main_repr])
 
@@ -727,12 +727,12 @@ class LocalIndex:
         ]
 
         for (
-            alsoKnownAs_colrev_ID,
-            main_colrev_ID,
+            alsoKnownAs_colrev_id,
+            main_colrev_id,
         ) in alsoKnownAs_Instances:
 
             try:
-                hash = hashlib.sha256(main_colrev_ID.encode("utf-8")).hexdigest()
+                hash = hashlib.sha256(main_colrev_id.encode("utf-8")).hexdigest()
                 while True:
                     if self.os.exists(index=self.RECORD_INDEX, id=hash):
                         # Note : this should happen rarely/never
@@ -741,20 +741,20 @@ class LocalIndex:
                     else:
                         response = self.os.get(index=self.RECORD_INDEX, id=hash)
                         saved_record = response["_source"]
-                        saved_original_string_repr = saved_record["colrev_ID"]
+                        saved_original_string_repr = saved_record["colrev_id"]
 
-                        if saved_original_string_repr == main_colrev_ID:
+                        if saved_original_string_repr == main_colrev_id:
                             # ok - no collision
-                            if alsoKnownAs_colrev_ID not in saved_record.get(
+                            if alsoKnownAs_colrev_id not in saved_record.get(
                                 "alsoKnownAs", []
                             ):
                                 if "alsoKnownAs" in saved_record:
                                     saved_record["alsoKnownAs"].append(
-                                        alsoKnownAs_colrev_ID
+                                        alsoKnownAs_colrev_id
                                     )
                                 else:
                                     saved_record["alsoKnownAs"] = [
-                                        alsoKnownAs_colrev_ID
+                                        alsoKnownAs_colrev_id
                                     ]
                                 self.os.update(
                                     index=self.RECORD_INDEX,
@@ -838,7 +838,7 @@ class LocalIndex:
 
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
 
-        string_representation_record = self.get_colrev_ID(record)
+        string_representation_record = self.get_colrev_id(record)
 
         try:
             # match_phrase := exact match
@@ -862,21 +862,21 @@ class LocalIndex:
         return self.prep_record_for_return(retrieved_record)
 
     def __retrieve_from_record_index(self, record: dict) -> dict:
-        retrieved_record = self.__retrieve_based_on_colrev_ID(
-            self.get_colrev_ID(record)
+        retrieved_record = self.__retrieve_based_on_colrev_id(
+            self.get_colrev_id(record)
         )
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
             raise RecordNotInIndexException
         return retrieved_record
 
-    def __retrieve_based_on_colrev_ID(self, colrev_ID: str) -> dict:
+    def __retrieve_based_on_colrev_id(self, colrev_id: str) -> dict:
 
-        hash = hashlib.sha256(colrev_ID.encode("utf-8")).hexdigest()
+        hash = hashlib.sha256(colrev_id.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
             res = self.os.get(index=self.RECORD_INDEX, id=hash)
             retrieved_record = res["_source"]
-            if self.get_colrev_ID(retrieved_record) == colrev_ID:
+            if self.get_colrev_id(retrieved_record) == colrev_id:
                 break
             else:
                 # Collision
@@ -1032,6 +1032,11 @@ class LocalIndex:
                         if "colrev_pdf_id" in record:
                             del record["colrev_pdf_id"]
 
+                    # To fix pdf_hash fields that should have been renamed
+                    if "pdf_hash" in record:
+                        record["colref_pdf_id"] = "cpid1:" + record["pdf_hash"]
+                        del record["pdf_hash"]
+
                     if "pdf_prep_hints" in record:
                         del record["pdf_prep_hints"]
                     if "pdf_processed" in record:
@@ -1083,17 +1088,17 @@ class LocalIndex:
 
         # 2. get most similar record
         if len(toc_items) > 0:
-            record["colrev_ID"] = self.get_colrev_ID(record)
+            record["colrev_id"] = self.get_colrev_id(record)
             sim_list = []
-            for toc_records_colrev_ID in toc_items:
+            for toc_records_colrev_id in toc_items:
                 # Note : using a simpler similarity measure
                 # because the publication outlet parameters are already identical
-                sv = fuzz.ratio(record["colrev_ID"], toc_records_colrev_ID) / 100
+                sv = fuzz.ratio(record["colrev_id"], toc_records_colrev_id) / 100
                 sim_list.append(sv)
 
             if max(sim_list) > similarity_threshold:
-                toc_records_colrev_ID = toc_items[sim_list.index(max(sim_list))]
-                hash = hashlib.sha256(toc_records_colrev_ID.encode("utf-8")).hexdigest()
+                toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
+                hash = hashlib.sha256(toc_records_colrev_id.encode("utf-8")).hexdigest()
                 res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
                 record = res["_source"]  # type: ignore
                 return self.prep_record_for_return(record, include_file)
@@ -1121,6 +1126,7 @@ class LocalIndex:
         if not retrieved_record:
             try:
                 retrieved_record = self.__retrieve_from_record_index(record)
+
             except (NotFoundError, RecordNotInIndexException):
                 pass
 
@@ -1172,10 +1178,10 @@ class LocalIndex:
 
         return record
 
-    def is_duplicate(self, record1_colrev_ID: str, record2_colrev_ID: str) -> str:
+    def is_duplicate(self, record1_colrev_id: str, record2_colrev_id: str) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
-        if record1_colrev_ID == record2_colrev_ID:
+        if record1_colrev_id == record2_colrev_id:
             return "yes"
 
         # Note : the retrieve(record) also checks the d_index, i.e.,
@@ -1183,8 +1189,8 @@ class LocalIndex:
         # record1 and record2 have been mapped to the same record
         # if record1 and record2 in index (and same source_url): return 'no'
         try:
-            r1_index = self.__retrieve_based_on_colrev_ID(record1_colrev_ID)
-            r2_index = self.__retrieve_based_on_colrev_ID(record2_colrev_ID)
+            r1_index = self.__retrieve_based_on_colrev_id(record1_colrev_id)
+            r2_index = self.__retrieve_based_on_colrev_id(record2_colrev_id)
             if r1_index["source_url"] == r2_index["source_url"]:
                 if r1_index["ID"] == r2_index["ID"]:
                     return "yes"
@@ -1199,7 +1205,7 @@ class LocalIndex:
                 "colrev/curated_metadata" in r1_index["source_url"]
                 and "colrev/curated_metadata" in r2_index["source_url"]
             ):
-                if r1_index["colrev_ID"] != r2_index["colrev_ID"]:
+                if r1_index["colrev_id"] != r2_index["colrev_id"]:
                     return "no"
 
         except (RecordNotInIndexException, NotFoundError):

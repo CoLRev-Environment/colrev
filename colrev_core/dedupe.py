@@ -143,7 +143,7 @@ class Dedupe(Process):
                     "volume",
                     "number",
                     "pages",
-                    "colrev_ID",
+                    "colrev_id",
                 ]
             ),
             1,
@@ -226,7 +226,7 @@ class Dedupe(Process):
 
         LOCAL_INDEX = LocalIndex()
         for r in records_queue:
-            r["colrev_ID"] = LOCAL_INDEX.get_colrev_ID(r)
+            r["colrev_id"] = LOCAL_INDEX.get_colrev_id(r)
 
         references = pd.DataFrame.from_dict(records_queue)
         references = self.__prep_references(references)
