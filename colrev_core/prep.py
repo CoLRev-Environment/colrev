@@ -2714,6 +2714,7 @@ class Preparation(Process):
                     f"Prepare records ({mode['name']})", saved_args=saved_args
                 )
                 self.REVIEW_MANAGER.reset_log()
+                print()
 
         if not keep_ids and not self.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
