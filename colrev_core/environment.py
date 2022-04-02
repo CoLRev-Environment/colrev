@@ -194,6 +194,7 @@ class EnvironmentManager:
 
         size = 0
         last_modified = "NOT_INITIATED"
+        status = ""
 
         def get_last_modified() -> str:
             import os
@@ -211,13 +212,16 @@ class EnvironmentManager:
                 index=LOCAL_INDEX.RECORD_INDEX, params={"format": "json"}
             )[0]["count"]
             last_modified = get_last_modified()
+            status = "up"
         except (NotFoundError, IndexError):
+            status = "down"
             pass
 
         environment_details["index"] = {
             "size": size,
             "last_modified": last_modified,
             "path": str(LocalIndex.local_environment_path),
+            "status": status,
         }
 
         local_repos = self.load_local_registry()
