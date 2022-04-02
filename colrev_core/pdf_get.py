@@ -199,7 +199,7 @@ class PDF_Retrieval(Process):
     def get_pdf_hash(self, path: Path) -> str:
         return str(
             imagehash.average_hash(
-                convert_from_path(path, first_page=0, last_page=1)[0],
+                convert_from_path(path, first_page=1, last_page=1)[0],
                 hash_size=32,
             )
         )

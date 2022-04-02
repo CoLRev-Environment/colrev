@@ -43,6 +43,14 @@ class PDFPrepMan(Process):
         )
         return pdf_prep_man_data
 
+    def get_pdf_hash(self, path: Path) -> str:
+        return str(
+            imagehash.average_hash(
+                convert_from_path(path, first_page=1, last_page=1)[0],
+                hash_size=32,
+            )
+        )
+
     def set_data(self, record: dict) -> None:
 
         record.update(status=RecordState.pdf_prepared)
@@ -50,14 +58,7 @@ class PDFPrepMan(Process):
         if "pdf_prep_hints" in record:
             del record["pdf_prep_hints"]
 
-        record.update(
-            pdf_hash=str(
-                imagehash.average_hash(
-                    convert_from_path(record["file"], first_page=0, last_page=1)[0],
-                    hash_size=32,
-                )
-            )
-        )
+        record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(

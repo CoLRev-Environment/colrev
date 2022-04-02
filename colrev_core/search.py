@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 
 import bibtexparser
+import imagehash
 import pandas as pd
 import pandasql as ps
 import requests
@@ -16,6 +17,7 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from crossref.restful import Journals
 from pandasql.sqldf import PandaSQLException
+from pdf2image import convert_from_path
 
 from colrev_core.prep import Preparation
 from colrev_core.process import Process
@@ -602,11 +604,16 @@ class Search(Process):
 
         return
 
+    def get_pdf_hash(self, path) -> typing.List[str]:
+        current_hash = imagehash.average_hash(
+            convert_from_path(str(path), first_page=1, last_page=1)[0],
+            hash_size=32,
+        )
+        return [str(path), str(current_hash)]
+
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
-        import imagehash
-        from pdf2image import convert_from_path
         from colrev_core import grobid_client
 
         from colrev_core.tei import TEI
@@ -643,14 +650,8 @@ class Search(Process):
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search pdf_hash {pdf_hash}')
                     for potential_pdf in potential_pdfs:
-                        hash_potential_pdf = str(
-                            imagehash.average_hash(
-                                convert_from_path(
-                                    potential_pdf, first_page=0, last_page=1
-                                )[0],
-                                hash_size=32,
-                            )
-                        )
+                        hash_potential_pdf = self.get_pdf_hash(potential_pdf)
+
                         # print(f'hash_potential_pdf {hash_potential_pdf}')
                         if pdf_hash == hash_potential_pdf:
                             x["file"] = str(potential_pdf)
@@ -768,15 +769,8 @@ class Search(Process):
         # Note: sets are more efficient:
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
-        def get_pdf_hash(path) -> typing.List[str]:
-            current_hash = imagehash.average_hash(
-                convert_from_path(str(path), first_page=0, last_page=1)[0],
-                hash_size=32,
-            )
-            return [str(path), str(current_hash)]
-
         if skip_duplicates:
-            pdfs_hashed = p_map(get_pdf_hash, pdfs_to_index)
+            pdfs_hashed = p_map(self.get_pdf_hash, pdfs_to_index)
             pdf_hashes = [x[1] for x in pdfs_hashed]
             duplicate_hashes = [
                 item for item, count in Counter(pdf_hashes).items() if count > 1

@@ -331,10 +331,8 @@ class PDF_Preparation(Process):
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record)
 
-            current_hash = imagehash.average_hash(
-                convert_from_path(record["file"], first_page=0, last_page=1)[0],
-                hash_size=32,
-            )
+            current_hash = self.get_pdf_hash(Path(record["file"]))
+
             if "pdf_hash" in retrieved_record:
                 if retrieved_record["pdf_hash"] == str(current_hash):
                     self.REVIEW_MANAGER.logger.debug(
@@ -802,12 +800,7 @@ class PDF_Preparation(Process):
 
         if RecordState.pdf_imported == record["status"]:
             record.update(status=RecordState.pdf_prepared)
-            record.update(
-                pdf_hash=imagehash.average_hash(
-                    convert_from_path(record["file"], first_page=0, last_page=1)[0],
-                    hash_size=32,
-                )
-            )
+            record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
 
             # status == pdf_imported : means successful
             # create *_backup.pdf if record['file'] was changed
@@ -903,25 +896,17 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         return
 
-    def get_hashes(self, path: str):
-
-        for pdf in Path(path).glob("*.pdf"):
-
-            last_page_average_hash_16 = imagehash.average_hash(
-                convert_from_path(pdf, first_page=1, last_page=1)[0],
-                hash_size=16,
+    def get_pdf_hash(self, path: Path) -> str:
+        return str(
+            imagehash.average_hash(
+                convert_from_path(path, first_page=1, last_page=1)[0],
+                hash_size=32,
             )
-            print(f'"{last_page_average_hash_16}",')
-        return
+        )
 
     def __update_hash(self, record: dict) -> dict:
         if "file" in record:
-            record.update(
-                pdf_hash=imagehash.average_hash(
-                    convert_from_path(record["file"], first_page=0, last_page=1)[0],
-                    hash_size=32,
-                )
-            )
+            record.update(pdf_hash=self.get_pdf_hash(Path(record["file"])))
         return record
 
     def update_hashes(self) -> None:
