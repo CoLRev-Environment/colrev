@@ -5,6 +5,8 @@ Collaborative Literature Reviews
 This project aims at improving the literature review process in terms of efficiency, trustworthiness, and richness.
 To accomplish this, CoLRev combines the transparent collaboration model of git with robust content-based identification schemes, and a model for content curation and reuse.
 
+**Development status**: Currently recommend for users with technical experience. Once CoLRev has matured, UIs should make it accessible to a broader user base. CoLRev is the result of intense prototyping, research and development. We use it for our own projects and believe it is ready to be released - after all, git ensures that your work is never lost.
+
 Getting started
 -----------------
 
