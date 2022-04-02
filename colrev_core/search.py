@@ -139,82 +139,91 @@ class Search(Process):
         # w1 = works.query(
         #     container_title="Journal of the Association for Information Systems"
         # )
+        if "selection_clause" in params:
+            query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+            print(query)
 
-        journals = Journals()
-        # t = journals.journal('1526-5536')
-        # input(feed_item['search_parameters'].split('=')[1])
-        w1 = journals.works(params["scope"]["journal_issn"]).query()
-        # for it in t:
-        #     pp.pprint(it)
-        #     input('stop')
+        for journal_issn in params["scope"]["journal_issn"].split("|"):
 
-        available_ids = []
-        max_id = 1
-        if not feed_file.is_file():
-            feed_db = BibDatabase()
-            records = []
-        else:
-            with open(feed_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
-            available_ids = [x["doi"] for x in records if "doi" in x]
-            max_id = max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
+            journals = Journals()
+            # t = journals.journal('1526-5536')
+            # input(feed_item['search_parameters'].split('=')[1])
+            w1 = journals.works(journal_issn).query()
+            # for it in t:
+            #     pp.pprint(it)
+            #     input('stop')
 
-        for item in w1:
-            if "DOI" in item:
-                if item["DOI"].upper() not in available_ids:
-                    record = self.PREPARATION.crossref_json_to_record(item)
+            available_ids = []
+            max_id = 1
+            if not feed_file.is_file():
+                feed_db = BibDatabase()
+                records = []
+            else:
+                with open(feed_file) as bibtex_file:
+                    feed_db = BibTexParser(
+                        customization=convert_to_unicode,
+                        ignore_nonstandard_types=True,
+                        common_strings=True,
+                    ).parse_file(bibtex_file, partial=True)
+                    records = feed_db.entries
+                available_ids = [x["doi"] for x in records if "doi" in x]
+                max_id = (
+                    max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
+                )
 
-                    if "selection_clause" in params:
-                        res = []
-                        try:
-                            rec_df = pd.DataFrame.from_records([record])
-                            print(rec_df)
-                            query = "SELECT * FROM rec_df WHERE"
-                            f"{params['selection_clause']}"
-                            res = ps.sqldf(query, locals())
-                        except PandaSQLException:
-                            # print(e)
-                            pass
+            for item in w1:
+                if "DOI" in item:
+                    if item["DOI"].upper() not in available_ids:
+                        record = self.PREPARATION.crossref_json_to_record(item)
 
-                        if len(res) == 0:
+                        # TODO : collect list of records for more efficient selection
+                        # select once (parse result to list of dicts?)
+                        if "selection_clause" in params:
+                            res = []
+                            try:
+                                rec_df = pd.DataFrame.from_records([record])
+                                # print(rec_df)
+                                res = ps.sqldf(query, locals())
+                            except PandaSQLException:
+                                # print(e)
+                                pass
+
+                            if len(res) == 0:
+                                continue
+
+                        # Note : do not download "empty" records
+                        if "" == record.get("author", "") and "" == record.get(
+                            "title", ""
+                        ):
                             continue
 
-                    # Note : do not download "empty" records
-                    if "" == record.get("author", "") and "" == record.get("title", ""):
-                        continue
+                        print(record["doi"])
+                        record["ID"] = str(max_id).rjust(6, "0")
+                        if "ENTRYTYPE" not in record:
+                            record["ENTRYTYPE"] = "misc"
+                        record["metadata_source"] = "CROSSREF"
+                        record = self.PREPARATION.get_link_from_doi(record)
+                        available_ids.append(record["doi"])
+                        records.append(record)
+                        max_id += 1
 
-                    print(record["doi"])
-                    record["ID"] = str(max_id).rjust(6, "0")
-                    if "ENTRYTYPE" not in record:
-                        record["ENTRYTYPE"] = "misc"
-                    record["metadata_source"] = "CROSSREF"
-                    record = self.PREPARATION.get_link_from_doi(record)
-                    available_ids.append(record["doi"])
-                    records.append(record)
-                    max_id += 1
-        # Note : we may have to set temporary IDs
-        # (and replace them after the following sort operation) ?!
-        records = sorted(
-            records,
-            key=lambda e: (
-                e.get("year", ""),
-                e.get("volume", ""),
-                e.get("number", ""),
-                e.get("author", ""),
-                e.get("title", ""),
-            ),
-        )
+            # Note : we may have to set temporary IDs
+            # (and replace them after the following sort operation) ?!
+            records = sorted(
+                records,
+                key=lambda e: (
+                    e.get("year", ""),
+                    e.get("volume", ""),
+                    e.get("number", ""),
+                    e.get("author", ""),
+                    e.get("title", ""),
+                ),
+            )
 
-        # TODO: append-mode (file-basis) instead of override?
-        feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        feed_db.entries = records
-        with open(feed_file, "w") as fi:
-            fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+            feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            feed_db.entries = records
+            with open(feed_file, "w") as fi:
+                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
 
         return
 
@@ -287,8 +296,8 @@ class Search(Process):
         try:
             api_url = "https://dblp.org/search/publ/api?q="
 
-            # Note : journal_abbreviated is the abbreviated version
-            # TODO : tbd how the abbreviated version can be retrieved
+            # Note : journal_abbreviated is the abbreviated venue_key
+            # TODO : tbd how the abbreviated venue_key can be retrieved
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
@@ -328,7 +337,6 @@ class Search(Process):
 
                         retrieved_record = self.PREPARATION.dblp_json_to_record(item)
 
-                        # TODO: include more checks
                         if (
                             f"{params['scope']['venue_key']}/"
                             not in retrieved_record["dblp_key"]
@@ -360,8 +368,6 @@ class Search(Process):
                             records.append(retrieved_record)
                             max_id += 1
 
-                    # break # TODO : remove
-
                     # Note : we may have to set temporary IDs
                     # (and replace them after the following sort operation) ?!
                     records = sorted(
@@ -375,7 +381,6 @@ class Search(Process):
                         ),
                     )
 
-                    # TODO: append-mode (file-basis) instead of override?
                     feed_file.parents[0].mkdir(parents=True, exist_ok=True)
                     if len(records) == 0:
                         continue
@@ -409,7 +414,7 @@ class Search(Process):
         print(params)
         print(feed_file)
         print(
-            "TODO: one or multiple source entries? "
+            "TODO : one or multiple source entries? "
             "(general search query vs individual source descriptions...) \n "
             "Or maybe use a pattern to link? e.g., files=backward_search*.bib "
             "(this would allow us to avoid redundant queries...)"
@@ -1012,16 +1017,18 @@ class Search(Process):
 
             return record
 
-        def get_last_ID(bib_file: Path) -> str:
-            current_ID = "1"
+        def get_last_ID(bib_file: Path) -> int:
+            IDs = []
             if bib_file.is_file():
                 with open(bib_file) as f:
                     line = f.readline()
                     while line:
                         if "@" in line[:3]:
                             current_ID = line[line.find("{") + 1 : line.rfind(",")]
+                            IDs.append(current_ID)
                         line = f.readline()
-            return current_ID
+            max_id = max([int(cid) for cid in IDs if cid.isdigit()] + [1]) + 1
+            return max_id
 
         batch_size = 10
         pdf_batches = [
@@ -1029,6 +1036,7 @@ class Search(Process):
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
 
+        ID = int(get_last_ID(feed_file))
         for pdf_batch in pdf_batches:
 
             print("\n")
@@ -1051,7 +1059,6 @@ class Search(Process):
             #     new_records = p_map(index_pdf, pdf_batch)
 
             if 0 != len(new_records):
-                ID = int(get_last_ID(feed_file))
                 for new_r in new_records:
                     indexed_pdf_paths.append(new_r["file"])
                     ID += 1
@@ -1069,7 +1076,12 @@ class Search(Process):
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             feed_db.entries = records
             with open(feed_file, "w") as fi:
-                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+                fi.write(
+                    bibtexparser.dumps(
+                        feed_db,
+                        self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer(),
+                    )
+                )
         else:
             print("No records found")
 
@@ -1118,6 +1130,7 @@ class Search(Process):
                         for x in selection
                     ]
                 )
+
             # else: parse complex selection (no need to parse!?)
             params["selection_clause"] = selection_str
 
@@ -1255,7 +1268,7 @@ class Search(Process):
     def add_source(self, query: str) -> None:
 
         # TODO : parse query (input format changed to sql-like string)
-        # TODO: the search query/syntax translation has to be checked carefully
+        # TODO : the search query/syntax translation has to be checked carefully
         # (risk of false-negative search results caused by errors/missing functionality)
         # https://lucene.apache.org/core/2_9_4/queryparsersyntax.html
         # https://github.com/netgen/query-translator/tree/master/lib/Languages/Galach
@@ -1271,6 +1284,13 @@ class Search(Process):
         # Note: corresponds to "digital[all] AND platform[all]"
 
         saved_args = {"add": f'"{query}"'}
+
+        as_filename = ""
+        if " AS " in query:
+            as_filename = query[query.find(" AS ") + 4 :]
+            if ".bib" not in as_filename:
+                as_filename = f"{as_filename}.bib"
+            query = query[: query.find(" AS ")]
         query = f"SELECT * {query}"
 
         self.validate_query(query)
@@ -1290,13 +1310,17 @@ class Search(Process):
         source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         for source in sources:
+            duplicate_source = []
+            try:
+                duplicate_source = [
+                    x
+                    for x in source_details
+                    if source == x["search_parameters"][0]["endpoint"]
+                    and selection == x["search_parameters"][0]["params"]
+                ]
+            except TypeError:
+                pass
 
-            duplicate_source = [
-                x
-                for x in source_details
-                if source == x["search_parameters"][0]["endpoint"]
-                and selection == x["search_parameters"][0]["params"]
-            ]
             if len(duplicate_source) > 0:
                 print(
                     "Source already exists: "
@@ -1304,12 +1328,17 @@ class Search(Process):
                 )
                 continue
 
-            # TODO : check whether it already exists
-            filename = f"{source}_query.bib"
-            i = 0
-            while filename in [x["filename"] for x in source_details]:
-                i += 1
-                filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
+            if as_filename != "":
+                filename = as_filename
+            else:
+                filename = f"{source}_query.bib"
+                i = 0
+                while filename in [x["filename"] for x in source_details]:
+                    i += 1
+                    filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
+
+            feed_file_path = Path.cwd() / Path("search") / Path(filename)
+            assert not feed_file_path.is_file()
 
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
@@ -1333,15 +1362,13 @@ class Search(Process):
 
     def update(self, selection_str: str) -> None:
 
-        # TODO: when the search_file has been filled only query the last years
-        # in the next calls?"
+        # TODO : when the search_file has been filled only query the last years
 
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        search_dir = Path.cwd() / Path("search")
         feed_paths = [x for x in sources if "FEED" == x["search_type"]]
         for feed_item in feed_paths:
 
-            feed_file = search_dir / Path(feed_item["filename"])
+            feed_file = Path.cwd() / Path("search") / Path(feed_item["filename"])
             search_param = feed_item["search_parameters"][0]
             if search_param["endpoint"] not in [
                 x["search_endpoint"] for x in self.search_scripts
