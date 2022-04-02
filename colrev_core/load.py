@@ -249,6 +249,7 @@ class Loader(Process):
     def start_zotero_translators(self) -> None:
         import docker
         from colrev_core.environment import EnvironmentManager
+        import time
 
         zotero_image = EnvironmentManager.docker_images["zotero/translation-server"]
 
@@ -263,11 +264,12 @@ class Loader(Process):
             detach=True,
         )
         i = 0
-        while i < 120:
+        while i < 45:
             try:
                 r = requests.get("http://127.0.0.1:1969/")
                 print(r)
             except requests.exceptions.ConnectionError as e:
+                time.sleep(1)
                 print(e)
                 pass
             i += 1

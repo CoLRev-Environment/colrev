@@ -1671,6 +1671,9 @@ class Preparation(Process):
 
     def remove_broken_IDs(self, record: dict) -> dict:
 
+        if not self.FIRST_ROUND:
+            return record
+
         if "doi" in record:
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
             d = re.match(r"^10.\d{4,9}\/", record["doi"])
@@ -1685,7 +1688,49 @@ class Preparation(Process):
 
         return record
 
+    def global_ids_consistency_check(self, record: dict) -> dict:
+        """When metadata provided by DOI/crossref or on the website (url) differs from
+        the record: set status to md_needs_manual_preparation."""
+
+        if not self.FIRST_ROUND:
+            return record
+
+        if "doi" in record:
+            doi_md = self.get_md_from_doi(record.copy())
+            # self.REVIEW_MANAGER.pp.pprint(doi_md)
+            for k, v in doi_md.items():
+                if not isinstance(v, str):
+                    continue
+                if k in record:
+                    if fuzz.partial_ratio(record[k], doi_md[k]) < 70:
+                        record["status"] = RecordState.md_needs_manual_preparation
+                        record[
+                            "man_prep_hints"
+                        ] = f"Disagreement with doi metadata ({k}: {v})"
+
+        if "url" in record:
+            url_md = self.retrieve_md_from_url(record["url"])
+            # self.REVIEW_MANAGER.pp.pprint(url_md)
+            for k, v in url_md.items():
+                if not isinstance(v, str):
+                    continue
+                if k in record:
+                    print(fuzz.partial_ratio(record[k], url_md[k]))
+                    if fuzz.partial_ratio(record[k], url_md[k]) < 70:
+                        record["status"] = RecordState.md_needs_manual_preparation
+                        record[
+                            "man_prep_hints"
+                        ] = f"Disagreement with url metadata ({k}: {v})"
+
+        self.REVIEW_MANAGER.pp.pprint(record)
+
+        return record
+
     def remove_urls_with_500_errors(self, record: dict) -> dict:
+
+        if not self.FIRST_ROUND:
+            return record
+
         try:
             if "url" in record:
                 r = requests.get(
@@ -1938,6 +1983,10 @@ class Preparation(Process):
                 "params": [preparation_record],
             },
             {
+                "script": self.global_ids_consistency_check,
+                "params": [preparation_record],
+            },
+            {
                 "script": self.correct_recordtype,
                 "params": [preparation_record],
             },
@@ -2069,7 +2118,10 @@ class Preparation(Process):
                 if self.DEBUG_MODE:
                     print("\n")
                     time.sleep(0.7)
-            if RecordState.rev_prescreen_excluded == preparation_record["status"]:
+
+            if RecordState.rev_prescreen_excluded == preparation_record[
+                "status"
+            ] or "Disagreement with " in preparation_record.get("man_prep_hints", ""):
                 record = preparation_record.copy()
                 break
 
@@ -2412,7 +2464,7 @@ class Preparation(Process):
             if len(items) == 0:
                 return record
             item = items[0]
-            self.REVIEW_MANAGER.pp.pprint(item)
+            # self.REVIEW_MANAGER.pp.pprint(item)
             record["ID"] = item["key"]
             record["ENTRYTYPE"] = "article"  # default
             if "journalArticle" == item.get("itemType", ""):
@@ -2652,6 +2704,8 @@ class Preparation(Process):
             {"name": "low_confidence", "similarity": 0.80},
         ]
 
+        self.FIRST_ROUND = True
+
         for mode in modes:
             self.REVIEW_MANAGER.logger.info(f"Prepare ({mode['name']})")
 
@@ -2715,6 +2769,8 @@ class Preparation(Process):
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
+
+            self.FIRST_ROUND = False
 
         if not keep_ids and not self.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
