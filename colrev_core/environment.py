@@ -1162,6 +1162,9 @@ class LocalIndex:
     def is_duplicate(self, record1_colrev_ID: str, record2_colrev_ID: str) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
+        if record1_colrev_ID == record2_colrev_ID:
+            return "yes"
+
         # Note : the retrieve(record) also checks the d_index, i.e.,
         # if the IDs and source_urls are identical,
         # record1 and record2 have been mapped to the same record
