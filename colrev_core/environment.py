@@ -595,7 +595,7 @@ class LocalIndex:
             retrieved_record = self.retrieve(record)
 
             # if the string_representations are not identical: add to d_index
-            if not retrieved_record["colrev_id"] == record["colrev_id"]:
+            if not self.get_colrev_id(retrieved_record) == record["colrev_id"]:
                 # Note: we need the colrev_id of the retrieved_record
                 # (may be different from record)
                 self.__amend_record(self.__get_record_hash(retrieved_record), record)

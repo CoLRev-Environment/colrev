@@ -1699,10 +1699,13 @@ class Preparation(Process):
         if not self.FIRST_ROUND:
             return record
 
+        fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
         if "doi" in record:
             doi_md = self.get_md_from_doi(record.copy())
             # self.REVIEW_MANAGER.pp.pprint(doi_md)
             for k, v in doi_md.items():
+                if k not in fields_to_check:
+                    continue
                 if not isinstance(v, str):
                     continue
                 if k in record:
@@ -1716,6 +1719,8 @@ class Preparation(Process):
             url_md = self.retrieve_md_from_url(record["url"])
             # self.REVIEW_MANAGER.pp.pprint(url_md)
             for k, v in url_md.items():
+                if k not in fields_to_check:
+                    continue
                 if not isinstance(v, str):
                     continue
                 if k in record:

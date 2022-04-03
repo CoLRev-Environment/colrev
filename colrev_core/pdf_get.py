@@ -156,8 +156,8 @@ class PDF_Retrieval(Process):
 
         LOCAL_INDEX = LocalIndex()
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(record)
-            # pp.pprint(retrieved_record)
+            retrieved_record = LOCAL_INDEX.retrieve(record, include_file=True)
+            # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
         except RecordNotInIndexException:
             pass
             return record
@@ -165,15 +165,19 @@ class PDF_Retrieval(Process):
         if "file" in retrieved_record:
             record["file"] = retrieved_record["file"]
 
-            new_fp = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
-                record["file"]
+            new_fp = (
+                self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+                / Path(record["ID"] + ".pdf").name
             )
             original_fp = Path(record["file"])
+
             if "SYMLINK" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
-                new_fp.symlink_to(original_fp)
+                if not new_fp.is_file():
+                    new_fp.symlink_to(original_fp)
                 record["file"] = str(new_fp)
             elif "COPY" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
-                shutil.copyfile(original_fp, new_fp.resolve())
+                if not new_fp.is_file():
+                    shutil.copyfile(original_fp, new_fp.resolve())
                 record["file"] = str(new_fp)
             # Note : else: leave absolute paths
 
@@ -468,10 +472,10 @@ class PDF_Retrieval(Process):
 
         saved_args = locals()
 
-        print("TODO: download if there is a fulltext link in the record")
+        # TODO : download if there is a fulltext link in the record
 
-        self.REVIEW_MANAGER.report_logger.info("Retrieve PDFs")
-        self.REVIEW_MANAGER.logger.info("Retrieve PDFs")
+        self.REVIEW_MANAGER.report_logger.info("Get PDFs")
+        self.REVIEW_MANAGER.logger.info("Get PDFs")
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records = self.__set_status_if_file_linked(records)
@@ -507,7 +511,7 @@ class PDF_Retrieval(Process):
             if rename:
                 records = self.__rename_pdfs(records)
 
-            self.REVIEW_MANAGER.create_commit("Retrieve PDFs", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
 
         if i == 1:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
