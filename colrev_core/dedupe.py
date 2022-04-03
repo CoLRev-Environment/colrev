@@ -342,6 +342,28 @@ class Dedupe(Process):
 
         return main_record
 
+    def same_source_merge(self, main_record: dict, dupe_record: dict) -> bool:
+
+        main_rec_sources = [x.split("/")[0] for x in main_record["origin"].split(";")]
+        dupe_rec_sources = [x.split("/")[0] for x in dupe_record["origin"].split(";")]
+        same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
+        if len(same_sources) > 0:
+            return True
+
+        return False
+
+    def export_same_source_merge(self, main_record: dict, dupe_record: dict) -> None:
+
+        merge_info = main_record["ID"] + "," + dupe_record["ID"]
+        same_source_merge_file = Path("same_source_merges.txt")
+        with same_source_merge_file.open("a") as f:
+            f.write(merge_info + "\n")
+        self.REVIEW_MANAGER.logger.warning(
+            f"Prevented same-source merge: ({merge_info})"
+        )
+
+        return
+
     def apply_merges(self, results: list):
         """Apply automated deduplication decisions
 
@@ -387,6 +409,11 @@ class Dedupe(Process):
             else:
                 main_record = rec_ID1_list[0]
                 dupe_record = rec_ID2_list[0]
+
+            if self.same_source_merge(main_record, dupe_record):
+                # TODO: option: allow-same-source-merges
+                self.export_same_source_merge(main_record, dupe_record)
+                continue
 
             main_record = self.merge_r1_r2(main_record, dupe_record)
 
@@ -563,54 +590,49 @@ class Dedupe(Process):
                 )
 
                 # Note : there could be more than two IDs in the list
-                while len(IDs_to_unmerge) > 0:
-                    filecontents = next(revlist)
-                    prior_db = bibtexparser.loads(filecontents)
-                    prior_records = prior_db.entries
+                filecontents = next(revlist)
+                prior_db = bibtexparser.loads(filecontents)
+                prior_records = prior_db.entries
 
-                    unmerged = []
-                    for ID_list_to_unmerge in IDs_to_unmerge:
-                        self.REVIEW_MANAGER.report_logger.info(
-                            f'Undo merge: {",".join(ID_list_to_unmerge)}'
-                        )
+                for ID_list_to_unmerge in IDs_to_unmerge:
+                    self.REVIEW_MANAGER.report_logger.info(
+                        f'Undo merge: {",".join(ID_list_to_unmerge)}'
+                    )
 
-                        # delete new record,
-                        # add previous records (from history) to records
-                        records = [
-                            r for r in records if r["ID"] not in ID_list_to_unmerge
+                    # delete new record,
+                    # add previous records (from history) to records
+                    records = [r for r in records if r["ID"] not in ID_list_to_unmerge]
+
+                    if all(
+                        [
+                            ID in [r["ID"] for r in prior_records]
+                            for ID in ID_list_to_unmerge
                         ]
+                    ):
+                        for r in prior_records:
+                            if r["ID"] in ID_list_to_unmerge:
+                                # add manual_dedupe/non_dupe decision to the records
+                                manual_non_duplicates = ID_list_to_unmerge.copy()
+                                manual_non_duplicates.remove(r["ID"])
 
-                        if all(
-                            [
-                                ID in [r["ID"] for r in prior_records]
-                                for ID in ID_list_to_unmerge
-                            ]
-                        ):
-                            for r in prior_records:
-                                if r["ID"] in ID_list_to_unmerge:
-                                    # add manual_dedupe/non_dupe decision to the records
-                                    manual_non_duplicates = ID_list_to_unmerge.copy()
-                                    manual_non_duplicates.remove(r["ID"])
-
-                                    if "manual_non_duplicate" in r:
-                                        r["manual_non_duplicate"] = (
-                                            r["manual_non_duplicate"]
-                                            + ";"
-                                            + ";".join(manual_non_duplicates)
-                                        )
-                                    else:
-                                        r["manual_non_duplicate"] = ";".join(
-                                            manual_non_duplicates
-                                        )
-                                    r["status"] = RecordState.md_processed
-                                    records.append(r)
-                                    self.REVIEW_MANAGER.logger.info(
-                                        f'Restored {r["ID"]}'
+                                if "manual_non_duplicate" in r:
+                                    r["manual_non_duplicate"] = (
+                                        r["manual_non_duplicate"]
+                                        + ";"
+                                        + ";".join(manual_non_duplicates)
                                     )
-                        else:
-                            unmerged.append(ID_list_to_unmerge)
-
-                    IDs_to_unmerge = unmerged
+                                else:
+                                    r["manual_non_duplicate"] = ";".join(
+                                        manual_non_duplicates
+                                    )
+                                r["status"] = RecordState.md_processed
+                                records.append(r)
+                                self.REVIEW_MANAGER.logger.info(f'Restored {r["ID"]}')
+                    else:
+                        self.REVIEW_MANAGER.logger.error(
+                            f"Could not retore {ID_list_to_unmerge} - "
+                            "please fix manually"
+                        )
 
                 records = sorted(records, key=lambda d: d["ID"])
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
