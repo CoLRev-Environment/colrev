@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import csv
+import typing
 from pathlib import Path
 
 import pandas as pd
@@ -191,6 +192,27 @@ class Prescreen(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
+
+    def create_prescreen_split(self, create_split: int) -> list:
+        import math
+
+        prescreen_splits = []
+
+        data = self.get_data()
+        nrecs = math.floor(data["nr_tasks"] / create_split)
+
+        self.REVIEW_MANAGER.report_logger.info(
+            f"Creating prescreen splits for {create_split} researchers "
+            f"({nrecs} each)"
+        )
+
+        for i in range(0, create_split):
+            added: typing.List[str] = []
+            while len(added) < nrecs:
+                added.append(next(data["items"])["ID"])
+            prescreen_splits.append("colrev prescreen --split " + ",".join(added))
+
+        return prescreen_splits
 
 
 if __name__ == "__main__":

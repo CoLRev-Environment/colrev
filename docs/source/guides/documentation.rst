@@ -362,6 +362,15 @@ Pre-screen
 
     Include all papers (do not implement a formal prescreen)
 
+.. option:: --create_split INT
+
+    Splits the prescreen between n researchers. Simply share the output with the researchers and ask them to run the commands in their local CoLRev project.
+
+.. option:: --split STR
+
+    Complete the prescreen for the specified split.
+
+
 .. _PDF get:
 
 PDF get
