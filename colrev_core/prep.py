@@ -241,7 +241,7 @@ class Preparation(Process):
                         url, "GET", headers=self.requests_headers, timeout=self.TIMEOUT
                     )
             record["url"] = str(url)
-        except requests.exceptions.ConnectionError:
+        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
             pass
         return record
 
@@ -1724,7 +1724,6 @@ class Preparation(Process):
                 if not isinstance(v, str):
                     continue
                 if k in record:
-                    print(fuzz.partial_ratio(record[k], url_md[k]))
                     if fuzz.partial_ratio(record[k], url_md[k]) < 70:
                         record["status"] = RecordState.md_needs_manual_preparation
                         record[
