@@ -606,6 +606,7 @@ class Preparation(Process):
         if not re.match(r"^\d*--\d*$", input_string) and "--" not in input_string:
             input_string = (
                 input_string.replace("-", "--")
+                .replace(" -- ", "--")
                 .replace("–", "--")
                 .replace("----", "--")
                 .replace(" -- ", "--")
