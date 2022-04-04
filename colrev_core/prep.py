@@ -1555,7 +1555,7 @@ class Preparation(Process):
                 res = re.findall(self.doi_regex, ret.text)
                 if res:
                     if len(res) == 1:
-                        ret_dois = res[0]
+                        ret_dois = [(res[0], 1)]
                     else:
                         counter = collections.Counter(res)
                         ret_dois = counter.most_common()
