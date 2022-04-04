@@ -986,6 +986,43 @@ class ReviewDataset:
             raise RecordNotInRepoException
         return record_l[0]
 
+    def get_missing_files(self) -> list:
+        from colrev_core.process import RecordState
+
+        # excluding pdf_not_available
+        file_required_status = [
+            str(RecordState.pdf_imported),
+            str(RecordState.pdf_needs_manual_preparation),
+            str(RecordState.pdf_prepared),
+            str(RecordState.rev_excluded),
+            str(RecordState.rev_included),
+            str(RecordState.rev_synthesized),
+        ]
+        missing_files = []
+        with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
+            for record_string in self.__read_next_record_str(f):
+                ID, status = "NA", "NA"
+
+                for line in record_string.split("\n"):
+                    if "@Comment" in line:
+                        ID = "Comment"
+                        break
+                    if "@" in line[:3]:
+                        ID = line[line.find("{") + 1 : line.rfind(",")]
+                    if "status" == line.lstrip()[:6]:
+                        status = line[line.find("{") + 1 : line.rfind("}")]
+                if "Comment" == ID:
+                    continue
+                if "NA" == ID:
+                    print(f"Skipping record without ID: {record_string}")
+                    continue
+
+                if (" file  " not in record_string) and (
+                    status in file_required_status
+                ):
+                    missing_files.append(ID)
+        return missing_files
+
     # CHECKS --------------------------------------------------------------
 
     def check_main_references_duplicates(self, data: dict) -> None:
