@@ -2428,16 +2428,17 @@ class Preparation(Process):
         LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
         LOADER.start_zotero_translators()
 
-        content_type_header = {"Content-type": "text/plain"}
-        headers = {**self.requests_headers, **content_type_header}
-        et = requests.post(
-            "http://127.0.0.1:1969/web",
-            headers=headers,
-            data=url,
-        )
-
-        record: typing.Dict = {}
         try:
+            content_type_header = {"Content-type": "text/plain"}
+            headers = {**self.requests_headers, **content_type_header}
+            et = requests.post(
+                "http://127.0.0.1:1969/web",
+                headers=headers,
+                data=url,
+            )
+
+            record: typing.Dict = {}
+
             items = json.loads(et.content.decode())
             if len(items) == 0:
                 return record
@@ -2497,7 +2498,7 @@ class Preparation(Process):
                 if len(item["tags"]) > 0:
                     keywords = ", ".join([k["tag"] for k in item["tags"]])
                     record["keywords"] = keywords
-        except json.decoder.JSONDecodeError:
+        except (json.decoder.JSONDecodeError, UnicodeEncodeError):
             pass
         except KeyError:
             pass
