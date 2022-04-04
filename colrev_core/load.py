@@ -246,6 +246,23 @@ class Loader(Process):
 
         return new_record
 
+    def zotero_service_available(self) -> bool:
+        import requests
+
+        url = "https://www.sciencedirect.com/science/article/abs/pii/S096386872100041X"
+        content_type_header = {"Content-type": "text/plain"}
+        try:
+            et = requests.post(
+                "http://127.0.0.1:1969/web",
+                headers=content_type_header,
+                data=url,
+            )
+            if et.status_code == 200:
+                return True
+        except requests.exceptions.ConnectionError:
+            pass
+        return False
+
     def start_zotero_translators(self) -> None:
         import docker
         from colrev_core.environment import EnvironmentManager
@@ -265,13 +282,9 @@ class Loader(Process):
         )
         i = 0
         while i < 45:
-            try:
-                r = requests.get("http://127.0.0.1:1969/")
-                print(r)
-            except requests.exceptions.ConnectionError as e:
-                time.sleep(1)
-                print(e)
-                pass
+            if self.zotero_service_available():
+                break
+            time.sleep(1)
             i += 1
         return
 
