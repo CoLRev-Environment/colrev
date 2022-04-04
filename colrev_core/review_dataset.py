@@ -782,7 +782,6 @@ class ReviewDataset:
         from colrev_core.process import ProcessModel
 
         data: dict = {
-            "missing_file": [],
             "pdf_not_exists": [],
             "status_fields": [],
             "status_transitions": [],
@@ -857,21 +856,6 @@ class ReviewDataset:
                     data["entries_without_origin"].append(ID)
 
                 data["status_fields"].append(status)
-
-                # excluding pdf_not_available
-                file_required_status = [
-                    str(RecordState.pdf_imported),
-                    str(RecordState.pdf_needs_manual_preparation),
-                    str(RecordState.pdf_prepared),
-                    str(RecordState.rev_excluded),
-                    str(RecordState.rev_included),
-                    str(RecordState.rev_synthesized),
-                ]
-
-                if (" file  " not in record_string) and (
-                    status in file_required_status
-                ):
-                    data["missing_file"].append(ID)
 
                 if "not_set" != excl_crit:
                     ec_case = [ID, status, excl_crit]
@@ -1409,27 +1393,6 @@ class ReviewDataset:
                             "Included record with exclusion_criterion satisfied: "
                             f"{ID}, {status}, {excl_crit}"
                         )
-        return
-
-    def check_main_references_files(self, data: dict) -> None:
-
-        # Check pdf files
-        if len(data["missing_file"]) > 0:
-            raise FieldError(
-                "record with status requiring a PDF file but missing "
-                + f'the path (file = ...): {data["missing_file"]}'
-            )
-
-        if len(data["pdf_not_exists"]) > 0:
-            if len(data["pdf_not_exists"]) < 10:
-                non_existent_pdfs = ",".join(data["pdf_not_exists"])
-            else:
-                non_existent_pdfs = ",".join(data["pdf_not_exists"][0:10] + ["..."])
-            raise FieldError(
-                f"record with broken file link ({non_existent_pdfs}). Use\n    "
-                "colrev pdf-get --relink_files"
-            )
-
         return
 
     # def check_screen_data(screen, data):

@@ -563,10 +563,6 @@ class ReviewManager:
                     "params": data,
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_references_files,
-                    "params": data,
-                },
-                {
                     "script": self.REVIEW_DATASET.check_status_transitions,
                     "params": data,
                 },
@@ -584,7 +580,6 @@ class ReviewManager:
                     in [
                         "check_sources",
                         "check_main_references_duplicates",
-                        "check_main_references_files",
                     ]
                 ]
 

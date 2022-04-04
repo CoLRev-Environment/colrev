@@ -343,6 +343,8 @@ class Status(Process):
         return environment_instructions
 
     def get_review_instructions(self, stat) -> list:
+        from colrev_core.process import RecordState
+
         review_instructions = []
 
         # git_repo = REVIEW_MANAGER.get_repo()
@@ -363,6 +365,62 @@ class Status(Process):
             if str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]) in non_staged:
                 instruction["priority"] = "yes"
             review_instructions.append(instruction)
+
+        # excluding pdf_not_available
+        file_required_status = [
+            str(RecordState.pdf_imported),
+            str(RecordState.pdf_needs_manual_preparation),
+            str(RecordState.pdf_prepared),
+            str(RecordState.rev_excluded),
+            str(RecordState.rev_included),
+            str(RecordState.rev_synthesized),
+        ]
+        missing_files = []
+        with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
+            for (
+                record_string
+            ) in self.REVIEW_MANAGER.REVIEW_DATASET.__read_next_record_str(f):
+                ID, status = "NA", "NA"
+
+                for line in record_string.split("\n"):
+                    if "@Comment" in line:
+                        ID = "Comment"
+                        break
+                    if "@" in line[:3]:
+                        ID = line[line.find("{") + 1 : line.rfind(",")]
+                    if "status" == line.lstrip()[:6]:
+                        status = line[line.find("{") + 1 : line.rfind("}")]
+                if "Comment" == ID:
+                    continue
+                if "NA" == ID:
+                    print(f"Skipping record without ID: {record_string}")
+                    continue
+
+                if (" file  " not in record_string) and (
+                    status in file_required_status
+                ):
+                    missing_files.append(ID)
+
+        # Check pdf files
+        if len(missing_files) > 0:
+            review_instructions.append(
+                {
+                    "msg": "record with status requiring a PDF file but missing "
+                    + f"the path (file = ...): {missing_files}"
+                }
+            )
+
+        if len(missing_files) > 0:
+            if len(missing_files) < 10:
+                non_existent_pdfs = ",".join(missing_files)
+            else:
+                non_existent_pdfs = ",".join(missing_files[0:10] + ["..."])
+            review_instructions.append(
+                {
+                    "msg": f"record with broken file link ({non_existent_pdfs})."
+                    " Use\n    colrev pdf-get --relink_files"
+                }
+            )
 
         current_record_state_list = (
             self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
