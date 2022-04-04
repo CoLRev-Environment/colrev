@@ -241,7 +241,7 @@ class Preparation(Process):
                         url, "GET", headers=self.requests_headers, timeout=self.TIMEOUT
                     )
             record["url"] = str(url)
-        except (requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
+        except requests.exceptions.RequestException:
             pass
         return record
 
@@ -822,7 +822,7 @@ class Preparation(Process):
                     most_similar_record = retrieved_record
         except json.decoder.JSONDecodeError:
             pass
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             return [{}]
 
         if jour_vol_iss_list:
@@ -952,9 +952,7 @@ class Preparation(Process):
                         f"(<{self.RETRIEVAL_SIMILARITY})"
                     )
 
-            except requests.exceptions.HTTPError:
-                pass
-            except requests.exceptions.ReadTimeout:
+            except requests.exceptions.RequestException:
                 pass
             except KeyboardInterrupt:
                 sys.exit()
@@ -1009,9 +1007,7 @@ class Preparation(Process):
             if years.count(most_common) > 3:
                 record["year"] = most_common
                 record["metadata_source"] = "CROSSREF"
-        except requests.exceptions.HTTPError:
-            pass
-        except requests.exceptions.ReadTimeout:
+        except requests.exceptions.RequestException:
             pass
         except KeyboardInterrupt:
             sys.exit()
@@ -1113,18 +1109,14 @@ class Preparation(Process):
                     f"scholar similarity: {similarity} "
                     f"(<{self.RETRIEVAL_SIMILARITY})"
                 )
-        except requests.exceptions.ReadTimeout:
-            pass
         except KeyError:
-            pass
-        except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
             self.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
             pass
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             pass
         return record
 
@@ -1221,16 +1213,12 @@ class Preparation(Process):
             record.update(metadata_source="OPEN_LIBRARY")
             if "title" in record and "booktitle" in record:
                 del record["booktitle"]
-        except requests.exceptions.ReadTimeout:
-            pass
-        except requests.exceptions.HTTPError:
+        except requests.exceptions.RequestException:
             pass
         except UnicodeEncodeError:
             self.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-            pass
-        except requests.exceptions.ConnectionError:
             pass
         return record
 
@@ -1258,7 +1246,7 @@ class Preparation(Process):
                     break
 
             venue = re.sub(r" \(.*?\)", "", venue)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             pass
         return venue
 
@@ -1389,13 +1377,9 @@ class Preparation(Process):
                         f"dblp similarity: {similarity} "
                         f"(<{self.RETRIEVAL_SIMILARITY})"
                     )
-        except requests.exceptions.HTTPError:
-            pass
         except UnicodeEncodeError:
             pass
-        except requests.exceptions.ReadTimeout:
-            pass
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             pass
         return record
 
@@ -1554,11 +1538,7 @@ class Preparation(Process):
 
         except json.decoder.JSONDecodeError:
             pass
-        except requests.exceptions.HTTPError:
-            pass
-        except requests.exceptions.ReadTimeout:
-            pass
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             pass
             return orig_record
         return record
@@ -1598,9 +1578,7 @@ class Preparation(Process):
                             )
                             record.update(metadata_source="LINKED_URL")
 
-            except requests.exceptions.ConnectionError:
-                pass
-            except Exception:
+            except requests.exceptions.RequestException:
                 pass
         return record
 
@@ -1746,11 +1724,7 @@ class Preparation(Process):
                 )
                 if r.status_code >= 500:
                     del record["url"]
-        except (
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ):
+        except requests.exceptions.RequestException:
             pass
         try:
             if "fulltext" in record:
@@ -1761,11 +1735,7 @@ class Preparation(Process):
                 )
                 if r.status_code >= 500:
                     del record["fulltext"]
-        except (
-            requests.exceptions.ReadTimeout,
-            requests.exceptions.ConnectionError,
-            requests.exceptions.HTTPError,
-        ):
+        except requests.exceptions.RequestException:
             pass
 
         return record
@@ -2607,8 +2577,6 @@ class Preparation(Process):
         return prep_data
 
     def check_DBs_availability(self) -> None:
-        from urllib3.exceptions import NewConnectionError
-        from requests.exceptions import ConnectionError
 
         try:
             test_rec = {
@@ -2627,7 +2595,7 @@ class Preparation(Process):
             else:
                 if not self.force_mode:
                     raise ServiceNotAvailableException("CROSSREF")
-        except (ConnectionError, NewConnectionError):
+        except requests.exceptions.RequestException:
             pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("CROSSREF")
@@ -2651,7 +2619,7 @@ class Preparation(Process):
             else:
                 if not self.force_mode:
                     raise ServiceNotAvailableException("DBLP")
-        except (ConnectionError, NewConnectionError):
+        except requests.exceptions.RequestException:
             pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("DBLP")
@@ -2670,7 +2638,7 @@ class Preparation(Process):
             if ret.status_code != 200:
                 if not self.force_mode:
                     raise ServiceNotAvailableException("OPENLIBRARY")
-        except (ConnectionError, NewConnectionError):
+        except requests.exceptions.RequestException:
             pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("OPENLIBRARY")
