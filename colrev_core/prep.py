@@ -1265,12 +1265,15 @@ class Preparation(Process):
             retrieved_record["ENTRYTYPE"] = "article"
             lpos = item["key"].find("/") + 1
             rpos = item["key"].rfind("/")
-            jour = item["key"][lpos:rpos]
-            retrieved_record["journal"] = self.__get_dblp_venue(jour, "Journal")
+            ven_key = item["key"][lpos:rpos]
+            retrieved_record["journal"] = self.__get_dblp_venue(ven_key, "Journal")
         if "Conference and Workshop Papers" == item["type"]:
             retrieved_record["ENTRYTYPE"] = "inproceedings"
+            lpos = item["key"].find("/") + 1
+            rpos = item["key"].rfind("/")
+            ven_key = item["key"][lpos:rpos]
             retrieved_record["booktitle"] = self.__get_dblp_venue(
-                item["venue"], "Conference or Workshop"
+                ven_key, "Conference or Workshop"
             )
         if "title" in item:
             retrieved_record["title"] = item["title"].rstrip(".")
@@ -1371,6 +1374,7 @@ class Preparation(Process):
                     )
                     record = self.__fuse_best_fields(record, retrieved_record)
                     record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
+                    record.update(metadata_source="DBLP")
                     record.update(status=RecordState.md_prepared)
                 else:
                     self.REVIEW_MANAGER.logger.debug(
@@ -1598,6 +1602,13 @@ class Preparation(Process):
         if record["ENTRYTYPE"] in self.record_field_requirements.keys():
             if len(self.__missing_fields(record)) == 0:
                 sufficiently_complete = True
+        if record.get("metadata_source", "") in [
+            "CROSSREF",
+            "DOI.ORG",
+            "CURATED",
+            "DBLP",
+        ]:
+            sufficiently_complete = True
         return sufficiently_complete
 
     def __get_inconsistencies(self, record: dict) -> list:
@@ -1687,14 +1698,16 @@ class Preparation(Process):
                 if not isinstance(v, str):
                     continue
                 if k in record:
-                    if fuzz.partial_ratio(record[k], doi_md[k]) < 70:
+                    if len(doi_md[k]) < 5 or len(record[k]) < 5:
+                        continue
+                    if fuzz.partial_ratio(record[k].lower(), doi_md[k].lower()) < 70:
                         record["status"] = RecordState.md_needs_manual_preparation
                         record[
                             "man_prep_hints"
                         ] = f"Disagreement with doi metadata ({k}: {v})"
 
         if "url" in record:
-            url_md = self.retrieve_md_from_url(record["url"])
+            url_md = self.retrieve_md_from_url(record.copy())
             # self.REVIEW_MANAGER.pp.pprint(url_md)
             for k, v in url_md.items():
                 if k not in fields_to_check:
@@ -1702,7 +1715,9 @@ class Preparation(Process):
                 if not isinstance(v, str):
                     continue
                 if k in record:
-                    if fuzz.partial_ratio(record[k], url_md[k]) < 70:
+                    if len(url_md[k]) < 5 or len(record[k]) < 5:
+                        continue
+                    if fuzz.partial_ratio(record[k].lower(), url_md[k].lower()) < 70:
                         record["status"] = RecordState.md_needs_manual_preparation
                         record[
                             "man_prep_hints"
@@ -2422,7 +2437,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
-    def retrieve_md_from_url(self, url: str) -> dict:
+    def retrieve_md_from_url(self, record: dict) -> dict:
         from colrev_core.load import Loader
 
         LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
@@ -2434,15 +2449,16 @@ class Preparation(Process):
             et = requests.post(
                 "http://127.0.0.1:1969/web",
                 headers=headers,
-                data=url,
+                data=record["url"],
             )
-
-            record: typing.Dict = {}
 
             items = json.loads(et.content.decode())
             if len(items) == 0:
                 return record
             item = items[0]
+            if "Shibboleth Authentication Request" == item["title"]:
+                return record
+
             # self.REVIEW_MANAGER.pp.pprint(item)
             record["ID"] = item["key"]
             record["ENTRYTYPE"] = "article"  # default
@@ -2500,6 +2516,8 @@ class Preparation(Process):
                     record["keywords"] = keywords
         except (json.decoder.JSONDecodeError, UnicodeEncodeError):
             pass
+        except requests.exceptions.RequestException:
+            pass
         except KeyError:
             pass
         return record
@@ -2511,7 +2529,7 @@ class Preparation(Process):
 
         if "url" in record:
             print("Metadata retrieved from website:")
-            retrieved_record = self.retrieve_md_from_url(record["url"])
+            retrieved_record = self.retrieve_md_from_url(record)
             self.REVIEW_MANAGER.pp.pprint(retrieved_record)
 
         return
@@ -2551,14 +2569,16 @@ class Preparation(Process):
             )
         return batch
 
-    def __load_prep_data_for_debug(self, debug_id: str) -> typing.Dict:
+    def __load_prep_data_for_debug(self, debug_ids: str) -> typing.Dict:
 
         self.REVIEW_MANAGER.logger.info("Data passed to the scripts")
         records = []
-        debug_ids = debug_id.split(",")
+        debug_ids_list = debug_ids.split(",")
         REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
         original_records = list(
-            REVIEW_DATASET.read_next_record(conditions=[{"ID": ID} for ID in debug_ids])
+            REVIEW_DATASET.read_next_record(
+                conditions=[{"ID": ID} for ID in debug_ids_list]
+            )
         )
         # self.REVIEW_MANAGER.logger.info("Current record")
         # self.REVIEW_MANAGER.pp.pprint(original_records)
@@ -2570,10 +2590,10 @@ class Preparation(Process):
         input("Press Enter to continue")
         print("\n\n")
         prep_data = {
-            "nr_tasks": len(debug_ids),
-            "PAD": len(debug_id),
+            "nr_tasks": len(debug_ids_list),
+            "PAD": len(debug_ids),
             "items": records,
-            "prior_ids": [debug_id],
+            "prior_ids": [debug_ids_list],
         }
         return prep_data
 
@@ -2650,7 +2670,7 @@ class Preparation(Process):
         self,
         reprocess_state: RecordState = RecordState.md_imported,
         keep_ids: bool = False,
-        debug_id: str = "NA",
+        debug_ids: str = "NA",
     ) -> None:
         saved_args = locals()
 
@@ -2693,7 +2713,7 @@ class Preparation(Process):
             )
 
             if self.DEBUG_MODE:
-                prepare_data = self.__load_prep_data_for_debug(debug_id)
+                prepare_data = self.__load_prep_data_for_debug(debug_ids)
                 if "high_confidence" == mode["name"]:
                     self.REVIEW_MANAGER.logger.info(
                         "In this round, we set "

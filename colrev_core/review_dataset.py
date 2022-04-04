@@ -184,6 +184,7 @@ class ReviewDataset:
             for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
         )
 
+        retrieved = []
         for commit_id, cmsg, filecontents in list(revlist):
             prior_db = bibtexparser.loads(filecontents)
             for prior_record in prior_db.entries:
@@ -197,9 +198,14 @@ class ReviewDataset:
                     ):
                         prior_record["status"] = RecordState[prior_record["status"]]
                         prior_records.append(prior_record)
+                        # only take the latest version (i.e., drop the record)
                         # Note: only append the first one if origins were in
                         # different records (after deduplication)
-                        continue
+                        retrieved.append(original_record["ID"])
+                original_records = [
+                    orec for orec in original_records if orec["ID"] not in retrieved
+                ]
+
         return prior_records
 
     def load_records(self) -> typing.List[dict]:
