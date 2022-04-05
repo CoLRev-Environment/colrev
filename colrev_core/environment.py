@@ -15,7 +15,6 @@ from bibtexparser.customization import convert_to_unicode
 from git.exc import InvalidGitRepositoryError
 from lxml.etree import SerialisationError
 from nameparser import HumanName
-from opensearchpy import ConnectionError
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
 from thefuzz import fuzz
@@ -360,6 +359,8 @@ class LocalIndex:
         return
 
     def start_opensearch_docker(self) -> None:
+        import requests
+
         os_image = EnvironmentManager.docker_images["opensearchproject/opensearch"]
         client = docker.from_env()
         if not any(
@@ -404,7 +405,7 @@ class LocalIndex:
         available = False
         try:
             self.os.get(index=self.RECORD_INDEX, id="test")
-        except ConnectionError:
+        except requests.exceptions.RequestException:
             pass
         except NotFoundError:
             available = True
@@ -416,7 +417,7 @@ class LocalIndex:
                 try:
                     self.os.get(index=self.RECORD_INDEX, id="test")
                     break
-                except ConnectionError:
+                except requests.exceptions.RequestException:
                     time.sleep(3)
                     pass
                 except NotFoundError:
