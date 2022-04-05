@@ -24,7 +24,7 @@ requirements = [
     "docker==5.0.3",
     "GitPython==3.1.24",
     "ImageHash==4.2.0",
-    "langdetect==1.0.9",
+    "lingua-language-detector==1.0.1",
     "lxml==4.5.0",
     "nameparser==1.0.6",
     "opensearch-py==1.1.0",

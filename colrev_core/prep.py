@@ -14,14 +14,13 @@ from urllib.parse import unquote
 import bibtexparser
 import dictdiffer
 import git
-import langdetect
 import requests
 import spacy
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
-from langdetect import detect_langs
+from lingua import LanguageDetectorBuilder
 from nameparser import HumanName
 from opensearchpy import NotFoundError
 from pathos.multiprocessing import ProcessPool
@@ -185,6 +184,15 @@ class Preparation(Process):
 
         self.languages_to_include = languages_to_include.split(",")
 
+        # Note : Lingua is tested/evaluated relative to other libraries:
+        # https://github.com/pemistahl/lingua-py
+        # It performs particularly well for short strings (single words/word pairs)
+        # The langdetect library is non-deterministic, especially for short strings
+        # https://pypi.org/project/langdetect/
+        self.detector = (
+            LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
+        )
+
         # if similarity == 0.0:  # if it has not been set use default
         # saved_args["RETRIEVAL_SIMILARITY"] = self.RETRIEVAL_SIMILARITY
         # RETRIEVAL_SIMILARITY = self.RETRIEVAL_SIMILARITY
@@ -192,12 +200,12 @@ class Preparation(Process):
         #     reprocess_state = RecordState.md_needs_manual_preparation
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
+        self.CPUS = 1
         if reprocess_state == "":
             self.reprocess_state = RecordState.md_imported
         else:
             self.reprocess_state = reprocess_state
 
-        self.CPUS = self.CPUS * 3
         self.NER = spacy.load("en_core_web_sm")
 
     def __meta_redirect(self, content: str):
@@ -1790,6 +1798,8 @@ class Preparation(Process):
         if not self.FIRST_ROUND:
             return record
 
+        # TODO : switch language formats to ISO 639-1 standard language codes
+        # https://github.com/flyingcircusio/pycountry
         if "language" in record:
             record["language"] = (
                 record["language"].replace("English", "en").replace("ENG", "en")
@@ -1801,31 +1811,27 @@ class Preparation(Process):
                 ] = f"language of title not in [{','.join(self.languages_to_include)}]"
             return record
 
-        # To avoid misclassifications of langdetect for short titles
-        if len(record.get("title", "")) < 50:
+        # To avoid misclassifications for short titles
+        if len(record.get("title", "")) < 30:
             return record
 
-        try:
-            langs = detect_langs(record["title"].lower())
-            if self.DEBUG_MODE:
-                print(record.get("title", "").lower())
-                self.REVIEW_MANAGER.pp.pprint(langs)
-            if not any(
-                lang.prob > 0.6
-                for lang in langs
-                if lang.lang in self.languages_to_include
-            ):
-                record["status"] = RecordState.rev_prescreen_excluded
-                record[
-                    "prescreen_exclusion"
-                ] = f"language of title not in [{','.join(self.languages_to_include)}]"
+        confidenceValues = self.detector.compute_language_confidence_values(
+            text=record["title"]
+        )
+        # Format: ENGLISH
 
-        except langdetect.lang_detect_exception.LangDetectException:
-            record["status"] = RecordState.md_needs_manual_preparation
-            record[
-                "man_prep_hints"
-            ] = "could not determine whether language of title is in scope"
-            pass
+        if self.DEBUG_MODE:
+            print(record["title"].lower())
+            self.REVIEW_MANAGER.pp.pprint(confidenceValues)
+        for lang, conf in confidenceValues:
+            if "ENGLISH" == lang.name:
+                if conf > 0.95:
+                    return record
+
+        record["status"] = RecordState.rev_prescreen_excluded
+        record[
+            "prescreen_exclusion"
+        ] = f"language of title not in [{','.join(self.languages_to_include)}]"
 
         return record
 
@@ -2930,7 +2936,7 @@ class Preparation(Process):
                 # preparation_batch = p_map(self.prepare, preparation_batch)
                 self.REVIEW_MANAGER.logger.info("This could take a while...")
                 pool = ProcessPool(nodes=self.CPUS)
-                preparation_batch = pool.imap(self.prepare, preparation_batch)
+                preparation_batch = pool.map(self.prepare, preparation_batch)
 
             if not self.DEBUG_MODE:
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(

@@ -10,9 +10,9 @@ import unicodedata
 from pathlib import Path
 
 import imagehash
-import langdetect
 import timeout_decorator
 from langdetect import detect_langs
+from lingua import LanguageDetectorBuilder
 from p_tqdm import p_map
 from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
@@ -71,6 +71,10 @@ class PDF_Preparation(Process):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"] * 2
+
+        self.detector = (
+            LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
+        )
 
     def __extract_text_by_page(self, record: dict, pages: list = None) -> str:
 
@@ -141,17 +145,14 @@ class PDF_Preparation(Process):
             pass
         return record
 
-    def __probability_english(self, text: str) -> float:
-        try:
-            langs = detect_langs(text)
-            probability_english = 0.0
-            for lang in langs:
-                if lang.lang == "en":
-                    probability_english = lang.prob
-        except langdetect.lang_detect_exception.LangDetectException:
-            probability_english = 0
-            pass
-        return probability_english
+    def __text_is_english(self, text: str) -> bool:
+        # Format: ENGLISH
+        confidenceValues = self.detector.compute_language_confidence_values(text=text)
+        for lang, conf in confidenceValues:
+            if "ENGLISH" == lang.name:
+                if conf > 0.98:
+                    return True
+        return False
 
     def __apply_ocr(self, record: dict, PAD: int) -> dict:
 
@@ -203,7 +204,7 @@ class PDF_Preparation(Process):
             msg = f'{record["ID"]}'.ljust(PAD, " ") + "Validation error (OCR problems)"
             self.REVIEW_MANAGER.report_logger.error(msg)
 
-        if self.__probability_english(record["text_from_pdf"]) < 0.9:
+        if not self.__text_is_english(record["text_from_pdf"]):
             msg = (
                 f'{record["ID"]}'.ljust(PAD, " ")
                 + "Validation error (Language not English)"
