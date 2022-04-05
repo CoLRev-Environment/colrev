@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 from langdetect import detect_langs
 from nameparser import HumanName
 from opensearchpy import NotFoundError
-from p_tqdm import p_map
+from pathos.multiprocessing import ProcessPool
 from thefuzz import fuzz
 
 from colrev_core import utils
@@ -197,7 +197,7 @@ class Preparation(Process):
         else:
             self.reprocess_state = reprocess_state
 
-        self.CPUS = self.CPUS * 5
+        self.CPUS = self.CPUS * 3
         self.NER = spacy.load("en_core_web_sm")
 
     def __meta_redirect(self, content: str):
@@ -2925,7 +2925,12 @@ class Preparation(Process):
                     r = self.prepare(item)
                     preparation_batch.append(r)
             else:
-                preparation_batch = p_map(self.prepare, preparation_batch)
+                # Note : p_map shows the progress (tqdm) but it is inefficient
+                # https://github.com/swansonk14/p_tqdm/issues/34
+                # preparation_batch = p_map(self.prepare, preparation_batch)
+                self.REVIEW_MANAGER.logger.info("This could take a while...")
+                pool = ProcessPool(nodes=self.CPUS)
+                preparation_batch = pool.imap(self.prepare, preparation_batch)
 
             if not self.DEBUG_MODE:
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
