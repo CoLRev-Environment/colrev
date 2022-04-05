@@ -296,20 +296,29 @@ class Status(Process):
                 if cumulative > 0.7:
                     break
             if len(selected) > 0:
+                curated_outlets = EnvironmentManager.get_curated_outlets()
+                selected_journals = [
+                    (candidate, freq)
+                    for candidate, freq in selected
+                    if candidate not in curated_outlets
+                ]
+
                 journals = "\n   - " + "\n   - ".join(
                     [
                         f"{candidate} ({round((freq/len(outlets))*100, 2)}%)"
-                        for candidate, freq in selected
+                        for candidate, freq in selected_journals
                     ]
                 )
-                instruction = {
-                    "msg": "Search and download curated metadata for your "
-                    "project (if available). \n  The most common journals in "
-                    f"your project are {journals}.\n"
-                    "  They may be available at "
-                    "https://github.com/topics/colrev-curated",
-                }
-                environment_instructions.append(instruction)
+
+                if len(selected_journals) > 0:
+                    instruction = {
+                        "msg": "Search and download curated metadata for your "
+                        "project (if available). \n  The most common journals in "
+                        f"your project are {journals}.\n"
+                        "  They may be available at "
+                        "https://github.com/topics/colrev-curated",
+                    }
+                    environment_instructions.append(instruction)
 
         local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
@@ -799,10 +808,9 @@ class Status(Process):
 
         # Principle: first column shows total records/PDFs in each stage
         # the second column shows
-        # (blank call)  * the number of records requiring manual action
+        # (blank cell)  * the number of records requiring manual action
         #               -> the number of records excluded/merged
 
-        # print("\nStatus\n")
         print("\n")
         print("________________________ Status _______________________________")
         print("")

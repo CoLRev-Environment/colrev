@@ -505,7 +505,7 @@ class ReviewManager:
 
     def check_repo(self) -> dict:
         """Check whether the repository is in a consistent state
-        Entrypoint for pre-commit hooks)
+        Entrypoint for pre-commit hooks
         """
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.

@@ -261,6 +261,36 @@ class EnvironmentManager:
         }
         return environment_details
 
+    @classmethod
+    def get_curated_outlets(cls) -> list:
+        curated_outlets: typing.List[str] = []
+        for source_url in [
+            x["source_url"]
+            for x in EnvironmentManager.load_local_registry()
+            if "colrev/curated_metadata/" in x["source_url"]
+        ]:
+            with open(f"{source_url}/readme.md") as f:
+                first_line = f.readline()
+            curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
+
+            with open(f"{source_url}/references.bib") as r:
+                outlets = []
+                for line in r.readlines():
+
+                    if "journal" == line.lstrip()[:7]:
+                        journal = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(journal)
+                    if "booktitle" == line.lstrip()[:9]:
+                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                        outlets.append(booktitle)
+
+                if len(set(outlets)) != 1:
+                    raise CuratedOutletNotUnique(
+                        "Error: Duplicate outlets in curated_metadata of "
+                        f"{source_url} : {','.join(list(set(outlets)))}"
+                    )
+        return curated_outlets
+
 
 class LocalIndex:
 
@@ -370,19 +400,28 @@ class LocalIndex:
             except docker.errors.APIError as e:
                 print(e)
                 pass
-        i = 0
-        while i < 20:
-            i += 1
-            try:
-                self.os.get(index=self.RECORD_INDEX, id="test")
-                break
-            except ConnectionError:
-                time.sleep(3)
-                print("Waiting until LocalIndex is available")
-                pass
-            except NotFoundError:
-                pass
-                break
+
+        available = False
+        try:
+            self.os.get(index=self.RECORD_INDEX, id="test")
+        except ConnectionError:
+            pass
+        except NotFoundError:
+            available = True
+            pass
+
+        if not available:
+            print("Waiting until LocalIndex is available")
+            for i in tqdm(range(0, 20)):
+                try:
+                    self.os.get(index=self.RECORD_INDEX, id="test")
+                    break
+                except ConnectionError:
+                    time.sleep(3)
+                    pass
+                except NotFoundError:
+                    pass
+                    break
         return
 
     def check_opensearch_docker_available(self) -> None:
@@ -924,33 +963,7 @@ class LocalIndex:
 
         print("Validate curated metadata")
 
-        curated_outlets = []
-        for source_url in [
-            x["source_url"]
-            for x in EnvironmentManager.load_local_registry()
-            if "colrev/curated_metadata/" in x["source_url"]
-        ]:
-            with open(f"{source_url}/readme.md") as f:
-                first_line = f.readline()
-            curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
-
-            with open(f"{source_url}/references.bib") as r:
-                outlets = []
-                for line in r.readlines():
-
-                    if "journal" == line.lstrip()[:7]:
-                        journal = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(journal)
-                    if "booktitle" == line.lstrip()[:9]:
-                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(booktitle)
-
-                if len(set(outlets)) != 1:
-                    print(
-                        "Error: Duplicate outlets in curated_metadata of "
-                        f"{source_url} : {','.join(list(set(outlets)))}"
-                    )
-                    return True
+        curated_outlets = EnvironmentManager.get_curated_outlets()
 
         if len(curated_outlets) != len(set(curated_outlets)):
             duplicated = [
@@ -1310,6 +1323,12 @@ class RecordNotInIndexException(Exception):
             self.message = f"Record not in index ({id})"
         else:
             self.message = "Record not in index"
+        super().__init__(self.message)
+
+
+class CuratedOutletNotUnique(Exception):
+    def __init__(self, msg: str = None):
+        self.message = msg
         super().__init__(self.message)
 
 
