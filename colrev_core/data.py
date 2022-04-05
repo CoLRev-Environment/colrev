@@ -56,20 +56,23 @@ class Data(Process):
         self, PAPER: Path, records_for_synthesis: list
     ) -> list:
         in_manuscript_to_synthesize = []
-        with open(PAPER) as f:
-            for line in f:
-                if self.NEW_RECORD_SOURCE_TAG in line:
-                    while line != "":
-                        line = f.readline()
-                        if re.search(r"- @.*", line):
-                            ID = re.findall(r"- @(.*)$", line)
-                            in_manuscript_to_synthesize.append(ID[0])
-                            if line == "\n":
-                                break
+        if PAPER.is_file():
+            with open(PAPER) as f:
+                for line in f:
+                    if self.NEW_RECORD_SOURCE_TAG in line:
+                        while line != "":
+                            line = f.readline()
+                            if re.search(r"- @.*", line):
+                                ID = re.findall(r"- @(.*)$", line)
+                                in_manuscript_to_synthesize.append(ID[0])
+                                if line == "\n":
+                                    break
 
-        in_manuscript_to_synthesize = [
-            x for x in in_manuscript_to_synthesize if x in records_for_synthesis
-        ]
+            in_manuscript_to_synthesize = [
+                x for x in in_manuscript_to_synthesize if x in records_for_synthesis
+            ]
+        else:
+            in_manuscript_to_synthesize = records_for_synthesis
         return in_manuscript_to_synthesize
 
     def get_synthesized_ids(self, records: typing.List[dict], PAPER: Path) -> list:
