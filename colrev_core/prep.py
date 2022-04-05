@@ -1806,9 +1806,9 @@ class Preparation(Process):
             return record
 
         try:
-            langs = detect_langs(record["title"])
+            langs = detect_langs(record["title"].lower())
             if self.DEBUG_MODE:
-                print(record.get("title", ""))
+                print(record.get("title", "").lower())
                 self.REVIEW_MANAGER.pp.pprint(langs)
             if not any(
                 lang.prob > 0.6

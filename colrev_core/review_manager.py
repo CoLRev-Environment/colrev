@@ -78,7 +78,7 @@ class ReviewManager:
     def __get_file_paths(self, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
         main_refs = "references.bib"
-        data = "data.yaml"
+        data = "data.csv"
         pdf_dir = "pdfs"
         sources = "sources.yaml"
         paper = "paper.md"

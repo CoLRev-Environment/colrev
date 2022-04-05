@@ -1,6 +1,6 @@
 #! /usr/bin/env python
+import csv
 import itertools
-import json
 import pkgutil
 import re
 import tempfile
@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pandas as pd
 import requests
-import yaml
 from urllib3.exceptions import ProtocolError
 from yaml import safe_load
 
@@ -299,19 +298,13 @@ class Data(Process):
             data_df = pd.DataFrame(data, columns=["ID"] + coding_dimensions)
             data_df.sort_values(by=["ID"], inplace=True)
 
-            with open(DATA, "w") as f:
-                yaml.dump(
-                    json.loads(data_df.to_json(orient="records")),
-                    f,
-                    default_flow_style=False,
-                )
+            data_df.to_csv(DATA, index=False, quoting=csv.QUOTE_ALL)
 
         else:
 
             nr_records_added = 0
 
-            with open(DATA) as f:
-                data_df = pd.json_normalize(safe_load(f))
+            data_df = pd.read_csv(DATA, dtype=str)
 
             for record_id in included:
                 # skip when already available
@@ -326,12 +319,8 @@ class Data(Process):
                 nr_records_added = nr_records_added + 1
 
             data_df.sort_values(by=["ID"], inplace=True)
-            with open(DATA, "w") as f:
-                yaml.dump(
-                    json.loads(data_df.to_json(orient="records")),
-                    f,
-                    default_flow_style=False,
-                )
+
+            data_df.to_csv(DATA, index=False, quoting=csv.QUOTE_ALL)
 
             self.REVIEW_MANAGER.report_logger.info(
                 f"{nr_records_added} records added ({DATA})"
