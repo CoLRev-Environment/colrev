@@ -64,6 +64,8 @@ class Process:
     ):
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
+        self.force_mode = self.REVIEW_MANAGER.force_mode
+
         self.type = type
         if fun is None:
             self.interactive = True
@@ -114,6 +116,9 @@ class Process:
         self.processing_function(*args)
 
     def check_precondition(self) -> None:
+
+        if self.force_mode:
+            return
 
         if ProcessType.load == self.type:
             self.require_clean_repo_general(

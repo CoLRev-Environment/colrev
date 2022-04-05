@@ -179,7 +179,6 @@ class Preparation(Process):
         )
         self.notify_state_transition_process = notify_state_transition_process
 
-        self.force_mode = force
         logging.getLogger("urllib3").setLevel(logging.ERROR)
 
         self.RETRIEVAL_SIMILARITY = similarity

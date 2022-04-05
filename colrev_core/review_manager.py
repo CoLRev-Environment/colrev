@@ -36,8 +36,10 @@ class ReviewManager:
 
     notified_next_process = None
 
-    def __init__(self, path_str: str = None) -> None:
+    def __init__(self, path_str: str = None, force_mode: bool = False) -> None:
         from colrev_core.review_dataset import ReviewDataset
+
+        self.force_mode = force_mode
 
         if path_str is not None:
             self.path = Path(path_str)
