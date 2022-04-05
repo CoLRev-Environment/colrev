@@ -14,12 +14,14 @@ from urllib.parse import unquote
 import bibtexparser
 import dictdiffer
 import git
+import langdetect
 import requests
 import spacy
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
+from langdetect import detect_langs
 from nameparser import HumanName
 from opensearchpy import NotFoundError
 from p_tqdm import p_map
@@ -119,6 +121,7 @@ class Preparation(Process):
         "warning",
         "note",
         "issn",
+        "language",
     ]
     fields_to_drop = [
         "type",
@@ -133,7 +136,6 @@ class Preparation(Process):
         "affiliation",
         "document_type",
         "art_number",
-        "language",
         "grobid-version",
         "doc-delivery-number",
         "da",
@@ -166,6 +168,7 @@ class Preparation(Process):
         reprocess_state: RecordState = RecordState.md_imported,
         notify_state_transition_process: bool = True,
         debug: str = "NA",
+        languages_to_include: str = "en",
     ):
         super().__init__(
             REVIEW_MANAGER,
@@ -180,6 +183,8 @@ class Preparation(Process):
         logging.getLogger("urllib3").setLevel(logging.ERROR)
 
         self.RETRIEVAL_SIMILARITY = similarity
+
+        self.languages_to_include = languages_to_include.split(",")
 
         # if similarity == 0.0:  # if it has not been set use default
         # saved_args["RETRIEVAL_SIMILARITY"] = self.RETRIEVAL_SIMILARITY
@@ -437,6 +442,12 @@ class Preparation(Process):
                     f' {record["ID"]}:'.ljust(self.PAD, " ")
                     + f'Unusual pages: {record["pages"]}'
                 )
+
+        if "language" in record:
+            # TODO : use https://pypi.org/project/langcodes/
+            record["language"] = (
+                record["language"].replace("English", "en").replace("ENG", "en")
+            )
 
         if "doi" in record:
             record.update(doi=record["doi"].replace("http://dx.doi.org/", "").upper())
@@ -727,6 +738,9 @@ class Preparation(Process):
                 retrieved_abstract = str(retrieved_abstract).replace("\n", "")
                 retrieved_abstract = retrieved_abstract.lstrip().rstrip()
                 record.update(abstract=retrieved_abstract)
+
+        if "language" in item:
+            record["language"] = item["language"]
 
         if "content-domain" in item:
             if "crossmark" in item["content-domain"]:
@@ -1772,6 +1786,50 @@ class Preparation(Process):
 
         return record
 
+    def exclude_languages(self, record: dict) -> dict:
+
+        if not self.FIRST_ROUND:
+            return record
+
+        if "language" in record:
+            record["language"] = (
+                record["language"].replace("English", "en").replace("ENG", "en")
+            )
+            if record["language"] not in self.languages_to_include:
+                record["status"] = RecordState.rev_prescreen_excluded
+                record[
+                    "prescreen_exclusion"
+                ] = f"language of title not in [{','.join(self.languages_to_include)}]"
+            return record
+
+        # To avoid misclassifications of langdetect for short titles
+        if len(record.get("title", "")) < 50:
+            return record
+
+        try:
+            langs = detect_langs(record["title"])
+            if self.DEBUG_MODE:
+                print(record.get("title", ""))
+                self.REVIEW_MANAGER.pp.pprint(langs)
+            if not any(
+                lang.prob > 0.6
+                for lang in langs
+                if lang.lang in self.languages_to_include
+            ):
+                record["status"] = RecordState.rev_prescreen_excluded
+                record[
+                    "prescreen_exclusion"
+                ] = f"language of title not in [{','.join(self.languages_to_include)}]"
+
+        except langdetect.lang_detect_exception.LangDetectException:
+            record["status"] = RecordState.md_needs_manual_preparation
+            record[
+                "man_prep_hints"
+            ] = "could not determine whether language of title is in scope"
+            pass
+
+        return record
+
     def __check_potential_retracts(self, record: dict) -> dict:
         retrieved_record = self.get_md_from_crossref(record.copy())
         if retrieved_record.get("crossmark", "") == "True":
@@ -1946,7 +2004,7 @@ class Preparation(Process):
         # if RecordState.md_imported != record["status"]:
         if record["status"] not in [
             RecordState.md_imported,
-            RecordState.md_prepared,
+            # RecordState.md_prepared, # avoid changing prepared records
             RecordState.md_needs_manual_preparation,
         ]:
             return record
@@ -1962,105 +2020,6 @@ class Preparation(Process):
         # Note : we need to rerun all preparation scripts because records are not stored
         # if not prepared successfully.
 
-        # Note: for these scripts, only the similarity changes.
-        prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {
-                "script": self.remove_urls_with_500_errors,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.remove_broken_IDs,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.resolve_crossrefs,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.global_ids_consistency_check,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.correct_recordtype,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.format,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.get_doi_from_sem_scholar,
-                "params": [preparation_record],
-                "source_correction_hint": "fill out the online form: "
-                "https://www.semanticscholar.org/faq#correct-error",
-            },
-            {"script": self.get_doi_from_urls, "params": [preparation_record]},
-            {
-                "script": self.get_md_from_doi,
-                "params": [preparation_record],
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "script": self.get_md_from_crossref,
-                "params": [preparation_record],
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "script": self.get_md_from_dblp,
-                "params": [preparation_record],
-                "source_correction_hint": "send and email to dblp@dagstuhl.de"
-                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
-            },
-            {
-                "script": self.get_record_from_local_index,
-                "params": [preparation_record],
-                "source_correction_hint": "correct the metadata in the source "
-                "repository (as linked in the source_url field)",
-            },
-            {
-                "script": self.get_md_from_open_library,
-                "params": [preparation_record],
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "script": self.get_year_from_vol_iss_jour_crossref,
-                "params": [preparation_record],
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "script": self.remove_nicknames,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.remove_redundant_fields,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.format_minor,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.exclude_non_latin_alphabets,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.drop_fields,
-                "params": [preparation_record],
-            },
-            {
-                "script": self.update_metadata_status,
-                "params": [preparation_record],
-            },
-        ]
-
         short_form = self.drop_fields(record.copy())
 
         preparation_details = []
@@ -2069,7 +2028,9 @@ class Preparation(Process):
             + f" called with: \n{self.REVIEW_MANAGER.pp.pformat(short_form)}\n\n"
         )
 
-        for prep_script in prep_scripts:
+        for prep_script in self.prep_scripts:
+            if prep_script["name"] not in item["mode"]["scripts"]:
+                continue
 
             prior = preparation_record.copy()
 
@@ -2077,17 +2038,15 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.logger.info(
                     f'{prep_script["script"].__name__}(...) called'
                 )
-            if [] == prep_script["params"]:
-                prep_script["script"]()
-            else:
-                prep_script["script"](*prep_script["params"])
+
+            prep_script["script"](preparation_record)
 
             diffs = list(dictdiffer.diff(prior, preparation_record))
             if diffs:
                 # self.REVIEW_MANAGER.pp.pprint(preparation_record)
                 change_report = (
                     f'{prep_script["script"].__name__}'
-                    f'({prep_script["params"][0]["ID"]})'
+                    f'({preparation_record["ID"]})'
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
                 preparation_details.append(change_report)
@@ -2415,7 +2374,7 @@ class Preparation(Process):
         from colrev_core.process import RecordState
 
         rsl = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
-        nr_tasks = len([x for x in rsl if RecordState.md_imported == x[1]])
+        nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])
 
         PAD = min((max(len(x[0]) for x in rsl) + 2), 35)
 
@@ -2570,23 +2529,51 @@ class Preparation(Process):
             )
         return batch
 
-    def __load_prep_data_for_debug(self, debug_ids: str) -> typing.Dict:
+    def __load_prep_data_for_debug(
+        self, debug_ids: str, debug_file: str
+    ) -> typing.Dict:
 
         self.REVIEW_MANAGER.logger.info("Data passed to the scripts")
-        records = []
-        debug_ids_list = debug_ids.split(",")
-        REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
-        original_records = list(
-            REVIEW_DATASET.read_next_record(
-                conditions=[{"ID": ID} for ID in debug_ids_list]
+        if "NA" != debug_file:
+            with open(debug_file) as target_db:
+                bib_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
+                ).parse_file(target_db, partial=True)
+
+            records = bib_db.entries
+            # Cast status to Enum
+            records = [
+                {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
+                for r in records
+            ]
+            for record in records:
+                if RecordState.md_imported != record.get("state", ""):
+                    self.REVIEW_MANAGER.logger.info(
+                        f"Setting status to md_imported {record['ID']}"
+                    )
+                    record["status"] = RecordState.md_imported
+            debug_ids_list = [r["ID"] for r in records]
+            debug_ids = ",".join(debug_ids_list)
+            self.REVIEW_MANAGER.logger.info("Imported record (retrieved from file)")
+
+        else:
+            records = []
+            debug_ids_list = debug_ids.split(",")
+            REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
+            original_records = list(
+                REVIEW_DATASET.read_next_record(
+                    conditions=[{"ID": ID} for ID in debug_ids_list]
+                )
             )
-        )
-        # self.REVIEW_MANAGER.logger.info("Current record")
-        # self.REVIEW_MANAGER.pp.pprint(original_records)
-        records = REVIEW_DATASET.retrieve_records_from_history(
-            original_records, RecordState.md_imported
-        )
-        self.REVIEW_MANAGER.logger.info("Imported record (retrieved from history)")
+            # self.REVIEW_MANAGER.logger.info("Current record")
+            # self.REVIEW_MANAGER.pp.pprint(original_records)
+            records = REVIEW_DATASET.retrieve_records_from_history(
+                original_records, RecordState.md_imported
+            )
+            self.REVIEW_MANAGER.logger.info("Imported record (retrieved from history)")
+
         self.REVIEW_MANAGER.pp.pprint(records)
         input("Press Enter to continue")
         print("\n\n")
@@ -2672,6 +2659,7 @@ class Preparation(Process):
         reprocess_state: RecordState = RecordState.md_imported,
         keep_ids: bool = False,
         debug_ids: str = "NA",
+        debug_file: str = "NA",
     ) -> None:
         saved_args = locals()
 
@@ -2696,15 +2684,212 @@ class Preparation(Process):
         if reprocess_state != RecordState.md_imported:
             self.set_to_reprocess(reprocess_state)
 
+        # Note: for these scripts, only the similarity changes.
+        self.prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
+            {
+                "name": "remove_urls_with_500_errors",
+                "script": self.remove_urls_with_500_errors,
+            },
+            {
+                "name": "remove_broken_IDs",
+                "script": self.remove_broken_IDs,
+            },
+            {
+                "name": "resolve_crossrefs",
+                "script": self.resolve_crossrefs,
+            },
+            {
+                "name": "global_ids_consistency_check",
+                "script": self.global_ids_consistency_check,
+            },
+            {
+                "name": "correct_recordtype",
+                "script": self.correct_recordtype,
+            },
+            {
+                "name": "format",
+                "script": self.format,
+            },
+            {
+                "name": "get_doi_from_sem_scholar",
+                "script": self.get_doi_from_sem_scholar,
+                "source_correction_hint": "fill out the online form: "
+                "https://www.semanticscholar.org/faq#correct-error",
+            },
+            {"name": "get_doi_from_urls", "script": self.get_doi_from_urls},
+            {
+                "name": "get_md_from_doi",
+                "script": self.get_md_from_doi,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            {
+                "name": "get_md_from_crossref",
+                "script": self.get_md_from_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            {
+                "name": "get_md_from_dblp",
+                "script": self.get_md_from_dblp,
+                "source_correction_hint": "send and email to dblp@dagstuhl.de"
+                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
+            },
+            {
+                "name": "get_record_from_local_index",
+                "script": self.get_record_from_local_index,
+                "source_correction_hint": "correct the metadata in the source "
+                "repository (as linked in the source_url field)",
+            },
+            {
+                "name": "get_md_from_open_library",
+                "script": self.get_md_from_open_library,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            {
+                "name": "get_year_from_vol_iss_jour_crossref",
+                "script": self.get_year_from_vol_iss_jour_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            {
+                "name": "remove_nicknames",
+                "script": self.remove_nicknames,
+            },
+            {
+                "name": "remove_redundant_fields",
+                "script": self.remove_redundant_fields,
+            },
+            {
+                "name": "format_minor",
+                "script": self.format_minor,
+            },
+            {
+                "name": "exclude_non_latin_alphabets",
+                "script": self.exclude_non_latin_alphabets,
+            },
+            {
+                "name": "exclude_languages",
+                "script": self.exclude_languages,
+            },
+            {
+                "name": "drop_fields",
+                "script": self.drop_fields,
+            },
+            {
+                "name": "update_metadata_status",
+                "script": self.update_metadata_status,
+            },
+        ]
+
         modes = [
-            {"name": "high_confidence", "similarity": 0.99},
-            {"name": "medium_confidence", "similarity": 0.9},
-            {"name": "low_confidence", "similarity": 0.80},
+            {
+                "name": "high_confidence",
+                "similarity": 0.99,
+                "scripts": [
+                    "remove_urls_with_500_errors",
+                    "remove_broken_IDs",
+                    "global_ids_consistency_check",
+                    "format",
+                    "get_doi_from_sem_scholar",
+                    "get_doi_from_urls",
+                    "get_md_from_doi",
+                    "get_md_from_crossref",
+                    "get_md_from_dblp",
+                    "get_record_from_local_index",
+                    "get_md_from_open_library",
+                    "get_year_from_vol_iss_jour_crossref",
+                    "remove_nicknames",
+                    "format_minor",
+                    "exclude_non_latin_alphabets",
+                    "exclude_languages",
+                    "drop_fields",
+                    "update_metadata_status",
+                ],
+            },
+            {
+                "name": "medium_confidence",
+                "similarity": 0.9,
+                "scripts": [
+                    "get_doi_from_sem_scholar",
+                    "get_doi_from_urls",
+                    "get_md_from_doi",
+                    "get_md_from_crossref",
+                    "get_md_from_dblp",
+                    "get_record_from_local_index",
+                    "get_md_from_open_library",
+                    "get_year_from_vol_iss_jour_crossref",
+                    "remove_nicknames",
+                    "remove_redundant_fields",
+                    "format_minor",
+                    "exclude_non_latin_alphabets",
+                    "exclude_languages",
+                    "drop_fields",
+                    "update_metadata_status",
+                ],
+            },
+            {
+                "name": "low_confidence",
+                "similarity": 0.80,
+                "scripts": [
+                    "correct_recordtype",
+                    "get_doi_from_sem_scholar",
+                    "get_doi_from_urls",
+                    "get_md_from_doi",
+                    "get_md_from_crossref",
+                    "get_md_from_dblp",
+                    "get_record_from_local_index",
+                    "get_md_from_open_library",
+                    "get_year_from_vol_iss_jour_crossref",
+                    "remove_nicknames",
+                    "remove_redundant_fields",
+                    "format_minor",
+                    "exclude_non_latin_alphabets",
+                    "exclude_languages",
+                    "drop_fields",
+                    "update_metadata_status",
+                ],
+            },
         ]
 
         self.FIRST_ROUND = True
 
-        for mode in modes:
+        while 0 != len(modes):
+
+            if self.DEBUG_MODE:
+                prepare_data = self.__load_prep_data_for_debug(debug_ids, debug_file)
+            else:
+                prepare_data = self.get_data()
+
+            if self.FIRST_ROUND and not self.DEBUG_MODE:
+                if prepare_data["nr_tasks"] > 100:
+                    # Start with the exclusion round
+                    modes.insert(
+                        0,
+                        {
+                            "name": "exclusion",
+                            "similarity": 1.0,
+                            "scripts": [
+                                "exclude_non_latin_alphabets",
+                                "exclude_languages",
+                            ],
+                        },
+                    )
+                if prepare_data["nr_tasks"] < 20:
+                    self.REVIEW_MANAGER.logger.info(
+                        "Less than 20 records: prepare in one batch."
+                    )
+                    modes.pop(0)
+                    modes.pop(0)
+                    # use one mode/run to avoid multiple commits
+
+            mode = modes.pop(0)
+
             self.REVIEW_MANAGER.logger.info(f"Prepare ({mode['name']})")
 
             self.RETRIEVAL_SIMILARITY = mode["similarity"]  # type: ignore
@@ -2714,7 +2899,6 @@ class Preparation(Process):
             )
 
             if self.DEBUG_MODE:
-                prepare_data = self.__load_prep_data_for_debug(debug_ids)
                 if "high_confidence" == mode["name"]:
                     self.REVIEW_MANAGER.logger.info(
                         "In this round, we set "
@@ -2728,8 +2912,6 @@ class Preparation(Process):
                     )
                 input("Press Enter to continue")
                 print("\n\n")
-            else:
-                prepare_data = self.get_data()
             # self.REVIEW_MANAGER.logger.debug(f"prepare_data: "
             # f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}")
             self.PAD = prepare_data["PAD"]
