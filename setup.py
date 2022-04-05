@@ -19,6 +19,7 @@ requirements = [
     "Click==8.0.1",
     "click_completion==0.5.2",
     "cx_Freeze==6.10",
+    "daff==1.3.46",
     "dictdiffer==0.8.1",
     "docker==5.0.3",
     "GitPython==3.1.24",

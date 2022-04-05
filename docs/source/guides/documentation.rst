@@ -472,7 +472,7 @@ Data
 :program:`colrev data` supports the data extraction, analysis and synthesis. Depending on the type of review, this may involve
 
 - a manuscript-based synthesis
-- structured data extraction
+    - structured data extraction (diffs are displayed using `daff <https://github.com/paulfitz/daff>`_ or the `browser extension <https://chrome.google.com/webstore/detail/github-csv-diff/ngpdjmibpbemokfbmapemhpbmgacebhg/>`_)
 
 To select the data format, please consult the best practices for different `types of reviews <../guides/best_practices.html#types-of-literature-reviews>`_.
 
@@ -480,9 +480,7 @@ To set the data format, run
 
 .. code:: bash
 
-    # Note: the format can be a list, possible values:
-    # MANUSCRIPT, TEI
-    colrev config --set DATA_FORMAT=['MANUSCRIPT']
+    colrev config --set DATA_FORMAT=['MANUSCRIPT', 'STRUCTURED']
 
     # commit changes:
     git add shared_config.ini
@@ -493,7 +491,6 @@ Depending on the data format, the :program:`colrev data` command
 
 - adds new records to the manuscript (paper.md, after the <!-- NEW_RECORD_SOURCE --> marker)
 - creates (enhanced) TEI files
-- **to be implemented**: adds new records to the coding sheets for structured data extraction and analysis
 
 .. code:: bash
 

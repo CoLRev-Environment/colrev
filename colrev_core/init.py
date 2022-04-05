@@ -145,6 +145,7 @@ class Initializer:
             ["pre-commit", "install", "--hook-type", "prepare-commit-msg"],
             ["pre-commit", "install", "--hook-type", "pre-push"],
             ["pre-commit", "autoupdate"],
+            ["daff", "git", "csv"],
         ]
         for script_to_call in scripts_to_call:
             check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
