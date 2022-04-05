@@ -953,6 +953,8 @@ class LocalIndex:
         if not include_file:
             if "file" in record:
                 del record["file"]
+            if "colref_pdf_id" in record:
+                del record["colref_pdf_id"]
 
         record["status"] = RecordState.md_prepared
 
