@@ -1017,6 +1017,249 @@ class Dedupe(Process):
         info = {"cuts": cuts, "same_source_merges": same_source_merges}
         return info
 
+    # -------------  SIMPLE MERGING PROCEDURES FOR SMALL SAMPLES  ------------------
+
+    def __calculate_similarities_record(self, references: pd.DataFrame) -> list:
+        # Note: per definition, similarities are needed relative to the last row.
+        references["similarity"] = 0
+        references["details"] = 0
+        sim_col = references.columns.get_loc("similarity")
+        details_col = references.columns.get_loc("details")
+        for base_record_i in range(0, references.shape[0]):
+            sim_details = utils.get_similarity_detailed(
+                references.iloc[base_record_i], references.iloc[-1]
+            )
+            self.REVIEW_MANAGER.report_logger.debug(
+                f"Similarity score: {sim_details['score']}"
+            )
+            self.REVIEW_MANAGER.report_logger.debug(sim_details["details"])
+
+            references.iloc[base_record_i, sim_col] = sim_details["score"]
+            references.iloc[base_record_i, details_col] = sim_details["details"]
+        # Note: return all other records (not the comparison record/first row)
+        # and restrict it to the ID, similarity and details
+        ck_col = references.columns.get_loc("ID")
+        sim_col = references.columns.get_loc("similarity")
+        details_col = references.columns.get_loc("details")
+        return references.iloc[:, [ck_col, sim_col, details_col]]
+
+    def append_merges(self, batch_item: dict) -> dict:
+
+        self.REVIEW_MANAGER.logger.debug(f'append_merges {batch_item["record"]}')
+
+        references = batch_item["queue"]
+
+        # if the record is the first one added to the records
+        # (in a preceding processing step), it can be propagated
+        # if len(batch_item["queue"]) < 2:
+        if len(references.index) < 2:
+            return {
+                "ID1": batch_item["record"],
+                "ID2": "NA",
+                "similarity": 1,
+                "decision": "no_duplicate",
+            }
+
+        # df to get_similarities for each other record
+        references = self.__calculate_similarities_record(references)
+        # drop the first row (similarities are calculated relative to the last row)
+        references = references.iloc[:-1, :]
+        # if batch_item['record'] == 'AdamsNelsonTodd1992':
+        #     references.to_csv('last_similarities.csv')
+
+        max_similarity = references.similarity.max()
+
+        # TODO: it may not be sufficient to consider
+        # the record with the highest similarity
+
+        if max_similarity <= batch_item["MERGING_NON_DUP_THRESHOLD"]:
+            # Note: if no other record has a similarity exceeding the threshold,
+            # it is considered a non-duplicate (in relation to all other records)
+            self.REVIEW_MANAGER.logger.debug(f"max_similarity ({max_similarity})")
+            return {
+                "ID1": batch_item["record"],
+                "ID2": "NA",
+                "similarity": max_similarity,
+                "decision": "no_duplicate",
+            }
+
+        elif (
+            max_similarity > batch_item["MERGING_NON_DUP_THRESHOLD"]
+            and max_similarity < batch_item["MERGING_DUP_THRESHOLD"]
+        ):
+
+            ID = references.loc[references["similarity"].idxmax()]["ID"]
+            self.REVIEW_MANAGER.logger.debug(
+                f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
+            )
+            details = references.loc[references["similarity"].idxmax()]["details"]
+            self.REVIEW_MANAGER.logger.debug(details)
+            # record_a, record_b = sorted([ID, record["ID"]])
+            msg = (
+                f'{batch_item["record"]} - {ID}'.ljust(35, " ")
+                + f"  - potential duplicate (similarity: {max_similarity})"
+            )
+            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.REVIEW_MANAGER.logger.info(msg)
+            return {
+                "ID1": batch_item["record"],
+                "ID2": ID,
+                "similarity": max_similarity,
+                "decision": "potential_duplicate",
+            }
+
+        else:  # max_similarity >= batch_item["MERGING_DUP_THRESHOLD"]:
+            # note: the following status will not be saved in the bib file but
+            # in the duplicate_tuples.csv (which will be applied to the bib file
+            # in the end)
+            ID = references.loc[references["similarity"].idxmax()]["ID"]
+            self.REVIEW_MANAGER.logger.debug(
+                f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
+            )
+            details = references.loc[references["similarity"].idxmax()]["details"]
+            self.REVIEW_MANAGER.logger.debug(details)
+            msg = (
+                f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
+                + f" (similarity: {max_similarity})\nDetails: {details}"
+            )
+            self.REVIEW_MANAGER.report_logger.info(msg)
+            self.REVIEW_MANAGER.logger.info(msg)
+            return {
+                "ID1": batch_item["record"],
+                "ID2": ID,
+                "similarity": max_similarity,
+                "decision": "duplicate",
+            }
+
+    def __batch(self, data):
+        # the queue (order) matters for the incremental merging (make sure that each
+        # additional record is compared to/merged with all prior records in
+        # the queue)
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+        # Note: Because we only introduce individual (non-merged records),
+        # there should be no semicolons in origin!
+        records_queue = [x for x in records if x["ID"] in data["queue"]]
+
+        records_queue = pd.DataFrame.from_dict(records_queue)
+        references = self.__prep_references(records_queue)
+        # self.REVIEW_MANAGER.pp.pprint(references.values())
+        references = pd.DataFrame(references.values())
+
+        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
+        items_start = data["items_start"]
+        it_len = len(data["queue"])
+        batch_data = []
+        for ndx in range(items_start // n, it_len, n):
+            for i in range(ndx, min(ndx + n, it_len)):
+                batch_data.append(
+                    {
+                        "record": data["queue"][i],
+                        "queue": references.iloc[: i + 1],
+                        "MERGING_NON_DUP_THRESHOLD": 0.7,
+                        "MERGING_DUP_THRESHOLD": 0.95,
+                    }
+                )
+
+        for ndx in range(0, it_len, n):
+            yield batch_data[ndx : min(ndx + n, it_len)]
+
+    def __merge_crossref_linked_records(self) -> None:
+        # Note : this is now done in the preparation scripts.
+        from colrev_core.prep import Preparation
+
+        PREPARATION = Preparation(self.REVIEW_MANAGER)
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        for record in records:
+            if "crossref" in record:
+                crossref_rec = PREPARATION.get_crossref_record(record)
+                if crossref_rec is None:
+                    continue
+
+                self.REVIEW_MANAGER.report_logger.info(
+                    f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
+                )
+                self.apply_merges(
+                    [
+                        {
+                            "ID1": record["ID"],
+                            "ID2": crossref_rec["ID"],
+                            "similarity": 1,
+                            "decision": "duplicate",
+                        }
+                    ],
+                )
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
+    def get_data(self):
+
+        # Note: this would also be a place to set
+        # records as "no-duplicate" by definition
+        # (e.g., for non-duplicated sources marked in the sources)
+
+        get_record_state_list = (
+            self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        )
+        IDs_to_dedupe = [
+            x[0] for x in get_record_state_list if x[1] == str(RecordState.md_prepared)
+        ]
+        processed_IDs = [
+            x[0]
+            for x in get_record_state_list
+            if x[1]
+            not in [
+                str(RecordState.md_imported),
+                str(RecordState.md_prepared),
+                str(RecordState.md_needs_manual_preparation),
+            ]
+        ]
+
+        nr_tasks = len(IDs_to_dedupe)
+        dedupe_data = {
+            "nr_tasks": nr_tasks,
+            "queue": processed_IDs + IDs_to_dedupe,
+            "items_start": len(processed_IDs),
+        }
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(dedupe_data))
+
+        return dedupe_data
+
+    def main(self) -> None:
+        saved_args = locals()
+
+        self.REVIEW_MANAGER.logger.info(
+            "Pairwise identification of duplicates based on static similarity measure"
+        )
+
+        self.__merge_crossref_linked_records()
+
+        dedupe_data = self.get_data()
+
+        i = 1
+        for dedupe_batch in self.__batch(dedupe_data):
+
+            # print(f"Batch {i}")
+            i += 1
+            dedupe_batch_results = []
+            for item in dedupe_batch:
+                dedupe_batch_results.append(self.append_merges(item))
+
+            # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
+
+            self.apply_merges(dedupe_batch_results)
+
+            self.REVIEW_MANAGER.create_commit(
+                "Process duplicates", saved_args=saved_args
+            )
+
+        if 1 == i:
+            self.REVIEW_MANAGER.logger.info("No records to check for duplicates")
+
+        return
+
 
 if __name__ == "__main__":
     pass

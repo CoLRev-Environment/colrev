@@ -327,10 +327,14 @@ Dedupe
 
 :program:`colrev dedupe` identifies and merges duplicates as follows:
 
+- Curated journals are queried (using the LocalIndex) to identify duplicates/non-duplicates
 - In an active learning process (based on the `dedupeio <https://github.com/dedupeio/dedupe>`_ library), researchers are asked to label pairs of papers
+- During the active learning (labeling) process, the LocalIndex is queried to prevent accidental merges (effectively implementing FP safeguards)
 - Once enough pairs have been labeled (e.g., at least 50 duplicates and 50 non-duplicates), the remaining records are matched and merged automatically
 - To validate the results, spreadsheets are exported in which duplicate and non-duplicate pairs can be checked (taking into consideration the differences in metadata and the confidence provided by the classifier)
 - Corrections can be applied by marking pairs in the spreadsheet ("x" in the *error* column), saving the file, and running colrev dedupe -f
+- Records from the same source file are not merged automatically (same source merges have a very high probability of introducing erroneous merge decisions)
+- In case there are not enough records to train an active learning model, a simple duplicate identification algorithm is applied
 
 .. code:: bash
 
