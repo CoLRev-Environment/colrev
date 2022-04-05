@@ -11,7 +11,6 @@ from pathlib import Path
 import pandas as pd
 import requests
 from urllib3.exceptions import ProtocolError
-from yaml import safe_load
 
 from colrev_core import grobid_client
 from colrev_core.process import Process
@@ -90,14 +89,13 @@ class Data(Process):
 
     def get_data_extracted(self, DATA: Path, records_for_data_extraction: list) -> list:
         data_extracted = []
-        with open(DATA) as f:
-            data_df = pd.json_normalize(safe_load(f))
+        data_df = pd.read_csv(DATA)
 
-            for record in records_for_data_extraction:
-                drec = data_df.loc[data_df["ID"] == record]
-                if 1 == drec.shape[0]:
-                    if "TODO" not in drec.iloc[0].tolist():
-                        data_extracted.append(drec.loc[0, "ID"])
+        for record in records_for_data_extraction:
+            drec = data_df.loc[data_df["ID"] == record]
+            if 1 == drec.shape[0]:
+                if "TODO" not in drec.iloc[0].tolist():
+                    data_extracted.append(drec.loc[drec.index[0], "ID"])
 
         data_extracted = [x for x in data_extracted if x in records_for_data_extraction]
         return data_extracted
@@ -106,7 +104,7 @@ class Data(Process):
         self, records: typing.List[dict], DATA: Path
     ) -> list:
 
-        if not DATA.is_dir():
+        if not DATA.is_file():
             return []
 
         records_for_data_extraction = [
@@ -286,7 +284,7 @@ class Data(Process):
             included = self.get_record_ids_for_synthesis(records)
 
             coding_dimensions_str = input(
-                "Enter columns for data extraction (comma-separted)"
+                "\n\nEnter columns for data extraction (comma-separted)"
             )
             coding_dimensions = coding_dimensions_str.replace(" ", "_").split(",")
 
