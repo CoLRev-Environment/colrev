@@ -793,7 +793,8 @@ class Loader(Process):
             if not keep_ids:
                 self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
-                    records, selected_IDs=[x["ID"] for x in search_records]
+                    records,
+                    selected_IDs=[x["ID"] for x in search_records],
                 )
 
             self.REVIEW_MANAGER.logger.info("Add changes and create commit")

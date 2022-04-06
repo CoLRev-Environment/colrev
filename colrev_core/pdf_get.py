@@ -307,6 +307,18 @@ class PDF_Retrieval(Process):
         self,
         records: typing.List[dict],
     ) -> typing.List[dict]:
+        from glob import glob
+
+        IDs = [x["ID"] for x in records]
+        linked_pdfs = [str(Path(x["file"]).resolve()) for x in records if "file" in x]
+
+        pdf_files = glob(
+            str(self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
+        )
+        unlinked_pdfs = [Path(x) for x in pdf_files if x not in linked_pdfs]
+
+        if len(unlinked_pdfs) == 0:
+            return records
 
         self.REVIEW_MANAGER.report_logger.info(
             "Starting GROBID service to extract metadata from PDFs"
@@ -315,13 +327,6 @@ class PDF_Retrieval(Process):
             "Starting GROBID service to extract metadata from PDFs"
         )
         grobid_client.start_grobid()
-
-        IDs = [x["ID"] for x in records]
-        linked_pdfs = [Path(x["file"]) for x in records if "file" in x]
-
-        pdf_files = Path(self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]).glob("*.pdf")
-        unlinked_pdfs = [x for x in pdf_files if x not in linked_pdfs]
-
         for file in unlinked_pdfs:
             if file.stem not in IDs:
 
@@ -374,15 +379,17 @@ class PDF_Retrieval(Process):
             new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
                 f"{record['ID']}.pdf"
             )
-            try:
+            if str(file) == str(new_filename):
+                continue
+
+            if file.is_file():
                 file.rename(new_filename)
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
-            except FileNotFoundError:
-                self.REVIEW_MANAGER.logger.error(
-                    f"Could not rename {record['ID']} - FileNotFoundError"
-                )
-                pass
+            if file.is_symlink():
+                os.rename(str(file), str(new_filename))
+                record["file"] = str(new_filename)
+                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -434,12 +441,16 @@ class PDF_Retrieval(Process):
             if record["status"] == RecordState.rev_prescreen_included:
                 if "file" in record:
                     if any(
-                        (self.REVIEW_MANAGER.path / Path(fpath)).is_file()
-                        for fpath in record["file"].split(";")
+                        Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
                         record["status"] = RecordState.pdf_imported
                         self.REVIEW_MANAGER.logger.info(
                             f'Set status to pdf_imported for {record["ID"]}'
+                        )
+                    else:
+                        print(
+                            "Warning: record with file field but no existing PDF "
+                            f'({record["ID"]}: {record["file"]}'
                         )
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

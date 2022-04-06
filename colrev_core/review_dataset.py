@@ -362,11 +362,11 @@ class ReviewDataset:
         ID_list = [record["ID"] for record in records]
 
         for record in records:
+            if "CURATED" == record.get("metadata_source", ""):
+                continue
             self.REVIEW_MANAGER.logger.debug(f'Set ID for {record["ID"]}')
             if selected_IDs is not None:
                 if record["ID"] not in selected_IDs:
-                    continue
-                if "LOCAL_INDEX" == record.get("metadata_source", ""):
                     continue
             elif str(record["status"]) not in [
                 str(RecordState.md_imported),

@@ -33,6 +33,9 @@ class TEI:
         """
 
         assert pdf_path is not None or tei_path is not None
+        if pdf_path is not None:
+            if pdf_path.is_symlink():
+                pdf_path = pdf_path.resolve()
         self.pdf_path = pdf_path
         self.tei_path = tei_path
         if pdf_path is not None:

@@ -150,8 +150,11 @@ class PDF_Preparation(Process):
         confidenceValues = self.detector.compute_language_confidence_values(text=text)
         for lang, conf in confidenceValues:
             if "ENGLISH" == lang.name:
-                if conf > 0.98:
+                if conf > 0.85:
                     return True
+            # else:
+            #     print(text)
+            #     print(conf)
         return False
 
     def __apply_ocr(self, record: dict, PAD: int) -> dict:
