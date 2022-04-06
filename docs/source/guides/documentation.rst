@@ -334,7 +334,7 @@ Dedupe
 - To validate the results, spreadsheets are exported in which duplicate and non-duplicate pairs can be checked (taking into consideration the differences in metadata and the confidence provided by the classifier)
 - Corrections can be applied by marking pairs in the spreadsheet ("x" in the *error* column), saving the file, and running colrev dedupe -f
 - Records from the same source file are not merged automatically (same source merges have a very high probability of introducing erroneous merge decisions)
-- In case there are not enough records to train an active learning model, a simple duplicate identification algorithm is applied
+- In case there are not enough records to train an active learning model, a simple duplicate identification algorithm is applied (followed by a manual labeling of borderline cases)
 
 .. code:: bash
 

@@ -364,7 +364,7 @@ class Dedupe(Process):
 
         return
 
-    def apply_merges(self, results: list):
+    def apply_merges(self, results: list, remaining_non_dupe: bool = False):
         """Apply automated deduplication decisions
 
         Level: IDs (not origins), requiring IDs to be immutable after md_prepared
@@ -428,11 +428,12 @@ class Dedupe(Process):
 
             records = [x for x in records if x["ID"] != dupe_record["ID"]]
 
-        # Set remaining records to md_processed (not duplicate) because all records
-        # have been considered by dedupe
-        for record in records:
-            if record["status"] == RecordState.md_prepared:
-                record["status"] = RecordState.md_processed
+        if remaining_non_dupe:
+            # Set remaining records to md_processed (not duplicate) because all records
+            # have been considered by dedupe
+            for record in records:
+                if record["status"] == RecordState.md_prepared:
+                    record["status"] = RecordState.md_processed
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -795,7 +796,7 @@ class Dedupe(Process):
                                     }
                                 )
 
-        self.apply_merges(auto_dedupe)
+        self.apply_merges(auto_dedupe, remaining_non_dupe=True)
 
         self.REVIEW_MANAGER.reorder_log(ID_list, criterion="descending_thresholds")
 
@@ -1250,6 +1251,21 @@ class Dedupe(Process):
             # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
 
             self.apply_merges(dedupe_batch_results)
+
+            self.potential_duplicates = [
+                r
+                for r in dedupe_batch_results
+                if "potential_duplicate" == r["decision"]
+            ]
+
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
+            records_queue = pd.DataFrame.from_dict(records)
+            references = self.__prep_references(records_queue)
+            # self.REVIEW_MANAGER.pp.pprint(references.values())
+            references = pd.DataFrame(references.values())
+
+            self.dedupe_references = references
 
             self.REVIEW_MANAGER.create_commit(
                 "Process duplicates", saved_args=saved_args

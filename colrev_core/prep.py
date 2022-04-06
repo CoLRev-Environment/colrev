@@ -39,6 +39,9 @@ from colrev_core.process import RecordState
 
 # from datetime import datetime
 
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("requests_cache").setLevel(logging.ERROR)
+
 
 class Preparation(Process):
 
@@ -198,8 +201,6 @@ class Preparation(Process):
             debug=(debug != "NA"),
         )
         self.notify_state_transition_process = notify_state_transition_process
-
-        logging.getLogger("urllib3").setLevel(logging.ERROR)
 
         self.RETRIEVAL_SIMILARITY = similarity
 
