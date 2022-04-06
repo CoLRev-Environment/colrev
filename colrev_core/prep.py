@@ -3,11 +3,13 @@ import collections
 import html
 import json
 import logging
+import multiprocessing as mp
 import re
 import sys
 import time
 import typing
 import urllib
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote
 
@@ -15,6 +17,7 @@ import bibtexparser
 import dictdiffer
 import git
 import requests
+import requests_cache
 import spacy
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
@@ -27,16 +30,20 @@ from pathos.multiprocessing import ProcessPool
 from thefuzz import fuzz
 
 from colrev_core import utils
+from colrev_core.environment import EnvironmentManager
 from colrev_core.environment import LocalIndex
 from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import RecordState
 
+# from datetime import datetime
+
 
 class Preparation(Process):
 
     ad = AlphabetDetector()
+    HTML_CLEANER = re.compile("<.*?>")
     PAD = 0
     TIMEOUT = 10
 
@@ -159,6 +166,20 @@ class Preparation(Process):
         "source_url",
     ]
 
+    # Note : the followin objects have heavy memory footprints and should be
+    # class (not object) properties to keep parallel processing as
+    # efficient as possible (the object is passed to each thread)
+    language_detector = (
+        LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
+    )
+
+    # session = requests_cache.CachedSession("requests_cache")
+    cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
+    session = requests_cache.CachedSession(
+        str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+    )
+    session.remove_expired_responses()
+
     def __init__(
         self,
         REVIEW_MANAGER,
@@ -189,9 +210,6 @@ class Preparation(Process):
         # It performs particularly well for short strings (single words/word pairs)
         # The langdetect library is non-deterministic, especially for short strings
         # https://pypi.org/project/langdetect/
-        self.detector = (
-            LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
-        )
 
         # if similarity == 0.0:  # if it has not been set use default
         # saved_args["RETRIEVAL_SIMILARITY"] = self.RETRIEVAL_SIMILARITY
@@ -200,13 +218,12 @@ class Preparation(Process):
         #     reprocess_state = RecordState.md_needs_manual_preparation
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
-        self.CPUS = 1
+        self.CPUS = self.CPUS * 15
+
         if reprocess_state == "":
             self.reprocess_state = RecordState.md_imported
         else:
             self.reprocess_state = reprocess_state
-
-        self.NER = spacy.load("en_core_web_sm")
 
     def __meta_redirect(self, content: str):
         soup = BeautifulSoup(content, "lxml")
@@ -236,7 +253,9 @@ class Preparation(Process):
         # print(ret)
 
         try:
-            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
+            )
             if 503 == ret.status_code:
                 return record
             elif (
@@ -249,8 +268,8 @@ class Preparation(Process):
                 # follow the chain of redirects
                 while self.__meta_redirect(ret.content.decode("utf-8")):
                     url = self.__meta_redirect(ret.content.decode("utf-8"))
-                    ret = requests.get(
-                        url, "GET", headers=self.requests_headers, timeout=self.TIMEOUT
+                    ret = self.session.request(
+                        "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
                     )
             record["url"] = str(url)
         except requests.exceptions.RequestException:
@@ -348,15 +367,7 @@ class Preparation(Process):
                     .rstrip(",")
                 )
                 record[field] = re.sub(r"\s+", " ", record[field])
-
-        if "title" in record:
-            title_text = self.NER(record["title"])
-            for word in title_text.ents:
-                if word.text.islower():
-                    if word.label_ in ["GPE", "NORP", "LOC", "ORG", "PERSON"]:
-                        record["title"] = record["title"].replace(
-                            word.text, word.text.title()
-                        )
+                record[field] = re.sub(self.HTML_CLEANER, "", record[field])
 
         if record.get("volume", "") == "ahead-of-print":
             del record["volume"]
@@ -365,14 +376,29 @@ class Preparation(Process):
 
         return record
 
-    def __title_if_mostly_upper(self, input_string: str) -> str:
+    def __format_if_mostly_upper(
+        self, input_string: str, case: str = "capitalize"
+    ) -> str:
+
         if not re.match(r"[a-zA-Z]+", input_string):
             return input_string
 
         if self.__percent_upper_chars(input_string) > 0.8:
-            return input_string.capitalize()
-        else:
-            return input_string
+            if "capitalize" == case:
+                return input_string.capitalize()
+            if "title" == case:
+                input_string = (
+                    input_string.title()
+                    .replace(" Of ", " of ")
+                    .replace(" For ", " for ")
+                    .replace(" The ", " the ")
+                    .replace("Ieee", "IEEE")
+                    .replace("Acm", "ACM")
+                    .replace(" And ", " and ")
+                )
+                return input_string
+
+        return input_string
 
     def format(self, record: dict) -> dict:
 
@@ -412,10 +438,14 @@ class Preparation(Process):
 
         if "title" in record:
             record.update(title=re.sub(r"\s+", " ", record["title"]).rstrip("."))
-            record.update(title=self.__title_if_mostly_upper(record["title"]))
+            record.update(title=self.__format_if_mostly_upper(record["title"]))
 
         if "booktitle" in record:
-            record.update(booktitle=self.__title_if_mostly_upper(record["booktitle"]))
+            record.update(
+                booktitle=self.__format_if_mostly_upper(
+                    record["booktitle"], case="title"
+                )
+            )
 
             stripped_btitle = re.sub(r"\d{4}", "", record["booktitle"])
             stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
@@ -436,7 +466,11 @@ class Preparation(Process):
 
         if "journal" in record:
             if len(record["journal"]) > 10:
-                record.update(journal=self.__title_if_mostly_upper(record["journal"]))
+                record.update(
+                    journal=self.__format_if_mostly_upper(
+                        record["journal"], case="title"
+                    )
+                )
 
         if "pages" in record:
             record.update(pages=self.__unify_pages_field(record["pages"]))
@@ -462,6 +496,8 @@ class Preparation(Process):
         if "number" not in record and "issue" in record:
             record.update(number=record["issue"])
             del record["issue"]
+        if "volume" in record:
+            record.update(volume=record["volume"].replace("Volume ", ""))
 
         if "url" in record and "fulltext" in record:
             if record["url"] == record["fulltext"]:
@@ -636,9 +672,6 @@ class Preparation(Process):
         if "doi" not in record or "CURATED" == record.get("metadata_source", ""):
             return record
         record = self.retrieve_doi_metadata(record)
-        if "title" in record:
-            record["title"] = self.__title_if_mostly_upper(record["title"])
-            record["title"] = record["title"].replace("\n", " ")
         record = self.get_link_from_doi(record)
         record.update(status=RecordState.md_prepared)
         record.update(metadata_source="DOI.ORG")
@@ -800,7 +833,9 @@ class Preparation(Process):
         record_list = []
         try:
             self.REVIEW_MANAGER.logger.debug(url)
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=headers, timeout=self.TIMEOUT
+            )
             ret.raise_for_status()
             if ret.status_code != 200:
                 self.REVIEW_MANAGER.logger.debug(
@@ -1084,7 +1119,9 @@ class Preparation(Process):
             url = search_api_url + record.get("title", "").replace(" ", "+")
             self.REVIEW_MANAGER.logger.debug(url)
             headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=headers, timeout=self.TIMEOUT
+            )
             ret.raise_for_status()
 
             data = json.loads(ret.text)
@@ -1099,8 +1136,8 @@ class Preparation(Process):
                 "https://api.semanticscholar.org/v1/paper/" + paper_id
             )
             self.REVIEW_MANAGER.logger.debug(record_retrieval_url)
-            ret_ent = requests.get(
-                record_retrieval_url, headers=headers, timeout=self.TIMEOUT
+            ret_ent = self.session.request(
+                "GET", record_retrieval_url, headers=headers, timeout=self.TIMEOUT
             )
             ret_ent.raise_for_status()
             item = json.loads(ret_ent.text)
@@ -1179,8 +1216,8 @@ class Preparation(Process):
             if "isbn" in record:
                 isbn = record["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = requests.get(
-                    url, headers=self.requests_headers, timeout=self.TIMEOUT
+                ret = self.session.request(
+                    "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
                 )
                 ret.raise_for_status()
                 self.REVIEW_MANAGER.logger.debug(url)
@@ -1212,8 +1249,8 @@ class Preparation(Process):
                 if ":" in title:
                     title = title[: title.find(":")]  # To catch sub-titles
                 url = url + "&title=" + title.replace(" ", "+")
-                ret = requests.get(
-                    url, headers=self.requests_headers, timeout=self.TIMEOUT
+                ret = self.session.request(
+                    "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
                 )
                 ret.raise_for_status()
                 self.REVIEW_MANAGER.logger.debug(url)
@@ -1254,7 +1291,9 @@ class Preparation(Process):
         url = api_url + venue_string.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
         try:
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=headers, timeout=self.TIMEOUT
+            )
             ret.raise_for_status()
             data = json.loads(ret.text)
             if "hit" not in data["result"]["hits"]:
@@ -1345,7 +1384,7 @@ class Preparation(Process):
         url = api_url + query.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
         self.REVIEW_MANAGER.logger.debug(url)
-        ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+        ret = self.session.request("GET", url, headers=headers, timeout=self.TIMEOUT)
         ret.raise_for_status()
         if ret.status_code == 500:
             return []
@@ -1548,7 +1587,9 @@ class Preparation(Process):
             url = "http://dx.doi.org/" + record["doi"]
             self.REVIEW_MANAGER.logger.debug(url)
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
-            ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=headers, timeout=self.TIMEOUT
+            )
             ret.raise_for_status()
             if ret.status_code != 200:
                 self.REVIEW_MANAGER.report_logger.info(
@@ -1561,12 +1602,16 @@ class Preparation(Process):
             retrieved_json = json.loads(ret.text)
             retrieved_record = self.crossref_json_to_record(retrieved_json)
             record = self.__fuse_best_fields(record, retrieved_record)
-
         except json.decoder.JSONDecodeError:
             pass
         except requests.exceptions.RequestException:
             pass
             return orig_record
+
+        if "title" in record:
+            record["title"] = self.__format_if_mostly_upper(record["title"])
+            record["title"] = record["title"].replace("\n", " ")
+
         return record
 
     def get_doi_from_urls(self, record: dict) -> dict:
@@ -1576,7 +1621,9 @@ class Preparation(Process):
             try:
                 self.REVIEW_MANAGER.logger.debug(f"Retrieve doi-md from {url}")
                 headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
-                ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
+                ret = self.session.request(
+                    "GET", url, headers=headers, timeout=self.TIMEOUT
+                )
                 ret.raise_for_status()
                 res = re.findall(self.doi_regex, ret.text)
                 if res:
@@ -1697,7 +1744,9 @@ class Preparation(Process):
         if "isbn" in record:
             isbn = record["isbn"].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
-            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
+            ret = self.session.request(
+                "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
+            )
             if '"error": "notfound"' in ret.text:
                 del record["isbn"]
 
@@ -1712,17 +1761,20 @@ class Preparation(Process):
 
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
         if "doi" in record:
-            doi_md = self.get_md_from_doi(record.copy())
+            crossref_md = self.get_md_from_crossref(record.copy())
             # self.REVIEW_MANAGER.pp.pprint(doi_md)
-            for k, v in doi_md.items():
+            for k, v in crossref_md.items():
                 if k not in fields_to_check:
                     continue
                 if not isinstance(v, str):
                     continue
                 if k in record:
-                    if len(doi_md[k]) < 5 or len(record[k]) < 5:
+                    if len(crossref_md[k]) < 5 or len(record[k]) < 5:
                         continue
-                    if fuzz.partial_ratio(record[k].lower(), doi_md[k].lower()) < 70:
+                    if (
+                        fuzz.partial_ratio(record[k].lower(), crossref_md[k].lower())
+                        < 70
+                    ):
                         record["status"] = RecordState.md_needs_manual_preparation
                         record[
                             "man_prep_hints"
@@ -1756,8 +1808,11 @@ class Preparation(Process):
 
         try:
             if "url" in record:
-                r = requests.get(
-                    record["url"], headers=self.requests_headers, timeout=self.TIMEOUT
+                r = self.session.request(
+                    "GET",
+                    record["url"],
+                    headers=self.requests_headers,
+                    timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
                     del record["url"]
@@ -1765,7 +1820,8 @@ class Preparation(Process):
             pass
         try:
             if "fulltext" in record:
-                r = requests.get(
+                r = self.session.request(
+                    "GET",
                     record["fulltext"],
                     headers=self.requests_headers,
                     timeout=self.TIMEOUT,
@@ -1815,7 +1871,7 @@ class Preparation(Process):
         if len(record.get("title", "")) < 30:
             return record
 
-        confidenceValues = self.detector.compute_language_confidence_values(
+        confidenceValues = self.language_detector.compute_language_confidence_values(
             text=record["title"]
         )
         # Format: ENGLISH
@@ -1836,11 +1892,11 @@ class Preparation(Process):
         return record
 
     def __check_potential_retracts(self, record: dict) -> dict:
-        retrieved_record = self.get_md_from_crossref(record.copy())
-        if retrieved_record.get("crossmark", "") == "True":
+        # Note : we retrieved metadata in get_md_from_crossref()
+        if record.get("crossmark", "") == "True":
             record["status"] = RecordState.md_needs_manual_preparation
             record["man_prep_hints"] = "crossmark_restriction_potential_retract"
-        if retrieved_record.get("warning", "") == "Withdrawn (according to DBLP)":
+        if record.get("warning", "") == "Withdrawn (according to DBLP)":
             record["status"] = RecordState.md_needs_manual_preparation
             record["man_prep_hints"] = "Withdrawn (according to DBLP)"
         return record
@@ -2014,6 +2070,8 @@ class Preparation(Process):
         ]:
             return record
 
+        print(record["ID"])
+
         #  preparation_record will change and eventually replace record (if successful)
         preparation_record = record.copy()
         # unprepared_record will not change (for diffs)
@@ -2036,6 +2094,8 @@ class Preparation(Process):
         for prep_script in self.prep_scripts:
             if prep_script["name"] not in item["mode"]["scripts"]:
                 continue
+
+            # startTime = datetime.now()
 
             prior = preparation_record.copy()
 
@@ -2082,6 +2142,10 @@ class Preparation(Process):
             ] or "Disagreement with " in preparation_record.get("man_prep_hints", ""):
                 record = preparation_record.copy()
                 break
+
+            # diff = (datetime.now() - startTime).total_seconds()
+            # with open("stats.csv", "a") as f:
+            #     f.write(f'{prep_script["script"].__name__};{record["ID"]};{diff};\n')
 
         if (
             preparation_record["status"]
@@ -2293,6 +2357,8 @@ class Preparation(Process):
         from colrev_core.tei import TEI, TEI_Exception
         from tqdm import tqdm
 
+        NER = spacy.load("en_core_web_sm")
+
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         refs = []
@@ -2325,7 +2391,7 @@ class Preparation(Process):
 
             if "title" in record:
 
-                title_text = self.NER(record["title"])
+                title_text = NER(record["title"])
                 for word in title_text.ents:
                     if word.text.islower():
                         if word.label_ in ["GPE", "NORP", "LOC", "ORG", "PERSON"]:
@@ -2451,13 +2517,7 @@ class Preparation(Process):
                 author_str = author_str[5:]  # drop the first " and "
                 record["author"] = author_str
             if "title" in item:
-                record["title"] = (
-                    item["title"]
-                    .replace("<b>", "")
-                    .replace("</b>", "")
-                    .replace("<i>", "")
-                    .replace("</i>", "")
-                )
+                record["title"] = item["title"]
             if "doi" in item:
                 record["doi"] = item["doi"]
             if "date" in item:
@@ -2609,7 +2669,8 @@ class Preparation(Process):
             else:
                 if not self.force_mode:
                     raise ServiceNotAvailableException("CROSSREF")
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
+            print(e)
             pass
             if not self.force_mode:
                 raise ServiceNotAvailableException("CROSSREF")
@@ -2794,6 +2855,14 @@ class Preparation(Process):
 
         modes = [
             {
+                "name": "exclusion",
+                "similarity": 1.0,
+                "scripts": [
+                    "exclude_non_latin_alphabets",
+                    "exclude_languages",
+                ],
+            },
+            {
                 "name": "high_confidence",
                 "similarity": 0.99,
                 "scripts": [
@@ -2811,8 +2880,6 @@ class Preparation(Process):
                     "get_year_from_vol_iss_jour_crossref",
                     "remove_nicknames",
                     "format_minor",
-                    "exclude_non_latin_alphabets",
-                    "exclude_languages",
                     "drop_fields",
                     "update_metadata_status",
                 ],
@@ -2832,8 +2899,6 @@ class Preparation(Process):
                     "remove_nicknames",
                     "remove_redundant_fields",
                     "format_minor",
-                    "exclude_non_latin_alphabets",
-                    "exclude_languages",
                     "drop_fields",
                     "update_metadata_status",
                 ],
@@ -2854,8 +2919,6 @@ class Preparation(Process):
                     "remove_nicknames",
                     "remove_redundant_fields",
                     "format_minor",
-                    "exclude_non_latin_alphabets",
-                    "exclude_languages",
                     "drop_fields",
                     "update_metadata_status",
                 ],
@@ -2872,25 +2935,11 @@ class Preparation(Process):
                 prepare_data = self.get_data()
 
             if self.FIRST_ROUND and not self.DEBUG_MODE:
-                if prepare_data["nr_tasks"] > 100:
-                    # Start with the exclusion round
-                    modes.insert(
-                        0,
-                        {
-                            "name": "exclusion",
-                            "similarity": 1.0,
-                            "scripts": [
-                                "exclude_non_latin_alphabets",
-                                "exclude_languages",
-                            ],
-                        },
-                    )
                 if prepare_data["nr_tasks"] < 20:
                     self.REVIEW_MANAGER.logger.info(
                         "Less than 20 records: prepare in one batch."
                     )
-                    modes.pop(0)
-                    modes.pop(0)
+                    modes = [m for m in modes if "low_confidence" == m["name"]]
                     # use one mode/run to avoid multiple commits
 
             mode = modes.pop(0)
@@ -2933,10 +2982,18 @@ class Preparation(Process):
             else:
                 # Note : p_map shows the progress (tqdm) but it is inefficient
                 # https://github.com/swansonk14/p_tqdm/issues/34
+                # from p_tqdm import p_map
                 # preparation_batch = p_map(self.prepare, preparation_batch)
-                self.REVIEW_MANAGER.logger.info("This could take a while...")
-                pool = ProcessPool(nodes=self.CPUS)
+
+                if "exclude_languages" in mode["scripts"]:  # type: ignore
+                    pool = ProcessPool(nodes=mp.cpu_count() // 2)
+                else:
+                    pool = ProcessPool(nodes=self.CPUS)
                 preparation_batch = pool.map(self.prepare, preparation_batch)
+
+                pool.close()
+                pool.join()
+                pool.clear()
 
             if not self.DEBUG_MODE:
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(

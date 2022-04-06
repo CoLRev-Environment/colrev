@@ -122,7 +122,8 @@ class Initializer:
             + ".references_learned_settings\n"
             + ".corrections\n"
             + ".ipynb_checkpoints/\n"
-            + "pdfs"
+            + "pdfs\n"
+            + "requests_cache.sqlite"
         )
         f.close()
         return
