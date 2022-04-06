@@ -42,7 +42,7 @@ from colrev_core.process import RecordState
 
 class Preparation(Process):
 
-    ad = AlphabetDetector()
+    alphabet_detector = AlphabetDetector()
     HTML_CLEANER = re.compile("<.*?>")
     PAD = 0
     TIMEOUT = 10
@@ -473,16 +473,19 @@ class Preparation(Process):
                 )
 
         if "pages" in record:
-            record.update(pages=self.__unify_pages_field(record["pages"]))
-            if (
-                not re.match(r"^\d*$", record["pages"])
-                and not re.match(r"^\d*--\d*$", record["pages"])
-                and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
-            ):
-                self.REVIEW_MANAGER.report_logger.info(
-                    f' {record["ID"]}:'.ljust(self.PAD, " ")
-                    + f'Unusual pages: {record["pages"]}'
-                )
+            if "N.PAG" == record.get("pages", ""):
+                del record["pages"]
+            else:
+                record.update(pages=self.__unify_pages_field(record["pages"]))
+                if (
+                    not re.match(r"^\d*$", record["pages"])
+                    and not re.match(r"^\d*--\d*$", record["pages"])
+                    and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
+                ):
+                    self.REVIEW_MANAGER.report_logger.info(
+                        f' {record["ID"]}:'.ljust(self.PAD, " ")
+                        + f'Unusual pages: {record["pages"]}'
+                    )
 
         if "language" in record:
             # TODO : use https://pypi.org/project/langcodes/
@@ -657,15 +660,14 @@ class Preparation(Process):
     def __unify_pages_field(self, input_string: str) -> str:
         if not isinstance(input_string, str):
             return input_string
-        if not re.match(r"^\d*--\d*$", input_string) and "--" not in input_string:
-            input_string = (
-                input_string.replace("-", "--")
-                .replace(" -- ", "--")
-                .replace("–", "--")
-                .replace("----", "--")
-                .replace(" -- ", "--")
-                .rstrip(".")
-            )
+        if 1 == input_string.count("-"):
+            input_string = input_string.replace("-", "--")
+        input_string = (
+            input_string.replace("–", "--")
+            .replace("----", "--")
+            .replace(" -- ", "--")
+            .rstrip(".")
+        )
         return input_string
 
     def get_md_from_doi(self, record: dict) -> dict:
@@ -1843,7 +1845,7 @@ class Preparation(Process):
                 record.get("booktitle", ""),
             ]
         )
-        if not self.ad.only_alphabet_chars(str_to_check, "LATIN"):
+        if not self.alphabet_detector.only_alphabet_chars(str_to_check, "LATIN"):
             record["status"] = RecordState.rev_prescreen_excluded
             record["prescreen_exclusion"] = "script:non_latin_alphabet"
 

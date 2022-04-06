@@ -313,6 +313,7 @@ class ReviewDataset:
             "man_prep_hints",
             "pdf_processed",
             "file",  # Note : do not change this order (parsers rely on it)
+            "prescreen_exclusion",
             "colrev_pdf_id",
             "potential_dupes",
             "doi",

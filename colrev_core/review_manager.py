@@ -938,7 +938,7 @@ class ReviewManager:
         ordered_items = ""
         consumed_items = []
         with open("report.log") as r:
-            items = []
+            items = []  # type: ignore
             item = ""
             for line in r.readlines():
                 if any(
@@ -963,6 +963,12 @@ class ReviewManager:
                     firsts.append(line)
                     continue
                 if re.search(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} ", line):
+                    # prep: only list "Dropped xy field" once
+                    if "[INFO] Dropped " in line:
+                        if any(
+                            item[item.find("[INFO] Dropped ") :] in x for x in items
+                        ):
+                            continue
                     if item != "":
                         item = item.replace("\n\n", "\n").replace("\n\n", "\n")
                         items.append(item)
@@ -970,6 +976,7 @@ class ReviewManager:
                     item = line
                 else:
                     item = item + line
+
             items.append(item.replace("\n\n", "\n").replace("\n\n", "\n"))
 
         if criterion is None:
