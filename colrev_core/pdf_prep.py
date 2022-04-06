@@ -11,7 +11,6 @@ from pathlib import Path
 
 import imagehash
 import timeout_decorator
-from langdetect import detect_langs
 from lingua import LanguageDetectorBuilder
 from p_tqdm import p_map
 from pdf2image import convert_from_path
@@ -72,7 +71,7 @@ class PDF_Preparation(Process):
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
         self.CPUS = self.REVIEW_MANAGER.config["CPUS"] * 2
 
-        self.detector = (
+        self.language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )
 
@@ -147,7 +146,9 @@ class PDF_Preparation(Process):
 
     def __text_is_english(self, text: str) -> bool:
         # Format: ENGLISH
-        confidenceValues = self.detector.compute_language_confidence_values(text=text)
+        confidenceValues = self.language_detector.compute_language_confidence_values(
+            text=text
+        )
         for lang, conf in confidenceValues:
             if "ENGLISH" == lang.name:
                 if conf > 0.85:
@@ -199,11 +200,12 @@ class PDF_Preparation(Process):
         if RecordState.pdf_imported != record["status"]:
             return record
 
-        if not any(lang.prob > 0.9 for lang in detect_langs(record["text_from_pdf"])):
+        # TODO : allow for other languages in this and the following if statement
+        if not self.__text_is_english(record["text_from_pdf"]):
             self.REVIEW_MANAGER.report_logger.info(f'apply_ocr({record["ID"]})')
             record = self.__apply_ocr(record, PAD)
 
-        if not any(lang.prob > 0.9 for lang in detect_langs(record["text_from_pdf"])):
+        if not self.__text_is_english(record["text_from_pdf"]):
             msg = f'{record["ID"]}'.ljust(PAD, " ") + "Validation error (OCR problems)"
             self.REVIEW_MANAGER.report_logger.error(msg)
 
