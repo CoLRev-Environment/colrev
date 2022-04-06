@@ -93,6 +93,7 @@ class EnvironmentManager:
 
     @classmethod
     def register_repo(cls, path_to_register: Path) -> None:
+        import git
 
         local_registry = cls.load_local_registry()
         registered_paths = [x["source_url"] for x in local_registry]
@@ -109,6 +110,10 @@ class EnvironmentManager:
             "source_name": path_to_register.stem,
             "source_url": path_to_register,
         }
+        git_repo = git.Repo(path_to_register)
+        for remote in git_repo.remotes:
+            if remote.url:
+                new_record["source_link"] = remote.url
         local_registry.append(new_record)
         cls.save_local_registry(local_registry)
         print(f"Registered path ({path_to_register})")

@@ -128,6 +128,7 @@ class Preparation(Process):
         "note",
         "issn",
         "language",
+        "source_url",
     ]
     fields_to_drop = [
         "type",
@@ -163,7 +164,6 @@ class Preparation(Process):
         "timestamp",
         "biburl",
         "man_prep_hints",
-        "source_url",
     ]
 
     # Note : the followin objects have heavy memory footprints and should be
@@ -274,6 +274,12 @@ class Preparation(Process):
             record["url"] = str(url)
         except requests.exceptions.RequestException:
             pass
+        return record
+
+    def prep_curated(self, record: dict) -> dict:
+        if "CURATED" == record.get("metadata_source", ""):
+            if RecordState.md_imported == record["status"]:
+                record["status"] = RecordState.md_prepared
         return record
 
     def correct_recordtype(self, record: dict) -> dict:
@@ -515,10 +521,12 @@ class Preparation(Process):
         retrieved = False
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record, include_file=False)
+            retrieved_record = LOCAL_INDEX.set_source_url_link(retrieved_record)
             retrieved = True
         except (RecordNotInIndexException, NotFoundError):
             pass
             try:
+                # Records can be CURATED without being indexed (??)
                 if "CURATED" == record.get("metadata_source", ""):
                     if "source_url" in record:  # do not change to other source
 
@@ -552,6 +560,7 @@ class Preparation(Process):
                     retrieved_record = LOCAL_INDEX.retrieve_from_toc(
                         record, self.RETRIEVAL_SIMILARITY, include_file=False
                     )
+                    retrieved_record = LOCAL_INDEX.set_source_url_link(retrieved_record)
                     retrieved = True
             except (RecordNotInIndexException, NotFoundError):
                 pass
@@ -597,8 +606,6 @@ class Preparation(Process):
                 # detailed report (and is available for tracing errors)
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
-
-            record = LOCAL_INDEX.set_source_url_link(record)
 
         return record
 
@@ -2061,9 +2068,6 @@ class Preparation(Process):
 
         record = item["record"]
 
-        if "CURATED" == record.get("metadata_source", ""):
-            return record
-
         # if RecordState.md_imported != record["status"]:
         if record["status"] not in [
             RecordState.md_imported,
@@ -2597,10 +2601,12 @@ class Preparation(Process):
         return batch
 
     def __load_prep_data_for_debug(
-        self, debug_ids: str, debug_file: str
+        self, debug_ids: str, debug_file: str = "NA"
     ) -> typing.Dict:
 
         self.REVIEW_MANAGER.logger.info("Data passed to the scripts")
+        if debug_file is None:
+            debug_file = "NA"
         if "NA" != debug_file:
             with open(debug_file) as target_db:
                 bib_db = BibTexParser(
@@ -2775,6 +2781,10 @@ class Preparation(Process):
                 "script": self.correct_recordtype,
             },
             {
+                "name": "prep_curated",
+                "script": self.prep_curated,
+            },
+            {
                 "name": "format",
                 "script": self.format,
             },
@@ -2871,6 +2881,7 @@ class Preparation(Process):
                     "remove_urls_with_500_errors",
                     "remove_broken_IDs",
                     "global_ids_consistency_check",
+                    "prep_curated",
                     "format",
                     "get_doi_from_sem_scholar",
                     "get_doi_from_urls",
@@ -2890,6 +2901,7 @@ class Preparation(Process):
                 "name": "medium_confidence",
                 "similarity": 0.9,
                 "scripts": [
+                    "prep_curated",
                     "get_doi_from_sem_scholar",
                     "get_doi_from_urls",
                     "get_md_from_doi",
@@ -2909,6 +2921,7 @@ class Preparation(Process):
                 "name": "low_confidence",
                 "similarity": 0.80,
                 "scripts": [
+                    "prep_curated",
                     "correct_recordtype",
                     "get_doi_from_sem_scholar",
                     "get_doi_from_urls",
