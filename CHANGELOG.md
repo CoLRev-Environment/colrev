@@ -15,6 +15,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+### [0.4.0] - 2022-04-06
+
+### Added
+
+- Extract functionality: ReviewDataset, Process
+- Developed LocalIndex, EnvironmentManager, OpenSearch
+- Curation model, including Resource installation and a "correction path"
+- Search operation (reintegrating paper_feed and local_paper_index)
+- Prep exclusion based on languages
+
+### Changed
+
+- Object-oriented refactoring of the whole codebase
+- Use Zotero translators (instead of bibutils) for imports
+- Duplicate identification (add FP safeguards based on LocalIndex, add a procedure for small samples)
+- Consistent PDF path handling
+- Structured data extraction based on csv
+
+### Fixed
+
+- Loggers
+- Performance issues in prep and status
+
 ### [0.3.0] - 2022-02-05
 
 ### Added
