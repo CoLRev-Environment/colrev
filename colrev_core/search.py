@@ -462,6 +462,7 @@ class Search(Process):
     def search_project(self, params: dict, feed_file: Path) -> None:
         from colrev_core.review_manager import ReviewManager
         from colrev_core.load import Loader
+        from tqdm import tqdm
 
         if not feed_file.is_file():
             feed_db = BibDatabase()
@@ -482,6 +483,9 @@ class Search(Process):
             PROJECT_REVIEW_MANAGER,
             notify_state_transition_process=False,
         )
+        self.REVIEW_MANAGER.logger.info(
+            f'Loading records from {params["scope"]["url"]}'
+        )
         records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records()
         records_to_import = [
             x for x in records_to_import if x["ID"] not in imported_ids
@@ -489,7 +493,9 @@ class Search(Process):
         records_to_import = [
             {k: str(v) for k, v in r.items()} for r in records_to_import
         ]
-        for record_to_import in records_to_import:
+
+        self.REVIEW_MANAGER.logger.info("Importing selected records")
+        for record_to_import in tqdm(records_to_import):
             if "selection_clause" in params:
                 res = []
                 try:
@@ -497,33 +503,35 @@ class Search(Process):
                     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
                     res = ps.sqldf(query, locals())
                 except PandaSQLException:
-                    # print(e)
                     pass
 
                 if len(res) == 0:
                     continue
+            self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
+            if "metadata_source" in record_to_import:
+                if "CURATED" != record_to_import["metadata_source"]:
+                    del record_to_import["metadata_source"]
             records = records + [record_to_import]
 
-        # records = records + records_to_import
         keys_to_drop = [
             "status",
             "origin",
             "excl_criteria",
             "manual_non_duplicate",
             "manual_duplicate",
-            "excl_criteria",
-            "metadata_source",
         ]
+
         records = [
             {key: item[key] for key in item.keys() if key not in keys_to_drop}
             for item in records
         ]
-
-        feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-        feed_db.entries = records
-        with open(feed_file, "w") as fi:
-            fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
-
+        if len(records) > 0:
+            feed_file.parents[0].mkdir(parents=True, exist_ok=True)
+            feed_db.entries = records
+            with open(feed_file, "w") as fi:
+                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+        else:
+            print("No records retrieved.")
         return
 
     def search_index(self, params: dict, feed_file: Path) -> None:
@@ -1369,7 +1377,6 @@ class Search(Process):
     def update(self, selection_str: str) -> None:
 
         # TODO : when the search_file has been filled only query the last years
-
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
         feed_paths = [x for x in sources if "FEED" == x["search_type"]]
         for feed_item in feed_paths:

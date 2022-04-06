@@ -4,6 +4,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import string
 import typing
 from pathlib import Path
@@ -1029,6 +1030,26 @@ class ReviewDataset:
                 ):
                     missing_files.append(ID)
         return missing_files
+
+    def import_file(self, record: dict) -> dict:
+        self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"].mkdir(exist_ok=True)
+        new_fp = (
+            self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
+            / Path(record["ID"] + ".pdf").name
+        )
+        original_fp = Path(record["file"])
+
+        if "SYMLINK" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+            if not new_fp.is_file():
+                new_fp.symlink_to(original_fp)
+            record["file"] = str(new_fp)
+        elif "COPY" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+            if not new_fp.is_file():
+                shutil.copyfile(original_fp, new_fp.resolve())
+            record["file"] = str(new_fp)
+        # Note : else: leave absolute paths
+
+        return record
 
     # CHECKS --------------------------------------------------------------
 
