@@ -39,31 +39,24 @@ class PDF_Retrieval(Process):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
 
-    def __copy_pdfs_to_repo(self) -> None:
+    def copy_pdfs_to_repo(self) -> None:
         self.REVIEW_MANAGER.logger.info("Copy PDFs to dir")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
         for record in records:
             if "file" in record:
-                fpath = self.REVIEW_MANAGER.path / Path(record["file"])
-                if fpath.is_file() and not str(
-                    self.REVIEW_MANAGER.paths["REPO_DIR"]
-                ) in str(fpath):
-                    new_fpath = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"] / Path(
-                        record["ID"] + ".pdf"
+                fpath = Path(record["file"])
+                if fpath.is_symlink():
+                    new_fpath = fpath.absolute()
+                    linked_file = fpath.resolve()
+                    if linked_file.is_file():
+                        fpath.unlink()
+                        shutil.copyfile(linked_file, new_fpath)
+                if new_fpath.is_file():
+                    self.REVIEW_MANAGER.logger.warning(
+                        f'No need to copy PDF - already exits ({record["ID"]})'
                     )
-                    if new_fpath.is_file():
-                        self.REVIEW_MANAGER.logger.warning(
-                            f'PDF cannot be copied - already exits ({record["ID"]})'
-                        )
-                        continue
-                    shutil.copyfile(fpath, new_fpath)
-                    record["file"] = str(
-                        self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-                        / Path(record["ID"] + ".pdf")
-                    )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
         return
 
     def __unpaywall(self, doi: str, retry: int = 0, pdfonly: bool = True) -> str:
@@ -382,29 +375,29 @@ class PDF_Retrieval(Process):
 
         return records
 
-    def __rename_pdfs(self, records: typing.List[dict]) -> typing.List[dict]:
-        self.REVIEW_MANAGER.logger.info("RENAME PDFs")
+    def rename_pdfs(self, records: typing.List[dict]) -> typing.List[dict]:
+        self.REVIEW_MANAGER.logger.info("Rename PDFs")
+
+        if 0 == len(records):
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+
         for record in records:
-            if "file" in record and record["status"] == RecordState.pdf_imported:
-                file = self.REVIEW_MANAGER / Path(record["file"])
-                new_filename = (
-                    self.REVIEW_MANAGER
-                    / self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
-                    / Path(f"{record['ID']}.pdf")
+            if "file" not in record:
+                continue
+
+            file = Path(record["file"])
+            new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+                f"{record['ID']}.pdf"
+            )
+            try:
+                file.rename(new_filename)
+                record["file"] = str(new_filename)
+                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
+            except FileNotFoundError:
+                self.REVIEW_MANAGER.logger.error(
+                    f"Could not rename {record['ID']} - FileNotFoundError"
                 )
-                try:
-                    file.rename(new_filename)
-                    record["file"] = str(
-                        new_filename.relative_to(self.REVIEW_MANAGER.path)
-                    )
-                    self.REVIEW_MANAGER.logger.info(
-                        f"rename {file.name} > {new_filename.name}"
-                    )
-                except FileNotFoundError:
-                    self.REVIEW_MANAGER.logger.error(
-                        f"Could not rename {record['ID']} - FileNotFoundError"
-                    )
-                    pass
+                pass
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -468,7 +461,7 @@ class PDF_Retrieval(Process):
 
         return records
 
-    def main(self, copy_to_repo: bool, rename: bool) -> None:
+    def main(self) -> None:
 
         saved_args = locals()
 
@@ -504,12 +497,8 @@ class PDF_Retrieval(Process):
             # For better readability:
             self.REVIEW_MANAGER.reorder_log([x["ID"] for x in retrieval_batch])
 
-            if copy_to_repo:
-                self.__copy_pdfs_to_repo()
-
             # Note: rename should be after copy.
-            if rename:
-                records = self.__rename_pdfs(records)
+            records = self.rename_pdfs(records)
 
             self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
 

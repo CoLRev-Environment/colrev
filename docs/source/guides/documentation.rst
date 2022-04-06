@@ -404,7 +404,7 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
     Search for the PDF (based on the pdf_hash) and update the file link accordingly. Useful when PDFs are renamed or moved to subdirectories.
 
-Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository, use `colrev config -s PDF_PATH_TYPE=COPY`
+Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, use `colrev config -s PDF_PATH_TYPE=COPY`
 
 :program:`colrev pdf-get-man` goes through the list of missing PDFs and asks the researcher to retrieve it:
 

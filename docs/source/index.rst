@@ -57,7 +57,7 @@ Conducting a literature review should be as simple as running the following oper
       # Complete the data analysis/synthesis
       colrev data
 
-      # Build a draft of the paper
+      # Build the paper
       colrev paper
 
 A key feature of CoLRev is that reuse of community-curated data is built into each step:
