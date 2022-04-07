@@ -2,6 +2,7 @@
 # import json
 import logging
 import re
+import typing
 from pathlib import Path
 
 import git
@@ -51,6 +52,9 @@ class Dedupe(Process):
     # the same ID may be used for other records in following commits!
 
     def __prep_references(self, references: pd.DataFrame) -> dict:
+
+        if "status" in references:
+            references["status"] = references["status"].astype(str)
 
         if "volume" not in references:
             references["volume"] = "nan"
@@ -144,6 +148,7 @@ class Dedupe(Process):
                     "number",
                     "pages",
                     "colrev_id",
+                    "status",
                 ]
             ),
             1,
@@ -233,13 +238,14 @@ class Dedupe(Process):
 
         return references
 
-    def setup_active_learning_dedupe(self, retrain: bool):
-
+    def setup_active_learning_dedupe(self, retrain: bool, min_n: int = 50):
         import dedupe
         from pathlib import Path
 
+        logging.getLogger("opensearch").setLevel(logging.ERROR)
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)
         logging.getLogger("dedupe.api").setLevel(logging.WARNING)
+        # logging.getLogger("rlr.crossvalidation:optimum").setLevel(logging.WARNING)
 
         training_file = Path(".references_dedupe_training.json")
         settings_file = Path(".references_learned_settings")
@@ -249,13 +255,18 @@ class Dedupe(Process):
 
         self.REVIEW_MANAGER.logger.info("Importing data ...")
 
-        ret_dict = {}
+        ret_dict: typing.Dict[str, typing.Any] = {}
 
         # Possible extension: in the readData, we may want to append the status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
         data_d = self.__readData()
-        if len(data_d) < 50:
+
+        ret_dict["n_new"] = len(
+            [d for d, v in data_d.items() if "md_prepared" == v["status"]]
+        )
+
+        if len(data_d) < min_n:
             ret_dict["status"] = "not_enough_data"
 
         else:
