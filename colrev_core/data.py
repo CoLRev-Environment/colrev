@@ -33,7 +33,8 @@ class Data(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def get_record_ids_for_synthesis(self, records: typing.List[dict]) -> list:
+    @classmethod
+    def get_record_ids_for_synthesis(cls, records: typing.List[dict]) -> list:
         return [
             x["ID"]
             for x in records
