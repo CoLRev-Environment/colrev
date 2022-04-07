@@ -17,6 +17,7 @@ from lxml.etree import SerialisationError
 from nameparser import HumanName
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
+from opensearchpy.exceptions import ConnectionError
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -410,7 +411,7 @@ class LocalIndex:
         available = False
         try:
             self.os.get(index=self.RECORD_INDEX, id="test")
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, ConnectionError):
             pass
         except NotFoundError:
             available = True
@@ -422,7 +423,7 @@ class LocalIndex:
                 try:
                     self.os.get(index=self.RECORD_INDEX, id="test")
                     break
-                except requests.exceptions.RequestException:
+                except (requests.exceptions.RequestException, ConnectionError):
                     time.sleep(3)
                     pass
                 except NotFoundError:
