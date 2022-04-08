@@ -77,7 +77,7 @@ class Preparation(Process):
 
     record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
         "article": ["booktitle"],
-        "inproceedings": ["volume", "issue", "number", "journal"],
+        "inproceedings": ["issue", "number", "journal"],
         "incollection": [],
         "inbook": ["journal"],
         "book": ["volume", "issue", "number", "journal"],
