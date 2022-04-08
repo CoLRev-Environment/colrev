@@ -328,6 +328,9 @@ class ReviewManager:
             ].pop()
 
             migration_script = migrator["script"]
+
+            self.logger.info(f"Migrating from {migrator['from']} to {migrator['to']}")
+
             updated = migration_script(self)
             if updated:
                 self.logger.info(f"Updated to: {current_version}")
