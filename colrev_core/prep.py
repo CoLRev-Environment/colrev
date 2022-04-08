@@ -23,7 +23,7 @@ from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
-from lingua import LanguageDetectorBuilder
+from lingua.builder import LanguageDetectorBuilder
 from nameparser import HumanName
 from opensearchpy import NotFoundError
 from pathos.multiprocessing import ProcessPool
