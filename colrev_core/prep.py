@@ -574,6 +574,8 @@ class Preparation(Process):
                 if "file" == k:
                     if "file" in record:
                         continue
+                if v == "":
+                    continue
                 record[k] = v
 
             git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
@@ -587,16 +589,17 @@ class Preparation(Process):
 
             if not any(
                 x in cur_project_source_paths
-                for x in retrieved_record.get("source_url", "").split(";")
+                for x in str(retrieved_record.get("source_url", "")).split(";")
             ):
                 record["metadata_source"] = "CURATED"
 
             # Note : don't list the same repository as its own source_url
             # (source_url s should point to other/external repos)
             for cur_project_source_path in cur_project_source_paths:
-                record["source_url"] = record["source_url"].replace(
-                    cur_project_source_path, ""
-                )
+                if "source_url" in record:
+                    record["source_url"] = str(record["source_url"]).replace(
+                        cur_project_source_path, ""
+                    )
             if record["source_url"] == "":
                 del record["source_url"]
 

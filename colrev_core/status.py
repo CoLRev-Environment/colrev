@@ -345,7 +345,7 @@ class Status(Process):
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
-                "cmd": "colrev env --apply_corrections",
+                "cmd": "colrev push -r",
             }
             environment_instructions.append(instruction)
 

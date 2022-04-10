@@ -1327,36 +1327,33 @@ class ReviewDataset:
                     changes = diff(original_curated_record, corrected_curated_record)
                     change_items = list(changes)
 
-                    # TODO : The export of corrections/changes does not seem to work yet
-                    # change: the key is in x[1]
-                    change_items = [
-                        (x[0], x[1], x[2])
-                        for x in change_items
-                        if x[1]
-                        not in [
-                            "excl_criteria",
-                            "status",
-                            "metadata_source",
-                            "source_url",
-                            "ID",
-                            "grobid-version",
-                        ]
+                    keys_to_ignore = [
+                        "excl_criteria",
+                        "status",
+                        "metadata_source",
+                        "source_url",
+                        "ID",
+                        "grobid-version",
+                        "pdf_hash",
+                        "file",
+                        "origin",
                     ]
 
-                    # add: the key is in x[2][0]
-                    change_items = [
-                        (x[0], x[1], x[2])
-                        for x in change_items
-                        if x[2][0]
-                        not in [
-                            "excl_criteria",
-                            "status",
-                            "metadata_source",
-                            "source_url",
-                            "ID",
-                            "grobid-version",
-                        ]
-                    ]
+                    selected_change_items = []
+                    for change_item in change_items:
+                        type, key, val = change_item
+                        if "add" == type:
+                            for add_item in val:
+                                add_item_key, add_item_val = add_item
+                                if add_item_key not in keys_to_ignore:
+                                    selected_change_items.append(
+                                        ("add", "", [(add_item_key, add_item_val)])
+                                    )
+                        elif "change" == type:
+                            if key not in keys_to_ignore:
+                                selected_change_items.append(change_item)
+
+                    change_items = selected_change_items
 
                     if len(change_items) == 0:
                         continue
