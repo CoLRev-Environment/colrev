@@ -571,6 +571,8 @@ class Preparation(Process):
             for k, v in retrieved_record.items():
                 if k in ["origin", "ID", "grobid-version"]:
                     continue
+                if k in ["keywords", "url"]:
+                    continue
                 if "file" == k:
                     if "file" in record:
                         continue
