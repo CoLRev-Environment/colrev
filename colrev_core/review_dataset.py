@@ -983,8 +983,15 @@ class ReviewDataset:
     ) -> dict:
         from colrev_core.environment import LocalIndex
 
+        # TODO: how do we deal with cases where changes lead to a
+        # different colrev_id? (add previous colrev_id when creating corrections?)
+
         self.LOCAL_INDEX = LocalIndex()
-        indexed_record_colrev_id = self.LOCAL_INDEX.get_colrev_id(indexed_record)
+        if "colrev_id" in indexed_record:
+            indexed_record_colrev_id = indexed_record["colrev_id"]
+        else:
+            indexed_record_colrev_id = self.LOCAL_INDEX.get_colrev_id(indexed_record)
+
         record_l = [
             x
             for x in records
@@ -1256,6 +1263,10 @@ class ReviewDataset:
                         except RecordNotInIndexException:
                             pass
                             original_curated_record = prior_cr.copy()
+
+                    original_curated_record[
+                        "colrev_id"
+                    ] = self.LOCAL_INDEX.get_colrev_id(original_curated_record)
 
                     if "DBLP" == corrected_curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp

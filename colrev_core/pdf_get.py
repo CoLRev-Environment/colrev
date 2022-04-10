@@ -365,7 +365,7 @@ class PDF_Retrieval(Process):
 
         return records
 
-    def rename_pdfs(self, records: typing.List[dict]) -> typing.List[dict]:
+    def rename_pdfs(self, records: typing.List[dict] = []) -> typing.List[dict]:
         self.REVIEW_MANAGER.logger.info("Rename PDFs")
 
         if 0 == len(records):
@@ -494,7 +494,8 @@ class PDF_Retrieval(Process):
             self.REVIEW_MANAGER.reorder_log([x["ID"] for x in retrieval_batch])
 
             # Note: rename should be after copy.
-            records = self.rename_pdfs(records)
+            # Note : do not pass records as an argument.
+            records = self.rename_pdfs()
 
             self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
 

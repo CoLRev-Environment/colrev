@@ -11,7 +11,7 @@ from pathlib import Path
 
 import imagehash
 import timeout_decorator
-from lingua import LanguageDetectorBuilder
+from lingua.builder import LanguageDetectorBuilder
 from p_tqdm import p_map
 from pdf2image import convert_from_path
 from pdfminer.converter import TextConverter
