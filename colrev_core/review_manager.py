@@ -320,12 +320,11 @@ class ReviewManager:
             {"from": "0.4.0", "to": upcoming_version, "script": migrate_0_4_0},
         ]
 
-        while current_version in [x["from"] for x in migration_scripts]:
-            self.logger.info(f"Current CoLRev version: {current_version}")
+        self.logger.info(f"Current CoLRev version: {current_version}")
 
-            migrator = [
-                x for x in migration_scripts if x["from"] == current_version
-            ].pop()
+        while last_version in [x["from"] for x in migration_scripts]:
+
+            migrator = [x for x in migration_scripts if x["from"] == last_version].pop()
 
             migration_script = migrator["script"]
 
@@ -333,7 +332,7 @@ class ReviewManager:
 
             updated = migration_script(self)
             if updated:
-                self.logger.info(f"Updated to: {current_version}")
+                self.logger.info(f"Updated to: {last_version}")
             else:
                 self.logger.info("Nothing to do.")
                 self.logger.info(
