@@ -277,6 +277,152 @@ class ReviewDataset:
 
         return
 
+    def load_records_dict(self) -> dict:
+        from colrev_core.review_dataset import ReviewManagerNotNofiedError
+
+        if self.REVIEW_MANAGER.notified_next_process is None:
+            raise ReviewManagerNotNofiedError()
+
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+
+        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+        if MAIN_REFERENCES_FILE.is_file():
+            with open(MAIN_REFERENCES_FILE) as target_db:
+                bib_db = BibTexParser(
+                    customization=convert_to_unicode,
+                    ignore_nonstandard_types=False,
+                    common_strings=True,
+                ).parse_file(target_db, partial=True)
+
+                records = bib_db.entries
+
+                # Cast status to Enum
+                # DOIs are case sensitive -> use upper case.
+                records_dict = {
+                    r["ID"]: {
+                        k: RecordState[v]
+                        if ("status" == k)
+                        else v.upper()
+                        if ("doi" == k)
+                        else v
+                        for k, v in r.items()
+                    }
+                    for r in records
+                }
+
+        else:
+            records_dict = {}
+
+        return records_dict
+
+    def load_origin_records(self) -> dict:
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+
+        origin_records: typing.Dict[str, typing.Any] = {}
+        sources = [x["filename"] for x in self.REVIEW_MANAGER.sources]
+        for source in sources:
+            source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
+            if source_file.is_file():
+                with open(source_file) as target_db:
+                    bib_db = BibTexParser(
+                        customization=convert_to_unicode,
+                        ignore_nonstandard_types=False,
+                        common_strings=True,
+                    ).parse_file(target_db, partial=True)
+
+                    records = bib_db.entries
+
+                    # Cast status to Enum
+                    # DOIs are case sensitive -> use upper case.
+                    records_dict = {
+                        f"{source}/{r['ID']}": {k: v for k, v in r.items()}
+                        for r in records
+                    }
+                    origin_records = {**origin_records, **records_dict}
+
+        return origin_records
+
+    def load_from_git_history(self):
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        revlist = (
+            (
+                commit.hexsha,
+                commit.message,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+        )
+
+        for commit_id, cmsg, filecontents in list(revlist):
+            prior_db = bibtexparser.loads(filecontents)
+            prior_db.entries
+            records_dict = {
+                r["ID"]: {
+                    k: RecordState[v]
+                    if ("status" == k)
+                    else v.upper()
+                    if ("doi" == k)
+                    else v
+                    for k, v in r.items()
+                }
+                for r in prior_db.entries
+            }
+            yield records_dict
+
+    def save_records_dict(self, recs_dict):
+        """Save the records dict"""
+        import bibtexparser
+        from bibtexparser.bibdatabase import BibDatabase
+
+        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+        # Cast to string (in particular the RecordState Enum)
+        max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
+        list_indent = ";\n" + " " * max_len
+        records = [
+            {
+                k: list_indent.join(v) if isinstance(v, list) else str(v)
+                for k, v in r.items()
+            }
+            for r in recs_dict.values()
+        ]
+
+        for record in records:
+            if "LOCAL_PAPER_INDEX" == record.get("metadata_source", ""):
+                record["metadata_source"] = "CURATED"
+
+        records.sort(key=lambda x: x["ID"])
+
+        bib_db = BibDatabase()
+        bib_db.entries = records
+
+        bibtex_str = bibtexparser.dumps(
+            bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+        )
+
+        with open(MAIN_REFERENCES_FILE, "w") as out:
+            out.write(bibtex_str)
+
+        # TBD: the caseing may not be necessary
+        # because we create a new list of dicts when casting to strings...
+        # # Casting to RecordState (in case the records are used afterwards)
+        # records = [
+        #     {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
+        #     for r in records
+        # ]
+
+        # # DOIs are case sensitive -> use upper case.
+        # records = [
+        #     {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
+        #      for r in records
+        # ]
+
+        return
+
     def reprocess_id(self, id: str) -> None:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
 
@@ -315,6 +461,7 @@ class ReviewDataset:
             "pdf_processed",
             "file",  # Note : do not change this order (parsers rely on it)
             "prescreen_exclusion",
+            "alsoKnownAs",
             "colrev_pdf_id",
             "potential_dupes",
             "doi",
@@ -981,21 +1128,19 @@ class ReviewDataset:
     def retrieve_by_colrev_id(
         self, indexed_record: dict, records: typing.List[typing.Dict]
     ) -> dict:
-        from colrev_core.environment import LocalIndex
+        from colrev_core.record import Record
 
         # TODO: how do we deal with cases where changes lead to a
         # different colrev_id? (add previous colrev_id when creating corrections?)
+        # Note : should consider the alsoKnownAs field for retrieval
 
-        self.LOCAL_INDEX = LocalIndex()
         if "colrev_id" in indexed_record:
             indexed_record_colrev_id = indexed_record["colrev_id"]
         else:
-            indexed_record_colrev_id = self.LOCAL_INDEX.get_colrev_id(indexed_record)
+            indexed_record_colrev_id = Record(indexed_record).get_colrev_id()
 
         record_l = [
-            x
-            for x in records
-            if self.LOCAL_INDEX.get_colrev_id(x) == indexed_record_colrev_id
+            x for x in records if Record(x).get_colrev_id() == indexed_record_colrev_id
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
@@ -1151,6 +1296,7 @@ class ReviewDataset:
         from colrev_core.environment import LocalIndex
         from colrev_core.environment import RecordNotInIndexException
         from colrev_core.prep import Preparation
+        from colrev_core.record import Record
         from dictdiffer import diff
         import io
         import requests
@@ -1264,9 +1410,9 @@ class ReviewDataset:
                             pass
                             original_curated_record = prior_cr.copy()
 
-                    original_curated_record[
-                        "colrev_id"
-                    ] = self.LOCAL_INDEX.get_colrev_id(original_curated_record)
+                    original_curated_record["colrev_id"] = Record(
+                        original_curated_record
+                    ).get_colrev_id()
 
                     if "DBLP" == corrected_curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp

@@ -206,7 +206,7 @@ class Dedupe(Process):
         return column
 
     def __readData(self):
-        from colrev_core.environment import LocalIndex
+        from colrev_core.record import Record, NotEnoughDataToIdentifyException
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
 
@@ -229,9 +229,13 @@ class Dedupe(Process):
             )
         ]
 
-        LOCAL_INDEX = LocalIndex()
         for r in records_queue:
-            r["colrev_id"] = LOCAL_INDEX.get_colrev_id(r)
+            try:
+                RECORD = Record(r)
+                r["colrev_id"] = RECORD.get_colrev_id()
+            except NotEnoughDataToIdentifyException:
+                r["colrev_id"] = "NA"
+                pass
 
         references = pd.DataFrame.from_dict(records_queue)
         references = self.__prep_references(references)

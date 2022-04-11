@@ -305,6 +305,30 @@ class ReviewManager:
             return False
 
         def migrate_0_4_0(self) -> bool:
+            from colrev_core.record import Record
+            from tqdm import tqdm
+
+            self.logger.info("Create alsoKnownAs fields from origins and history")
+            recs_dict = self.REVIEW_DATASET.load_records_dict()
+            if len(recs_dict) > 0:
+                origin_records = self.REVIEW_DATASET.load_origin_records()
+                for rec in tqdm(recs_dict.values()):
+                    RECORD = Record(rec)
+                    origins = RECORD.get_origins()
+                    RECORD.set_also_known_as(
+                        [origin_records[origin] for origin in origins]
+                    )
+                for history_recs in self.REVIEW_DATASET.load_from_git_history():
+                    for hist_rec in tqdm(history_recs.values()):
+                        for rec in recs_dict.values():
+                            RECORD = Record(rec)
+                            HIST_RECORD = Record(hist_rec)
+                            # TODO : acces hist_rec based on an origin-key record-list?
+                            if RECORD.shares_origins(HIST_RECORD):
+                                RECORD.set_also_known_as([HIST_RECORD.get_data()])
+
+                self.REVIEW_DATASET.save_records_dict(recs_dict)
+                self.REVIEW_DATASET.add_record_changes()
 
             return True
 
@@ -317,12 +341,14 @@ class ReviewManager:
             {"from": "0.4.0", "to": upcoming_version, "script": migrate_0_4_0},
         ]
 
-        while current_version in [x["from"] for x in migration_scripts]:
-            self.logger.info(f"Current CoLRev version: {current_version}")
+        # Start with the first step if the version is older:
+        if last_version not in [x["from"] for x in migration_scripts]:
+            last_version = "0.3.0"
 
-            migrator = [
-                x for x in migration_scripts if x["from"] == current_version
-            ].pop()
+        while current_version in [x["from"] for x in migration_scripts]:
+            self.logger.info(f"Current CoLRev version: {last_version}")
+
+            migrator = [x for x in migration_scripts if x["from"] == last_version].pop()
 
             migration_script = migrator["script"]
 
@@ -346,7 +372,7 @@ class ReviewManager:
                 break
 
         if self.REVIEW_DATASET.has_changes():
-            self.create_commit("Upgrade to CoLRev 0.3.0")
+            self.create_commit(f"Upgrade to CoLRev {upcoming_version}")
 
         return
 

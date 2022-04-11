@@ -3,18 +3,13 @@ import binascii
 import hashlib
 import logging
 import os
-import re
 import time
 import typing
-import unicodedata
 from pathlib import Path
 
 import docker
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
 from git.exc import InvalidGitRepositoryError
 from lxml.etree import SerialisationError
-from nameparser import HumanName
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import ConnectionError
@@ -23,6 +18,8 @@ from tqdm import tqdm
 
 from colrev_core.process import CheckProcess
 from colrev_core.process import RecordState
+from colrev_core.record import NotEnoughDataToIdentifyException
+from colrev_core.record import Record
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_Exception
 
@@ -436,113 +433,9 @@ class LocalIndex:
         self.os.info()
         return
 
-    def __robust_append(self, input_string: str, to_append: str) -> str:
-        input_string = str(input_string)
-        to_append = (
-            str(to_append).replace("\n", " ").rstrip().lstrip().replace("–", " ")
-        )
-        to_append = re.sub(r"[\.\:“”’]", "", to_append)
-        to_append = re.sub(r"\s+", " ", to_append)
-        to_append = to_append.lower()
-        input_string = input_string + "|" + to_append
-        return input_string
-
-    def __rmdiacritics(self, char):
-        """
-        Return the base character of char, by "removing" any
-        diacritics like accents or curls and strokes and the like.
-        """
-        try:
-            desc = unicodedata.name(char)
-            cutoff = desc.find(" WITH ")
-            if cutoff != -1:
-                desc = desc[:cutoff]
-                char = unicodedata.lookup(desc)
-        except (KeyError, ValueError):
-            pass  # removing "WITH ..." produced an invalid name
-        return char
-
-    def __remove_accents(self, input_str: str) -> str:
-        nfkd_form = unicodedata.normalize("NFKD", input_str)
-        wo_ac = [
-            self.__rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
-        ]
-        wo_ac_str = "".join(wo_ac)
-        return wo_ac_str
-
-    def __get_container_title(self, record: dict) -> str:
-
-        # if multiple container titles are available, they are concatenated
-        container_title = ""
-
-        # school as the container title for theses
-        if "school" in record:
-            container_title += record["school"]
-        # for technical reports
-        if "institution" in record:
-            container_title += record["institution"]
-        if "series" in record:
-            container_title += record["series"]
-        if "booktitle" in record:
-            container_title += record["booktitle"]
-        if "journal" in record:
-            container_title += record["journal"]
-
-        if "url" in record and not any(
-            x in record for x in ["journal", "series", "booktitle"]
-        ):
-            container_title += record["url"]
-
-        return container_title
-
-    def __format_author_field(self, input_string: str) -> str:
-        input_string = input_string.replace("\n", " ")
-        names = (
-            self.__remove_accents(input_string).replace("; ", " and ").split(" and ")
-        )
-        author_list = []
-        for name in names:
-            parsed_name = HumanName(name)
-            # Note: do not set parsed_name.string_format as a global constant
-            # to preserve consistent creation of identifiers
-            parsed_name.string_format = "{last}, {first} {middle}"
-            if len(parsed_name.middle) > 0:
-                parsed_name.middle = parsed_name.middle[:1]
-            if len(parsed_name.first) > 0:
-                parsed_name.first = parsed_name.first[:1]
-            if len(parsed_name.nickname) > 0:
-                parsed_name.nickname = ""
-
-            if "," not in str(parsed_name):
-                author_list.append(str(parsed_name))
-                continue
-            author_list.append(str(parsed_name))
-        return " and ".join(author_list)
-
-    def get_colrev_id(self, record: dict) -> str:
-
-        # Including the version of the identifier prevents cases
-        # in which almost all identifiers are identical
-        # (and very few identifiers change)
-        # when updating the identifier function function
-        # (this may look like an anomaly and be hard to identify)
-        srep = "v0.1"
-        author = record.get("author", "")
-        srep = self.__robust_append(srep, record.get("ENTRYTYPE", "NA").lower())
-        srep = self.__robust_append(srep, self.__format_author_field(author))
-        srep = self.__robust_append(srep, record.get("year", ""))
-        title_str = re.sub("[^0-9a-zA-Z]+", " ", record.get("title", ""))
-        srep = self.__robust_append(srep, title_str)
-        srep = self.__robust_append(srep, self.__get_container_title(record))
-        srep = self.__robust_append(srep, record.get("volume", ""))
-        srep = self.__robust_append(srep, record.get("number", ""))
-        pages = record.get("pages", "")
-        srep = self.__robust_append(srep, pages)
-
-        return srep
-
     def __get_record_hash(self, record: dict) -> str:
-        string_to_hash = self.get_colrev_id(record)
+        # Note : may raise NotEnoughDataToIdentifyException
+        string_to_hash = Record(record).get_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, hash: str) -> str:
@@ -625,23 +518,28 @@ class LocalIndex:
         return
 
     def __record_index(self, record: dict) -> None:
-        # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) for k, v in record.items()}
+        # Note : may raise NotEnoughDataToIdentifyException
+
         if record.get("year", "NA").isdigit():
             record["year"] = int(record["year"])
         elif "year" in record:
             del record["year"]
 
-        record["colrev_id"] = self.get_colrev_id(record)
+        record["colrev_id"] = Record(record).get_colrev_id()
+
+        # Casting to string (in particular the RecordState Enum)
+        record = {k: str(v) for k, v in record.items()}
 
         hash = self.__get_record_hash(record)
 
         try:
             # check if the record is already indexed (based on d)
             retrieved_record = self.retrieve(record)
-
             # if the string_representations are not identical: add to d_index
-            if not self.get_colrev_id(retrieved_record) == record["colrev_id"]:
+            if (
+                not Record(retrieved_record).get_colrev_id(assume_complete=True)
+                == record["colrev_id"]
+            ):
                 # Note: we need the colrev_id of the retrieved_record
                 # (may be different from record)
                 self.__amend_record(self.__get_record_hash(retrieved_record), record)
@@ -701,28 +599,34 @@ class LocalIndex:
                 return
 
             # print(toc_key)
-            record["colrev_id"] = self.get_colrev_id(record)
+            try:
+                record["colrev_id"] = Record(record).get_colrev_id()
 
-            if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
-                toc_item = {
-                    "toc_key": toc_key,
-                    "string_representations": [record["colrev_id"]],
-                }
-                self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
-            else:
-                toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
-                toc_item = toc_item_response["_source"]
-                if toc_item["toc_key"] == toc_key:
-                    # ok - no collision, update the record
-                    # Note : do not update (the record from the first repository
-                    #  should take precedence - reset the index to update)
-                    if record["colrev_id"] not in toc_item["string_representations"]:
-                        toc_item["string_representations"].append(  # type: ignore
+                if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
+                    toc_item = {
+                        "toc_key": toc_key,
+                        "string_representations": [record["colrev_id"]],
+                    }
+                    self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
+                else:
+                    toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
+                    toc_item = toc_item_response["_source"]
+                    if toc_item["toc_key"] == toc_key:
+                        # ok - no collision, update the record
+                        # Note : do not update (the record from the first repository
+                        #  should take precedence - reset the index to update)
+                        if (
                             record["colrev_id"]
-                        )
-                        self.os.update(
-                            index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
-                        )
+                            not in toc_item["string_representations"]
+                        ):
+                            toc_item["string_representations"].append(  # type: ignore
+                                record["colrev_id"]
+                            )
+                            self.os.update(
+                                index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
+                            )
+            except NotEnoughDataToIdentifyException:
+                pass
 
         return
 
@@ -742,149 +646,21 @@ class LocalIndex:
         self, non_identical_representations: list, origin_record: dict, record: dict
     ) -> list:
 
-        required_fields = [
-            k
-            for k, v in record.items()
-            if k
-            in [
-                "author",
-                "title",
-                "year",
-                "journal",
-                "volume",
-                "number",
-                "pages",
-                "booktitle",
-            ]
-        ]
-
-        if all(required_field in origin_record for required_field in required_fields):
-            orig_repr = self.get_colrev_id(origin_record)
-            main_repr = self.get_colrev_id(record)
+        try:
+            RECORD = Record(record)
+            main_repr = RECORD.get_colrev_id()
+            orig_repr = RECORD.get_colrev_id(alsoKnownAsRecord=origin_record)
             if orig_repr != main_repr:
                 non_identical_representations.append([orig_repr, main_repr])
+        except NotEnoughDataToIdentifyException:
+            pass
 
         return non_identical_representations
 
-    def __update_alsoKnownAs(self, alsoKnownAs_Instances: list) -> None:
-
-        alsoKnownAs_Instances = [
-            list(x) for x in {tuple(x) for x in alsoKnownAs_Instances}
-        ]
-
-        for (
-            alsoKnownAs_colrev_id,
-            main_colrev_id,
-        ) in alsoKnownAs_Instances:
-
-            try:
-                hash = hashlib.sha256(main_colrev_id.encode("utf-8")).hexdigest()
-                while True:
-                    if self.os.exists(index=self.RECORD_INDEX, id=hash):
-                        # Note : this should happen rarely/never
-                        # but we have to make sure that the while loop breaks
-                        break
-                    else:
-                        response = self.os.get(index=self.RECORD_INDEX, id=hash)
-                        saved_record = response["_source"]
-                        saved_original_string_repr = saved_record["colrev_id"]
-
-                        if saved_original_string_repr == main_colrev_id:
-                            # ok - no collision
-                            if alsoKnownAs_colrev_id not in saved_record.get(
-                                "alsoKnownAs", []
-                            ):
-                                if "alsoKnownAs" in saved_record:
-                                    saved_record["alsoKnownAs"].append(
-                                        alsoKnownAs_colrev_id
-                                    )
-                                else:
-                                    saved_record["alsoKnownAs"] = [
-                                        alsoKnownAs_colrev_id
-                                    ]
-                                self.os.update(
-                                    index=self.RECORD_INDEX,
-                                    id=hash,
-                                    body={"doc": saved_record},
-                                )
-                            break
-                        else:
-                            print(f"Collision: {hash}")
-                            hash = self.__increment_hash(hash)
-            except NotFoundError:
-                pass
-
-        return
-
-    def __alsoKnownAs_index(self, records: typing.List[dict]) -> None:
-
-        try:
-            search_path = Path(records[0]["source_url"] + "/search/")
-        except IndexError:
-            pass
-            return
-
-        print(f"Update alsoKnownAs fields for {search_path.parent}")
-
-        # Note : records are at least md_processed.
-        duplicate_repr_list = []
-        for record in records:
-            for orig in record["origin"].split(";"):
-                duplicate_repr_list.append(
-                    {
-                        "origin_source": orig.split("/")[0],
-                        "origin_id": orig.split("/")[1],
-                        "record": record,
-                    }
-                )
-
-        if len(duplicate_repr_list) == 0:
-            return
-
-        origin_sources = list({x["origin_source"] for x in duplicate_repr_list})
-        alsoKnownAsInstances: typing.List[list] = []
-        j_variations: typing.List[list] = []
-        for origin_source in origin_sources:
-            os_fp = search_path / Path(origin_source)
-            if not os_fp.is_file():
-                print(f"source not found {os_fp}")
-            else:
-                with open(os_fp) as target_db:
-                    bib_db = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
-
-                    origin_source_records = bib_db.entries
-                for duplicate_repr in duplicate_repr_list:
-                    if duplicate_repr["origin_source"] != origin_source:
-                        continue
-
-                    record = duplicate_repr["record"]
-                    origin_record_list = [
-                        x
-                        for x in origin_source_records
-                        if x["ID"] == duplicate_repr["origin_id"]
-                    ]
-                    if len(origin_record_list) != 1:
-                        continue
-                    origin_record = origin_record_list[0]
-                    alsoKnownAsInstances = self.__append_if_duplicate_repr(
-                        alsoKnownAsInstances, origin_record, record
-                    )
-                    j_variations = self.__append_j_variation(
-                        j_variations, origin_record, record
-                    )
-
-        # 2. add alsoKnownAs to index
-        self.__update_alsoKnownAs(alsoKnownAsInstances)
-
-        return
-
     def __retrieve_record_from_d_index(self, record: dict) -> dict:
+        # Note : may raise NotEnoughDataToIdentifyException
 
-        string_representation_record = self.get_colrev_id(record)
+        string_representation_record = Record(record).get_colrev_id()
 
         try:
             # match_phrase := exact match
@@ -907,27 +683,33 @@ class LocalIndex:
 
         return self.prep_record_for_return(retrieved_record)
 
-    def __retrieve_from_record_index(self, record: dict) -> dict:
-        retrieved_record = self.__retrieve_based_on_colrev_id(
-            self.get_colrev_id(record)
-        )
-        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
-            raise RecordNotInIndexException
-        return retrieved_record
-
     def __retrieve_based_on_colrev_id(self, colrev_id: str) -> dict:
+        # Note : may raise NotEnoughDataToIdentifyException
 
         hash = hashlib.sha256(colrev_id.encode("utf-8")).hexdigest()
 
         while True:  # Note : while breaks with NotFoundError
             res = self.os.get(index=self.RECORD_INDEX, id=hash)
             retrieved_record = res["_source"]
-            if self.get_colrev_id(retrieved_record) == colrev_id:
+            if (
+                Record(retrieved_record).get_colrev_id(assume_complete=True)
+                == colrev_id
+            ):
                 break
             else:
                 # Collision
                 hash = self.__increment_hash(hash)
 
+        return retrieved_record
+
+    def __retrieve_from_record_index(self, record: dict) -> dict:
+        # Note : may raise NotEnoughDataToIdentifyException
+
+        retrieved_record = self.__retrieve_based_on_colrev_id(
+            Record(record).get_colrev_id()
+        )
+        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
+            raise RecordNotInIndexException
         return retrieved_record
 
     def prep_record_for_return(self, record: dict, include_file: bool = False) -> dict:
@@ -1072,16 +854,18 @@ class LocalIndex:
                         else:
                             del record["file"]
 
-                    del record["status"]
-
-                    self.__record_index(record)
+                    try:
+                        # Note: alsoKnownAs fields should already be available in the
+                        # records (don't require a separate indexing routine)
+                        self.__record_index(record)
+                    except NotEnoughDataToIdentifyException:
+                        pass
 
                     # Note : only use curated journal metadata for TOC indices
                     # otherwise, TOCs will be incomplete and affect retrieval
                     if "colrev/curated_metadata" in source_url:
                         self.__toc_index(record)
 
-                self.__alsoKnownAs_index(records)
             except InvalidGitRepositoryError:
                 print(f"InvalidGitRepositoryError: {source_url}")
                 pass
@@ -1110,20 +894,27 @@ class LocalIndex:
 
         # 2. get most similar record
         if len(toc_items) > 0:
-            record["colrev_id"] = self.get_colrev_id(record)
-            sim_list = []
-            for toc_records_colrev_id in toc_items:
-                # Note : using a simpler similarity measure
-                # because the publication outlet parameters are already identical
-                sv = fuzz.ratio(record["colrev_id"], toc_records_colrev_id) / 100
-                sim_list.append(sv)
+            try:
+                # TODO : we need to search tocs even if records are not complete:
+                # and a NotEnoughDataToIdentifyException is thrown
+                record["colrev_id"] = Record(record).get_colrev_id()
+                sim_list = []
+                for toc_records_colrev_id in toc_items:
+                    # Note : using a simpler similarity measure
+                    # because the publication outlet parameters are already identical
+                    sv = fuzz.ratio(record["colrev_id"], toc_records_colrev_id) / 100
+                    sim_list.append(sv)
 
-            if max(sim_list) > similarity_threshold:
-                toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
-                hash = hashlib.sha256(toc_records_colrev_id.encode("utf-8")).hexdigest()
-                res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
-                record = res["_source"]  # type: ignore
-                return self.prep_record_for_return(record, include_file)
+                if max(sim_list) > similarity_threshold:
+                    toc_records_colrev_id = toc_items[sim_list.index(max(sim_list))]
+                    hash = hashlib.sha256(
+                        toc_records_colrev_id.encode("utf-8")
+                    ).hexdigest()
+                    res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
+                    record = res["_source"]  # type: ignore
+                    return self.prep_record_for_return(record, include_file)
+            except NotEnoughDataToIdentifyException:
+                pass
 
         raise RecordNotInIndexException()
         return record
@@ -1149,7 +940,11 @@ class LocalIndex:
             try:
                 retrieved_record = self.__retrieve_from_record_index(record)
 
-            except (NotFoundError, RecordNotInIndexException):
+            except (
+                NotFoundError,
+                RecordNotInIndexException,
+                NotEnoughDataToIdentifyException,
+            ):
                 pass
 
         if retrieved_record:
@@ -1175,7 +970,7 @@ class LocalIndex:
         if not retrieved_record:
             try:
                 retrieved_record = self.__retrieve_record_from_d_index(record)
-            except FileNotFoundError:
+            except (FileNotFoundError, NotEnoughDataToIdentifyException):
                 pass
 
         if not retrieved_record:
@@ -1230,7 +1025,11 @@ class LocalIndex:
                 if r1_index["colrev_id"] != r2_index["colrev_id"]:
                     return "no"
 
-        except (RecordNotInIndexException, NotFoundError):
+        except (
+            RecordNotInIndexException,
+            NotFoundError,
+            NotEnoughDataToIdentifyException,
+        ):
             pass
             return "unknown"
 
