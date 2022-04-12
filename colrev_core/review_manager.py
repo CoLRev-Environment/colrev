@@ -305,30 +305,8 @@ class ReviewManager:
             return False
 
         def migrate_0_4_0(self) -> bool:
-            from colrev_core.record import Record
-            from tqdm import tqdm
 
-            self.logger.info("Create colrev_id list from origins and history")
-            recs_dict = self.REVIEW_DATASET.load_records_dict()
-            if len(recs_dict) > 0:
-                origin_records = self.REVIEW_DATASET.load_origin_records()
-                for rec in tqdm(recs_dict.values()):
-                    RECORD = Record(rec)
-                    origins = RECORD.get_origins()
-                    RECORD.add_colrev_ids(
-                        [origin_records[origin] for origin in origins]
-                    )
-                for history_recs in self.REVIEW_DATASET.load_from_git_history():
-                    for hist_rec in tqdm(history_recs.values()):
-                        for rec in recs_dict.values():
-                            RECORD = Record(rec)
-                            HIST_RECORD = Record(hist_rec)
-                            # TODO : acces hist_rec based on an origin-key record-list?
-                            if RECORD.shares_origins(HIST_RECORD):
-                                RECORD.add_colrev_ids([HIST_RECORD.get_data()])
-
-                self.REVIEW_DATASET.save_records_dict(recs_dict)
-                self.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_DATASET.update_colrev_ids()
 
             return True
 
@@ -357,12 +335,6 @@ class ReviewManager:
             updated = migration_script(self)
             if updated:
                 self.logger.info(f"Updated to: {current_version}")
-            else:
-                self.logger.info("Nothing to do.")
-                self.logger.info(
-                    "If the update notification occurs again, run\n "
-                    "git commit -n -m --allow-empty 'update colrev'"
-                )
 
             # Note : the version in the commit message will be set to
             # the current_version immediately. Therefore, use the migrator['to'] field.
@@ -373,6 +345,12 @@ class ReviewManager:
 
         if self.REVIEW_DATASET.has_changes():
             self.create_commit(f"Upgrade to CoLRev {upcoming_version}")
+        else:
+            self.logger.info("Nothing to do.")
+            self.logger.info(
+                "If the update notification occurs again, run\n "
+                "git commit -n -m --allow-empty 'update colrev'"
+            )
 
         return
 

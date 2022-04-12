@@ -1078,6 +1078,33 @@ class ReviewDataset:
             raise RecordNotInRepoException
         return record_l[0]
 
+    def update_colrev_ids(self) -> None:
+        from colrev_core.record import Record
+        from tqdm import tqdm
+
+        self.REVIEW_MANAGER.logger.info(
+            "Create colrev_id list from origins and history"
+        )
+        recs_dict = self.load_records_dict()
+        if len(recs_dict) > 0:
+            origin_records = self.load_origin_records()
+            for rec in tqdm(recs_dict.values()):
+                RECORD = Record(rec)
+                origins = RECORD.get_origins()
+                RECORD.add_colrev_ids([origin_records[origin] for origin in origins])
+            for history_recs in self.load_from_git_history():
+                for hist_rec in tqdm(history_recs.values()):
+                    for rec in recs_dict.values():
+                        RECORD = Record(rec)
+                        HIST_RECORD = Record(hist_rec)
+                        # TODO : acces hist_rec based on an origin-key record-list?
+                        if RECORD.shares_origins(HIST_RECORD):
+                            RECORD.add_colrev_ids([HIST_RECORD.get_data()])
+
+            self.save_records_dict(recs_dict)
+            self.add_record_changes()
+        return
+
     def get_missing_files(self) -> list:
         from colrev_core.process import RecordState
 
