@@ -24,14 +24,9 @@ class Record:
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
-        # Note : do not automatically create colrev_ids
-        # or at least keep in mind that this will not be possible for some records
-        if "colrev_id" in data:
-            if isinstance(data["colrev_id"], str):
-                data["colrev_id"] = [
-                    cid.lstrip() for cid in data["colrev_id"].split(";")
-                ]
         self.data = data
+        # Note : avoid parsing upon Record instantiation
+        # as much as possible (to maintain high performance)
 
     def __repr__(self):
         # TODO : maybe print as OrderedDict
@@ -54,8 +49,27 @@ class Record:
     def get_data(self) -> dict:
         return self.data
 
-    def get_field(self, field_key):
-        return self.data[field_key]
+    def get_field(self, field_key, default=None):
+        if default is not None:
+            try:
+                ret = self.data[field_key]
+                return ret
+            except KeyError:
+                pass
+                return default
+        else:
+            return self.data[field_key]
+
+    def get_colrev_id(self) -> list:
+        # Note : do not automatically create colrev_ids
+        # or at least keep in mind that this will not be possible for some records
+        colrev_id = []
+        if "colrev_id" in self.data:
+            if isinstance(self.data["colrev_id"], str):
+                colrev_id = [cid.lstrip() for cid in self.data["colrev_id"].split(";")]
+            elif isinstance(self.data["colrev_id"], list):
+                colrev_id = self.data["colrev_id"]
+        return colrev_id
 
     def update_field(self, field, value, source, confidence):
         self.data["field"] = value

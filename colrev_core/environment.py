@@ -528,22 +528,23 @@ class LocalIndex:
             record["year"] = int(record["year"])
         elif "year" in record:
             del record["year"]
-
         cid_to_index = Record(record).create_colrev_id()
 
         # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) for k, v in record.items()}
+        record = {k: str(v) if "status" == k else v for k, v in record.items()}
+        if "colrev_id" in record:
+            if isinstance(record["colrev_id"], list):
+                record["colrev_id"] = ";".join(record["colrev_id"])
 
         hash = self.__get_record_hash(record)
 
         try:
             # check if the record is already indexed (based on d)
-            retrieved_record = self.retrieve(record)
-            retrieved_record_cid = Record(retrieved_record).create_colrev_id(
-                assume_complete=True
-            )
-            # if the string_representations are not identical: add to d_index
-            if retrieved_record_cid != cid_to_index:
+            retrieved_record = self.retrieve(record, include_colrev_ids=True)
+            retrieved_record_cid = Record(retrieved_record).get_colrev_id()
+
+            # if the string_representations are not identical (but overlapping): amend
+            if not set(retrieved_record_cid).isdisjoint(list(cid_to_index)):
                 # Note: we need the colrev_id of the retrieved_record
                 # (may be different from record)
                 self.__amend_record(self.__get_record_hash(retrieved_record), record)
@@ -646,76 +647,61 @@ class LocalIndex:
 
         return j_variations
 
-    def __append_if_duplicate_repr(
-        self, non_identical_representations: list, origin_record: dict, record: dict
-    ) -> list:
-
-        try:
-            RECORD = Record(record)
-            main_repr = RECORD.create_colrev_id()
-            orig_repr = RECORD.create_colrev_id(alsoKnownAsRecord=origin_record)
-            if orig_repr != main_repr:
-                non_identical_representations.append([orig_repr, main_repr])
-        except NotEnoughDataToIdentifyException:
-            pass
-
-        return non_identical_representations
-
-    def __retrieve_record_from_d_index(self, record: dict) -> dict:
+    def __retrieve_based_on_colrev_id(self, cids_to_retrieve: list) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        colrev_id_to_retrieve = Record(record).create_colrev_id()
+        for cid_to_retrieve in cids_to_retrieve:
+            hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
+            while True:  # Note : while breaks with NotFoundError
+                try:
+                    res = self.os.get(index=self.RECORD_INDEX, id=hash)
+                    retrieved_record = res["_source"]
+                    if cid_to_retrieve in Record(retrieved_record).get_colrev_id():
+                        return retrieved_record
+                    else:
+                        # Collision
+                        hash = self.__increment_hash(hash)
+                except NotFoundError:
+                    pass
+                    break
 
-        try:
-            # match_phrase := exact match
-            resp = self.os.search(
-                index=self.RECORD_INDEX,
-                body={"query": {"match_phrase": {"colrev_id": colrev_id_to_retrieve}}},
-            )
-            retrieved_record = resp["hits"]["hits"][0]["_source"]
+        # search colrev_id field
+        for cid_to_retrieve in cids_to_retrieve:
+            try:
+                # match_phrase := exact match
+                resp = self.os.search(
+                    index=self.RECORD_INDEX,
+                    body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
+                )
+                retrieved_record = resp["hits"]["hits"][0]["_source"]
+                return retrieved_record
+            except (IndexError, NotFoundError):
+                pass
+                raise RecordNotInIndexException
 
-        except (IndexError, NotFoundError):
-            pass
-            raise RecordNotInIndexException
-
-        if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
-            raise RecordNotInIndexException
-
-        return self.prep_record_for_return(retrieved_record)
-
-    def __retrieve_based_on_colrev_id(self, cid_to_retrieve: str) -> dict:
-        # Note : may raise NotEnoughDataToIdentifyException
-
-        hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
-
-        while True:  # Note : while breaks with NotFoundError
-            res = self.os.get(index=self.RECORD_INDEX, id=hash)
-            retrieved_record = res["_source"]
-            if cid_to_retrieve in Record(retrieved_record).get_field("colrev_id"):
-                break
-            else:
-                # Collision
-                hash = self.__increment_hash(hash)
-
-        return retrieved_record
+        raise RecordNotInIndexException
 
     def __retrieve_from_record_index(self, record: dict) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        retrieved_record = self.__retrieve_based_on_colrev_id(
-            Record(record).create_colrev_id()
-        )
+        RECORD = Record(record)
+        if "colrev_id" in RECORD.data:
+            cid_to_retrieve = RECORD.get_colrev_id()
+        else:
+            cid_to_retrieve = [RECORD.create_colrev_id()]
+
+        retrieved_record = self.__retrieve_based_on_colrev_id(cid_to_retrieve)
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
             raise RecordNotInIndexException
         return retrieved_record
 
-    def prep_record_for_return(self, record: dict, include_file: bool = False) -> dict:
+    def prep_record_for_return(
+        self, record: dict, include_file: bool = False, include_colrev_ids=False
+    ) -> dict:
         from colrev_core.process import RecordState
 
         # Casting to string (in particular the RecordState Enum)
         record = {k: str(v) for k, v in record.items()}
-
-        # del retrieved_record['source_url']
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
@@ -731,8 +717,12 @@ class LocalIndex:
             del record["fulltext"]
         if "tei_file" in record:
             del record["tei_file"]
-        if "colrev_id" in record:
-            del record["colrev_id"]
+        if include_colrev_ids:
+            if "colrev_id" in record:
+                pass
+        else:
+            if "colrev_id" in record:
+                del record["colrev_id"]
 
         if not include_file:
             if "file" in record:
@@ -767,7 +757,6 @@ class LocalIndex:
     def index_colrev_project(self, source_url):
         from colrev_core.review_manager import ReviewManager
 
-        input("done")
         try:
             if not Path(source_url).is_dir():
                 print(f"Warning {source_url} not a directory")
@@ -927,7 +916,9 @@ class LocalIndex:
         res = resp["hits"]["hits"][0]["_source"]
         return res
 
-    def retrieve(self, record: dict, include_file: bool = False) -> dict:
+    def retrieve(
+        self, record: dict, include_file: bool = False, include_colrev_ids=False
+    ) -> dict:
         """
         Convenience function to retrieve the indexed record metadata
         based on another record
@@ -940,7 +931,6 @@ class LocalIndex:
         if not retrieved_record:
             try:
                 retrieved_record = self.__retrieve_from_record_index(record)
-
             except (
                 NotFoundError,
                 RecordNotInIndexException,
@@ -949,7 +939,9 @@ class LocalIndex:
                 pass
 
         if retrieved_record:
-            return self.prep_record_for_return(retrieved_record, include_file)
+            return self.prep_record_for_return(
+                retrieved_record, include_file, include_colrev_ids
+            )
 
         # 2. Try using global-ids
         if not retrieved_record:
@@ -964,21 +956,12 @@ class LocalIndex:
                 except (IndexError, NotFoundError):
                     pass
 
-        if retrieved_record:
-            return self.prep_record_for_return(retrieved_record, include_file)
-
-        # TODO : this may no longer be required (if we use colrev_id as a list)
-        # 3. Try alsoKnownAs
-        if not retrieved_record:
-            try:
-                retrieved_record = self.__retrieve_record_from_d_index(record)
-            except (FileNotFoundError, NotEnoughDataToIdentifyException):
-                pass
-
         if not retrieved_record:
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
-        return self.prep_record_for_return(retrieved_record, include_file)
+        return self.prep_record_for_return(
+            retrieved_record, include_file, include_colrev_ids
+        )
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:
@@ -997,10 +980,10 @@ class LocalIndex:
 
         return record
 
-    def is_duplicate(self, record1_colrev_id: str, record2_colrev_id: str) -> str:
+    def is_duplicate(self, record1_colrev_id: list, record2_colrev_id: list) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
-        if record1_colrev_id == record2_colrev_id:
+        if not set(record1_colrev_id).isdisjoint(list(record2_colrev_id)):
             return "yes"
 
         # Note : the retrieve(record) also checks the d_index, i.e.,

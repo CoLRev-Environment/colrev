@@ -268,6 +268,8 @@ class Push(Process):
                 del prior_rec["metadata_source"]
             if "doi" in prior_rec:
                 del prior_rec["doi"]
+            if "colrev_id" in prior_rec:
+                del prior_rec["colrev_id"]
             if "colrev_pdf_id" in prior_rec:
                 del prior_rec["colrev_pdf_id"]
             if "grobid-version" in prior_rec:

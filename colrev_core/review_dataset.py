@@ -1065,14 +1065,14 @@ class ReviewDataset:
         INDEXED_RECORD = Record(indexed_record_dict)
 
         if "colrev_id" in INDEXED_RECORD.data:
-            cid_to_retrieve = INDEXED_RECORD.get_field("colrev_id")
+            cid_to_retrieve = INDEXED_RECORD.get_colrev_id()
         else:
-            cid_to_retrieve = INDEXED_RECORD.create_colrev_id()
+            cid_to_retrieve = [INDEXED_RECORD.create_colrev_id()]
 
         record_l = [
             x
             for x in records
-            if any(cid in Record(x).get_field("colrev_id") for cid in cid_to_retrieve)
+            if any(cid in Record(x).get_colrev_id() for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
