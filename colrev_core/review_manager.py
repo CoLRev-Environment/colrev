@@ -354,7 +354,7 @@ class ReviewManager:
 
         return
 
-    def __check_repository_setup(self) -> None:
+    def check_repository_setup(self) -> None:
         from git.exc import GitCommandError
 
         # 1. git repository?
@@ -530,7 +530,7 @@ class ReviewManager:
             {"script": EnvironmentManager.check_docker_installed, "params": []},
             {"script": EnvironmentManager.build_docker_images, "params": []},
             {"script": self.__check_git_conflicts, "params": []},
-            {"script": self.__check_repository_setup, "params": []},
+            {"script": self.check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},
         ]
 
