@@ -764,9 +764,89 @@ class LocalIndex:
 
         return False
 
+    def index_colrev_project(self, source_url):
+        from colrev_core.review_manager import ReviewManager
+
+        input("done")
+        try:
+            if not Path(source_url).is_dir():
+                print(f"Warning {source_url} not a directory")
+                return
+            os.chdir(source_url)
+            print(f"Index records from {source_url}")
+
+            # get ReviewManager for project (after chdir)
+            REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
+            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
+
+            if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                return
+
+            records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+            records_list = [
+                r
+                for r in records.values()
+                if r["status"]
+                not in [
+                    RecordState.md_retrieved,
+                    RecordState.md_imported,
+                    RecordState.md_prepared,
+                    RecordState.md_needs_manual_preparation,
+                ]
+            ]
+
+            for record in tqdm(records_list):
+                record["source_url"] = source_url
+                if "excl_criteria" in record:
+                    del record["excl_criteria"]
+                # Note: if the colrev_pdf_id has not been checked,
+                # we cannot use it for retrieval or preparation.
+                if record["status"] not in [
+                    RecordState.pdf_prepared,
+                    RecordState.rev_excluded,
+                    RecordState.rev_included,
+                    RecordState.rev_synthesized,
+                ]:
+                    if "colrev_pdf_id" in record:
+                        del record["colrev_pdf_id"]
+
+                # To fix pdf_hash fields that should have been renamed
+                if "pdf_hash" in record:
+                    record["colref_pdf_id"] = "cpid1:" + record["pdf_hash"]
+                    del record["pdf_hash"]
+
+                if "pdf_prep_hints" in record:
+                    del record["pdf_prep_hints"]
+                if "pdf_processed" in record:
+                    del record["pdf_processed"]
+
+                # Note : file paths should be absolute when added to the LocalIndex
+                if "file" in record:
+                    pdf_path = source_url / Path(record["file"])
+                    if pdf_path.is_file:
+                        record["file"] = str(pdf_path)
+                    else:
+                        del record["file"]
+
+                try:
+                    # Note: alsoKnownAs fields should already be available in the
+                    # records (don't require a separate indexing routine)
+                    self.__record_index(record)
+                except NotEnoughDataToIdentifyException:
+                    pass
+
+                # Note : only use curated journal metadata for TOC indices
+                # otherwise, TOCs will be incomplete and affect retrieval
+                if "colrev/curated_metadata" in source_url:
+                    self.__toc_index(record)
+
+        except InvalidGitRepositoryError:
+            print(f"InvalidGitRepositoryError: {source_url}")
+            pass
+        return
+
     def index_records(self) -> None:
         # import shutil
-        from colrev_core.review_manager import ReviewManager
 
         print("Start LocalIndex")
 
@@ -785,87 +865,11 @@ class LocalIndex:
         self.os.indices.create(index=self.RECORD_INDEX)
         self.os.indices.create(index=self.TOC_INDEX)
 
-        for source_url in [
+        source_urls = [
             x["source_url"] for x in EnvironmentManager.load_local_registry()
-        ]:
-
-            try:
-                if not Path(source_url).is_dir():
-                    print(f"Warning {source_url} not a directory")
-                    continue
-                os.chdir(source_url)
-                print(f"Index records from {source_url}")
-
-                # get ReviewManager for project (after chdir)
-                REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
-                CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
-
-                if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-                    continue
-
-                records = (
-                    CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-                )
-                records_list = [
-                    r
-                    for r in records.values()
-                    if r["status"]
-                    not in [
-                        RecordState.md_retrieved,
-                        RecordState.md_imported,
-                        RecordState.md_prepared,
-                        RecordState.md_needs_manual_preparation,
-                    ]
-                ]
-
-                for record in tqdm(records_list):
-                    record["source_url"] = source_url
-                    if "excl_criteria" in record:
-                        del record["excl_criteria"]
-                    # Note: if the colrev_pdf_id has not been checked,
-                    # we cannot use it for retrieval or preparation.
-                    if record["status"] not in [
-                        RecordState.pdf_prepared,
-                        RecordState.rev_excluded,
-                        RecordState.rev_included,
-                        RecordState.rev_synthesized,
-                    ]:
-                        if "colrev_pdf_id" in record:
-                            del record["colrev_pdf_id"]
-
-                    # To fix pdf_hash fields that should have been renamed
-                    if "pdf_hash" in record:
-                        record["colref_pdf_id"] = "cpid1:" + record["pdf_hash"]
-                        del record["pdf_hash"]
-
-                    if "pdf_prep_hints" in record:
-                        del record["pdf_prep_hints"]
-                    if "pdf_processed" in record:
-                        del record["pdf_processed"]
-
-                    # Note : file paths should be absolute when added to the LocalIndex
-                    if "file" in record:
-                        pdf_path = source_url / Path(record["file"])
-                        if pdf_path.is_file:
-                            record["file"] = str(pdf_path)
-                        else:
-                            del record["file"]
-
-                    try:
-                        # Note: alsoKnownAs fields should already be available in the
-                        # records (don't require a separate indexing routine)
-                        self.__record_index(record)
-                    except NotEnoughDataToIdentifyException:
-                        pass
-
-                    # Note : only use curated journal metadata for TOC indices
-                    # otherwise, TOCs will be incomplete and affect retrieval
-                    if "colrev/curated_metadata" in source_url:
-                        self.__toc_index(record)
-
-            except InvalidGitRepositoryError:
-                print(f"InvalidGitRepositoryError: {source_url}")
-                pass
+        ]
+        for source_url in source_urls:
+            self.index_colrev_project(source_url)
 
         # for annotator in self.annotators_path.glob("*/annotate.py"):
         #     print(f"Load {annotator}")
