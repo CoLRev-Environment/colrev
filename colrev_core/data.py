@@ -34,11 +34,12 @@ class Data(Process):
         )
 
     @classmethod
-    def get_record_ids_for_synthesis(cls, records: typing.List[dict]) -> list:
+    def get_record_ids_for_synthesis(cls, records: typing.Dict) -> list:
         return [
-            x["ID"]
-            for x in records
-            if x["status"] in [RecordState.rev_included, RecordState.rev_synthesized]
+            ID
+            for ID, record in records.items()
+            if record["status"]
+            in [RecordState.rev_included, RecordState.rev_synthesized]
         ]
 
     def get_data_page_missing(self, PAPER: Path, record_id_list: list) -> list:
@@ -74,7 +75,7 @@ class Data(Process):
             in_manuscript_to_synthesize = records_for_synthesis
         return in_manuscript_to_synthesize
 
-    def get_synthesized_ids(self, records: typing.List[dict], PAPER: Path) -> list:
+    def get_synthesized_ids(self, records: typing.Dict, PAPER: Path) -> list:
 
         record_ids_for_synthesis = self.get_record_ids_for_synthesis(records)
 
@@ -101,17 +102,16 @@ class Data(Process):
         data_extracted = [x for x in data_extracted if x in records_for_data_extraction]
         return data_extracted
 
-    def get_structured_data_extracted(
-        self, records: typing.List[dict], DATA: Path
-    ) -> list:
+    def get_structured_data_extracted(self, records: typing.Dict, DATA: Path) -> list:
 
         if not DATA.is_file():
             return []
 
         records_for_data_extraction = [
-            x["ID"]
-            for x in records
-            if x["status"] in [RecordState.rev_included, RecordState.rev_synthesized]
+            ID
+            for ID, record in records.items()
+            if record["status"]
+            in [RecordState.rev_included, RecordState.rev_synthesized]
         ]
 
         data_extracted = self.get_data_extracted(DATA, records_for_data_extraction)
@@ -219,9 +219,7 @@ class Data(Process):
             f.write(s)
         return
 
-    def update_manuscript(
-        self, records: typing.List[dict], included: list
-    ) -> typing.List[dict]:
+    def update_manuscript(self, records: typing.Dict, included: list) -> typing.Dict:
 
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]
         PAPER_RELATIVE = self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]
@@ -276,8 +274,8 @@ class Data(Process):
         return records
 
     def update_structured_data(
-        self, records: typing.List[dict], included: list
-    ) -> typing.List[dict]:
+        self, records: typing.Dict, included: list
+    ) -> typing.Dict:
 
         DATA = self.REVIEW_MANAGER.paths["DATA"]
 
@@ -331,8 +329,8 @@ class Data(Process):
         return records
 
     def update_tei(
-        self, records: typing.List[dict], included: typing.List[dict]
-    ) -> typing.List[dict]:
+        self, records: typing.Dict, included: typing.List[dict]
+    ) -> typing.Dict:
         from lxml import etree
         from lxml.etree import XMLSyntaxError
 
@@ -375,24 +373,24 @@ class Data(Process):
                     pass
             return
 
-        for record in records:
+        for record in records.values():
             create_tei(record)
         # p_map(create_tei, records, num_cpus=6)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             self.REVIEW_MANAGER.create_commit("Create TEIs")
 
         # Enhance TEIs (link local IDs)
-        for record in records:
+        for record in records.values():
             self.REVIEW_MANAGER.logger.info(f"Enhance TEI for {record['ID']}")
             if "tei_file" in record:
 
                 tei_path = Path(record["tei_file"])
                 try:
                     TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_path)
-                    TEI_INSTANCE.mark_references(records)
+                    TEI_INSTANCE.mark_references(records.values())
                 except XMLSyntaxError:
                     pass
                     continue
@@ -421,11 +419,9 @@ class Data(Process):
     def enlit_heuristic(self):
 
         enlit_list = []
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         for relevant_record_id in self.get_record_ids_for_synthesis(records):
-            enlit_status = str(
-                [x["status"] for x in records if x["ID"] == relevant_record_id].pop()
-            )
+            enlit_status = str(records[relevant_record_id]["status"])
             enlit_status = enlit_status.replace("rev_included", "").replace(
                 "rev_synthesized", "synthesized"
             )
@@ -464,9 +460,9 @@ class Data(Process):
 
         saved_args = locals()
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        self.PAD = min((max(len(x["ID"]) for x in records) + 2), 35)
+        self.PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
 
@@ -483,7 +479,7 @@ class Data(Process):
             DATA_FORMAT = self.REVIEW_MANAGER.config["DATA_FORMAT"]
             if "TEI" in DATA_FORMAT:
                 records = self.update_tei(records, included)
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             if "MANUSCRIPT" in DATA_FORMAT:
                 records = self.update_manuscript(records, included)
@@ -515,11 +511,11 @@ class Data(Process):
             f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {PAPER}"
         )
 
-    def update_synthesized_status(self) -> typing.List[dict]:
+    def update_synthesized_status(self) -> typing.Dict:
         from colrev_core.process import CheckProcess
 
         CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
-        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]
         DATA = self.REVIEW_MANAGER.paths["DATA"]
@@ -528,27 +524,21 @@ class Data(Process):
         structured_data_extracted = self.get_structured_data_extracted(records, DATA)
 
         DATA_FORMAT = self.REVIEW_MANAGER.config["DATA_FORMAT"]
-        for record in records:
-            if (
-                "MANUSCRIPT" in DATA_FORMAT
-                and record["ID"] not in synthesized_in_manuscript
-            ):
+        for ID, record in records.items():
+            if "MANUSCRIPT" in DATA_FORMAT and ID not in synthesized_in_manuscript:
                 continue
-            if (
-                "STRUCTURED" in DATA_FORMAT
-                and record["ID"] not in structured_data_extracted
-            ):
+            if "STRUCTURED" in DATA_FORMAT and ID not in structured_data_extracted:
                 continue
 
             record.update(status=RecordState.rev_synthesized)
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ") + "set status to synthesized"
+                f" {ID}".ljust(self.PAD, " ") + "set status to synthesized"
             )
             self.REVIEW_MANAGER.logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ") + "set status to synthesized"
+                f" {ID}".ljust(self.PAD, " ") + "set status to synthesized"
             )
 
-        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
@@ -585,12 +575,15 @@ class Data(Process):
         references = references[cols]
         return references
 
-    def __prep_observations(self, references: dict, records) -> pd.DataFrame:
+    def __prep_observations(
+        self, references: dict, records: typing.Dict
+    ) -> pd.DataFrame:
 
         included_papers = [
-            x["ID"]
-            for x in records
-            if x["status"] in [RecordState.rev_synthesized, RecordState.rev_included]
+            ID
+            for ID, record in records.items()
+            if record["status"]
+            in [RecordState.rev_synthesized, RecordState.rev_included]
         ]
         observations = references[references["ID"].isin(included_papers)].copy()
         observations.loc[:, "year"] = observations.loc[:, "year"].astype(int)
@@ -607,12 +600,12 @@ class Data(Process):
         #     self.REVIEW_MANAGER.logger.warning(
         #  f"{colors.RED}Sample not completely processed!{colors.END}")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         output_dir = self.REVIEW_MANAGER.path / Path("output")
         output_dir.mkdir(exist_ok=True)
 
-        references = self.__prep_references(records)
+        references = self.__prep_references(records.values())
         observations = self.__prep_observations(references, records)
 
         if observations.empty:

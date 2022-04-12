@@ -283,16 +283,16 @@ class ReviewManager:
             return
 
         def migrate_0_3_0(self) -> bool:
-            records = self.REVIEW_DATASET.load_records()
-            if len(records) > 0:
-                for record in records:
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
                     if "LOCAL_INDEX" == record.get("metadata_source", ""):
                         record["metadata_source"] = "CURATED"
                     if "pdf_hash" in record:
                         record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
                         del record["pdf_hash"]
 
-                self.REVIEW_DATASET.save_records(records)
+                self.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_DATASET.add_record_changes()
 
             inplace_change(

@@ -78,14 +78,14 @@ class PDFPrepMan(Process):
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         self.REVIEW_MANAGER.logger.info("Calculate statistics")
         stats: dict = {"ENTRYTYPE": {}}
 
         prep_man_hints = []
         crosstab = []
-        for record in records:
+        for record in records.values():
 
             if RecordState.pdf_needs_manual_preparation != record["status"]:
                 continue
@@ -150,24 +150,24 @@ class PDFPrepMan(Process):
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records = [
+        records_list = [
             record
-            for record in records
+            for record in records.values()
             if RecordState.pdf_needs_manual_preparation == record["status"]
         ]
 
         # Casting to string (in particular the RecordState Enum)
-        records = [{k: str(v) for k, v in r.items()} for r in records]
+        records_list = [{k: str(v) for k, v in r.items()} for r in records_list]
 
         bib_db = BibDatabase()
-        bib_db.entries = records
+        bib_db.entries = records_list
         bibtex_str = bibtexparser.dumps(bib_db)
         with open(prep_bib_path, "w") as out:
             out.write(bibtex_str)
 
-        bib_db_df = pd.DataFrame.from_records(records)
+        bib_db_df = pd.DataFrame.from_records(records_list)
 
         col_names = [
             "ID",
@@ -213,8 +213,8 @@ class PDFPrepMan(Process):
 
                 bib_db_changed = bib_db.entries
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
                 x for x in bib_db_changed if x["origin"] == record["origin"]
@@ -232,7 +232,7 @@ class PDFPrepMan(Process):
                     if v == "":
                         del record[k]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
         return

@@ -117,8 +117,8 @@ def debug_data():
     from colrev_core.data import Data
 
     DATA = Data()
-    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-    included = DATA.get_records_for_synthesis(records)
+    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+    included = DATA.get_record_ids_for_synthesis(records)
 
     DATA.update_manuscript(records, included)
 
@@ -147,8 +147,8 @@ def debug_pdf_prep():
     # from pdfminer.pdfdocument import PDFDocument
     # from pdfminer.pdfinterp import resolve1
     # from pdfminer.pdfparser import PDFParser
-    # records = REVIEW_MANAGER.load_records()
-    # record = [x for x in records if x["ID"] == "Johns2006"].pop()
+    # records = REVIEW_MANAGER.load_records_dict()
+    # record = records["Johns2006"]
     # with open(record["file"], "rb") as file:
     #     parser = PDFParser(file)
     #     document = PDFDocument(parser)
@@ -182,12 +182,14 @@ def get_non_unique_colrev_pdf_ids() -> None:
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
-    records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
+    records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
     import collections
 
     colrev_pdf_ids = [
-        x["colrev_pdf_id"].split(":")[1] for x in records if "colrev_pdf_id" in x
+        x["colrev_pdf_id"].split(":")[1]
+        for x in records.values()
+        if "colrev_pdf_id" in x
     ]
     colrev_pdf_ids = [
         item for item, count in collections.Counter(colrev_pdf_ids).items() if count > 1

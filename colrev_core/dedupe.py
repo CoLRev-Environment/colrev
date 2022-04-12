@@ -208,13 +208,13 @@ class Dedupe(Process):
     def __readData(self):
         from colrev_core.record import Record, NotEnoughDataToIdentifyException
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
         # there should be no semicolons in origin!
         records_queue = [
             x
-            for x in records
+            for x in records.values()
             if x["status"]
             not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
         ]
@@ -401,29 +401,27 @@ class Dedupe(Process):
 
         # results = list(itertools.chain(*results))
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
-            non_dupe_record_list = [x for x in records if x["ID"] == non_dupe]
-            if len(non_dupe_record_list) == 0:
-                continue
-            non_dupe_record = non_dupe_record_list.pop()
-            non_dupe_record.update(status=RecordState.md_processed)
+            if non_dupe in records:
+                records[non_dupe].update(status=RecordState.md_processed)
 
         for dupe in [x for x in results if "duplicate" == x["decision"]]:
 
-            rec_ID1_list = [x for x in records if x["ID"] == dupe["ID1"]]
-            rec_ID2_list = [x for x in records if x["ID"] == dupe["ID2"]]
-            if len(rec_ID1_list) == 0 or len(rec_ID2_list) == 0:
+            if dupe["ID1"] not in records or dupe["ID2"] not in records:
                 continue
 
+            rec_ID1 = records[dupe["ID1"]]
+            rec_ID2 = records[dupe["ID2"]]
+
             # Heuristic: Merge into curated record
-            if "CURATED" == rec_ID2_list[0].get("metadata_source", ""):
-                main_record = rec_ID2_list[0]
-                dupe_record = rec_ID1_list[0]
+            if "CURATED" == rec_ID2.get("metadata_source", ""):
+                main_record = rec_ID2
+                dupe_record = rec_ID1
             else:
-                main_record = rec_ID1_list[0]
-                dupe_record = rec_ID2_list[0]
+                main_record = rec_ID1
+                dupe_record = rec_ID2
 
             if self.same_source_merge(main_record, dupe_record):
                 # TODO: option: allow-same-source-merges
@@ -441,16 +439,16 @@ class Dedupe(Process):
                 + f'{main_record["ID"]} <- {dupe_record["ID"]}'
             )
 
-            records = [x for x in records if x["ID"] != dupe_record["ID"]]
+            del records[dupe_record["ID"]]
 
         if remaining_non_dupe:
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
-            for record in records:
+            for record in records.values():
                 if record["status"] == RecordState.md_prepared:
                     record["status"] = RecordState.md_processed
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -467,7 +465,7 @@ class Dedupe(Process):
 
         # The merging also needs to consider whether IDs are propagated
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         non_dupe_list = []
         dupe_list = []
@@ -479,14 +477,18 @@ class Dedupe(Process):
 
         # Set manual_non_duplicate marks
         for non_dupe_1, non_dupe_2 in non_dupe_list:
-            record = [x for x in records if x["ID"] == non_dupe_1].pop()
+            if non_dupe_1 not in records or non_dupe_2 not in records:
+                continue
+
+            record = records[non_dupe_1]
             if "manual_non_duplicate" in record:
                 id_list = record["manual_non_duplicate"].split(";") + [non_dupe_2]
                 id_list = list(set(id_list))
                 record["manual_non_duplicate"] = ";".join(id_list)
             else:
                 record["manual_non_duplicate"] = non_dupe_2
-            record = [x for x in records if x["ID"] == non_dupe_2].pop()
+
+            record = records[non_dupe_2]
             if "manual_non_duplicate" in record:
                 id_list = record["manual_non_duplicate"].split(";") + [non_dupe_1]
                 id_list = list(set(id_list))
@@ -498,13 +500,11 @@ class Dedupe(Process):
 
         removed_duplicates = []
         for ID1, ID2 in dupe_list:
-            rec_ID1_l = [x for x in records if x["ID"] == ID1]
-            rec_ID2_l = [x for x in records if x["ID"] == ID2]
-            if len(rec_ID1_l) != 1 or len(rec_ID2_l) != 1:
+            if ID1 not in records or ID2 not in records:
                 continue
 
-            rec_ID1 = rec_ID1_l[0]
-            rec_ID2 = rec_ID2_l[0]
+            rec_ID1 = records[ID1]
+            rec_ID2 = records[ID2]
 
             # Heuristic: Merge into curated record
             if "CURATED" == rec_ID2.get("metadata_source", ""):
@@ -520,9 +520,7 @@ class Dedupe(Process):
             # Simple way of implementing the closure
             # cases where the main_record has already been merged into another record
             if "MOVED_DUPE" in main_record:
-                main_record = [
-                    x for x in records if x["ID"] == main_record["MOVED_DUPE"]
-                ].pop()
+                main_record = records[main_record["MOVED_DUPE"]]
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
 
@@ -565,11 +563,14 @@ class Dedupe(Process):
             )
             removed_duplicates.append(dupe_rec_id)
 
-        records = [x for x in records if x["ID"] not in removed_duplicates]
+        # TODO : test the "MOVED_DUPE" part:
+        records = {
+            k: v if "MOVED_DUPE" not in v else {}
+            for k, v in records
+            if k not in removed_duplicates
+        }
 
-        records = [{k: v for k, v in r.items() if k != "MOVED_DUPE"} for r in records]
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -593,7 +594,7 @@ class Dedupe(Process):
             IDs_to_unmerge = dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
 
             if len(IDs_to_unmerge) > 0:
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
                 MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths[
                     "MAIN_REFERENCES_RELATIVE"
@@ -617,7 +618,9 @@ class Dedupe(Process):
 
                     # delete new record,
                     # add previous records (from history) to records
-                    records = [r for r in records if r["ID"] not in ID_list_to_unmerge]
+                    records = {
+                        k: v for k, v in records.items() if k not in ID_list_to_unmerge
+                    }
 
                     if all(
                         [
@@ -642,7 +645,8 @@ class Dedupe(Process):
                                         manual_non_duplicates
                                     )
                                 r["status"] = RecordState.md_processed
-                                records.append(r)
+                                r_dict = {r["ID"]: r}
+                                records.append(r_dict)
                                 self.REVIEW_MANAGER.logger.info(f'Restored {r["ID"]}')
                     else:
                         self.REVIEW_MANAGER.logger.error(
@@ -650,8 +654,7 @@ class Dedupe(Process):
                             "please fix manually"
                         )
 
-                records = sorted(records, key=lambda d: d["ID"])
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         non_dupe_file_xlsx = Path("non_duplicates_to_validate.xlsx")
@@ -979,9 +982,9 @@ class Dedupe(Process):
 
             return toc_key
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        origins = [record["origin"].split(";") for record in records]
+        origins = [record["origin"].split(";") for record in records.values()]
         origins = [item.split("/")[0] for sublist in origins for item in sublist]
         origins = list(set(origins))
 
@@ -991,7 +994,7 @@ class Dedupe(Process):
             for subset in itertools.combinations(origins, L):
                 cuts["/".join(list(subset))] = {"origins": list(subset), "records": []}
 
-        for record in records:
+        for record in records.values():
 
             rec_sources = [x.split("/")[0] for x in record["origin"].split(";")]
 
@@ -1025,7 +1028,7 @@ class Dedupe(Process):
             else:
                 cut["toc_items"][toc_i] = 1  # type: ignore
 
-        total = len(records)
+        total = len(records.values())
         for k, det in cuts.items():
             det["size"] = len(det["records"])  # type: ignore
             det["fraction"] = det["size"] / total * 100  # type: ignore
@@ -1152,11 +1155,13 @@ class Dedupe(Process):
         # additional record is compared to/merged with all prior records in
         # the queue)
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
         # there should be no semicolons in origin!
-        records_queue = [x for x in records if x["ID"] in data["queue"]]
+        records_queue = [
+            record for ID, record in records.items() if ID in data["queue"]
+        ]
 
         records_queue = pd.DataFrame.from_dict(records_queue)
         references = self.__prep_references(records_queue)
@@ -1186,8 +1191,8 @@ class Dedupe(Process):
         from colrev_core.prep import Preparation
 
         PREPARATION = Preparation(self.REVIEW_MANAGER)
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        for record in records.values():
             if "crossref" in record:
                 crossref_rec = PREPARATION.get_crossref_record(record)
                 if crossref_rec is None:
@@ -1273,9 +1278,9 @@ class Dedupe(Process):
                 if "potential_duplicate" == r["decision"]
             ]
 
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-            records_queue = pd.DataFrame.from_dict(records)
+            records_queue = pd.DataFrame.from_dict(records.values())
             references = self.__prep_references(records_queue)
             # self.REVIEW_MANAGER.pp.pprint(references.values())
             references = pd.DataFrame(references.values())

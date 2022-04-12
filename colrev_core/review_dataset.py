@@ -209,75 +209,8 @@ class ReviewDataset:
 
         return prior_records
 
-    def load_records(self) -> typing.List[dict]:
-        """Get the records (requires REVIEW_MANAGER.notify(...))"""
-
-        if self.REVIEW_MANAGER.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
-
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
-
-        if self.MAIN_REFERENCES_FILE.is_file():
-            with open(self.MAIN_REFERENCES_FILE) as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
-
-                records = bib_db.entries
-
-                # Cast status to Enum
-                records = [
-                    {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-                    for r in records
-                ]
-
-                # DOIs are case sensitive -> use upper case.
-                records = [
-                    {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
-                    for r in records
-                ]
-
-        else:
-            records = []
-
-        return records
-
-    def save_records(self, records: typing.List[dict]) -> None:
-        """Save the records"""
-
-        # Cast to string (in particular the RecordState Enum)
-        records = [{k: str(v) for k, v in r.items()} for r in records]
-        for record in records:
-            if "LOCAL_PAPER_INDEX" == record.get("metadata_source", ""):
-                record["metadata_source"] = "CURATED"
-
-        records.sort(key=lambda x: x["ID"])
-
-        bib_db = BibDatabase()
-        bib_db.entries = records
-
-        bibtex_str = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
-
-        with open(self.MAIN_REFERENCES_FILE, "w") as out:
-            out.write(bibtex_str)
-
-        # Casting to RecordState (in case the records are used afterwards)
-        records = [
-            {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-            for r in records
-        ]
-
-        # DOIs are case sensitive -> use upper case.
-        records = [
-            {k: v.upper() if ("doi" == k) else v for k, v in r.items()} for r in records
-        ]
-
-        return
-
     def load_records_dict(self) -> dict:
+        """Get the records (requires REVIEW_MANAGER.notify(...))"""
         from colrev_core.review_dataset import ReviewManagerNotNofiedError
 
         if self.REVIEW_MANAGER.notified_next_process is None:
@@ -436,9 +369,11 @@ class ReviewDataset:
                 working_tree=True,
             )
         else:
-            records = self.load_records()
-            records = [x for x in records if id != x["ID"]]
-            self.save_records(records)
+            records = self.load_records_dict()
+            records = {
+                ID: record for ID, record in records.items() if ID not in id.split(",")
+            }
+            self.save_records_dict(records)
             self.add_record_changes()
 
         self.REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
@@ -491,8 +426,8 @@ class ReviewDataset:
         return writer
 
     def set_IDs(
-        self, records: typing.List[dict] = [], selected_IDs: list = None
-    ) -> typing.List[dict]:
+        self, records: typing.Dict = {}, selected_IDs: list = None
+    ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         from colrev_core.prep import Preparation
@@ -504,16 +439,16 @@ class ReviewDataset:
         )
 
         if len(records) == 0:
-            records = self.load_records()
+            records = self.load_records_dict()
 
-        ID_list = [record["ID"] for record in records]
+        ID_list = list(records.keys())
 
-        for record in records:
+        for record_ID, record in records.items():
             if "CURATED" == record.get("metadata_source", ""):
                 continue
-            self.REVIEW_MANAGER.logger.debug(f'Set ID for {record["ID"]}')
+            self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
             if selected_IDs is not None:
-                if record["ID"] not in selected_IDs:
+                if record_ID not in selected_IDs:
                     continue
             elif str(record["status"]) not in [
                 str(RecordState.md_imported),
@@ -521,7 +456,7 @@ class ReviewDataset:
             ]:
                 continue
 
-            old_id = record["ID"]
+            old_id = record_ID
             new_id = self.__generate_ID_blacklist(
                 record, ID_list, record_in_bib_db=True, raise_error=False
             )
@@ -532,14 +467,12 @@ class ReviewDataset:
                 if old_id in ID_list:
                     ID_list.remove(old_id)
 
-        records = sorted(records, key=lambda d: d["ID"])
-
-        self.save_records(records)
+        self.save_records_dict(records)
 
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
-        records = self.load_records()
-        self.save_records(records)
+        records = self.load_records_dict()
+        self.save_records_dict(records)
         self.add_record_changes()
 
         return records
@@ -900,8 +833,8 @@ class ReviewDataset:
 
         FormatProcess(self.REVIEW_MANAGER)  # to notify
 
-        records = self.load_records()
-        for record in records:
+        records = self.load_records_dict()
+        for record in records.values():
             if "status" not in record:
                 print(f'Error: no status field in record ({record["ID"]})')
                 continue
@@ -926,8 +859,7 @@ class ReviewDataset:
                 if "pdf_prep_hints" in record:
                     del record["pdf_prep_hints"]
 
-        records = sorted(records, key=lambda d: d["ID"])
-        self.save_records(records)
+        self.save_records_dict(records)
         CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]

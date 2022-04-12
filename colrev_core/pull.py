@@ -59,17 +59,19 @@ class Pull(Process):
         PREPARATION = Preparation(
             self.REVIEW_MANAGER, notify_state_transition_process=False
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         self.REVIEW_MANAGER.logger.info("Update records based on LocalIndex")
 
         pool = ProcessPool(nodes=mp.cpu_count() - 1)
-        records = pool.map(pull_record, records)
+        records_list = pool.map(pull_record, records.values())
         pool.close()
         pool.join()
         pool.clear()
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        # TODO : test the following line
+        records = {r["ID"]: r for r in records_list}
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Update records")
 

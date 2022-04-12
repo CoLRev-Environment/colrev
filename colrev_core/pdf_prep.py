@@ -902,18 +902,18 @@ class PDF_Preparation(Process):
 
     def __set_to_reprocess(self):
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         [
             r.update(pdf_prep_hints="")
-            for r in records
+            for r in records.values()
             if r["status"] == RecordState.pdf_needs_manual_preparation
         ]
         [
             r.update(status=RecordState.pdf_imported)
-            for r in records
+            for r in records.values()
             if r["status"] == RecordState.pdf_needs_manual_preparation
         ]
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         return
 
     def get_colrev_pdf_id(self, path: Path) -> str:
@@ -933,9 +933,10 @@ class PDF_Preparation(Process):
 
     def update_colrev_pdf_ids(self) -> None:
         self.REVIEW_MANAGER.logger.info("Update colrev_pdf_ids")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        records = p_map(self.__update_colrev_pdf_ids, records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records_list = p_map(self.__update_colrev_pdf_ids, records.values())
+        records = {r["ID"]: r for r in records_list}
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Update colrev_pdf_ids")
         return

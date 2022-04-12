@@ -163,8 +163,9 @@ class Validate(Process):
 
         if target_commit is None:
             self.REVIEW_MANAGER.logger.info("Loading data...")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-            [x.update(changed_in_target_commit="True") for x in records]
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+            [x.update(changed_in_target_commit="True") for x in records.values()]
+            return records.values()
 
         else:
             self.REVIEW_MANAGER.logger.info("Loading data from history...")
@@ -201,7 +202,7 @@ class Validate(Process):
                 if record != prior_record:
                     record.update(changed_in_target_commit="True")
 
-        return records
+            return records
 
     def validate_properties(self, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)

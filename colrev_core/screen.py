@@ -18,24 +18,23 @@ class Screen(Process):
         self,
     ) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        excl_criteria = self.get_exclusion_criteria(records)
+        excl_criteria = self.get_exclusion_criteria(records.values())
 
         saved_args = locals()
         saved_args["include_all"] = ""
         PAD = 50
-        for record in records:
+        for record_ID, record in records.items():
             if record["status"] != RecordState.pdf_prepared:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(PAD, " ")
-                + "Included in screen (automatically)"
+                f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
             )
             record.update(excl_criteria=";".join([e + "=no" for e in excl_criteria]))
             record.update(status=RecordState.rev_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
             "Screen (include_all)", manual_author=False, saved_args=saved_args

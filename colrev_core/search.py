@@ -422,10 +422,10 @@ class Search(Process):
             "(this would allow us to avoid redundant queries...)"
         )
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # default: rev_included/rev_synthesized and no selection clauses
-        for record in records:
+        for record in records.values():
             if record["status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
@@ -486,16 +486,16 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.info(
             f'Loading records from {params["scope"]["url"]}'
         )
-        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        records_to_import = [
-            x for x in records_to_import if x["ID"] not in imported_ids
-        ]
-        records_to_import = [
-            {k: str(v) for k, v in r.items()} for r in records_to_import
+        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records_to_import = {
+            ID: rec for ID, rec in records_to_import.items() if ID not in imported_ids
+        }
+        records_to_import_list = [
+            {k: str(v) for k, v in r.items()} for r in records_to_import.values()
         ]
 
         self.REVIEW_MANAGER.logger.info("Importing selected records")
-        for record_to_import in tqdm(records_to_import):
+        for record_to_import in tqdm(records_to_import_list):
             if "selection_clause" in params:
                 res = []
                 try:
@@ -650,14 +650,14 @@ class Search(Process):
         )
 
         def update_if_pdf_renamed(
-            x: dict, records: typing.List[typing.Dict], search_source: Path
+            x: dict, records: typing.Dict, search_source: Path
         ) -> bool:
             UPDATED = True
             NOT_UPDATED = False
 
             c_rec_l = [
                 r
-                for r in records
+                for r in records.values()
                 if f"{search_source}/{x['ID']}" in r["origin"].split(";")
             ]
             if len(c_rec_l) == 1:
@@ -697,9 +697,9 @@ class Search(Process):
                     common_strings=True,
                 ).parse_file(target_db, partial=True)
 
-            records = []
+            records = {}
             if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
             to_remove: typing.List[str] = []
             for x in search_db.entries:
@@ -729,7 +729,7 @@ class Search(Process):
 
                 to_remove = []
                 source_ids = [x["ID"] for x in search_db.entries]
-                for record in records:
+                for record in records.values():
                     if str(feed_file.name) in record["origin"]:
                         if (
                             record["origin"].split(";")[0].split("/")[1]
@@ -746,8 +746,10 @@ class Search(Process):
                         f"remove from index (PDF path no longer exists): {r}"
                     )
 
-                records = [x for x in records if x["origin"] not in to_remove]
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                records = {
+                    k: v for k, v in records.items() if v["origin"] not in to_remove
+                }
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             return

@@ -164,7 +164,7 @@ class Push(Process):
             "doi",
         ]
 
-        records = REVIEW_DATASET.load_records()
+        records = REVIEW_DATASET.load_records_dict()
         pull_request_msgs = []
         for change_item in change_list:
             original_curated_record = change_item["original_curated_record"]
@@ -172,7 +172,7 @@ class Push(Process):
             found = False
             try:
                 record = REVIEW_DATASET.retrieve_by_colrev_id(
-                    original_curated_record, records
+                    original_curated_record, records.values()
                 )
                 found = True
             except RecordNotInRepoException:
@@ -181,7 +181,7 @@ class Push(Process):
 
                 matching_doi_rec_l = [
                     r
-                    for r in records
+                    for r in records.values()
                     if original_curated_record.get("doi", "NDOI") == r.get("doi", "NA")
                 ]
                 if len(matching_doi_rec_l) == 1:
@@ -190,7 +190,7 @@ class Push(Process):
 
                 matching_url_rec_l = [
                     r
-                    for r in records
+                    for r in records.values()
                     if original_curated_record.get("url", "NURL") == r.get("url", "NA")
                 ]
                 if len(matching_url_rec_l) == 1:
@@ -313,7 +313,7 @@ class Push(Process):
             REVIEW_DATASET.add_changes(
                 str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
             )
-            REVIEW_DATASET.save_records(records)
+            REVIEW_DATASET.save_records_dict(records)
             REVIEW_DATASET.add_record_changes()
             CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
 

@@ -763,8 +763,8 @@ class Loader(Process):
 
             self.resolve_non_unique_IDs(corresponding_bib_file)
 
-            search_records = self.__load_records(corresponding_bib_file)
-            nr_search_recs = len(search_records)
+            search_records_list = self.__load_records(corresponding_bib_file)
+            nr_search_recs = len(search_records_list)
 
             nr_in_bib = self.__get_nr_in_bib(corresponding_bib_file)
             if nr_in_bib != nr_search_recs:
@@ -772,20 +772,23 @@ class Loader(Process):
                     f"ERROR in bib file:  {corresponding_bib_file}"
                 )
 
-            search_records = [
-                x for x in search_records if x["origin"] not in imported_origins
+            search_records_list = [
+                x for x in search_records_list if x["origin"] not in imported_origins
             ]
-            to_import = len(search_records)
+            to_import = len(search_records_list)
             if 0 == to_import:
                 continue
 
-            for sr in search_records:
+            for sr in search_records_list:
                 sr = self.__import_record(sr)
 
             self.REVIEW_MANAGER.logger.info("Save records to references.bib")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-            records += search_records
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+            search_records = {
+                r["ID"]: {k: v for k, v in r.items()} for r in search_records_list
+            }
+            records = {**records, **search_records}
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
             # TBD: does the following create errors!?
             # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
@@ -794,7 +797,7 @@ class Loader(Process):
                 self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                     records,
-                    selected_IDs=[x["ID"] for x in search_records],
+                    selected_IDs=search_records.keys(),
                 )
 
             self.REVIEW_MANAGER.logger.info("Add changes and create commit")

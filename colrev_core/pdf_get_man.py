@@ -19,14 +19,14 @@ class PDFRetrievalMan(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def get_pdf_get_man(self, records: typing.List[dict]) -> list:
+    def get_pdf_get_man(self, records: typing.Dict) -> list:
         missing_records = []
-        for record in records:
+        for record in records.values():
             if record["status"] == RecordState.pdf_needs_manual_retrieval:
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, records: typing.List[dict]) -> None:
+    def export_retrieval_table(self, records: typing.Dict) -> None:
         missing_records = self.get_pdf_get_man(records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 

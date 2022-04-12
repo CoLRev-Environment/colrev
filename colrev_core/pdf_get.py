@@ -41,9 +41,9 @@ class PDF_Retrieval(Process):
 
     def copy_pdfs_to_repo(self) -> None:
         self.REVIEW_MANAGER.logger.info("Copy PDFs to dir")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        for record in records:
+        for record in records.values():
             if "file" in record:
                 fpath = Path(record["file"])
                 if fpath.is_symlink():
@@ -234,7 +234,7 @@ class PDF_Retrieval(Process):
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
-            for record in records:
+            for record in records.values():
                 if "file" not in record:
                     continue
 
@@ -293,10 +293,10 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = relink_pdf_files(records)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Relink PDFs")
@@ -305,12 +305,13 @@ class PDF_Retrieval(Process):
 
     def check_existing_unlinked_pdfs(
         self,
-        records: typing.List[dict],
-    ) -> typing.List[dict]:
+        records: typing.Dict,
+    ) -> typing.Dict:
         from glob import glob
 
-        IDs = [x["ID"] for x in records]
-        linked_pdfs = [str(Path(x["file"]).resolve()) for x in records if "file" in x]
+        linked_pdfs = [
+            str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
+        ]
 
         pdf_files = glob(
             str(self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
@@ -328,7 +329,7 @@ class PDF_Retrieval(Process):
         )
         grobid_client.start_grobid()
         for file in unlinked_pdfs:
-            if file.stem not in IDs:
+            if file.stem not in records.keys():
 
                 TEI_INSTANCE = TEI(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
@@ -338,7 +339,7 @@ class PDF_Retrieval(Process):
 
                 max_similarity = 0.0
                 max_sim_record = None
-                for record in records:
+                for record in records.values():
                     sim = utils.get_record_similarity(pdf_record, record.copy())
                     if sim > max_similarity:
                         max_similarity = sim
@@ -365,13 +366,12 @@ class PDF_Retrieval(Process):
 
         return records
 
-    def rename_pdfs(self, records: typing.List[dict] = []) -> typing.List[dict]:
+    def rename_pdfs(self) -> None:
         self.REVIEW_MANAGER.logger.info("Rename PDFs")
 
-        if 0 == len(records):
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        for record in records:
+        for record in records.values():
             if "file" not in record:
                 continue
 
@@ -391,10 +391,10 @@ class PDF_Retrieval(Process):
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return records
+        return
 
     def __get_data(self) -> dict:
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
@@ -433,11 +433,9 @@ class PDF_Retrieval(Process):
                 batch = []
         yield batch
 
-    def __set_status_if_file_linked(
-        self, records: typing.List[dict]
-    ) -> typing.List[dict]:
+    def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:
 
-        for record in records:
+        for record in records.values():
             if record["status"] == RecordState.rev_prescreen_included:
                 if "file" in record:
                     if any(
@@ -452,7 +450,7 @@ class PDF_Retrieval(Process):
                             "Warning: record with file field but no existing PDF "
                             f'({record["ID"]}: {record["file"]}'
                         )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
@@ -466,7 +464,7 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.report_logger.info("Get PDFs")
         self.REVIEW_MANAGER.logger.info("Get PDFs")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = self.__set_status_if_file_linked(records)
         records = self.check_existing_unlinked_pdfs(records)
 
@@ -495,7 +493,7 @@ class PDF_Retrieval(Process):
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
-            records = self.rename_pdfs()
+            self.rename_pdfs()
 
             self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
 

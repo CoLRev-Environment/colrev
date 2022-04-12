@@ -20,10 +20,10 @@ class Prescreen(Process):
 
     def export_table(self, export_table_format: str) -> None:
         self.REVIEW_MANAGER.logger.info("Loading records for export")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         tbl = []
-        for record in records:
+        for record in records.vaules():
 
             if record["status"] in [
                 RecordState.md_imported,
@@ -93,7 +93,7 @@ class Prescreen(Process):
 
     def import_table(self, import_table_path: str) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         if not Path(import_table_path).is_file():
             self.REVIEW_MANAGER.logger.error(
                 f"Did not find {import_table_path} - exiting."
@@ -107,41 +107,32 @@ class Prescreen(Process):
             "import_table not completed (exclusion_criteria not yet imported)"
         )
 
-        for x in [
-            [
-                x.get("ID", ""),
-                x.get("inclusion_1", ""),
-                x.get("inclusion_2", ""),
-                x.get("excl_criteria", ""),
-            ]
-            for x in screened_records
-        ]:
-            record_list = [e for e in records if e["ID"] == x[0]]
-            if len(record_list) == 1:
-                record: dict = record_list.pop()
-                if x[1] == "no":
+        for screened_record in screened_records:
+            if screened_record.get("ID", "") in records:
+                record = records[screened_record.get("ID", "")]
+                if "no" == screened_record.get("inclusion_1", ""):
                     record["status"] = RecordState.rev_prescreen_excluded
-                if x[1] == "yes":
+                if "yes" == screened_record.get("inclusion_1", ""):
                     record["status"] = RecordState.rev_prescreen_included
-                if x[2] == "no":
+                if "no" == screened_record.get("inclusion_2", ""):
                     record["status"] = RecordState.rev_excluded
-                if x[2] == "yes":
+                if "yes" == screened_record.get("inclusion_2", ""):
                     record["status"] = RecordState.rev_included
-                if x[3] != "":
-                    record["excl_criteria"] = x[3]
+                if "" != screened_record.get("excl_criteria", ""):
+                    record["excl_criteria"] = screened_record.get("excl_criteria", "")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
         return
 
     def include_all_in_prescreen(self) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         saved_args = locals()
         saved_args["include_all"] = ""
         PAD = 50
-        for record in records:
+        for record in records.values():
             if record["status"] != RecordState.md_processed:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
@@ -150,7 +141,7 @@ class Prescreen(Process):
             )
             record.update(status=RecordState.rev_prescreen_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
             "Pre-screen (include_all)", manual_author=False, saved_args=saved_args

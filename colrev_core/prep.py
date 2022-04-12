@@ -2296,19 +2296,18 @@ class Preparation(Process):
 
     def reset_records(self, reset_ids: list) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records_to_reset = []
         for reset_id in reset_ids:
-            record_list = [x for x in records if x["ID"] == reset_id]
-            if len(record_list) != 1:
+            if reset_id in records:
+                records_to_reset.append(records[reset_id])
+            else:
                 print(f"Error: record not found (ID={reset_id})")
-                continue
-            records_to_reset.append(record_list.pop())
 
         self.reset(records_to_reset)
 
         saved_args = {"reset_records": ",".join(reset_ids)}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         # self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
@@ -2318,7 +2317,7 @@ class Preparation(Process):
 
     def reset_ids(self) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
@@ -2329,16 +2328,16 @@ class Preparation(Process):
         filecontents = next(revlist)  # noqa
         prior_bib_db = bibtexparser.loads(filecontents)
 
-        for record in records:
+        for record in records.values():
             prior_record_l = [
                 x for x in prior_bib_db.entries if x["origin"] == record["origin"]
             ]
             if len(prior_record_l) != 1:
                 continue
-            prior_record = prior_record_l.pop()
+            prior_record = prior_record_l[0]
             record["ID"] = prior_record["ID"]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
         return
 
@@ -2355,11 +2354,11 @@ class Preparation(Process):
         self,
     ) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        for record in records.values():
             if "doi" in record and record.get("journal", "") == "MIS Quarterly":
                 record = self.get_md_from_doi(record)
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
         return
@@ -2371,7 +2370,7 @@ class Preparation(Process):
 
         NER = spacy.load("en_core_web_sm")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         refs = []
         for tei_file in Path("tei").glob("*.tei.xml"):
@@ -2387,7 +2386,7 @@ class Preparation(Process):
 
         self.RETRIEVAL_SIMILARITY = input_sim
 
-        for record in tqdm(records):
+        for record in tqdm(records.values()):
 
             previous_status = record["status"]
             # TODO : the source_url should be a list (with newlines)?
@@ -2447,7 +2446,7 @@ class Preparation(Process):
                 record["journal"] = journal_counter.most_common()[0][0]
 
         if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             self.REVIEW_MANAGER.create_commit("Polish metadata")
 
@@ -2576,13 +2575,13 @@ class Preparation(Process):
         # consistent with the check_valid_transitions because it will either
         # transition to prepared or to needs_manual_preparation
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         [
             r.update(status=RecordState.md_imported)
-            for r in records
+            for r in records.values()
             if reprocess_state == r["status"]
         ]
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         return
 
     def __get_pdf_source_data(self, PDF_INDICES, item):
@@ -3028,8 +3027,9 @@ class Preparation(Process):
                 preparation_batch_IDs = [x["ID"] for x in preparation_batch]
                 self.REVIEW_MANAGER.reorder_log(preparation_batch_IDs)
 
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                # Note: probably for formatting...
+                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(

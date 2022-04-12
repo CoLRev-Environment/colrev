@@ -8,6 +8,7 @@ from nameparser import HumanName
 
 from colrev_core.process import RecordState
 
+
 class Record:
 
     identifying_fields = [

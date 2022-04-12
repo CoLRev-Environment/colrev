@@ -808,10 +808,12 @@ class LocalIndex:
                 if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                     continue
 
-                records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-                records = [
+                records = (
+                    CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+                )
+                records_list = [
                     r
-                    for r in records
+                    for r in records.values()
                     if r["status"]
                     not in [
                         RecordState.md_retrieved,
@@ -821,7 +823,7 @@ class LocalIndex:
                     ]
                 ]
 
-                for record in tqdm(records):
+                for record in tqdm(records_list):
                     record["source_url"] = source_url
                     if "excl_criteria" in record:
                         del record["excl_criteria"]
