@@ -405,6 +405,8 @@ class LocalIndex:
                 print(e)
                 pass
 
+        logging.getLogger("opensearch").setLevel(logging.ERROR)
+
         available = False
         try:
             self.os.get(index=self.RECORD_INDEX, id="test")
@@ -426,6 +428,8 @@ class LocalIndex:
                 except NotFoundError:
                     pass
                     break
+        logging.getLogger("opensearch").setLevel(logging.WARNING)
+
         return
 
     def check_opensearch_docker_available(self) -> None:
