@@ -24,6 +24,13 @@ class Record:
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
+        # Note : do not automatically create colrev_ids
+        # or at least keep in mind that this will not be possible for some records
+        if "colrev_id" in data:
+            if isinstance(data["colrev_id"], str):
+                data["colrev_id"] = [
+                    cid.lstrip() for cid in data["colrev_id"].split(";")
+                ]
         self.data = data
 
     def __repr__(self):
@@ -47,6 +54,9 @@ class Record:
     def get_data(self) -> dict:
         return self.data
 
+    def get_field(self, field_key):
+        return self.data[field_key]
+
     def update_field(self, field, value, source, confidence):
         self.data["field"] = value
         if field in self.identifying_fields:
@@ -58,15 +68,15 @@ class Record:
             self.data["provenance_additional_fields"] = f"{field}:{source};{confidence}"
         return
 
-    def set_also_known_as(self, records: typing.List[dict]):
+    def add_colrev_ids(self, records: typing.List[dict]):
 
         for r in records:
             try:
-                colrev_id = self.get_colrev_id(alsoKnownAsRecord=r)
-                if "alsoKnownAs" not in self.data:
-                    self.data["alsoKnownAs"] = [colrev_id]
-                elif colrev_id not in self.data["alsoKnownAs"]:
-                    self.data["alsoKnownAs"].append(colrev_id)
+                colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
+                if "colrev_id" not in self.data:
+                    self.data["colrev_id"] = [colrev_id]
+                elif colrev_id not in self.data["colrev_id"]:
+                    self.data["colrev_id"].append(colrev_id)
             except NotEnoughDataToIdentifyException:
                 pass
 
@@ -162,7 +172,9 @@ class Record:
 
         return "-".join(author_list)
 
-    def get_colrev_id(self, alsoKnownAsRecord: dict = {}, assume_complete=False) -> str:
+    def create_colrev_id(
+        self, alsoKnownAsRecord: dict = {}, assume_complete=False
+    ) -> str:
         """Returns the colrev_id of the Record.
         If a alsoKnownAsRecord is provided, it returns the colrev_id of the
         alsoKnownAsRecord (using the Record as the reference to decide whether

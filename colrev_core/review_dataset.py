@@ -395,8 +395,8 @@ class ReviewDataset:
             "man_prep_hints",
             "pdf_processed",
             "file",  # Note : do not change this order (parsers rely on it)
+            "colrev_id",
             "prescreen_exclusion",
-            "alsoKnownAs",
             "colrev_pdf_id",
             "potential_dupes",
             "doi",
@@ -1058,21 +1058,21 @@ class ReviewDataset:
         return IDs
 
     def retrieve_by_colrev_id(
-        self, indexed_record: dict, records: typing.List[typing.Dict]
+        self, indexed_record_dict: dict, records: typing.List[typing.Dict]
     ) -> dict:
         from colrev_core.record import Record
 
-        # TODO: how do we deal with cases where changes lead to a
-        # different colrev_id? (add previous colrev_id when creating corrections?)
-        # Note : should consider the alsoKnownAs field for retrieval
+        INDEXED_RECORD = Record(indexed_record_dict)
 
-        if "colrev_id" in indexed_record:
-            indexed_record_colrev_id = indexed_record["colrev_id"]
+        if "colrev_id" in INDEXED_RECORD.data:
+            cid_to_retrieve = INDEXED_RECORD.get_field("colrev_id")
         else:
-            indexed_record_colrev_id = Record(indexed_record).get_colrev_id()
+            cid_to_retrieve = INDEXED_RECORD.create_colrev_id()
 
         record_l = [
-            x for x in records if Record(x).get_colrev_id() == indexed_record_colrev_id
+            x
+            for x in records
+            if any(cid in Record(x).get_field("colrev_id") for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
@@ -1344,7 +1344,7 @@ class ReviewDataset:
 
                     original_curated_record["colrev_id"] = Record(
                         original_curated_record
-                    ).get_colrev_id()
+                    ).create_colrev_id()
 
                     if "DBLP" == corrected_curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp
