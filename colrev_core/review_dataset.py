@@ -1521,7 +1521,7 @@ class ReviewDataset:
                     fp.parent.mkdir(exist_ok=True)
 
                     with open(fp, "w", encoding="utf8") as corrections_file:
-                        json.dump(dict_to_save, corrections_file)
+                        json.dump(dict_to_save, corrections_file, indent=4)
 
                     # TODO : combine merge-record corrections
 

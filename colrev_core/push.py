@@ -99,6 +99,7 @@ class Push(Process):
                     "\nThank you for supporting other researchers "
                     "by sharing your corrections ❤\n"
                 )
+
         return
 
     def __share_correction(self, source_url, change_list) -> None:
@@ -330,7 +331,8 @@ class Push(Process):
 
             RECORD = Record(record)
             RECORD.add_colrev_ids([record])
-            record = RECORD.get_data()
+            cids = RECORD.get_data()["colrev_id"]
+            record["colrev_id"] = cids
 
             crb_path = str(
                 CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
@@ -365,8 +367,13 @@ class Push(Process):
                 )
 
             # reset the record - each branch should have changes for one record
+            # Note : modify dict (do not replace it) - otherwise changes will not be
+            # part of the records.
             for k, v in rec_for_reset.items():
                 record[k] = v
+            keys_added = [k for k in record.keys() if k not in rec_for_reset.keys()]
+            for key in keys_added:
+                del record[key]
 
             if Path(change_item["file"]).is_file():
                 Path(change_item["file"]).unlink()
