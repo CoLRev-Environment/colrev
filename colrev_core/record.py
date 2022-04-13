@@ -18,7 +18,7 @@ class Record:
         "journal",
         "booktitle",
         "volume",
-        "issue",
+        "number",
         "pages",
     ]
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -28,13 +28,27 @@ class Record:
         # Note : avoid parsing upon Record instantiation
         # as much as possible (to maintain high performance)
 
-    def __repr__(self):
-        # TODO : maybe print as OrderedDict
+    def __repr__(self) -> str:
         return self.pp.pformat(self.data)
 
-    def __str__(self):
-        # TODO : maybe print as OrderedDict
-        return self.pp.pformat(self.data)
+    def __str__(self) -> str:
+
+        identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+            k for k in self.identifying_fields if k in self.data
+        ]
+        complementary_keys_order = [
+            k for k, v in self.data.items() if k not in identifying_keys_order
+        ]
+
+        ik_sorted = {k: v for k, v in self.data.items() if k in identifying_keys_order}
+        ck_sorted = {
+            k: v for k, v in self.data.items() if k in complementary_keys_order
+        }
+        ret_str = (
+            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+        )
+
+        return ret_str
 
     def get_origins(self) -> list:
         if "origin" in self.data:
@@ -49,7 +63,7 @@ class Record:
     def get_data(self) -> dict:
         return self.data
 
-    def get_field(self, field_key, default=None):
+    def get_field(self, field_key: str, default=None):
         if default is not None:
             try:
                 ret = self.data[field_key]
@@ -71,26 +85,29 @@ class Record:
                 colrev_id = self.data["colrev_id"]
         return colrev_id
 
-    def update_field(self, field, value, source, confidence):
+    def update_field(self, field: str, value, source: str, comment: str) -> None:
         self.data["field"] = value
         if field in self.identifying_fields:
             # TODO: replace if already exists
-            self.data[
-                "provenance_identifying_fields"
-            ] = f"{field}:{source};{confidence}"
+            self.data["provenance_identifying_fields"] = f"{field}:{source};{comment}"
         else:
-            self.data["provenance_additional_fields"] = f"{field}:{source};{confidence}"
+            self.data["provenance_additional_fields"] = f"{field}:{source};{comment}"
         return
 
-    def add_colrev_ids(self, records: typing.List[dict]):
-
+    def add_colrev_ids(self, records: typing.List[dict]) -> None:
+        if isinstance(self.data["colrev_id"], list):
+            self.data["colrev_id"] = ";".join(self.data["colrev_id"])
         for r in records:
             try:
                 colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
                 if "colrev_id" not in self.data:
-                    self.data["colrev_id"] = [colrev_id]
+                    self.data["colrev_id"] = colrev_id
                 elif colrev_id not in self.data["colrev_id"]:
-                    self.data["colrev_id"].append(colrev_id)
+                    cids = self.data["colrev_id"].split(";")
+                    if colrev_id not in cids:
+                        self.data["colrev_id"] = (
+                            self.data["colrev_id"] + ";" + colrev_id
+                        )
             except NotEnoughDataToIdentifyException:
                 pass
 
@@ -99,9 +116,8 @@ class Record:
     @classmethod
     def __robust_append(cls, input_string: str, to_append: str) -> str:
         input_string = str(input_string)
-        to_append = (
-            str(to_append).replace("\n", " ").rstrip().lstrip().replace("–", " ")
-        )
+        to_append = str(to_append).replace("\n", " ")
+        to_append = to_append.rstrip().lstrip().replace("–", " ")
         to_append = re.sub(r"[\.\:“”’]", "", to_append)
         to_append = re.sub(r"\s+", "-", to_append)
         to_append = to_append.lower()

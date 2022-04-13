@@ -15,14 +15,10 @@ class Push(Process):
 
     def main(self, records_only: bool = False, project_only: bool = False) -> None:
 
-        # self.REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
-        # input("done")
-
         if project_only:
             self.push_project()
 
         if records_only:
-            input("TODO: check/pull curated repos before!")
             self.push_record_corrections()
 
         return
@@ -67,12 +63,33 @@ class Push(Process):
                 for change_item in item["changes"]:
                     if "change" == change_item[0]:
                         type, field, values = change_item
+                        if "colrev_id" == field:
+                            continue
                         prefix = f"{type} {field}"
-                        print(f"{prefix}: {values[0]}")
-                        print(" " * len(prefix) + f"  {values[1]}")
+                        print(
+                            f"{prefix}"
+                            + " " * max(len(prefix), 30 - len(prefix))
+                            + f": {values[0]}"
+                        )
+                        print(" " * max(len(prefix), 30) + f"  {values[1]}")
+                    elif "add" == change_item[0]:
+                        type, field, values = change_item
+                        prefix = f"{type} {values[0][0]}"
+                        print(
+                            prefix
+                            + " " * max(len(prefix), 30 - len(prefix))
+                            + f": {values[0][1]}"
+                        )
                     else:
                         self.REVIEW_MANAGER.pp.pprint(change_item)
-            if "y" == input("\nConfirm changes? (y/n)"):
+
+            response = ""
+            while True:
+                response = input("\nConfirm changes? (y/n)")
+                if response in ["y", "n"]:
+                    break
+
+            if "y" == response:
                 if "metadata_source=" in source_url:
                     self.__share_correction(source_url, change_itemset)
                 else:
@@ -129,6 +146,7 @@ class Push(Process):
         from bibtexparser.customization import convert_to_unicode
         import bibtexparser
         from colrev_core.review_dataset import RecordNotInRepoException
+        from colrev_core.record import Record
         import git
 
         # TBD: other modes of accepting changes?
@@ -137,12 +155,6 @@ class Push(Process):
         CHECK_PROCESS = CheckProcess(check_REVIEW_MANAGER)
         REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
         git_repo = REVIEW_DATASET.get_repo()
-        if REVIEW_DATASET.behind_remote():
-            self.REVIEW_MANAGER.logger.error(
-                "Repo behind remote. Pull first to avoid conflicts.\n"
-                f"colrev env --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
-            )
-            return
 
         if git_repo.is_dirty():
             print(
@@ -150,6 +162,18 @@ class Push(Process):
                 "commit or stash before updating records"
             )
             return
+
+        if REVIEW_DATASET.behind_remote():
+            o = git_repo.remotes.origin
+            o.pull()
+            if not REVIEW_DATASET.behind_remote():
+                self.REVIEW_MANAGER.logger.info("Pulled changes")
+            else:
+                self.REVIEW_MANAGER.logger.error(
+                    "Repo behind remote. Pull first to avoid conflicts.\n"
+                    f"colrev env --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
+                )
+                return
 
         essential_md_keys = [
             "title",
@@ -162,6 +186,8 @@ class Push(Process):
             "issue",
             "author",
             "doi",
+            "dblp_key",
+            "url",
         ]
 
         records = REVIEW_DATASET.load_records_dict()
@@ -260,40 +286,12 @@ class Push(Process):
                 next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
             prior_rec["ID"] = next_unique_ID
 
-            if "status" in prior_rec:
-                del prior_rec["status"]
-            if "origin" in prior_rec:
-                del prior_rec["origin"]
-            if "metadata_source" in prior_rec:
-                del prior_rec["metadata_source"]
-            if "doi" in prior_rec:
-                del prior_rec["doi"]
-            if "colrev_id" in prior_rec:
-                del prior_rec["colrev_id"]
-            if "colrev_pdf_id" in prior_rec:
-                del prior_rec["colrev_pdf_id"]
-            if "grobid-version" in prior_rec:
-                del prior_rec["grobid-version"]
-            if "file" in prior_rec:
-                del prior_rec["file"]
+            prior_rec_keys = list(prior_rec.keys())
+            for k in prior_rec_keys:
+                if k not in essential_md_keys + ["ID", "ENTRYTYPE"]:
+                    del prior_rec[k]
+
             corrections_bib.entries.append(prior_rec)
-            record["origin"] = (
-                record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
-            )
-
-            for (type, key, change) in list(change_item["changes"]):
-                if key in ["status", "origin", "metadata_source", "file"]:
-                    continue
-
-                # Note: the most important thing is to update the metadata.
-                # we can create a copy/duplicate representation (/search) later
-                if key not in essential_md_keys:
-                    continue
-                # TODO : deal with add/remove
-                if type != "change":
-                    continue
-
-                record[key] = change[1]
 
             corrections_bib.entries = sorted(
                 corrections_bib.entries, key=lambda d: d["ID"]
@@ -306,6 +304,33 @@ class Push(Process):
 
             with open(corrections_bib_path, "w") as out:
                 out.write(bibtex_str)
+
+            record["origin"] = (
+                record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
+            )
+
+            for (type, key, change) in list(change_item["changes"]):
+                # Note : by retricting changes to essential_md_keys,
+                # we also prevent changes in
+                # "status", "origin", "metadata_source", "file"
+
+                # Note: the most important thing is to update the metadata.
+
+                if type == "change":
+                    if key not in essential_md_keys:
+                        continue
+                    record[key] = change[1]
+                if type == "add":
+                    key = change[0][0]
+                    value = change[0][1]
+                    if key not in essential_md_keys:
+                        continue
+                    record[key] = value
+                # TODO : deal with remove/merge
+
+            RECORD = Record(record)
+            RECORD.add_colrev_ids([record])
+            record = RECORD.get_data()
 
             crb_path = str(
                 CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
@@ -322,6 +347,7 @@ class Push(Process):
             git_repo.remotes.origin.push(
                 refspec=f"{record_branch_name}:{record_branch_name}"
             )
+            self.REVIEW_MANAGER.logger.info("Pushed corrections")
 
             for head in git_repo.heads:
                 if head.name == prev_branch_name:
@@ -329,6 +355,8 @@ class Push(Process):
 
             g = git.Git(source_url)
             g.execute(["git", "branch", "-D", record_branch_name])
+
+            self.REVIEW_MANAGER.logger.info("Removed local corrections branch")
 
             if "github.com" in remote.url:
                 pull_request_msgs.append(

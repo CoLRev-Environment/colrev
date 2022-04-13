@@ -315,6 +315,14 @@ class ReviewDataset:
 
         # Cast to string (in particular the RecordState Enum)
         max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
+        for record in recs_dict.values():
+            if "colrev_id" in record:
+                if isinstance(record["colrev_id"], str):
+                    record["colrev_id"] = [
+                        cid.lstrip().rstrip().replace("\n", "")
+                        for cid in record["colrev_id"].split(";")
+                    ]
+
         list_indent = ";\n" + " " * max_len
         records = [
             {
