@@ -35,6 +35,7 @@ from colrev_core.environment import LocalIndex
 from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 # from datetime import datetime
@@ -57,35 +58,6 @@ class Preparation(Process):
 
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
-
-    # Based on https://en.wikipedia.org/wiki/BibTeX
-    record_field_requirements = {
-        "article": ["author", "title", "journal", "year", "volume", "number"],
-        "inproceedings": ["author", "title", "booktitle", "year"],
-        "incollection": ["author", "title", "booktitle", "publisher", "year"],
-        "inbook": ["author", "title", "chapter", "publisher", "year"],
-        "proceedings": ["booktitle", "editor"],
-        "book": ["author", "title", "publisher", "year"],
-        "phdthesis": ["author", "title", "school", "year"],
-        "masterthesis": ["author", "title", "school", "year"],
-        "techreport": ["author", "title", "institution", "year"],
-        "unpublished": ["title", "author", "year"],
-        "misc": ["author", "title", "year"],
-    }
-
-    # book, inbook: author <- editor
-
-    record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
-        "article": ["booktitle"],
-        "inproceedings": ["issue", "number", "journal"],
-        "incollection": [],
-        "inbook": ["journal"],
-        "book": ["volume", "issue", "number", "journal"],
-        "phdthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "masterthesis": ["volume", "issue", "number", "journal", "booktitle"],
-        "techreport": ["volume", "issue", "number", "journal", "booktitle"],
-        "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
-    }
 
     fields_to_keep = [
         "ID",
@@ -1672,8 +1644,8 @@ class Preparation(Process):
 
     def __missing_fields(self, record: dict) -> list:
         missing_fields = []
-        if record["ENTRYTYPE"] in self.record_field_requirements.keys():
-            reqs = self.record_field_requirements[record["ENTRYTYPE"]]
+        if record["ENTRYTYPE"] in Record.record_field_requirements.keys():
+            reqs = Record.record_field_requirements[record["ENTRYTYPE"]]
             missing_fields = [
                 x for x in reqs if x not in record.keys() or "" == record[x]
             ]
@@ -1683,7 +1655,7 @@ class Preparation(Process):
 
     def __is_complete(self, record: dict) -> bool:
         sufficiently_complete = False
-        if record["ENTRYTYPE"] in self.record_field_requirements.keys():
+        if record["ENTRYTYPE"] in Record.record_field_requirements.keys():
             if len(self.__missing_fields(record)) == 0:
                 sufficiently_complete = True
         if record.get("metadata_source", "") in [
@@ -1697,8 +1669,8 @@ class Preparation(Process):
 
     def __get_inconsistencies(self, record: dict) -> list:
         inconsistent_fields = []
-        if record["ENTRYTYPE"] in self.record_field_inconsistencies.keys():
-            incons_fields = self.record_field_inconsistencies[record["ENTRYTYPE"]]
+        if record["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
+            incons_fields = Record.record_field_inconsistencies[record["ENTRYTYPE"]]
             inconsistent_fields = [x for x in incons_fields if x in record]
         # Note: a thesis should be single-authored
         if "thesis" in record["ENTRYTYPE"] and " and " in record.get("author", ""):
@@ -1707,24 +1679,14 @@ class Preparation(Process):
 
     def __has_inconsistent_fields(self, record: dict) -> bool:
         found_inconsistencies = False
-        if record["ENTRYTYPE"] in self.record_field_inconsistencies.keys():
+        if record["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
             inconsistencies = self.__get_inconsistencies(record)
             if inconsistencies:
                 found_inconsistencies = True
         return found_inconsistencies
 
-    def __get_incomplete_fields(self, record: dict) -> list:
-        incomplete_fields = []
-        for key in record.keys():
-            if key in ["title", "journal", "booktitle", "author"]:
-                if record[key].endswith("...") or record[key].endswith("…"):
-                    incomplete_fields.append(key)
-        if record.get("author", "").endswith("and others"):
-            incomplete_fields.append("author")
-        return incomplete_fields
-
     def __has_incomplete_fields(self, record: dict) -> bool:
-        if len(self.__get_incomplete_fields(record)) > 0:
+        if len(Record.get_incomplete_fields(record)) > 0:
             return True
         return False
 
@@ -1991,9 +1953,9 @@ class Preparation(Process):
         if self.__has_incomplete_fields(record):
             self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(self.PAD, " ")
-                + f"Incomplete fields {self.__get_incomplete_fields(record)}"
+                + f"Incomplete fields {Record.get_incomplete_fields(record)}"
             )
-            msg += f"; incomplete: {self.__get_incomplete_fields(record)}"
+            msg += f"; incomplete: {Record.get_incomplete_fields(record)}"
         if change > 0.1:
             msg += f"; change-score: {change}"
 

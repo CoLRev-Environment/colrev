@@ -21,6 +21,36 @@ class Record:
         "number",
         "pages",
     ]
+
+    # Based on https://en.wikipedia.org/wiki/BibTeX
+    record_field_requirements = {
+        "article": ["author", "title", "journal", "year", "volume", "number"],
+        "inproceedings": ["author", "title", "booktitle", "year"],
+        "incollection": ["author", "title", "booktitle", "publisher", "year"],
+        "inbook": ["author", "title", "chapter", "publisher", "year"],
+        "proceedings": ["booktitle", "editor"],
+        "book": ["author", "title", "publisher", "year"],
+        "phdthesis": ["author", "title", "school", "year"],
+        "masterthesis": ["author", "title", "school", "year"],
+        "techreport": ["author", "title", "institution", "year"],
+        "unpublished": ["title", "author", "year"],
+        "misc": ["author", "title", "year"],
+    }
+
+    # book, inbook: author <- editor
+
+    record_field_inconsistencies: typing.Dict[str, typing.List[str]] = {
+        "article": ["booktitle"],
+        "inproceedings": ["issue", "number", "journal"],
+        "incollection": [],
+        "inbook": ["journal"],
+        "book": ["volume", "issue", "number", "journal"],
+        "phdthesis": ["volume", "issue", "number", "journal", "booktitle"],
+        "masterthesis": ["volume", "issue", "number", "journal", "booktitle"],
+        "techreport": ["volume", "issue", "number", "journal", "booktitle"],
+        "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
+    }
+
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
@@ -112,6 +142,18 @@ class Record:
                 pass
 
         return
+
+    # TODO : change from classmethod to object method
+    @classmethod
+    def get_incomplete_fields(cls, record: dict) -> list:
+        incomplete_fields = []
+        for key in record.keys():
+            if key in ["title", "journal", "booktitle", "author"]:
+                if record[key].endswith("...") or record[key].endswith("…"):
+                    incomplete_fields.append(key)
+        if record.get("author", "").endswith("and others"):
+            incomplete_fields.append("author")
+        return incomplete_fields
 
     @classmethod
     def __robust_append(cls, input_string: str, to_append: str) -> str:
