@@ -1,7 +1,5 @@
 #! /usr/bin/env python
-import itertools
 import json
-import string
 from pathlib import Path
 
 from colrev_core.process import Process
@@ -142,10 +140,6 @@ class Push(Process):
 
     def __apply_correction(self, source_url, change_list) -> None:
         from colrev_core.process import CheckProcess
-        from bibtexparser.bibdatabase import BibDatabase
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
-        import bibtexparser
         from colrev_core.review_dataset import RecordNotInRepoException
         from colrev_core.record import Record
         import git
@@ -244,71 +238,7 @@ class Push(Process):
                 if head.name == record_branch_name:
                     head.checkout()
 
-            corrections_bib_path = CHECK_PROCESS.REVIEW_MANAGER.paths[
-                "SEARCHDIR"
-            ] / Path("corrections.bib")
-            if corrections_bib_path.is_file():
-                with open(corrections_bib_path) as target_db:
-                    corrections_bib = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
-            else:
-                corrections_bib = BibDatabase()
-                new_record = {
-                    "filename": str(corrections_bib_path.name),
-                    "search_type": "OTHER",
-                    "source_name": "corrections",
-                    "source_url": str(corrections_bib_path.name),
-                    "search_parameters": "",
-                    "comment": "",
-                }
-
-                sources = REVIEW_DATASET.load_sources()
-                sources.append(new_record)
-                REVIEW_DATASET.save_sources(sources)
-
-            # append original record to search/corrections.bib
-            # add ID as an origin to record
             rec_for_reset = record.copy()
-            prior_rec = record.copy()
-
-            order = 0
-            letters = list(string.ascii_lowercase)
-            temp_ID = prior_rec["ID"]
-            next_unique_ID = temp_ID
-            other_ids = [x["ID"] for x in corrections_bib.entries]
-            appends: list = []
-            while next_unique_ID in other_ids:
-                if len(appends) == 0:
-                    order += 1
-                    appends = [p for p in itertools.product(letters, repeat=order)]
-                next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
-            prior_rec["ID"] = next_unique_ID
-
-            prior_rec_keys = list(prior_rec.keys())
-            for k in prior_rec_keys:
-                if k not in essential_md_keys + ["ID", "ENTRYTYPE"]:
-                    del prior_rec[k]
-
-            corrections_bib.entries.append(prior_rec)
-
-            corrections_bib.entries = sorted(
-                corrections_bib.entries, key=lambda d: d["ID"]
-            )
-
-            bibtex_str = bibtexparser.dumps(
-                corrections_bib,
-                writer=self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer(),
-            )
-
-            with open(corrections_bib_path, "w") as out:
-                out.write(bibtex_str)
-
-            record["origin"] = (
-                record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
-            )
 
             for (type, key, change) in list(change_item["changes"]):
                 # Note : by retricting changes to essential_md_keys,
@@ -334,14 +264,6 @@ class Push(Process):
             cids = RECORD.get_data()["colrev_id"]
             record["colrev_id"] = cids
 
-            crb_path = str(
-                CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
-                / Path("corrections.bib")
-            )
-            REVIEW_DATASET.add_changes(crb_path)
-            REVIEW_DATASET.add_changes(
-                str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
-            )
             REVIEW_DATASET.save_records_dict(records)
             REVIEW_DATASET.add_record_changes()
             CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
