@@ -308,6 +308,17 @@ class ReviewManager:
 
             self.REVIEW_DATASET.update_colrev_ids()
 
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
+                    if "manual_duplicate" in record:
+                        del record["manual_duplicate"]
+                    if "manual_non_duplicate" in record:
+                        del record["manual_non_duplicate"]
+
+                self.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_DATASET.add_record_changes()
+
             return True
 
         # next version should be:

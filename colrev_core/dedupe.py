@@ -47,10 +47,6 @@ class Dedupe(Process):
     #   manually and we cannot set the 'status' to md_processed
     # - If the results list contains a 'score value'
 
-    # IMPORTANT: manual_duplicate/manual_non_duplicate fields:
-    # ID in the (same) deduplication commit
-    # the same ID may be used for other records in following commits!
-
     def __prep_references(self, references: pd.DataFrame) -> dict:
 
         if "status" in references:
@@ -475,29 +471,6 @@ class Dedupe(Process):
             if "duplicate" == x["decision"]:
                 dupe_list.append([x["ID1"], x["ID2"]])
 
-        # Set manual_non_duplicate marks
-        for non_dupe_1, non_dupe_2 in non_dupe_list:
-            if non_dupe_1 not in records or non_dupe_2 not in records:
-                continue
-
-            record = records[non_dupe_1]
-            if "manual_non_duplicate" in record:
-                id_list = record["manual_non_duplicate"].split(";") + [non_dupe_2]
-                id_list = list(set(id_list))
-                record["manual_non_duplicate"] = ";".join(id_list)
-            else:
-                record["manual_non_duplicate"] = non_dupe_2
-
-            record = records[non_dupe_2]
-            if "manual_non_duplicate" in record:
-                id_list = record["manual_non_duplicate"].split(";") + [non_dupe_1]
-                id_list = list(set(id_list))
-                record["manual_non_duplicate"] = ";".join(id_list)
-            else:
-                record["manual_non_duplicate"] = non_dupe_1
-
-            # Note : no need to consider "manual_duplicate" (it stays the same)
-
         removed_duplicates = []
         for ID1, ID2 in dupe_list:
             if ID1 not in records or ID2 not in records:
@@ -525,38 +498,6 @@ class Dedupe(Process):
             dupe_record["MOVED_DUPE"] = main_record["ID"]
 
             main_record = self.merge_r1_r2(main_record, dupe_record)
-
-            if "manual_duplicate" in main_record:
-                main_record["manual_duplicate"] = (
-                    main_record["manual_duplicate"] + ";" + dupe_rec_id
-                )
-            else:
-                main_record["manual_duplicate"] = dupe_rec_id
-
-            # Note: no need to change "manual_non_duplicate" or "manual_duplicate"
-            # in dupe_record because dupe_record will be dropped anyway
-
-            if (
-                "manual_non_duplicate" in main_record
-                and "manual_non_duplicate" in dupe_record
-            ):
-                main_record["manual_non_duplicate"] = (
-                    main_record["manual_non_duplicate"]
-                    + ";"
-                    + dupe_record["manual_non_duplicate"]
-                )
-
-            # Note : we add the "manual_duplicate" from dedupe record to keep all
-            # manual_duplicate classification decisions
-            if "manual_duplicate" in dupe_record:
-                if "manual_duplicate" in main_record:
-                    main_record["manual_duplicate"] = (
-                        main_record["manual_duplicate"]
-                        + ";"
-                        + dupe_record["manual_duplicate"]
-                    )
-                else:
-                    main_record["manual_duplicate"] = dupe_record["manual_duplicate"]
 
             self.REVIEW_MANAGER.report_logger.info(
                 f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
@@ -634,16 +575,6 @@ class Dedupe(Process):
                                 manual_non_duplicates = ID_list_to_unmerge.copy()
                                 manual_non_duplicates.remove(r["ID"])
 
-                                if "manual_non_duplicate" in r:
-                                    r["manual_non_duplicate"] = (
-                                        r["manual_non_duplicate"]
-                                        + ";"
-                                        + ";".join(manual_non_duplicates)
-                                    )
-                                else:
-                                    r["manual_non_duplicate"] = ";".join(
-                                        manual_non_duplicates
-                                    )
                                 r["status"] = RecordState.md_processed
                                 r_dict = {r["ID"]: r}
                                 records.append(r_dict)

@@ -709,10 +709,6 @@ class LocalIndex:
             if not Path(record["file"]).is_file():
                 del record["file"]
 
-        if "manual_non_duplicate" in record:
-            del record["manual_non_duplicate"]
-        if "manual_duplicate" in record:
-            del record["manual_duplicate"]
         if "fulltext" in record:
             del record["fulltext"]
         if "tei_file" in record:

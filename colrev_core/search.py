@@ -517,8 +517,6 @@ class Search(Process):
             "status",
             "origin",
             "excl_criteria",
-            "manual_non_duplicate",
-            "manual_duplicate",
         ]
 
         records = [
@@ -597,7 +595,6 @@ class Search(Process):
             "status",
             "origin",
             "excl_criteria",
-            "manual_non_duplicate",
             "excl_criteria",
             "metadata_source",
         ]

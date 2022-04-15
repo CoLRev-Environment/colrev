@@ -262,8 +262,6 @@ class PrepMan(Process):
         record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
         max_id += 1
         record["ID"] = str(max_id).rjust(9, "0")
-        record_to_unmerge["manual_non_duplicate"] = record["ID"]
-        record["manual_non_duplicate"] = record_to_unmerge["ID"]
 
         record_to_unmerge = {k: str(v) for k, v in record_to_unmerge.items()}
         record = {k: str(v) for k, v in record.items()}
