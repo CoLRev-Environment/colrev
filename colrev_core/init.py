@@ -132,6 +132,7 @@ class Initializer:
         from subprocess import check_call
         from subprocess import DEVNULL
         from subprocess import STDOUT
+        from subprocess import CalledProcessError
 
         from colrev_core.environment import EnvironmentManager
 
@@ -149,7 +150,17 @@ class Initializer:
             ["daff", "git", "csv"],
         ]
         for script_to_call in scripts_to_call:
-            check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
+            try:
+                check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
+            except CalledProcessError:
+                if "" == " ".join(script_to_call):
+                    print(
+                        f"{' '.join(script_to_call)} did not succeed "
+                        "(Internet connection could not be available)"
+                    )
+                else:
+                    print(f"Script did not succeed: {' '.join(script_to_call)}")
+                pass
         git_repo.index.add(
             [
                 "readme.md",
