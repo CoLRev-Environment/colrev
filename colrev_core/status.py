@@ -48,7 +48,7 @@ class Status(Process):
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def get_status_freq(self) -> dict:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
         from colrev_core.process import ProcessModel
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()

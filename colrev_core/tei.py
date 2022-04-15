@@ -6,7 +6,7 @@ import requests
 from lxml import etree
 
 from colrev_core import grobid_client
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class TEI:

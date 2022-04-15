@@ -11,7 +11,7 @@ import pandas as pd
 from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class Dedupe(Process):

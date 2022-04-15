@@ -3,7 +3,7 @@ import typing
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class Screen(Process):

@@ -15,7 +15,7 @@ from colrev_core import grobid_client
 from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 
 

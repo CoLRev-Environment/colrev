@@ -28,7 +28,7 @@ from PyPDF2 import PdfFileWriter
 from colrev_core.environment import LocalIndex
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class PDF_Preparation(Process):

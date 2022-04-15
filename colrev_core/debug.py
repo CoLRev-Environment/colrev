@@ -3,7 +3,7 @@ import logging
 import pprint
 from pathlib import Path  # noqa F401
 
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 from colrev_core.review_manager import ReviewManager
 
 logger = logging.getLogger("colrev_core")

@@ -35,7 +35,7 @@ from colrev_core.environment import LocalIndex
 from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 # from datetime import datetime
 
@@ -2453,7 +2453,7 @@ class Preparation(Process):
         return
 
     def get_data(self):
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         rsl = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])

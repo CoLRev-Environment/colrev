@@ -6,6 +6,8 @@ from enum import Enum
 import git
 from transitions import Machine
 
+from colrev_core.record import RecordState
+
 # from colrev_core.review_manager import ReviewManager
 
 
@@ -25,29 +27,6 @@ class ProcessType(Enum):
     format = auto()
     explore = auto()
     check = auto()
-
-    def __str__(self):
-        return f"{self.name}"
-
-
-class RecordState(Enum):
-    # without the md_retrieved state, we could not display the load transition
-    md_retrieved = auto()
-    md_imported = auto()
-    md_needs_manual_preparation = auto()
-    md_prepared = auto()
-    md_processed = auto()
-    rev_prescreen_excluded = auto()
-    rev_prescreen_included = auto()
-    pdf_needs_manual_retrieval = auto()
-    pdf_imported = auto()
-    pdf_not_available = auto()
-    pdf_needs_manual_preparation = auto()
-    pdf_prepared = auto()
-    rev_excluded = auto()
-    rev_included = auto()
-    rev_synthesized = auto()
-    # Note : TBD: rev_coded
 
     def __str__(self):
         return f"{self.name}"

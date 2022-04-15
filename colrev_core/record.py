@@ -3,10 +3,10 @@ import pprint
 import re
 import typing
 import unicodedata
+from enum import auto
+from enum import Enum
 
 from nameparser import HumanName
-
-from colrev_core.process import RecordState
 
 
 class Record:
@@ -283,6 +283,29 @@ class Record:
         except KeyError as e:
             raise NotEnoughDataToIdentifyException(str(e))
         return srep
+
+
+class RecordState(Enum):
+    # without the md_retrieved state, we could not display the load transition
+    md_retrieved = auto()
+    md_imported = auto()
+    md_needs_manual_preparation = auto()
+    md_prepared = auto()
+    md_processed = auto()
+    rev_prescreen_excluded = auto()
+    rev_prescreen_included = auto()
+    pdf_needs_manual_retrieval = auto()
+    pdf_imported = auto()
+    pdf_not_available = auto()
+    pdf_needs_manual_preparation = auto()
+    pdf_prepared = auto()
+    rev_excluded = auto()
+    rev_included = auto()
+    rev_synthesized = auto()
+    # Note : TBD: rev_coded
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 class NotEnoughDataToIdentifyException(Exception):

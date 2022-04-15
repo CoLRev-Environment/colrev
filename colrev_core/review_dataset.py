@@ -20,7 +20,7 @@ from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
 from colrev_core import utils
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class ReviewDataset:
@@ -1114,7 +1114,7 @@ class ReviewDataset:
         return
 
     def get_missing_files(self) -> list:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         # excluding pdf_not_available
         file_required_status = [

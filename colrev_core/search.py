@@ -405,7 +405,7 @@ class Search(Process):
         return
 
     def search_backward(self, params: dict, feed_file: Path) -> None:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
         from colrev_core import grobid_client
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
@@ -638,7 +638,7 @@ class Search(Process):
         from pdfminer.pdfparser import PDFParser
         from colrev_core.pdf_prep import PDF_Preparation
 
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         skip_duplicates = True
 

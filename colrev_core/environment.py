@@ -17,9 +17,9 @@ from thefuzz import fuzz
 from tqdm import tqdm
 
 from colrev_core.process import CheckProcess
-from colrev_core.process import RecordState
 from colrev_core.record import NotEnoughDataToIdentifyException
 from colrev_core.record import Record
+from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_Exception
 
@@ -698,7 +698,7 @@ class LocalIndex:
     def prep_record_for_return(
         self, record: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         # Casting to string (in particular the RecordState Enum)
         record = {k: str(v) for k, v in record.items()}
