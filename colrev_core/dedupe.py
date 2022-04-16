@@ -8,7 +8,6 @@ from pathlib import Path
 import git
 import pandas as pd
 
-from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
@@ -64,10 +63,7 @@ class Dedupe(Process):
             references["year"] = references["year"].astype(str)
         if "author" not in references:
             references["author"] = "nan"
-        else:
-            references["author"] = references["author"].apply(
-                lambda x: utils.format_authors_string(x)
-            )
+
         references["author"] = references["author"].str[:60]
 
         references.loc[
@@ -970,13 +966,15 @@ class Dedupe(Process):
     # -------------  SIMPLE MERGING PROCEDURES FOR SMALL SAMPLES  ------------------
 
     def __calculate_similarities_record(self, references: pd.DataFrame) -> list:
+        from colrev_core.record import Record
+
         # Note: per definition, similarities are needed relative to the last row.
         references["similarity"] = 0
         references["details"] = 0
         sim_col = references.columns.get_loc("similarity")
         details_col = references.columns.get_loc("details")
         for base_record_i in range(0, references.shape[0]):
-            sim_details = utils.get_similarity_detailed(
+            sim_details = Record.get_similarity_detailed(
                 references.iloc[base_record_i], references.iloc[-1]
             )
             self.REVIEW_MANAGER.report_logger.debug(

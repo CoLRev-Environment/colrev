@@ -29,7 +29,6 @@ from opensearchpy import NotFoundError
 from pathos.multiprocessing import ProcessPool
 from thefuzz import fuzz
 
-from colrev_core import utils
 from colrev_core.environment import EnvironmentManager
 from colrev_core.environment import LocalIndex
 from colrev_core.environment import RecordNotInIndexException
@@ -87,14 +86,12 @@ class Preparation(Process):
         "dblp_key",
         "sem_scholar_id",
         "url",
-        "metadata_source",
         "isbn",
         "address",
         "edition",
         "warning",
         "crossref",
         "date",
-        "colrev_pdf_id",
         "wos_accession_number",
         "link",
         "url",
@@ -103,7 +100,10 @@ class Preparation(Process):
         "note",
         "issn",
         "language",
-        "source_url",
+        "colrev_masterdata_provenance",
+        "colrev_masterdata",
+        "colrev_data_provenance",
+        "colrev_pid",
     ]
     fields_to_drop = [
         "type",
@@ -210,9 +210,9 @@ class Preparation(Process):
                 return str(url)
         return None
 
-    def get_link_from_doi(self, record: dict) -> dict:
+    def get_link_from_doi(self, RECORD: Record) -> Record:
 
-        url = f"https://www.doi.org/{record['doi']}"
+        doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
 
         # TODO : retry for 50X
         # from requests.adapters import HTTPAdapter
@@ -225,12 +225,13 @@ class Preparation(Process):
         # ret = s.get(url, headers=headers)
         # print(ret)
 
+        url = doi_url
         try:
             ret = self.session.request(
-                "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
+                "GET", doi_url, headers=self.requests_headers, timeout=self.TIMEOUT
             )
             if 503 == ret.status_code:
-                return record
+                return RECORD
             elif (
                 200 == ret.status_code
                 and "doi.org" not in ret.url
@@ -244,82 +245,82 @@ class Preparation(Process):
                     ret = self.session.request(
                         "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
                     )
-            record["url"] = str(url)
+            RECORD.update_field("url", str(url), doi_url)
         except requests.exceptions.RequestException:
             pass
-        return record
+        return RECORD
 
-    def prep_curated(self, record: dict) -> dict:
-        if "CURATED" == record.get("metadata_source", ""):
-            if RecordState.md_imported == record["status"]:
-                record["status"] = RecordState.md_prepared
-        return record
+    def prep_curated(self, RECORD: Record) -> Record:
+        if RECORD.is_curated():
+            if RecordState.md_imported == RECORD.data["status"]:
+                RECORD.data["status"] = RecordState.md_prepared
+        return RECORD
 
-    def correct_recordtype(self, record: dict) -> dict:
+    def correct_recordtype(self, RECORD: Record) -> Record:
 
-        if self.__is_complete(record) and not self.__has_inconsistent_fields(record):
-            return record
+        if RECORD.masterdata_is_complete() and not RECORD.has_inconsistent_fields():
+            return RECORD
 
         if self.RETRIEVAL_SIMILARITY > 0.9:
-            return record
+            return RECORD
 
         if (
-            "dissertation" in record.get("fulltext", "NA").lower()
-            and record["ENTRYTYPE"] != "phdthesis"
+            "dissertation" in RECORD.data.get("fulltext", "NA").lower()
+            and RECORD.data["ENTRYTYPE"] != "phdthesis"
         ):
-            prior_e_type = record["ENTRYTYPE"]
-            record.update(ENTRYTYPE="phdthesis")
+            prior_e_type = RECORD.data["ENTRYTYPE"]
+            RECORD.data.update(ENTRYTYPE="phdthesis")
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
+                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("dissertation" in fulltext link)'
             )
 
         if (
-            "thesis" in record.get("fulltext", "NA").lower()
-            and record["ENTRYTYPE"] != "phdthesis"
+            "thesis" in RECORD.data.get("fulltext", "NA").lower()
+            and RECORD.data["ENTRYTYPE"] != "phdthesis"
         ):
-            prior_e_type = record["ENTRYTYPE"]
-            record.update(ENTRYTYPE="phdthesis")
+            prior_e_type = RECORD.data["ENTRYTYPE"]
+            RECORD.data.update(ENTRYTYPE="phdthesis")
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
+                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in fulltext link)'
             )
 
         if (
-            "This thesis" in record.get("abstract", "NA").lower()
-            and record["ENTRYTYPE"] != "phdthesis"
+            "This thesis" in RECORD.data.get("abstract", "NA").lower()
+            and RECORD.data["ENTRYTYPE"] != "phdthesis"
         ):
-            prior_e_type = record["ENTRYTYPE"]
-            record.update(ENTRYTYPE="phdthesis")
+            prior_e_type = RECORD.data["ENTRYTYPE"]
+            RECORD.data.update(ENTRYTYPE="phdthesis")
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
+                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
                 + f"Set from {prior_e_type} to phdthesis "
                 '("thesis" in abstract)'
             )
 
         # Journal articles should not have booktitles/series set.
-        if "article" == record["ENTRYTYPE"]:
-            if "booktitle" in record:
-                if "journal" not in record:
-                    record.update(journal=record["booktitle"])
-                    del record["booktitle"]
-            if "series" in record:
-                if "journal" not in record:
-                    record.update(journal=record["series"])
-                    del record["series"]
+        if "article" == RECORD.data["ENTRYTYPE"]:
+            if "booktitle" in RECORD.data:
+                if "journal" not in RECORD.data:
+                    RECORD.data.update(journal=RECORD.data["booktitle"])
+                    del RECORD.data["booktitle"]
+            if "series" in RECORD.data:
+                if "journal" not in RECORD.data:
+                    RECORD.data.update(journal=RECORD.data["series"])
+                    del RECORD.data["series"]
 
-        if "article" == record["ENTRYTYPE"]:
-            if "journal" not in record:
-                if "series" in record:
-                    journal_string = record["series"]
-                    record.update(journal=journal_string)
-                    del record["series"]
+        if "article" == RECORD.data["ENTRYTYPE"]:
+            if "journal" not in RECORD.data:
+                if "series" in RECORD.data:
+                    journal_string = RECORD.data["series"]
+                    RECORD.data.update(journal=journal_string)
+                    del RECORD.data["series"]
 
-        return record
+        return RECORD
 
-    def format_minor(self, record: dict) -> dict:
+    def format_minor(self, RECORD: Record) -> Record:
 
         fields_to_process = [
             "author",
@@ -335,9 +336,9 @@ class Preparation(Process):
             "abstract",
         ]
         for field in fields_to_process:
-            if field in record:
-                record[field] = (
-                    str(record[field])
+            if field in RECORD.data:
+                RECORD.data[field] = (
+                    str(RECORD.data[field])
                     .replace("\n", " ")
                     .rstrip()
                     .lstrip()
@@ -345,15 +346,15 @@ class Preparation(Process):
                     .replace("}", "")
                     .rstrip(",")
                 )
-                record[field] = re.sub(r"\s+", " ", record[field])
-                record[field] = re.sub(self.HTML_CLEANER, "", record[field])
+                RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
+                RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
-        if record.get("volume", "") == "ahead-of-print":
-            del record["volume"]
-        if record.get("number", "") == "ahead-of-print":
-            del record["number"]
+        if RECORD.data.get("volume", "") == "ahead-of-print":
+            del RECORD.data["volume"]
+        if RECORD.data.get("number", "") == "ahead-of-print":
+            del RECORD.data["number"]
 
-        return record
+        return RECORD
 
     def __format_if_mostly_upper(
         self, input_string: str, case: str = "capitalize"
@@ -379,7 +380,7 @@ class Preparation(Process):
 
         return input_string
 
-    def format(self, record: dict) -> dict:
+    def format(self, RECORD: Record) -> Record:
 
         fields_to_process = [
             "author",
@@ -395,9 +396,9 @@ class Preparation(Process):
             "abstract",
         ]
         for field in fields_to_process:
-            if field in record:
-                record[field] = (
-                    record[field]
+            if field in RECORD.data:
+                RECORD.data[field] = (
+                    RECORD.data[field]
                     .replace("\n", " ")
                     .rstrip()
                     .lstrip()
@@ -405,135 +406,138 @@ class Preparation(Process):
                     .replace("}", "")
                 )
 
-        if "author" in record:
+        if "author" in RECORD.data:
             # DBLP appends identifiers to non-unique authors
-            record.update(author=str(re.sub(r"[0-9]{4}", "", record["author"])))
+            RECORD.data.update(
+                author=str(re.sub(r"[0-9]{4}", "", RECORD.data["author"]))
+            )
 
             # fix name format
-            if (1 == len(record["author"].split(" ")[0])) or (
-                ", " not in record["author"]
+            if (1 == len(RECORD.data["author"].split(" ")[0])) or (
+                ", " not in RECORD.data["author"]
             ):
-                record.update(author=self.format_author_field(record["author"]))
-
-        if "title" in record:
-            record.update(title=re.sub(r"\s+", " ", record["title"]).rstrip("."))
-            record.update(title=self.__format_if_mostly_upper(record["title"]))
-
-        if "booktitle" in record:
-            record.update(
-                booktitle=self.__format_if_mostly_upper(
-                    record["booktitle"], case="title"
+                RECORD.data.update(
+                    author=self.format_author_field(RECORD.data["author"])
                 )
+
+        if "title" in RECORD.data:
+            RECORD.data.update(
+                title=re.sub(r"\s+", " ", RECORD.data["title"]).rstrip(".")
             )
+            if "UNKNOWN" != RECORD.data["title"]:
+                RECORD.data.update(
+                    title=self.__format_if_mostly_upper(RECORD.data["title"])
+                )
 
-            stripped_btitle = re.sub(r"\d{4}", "", record["booktitle"])
-            stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
-            stripped_btitle = re.sub(r"\d{1,2}nd", "", stripped_btitle)
-            stripped_btitle = re.sub(r"\d{1,2}rd", "", stripped_btitle)
-            stripped_btitle = re.sub(r"\d{1,2}st", "", stripped_btitle)
-            stripped_btitle = re.sub(r"\([A-Z]{3,6}\)", "", stripped_btitle)
-            stripped_btitle = stripped_btitle.replace("Proceedings of the", "").replace(
-                "Proceedings", ""
-            )
-            stripped_btitle = stripped_btitle.lstrip().rstrip()
-            record.update(booktitle=stripped_btitle)
-
-        if "date" in record and "year" not in record:
-            year = re.search(r"\d{4}", record["date"])
-            if year:
-                record["year"] = year.group(0)
-
-        if "journal" in record:
-            if len(record["journal"]) > 10:
-                record.update(
-                    journal=self.__format_if_mostly_upper(
-                        record["journal"], case="title"
+        if "booktitle" in RECORD.data:
+            if "UNKNOWN" != RECORD.data["booktitle"]:
+                RECORD.data.update(
+                    booktitle=self.__format_if_mostly_upper(
+                        RECORD.data["booktitle"], case="title"
                     )
                 )
 
-        if "pages" in record:
-            if "N.PAG" == record.get("pages", ""):
-                del record["pages"]
+                stripped_btitle = re.sub(r"\d{4}", "", RECORD.data["booktitle"])
+                stripped_btitle = re.sub(r"\d{1,2}th", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}nd", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}rd", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\d{1,2}st", "", stripped_btitle)
+                stripped_btitle = re.sub(r"\([A-Z]{3,6}\)", "", stripped_btitle)
+                stripped_btitle = stripped_btitle.replace(
+                    "Proceedings of the", ""
+                ).replace("Proceedings", "")
+                stripped_btitle = stripped_btitle.lstrip().rstrip()
+                RECORD.data.update(booktitle=stripped_btitle)
+
+        if "date" in RECORD.data and "year" not in RECORD.data:
+            year = re.search(r"\d{4}", RECORD.data["date"])
+            if year:
+                RECORD.data["year"] = year.group(0)
+
+        if "journal" in RECORD.data:
+            if len(RECORD.data["journal"]) > 10 and "UNKNOWN" != RECORD.data["journal"]:
+                RECORD.data.update(
+                    journal=self.__format_if_mostly_upper(
+                        RECORD.data["journal"], case="title"
+                    )
+                )
+
+        if "pages" in RECORD.data:
+            if "N.PAG" == RECORD.data.get("pages", ""):
+                del RECORD.data["pages"]
             else:
-                record.update(pages=self.__unify_pages_field(record["pages"]))
+                RECORD.data.update(pages=self.__unify_pages_field(RECORD.data["pages"]))
                 if (
-                    not re.match(r"^\d*$", record["pages"])
-                    and not re.match(r"^\d*--\d*$", record["pages"])
-                    and not re.match(r"^[xivXIV]*--[xivXIV]*$", record["pages"])
+                    not re.match(r"^\d*$", RECORD.data["pages"])
+                    and not re.match(r"^\d*--\d*$", RECORD.data["pages"])
+                    and not re.match(r"^[xivXIV]*--[xivXIV]*$", RECORD.data["pages"])
                 ):
                     self.REVIEW_MANAGER.report_logger.info(
-                        f' {record["ID"]}:'.ljust(self.PAD, " ")
-                        + f'Unusual pages: {record["pages"]}'
+                        f' {RECORD.data["ID"]}:'.ljust(self.PAD, " ")
+                        + f'Unusual pages: {RECORD.data["pages"]}'
                     )
 
-        if "language" in record:
+        if "language" in RECORD.data:
             # TODO : use https://pypi.org/project/langcodes/
-            record["language"] = (
-                record["language"].replace("English", "en").replace("ENG", "en")
+            RECORD.data["language"] = (
+                RECORD.data["language"].replace("English", "en").replace("ENG", "en")
             )
 
-        if "doi" in record:
-            record.update(doi=record["doi"].replace("http://dx.doi.org/", "").upper())
+        if "doi" in RECORD.data:
+            RECORD.data.update(
+                doi=RECORD.data["doi"].replace("http://dx.doi.org/", "").upper()
+            )
 
-        if "number" not in record and "issue" in record:
-            record.update(number=record["issue"])
-            del record["issue"]
-        if "volume" in record:
-            record.update(volume=record["volume"].replace("Volume ", ""))
+        if "number" not in RECORD.data and "issue" in RECORD.data:
+            RECORD.data.update(number=RECORD.data["issue"])
+            del RECORD.data["issue"]
+        if "volume" in RECORD.data:
+            RECORD.data.update(volume=RECORD.data["volume"].replace("Volume ", ""))
 
-        if "url" in record and "fulltext" in record:
-            if record["url"] == record["fulltext"]:
-                del record["fulltext"]
+        if "url" in RECORD.data and "fulltext" in RECORD.data:
+            if RECORD.data["url"] == RECORD.data["fulltext"]:
+                del RECORD.data["fulltext"]
 
-        return record
+        return RECORD
 
-    def get_record_from_local_index(self, record: dict) -> dict:
-
+    def get_record_from_local_index(self, RECORD: Record) -> Record:
+        # TODO: how to distinguish masterdata and complementary CURATED sources?
         LOCAL_INDEX = LocalIndex()
 
         retrieved = False
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(record, include_file=False)
-            retrieved_record = LOCAL_INDEX.set_source_url_link(retrieved_record)
+            retrieved_record = LOCAL_INDEX.retrieve(
+                RECORD.get_data(), include_file=False
+            )
             retrieved = True
         except (RecordNotInIndexException, NotFoundError):
             pass
             try:
-                # Records can be CURATED without being indexed (??)
-                if "CURATED" == record.get("metadata_source", ""):
-                    if "source_url" in record:  # do not change to other source
+                if RECORD.is_curated():
+                    pass
+                # TODO: Records can be CURATED without being indexed (??)
+                # This requires a different retrieval mechanism
+                # (not LOCAL_INDEX.retrieve(...))
+                #     # ...
+                #     if (
+                #         retrieved_record["colrev_masterdata"]
+                #         == RECORD.data["colrev_masterdata"]
+                #     ):
+                #         # Keep all fields of the original record
+                #         retrieved_record = RECORD.get_data()
+                #         # Update the essential metadata
+                #         for key in self.fields_to_keep:
+                #             if key in ind_rec:
+                #                 retrieved_record = ind_rec[key]
+                #         # Add complementary fields if they are not yet avilable
+                #         for k, v in ind_rec.items():
+                #             if k not in retrieved_record:
+                #                 retrieved_record[k] = v
 
-                        ind_rec = LOCAL_INDEX.retrieve(
-                            record.copy(), include_file=False
-                        )
-                        if ind_rec["source_url"] == record["source_url"]:
-                            # Keep all fields of the original record
-                            retrieved_record = record
-                            # Update the essential metadata
-                            for key in self.fields_to_keep:
-                                if key in ind_rec:
-                                    retrieved_record = ind_rec[key]
-                            # Add complementary fields if they are not yet avilable
-                            for k, v in ind_rec.items():
-                                if k not in retrieved_record:
-                                    retrieved_record[k] = v
-                        else:
-                            self.REVIEW_MANAGER.logger.error(
-                                "Error: curated record has other "
-                                f'source_url in LocalIndex ({record["ID"]})'
-                            )
-
-                    else:
-                        # update record metadata
-                        retrieved_record = LOCAL_INDEX.retrieve(
-                            record, include_file=False
-                        )
-                    retrieved = True
                 else:
                     retrieved_record = LOCAL_INDEX.retrieve_from_toc(
-                        record, self.RETRIEVAL_SIMILARITY, include_file=False
+                        RECORD.data, self.RETRIEVAL_SIMILARITY, include_file=False
                     )
-                    retrieved_record = LOCAL_INDEX.set_source_url_link(retrieved_record)
                     retrieved = True
             except (RecordNotInIndexException, NotFoundError):
                 pass
@@ -546,11 +550,14 @@ class Preparation(Process):
                 if k in ["keywords", "url"]:
                     continue
                 if "file" == k:
-                    if "file" in record:
+                    if "file" in RECORD.data:
                         continue
                 if v == "":
                     continue
-                record[k] = v
+                RECORD.data[k] = v
+
+            if "colrev_masterdata_provenance" in RECORD.data:
+                del RECORD.data["colrev_masterdata_provenance"]
 
             git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
             cur_project_source_paths = [str(self.REVIEW_MANAGER.path)]
@@ -561,21 +568,13 @@ class Preparation(Process):
                     cur_project_source_paths.append(shared_url)
                     break
 
-            if not any(
-                x in cur_project_source_paths
-                for x in str(retrieved_record.get("source_url", "")).split(";")
-            ):
-                record["metadata_source"] = "CURATED"
+            # if not any(
+            #     x in cur_project_source_paths
+            #     for x in str(retrieved_record.get("source_url", "")).split(";")
+            # ):
 
-            # Note : don't list the same repository as its own source_url
+            # TODO : check: don't list the same repository as its own source_url
             # (source_url s should point to other/external repos)
-            for cur_project_source_path in cur_project_source_paths:
-                if "source_url" in record:
-                    record["source_url"] = str(record["source_url"]).replace(
-                        cur_project_source_path, ""
-                    )
-            if record["source_url"] == "":
-                del record["source_url"]
 
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
@@ -585,7 +584,7 @@ class Preparation(Process):
                 if k not in self.fields_to_keep and k != "source_url":
                     self.fields_to_keep.append(k)
 
-        return record
+        return RECORD
 
     def __mostly_upper_case(self, input_string: str) -> bool:
         if not re.match(r"[a-zA-Z]+", input_string):
@@ -627,21 +626,6 @@ class Preparation(Process):
 
         return author_string
 
-    def __get_container_title(self, record: dict) -> str:
-        container_title = "NA"
-        if "ENTRYTYPE" not in record:
-            container_title = record.get("journal", record.get("booktitle", "NA"))
-        else:
-            if "article" == record["ENTRYTYPE"]:
-                container_title = record.get("journal", "NA")
-            if "inproceedings" == record["ENTRYTYPE"]:
-                container_title = record.get("booktitle", "NA")
-            if "book" == record["ENTRYTYPE"]:
-                container_title = record.get("title", "NA")
-            if "inbook" == record["ENTRYTYPE"]:
-                container_title = record.get("booktitle", "NA")
-        return container_title
-
     def __unify_pages_field(self, input_string: str) -> str:
         if not isinstance(input_string, str):
             return input_string
@@ -655,14 +639,13 @@ class Preparation(Process):
         )
         return input_string
 
-    def get_md_from_doi(self, record: dict) -> dict:
-        if "doi" not in record or "CURATED" == record.get("metadata_source", ""):
-            return record
-        record = self.retrieve_doi_metadata(record)
-        record = self.get_link_from_doi(record)
-        record.update(status=RecordState.md_prepared)
-        record.update(metadata_source="DOI.ORG")
-        return record
+    def get_md_from_doi(self, RECORD: Record) -> Record:
+        if "doi" not in RECORD.data or RECORD.is_curated():
+            return RECORD
+
+        self.retrieve_doi_metadata(RECORD)
+        self.get_link_from_doi(RECORD)
+        return RECORD
 
     def crossref_json_to_record(self, item: dict) -> dict:
         # Note: the format differst between crossref and doi.org
@@ -791,7 +774,7 @@ class Preparation(Process):
             bibl = re.sub(r"[\W]+", "", bibl.replace(" ", "_"))
             params["query.bibliographic"] = bibl.replace("_", " ")
 
-            container_title = self.__get_container_title(record)
+            container_title = Record(record).get_container_title()
             if "." not in container_title:
                 container_title = container_title.replace(" ", "_")
                 container_title = re.sub(r"[\W]+", "", container_title)
@@ -845,8 +828,8 @@ class Preparation(Process):
                     record.get("title", "").lower(),
                 )
                 container_similarity = fuzz.partial_ratio(
-                    self.__get_container_title(retrieved_record).lower(),
-                    self.__get_container_title(record).lower(),
+                    Record(retrieved_record).get_container_title().lower(),
+                    Record(record).get_container_title().lower(),
                 )
                 weights = [0.6, 0.4]
                 similarities = [title_similarity, container_similarity]
@@ -874,121 +857,128 @@ class Preparation(Process):
         else:
             return [most_similar_record]
 
-    def __container_is_abbreviated(self, record: dict) -> bool:
-        if "journal" in record:
-            if record["journal"].count(".") > 2:
+    def __container_is_abbreviated(self, RECORD: Record) -> bool:
+        if "journal" in RECORD.data:
+            if RECORD.data["journal"].count(".") > 2:
                 return True
-            if record["journal"].isupper():
+            if RECORD.data["journal"].isupper():
                 return True
-        if "booktitle" in record:
-            if record["booktitle"].count(".") > 2:
+        if "booktitle" in RECORD.data:
+            if RECORD.data["booktitle"].count(".") > 2:
                 return True
-            if record["booktitle"].isupper():
+            if RECORD.data["booktitle"].isupper():
                 return True
         # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
         return False
 
-    def __abbreviate_container(self, record: dict, min_len: int) -> dict:
-        if "journal" in record:
-            record["journal"] = " ".join(
-                [x[:min_len] for x in record["journal"].split(" ")]
+    def __abbreviate_container(self, RECORD: Record, min_len: int) -> Record:
+        if "journal" in RECORD.data:
+            RECORD.data["journal"] = " ".join(
+                [x[:min_len] for x in RECORD.data["journal"].split(" ")]
             )
-        return record
+        return RECORD
 
-    def __get_abbrev_container_min_len(self, record: dict) -> int:
+    def __get_abbrev_container_min_len(self, RECORD: Record) -> int:
         min_len = -1
-        if "journal" in record:
-            min_len = min(len(x) for x in record["journal"].replace(".", "").split(" "))
-        if "booktitle" in record:
+        if "journal" in RECORD.data:
             min_len = min(
-                len(x) for x in record["booktitle"].replace(".", "").split(" ")
+                len(x) for x in RECORD.data["journal"].replace(".", "").split(" ")
+            )
+        if "booktitle" in RECORD.data:
+            min_len = min(
+                len(x) for x in RECORD.data["booktitle"].replace(".", "").split(" ")
             )
         return min_len
 
-    def get_retrieval_similarity(self, record: dict, retrieved_record: dict) -> float:
+    def get_retrieval_similarity(
+        self, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
+    ) -> float:
+        RECORD = Record(RECORD_ORIGINAL.data.copy())
+        RETRIEVED_RECORD = Record(RETRIEVED_RECORD_ORIGINAL.data.copy())
+        if self.__container_is_abbreviated(RECORD):
+            min_len = self.__get_abbrev_container_min_len(RECORD)
+            self.__abbreviate_container(RETRIEVED_RECORD, min_len)
+            self.__abbreviate_container(RECORD, min_len)
+        if self.__container_is_abbreviated(RETRIEVED_RECORD):
+            min_len = self.__get_abbrev_container_min_len(RETRIEVED_RECORD)
+            self.__abbreviate_container(RECORD, min_len)
+            self.__abbreviate_container(RETRIEVED_RECORD, min_len)
 
-        if self.__container_is_abbreviated(record):
-            min_len = self.__get_abbrev_container_min_len(record)
-            self.__abbreviate_container(retrieved_record, min_len)
-            self.__abbreviate_container(record, min_len)
-        if self.__container_is_abbreviated(retrieved_record):
-            min_len = self.__get_abbrev_container_min_len(retrieved_record)
-            self.__abbreviate_container(record, min_len)
-            self.__abbreviate_container(retrieved_record, min_len)
+        if "title" in RECORD.data:
+            RECORD.data["title"] = RECORD.data["title"][:90]
+        if "title" in RETRIEVED_RECORD.data:
+            RETRIEVED_RECORD.data["title"] = RETRIEVED_RECORD.data["title"][:90]
 
-        if "title" in record:
-            record["title"] = record["title"][:90]
-        if "title" in retrieved_record:
-            retrieved_record["title"] = retrieved_record["title"][:90]
-
-        if "author" in record:
-            record["author"] = utils.format_authors_string(record["author"])
-            record["author"] = record["author"][:45]
-        if "author" in retrieved_record:
-            retrieved_record["author"] = utils.format_authors_string(
-                retrieved_record["author"]
-            )
-            retrieved_record["author"] = retrieved_record["author"][:45]
-        if not ("volume" in record and "volume" in retrieved_record):
-            record["volume"] = "nan"
-            retrieved_record["volume"] = "nan"
-        if not ("number" in record and "number" in retrieved_record):
-            record["number"] = "nan"
-            retrieved_record["number"] = "nan"
-        if not ("pages" in record and "pages" in retrieved_record):
-            record["pages"] = "nan"
-            retrieved_record["pages"] = "nan"
+        if "author" in RECORD.data:
+            RECORD.format_authors_string()
+            RECORD.data["author"] = RECORD.data["author"][:45]
+        if "author" in RETRIEVED_RECORD.data:
+            RETRIEVED_RECORD.format_authors_string()
+            RETRIEVED_RECORD.data["author"] = RETRIEVED_RECORD.data["author"][:45]
+        if not ("volume" in RECORD.data and "volume" in RETRIEVED_RECORD.data):
+            RECORD.data["volume"] = "nan"
+            RETRIEVED_RECORD.data["volume"] = "nan"
+        if not ("number" in RECORD.data and "number" in RETRIEVED_RECORD.data):
+            RECORD.data["number"] = "nan"
+            RETRIEVED_RECORD.data["number"] = "nan"
+        if not ("pages" in RECORD.data and "pages" in RETRIEVED_RECORD.data):
+            RECORD.data["pages"] = "nan"
+            RETRIEVED_RECORD.data["pages"] = "nan"
         # Sometimes, the number of pages is provided (not the range)
-        elif not ("--" in record["pages"] and "--" in retrieved_record["pages"]):
-            record["pages"] = "nan"
-            retrieved_record["pages"] = "nan"
+        elif not (
+            "--" in RECORD.data["pages"] and "--" in RETRIEVED_RECORD.data["pages"]
+        ):
+            RECORD.data["pages"] = "nan"
+            RETRIEVED_RECORD.data["pages"] = "nan"
 
-        if "editorial" in record.get("title", "NA").lower():
-            if not all(x in record for x in ["volume", "number"]):
+        if "editorial" in RECORD.data.get("title", "NA").lower():
+            if not all(x in RECORD.data for x in ["volume", "number"]):
                 return 0
-        # pp.pprint(record)
+        # pp.pprint(RECORD.data)
         # pp.pprint(retrieved_record)
-        similarity = utils.get_record_similarity(record, retrieved_record)
+        similarity = Record.get_record_similarity(RECORD, RETRIEVED_RECORD)
 
         return similarity
 
-    def get_md_from_crossref(self, record: dict) -> dict:
-        if "title" not in record or "CURATED" == record.get("metadata_source", ""):
-            return record
+    def get_md_from_crossref(self, RECORD: Record) -> Record:
+        if "title" not in RECORD.data or RECORD.is_curated():
+            return RECORD
 
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
-        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({record["ID"]})')
+        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({RECORD.data["ID"]})')
         MAX_RETRIES_ON_ERROR = 3
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
-        if len(record["title"]) > 35:
+        if len(RECORD.data["title"]) > 35:
             try:
 
-                retrieved_record_list = self.__crossref_query(record)
+                retrieved_record_list = self.__crossref_query(RECORD.get_data())
                 retrieved_record = retrieved_record_list.pop()
                 retries = 0
                 while not retrieved_record and retries < MAX_RETRIES_ON_ERROR:
                     retries += 1
-                    retrieved_record_list = self.__crossref_query(record)
+                    retrieved_record_list = self.__crossref_query(RECORD.get_data())
                     retrieved_record = retrieved_record_list.pop()
 
                 if 0 == len(retrieved_record):
-                    return record
+                    return RECORD
 
-                similarity = self.get_retrieval_similarity(
-                    record.copy(), retrieved_record.copy()
-                )
+                RETRIEVED_RECORD = Record(retrieved_record)
+                similarity = self.get_retrieval_similarity(RECORD, RETRIEVED_RECORD)
                 if similarity > self.RETRIEVAL_SIMILARITY:
                     self.REVIEW_MANAGER.logger.debug("Found matching record")
                     self.REVIEW_MANAGER.logger.debug(
                         f"crossref similarity: {similarity} "
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
-                    record = self.__fuse_best_fields(record, retrieved_record)
-                    record = self.get_link_from_doi(record)
-                    record.update(status=RecordState.md_prepared)
-                    record.update(metadata_source="CROSSREF")
+                    source_link = (
+                        f"https://api.crossref.org/works/{RETRIEVED_RECORD.data['doi']}"
+                    )
+                    RECORD.fuse_best_fields(RETRIEVED_RECORD, source_link)
+                    self.get_link_from_doi(RECORD)
+                    RECORD.set_masterdata_complete()
+                    RECORD.set_status(RecordState.md_prepared)
 
                 else:
                     self.REVIEW_MANAGER.logger.debug(
@@ -1000,20 +990,20 @@ class Preparation(Process):
                 pass
             except KeyboardInterrupt:
                 sys.exit()
-        return record
+        return RECORD
 
-    def get_year_from_vol_iss_jour_crossref(self, record: dict) -> dict:
+    def get_year_from_vol_iss_jour_crossref(self, RECORD: Record) -> Record:
         # The year depends on journal x volume x issue
         if not (
-            ("journal" in record and "volume" in record and "number")
-            and "year" not in record
+            ("journal" in RECORD.data and "volume" in RECORD.data and "number")
+            and "year" not in RECORD.data
         ):
-            return record
+            return RECORD
 
-        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({record["ID"]})')
+        self.REVIEW_MANAGER.logger.debug(f'get_md_from_crossref({RECORD.data["ID"]})')
         MAX_RETRIES_ON_ERROR = 3
         try:
-            modified_record = record.copy()
+            modified_record = RECORD.data.copy()
             modified_record = {
                 k: v
                 for k, v in modified_record.items()
@@ -1024,39 +1014,39 @@ class Preparation(Process):
             # query.container-title=%22MIS+Quarterly%22&query=%2216+2%22
 
             retrieved_records_list = self.__crossref_query(
-                record, jour_vol_iss_list=True
+                RECORD.data, jour_vol_iss_list=True
             )
             retries = 0
             while not retrieved_records_list and retries < MAX_RETRIES_ON_ERROR:
                 retries += 1
                 retrieved_records_list = self.__crossref_query(
-                    record, jour_vol_iss_list=True
+                    RECORD.data, jour_vol_iss_list=True
                 )
             if 0 == len(retrieved_records_list):
-                return record
+                return RECORD
 
             retrieved_records = [
                 r
                 for r in retrieved_records_list
-                if r.get("volume", "NA") == record.get("volume", "NA")
-                and r.get("journal", "NA") == record.get("journal", "NA")
-                and r.get("number", "NA") == record.get("number", "NA")
+                if r.get("volume", "NA") == RECORD.data.get("volume", "NA")
+                and r.get("journal", "NA") == RECORD.data.get("journal", "NA")
+                and r.get("number", "NA") == RECORD.data.get("number", "NA")
             ]
             years = [r["year"] for r in retrieved_records]
             if len(years) == 0:
-                return record
+                return RECORD
             most_common = max(years, key=years.count)
             self.REVIEW_MANAGER.logger.debug(most_common)
             self.REVIEW_MANAGER.logger.debug(years.count(most_common))
             if years.count(most_common) > 3:
-                record["year"] = most_common
-                record["metadata_source"] = "CROSSREF"
+                RECORD.data["year"] = most_common
+                RECORD.data["metadata_source"] = "CROSSREF"
         except requests.exceptions.RequestException:
             pass
         except KeyboardInterrupt:
             sys.exit()
 
-        return record
+        return RECORD
 
     def __sem_scholar_json_to_record(self, item: dict, record: dict) -> dict:
         retrieved_record: dict = {}
@@ -1093,17 +1083,17 @@ class Preparation(Process):
             del retrieved_record[key]
         return retrieved_record
 
-    def get_doi_from_sem_scholar(self, record: dict) -> dict:
+    def get_doi_from_sem_scholar(self, RECORD: Record) -> Record:
 
         enrich_only = False
-        if "doi" in record:
+        if "doi" in RECORD.data:
             enrich_only = True
 
         try:
             search_api_url = (
                 "https://api.semanticscholar.org/graph/v1/paper/search?query="
             )
-            url = search_api_url + record.get("title", "").replace(" ", "+")
+            url = search_api_url + RECORD.data.get("title", "").replace(" ", "+")
             self.REVIEW_MANAGER.logger.debug(url)
             headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
             ret = self.session.request(
@@ -1114,9 +1104,9 @@ class Preparation(Process):
             data = json.loads(ret.text)
             items = data["data"]
             if len(items) == 0:
-                return record
+                return RECORD
             if "paperId" not in items[0]:
-                return record
+                return RECORD
 
             paper_id = items[0]["paperId"]
             record_retrieval_url = (
@@ -1128,17 +1118,18 @@ class Preparation(Process):
             )
             ret_ent.raise_for_status()
             item = json.loads(ret_ent.text)
-            retrieved_record = self.__sem_scholar_json_to_record(item, record)
+            retrieved_record = self.__sem_scholar_json_to_record(item, RECORD.data)
+            RETRIEVED_RECORD = Record(retrieved_record)
 
-            red_record_copy = record.copy()
+            # Remove fields that are not/rarely available before
+            # calculating similarity metrics
+            red_record_copy = RECORD.data.copy()
             for key in ["volume", "number", "number", "pages"]:
                 if key in red_record_copy:
                     del red_record_copy[key]
             # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
-
-            similarity = self.get_retrieval_similarity(
-                red_record_copy, retrieved_record.copy()
-            )
+            RED_REC_COPY = Record(red_record_copy)
+            similarity = self.get_retrieval_similarity(RED_REC_COPY, RETRIEVED_RECORD)
             if similarity > self.RETRIEVAL_SIMILARITY:
                 self.REVIEW_MANAGER.logger.debug("Found matching record")
                 self.REVIEW_MANAGER.logger.debug(
@@ -1147,9 +1138,13 @@ class Preparation(Process):
                 )
 
                 if not enrich_only:
-                    record = self.__fuse_best_fields(record, retrieved_record)
-                if record.get("doi", "") == "NONE":
-                    del record["doi"]
+                    RECORD.fuse_best_fields(
+                        RETRIEVED_RECORD,
+                        RETRIEVED_RECORD.data.get("sem_scholar_id", "SEMANTIC_SCHOLAR"),
+                    )
+
+                # TODO : cover else (enrigh_only)
+
             else:
                 self.REVIEW_MANAGER.logger.debug(
                     f"scholar similarity: {similarity} "
@@ -1164,7 +1159,7 @@ class Preparation(Process):
             pass
         except requests.exceptions.RequestException:
             pass
-        return record
+        return RECORD
 
     def __open_library_json_to_record(self, item: dict) -> dict:
         retrieved_record: dict = {}
@@ -1192,16 +1187,14 @@ class Preparation(Process):
 
         return retrieved_record
 
-    def get_md_from_open_library(self, record: dict) -> dict:
+    def get_md_from_open_library(self, RECORD: Record) -> Record:
 
-        if record.get("ENTRYTYPE", "NA") != "book" or "CURATED" == record.get(
-            "metadata_source", ""
-        ):
-            return record
+        if RECORD.data.get("ENTRYTYPE", "NA") != "book" or RECORD.is_curated():
+            return RECORD
 
         try:
-            if "isbn" in record:
-                isbn = record["isbn"].replace("-", "").replace(" ", "")
+            if "isbn" in RECORD.data:
+                isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
                 ret = self.session.request(
                     "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
@@ -1209,30 +1202,32 @@ class Preparation(Process):
                 ret.raise_for_status()
                 self.REVIEW_MANAGER.logger.debug(url)
                 if '"error": "notfound"' in ret.text:
-                    del record["isbn"]
+                    del RECORD.data["isbn"]
 
                 item = json.loads(ret.text)
 
-            if "isbn" not in record:
+            if "isbn" not in RECORD.data:
                 base_url = "https://openlibrary.org/search.json?"
                 url = ""
-                if record.get("author", "NA").split(",")[0]:
+                if RECORD.data.get("author", "NA").split(",")[0]:
                     url = (
-                        base_url + "&author=" + record.get("author", "NA").split(",")[0]
+                        base_url
+                        + "&author="
+                        + RECORD.data.get("author", "NA").split(",")[0]
                     )
-                if "inbook" == record["ENTRYTYPE"] and "editor" in record:
-                    if record.get("editor", "NA").split(",")[0]:
+                if "inbook" == RECORD.data["ENTRYTYPE"] and "editor" in RECORD.data:
+                    if RECORD.data.get("editor", "NA").split(",")[0]:
                         url = (
                             base_url
                             + "&author="
-                            + record.get("editor", "NA").split(",")[0]
+                            + RECORD.data.get("editor", "NA").split(",")[0]
                         )
                 if base_url not in url:
-                    return record
+                    return RECORD
 
-                title = record.get("title", record.get("booktitle", "NA"))
+                title = RECORD.data.get("title", RECORD.data.get("booktitle", "NA"))
                 if len(title) < 10:
-                    return record
+                    return RECORD
                 if ":" in title:
                     title = title[: title.find(":")]  # To catch sub-titles
                 url = url + "&title=" + title.replace(" ", "+")
@@ -1244,21 +1239,21 @@ class Preparation(Process):
 
                 # if we have an exact match, we don't need to check the similarity
                 if '"numFoundExact": true,' not in ret.text:
-                    return record
+                    return RECORD
 
                 data = json.loads(ret.text)
                 items = data["docs"]
                 if not items:
-                    return record
+                    return RECORD
                 item = items[0]
 
             retrieved_record = self.__open_library_json_to_record(item)
 
             for key, val in retrieved_record.items():
-                record[key] = val
-            record.update(metadata_source="OPEN_LIBRARY")
-            if "title" in record and "booktitle" in record:
-                del record["booktitle"]
+                RECORD.data[key] = val
+            RECORD.data.update(metadata_source="OPEN_LIBRARY")
+            if "title" in RECORD.data and "booktitle" in RECORD.data:
+                del RECORD.data["booktitle"]
         except requests.exceptions.RequestException:
             pass
         except UnicodeEncodeError:
@@ -1266,7 +1261,7 @@ class Preparation(Process):
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
             pass
-        return record
+        return RECORD
 
     def __get_dblp_venue(self, venue_string: str, type: str) -> str:
         # Note : venue_string should be like "behaviourIT"
@@ -1385,12 +1380,12 @@ class Preparation(Process):
         items = [hit["info"] for hit in hits]
         return items
 
-    def get_md_from_dblp(self, record: dict) -> dict:
-        if "dblp_key" in record:
-            return record
+    def get_md_from_dblp(self, RECORD: Record) -> Record:
+        if "dblp_key" in RECORD.data:
+            return RECORD
 
         try:
-            query = "" + record.get("title", "").replace("-", "_")
+            query = "" + RECORD.data.get("title", "").replace("-", "_")
             # Note: queries combining title+author/journal do not seem to work any more
             # if "author" in record:
             #     query = query + "_" + record["author"].split(",")[0]
@@ -1404,15 +1399,14 @@ class Preparation(Process):
             items = self.__retrieve_dblp_items(query)
 
             if len(items) == 0:
-                return record
+                return RECORD
 
             for item in items:
                 retrieved_record = self.dblp_json_to_record(item)
                 # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+                RETRIEVED_RECORD = Record(retrieved_record)
 
-                similarity = self.get_retrieval_similarity(
-                    record.copy(), retrieved_record.copy()
-                )
+                similarity = self.get_retrieval_similarity(RECORD, RETRIEVED_RECORD)
 
                 if similarity > self.RETRIEVAL_SIMILARITY:
                     self.REVIEW_MANAGER.logger.debug("Found matching record")
@@ -1420,10 +1414,11 @@ class Preparation(Process):
                         f"dblp similarity: {similarity} "
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
-                    record = self.__fuse_best_fields(record, retrieved_record)
-                    record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
-                    record.update(metadata_source="DBLP")
-                    record.update(status=RecordState.md_prepared)
+                    dblp_key = "https://dblp.org/rec/" + item["key"]
+                    RECORD.fuse_best_fields(RETRIEVED_RECORD, dblp_key)
+                    RECORD.data["dblp_key"] = dblp_key
+                    RECORD.set_masterdata_complete()
+                    RECORD.set_status(RecordState.md_prepared)
                 else:
                     self.REVIEW_MANAGER.logger.debug(
                         f"dblp similarity: {similarity} "
@@ -1433,145 +1428,21 @@ class Preparation(Process):
             pass
         except requests.exceptions.RequestException:
             pass
-        return record
+        return RECORD
 
     def __percent_upper_chars(self, input_string: str) -> float:
         return sum(map(str.isupper, input_string)) / len(input_string)
 
-    def __select_best_author(self, default: str, candidate: str) -> str:
-        best_author = default
-
-        default_mostly_upper = self.__percent_upper_chars(default) > 0.8
-        candidate_mostly_upper = self.__percent_upper_chars(candidate) > 0.8
-
-        if default_mostly_upper and not candidate_mostly_upper:
-            best_author = candidate
-
-        # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
-        if ", and " in default and ", and " not in candidate:
-            return candidate
-        if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
-            best_author = candidate
-
-        self.REVIEW_MANAGER.logger.debug(
-            f"best_author({default}, \n"
-            f"                                      {candidate}) = \n"
-            f"                                      {best_author}"
-        )
-        return best_author
-
-    def __select_best_pages(self, default: str, candidate: str) -> str:
-        best_pages = default
-        if "--" in candidate and "--" not in default:
-            best_pages = candidate
-
-        self.REVIEW_MANAGER.logger.debug(
-            f"best_pages({default}, {candidate}) = {best_pages}"
-        )
-
-        return best_pages
-
-    def __select_best_title(self, default: str, candidate: str) -> str:
-        best_title = default
-
-        default_upper = self.__percent_upper_chars(default)
-        candidate_upper = self.__percent_upper_chars(candidate)
-
-        # Relatively simple rule...
-        # catches cases when default is all upper or title case
-        if default_upper > candidate_upper:
-            best_title = candidate
-
-        self.REVIEW_MANAGER.logger.debug(
-            f"best_title({default},\n"
-            f"                                      {candidate}) = \n"
-            f"                                      {best_title}"
-        )
-
-        return best_title
-
-    def __select_best_journal(self, default: str, candidate: str) -> str:
-
-        best_journal = default
-
-        default_upper = self.__percent_upper_chars(default)
-        candidate_upper = self.__percent_upper_chars(candidate)
-
-        # Simple heuristic to avoid abbreviations
-        if "." in default and "." not in candidate:
-            best_journal = candidate
-        # Relatively simple rule...
-        # catches cases when default is all upper or title case
-        if default_upper > candidate_upper:
-            best_journal = candidate
-
-        self.REVIEW_MANAGER.logger.debug(
-            f"best_journal({default}, \n"
-            f"                                      {candidate}) = \n"
-            f"                                      {best_journal}"
-        )
-
-        return best_journal
-
-    def __fuse_best_fields(self, record: dict, merging_record: dict) -> dict:
-        """Apply heuristics to create a fusion of the best fields based on
-        quality heuristics"""
-
-        self.REVIEW_MANAGER.logger.debug(
-            "Fuse retrieved record " "(select fields with the highest quality)"
-        )
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(merging_record))
-        for key, val in merging_record.items():
-            if val:
-                if "author" == key:
-                    if "author" in record:
-                        if record["author"] != merging_record["author"]:
-                            record["author"] = self.__select_best_author(
-                                record["author"], merging_record["author"]
-                            )
-                    else:
-                        record["author"] = str(val)
-                elif "pages" == key:
-                    if "pages" in record:
-                        if record["pages"] != merging_record["pages"]:
-                            record["pages"] = self.__select_best_pages(
-                                record["pages"], merging_record["pages"]
-                            )
-                    else:
-                        record["pages"] = str(val)
-                elif "title" == key:
-                    if "title" in record:
-                        if record["title"] != merging_record["title"]:
-                            record["title"] = self.__select_best_title(
-                                record["title"], merging_record["title"]
-                            )
-                    else:
-                        record["title"] = str(val)
-                elif "journal" == key:
-                    if "journal" in record:
-                        if record["journal"] != merging_record["journal"]:
-                            record["journal"] = self.__select_best_journal(
-                                record["journal"], merging_record["journal"]
-                            )
-                    else:
-                        record["journal"] = str(val)
-                else:
-                    record[key] = str(val)
-
-        return record
-
-    def retrieve_doi_metadata(self, record: dict) -> dict:
-        if "doi" not in record:
-            return record
+    def retrieve_doi_metadata(self, RECORD: Record) -> Record:
+        if "doi" not in RECORD.data:
+            return RECORD
 
         # for testing:
         # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
         # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
 
-        # For exceptions:
-        orig_record = record.copy()
         try:
-            url = "http://dx.doi.org/" + record["doi"]
+            url = "http://dx.doi.org/" + RECORD.data["doi"]
             self.REVIEW_MANAGER.logger.debug(url)
             headers = {"accept": "application/vnd.citationstyles.csl+json"}
             ret = self.session.request(
@@ -1580,30 +1451,34 @@ class Preparation(Process):
             ret.raise_for_status()
             if ret.status_code != 200:
                 self.REVIEW_MANAGER.report_logger.info(
-                    f' {record["ID"]}'.ljust(self.PAD, " ")
+                    f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
                     + "metadata for "
-                    + f'doi  {record["doi"]} not (yet) available'
+                    + f'doi  {RECORD.data["doi"]} not (yet) available'
                 )
-                return record
+                return RECORD
 
             retrieved_json = json.loads(ret.text)
             retrieved_record = self.crossref_json_to_record(retrieved_json)
-            record = self.__fuse_best_fields(record, retrieved_record)
+            RETRIEVED_RECORD = Record(retrieved_record)
+            RECORD.fuse_best_fields(RETRIEVED_RECORD, url)
+            RECORD.set_masterdata_complete()
+            RECORD.set_status(RecordState.md_prepared)
+
         except json.decoder.JSONDecodeError:
             pass
         except requests.exceptions.RequestException:
             pass
-            return orig_record
+            return RECORD
 
-        if "title" in record:
-            record["title"] = self.__format_if_mostly_upper(record["title"])
-            record["title"] = record["title"].replace("\n", " ")
+        if "title" in RECORD.data:
+            RECORD.data["title"] = self.__format_if_mostly_upper(RECORD.data["title"])
+            RECORD.data["title"] = RECORD.data["title"].replace("\n", " ")
 
-        return record
+        return RECORD
 
-    def get_doi_from_urls(self, record: dict) -> dict:
+    def get_doi_from_urls(self, RECORD: Record) -> Record:
 
-        url = record.get("url", record.get("fulltext", "NA"))
+        url = RECORD.data.get("url", RECORD.data.get("fulltext", "NA"))
         if "NA" != url:
             try:
                 self.REVIEW_MANAGER.logger.debug(f"Retrieve doi-md from {url}")
@@ -1621,262 +1496,226 @@ class Preparation(Process):
                         ret_dois = counter.most_common()
 
                     if not ret_dois:
-                        return record
+                        return RECORD
                     for doi, freq in ret_dois:
-                        retrieved_record = {"doi": doi.upper(), "ID": record["ID"]}
-                        retrieved_record = self.retrieve_doi_metadata(retrieved_record)
+                        retrieved_record = {"doi": doi.upper(), "ID": RECORD.data["ID"]}
+                        RETRIEVED_RECORD = Record(retrieved_record)
+                        self.retrieve_doi_metadata(RETRIEVED_RECORD)
+
                         similarity = self.get_retrieval_similarity(
-                            record.copy(), retrieved_record.copy()
+                            RECORD, RETRIEVED_RECORD
                         )
                         if similarity > self.RETRIEVAL_SIMILARITY:
-                            for key, val in retrieved_record.items():
-                                record[key] = val
+                            RECORD.fuse_best_fields(RETRIEVED_RECORD, url)
 
                             self.REVIEW_MANAGER.report_logger.debug(
                                 "Retrieved metadata based on doi from"
-                                f' website: {record["doi"]}'
+                                f' website: {RECORD.data["doi"]}'
                             )
-                            record.update(metadata_source="LINKED_URL")
 
             except requests.exceptions.RequestException:
                 pass
-        return record
+        return RECORD
 
-    def __missing_fields(self, record: dict) -> list:
-        missing_fields = []
-        if record["ENTRYTYPE"] in Record.record_field_requirements.keys():
-            reqs = Record.record_field_requirements[record["ENTRYTYPE"]]
-            missing_fields = [
-                x for x in reqs if x not in record.keys() or "" == record[x]
-            ]
-        else:
-            missing_fields = ["no field requirements defined"]
-        return missing_fields
-
-    def __is_complete(self, record: dict) -> bool:
-        sufficiently_complete = False
-        if record["ENTRYTYPE"] in Record.record_field_requirements.keys():
-            if len(self.__missing_fields(record)) == 0:
-                sufficiently_complete = True
-        if record.get("metadata_source", "") in [
-            "CROSSREF",
-            "DOI.ORG",
-            "CURATED",
-            "DBLP",
-        ]:
-            sufficiently_complete = True
-        return sufficiently_complete
-
-    def __get_inconsistencies(self, record: dict) -> list:
-        inconsistent_fields = []
-        if record["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
-            incons_fields = Record.record_field_inconsistencies[record["ENTRYTYPE"]]
-            inconsistent_fields = [x for x in incons_fields if x in record]
-        # Note: a thesis should be single-authored
-        if "thesis" in record["ENTRYTYPE"] and " and " in record.get("author", ""):
-            inconsistent_fields.append("author")
-        return inconsistent_fields
-
-    def __has_inconsistent_fields(self, record: dict) -> bool:
-        found_inconsistencies = False
-        if record["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
-            inconsistencies = self.__get_inconsistencies(record)
-            if inconsistencies:
-                found_inconsistencies = True
-        return found_inconsistencies
-
-    def __has_incomplete_fields(self, record: dict) -> bool:
-        if len(Record.get_incomplete_fields(record)) > 0:
-            return True
-        return False
-
-    def drop_fields(self, record: dict) -> dict:
-        for key in list(record):
-            if "NA" == record[key]:
-                del record[key]
+    def drop_fields(self, RECORD: Record) -> Record:
+        for key in list(RECORD.data.keys()):
+            if "NA" == RECORD.data[key]:
+                del RECORD.data[key]
             if key not in self.fields_to_keep:
-                record.pop(key)
+                RECORD.data.pop(key)
                 # warn if fields are dropped that are not in fields_to_drop
                 if key not in self.fields_to_drop:
                     self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
-        for key in list(record):
-            if "" == record[key]:
-                del record[key]
+        for key in list(RECORD.data.keys()):
+            if key in self.fields_to_keep:
+                continue
+            if "" == RECORD.data[key]:
+                del RECORD.data[key]
 
-        if "publisher" in record:
-            if "researchgate.net" == record["publisher"]:
-                del record["publisher"]
-        return record
+        if "publisher" in RECORD.data:
+            if "researchgate.net" == RECORD.data["publisher"]:
+                del RECORD.data["publisher"]
+        return RECORD
 
-    def remove_broken_IDs(self, record: dict) -> dict:
+    def remove_broken_IDs(self, RECORD: Record) -> Record:
 
         if not self.FIRST_ROUND:
-            return record
+            return RECORD
 
-        if "doi" in record:
+        if "doi" in RECORD.data:
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
-            d = re.match(r"^10.\d{4,9}\/", record["doi"])
+            d = re.match(r"^10.\d{4,9}\/", RECORD.data["doi"])
             if not d:
-                del record["doi"]
-        if "isbn" in record:
-            isbn = record["isbn"].replace("-", "").replace(" ", "")
+                del RECORD.data["doi"]
+        if "isbn" in RECORD.data:
+            isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
             ret = self.session.request(
                 "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
             )
             if '"error": "notfound"' in ret.text:
-                del record["isbn"]
+                del RECORD.data["isbn"]
 
-        return record
+        return RECORD
 
-    def global_ids_consistency_check(self, record: dict) -> dict:
+    def global_ids_consistency_check(self, RECORD: Record) -> Record:
         """When metadata provided by DOI/crossref or on the website (url) differs from
-        the record: set status to md_needs_manual_preparation."""
+        the RECORD: set status to md_needs_manual_preparation."""
 
         if not self.FIRST_ROUND:
-            return record
+            return RECORD
 
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
-        if "doi" in record:
-            crossref_md = self.get_md_from_crossref(record.copy())
+        if "doi" in RECORD.data:
+            R_COPY = Record(RECORD.get_data())
+            CROSSREF_MD = self.get_md_from_crossref(R_COPY)
             # self.REVIEW_MANAGER.pp.pprint(doi_md)
-            for k, v in crossref_md.items():
+            for k, v in CROSSREF_MD.data.items():
                 if k not in fields_to_check:
                     continue
                 if not isinstance(v, str):
                     continue
-                if k in record:
-                    if len(crossref_md[k]) < 5 or len(record[k]) < 5:
+                if k in RECORD.data:
+                    if len(CROSSREF_MD.data[k]) < 5 or len(RECORD.data[k]) < 5:
                         continue
                     if (
-                        fuzz.partial_ratio(record[k].lower(), crossref_md[k].lower())
+                        fuzz.partial_ratio(
+                            RECORD.data[k].lower(), CROSSREF_MD.data[k].lower()
+                        )
                         < 70
                     ):
-                        record["status"] = RecordState.md_needs_manual_preparation
-                        record[
+                        # TODO : update man_prep_hints:
+                        RECORD.data["status"] = RecordState.md_needs_manual_preparation
+                        RECORD.data[
                             "man_prep_hints"
                         ] = f"Disagreement with doi metadata ({k}: {v})"
 
-        if "url" in record:
-            url_md = self.retrieve_md_from_url(record.copy())
+        if "url" in RECORD.data:
+            R_COPY = Record(RECORD.get_data())
+            URL_MD = self.retrieve_md_from_url(R_COPY)
             # self.REVIEW_MANAGER.pp.pprint(url_md)
-            for k, v in url_md.items():
+            for k, v in URL_MD.data.items():
                 if k not in fields_to_check:
                     continue
                 if not isinstance(v, str):
                     continue
-                if k in record:
-                    if len(url_md[k]) < 5 or len(record[k]) < 5:
+                if k in RECORD.data:
+                    if len(URL_MD.data[k]) < 5 or len(RECORD.data[k]) < 5:
                         continue
-                    if fuzz.partial_ratio(record[k].lower(), url_md[k].lower()) < 70:
-                        record["status"] = RecordState.md_needs_manual_preparation
-                        record[
+                    if (
+                        fuzz.partial_ratio(
+                            RECORD.data[k].lower(), URL_MD.data[k].lower()
+                        )
+                        < 70
+                    ):
+                        RECORD.data["status"] = RecordState.md_needs_manual_preparation
+                        RECORD.data[
                             "man_prep_hints"
                         ] = f"Disagreement with url metadata ({k}: {v})"
 
         # self.REVIEW_MANAGER.pp.pprint(record)
 
-        return record
+        return RECORD
 
-    def remove_urls_with_500_errors(self, record: dict) -> dict:
+    def remove_urls_with_500_errors(self, RECORD: Record) -> Record:
 
         if not self.FIRST_ROUND:
-            return record
+            return RECORD
 
         try:
-            if "url" in record:
+            if "url" in RECORD.data:
                 r = self.session.request(
                     "GET",
-                    record["url"],
+                    RECORD.data["url"],
                     headers=self.requests_headers,
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    del record["url"]
+                    del RECORD.data["url"]
         except requests.exceptions.RequestException:
             pass
         try:
-            if "fulltext" in record:
+            if "fulltext" in RECORD.data:
                 r = self.session.request(
                     "GET",
-                    record["fulltext"],
+                    RECORD.data["fulltext"],
                     headers=self.requests_headers,
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    del record["fulltext"]
+                    del RECORD.data["fulltext"]
         except requests.exceptions.RequestException:
             pass
 
-        return record
+        return RECORD
 
-    def exclude_non_latin_alphabets(self, record: dict) -> dict:
+    def exclude_non_latin_alphabets(self, RECORD: Record) -> Record:
 
         str_to_check = " ".join(
             [
-                record.get("title", ""),
-                record.get("author", ""),
-                record.get("journal", ""),
-                record.get("booktitle", ""),
+                RECORD.data.get("title", ""),
+                RECORD.data.get("author", ""),
+                RECORD.data.get("journal", ""),
+                RECORD.data.get("booktitle", ""),
             ]
         )
         if not self.alphabet_detector.only_alphabet_chars(str_to_check, "LATIN"):
-            record["status"] = RecordState.rev_prescreen_excluded
-            record["prescreen_exclusion"] = "script:non_latin_alphabet"
+            RECORD.data["status"] = RecordState.rev_prescreen_excluded
+            RECORD.data["prescreen_exclusion"] = "script:non_latin_alphabet"
 
-        return record
+        return RECORD
 
-    def exclude_languages(self, record: dict) -> dict:
+    def exclude_languages(self, RECORD: Record) -> Record:
 
         if not self.FIRST_ROUND:
-            return record
+            return RECORD
 
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
-        if "language" in record:
-            record["language"] = (
-                record["language"].replace("English", "en").replace("ENG", "en")
+        if "language" in RECORD.data:
+            RECORD.data["language"] = (
+                RECORD.data["language"].replace("English", "en").replace("ENG", "en")
             )
-            if record["language"] not in self.languages_to_include:
-                record["status"] = RecordState.rev_prescreen_excluded
-                record[
+            if RECORD.data["language"] not in self.languages_to_include:
+                RECORD.data["status"] = RecordState.rev_prescreen_excluded
+                RECORD.data[
                     "prescreen_exclusion"
                 ] = f"language of title not in [{','.join(self.languages_to_include)}]"
-            return record
+            return RECORD
 
         # To avoid misclassifications for short titles
-        if len(record.get("title", "")) < 30:
-            return record
+        if len(RECORD.data.get("title", "")) < 30:
+            return RECORD
 
         confidenceValues = self.language_detector.compute_language_confidence_values(
-            text=record["title"]
+            text=RECORD.data["title"]
         )
         # Format: ENGLISH
 
         if self.DEBUG_MODE:
-            print(record["title"].lower())
+            print(RECORD.data["title"].lower())
             self.REVIEW_MANAGER.pp.pprint(confidenceValues)
         for lang, conf in confidenceValues:
             if "ENGLISH" == lang.name:
                 if conf > 0.95:
-                    return record
+                    return RECORD
 
-        record["status"] = RecordState.rev_prescreen_excluded
-        record[
+        RECORD.data["status"] = RecordState.rev_prescreen_excluded
+        RECORD.data[
             "prescreen_exclusion"
         ] = f"language of title not in [{','.join(self.languages_to_include)}]"
 
-        return record
+        return RECORD
 
-    def __check_potential_retracts(self, record: dict) -> dict:
+    def __check_potential_retracts(self, RECORD: Record) -> Record:
         # Note : we retrieved metadata in get_md_from_crossref()
-        if record.get("crossmark", "") == "True":
-            record["status"] = RecordState.md_needs_manual_preparation
-            record["man_prep_hints"] = "crossmark_restriction_potential_retract"
-        if record.get("warning", "") == "Withdrawn (according to DBLP)":
-            record["status"] = RecordState.md_needs_manual_preparation
-            record["man_prep_hints"] = "Withdrawn (according to DBLP)"
-        return record
+        if RECORD.data.get("crossmark", "") == "True":
+            RECORD.data["status"] = RecordState.md_needs_manual_preparation
+            RECORD.data["man_prep_hints"] = "crossmark_restriction_potential_retract"
+        if RECORD.data.get("warning", "") == "Withdrawn (according to DBLP)":
+            RECORD.data["status"] = RecordState.md_needs_manual_preparation
+            RECORD.data["man_prep_hints"] = "Withdrawn (according to DBLP)"
+        return RECORD
 
     def __read_next_record_str(self) -> typing.Iterator[str]:
         with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
@@ -1913,143 +1752,131 @@ class Preparation(Process):
                     return record
         return {}
 
-    def resolve_crossrefs(self, record: dict) -> dict:
-        if "crossref" in record:
-            crossref_record = self.get_crossref_record(record)
+    def resolve_crossrefs(self, RECORD: Record) -> Record:
+        if "crossref" in RECORD.data:
+            crossref_record = self.get_crossref_record(RECORD.data)
             if 0 != len(crossref_record):
                 for k, v in crossref_record.items():
-                    if k not in record:
-                        record[k] = v
-        return record
+                    if k not in RECORD.data:
+                        RECORD.data[k] = v
+        return RECORD
 
-    def log_notifications(self, record: dict, unprepared_record: dict) -> dict:
+    def log_notifications(self, RECORD: Record, UNPREPARED_RECORD: Record) -> Record:
 
         msg = ""
-
-        change = 1 - utils.get_record_similarity(record.copy(), unprepared_record)
+        change = 1 - Record.get_record_similarity(RECORD, UNPREPARED_RECORD)
         if change > 0.1:
             self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
+                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
                 + f"Change score: {round(change, 2)}"
             )
 
-        if not self.__is_complete(record):
-            self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
-                + f'{str(record["ENTRYTYPE"]).title()} '
-                f"missing {self.__missing_fields(record)}"
-            )
-            msg += f"missing: {self.__missing_fields(record)}"
+        if not RECORD.masterdata_is_complete():
+            for missing_field in RECORD.missing_fields():
+                RECORD.add_masterdata_provenance_hint(missing_field, "missing")
 
-        if self.__has_inconsistent_fields(record):
-            self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
-                + f'{str(record["ENTRYTYPE"]).title()} '
-                f"with {self.__get_inconsistencies(record)} field(s)"
-                " (inconsistent"
-            )
-            msg += f'; {record["ENTRYTYPE"]} but {self.__get_inconsistencies(record)}'
+        if RECORD.has_inconsistent_fields():
+            msg += f'; {RECORD.data["ENTRYTYPE"]} but {RECORD.get_inconsistencies()}'
 
-        if self.__has_incomplete_fields(record):
-            self.REVIEW_MANAGER.report_logger.info(
-                f' {record["ID"]}'.ljust(self.PAD, " ")
-                + f"Incomplete fields {Record.get_incomplete_fields(record)}"
-            )
-            msg += f"; incomplete: {Record.get_incomplete_fields(record)}"
+        if RECORD.has_incomplete_fields():
+            for incomplete_field in RECORD.get_incomplete_fields():
+                RECORD.add_masterdata_provenance_hint(incomplete_field, "incomplete")
+
         if change > 0.1:
             msg += f"; change-score: {change}"
 
         if msg != "":
-            if "man_prep_hints" not in record:
-                record["man_prep_hints"] = ""
+            if "man_prep_hints" not in RECORD.data:
+                RECORD.data["man_prep_hints"] = ""
             else:
-                record["man_prep_hints"] = record["man_prep_hints"] + ";"
-            record["man_prep_hints"] = record["man_prep_hints"] + msg.strip(";").lstrip(
-                " "
-            )
+                RECORD.data["man_prep_hints"] = RECORD.data["man_prep_hints"] + ";"
+            RECORD.data["man_prep_hints"] = RECORD.data["man_prep_hints"] + msg.strip(
+                ";"
+            ).lstrip(" ")
 
-        return record
+        return RECORD
 
-    def remove_nicknames(self, record: dict) -> dict:
-        if "author" in record:
+    def remove_nicknames(self, RECORD: Record) -> Record:
+        if "author" in RECORD.data:
             # Replace nicknames in parentheses
-            record["author"] = re.sub(r"\([^)]*\)", "", record["author"])
-            record["author"] = record["author"].replace("  ", " ")
-        return record
+            RECORD.data["author"] = re.sub(r"\([^)]*\)", "", RECORD.data["author"])
+            RECORD.data["author"] = RECORD.data["author"].replace("  ", " ")
+        return RECORD
 
-    def remove_redundant_fields(self, record: dict) -> dict:
-        if "article" == record["ENTRYTYPE"]:
-            if "journal" in record and "booktitle" in record:
+    def remove_redundant_fields(self, RECORD: Record) -> Record:
+        if "article" == RECORD.data["ENTRYTYPE"]:
+            if "journal" in RECORD.data and "booktitle" in RECORD.data:
                 if (
                     fuzz.partial_ratio(
-                        record["journal"].lower(), record["booktitle"].lower()
+                        RECORD.data["journal"].lower(), RECORD.data["booktitle"].lower()
                     )
                     / 100
                     > 0.9
                 ):
-                    del record["booktitle"]
-        if "inproceedings" == record["ENTRYTYPE"]:
-            if "journal" in record and "booktitle" in record:
+                    del RECORD.data["booktitle"]
+        if "inproceedings" == RECORD.data["ENTRYTYPE"]:
+            if "journal" in RECORD.data and "booktitle" in RECORD.data:
                 if (
                     fuzz.partial_ratio(
-                        record["journal"].lower(), record["booktitle"].lower()
+                        RECORD.data["journal"].lower(), RECORD.data["booktitle"].lower()
                     )
                     / 100
                     > 0.9
                 ):
-                    del record["journal"]
-        return record
+                    del RECORD.data["journal"]
+        return RECORD
 
-    def update_metadata_status(self, record: dict) -> dict:
-        record = self.__check_potential_retracts(record)
-        if "crossmark" in record:
-            return record
-        if "CURATED" == record["metadata_source"]:
-            record.update(status=RecordState.md_prepared)
-            return record
+    def update_metadata_status(self, RECORD: Record) -> Record:
+        self.__check_potential_retracts(RECORD)
+        if "crossmark" in RECORD.data:
+            return RECORD
+        if RECORD.is_curated():
+            RECORD.data.update(status=RecordState.md_prepared)
+            return RECORD
 
         self.REVIEW_MANAGER.logger.debug(
-            f'is_complete({record["ID"]}): {self.__is_complete(record)}'
+            f'is_complete({RECORD.data["ID"]}): {RECORD.masterdata_is_complete()}'
         )
 
         self.REVIEW_MANAGER.logger.debug(
-            f'has_inconsistent_fields({record["ID"]}): '
-            f"{self.__has_inconsistent_fields(record)}"
+            f'has_inconsistent_fields({RECORD.data["ID"]}): '
+            f"{RECORD.has_inconsistent_fields()}"
         )
         self.REVIEW_MANAGER.logger.debug(
-            f'has_incomplete_fields({record["ID"]}): '
-            f"{self.__has_incomplete_fields(record)}"
+            f'has_incomplete_fields({RECORD.data["ID"]}): '
+            f"{RECORD.has_incomplete_fields()}"
         )
 
-        if not self.__is_complete(record):
-            record.update(status=RecordState.md_needs_manual_preparation)
-        elif self.__has_incomplete_fields(record):
-            record.update(status=RecordState.md_needs_manual_preparation)
-        elif self.__has_inconsistent_fields(record):
-            record.update(status=RecordState.md_needs_manual_preparation)
+        if not RECORD.masterdata_is_complete():
+            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
+        elif RECORD.has_incomplete_fields():
+            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
+        elif RECORD.has_inconsistent_fields():
+            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
         else:
-            record.update(status=RecordState.md_prepared)
+            RECORD.data.update(status=RecordState.md_prepared)
 
-        return record
+        return RECORD
 
     def prepare(self, item: dict) -> dict:
 
-        record = item["record"]
+        RECORD = item["record"]
 
         # if RecordState.md_imported != record["status"]:
-        if record["status"] not in [
+        if RECORD.data["status"] not in [
             RecordState.md_imported,
             # RecordState.md_prepared, # avoid changing prepared records
             RecordState.md_needs_manual_preparation,
         ]:
-            return record
+            return RECORD
 
-        print(record["ID"])
+        print(RECORD.data["ID"])
 
         #  preparation_record will change and eventually replace record (if successful)
-        preparation_record = record.copy()
+        preparation_record = RECORD.data.copy()
+
         # unprepared_record will not change (for diffs)
-        unprepared_record = record.copy()
+        unprepared_record = Record(RECORD.data.copy())
 
         # Note: we require (almost) perfect matches for the scripts.
         # Cases with higher dissimilarity will be handled in the prep_man.py
@@ -2057,11 +1884,12 @@ class Preparation(Process):
         # Note : we need to rerun all preparation scripts because records are not stored
         # if not prepared successfully.
 
-        short_form = self.drop_fields(record.copy())
+        SF_REC = Record(RECORD.data.copy())
+        short_form = self.drop_fields(SF_REC)
 
         preparation_details = []
         preparation_details.append(
-            f'prepare({record["ID"]})'
+            f'prepare({RECORD.data["ID"]})'
             + f" called with: \n{self.REVIEW_MANAGER.pp.pformat(short_form)}\n\n"
         )
 
@@ -2078,7 +1906,9 @@ class Preparation(Process):
                     f'{prep_script["script"].__name__}(...) called'
                 )
 
-            prep_script["script"](preparation_record)
+            PREPARATION_RECORD = Record(preparation_record)
+            PREPARATION_RECORD = prep_script["script"](PREPARATION_RECORD)
+            preparation_record = PREPARATION_RECORD.get_data()
 
             diffs = list(dictdiffer.diff(prior, preparation_record))
             if diffs:
@@ -2111,35 +1941,48 @@ class Preparation(Process):
                     print("\n")
                     time.sleep(0.7)
 
-            if RecordState.rev_prescreen_excluded == preparation_record[
-                "status"
-            ] or "Disagreement with " in preparation_record.get("man_prep_hints", ""):
-                record = preparation_record.copy()
-                break
+            # TODO : reinclude the following:
+            if (
+                preparation_record["status"]
+                in [
+                    RecordState.rev_prescreen_excluded,
+                    RecordState.md_prepared,
+                ]
+                or "Disagreement with " in preparation_record.get("man_prep_hints", "")
+            ):
+                RECORD.data = preparation_record.copy()
+                # break
 
             # diff = (datetime.now() - startTime).total_seconds()
             # with open("stats.csv", "a") as f:
             #     f.write(f'{prep_script["script"].__name__};{record["ID"]};{diff};\n')
 
-        if (
-            preparation_record["status"]
-            in [RecordState.md_prepared, RecordState.rev_prescreen_excluded]
-            or "crossmark" in preparation_record
-        ):
-            record = preparation_record.copy()
-            if "crossmark" in preparation_record:
-                record = self.log_notifications(record, unprepared_record)
+        # TODO : deal with "crossmark" in preparation_record
 
-            # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
-            # for preparation_detail in preparation_details:
-            #     self.REVIEW_MANAGER.report_logger.info(preparation_detail)
+        if self.LAST_ROUND:
+            RECORD.data = preparation_record.copy()
+            if (
+                RecordState.md_needs_manual_preparation
+                == preparation_record["status"]
+            ):
+                RECORD = self.log_notifications(RECORD, unprepared_record)
+        else:
+            if self.DEBUG_MODE:
+                if (
+                    RecordState.md_needs_manual_preparation
+                    == preparation_record["status"]
+                ):
+                    self.REVIEW_MANAGER.logger.debug(
+                        "Resetting values (instead of saving them)."
+                    )
+                    # for the readability of diffs,
+                    # we change records only once (in the last round)
 
-        if "low_confidence" == item["mode"]["name"]:
-            record = preparation_record.copy()
-            if RecordState.md_needs_manual_preparation == preparation_record["status"]:
-                record = self.log_notifications(record, unprepared_record)
+        # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
+        # for preparation_detail in preparation_details:
+        #     self.REVIEW_MANAGER.report_logger.info(preparation_detail)
 
-        return record
+        return RECORD
 
     def __log_details(self, preparation_batch: list) -> None:
 
@@ -2441,11 +2284,13 @@ class Preparation(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
-    def retrieve_md_from_url(self, record: dict) -> dict:
+    def retrieve_md_from_url(self, RECORD: Record) -> Record:
         from colrev_core.load import Loader
 
         LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
         LOADER.start_zotero_translators()
+
+        # TODO : change to the similar fuse_best_fields structure?
 
         try:
             content_type_header = {"Content-type": "text/plain"}
@@ -2453,31 +2298,31 @@ class Preparation(Process):
             et = requests.post(
                 "http://127.0.0.1:1969/web",
                 headers=headers,
-                data=record["url"],
+                data=RECORD.data["url"],
             )
 
             items = json.loads(et.content.decode())
             if len(items) == 0:
-                return record
+                return RECORD
             item = items[0]
             if "Shibboleth Authentication Request" == item["title"]:
-                return record
+                return RECORD
 
             # self.REVIEW_MANAGER.pp.pprint(item)
-            record["ID"] = item["key"]
-            record["ENTRYTYPE"] = "article"  # default
+            RECORD.data["ID"] = item["key"]
+            RECORD.data["ENTRYTYPE"] = "article"  # default
             if "journalArticle" == item.get("itemType", ""):
-                record["ENTRYTYPE"] = "article"
+                RECORD.data["ENTRYTYPE"] = "article"
                 if "publicationTitle" in item:
-                    record["journal"] = item["publicationTitle"]
+                    RECORD.data["journal"] = item["publicationTitle"]
                 if "volume" in item:
-                    record["volume"] = item["volume"]
+                    RECORD.data["volume"] = item["volume"]
                 if "issue" in item:
-                    record["number"] = item["issue"]
+                    RECORD.data["number"] = item["issue"]
             if "conferencePaper" == item.get("itemType", ""):
-                record["ENTRYTYPE"] = "inproceedings"
+                RECORD.data["ENTRYTYPE"] = "inproceedings"
                 if "proceedingsTitle" in item:
-                    record["booktitle"] = item["proceedingsTitle"]
+                    RECORD.data["booktitle"] = item["proceedingsTitle"]
             if "creators" in item:
                 author_str = ""
                 for creator in item["creators"]:
@@ -2488,47 +2333,48 @@ class Preparation(Process):
                         + creator.get("firstName", "")
                     )
                 author_str = author_str[5:]  # drop the first " and "
-                record["author"] = author_str
+                RECORD.data["author"] = author_str
             if "title" in item:
-                record["title"] = item["title"]
+                RECORD.data["title"] = item["title"]
             if "doi" in item:
-                record["doi"] = item["doi"]
+                RECORD.data["doi"] = item["doi"]
             if "date" in item:
                 year = re.search(r"\d{4}", item["date"])
                 if year:
-                    record["year"] = year.group(0)
+                    RECORD.data["year"] = year.group(0)
             if "pages" in item:
-                record["pages"] = item["pages"]
+                RECORD.data["pages"] = item["pages"]
             if "url" in item:
                 if "https://doi.org/" in item["url"]:
-                    record["doi"] = item["url"].replace("https://doi.org/", "")
-                    ret_rec = self.get_link_from_doi({"doi": record["doi"]})
-                    if "https://doi.org/" not in ret_rec["url"]:
-                        record["url"] = ret_rec["url"]
+                    RECORD.data["doi"] = item["url"].replace("https://doi.org/", "")
+                    DUMMY_R = Record({"doi": RECORD.data["doi"]})
+                    RET_REC = self.get_link_from_doi(DUMMY_R)
+                    if "https://doi.org/" not in RET_REC.data["url"]:
+                        RECORD.data["url"] = RET_REC.data["url"]
                 else:
-                    record["url"] = item["url"]
+                    RECORD.data["url"] = item["url"]
 
             if "tags" in item:
                 if len(item["tags"]) > 0:
                     keywords = ", ".join([k["tag"] for k in item["tags"]])
-                    record["keywords"] = keywords
+                    RECORD.data["keywords"] = keywords
         except (json.decoder.JSONDecodeError, UnicodeEncodeError):
             pass
         except requests.exceptions.RequestException:
             pass
         except KeyError:
             pass
-        return record
+        return RECORD
 
     def print_doi_metadata(self, doi: str) -> None:
+        DUMMY_R = Record({"doi": doi})
+        RECORD = self.get_md_from_doi(DUMMY_R)
+        print(RECORD)
 
-        record = self.get_md_from_doi({"doi": doi})
-        self.REVIEW_MANAGER.pp.pprint(record)
-
-        if "url" in record:
+        if "url" in RECORD.data:
             print("Metadata retrieved from website:")
-            retrieved_record = self.retrieve_md_from_url(record)
-            self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+            RETRIEVED_RECORD = self.retrieve_md_from_url(RECORD)
+            print(RETRIEVED_RECORD)
 
         return
 
@@ -2561,7 +2407,7 @@ class Preparation(Process):
         for item in items:
             batch.append(
                 {
-                    "record": item,
+                    "record": Record(item),
                     "mode": mode,
                 }
             )
@@ -2614,7 +2460,7 @@ class Preparation(Process):
             )
             self.REVIEW_MANAGER.logger.info("Imported record (retrieved from history)")
 
-        self.REVIEW_MANAGER.pp.pprint(records)
+        print(Record(records[0]))
         input("Press Enter to continue")
         print("\n\n")
         prep_data = {
@@ -2661,11 +2507,12 @@ class Preparation(Process):
                 "journal": "Communications of the Association for Information Systems",
                 "volume": "46",
                 "year": "2020",
+                "status": RecordState.md_prepared,  # type: ignore
             }
-            returned_rec = self.get_md_from_dblp(test_rec.copy())
-            if 0 != len(returned_rec):
-                assert returned_rec["title"] == test_rec["title"]
-                assert returned_rec["author"] == test_rec["author"]
+            RET_REC = self.get_md_from_dblp(Record(test_rec.copy()))
+            if 0 != len(RET_REC.data):
+                assert RET_REC.data["title"] == test_rec["title"]
+                assert RET_REC.data["author"] == test_rec["author"]
             else:
                 if not self.force_mode:
                     raise ServiceNotAvailableException("DBLP")
@@ -2908,6 +2755,7 @@ class Preparation(Process):
         ]
 
         self.FIRST_ROUND = True
+        self.LAST_ROUND = False
 
         while 0 != len(modes):
 
@@ -2925,6 +2773,8 @@ class Preparation(Process):
                     # use one mode/run to avoid multiple commits
 
             mode = modes.pop(0)
+            if len(modes) == 0:
+                self.LAST_ROUND = True
 
             self.REVIEW_MANAGER.logger.info(f"Prepare ({mode['name']})")
 
@@ -2978,6 +2828,7 @@ class Preparation(Process):
                 pool.clear()
 
             if not self.DEBUG_MODE:
+                preparation_batch = [x.get_data() for x in preparation_batch]
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
                     preparation_batch
                 )

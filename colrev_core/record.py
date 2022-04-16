@@ -6,7 +6,9 @@ import unicodedata
 from enum import auto
 from enum import Enum
 
+import pandas as pd
 from nameparser import HumanName
+from thefuzz import fuzz
 
 
 class Record:
@@ -55,8 +57,8 @@ class Record:
 
     def __init__(self, data: dict):
         self.data = data
-        # Note : avoid parsing upon Record instantiation
-        # as much as possible (to maintain high performance)
+        # Note : avoid parsing upon Record instantiation as much as possible
+        # to maintain high performance and ensure pickle-abiligy (in multiprocessing)
 
     def __repr__(self) -> str:
         return self.pp.pformat(self.data)
@@ -80,6 +82,27 @@ class Record:
 
         return ret_str
 
+    def get_data(self) -> dict:
+        return self.data
+
+    def is_curated(self) -> bool:
+        return "CURATED" in self.data.get("colrev_masterdata", "")
+
+    def set_status(self, target_state) -> None:
+        from colrev_core.record import RecordState
+
+        if RecordState.md_prepared == target_state:
+            if self.masterdata_is_complete():
+                colrev_id = self.create_colrev_id()
+                if "colrev_id" not in self.data:
+                    self.data["colrev_id"] = colrev_id
+                # else should not happen because colrev_ids should only be
+                # created once records are prepared (complete)
+            else:
+                target_state = RecordState.md_needs_manual_preparation
+
+        self.data["status"] = target_state
+
     def get_origins(self) -> list:
         if "origin" in self.data:
             origins = self.data["origin"].split(";")
@@ -89,9 +112,6 @@ class Record:
 
     def shares_origins(self, other_record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
-
-    def get_data(self) -> dict:
-        return self.data
 
     def get_field(self, field_key: str, default=None):
         if default is not None:
@@ -115,18 +135,19 @@ class Record:
                 colrev_id = self.data["colrev_id"]
         return colrev_id
 
-    def update_field(self, field: str, value, source: str, comment: str) -> None:
-        self.data["field"] = value
+    def update_field(self, field: str, value, source: str, comment: str = "") -> None:
+        self.data[field] = value
         if field in self.identifying_fields:
-            # TODO: replace if already exists
-            self.data["provenance_identifying_fields"] = f"{field}:{source};{comment}"
+            # TODO: parse, replace if already exists
+            self.data["colrev_masterdata_provenance"] = f"{field}:{source};{comment}"
         else:
-            self.data["provenance_additional_fields"] = f"{field}:{source};{comment}"
+            self.data["colrev_data_provenance"] = f"{field}:{source};{comment}"
         return
 
     def add_colrev_ids(self, records: typing.List[dict]) -> None:
-        if isinstance(self.data["colrev_id"], list):
-            self.data["colrev_id"] = ";".join(self.data["colrev_id"])
+        if "colrev_id" in self.data:
+            if isinstance(self.data["colrev_id"], list):
+                self.data["colrev_id"] = ";".join(self.data["colrev_id"])
         for r in records:
             try:
                 colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
@@ -143,53 +164,529 @@ class Record:
 
         return
 
-    # TODO : change from classmethod to object method
+    def masterdata_is_complete(self) -> bool:
+        if self.is_curated():
+            return True
+        if not any(
+            v == "UNKNOWN" for k, v in self.data.items() if k in self.identifying_fields
+        ):
+            return True
+        return False
+
+    def set_masterdata_complete(self) -> None:
+        for identifying_field in self.identifying_fields:
+            if "UNKNOWN" == self.data.get(identifying_field, "NA"):
+                del self.data[identifying_field]
+
+        return
+
+    def missing_fields(self) -> list:
+        missing_fields = []
+        if self.data["ENTRYTYPE"] in Record.record_field_requirements.keys():
+            reqs = Record.record_field_requirements[self.data["ENTRYTYPE"]]
+            missing_fields = [
+                x
+                for x in reqs
+                if x not in self.data.keys()
+                or "" == self.data[x]
+                or "UNKNOWN" == self.data[x]
+            ]
+        else:
+            missing_fields = ["no field requirements defined"]
+        return missing_fields
+
+    def get_inconsistencies(self) -> list:
+        inconsistent_fields = []
+        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
+            incons_fields = Record.record_field_inconsistencies[self.data["ENTRYTYPE"]]
+            inconsistent_fields = [x for x in incons_fields if x in self.data]
+        # Note: a thesis should be single-authored
+        if "thesis" in self.data["ENTRYTYPE"] and " and " in self.data.get(
+            "author", ""
+        ):
+            inconsistent_fields.append("author")
+        return inconsistent_fields
+
+    def has_inconsistent_fields(self) -> bool:
+        found_inconsistencies = False
+        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
+            inconsistencies = self.get_inconsistencies()
+            if inconsistencies:
+                found_inconsistencies = True
+        return found_inconsistencies
+
+    def has_incomplete_fields(self) -> bool:
+        if len(self.get_incomplete_fields()) > 0:
+            return True
+        return False
+
+    def fuse_best_fields(self, MERGING_RECORD, source: str):
+        """Apply heuristics to create a fusion of the best fields based on
+        quality heuristics"""
+
+        # self.REVIEW_MANAGER.logger.debug(
+        #     "Fuse retrieved record " "(select fields with the highest quality)"
+        # )
+        # self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(merging_record))
+        for key, val in MERGING_RECORD.data.items():
+            if val:
+                if "author" == key:
+                    if "author" in self.data:
+                        best_author = self.__select_best_author(
+                            self.data["author"], MERGING_RECORD.data["author"]
+                        )
+                        if self.data["author"] != best_author:
+                            self.update_field("author", best_author, source)
+                    else:
+                        self.update_field("author", str(val), source)
+
+                elif "pages" == key:
+                    if "pages" in self.data:
+                        best_pages = self.__select_best_pages(
+                            self.data["pages"], MERGING_RECORD.data["pages"]
+                        )
+                        if self.data["pages"] != best_pages:
+                            self.update_field("pages", best_pages, source)
+
+                    else:
+                        self.update_field("pages", str(val), source)
+
+                elif "title" == key:
+                    if "title" in self.data:
+                        best_title = self.__select_best_title(
+                            self.data["title"], MERGING_RECORD.data["title"]
+                        )
+                        if self.data["title"] != best_title:
+                            self.update_field("title", best_title, source)
+
+                    else:
+                        self.update_field("title", str(val), source)
+
+                elif "journal" == key:
+                    if "journal" in self.data:
+                        best_journal = self.__select_best_journal(
+                            self.data["journal"], MERGING_RECORD.data["journal"]
+                        )
+                        if self.data["journal"] != best_journal:
+                            self.update_field("journal", best_journal, source)
+                    else:
+                        self.update_field("journal", str(val), source)
+
+                elif "booktitle" == key:
+                    if "booktitle" in self.data:
+                        best_booktitle = self.__select_best_journal(
+                            self.data["booktitle"], MERGING_RECORD.data["booktitle"]
+                        )
+                        if self.data["booktitle"] != best_booktitle:
+                            # TBD: custom select_best_booktitle?
+                            self.update_field("booktitle", best_booktitle, source)
+
+                    else:
+                        self.update_field("booktitle", str(val), source)
+
+                else:
+                    self.data[key] = str(val)
+
+        return
+
+    def __select_best_author(self, default: str, candidate: str) -> str:
+        best_author = default
+
+        default_mostly_upper = Record.percent_upper_chars(default) > 0.8
+        candidate_mostly_upper = Record.percent_upper_chars(candidate) > 0.8
+
+        if default_mostly_upper and not candidate_mostly_upper:
+            best_author = candidate
+
+        # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
+        if ", and " in default and ", and " not in candidate:
+            return candidate
+        if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
+            best_author = candidate
+
+        # self.REVIEW_MANAGER.logger.debug(
+        #     f"best_author({default}, \n"
+        #     f"                                      {candidate}) = \n"
+        #     f"                                      {best_author}"
+        # )
+        return best_author
+
+    def __select_best_pages(self, default: str, candidate: str) -> str:
+        best_pages = default
+        if "--" in candidate and "--" not in default:
+            best_pages = candidate
+
+        # self.REVIEW_MANAGER.logger.debug(
+        #     f"best_pages({default}, {candidate}) = {best_pages}"
+        # )
+
+        return best_pages
+
+    def __select_best_title(self, default: str, candidate: str) -> str:
+        best_title = default
+
+        default_upper = Record.percent_upper_chars(default)
+        candidate_upper = Record.percent_upper_chars(candidate)
+
+        # Relatively simple rule...
+        # catches cases when default is all upper or title case
+        if default_upper > candidate_upper:
+            best_title = candidate
+
+        # self.REVIEW_MANAGER.logger.debug(
+        #     f"best_title({default},\n"
+        #     f"                                      {candidate}) = \n"
+        #     f"                                      {best_title}"
+        # )
+
+        return best_title
+
+    def __select_best_journal(self, default: str, candidate: str) -> str:
+
+        best_journal = default
+
+        default_upper = Record.percent_upper_chars(default)
+        candidate_upper = Record.percent_upper_chars(candidate)
+
+        # Simple heuristic to avoid abbreviations
+        if "." in default and "." not in candidate:
+            best_journal = candidate
+        # Relatively simple rule...
+        # catches cases when default is all upper or title case
+        if default_upper > candidate_upper:
+            best_journal = candidate
+
+        # self.REVIEW_MANAGER.logger.debug(
+        #     f"best_jour62nal({default}, \n"
+        #     f"                                      {candidate}) = \n"
+        #     f"                                      {best_journal}"
+        # )
+
+        return best_journal
+
+    def get_container_title(self) -> str:
+        container_title = "NA"
+        if "ENTRYTYPE" not in self.data:
+            container_title = self.data.get("journal", self.data.get("booktitle", "NA"))
+        else:
+            if "article" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("journal", "NA")
+            if "inproceedings" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("booktitle", "NA")
+            if "book" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("title", "NA")
+            if "inbook" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("booktitle", "NA")
+        return container_title
+
     @classmethod
-    def get_incomplete_fields(cls, record: dict) -> list:
+    def get_record_similarity(cls, RECORD_A, RECORD_B) -> float:
+        record_a = RECORD_A.data.copy()
+        record_b = RECORD_B.data.copy()
+
+        if "title" not in record_a:
+            record_a["title"] = ""
+        if "author" not in record_a:
+            record_a["author"] = ""
+        if "year" not in record_a:
+            record_a["year"] = ""
+        if "journal" not in record_a:
+            record_a["journal"] = ""
+        if "volume" not in record_a:
+            record_a["volume"] = ""
+        if "number" not in record_a:
+            record_a["number"] = ""
+        if "pages" not in record_a:
+            record_a["pages"] = ""
+        if "booktitle" not in record_a:
+            record_a["booktitle"] = ""
+        if "title" not in record_b:
+            record_b["title"] = ""
+        if "author" not in record_b:
+            record_b["author"] = ""
+        if "year" not in record_b:
+            record_b["year"] = ""
+        if "journal" not in record_b:
+            record_b["journal"] = ""
+        if "volume" not in record_b:
+            record_b["volume"] = ""
+        if "number" not in record_b:
+            record_b["number"] = ""
+        if "pages" not in record_b:
+            record_b["pages"] = ""
+        if "booktitle" not in record_b:
+            record_b["booktitle"] = ""
+
+        if "container_title" not in record_a:
+            record_a["container_title"] = (
+                record_a.get("journal", "")
+                + record_a.get("booktitle", "")
+                + record_a.get("series", "")
+            )
+
+        if "container_title" not in record_b:
+            record_b["container_title"] = (
+                record_b.get("journal", "")
+                + record_b.get("booktitle", "")
+                + record_b.get("series", "")
+            )
+
+        df_a = pd.DataFrame.from_dict([record_a])
+        df_b = pd.DataFrame.from_dict([record_b])
+
+        return Record.get_similarity(df_a.iloc[0], df_b.iloc[0])
+
+    @classmethod
+    def get_similarity(cls, df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
+        details = Record.get_similarity_detailed(df_a, df_b)
+        return details["score"]
+
+    @classmethod
+    def get_similarity_detailed(cls, df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
+
+        author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
+
+        title_similarity = (
+            fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
+        )
+
+        # partial ratio (catching 2010-10 or 2001-2002)
+        year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
+
+        outlet_similarity = (
+            fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
+        )
+
+        if str(df_a["journal"]) != "nan":
+            # Note: for journals papers, we expect more details
+            if df_a["volume"] == df_b["volume"]:
+                volume_similarity = 1
+            else:
+                volume_similarity = 0
+            if df_a["number"] == df_b["number"]:
+                number_similarity = 1
+            else:
+                number_similarity = 0
+
+            # page similarity is not considered at the moment.
+            #
+            # sometimes, only the first page is provided.
+            # if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
+            #     pages_similarity = 1
+            # else:
+            #     if df_a["pages"] == df_b["pages"]:
+            #         pages_similarity = 1
+            #     else:
+            #         if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
+            #             pages_similarity = 1
+            #         else:
+            #            pages_similarity = 0
+
+            # Put more weithe on other fields if the title is very common
+            # ie., non-distinctive
+            # The list is based on a large export of distinct papers, tabulated
+            # according to titles and sorted by frequency
+            if [df_a["title"], df_b["title"]] in [
+                ["editorial", "editorial"],
+                ["editorial introduction", "editorial introduction"],
+                ["editorial notes", "editorial notes"],
+                ["editor's comments", "editor's comments"],
+                ["book reviews", "book reviews"],
+                ["editorial note", "editorial note"],
+                ["reviewer ackowledgment", "reviewer ackowledgment"],
+            ]:
+                weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
+            else:
+                weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
+
+            sim_names = [
+                "authors",
+                "title",
+                "year",
+                "outlet",
+                "volume",
+                "number",
+            ]
+            similarities = [
+                author_similarity,
+                title_similarity,
+                year_similarity,
+                outlet_similarity,
+                volume_similarity,
+                number_similarity,
+            ]
+
+        else:
+
+            weights = [0.15, 0.75, 0.05, 0.05]
+            sim_names = [
+                "author",
+                "title",
+                "year",
+                "outlet",
+            ]
+            similarities = [
+                author_similarity,
+                title_similarity,
+                year_similarity,
+                outlet_similarity,
+            ]
+
+        weighted_average = sum(
+            similarities[g] * weights[g] for g in range(len(similarities))
+        )
+
+        details = (
+            "["
+            + ",".join([sim_names[g] for g in range(len(similarities))])
+            + "]"
+            + "*weights_vecor^T = "
+            + "["
+            + ",".join([str(similarities[g]) for g in range(len(similarities))])
+            + "]*"
+            + "["
+            + ",".join([str(weights[g]) for g in range(len(similarities))])
+            + "]^T"
+        )
+        similarity_score = round(weighted_average, 4)
+
+        return {"score": similarity_score, "details": details}
+
+    @classmethod
+    def percent_upper_chars(cls, input_string: str) -> float:
+        return sum(map(str.isupper, input_string)) / len(input_string)
+
+    def import_provenance(self) -> None:
+
+        if "colrev_masterdata_provenance" in self.data:
+            colrev_masterdata_provenance = self.load_masterdata_provenance()
+        else:
+            colrev_masterdata_provenance = {}
+
+        # Note : only add provenance data for the fields with problems
+        # Implicitly, the other fields have source=original and no problems.
+        if "colrev_masterdata" not in self.data:
+            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+            for required_field in required_fields:
+                if required_field in self.data:
+                    if self.percent_upper_chars(self.data[required_field]) > 0.8:
+                        colrev_masterdata_provenance[required_field] = {
+                            "source": "ORIGINAL",
+                            "note": "mostly upper case",
+                        }
+                else:
+                    self.data[required_field] = "UNKNOWN"
+            if "colrev_masterdata" not in self.data:
+                self.data["colrev_masterdata"] = "ORIGINAL"
+
+        inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
+        for inconsistent_field in inconsistent_fields:
+            if inconsistent_field in self.data:
+                # TODO : really set to ORIGINAL?
+                if inconsistent_field in colrev_masterdata_provenance:
+                    add_info = (
+                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
+                else:
+                    colrev_masterdata_provenance[inconsistent_field] = {
+                        "source": "ORIGINAL",
+                        "note": (
+                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
+                        ),
+                    }
+        incomplete_fields = self.get_incomplete_fields()
+        for incomplete_field in incomplete_fields:
+            if incomplete_field in colrev_masterdata_provenance:
+                add_info = f", {incomplete_field} incomplete"
+                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
+            else:
+                colrev_masterdata_provenance[incomplete_field] = {
+                    "source": "ORIGINAL",
+                    "note": f"{incomplete_field} incomplete",
+                }
+
+        self.set_masterdata_provenance(colrev_masterdata_provenance)
+        return
+
+    def load_masterdata_provenance(self) -> dict:
+        colrev_masterdata_provenance_dict = {}
+        if "colrev_masterdata_provenance" in self.data:
+            if "" == self.data["colrev_masterdata_provenance"]:
+                return {}
+            for item in self.data["colrev_masterdata_provenance"].split("\n"):
+                elements = item.split(";")
+                elements.remove("")
+                if 2 == len(elements):
+                    key, source = elements.pop(0).split(":")
+                    note = elements.pop(0)
+                    colrev_masterdata_provenance_dict[key] = {
+                        "source": source,
+                        "note": note,
+                    }
+                else:
+                    print(f"problem with masterdata_provenance_item {item}")
+
+        return colrev_masterdata_provenance_dict
+
+    def set_masterdata_provenance(self, md_p_dict: dict):
+        # TODO: test this!
+        parsed = ""
+        for k, v in md_p_dict.items():
+            parsed += (
+                f"{k.replace(';', ',')}:"
+                + f"{v['source'].replace(';', ',')};"
+                + f"{v['note'].replace(';', ',')};\n"
+            )
+        self.data["colrev_masterdata_provenance"] = parsed.rstrip("\n")
+        return
+
+    def add_masterdata_provenance_hint(self, field, hint):
+        md_p_dict = self.load_masterdata_provenance()
+        if field in md_p_dict:
+            md_p_dict[field]["note"] += f",{hint}"
+        else:
+            md_p_dict[field] = {"source": "original", "note": f"{hint}"}
+        self.set_masterdata_provenance(md_p_dict)
+        return
+
+    def get_incomplete_fields(self) -> list:
         incomplete_fields = []
-        for key in record.keys():
+        for key in self.data.keys():
             if key in ["title", "journal", "booktitle", "author"]:
-                if record[key].endswith("...") or record[key].endswith("…"):
+                if self.data[key].endswith("...") or self.data[key].endswith("…"):
                     incomplete_fields.append(key)
-        if record.get("author", "").endswith("and others"):
+        if self.data.get("author", "").endswith("and others"):
             incomplete_fields.append("author")
         return incomplete_fields
 
     @classmethod
-    def __robust_append(cls, input_string: str, to_append: str) -> str:
-        input_string = str(input_string)
-        to_append = str(to_append).replace("\n", " ")
-        to_append = to_append.rstrip().lstrip().replace("–", " ")
-        to_append = re.sub(r"[\.\:“”’]", "", to_append)
-        to_append = re.sub(r"\s+", "-", to_append)
-        to_append = to_append.lower()
-        input_string = input_string + "|" + to_append
-        return input_string
+    def remove_accents(cls, input_str: str) -> str:
+        def rmdiacritics(char):
+            """
+            Return the base character of char, by "removing" any
+            diacritics like accents or curls and strokes and the like.
+            """
+            try:
+                desc = unicodedata.name(char)
+                cutoff = desc.find(" WITH ")
+                if cutoff != -1:
+                    desc = desc[:cutoff]
+                    char = unicodedata.lookup(desc)
+            except (KeyError, ValueError):
+                pass  # removing "WITH ..." produced an invalid name
+            return char
 
-    @classmethod
-    def __rmdiacritics(cls, char):
-        """
-        Return the base character of char, by "removing" any
-        diacritics like accents or curls and strokes and the like.
-        """
         try:
-            desc = unicodedata.name(char)
-            cutoff = desc.find(" WITH ")
-            if cutoff != -1:
-                desc = desc[:cutoff]
-                char = unicodedata.lookup(desc)
-        except (KeyError, ValueError):
-            pass  # removing "WITH ..." produced an invalid name
-        return char
-
-    @classmethod
-    def __remove_accents(cls, input_str: str) -> str:
-        nfkd_form = unicodedata.normalize("NFKD", input_str)
-        wo_ac = [
-            cls.__rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
-        ]
-        wo_ac_str = "".join(wo_ac)
-        return wo_ac_str
+            nfkd_form = unicodedata.normalize("NFKD", input_str)
+            wo_ac_list = [
+                rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
+            ]
+            wo_ac = "".join(wo_ac_list)
+        except ValueError:
+            wo_ac = input_str
+            pass
+        return wo_ac
 
     @classmethod
     def __get_container_title(cls, record: dict) -> str:
@@ -216,33 +713,34 @@ class Record:
 
         return container_title
 
-    @classmethod
-    def __format_author_field(cls, input_string: str) -> str:
-        input_string = input_string.replace("\n", " ").replace("'", "")
-        names = cls.__remove_accents(input_string).replace("; ", " and ").split(" and ")
-        author_list = []
-        for name in names:
+    def format_authors_string(self):
+        if "author" not in self.data:
+            return
+        authors = self.data["author"]
+        authors = str(authors).lower()
+        authors_string = ""
+        authors = Record.remove_accents(authors)
 
-            if "," == name.rstrip()[-1:]:
-                # if last-names only (eg, "Webster, and Watson, ")
-                if len(name[:-2]) > 1:
-                    author_list.append(str(name.rstrip()[:-1]))
+        # abbreviate first names
+        # "Webster, Jane" -> "Webster, J"
+        # also remove all special characters and do not include separators (and)
+        for author in authors.split(" and "):
+            if "," in author:
+                last_names = [
+                    word[0] for word in author.split(",")[1].split(" ") if len(word) > 0
+                ]
+                authors_string = (
+                    authors_string
+                    + author.split(",")[0]
+                    + " "
+                    + " ".join(last_names)
+                    + " "
+                )
             else:
-                parsed_name = HumanName(name)
-                # Note: do not set parsed_name.string_format as a global constant
-                # to preserve consistent creation of identifiers
-                parsed_name.string_format = "{last} "
-                if len(parsed_name.middle) > 0:
-                    parsed_name.middle = parsed_name.middle[:1]
-                if len(parsed_name.first) > 0:
-                    parsed_name.first = parsed_name.first[:1]
-                if len(parsed_name.nickname) > 0:
-                    parsed_name.nickname = ""
-
-                if len(str(parsed_name)) > 1:
-                    author_list.append(str(parsed_name))
-
-        return "-".join(author_list)
+                authors_string = authors_string + author + " "
+        authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
+        self.data["author"] = authors_string
+        return
 
     def create_colrev_id(
         self, alsoKnownAsRecord: dict = {}, assume_complete=False
@@ -251,6 +749,47 @@ class Record:
         If a alsoKnownAsRecord is provided, it returns the colrev_id of the
         alsoKnownAsRecord (using the Record as the reference to decide whether
         required fields are missing)"""
+
+        def format_author_field(input_string: str) -> str:
+            input_string = input_string.replace("\n", " ").replace("'", "")
+            names = (
+                Record.remove_accents(input_string)
+                .replace("; ", " and ")
+                .split(" and ")
+            )
+            author_list = []
+            for name in names:
+
+                if "," == name.rstrip()[-1:]:
+                    # if last-names only (eg, "Webster, and Watson, ")
+                    if len(name[:-2]) > 1:
+                        author_list.append(str(name.rstrip()[:-1]))
+                else:
+                    parsed_name = HumanName(name)
+                    # Note: do not set parsed_name.string_format as a global constant
+                    # to preserve consistent creation of identifiers
+                    parsed_name.string_format = "{last} "
+                    if len(parsed_name.middle) > 0:
+                        parsed_name.middle = parsed_name.middle[:1]
+                    if len(parsed_name.first) > 0:
+                        parsed_name.first = parsed_name.first[:1]
+                    if len(parsed_name.nickname) > 0:
+                        parsed_name.nickname = ""
+
+                    if len(str(parsed_name)) > 1:
+                        author_list.append(str(parsed_name))
+
+            return "-".join(author_list)
+
+        def robust_append(input_string: str, to_append: str) -> str:
+            input_string = str(input_string)
+            to_append = str(to_append).replace("\n", " ")
+            to_append = to_append.rstrip().lstrip().replace("–", " ")
+            to_append = re.sub(r"[\.\:“”’]", "", to_append)
+            to_append = re.sub(r"\s+", "-", to_append)
+            to_append = to_append.lower()
+            input_string = input_string + "|" + to_append
+            return input_string
 
         if not assume_complete:
             if self.data["status"] in [
@@ -298,30 +837,30 @@ class Record:
             # (this may look like an anomaly and be hard to identify)
             srep = "colrev_id1:"
             if "article" == record["ENTRYTYPE"].lower():
-                srep = self.__robust_append(srep, "a")
+                srep = robust_append(srep, "a")
             elif "inproceedings" == record["ENTRYTYPE"].lower():
-                srep = self.__robust_append(srep, "p")
+                srep = robust_append(srep, "p")
             else:
-                srep = self.__robust_append(srep, record["ENTRYTYPE"].lower())
-            srep = self.__robust_append(srep, self.__get_container_title(record))
+                srep = robust_append(srep, record["ENTRYTYPE"].lower())
+            srep = robust_append(srep, self.__get_container_title(record))
             if "article" == record["ENTRYTYPE"]:
                 # Note: volume/number may not be required.
                 # TODO : how do we make sure that colrev_ids are not generated when
                 # volume/number are required?
-                srep = self.__robust_append(srep, record.get("volume", "-"))
-                srep = self.__robust_append(srep, record.get("number", "-"))
-            srep = self.__robust_append(srep, record["year"])
-            author = self.__format_author_field(record["author"])
+                srep = robust_append(srep, record.get("volume", "-"))
+                srep = robust_append(srep, record.get("number", "-"))
+            srep = robust_append(srep, record["year"])
+            author = format_author_field(record["author"])
             if "" == author.replace("-", ""):
                 raise NotEnoughDataToIdentifyException("author field format error")
-            srep = self.__robust_append(srep, author)
+            srep = robust_append(srep, author)
             title_str = re.sub("[^0-9a-zA-Z]+", " ", record["title"])
-            srep = self.__robust_append(srep, title_str)
+            srep = robust_append(srep, title_str)
             srep = srep.replace("&", "and")
 
             # Note : pages not needed.
             # pages = record.get("pages", "")
-            # srep = self.__robust_append(srep, pages)
+            # srep = robust_append(srep, pages)
         except KeyError as e:
             raise NotEnoughDataToIdentifyException(str(e))
         return srep

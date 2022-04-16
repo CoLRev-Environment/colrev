@@ -19,6 +19,7 @@ from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
@@ -219,8 +220,10 @@ class Loader(Process):
             record.update(number=record["issue"])
             del record["issue"]
 
-        if "metadata_source" not in record:
-            record.update(metadata_source="ORIGINAL")
+        RECORD = Record(record)
+        RECORD.import_provenance()
+        record = RECORD.get_data()
+
         record.update(status=RecordState.md_imported)
 
         return record

@@ -12,7 +12,6 @@ from bashplotlib.histogram import plot_hist
 from bibtexparser.customization import convert_to_unicode
 from p_tqdm import p_map
 
-from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -48,6 +47,7 @@ class Validate(Process):
     def validate_preparation_changes(
         self, records: typing.List[dict], search_records: list
     ) -> None:
+        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info("Calculating preparation differences...")
         change_diff = []
@@ -64,7 +64,9 @@ class Validate(Process):
                     if cur_record_link in x["origin"].split(",")
                 ]
                 for prior_record in prior_records:
-                    similarity = utils.get_record_similarity(record, prior_record)
+                    similarity = Record.get_record_similarity(
+                        Record(record), Record(prior_record)
+                    )
                     change_diff.append([record["ID"], cur_record_link, similarity])
 
         change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
@@ -109,6 +111,7 @@ class Validate(Process):
     def validate_merging_changes(
         self, records: typing.List[dict], search_records: list
     ) -> None:
+        from colrev_core.record import Record
 
         os.system("cls" if os.name == "nt" else "clear")
         self.REVIEW_MANAGER.logger.info(
@@ -128,7 +131,9 @@ class Validate(Process):
                     record_1 = [x for x in search_records if el_1 == x["origin"]]
                     record_2 = [x for x in search_records if el_2 == x["origin"]]
 
-                    similarity = utils.get_record_similarity(record_1[0], record_2[0])
+                    similarity = Record.get_record_similarity(
+                        Record(record_1[0]), Record(record_2[0])
+                    )
                     change_diff.append([el_1, el_2, similarity])
 
         change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]

@@ -674,7 +674,8 @@ class LocalIndex:
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
                 )
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
-                return retrieved_record
+                if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
+                    return retrieved_record
             except (IndexError, NotFoundError):
                 pass
                 raise RecordNotInIndexException
@@ -719,6 +720,17 @@ class LocalIndex:
         else:
             if "colrev_id" in record:
                 del record["colrev_id"]
+
+        # TODO (after reindex): remove the following
+        if "metadata_source" in record:
+            del record["metadata_source"]
+
+        if "source_url" in record:
+            record = self.set_source_url_link(record)
+            record["colrev_masterdata"] = "CURATED:" + record.get(
+                "source_url", "NO_LINK_SET"
+            )
+            del record["source_url"]
 
         if not include_file:
             if "file" in record:
@@ -924,15 +936,14 @@ class LocalIndex:
 
         # 1. Try the record index
 
-        if not retrieved_record:
-            try:
-                retrieved_record = self.__retrieve_from_record_index(record)
-            except (
-                NotFoundError,
-                RecordNotInIndexException,
-                NotEnoughDataToIdentifyException,
-            ):
-                pass
+        try:
+            retrieved_record = self.__retrieve_from_record_index(record)
+        except (
+            NotFoundError,
+            RecordNotInIndexException,
+            NotEnoughDataToIdentifyException,
+        ):
+            pass
 
         if retrieved_record:
             return self.prep_record_for_return(
@@ -961,11 +972,20 @@ class LocalIndex:
 
     def set_source_url_link(self, record: dict) -> dict:
         if "source_url" in record:
-            for local_repo in EnvironmentManager.load_local_registry():
-                if local_repo["source_url"] == record["source_url"]:
-                    if "source_link" in local_repo:
-                        record["source_url"] = local_repo["source_link"]
-
+            local_repo = [
+                r
+                for r in EnvironmentManager.load_local_registry()
+                if r["source_url"] == record["source_url"]
+            ]
+            if len(local_repo) > 0:
+                if local_repo[0].get("source_link") is not None:
+                    record["source_url"] = local_repo[0]["source_link"]
+                else:
+                    record["source_url"] = local_repo[0]["source_url"]
+            else:
+                record["source_url"] = "NO_SOURCE_URL_IN_REGISTRY"
+        else:
+            record["source_url"] = "NO_SOURCE_URL"
         return record
 
     def set_source_path(self, record: dict) -> dict:

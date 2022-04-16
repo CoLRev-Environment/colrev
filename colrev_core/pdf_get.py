@@ -12,7 +12,6 @@ from pdf2image import convert_from_path
 from pdfminer.high_level import extract_text
 
 from colrev_core import grobid_client
-from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
@@ -308,6 +307,7 @@ class PDF_Retrieval(Process):
         records: typing.Dict,
     ) -> typing.Dict:
         from glob import glob
+        from colrev_core.record import Record
 
         linked_pdfs = [
             str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
@@ -340,7 +340,9 @@ class PDF_Retrieval(Process):
                 max_similarity = 0.0
                 max_sim_record = None
                 for record in records.values():
-                    sim = utils.get_record_similarity(pdf_record, record.copy())
+                    sim = Record.get_record_similarity(
+                        Record(pdf_record), Record(record.copy())
+                    )
                     if sim > max_similarity:
                         max_similarity = sim
                         max_sim_record = record

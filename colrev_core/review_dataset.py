@@ -19,7 +19,6 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
-from colrev_core import utils
 from colrev_core.record import RecordState
 
 
@@ -316,12 +315,30 @@ class ReviewDataset:
         # Cast to string (in particular the RecordState Enum)
         max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
         for record in recs_dict.values():
-            if "colrev_id" in record:
-                if isinstance(record["colrev_id"], str):
-                    record["colrev_id"] = [
-                        cid.lstrip().rstrip().replace("\n", "")
-                        for cid in record["colrev_id"].split(";")
-                    ]
+            # separated by ;
+            for field in ["colrev_id"]:
+                if field in record:
+                    if isinstance(record[field], str):
+                        record[field] = [
+                            element.lstrip().rstrip().replace("\n", "")
+                            for element in record[field].split(";")
+                        ]
+            # separated by \n
+            for field in [
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_file_provenance",
+            ]:
+                if field in record:
+                    if isinstance(record[field], str):
+                        # anticipate/prevent removal of last char:
+                        record[field] += ";"
+                        record[field] = [
+                            # Note : [:-1] - removes last ;
+                            # which is added by list_indent
+                            element.lstrip().rstrip()[:-1]
+                            for element in record[field].split("\n")
+                        ]
 
         list_indent = ";\n" + " " * max_len
         records = [
@@ -403,6 +420,10 @@ class ReviewDataset:
             "man_prep_hints",
             "pdf_processed",
             "file",  # Note : do not change this order (parsers rely on it)
+            "colrev_masterdata",
+            "colrev_masterdata_provenance",
+            "colrev_data_provenance",
+            "colrev_file_provenance",
             "colrev_id",
             "prescreen_exclusion",
             "colrev_pdf_id",
@@ -410,6 +431,7 @@ class ReviewDataset:
             "doi",
             "grobid-version",
             "dblp_key",
+            "sem_scholar_id",
             "wos_accession_number",
             "source_url",
             "author",
@@ -439,6 +461,7 @@ class ReviewDataset:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         from colrev_core.prep import Preparation
+        from colrev_core.record import Record
         from colrev_core.environment import LocalIndex
 
         self.LOCAL_INDEX = LocalIndex()
@@ -452,7 +475,8 @@ class ReviewDataset:
         ID_list = list(records.keys())
 
         for record_ID, record in records.items():
-            if "CURATED" == record.get("metadata_source", ""):
+            RECORD = Record(record)
+            if RECORD.is_curated():
                 continue
             self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
             if selected_IDs is not None:
@@ -527,6 +551,35 @@ class ReviewDataset:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
+        import re
+        import unicodedata
+
+        def rmdiacritics(char: str) -> str:
+            """
+            Return the base character of char, by "removing" any
+            diacritics like accents or curls and strokes and the like.
+            """
+            desc = unicodedata.name(char)
+            cutoff = desc.find(" WITH ")
+            if cutoff != -1:
+                desc = desc[:cutoff]
+                try:
+                    char = unicodedata.lookup(desc)
+                except KeyError:
+                    pass  # removing "WITH ..." produced an invalid name
+            return char
+
+        def remove_accents(input_str: str) -> str:
+            try:
+                nfkd_form = unicodedata.normalize("NFKD", input_str)
+                wo_ac_list = [
+                    rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
+                ]
+                wo_ac = "".join(wo_ac_list)
+            except ValueError:
+                wo_ac = input_str
+                pass
+            return wo_ac
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
@@ -581,7 +634,7 @@ class ReviewDataset:
                 temp_ID = temp_ID.capitalize()
             # Replace special characters
             # (because IDs may be used as file names)
-            temp_ID = utils.remove_accents(temp_ID)
+            temp_ID = remove_accents(temp_ID)
             temp_ID = re.sub(r"\(.*\)", "", temp_ID)
             temp_ID = re.sub("[^0-9a-zA-Z]+", "", temp_ID)
 
