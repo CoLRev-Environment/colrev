@@ -1,13 +1,17 @@
 #! /usr/bin/env python3
 import io
+import multiprocessing
 import typing
 from collections import Counter
 from pathlib import Path
 
 import git
+from git.exc import InvalidGitRepositoryError
+from git.exc import NoSuchPathError
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.review_manager import ReviewManager
 
 
 class Status(Process):
@@ -196,7 +200,7 @@ class Status(Process):
         )
         return stat
 
-    def get_priority_transition(self, current_states_dict: dict) -> list:
+    def get_priority_transition(self, current_origin_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
@@ -204,13 +208,13 @@ class Status(Process):
         search_states = ["rev_synthesized"]
         while True:
             if any(
-                search_state in current_states_dict.values()
+                search_state in current_origin_states_dict.values()
                 for search_state in search_states
             ):
                 earliest_state = [
                     search_state
                     for search_state in search_states
-                    if search_state in current_states_dict.values()
+                    if search_state in current_origin_states_dict.values()
                 ]
             search_states = [
                 str(x["source"])
@@ -230,11 +234,11 @@ class Status(Process):
         # print(f'priority_transitions: {priority_transitions}')
         return list(set(priority_transitions))
 
-    def get_active_processing_functions(self, current_states_dict: dict) -> list:
+    def get_active_processing_functions(self, current_origin_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         active_processing_functions = []
-        for state in current_states_dict.values():
+        for state in current_origin_states_dict.values():
             srec = ProcessModel(state=state)
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
@@ -270,9 +274,6 @@ class Status(Process):
         return [nr_commits_behind, nr_commits_ahead]
 
     def get_environment_instructions(self, stat: dict) -> list:
-        from colrev_core.review_manager import ReviewManager
-        from git.exc import NoSuchPathError
-        from git.exc import InvalidGitRepositoryError
         from colrev_core.environment import EnvironmentManager
 
         environment_instructions = []
@@ -325,26 +326,13 @@ class Status(Process):
 
         local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
-        for registered_path in registered_paths:
 
-            try:
-                REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
-            except (NoSuchPathError, InvalidGitRepositoryError):
-                pass
-                instruction = {
-                    "msg": "Locally registered repo no longer exists.",
-                    "cmd": f"colrev env --unregister {registered_path}",
-                }
-                environment_instructions.append(instruction)
-                continue
-            if "curated_metadata" in str(registered_path):
-                if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
-                    instruction = {
-                        "msg": "Updates available for curated repo "
-                        f"({registered_path}).",
-                        "cmd": "colrev env --update",
-                    }
-                    environment_instructions.append(instruction)
+        pool = multiprocessing.Pool(processes=6)
+        add_instructions = pool.map(
+            self.append_registered_repo_instructions, registered_paths
+        )
+        environment_instructions += list(filter(None, add_instructions))
+
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
@@ -353,6 +341,29 @@ class Status(Process):
             environment_instructions.append(instruction)
 
         return environment_instructions
+
+    @classmethod
+    def append_registered_repo_instructions(cls, registered_path):
+        try:
+            REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
+        except (NoSuchPathError, InvalidGitRepositoryError):
+            pass
+            instruction = {
+                "msg": "Locally registered repo no longer exists.",
+                "cmd": f"colrev env --unregister {registered_path}",
+            }
+            # environment_instructions.append(instruction)
+            return instruction
+        if "curated_metadata" in str(registered_path):
+            if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
+                instruction = {
+                    "msg": "Updates available for curated repo "
+                    f"({registered_path}).",
+                    "cmd": "colrev env --update",
+                }
+                # environment_instructions.append(instruction)
+                return instruction
+        return {}
 
     def get_review_instructions(self, stat) -> list:
 
@@ -400,11 +411,10 @@ class Status(Process):
                 }
             )
 
-        REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
-        current_states_dict = {
-            record_state[0]: record_state[1]
-            for record_state in REVIEW_DATASET.get_record_state_list()
-        }
+        current_origin_states_dict = (
+            self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict()
+        )
+
         # temporarily override for testing
         # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
         # from colrev_core.process import ProcessModel
@@ -433,31 +443,23 @@ class Status(Process):
 
             from colrev_core.process import ProcessModel
 
-            committed_record_states_list = (
-                self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list_from_file_obj(
+            committed_origin_states_dict = (
+                self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict(
                     io.StringIO(filecontents.decode("utf-8"))
                 )
             )
-            committed_record_states_dict = {
-                record_state[0]: record_state[1]
-                for record_state in committed_record_states_list
-            }
 
             transitioned_records = []
             for (
-                committed_ID,
+                committed_origin,
                 committed_colrev_status,
-            ) in committed_record_states_dict.items():
-                # TODO : we should match the current and committed records based
-                # on their origins because IDs may change (e.g., in the preparation)
+            ) in committed_origin_states_dict.items():
                 transitioned_record = {
-                    "ID": committed_ID,
+                    "origin": committed_origin,
                     "source": committed_colrev_status,
                 }
 
-                if committed_ID not in current_states_dict:
-                    # TODO : this could occur when IDs have changed
-                    # -> need to use origins
+                if committed_origin not in current_origin_states_dict:
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
@@ -468,7 +470,9 @@ class Status(Process):
                     )
                     continue
 
-                transitioned_record["dest"] = current_states_dict[committed_ID]
+                transitioned_record["dest"] = current_origin_states_dict[
+                    committed_origin
+                ]
 
                 process_type = [
                     x["trigger"]
@@ -516,15 +520,17 @@ class Status(Process):
                 instruction["priority"] = "yes"
                 review_instructions.append(instruction)
 
-        self.REVIEW_MANAGER.logger.debug(f"current_states_dict: {current_states_dict}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"current_origin_states_dict: {current_origin_states_dict}"
+        )
         active_processing_functions = self.get_active_processing_functions(
-            current_states_dict
+            current_origin_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"active_processing_functions: {active_processing_functions}"
         )
         priority_processing_functions = self.get_priority_transition(
-            current_states_dict
+            current_origin_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"

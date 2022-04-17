@@ -105,6 +105,30 @@ class ReviewDataset:
             for record_header_str in self.__read_next_record_header_str()
         ]
 
+    def get_origin_state_dict(self, file_object=None) -> dict:
+        ret_dict = {}
+
+        def append_origin_state_pair(r_header: str):
+            rhlines = r_header.split("\n")
+            rhl0, rhl1, rhl2 = (
+                line[line.find("{") + 1 : line.rfind("}")] for line in rhlines[0:3]
+            )
+            origins = rhl1
+            if "colrev_status" not in rhlines[2]:
+                raise StatusFieldValueError(origins, "colrev_status", "NA")
+            colrev_status = rhl2
+            for origin in origins.split(";"):
+                ret_dict[origin] = colrev_status
+            return
+
+        if not self.MAIN_REFERENCES_FILE.is_file():
+            return {}
+        [
+            append_origin_state_pair(record_header_str)
+            for record_header_str in self.__read_next_record_header_str(file_object)
+        ]
+        return ret_dict
+
     def get_record_header_list(self) -> list:
         """Get the record_header_list"""
 
