@@ -327,7 +327,10 @@ class Status(Process):
         local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
 
-        pool = multiprocessing.Pool(processes=6)
+        # Note : we can use many parallel processes
+        # because append_registered_repo_instructions mainly waits for the network
+        # it does not use a lot of CPU capacity
+        pool = multiprocessing.Pool(processes=30)
         add_instructions = pool.map(
             self.append_registered_repo_instructions, registered_paths
         )
