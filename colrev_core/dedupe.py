@@ -1125,35 +1125,6 @@ class Dedupe(Process):
         for ndx in range(0, it_len, n):
             yield batch_data[ndx : min(ndx + n, it_len)]
 
-    def __merge_crossref_linked_records(self) -> None:
-        # Note : this is now done in the preparation scripts.
-        from colrev_core.prep import Preparation
-
-        PREPARATION = Preparation(self.REVIEW_MANAGER)
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        for record in records.values():
-            if "crossref" in record:
-                crossref_rec = PREPARATION.get_crossref_record(record)
-                if crossref_rec is None:
-                    continue
-
-                self.REVIEW_MANAGER.report_logger.info(
-                    f'Resolved crossref link: {record["ID"]} <- {crossref_rec["ID"]}'
-                )
-                self.apply_merges(
-                    [
-                        {
-                            "ID1": record["ID"],
-                            "ID2": crossref_rec["ID"],
-                            "similarity": 1,
-                            "decision": "duplicate",
-                        }
-                    ],
-                )
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
-
     def get_data(self):
 
         # Note: this would also be a place to set
@@ -1193,8 +1164,6 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.logger.info(
             "Pairwise identification of duplicates based on static similarity measure"
         )
-
-        self.__merge_crossref_linked_records()
 
         dedupe_data = self.get_data()
 

@@ -23,6 +23,66 @@ from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
+class LoadRecord(Record):
+    def __init__(self, data: dict):
+        super().__init__(data)
+
+    def import_provenance(self) -> None:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
+        if "colrev_masterdata_provenance" in self.data:
+            colrev_masterdata_provenance = self.load_masterdata_provenance()
+        else:
+            colrev_masterdata_provenance = {}
+
+        # Note : only add provenance data for the fields with problems
+        # Implicitly, the other fields have source=original and no problems.
+        if "colrev_masterdata" not in self.data:
+            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+            for required_field in required_fields:
+                if required_field in self.data:
+                    if percent_upper_chars(self.data[required_field]) > 0.8:
+                        colrev_masterdata_provenance[required_field] = {
+                            "source": "ORIGINAL",
+                            "note": "mostly upper case",
+                        }
+                else:
+                    self.data[required_field] = "UNKNOWN"
+            if "colrev_masterdata" not in self.data:
+                self.data["colrev_masterdata"] = "ORIGINAL"
+
+        inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
+        for inconsistent_field in inconsistent_fields:
+            if inconsistent_field in self.data:
+                # TODO : really set to ORIGINAL?
+                if inconsistent_field in colrev_masterdata_provenance:
+                    add_info = (
+                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
+                else:
+                    colrev_masterdata_provenance[inconsistent_field] = {
+                        "source": "ORIGINAL",
+                        "note": (
+                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
+                        ),
+                    }
+        incomplete_fields = self.get_incomplete_fields()
+        for incomplete_field in incomplete_fields:
+            if incomplete_field in colrev_masterdata_provenance:
+                add_info = f", {incomplete_field} incomplete"
+                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
+            else:
+                colrev_masterdata_provenance[incomplete_field] = {
+                    "source": "ORIGINAL",
+                    "note": f"{incomplete_field} incomplete",
+                }
+
+        self.set_masterdata_provenance(colrev_masterdata_provenance)
+        return
+
+
 class Loader(Process):
     def __init__(
         self,
@@ -220,7 +280,7 @@ class Loader(Process):
             record.update(number=record["issue"])
             del record["issue"]
 
-        RECORD = Record(record)
+        RECORD = LoadRecord(record)
         RECORD.import_provenance()
         record = RECORD.get_data()
 

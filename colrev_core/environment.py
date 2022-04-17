@@ -702,6 +702,8 @@ class LocalIndex:
             del record["fulltext"]
         if "tei_file" in record:
             del record["tei_file"]
+        if "grobid-version" in record:
+            del record["grobid-version"]
         if include_colrev_ids:
             if "colrev_id" in record:
                 pass

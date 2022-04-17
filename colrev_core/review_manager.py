@@ -316,7 +316,7 @@ class ReviewManager:
                     if "manual_non_duplicate" in record:
                         del record["manual_non_duplicate"]
                     if "origin" in record:
-                        record["colrev_record"] = record["record"]
+                        record["colrev_origin"] = record["origin"]
                         del record["origin"]
                     if "status" in record:
                         record["colrev_status"] = record["status"]

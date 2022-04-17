@@ -132,8 +132,8 @@ class ReviewDataset:
         ID = rhl0
         if "colrev_status" not in rhlines[2]:
             raise StatusFieldValueError(ID, "colrev_status", "NA")
-        status = rhl2[:-1]  # to replace the trailing }
-        return [ID, status]
+        colrev_status = rhl2[:-1]  # to replace the trailing }
+        return [ID, colrev_status]
 
     def __get_record_header_item(self, r_header: str) -> list:
         items = r_header.split("\n")[0:8]
@@ -154,7 +154,7 @@ class ReviewDataset:
             colrev_status.find("{") + 1 : colrev_status.rfind("}")
         ]
 
-        excl_criteria, file, metadata_source = "", "", ""
+        excl_criteria, file, colrev_masterdata = "", "", ""
         while items:
             item = items.pop(0)
 
@@ -167,10 +167,17 @@ class ReviewDataset:
             if "file" in item:
                 file = item[item.find("{") + 1 : item.rfind("}")]
 
-            if "metadata_source" in item:
-                metadata_source = item[item.find("{") + 1 : item.rfind("}")]
+            if "colrev_masterdata" in item:
+                colrev_masterdata = item[item.find("{") + 1 : item.rfind("}")]
 
-        return [ID, colrev_origin, colrev_status, excl_criteria, file, metadata_source]
+        return [
+            ID,
+            colrev_origin,
+            colrev_status,
+            excl_criteria,
+            file,
+            colrev_masterdata,
+        ]
 
     def retrieve_records_from_history(
         self, original_records: typing.List[typing.Dict], condition_state: RecordState

@@ -63,9 +63,9 @@ class Status(Process):
             record_links += nr_record_links + 1
 
         stat: dict = {"colrev_status": {}}
-        metadata_sources = [x[5] for x in record_header_list]
+        colrev_masterdata_items = [x[5] for x in record_header_list]
         stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in metadata_sources if "CURATED" == x]
+            [x for x in colrev_masterdata_items if "CURATED:" in x]
         )
 
         exclusion_statistics = {}
@@ -196,7 +196,7 @@ class Status(Process):
         )
         return stat
 
-    def get_priority_transition(self, current_states: set) -> list:
+    def get_priority_transition(self, current_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
@@ -204,12 +204,13 @@ class Status(Process):
         search_states = ["rev_synthesized"]
         while True:
             if any(
-                search_state in list(current_states) for search_state in search_states
+                search_state in current_states_dict.values()
+                for search_state in search_states
             ):
                 earliest_state = [
                     search_state
                     for search_state in search_states
-                    if search_state in current_states
+                    if search_state in current_states_dict.values()
                 ]
             search_states = [
                 str(x["source"])
@@ -229,11 +230,11 @@ class Status(Process):
         # print(f'priority_transitions: {priority_transitions}')
         return list(set(priority_transitions))
 
-    def get_active_processing_functions(self, current_states_set) -> list:
+    def get_active_processing_functions(self, current_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         active_processing_functions = []
-        for state in current_states_set:
+        for state in current_states_dict.values():
             srec = ProcessModel(state=state)
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
@@ -399,12 +400,11 @@ class Status(Process):
                 }
             )
 
-        current_record_state_list = (
-            self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
-        )
-        current_states_set = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set(
-            current_record_state_list
-        )
+        REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
+        current_states_dict = {
+            record_state[0]: record_state[1]
+            for record_state in REVIEW_DATASET.get_record_state_list()
+        }
         # temporarily override for testing
         # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
         # from colrev_core.process import ProcessModel
@@ -438,23 +438,26 @@ class Status(Process):
                     io.StringIO(filecontents.decode("utf-8"))
                 )
             )
+            committed_record_states_dict = {
+                record_state[0]: record_state[1]
+                for record_state in committed_record_states_list
+            }
 
-            record_state_items = [
-                record_state
-                for record_state in current_record_state_list
-                if record_state not in committed_record_states_list
-            ]
             transitioned_records = []
-            for item in record_state_items:
+            for (
+                committed_ID,
+                committed_colrev_status,
+            ) in committed_record_states_dict.items():
                 # TODO : we should match the current and committed records based
                 # on their origins because IDs may change (e.g., in the preparation)
-                transitioned_record = {"ID": item[0], "dest": item[1]}
+                transitioned_record = {
+                    "ID": committed_ID,
+                    "source": committed_colrev_status,
+                }
 
-                source_state = [
-                    rec[1] for rec in committed_record_states_list if rec[0] == item[0]
-                ]
-                if len(source_state) != 1:
-
+                if committed_ID not in current_states_dict:
+                    # TODO : this could occur when IDs have changed
+                    # -> need to use origins
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
@@ -464,7 +467,8 @@ class Status(Process):
                         }
                     )
                     continue
-                transitioned_record["source"] = source_state[0]
+
+                transitioned_record["dest"] = current_states_dict[committed_ID]
 
                 process_type = [
                     x["trigger"]
@@ -512,14 +516,16 @@ class Status(Process):
                 instruction["priority"] = "yes"
                 review_instructions.append(instruction)
 
-        self.REVIEW_MANAGER.logger.debug(f"current_states_set: {current_states_set}")
+        self.REVIEW_MANAGER.logger.debug(f"current_states_dict: {current_states_dict}")
         active_processing_functions = self.get_active_processing_functions(
-            current_states_set
+            current_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"active_processing_functions: {active_processing_functions}"
         )
-        priority_processing_functions = self.get_priority_transition(current_states_set)
+        priority_processing_functions = self.get_priority_transition(
+            current_states_dict
+        )
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )

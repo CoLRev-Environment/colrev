@@ -161,7 +161,6 @@ class Record:
                         )
             except NotEnoughDataToIdentifyException:
                 pass
-
         return
 
     def masterdata_is_complete(self) -> bool:
@@ -177,7 +176,6 @@ class Record:
         for identifying_field in self.identifying_fields:
             if "UNKNOWN" == self.data.get(identifying_field, "NA"):
                 del self.data[identifying_field]
-
         return
 
     def missing_fields(self) -> list:
@@ -224,15 +222,100 @@ class Record:
         """Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
+        def select_best_author(default: str, candidate: str) -> str:
+            best_author = default
+
+            default_mostly_upper = percent_upper_chars(default) > 0.8
+            candidate_mostly_upper = percent_upper_chars(candidate) > 0.8
+
+            if default_mostly_upper and not candidate_mostly_upper:
+                best_author = candidate
+
+            # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
+            if ", and " in default and ", and " not in candidate:
+                return candidate
+            if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
+                best_author = candidate
+
+            # self.REVIEW_MANAGER.logger.debug(
+            #     f"best_author({default}, \n"
+            #     f"                                      {candidate}) = \n"
+            #     f"                                      {best_author}"
+            # )
+            return best_author
+
+        def select_best_pages(default: str, candidate: str) -> str:
+            best_pages = default
+            if "--" in candidate and "--" not in default:
+                best_pages = candidate
+
+            # self.REVIEW_MANAGER.logger.debug(
+            #     f"best_pages({default}, {candidate}) = {best_pages}"
+            # )
+
+            return best_pages
+
+        def select_best_title(default: str, candidate: str) -> str:
+            best_title = default
+
+            default_upper = percent_upper_chars(default)
+            candidate_upper = percent_upper_chars(candidate)
+
+            # Relatively simple rule...
+            # catches cases when default is all upper or title case
+            if default_upper > candidate_upper:
+                best_title = candidate
+
+            # self.REVIEW_MANAGER.logger.debug(
+            #     f"best_title({default},\n"
+            #     f"                                      {candidate}) = \n"
+            #     f"                                      {best_title}"
+            # )
+
+            return best_title
+
+        def select_best_journal(default: str, candidate: str) -> str:
+
+            best_journal = default
+
+            default_upper = percent_upper_chars(default)
+            candidate_upper = percent_upper_chars(candidate)
+
+            # Simple heuristic to avoid abbreviations
+            if "." in default and "." not in candidate:
+                best_journal = candidate
+            # Relatively simple rule...
+            # catches cases when default is all upper or title case
+            if default_upper > candidate_upper:
+                best_journal = candidate
+
+            # self.REVIEW_MANAGER.logger.debug(
+            #     f"best_jour62nal({default}, \n"
+            #     f"                                      {candidate}) = \n"
+            #     f"                                      {best_journal}"
+            # )
+
+            return best_journal
+
         # self.REVIEW_MANAGER.logger.debug(
         #     "Fuse retrieved record " "(select fields with the highest quality)"
         # )
         # self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(merging_record))
         for key, val in MERGING_RECORD.data.items():
+            if "" == val:
+                continue
+
+            # Do not change fields for curated records
+            if key in Record.identifying_fields and self.is_curated():
+                continue
+
             if val:
                 if "author" == key:
                     if "author" in self.data:
-                        best_author = self.__select_best_author(
+                        best_author = select_best_author(
                             self.data["author"], MERGING_RECORD.data["author"]
                         )
                         if self.data["author"] != best_author:
@@ -242,7 +325,7 @@ class Record:
 
                 elif "pages" == key:
                     if "pages" in self.data:
-                        best_pages = self.__select_best_pages(
+                        best_pages = select_best_pages(
                             self.data["pages"], MERGING_RECORD.data["pages"]
                         )
                         if self.data["pages"] != best_pages:
@@ -253,7 +336,7 @@ class Record:
 
                 elif "title" == key:
                     if "title" in self.data:
-                        best_title = self.__select_best_title(
+                        best_title = select_best_title(
                             self.data["title"], MERGING_RECORD.data["title"]
                         )
                         if self.data["title"] != best_title:
@@ -264,7 +347,7 @@ class Record:
 
                 elif "journal" == key:
                     if "journal" in self.data:
-                        best_journal = self.__select_best_journal(
+                        best_journal = select_best_journal(
                             self.data["journal"], MERGING_RECORD.data["journal"]
                         )
                         if self.data["journal"] != best_journal:
@@ -274,7 +357,7 @@ class Record:
 
                 elif "booktitle" == key:
                     if "booktitle" in self.data:
-                        best_booktitle = self.__select_best_journal(
+                        best_booktitle = select_best_journal(
                             self.data["booktitle"], MERGING_RECORD.data["booktitle"]
                         )
                         if self.data["booktitle"] != best_booktitle:
@@ -285,99 +368,17 @@ class Record:
                         self.update_field("booktitle", str(val), source)
 
                 else:
-                    self.data[key] = str(val)
+                    # keep existing values per default
+                    if key in self.data:
+                        pass
+                    else:
+                        self.data[key] = str(val)
+        if "CURATED:" in source:
+            if "colrev_masterdata_provenance" in self.data:
+                del self.data["colrev_masterdata_provenance"]
+            self.data["colrev_masterdata"] = source
 
         return
-
-    def __select_best_author(self, default: str, candidate: str) -> str:
-        best_author = default
-
-        default_mostly_upper = Record.percent_upper_chars(default) > 0.8
-        candidate_mostly_upper = Record.percent_upper_chars(candidate) > 0.8
-
-        if default_mostly_upper and not candidate_mostly_upper:
-            best_author = candidate
-
-        # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
-        if ", and " in default and ", and " not in candidate:
-            return candidate
-        if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
-            best_author = candidate
-
-        # self.REVIEW_MANAGER.logger.debug(
-        #     f"best_author({default}, \n"
-        #     f"                                      {candidate}) = \n"
-        #     f"                                      {best_author}"
-        # )
-        return best_author
-
-    def __select_best_pages(self, default: str, candidate: str) -> str:
-        best_pages = default
-        if "--" in candidate and "--" not in default:
-            best_pages = candidate
-
-        # self.REVIEW_MANAGER.logger.debug(
-        #     f"best_pages({default}, {candidate}) = {best_pages}"
-        # )
-
-        return best_pages
-
-    def __select_best_title(self, default: str, candidate: str) -> str:
-        best_title = default
-
-        default_upper = Record.percent_upper_chars(default)
-        candidate_upper = Record.percent_upper_chars(candidate)
-
-        # Relatively simple rule...
-        # catches cases when default is all upper or title case
-        if default_upper > candidate_upper:
-            best_title = candidate
-
-        # self.REVIEW_MANAGER.logger.debug(
-        #     f"best_title({default},\n"
-        #     f"                                      {candidate}) = \n"
-        #     f"                                      {best_title}"
-        # )
-
-        return best_title
-
-    def __select_best_journal(self, default: str, candidate: str) -> str:
-
-        best_journal = default
-
-        default_upper = Record.percent_upper_chars(default)
-        candidate_upper = Record.percent_upper_chars(candidate)
-
-        # Simple heuristic to avoid abbreviations
-        if "." in default and "." not in candidate:
-            best_journal = candidate
-        # Relatively simple rule...
-        # catches cases when default is all upper or title case
-        if default_upper > candidate_upper:
-            best_journal = candidate
-
-        # self.REVIEW_MANAGER.logger.debug(
-        #     f"best_jour62nal({default}, \n"
-        #     f"                                      {candidate}) = \n"
-        #     f"                                      {best_journal}"
-        # )
-
-        return best_journal
-
-    def get_container_title(self) -> str:
-        container_title = "NA"
-        if "ENTRYTYPE" not in self.data:
-            container_title = self.data.get("journal", self.data.get("booktitle", "NA"))
-        else:
-            if "article" == self.data["ENTRYTYPE"]:
-                container_title = self.data.get("journal", "NA")
-            if "inproceedings" == self.data["ENTRYTYPE"]:
-                container_title = self.data.get("booktitle", "NA")
-            if "book" == self.data["ENTRYTYPE"]:
-                container_title = self.data.get("title", "NA")
-            if "inbook" == self.data["ENTRYTYPE"]:
-                container_title = self.data.get("booktitle", "NA")
-        return container_title
 
     @classmethod
     def get_record_similarity(cls, RECORD_A, RECORD_B) -> float:
@@ -549,65 +550,7 @@ class Record:
             + "]^T"
         )
         similarity_score = round(weighted_average, 4)
-
         return {"score": similarity_score, "details": details}
-
-    @classmethod
-    def percent_upper_chars(cls, input_string: str) -> float:
-        return sum(map(str.isupper, input_string)) / len(input_string)
-
-    def import_provenance(self) -> None:
-
-        if "colrev_masterdata_provenance" in self.data:
-            colrev_masterdata_provenance = self.load_masterdata_provenance()
-        else:
-            colrev_masterdata_provenance = {}
-
-        # Note : only add provenance data for the fields with problems
-        # Implicitly, the other fields have source=original and no problems.
-        if "colrev_masterdata" not in self.data:
-            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
-            for required_field in required_fields:
-                if required_field in self.data:
-                    if self.percent_upper_chars(self.data[required_field]) > 0.8:
-                        colrev_masterdata_provenance[required_field] = {
-                            "source": "ORIGINAL",
-                            "note": "mostly upper case",
-                        }
-                else:
-                    self.data[required_field] = "UNKNOWN"
-            if "colrev_masterdata" not in self.data:
-                self.data["colrev_masterdata"] = "ORIGINAL"
-
-        inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
-        for inconsistent_field in inconsistent_fields:
-            if inconsistent_field in self.data:
-                # TODO : really set to ORIGINAL?
-                if inconsistent_field in colrev_masterdata_provenance:
-                    add_info = (
-                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                    )
-                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
-                else:
-                    colrev_masterdata_provenance[inconsistent_field] = {
-                        "source": "ORIGINAL",
-                        "note": (
-                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
-                        ),
-                    }
-        incomplete_fields = self.get_incomplete_fields()
-        for incomplete_field in incomplete_fields:
-            if incomplete_field in colrev_masterdata_provenance:
-                add_info = f", {incomplete_field} incomplete"
-                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
-            else:
-                colrev_masterdata_provenance[incomplete_field] = {
-                    "source": "ORIGINAL",
-                    "note": f"{incomplete_field} incomplete",
-                }
-
-        self.set_masterdata_provenance(colrev_masterdata_provenance)
-        return
 
     def load_masterdata_provenance(self) -> dict:
         colrev_masterdata_provenance_dict = {}
@@ -626,7 +569,6 @@ class Record:
                     }
                 else:
                     print(f"problem with masterdata_provenance_item {item}")
-
         return colrev_masterdata_provenance_dict
 
     def set_masterdata_provenance(self, md_p_dict: dict):
@@ -688,59 +630,20 @@ class Record:
             pass
         return wo_ac
 
-    @classmethod
-    def __get_container_title(cls, record: dict) -> str:
-
-        # school as the container title for theses
-        if record["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
-            container_title = record["school"]
-        # for technical reports
-        elif "techreport" == record["ENTRYTYPE"]:
-            container_title = record["institution"]
-        elif "inproceedings" == record["ENTRYTYPE"]:
-            container_title = record["booktitle"]
-        elif "article" == record["ENTRYTYPE"]:
-            container_title = record["journal"]
+    def get_container_title(self) -> str:
+        container_title = "NA"
+        if "ENTRYTYPE" not in self.data:
+            container_title = self.data.get("journal", self.data.get("booktitle", "NA"))
         else:
-            raise KeyError
-        # TODO : TBD how to deal with the other ENTRYTYPES
-        # if "series" in record:
-        #     container_title += record["series"]
-        # if "url" in record and not any(
-        #     x in record for x in ["journal", "series", "booktitle"]
-        # ):
-        #     container_title += record["url"]
-
+            if "article" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("journal", "NA")
+            if "inproceedings" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("booktitle", "NA")
+            if "book" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("title", "NA")
+            if "inbook" == self.data["ENTRYTYPE"]:
+                container_title = self.data.get("booktitle", "NA")
         return container_title
-
-    def format_authors_string(self):
-        if "author" not in self.data:
-            return
-        authors = self.data["author"]
-        authors = str(authors).lower()
-        authors_string = ""
-        authors = Record.remove_accents(authors)
-
-        # abbreviate first names
-        # "Webster, Jane" -> "Webster, J"
-        # also remove all special characters and do not include separators (and)
-        for author in authors.split(" and "):
-            if "," in author:
-                last_names = [
-                    word[0] for word in author.split(",")[1].split(" ") if len(word) > 0
-                ]
-                authors_string = (
-                    authors_string
-                    + author.split(",")[0]
-                    + " "
-                    + " ".join(last_names)
-                    + " "
-                )
-            else:
-                authors_string = authors_string + author + " "
-        authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-        self.data["author"] = authors_string
-        return
 
     def create_colrev_id(
         self, alsoKnownAsRecord: dict = {}, assume_complete=False
@@ -780,6 +683,31 @@ class Record:
                         author_list.append(str(parsed_name))
 
             return "-".join(author_list)
+
+        def get_container_title(record: dict) -> str:
+            # Note: custom get_container_title for the colrev_id
+
+            # school as the container title for theses
+            if record["ENTRYTYPE"] in ["phdthesis", "masterthesis"]:
+                container_title = record["school"]
+            # for technical reports
+            elif "techreport" == record["ENTRYTYPE"]:
+                container_title = record["institution"]
+            elif "inproceedings" == record["ENTRYTYPE"]:
+                container_title = record["booktitle"]
+            elif "article" == record["ENTRYTYPE"]:
+                container_title = record["journal"]
+            else:
+                raise KeyError
+            # TODO : TBD how to deal with the other ENTRYTYPES
+            # if "series" in record:
+            #     container_title += record["series"]
+            # if "url" in record and not any(
+            #     x in record for x in ["journal", "series", "booktitle"]
+            # ):
+            #     container_title += record["url"]
+
+            return container_title
 
         def robust_append(input_string: str, to_append: str) -> str:
             input_string = str(input_string)
@@ -842,7 +770,7 @@ class Record:
                 srep = robust_append(srep, "p")
             else:
                 srep = robust_append(srep, record["ENTRYTYPE"].lower())
-            srep = robust_append(srep, self.__get_container_title(record))
+            srep = robust_append(srep, get_container_title(record))
             if "article" == record["ENTRYTYPE"]:
                 # Note: volume/number may not be required.
                 # TODO : how do we make sure that colrev_ids are not generated when
