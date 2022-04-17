@@ -120,8 +120,8 @@ class PrepRecord(Record):
         if "editorial" in RECORD.data.get("title", "NA").lower():
             if not all(x in RECORD.data for x in ["volume", "number"]):
                 return 0
-        # pp.pprint(RECORD.data)
-        # pp.pprint(retrieved_record)
+        # print(RECORD)
+        # print(RETRIEVED_RECORD)
         similarity = Record.get_record_similarity(RECORD, RETRIEVED_RECORD)
 
         return similarity
@@ -2086,7 +2086,7 @@ class Preparation(Process):
 
             diffs = list(dictdiffer.diff(prior, preparation_record))
             if diffs:
-                # self.REVIEW_MANAGER.pp.pprint(preparation_record)
+                # print(PREPARATION_RECORD)
                 change_report = (
                     f'{prep_script["script"].__name__}'
                     f'({preparation_record["ID"]})'

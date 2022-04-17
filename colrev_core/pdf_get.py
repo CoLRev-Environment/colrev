@@ -149,7 +149,7 @@ class PDF_Retrieval(Process):
         LOCAL_INDEX = LocalIndex()
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record, include_file=True)
-            # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+            # print(Record(retrieved_record))
         except RecordNotInIndexException:
             pass
             return record

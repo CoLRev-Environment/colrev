@@ -93,9 +93,9 @@ class Validate(Process):
                 "Difference: " + str(round(difference, 4)) + "\n\n"
             )
             record_1 = [x for x in search_records if record_link == x["colrev_origin"]]
-            self.REVIEW_MANAGER.pp.pprint(record_1[0])
+            print(Record(record_1[0]))
             record_2 = [x for x in records if eid == x["ID"]]
-            self.REVIEW_MANAGER.pp.pprint(record_2[0])
+            print(Record(record_2[0]))
 
             print("\n\n")
             for diff in list(dictdiffer.diff(record_1, record_2)):
@@ -155,9 +155,9 @@ class Validate(Process):
                 "Differences between merged records:" + f" {round(difference, 4)}\n\n"
             )
             record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
-            self.REVIEW_MANAGER.pp.pprint(record_1[0])
+            print(Record(record_1[0]))
             record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
-            self.REVIEW_MANAGER.pp.pprint(record_2[0])
+            print(Record(record_2[0]))
 
             if "n" == input("continue (y/n)?"):
                 break
