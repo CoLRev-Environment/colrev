@@ -101,11 +101,11 @@ class Record:
             else:
                 target_state = RecordState.md_needs_manual_preparation
 
-        self.data["status"] = target_state
+        self.data["colrev_status"] = target_state
 
     def get_origins(self) -> list:
-        if "origin" in self.data:
-            origins = self.data["origin"].split(";")
+        if "colrev_origin" in self.data:
+            origins = self.data["colrev_origin"].split(";")
         else:
             origins = []
         return origins
@@ -792,7 +792,7 @@ class Record:
             return input_string
 
         if not assume_complete:
-            if self.data["status"] in [
+            if self.data["colrev_status"] in [
                 RecordState.md_imported,
                 RecordState.md_needs_manual_preparation,
             ]:

@@ -26,13 +26,13 @@ class Screen(Process):
         saved_args["include_all"] = ""
         PAD = 50
         for record_ID, record in records.items():
-            if record["status"] != RecordState.pdf_prepared:
+            if record["colrev_status"] != RecordState.pdf_prepared:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
             )
             record.update(excl_criteria=";".join([e + "=no" for e in excl_criteria]))
-            record.update(status=RecordState.rev_included)
+            record.update(colrev_status=RecordState.rev_included)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -74,7 +74,7 @@ class Screen(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.pdf_prepared}]
+            conditions=[{"colrev_status": RecordState.pdf_prepared}]
         )
         screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
@@ -82,7 +82,7 @@ class Screen(Process):
 
     def set_data(self, record: dict, PAD: int = 40) -> None:
 
-        if RecordState.rev_included == record["status"]:
+        if RecordState.rev_included == record["colrev_status"]:
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Included in screen"
             )

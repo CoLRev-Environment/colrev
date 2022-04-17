@@ -62,9 +62,9 @@ class Status(Process):
             nr_record_links = origin.count(";")
             record_links += nr_record_links + 1
 
-        stat: dict = {"status": {}}
+        stat: dict = {"colrev_status": {}}
         metadata_sources = [x[5] for x in record_header_list]
-        stat["status"]["CURATED_records"] = len(
+        stat["colrev_status"]["CURATED_records"] = len(
             [x for x in metadata_sources if "CURATED" == x]
         )
 
@@ -77,21 +77,21 @@ class Status(Process):
                     if crit + "=yes" in exclusion_case:
                         exclusion_statistics[crit] += 1
 
-        stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
-        stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
+        stat["colrev_status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
+        stat["colrev_status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
 
         currently_stats = dict(Counter(status_list))
         for currently_stat, val in currently_stats.items():
-            stat["status"]["currently"][currently_stat] = val
-            stat["status"]["overall"][currently_stat] = val
+            stat["colrev_status"]["currently"][currently_stat] = val
+            stat["colrev_status"]["overall"][currently_stat] = val
 
         atomic_step_number = 0
         completed_atomic_steps = 0
 
         self.REVIEW_MANAGER.logger.debug(
-            "Set overall status statistics (going backwards)"
+            "Set overall colrev_status statistics (going backwards)"
         )
-        st_o = stat["status"]["overall"]
+        st_o = stat["colrev_status"]["overall"]
         non_completed = 0
         current_state = RecordState.rev_synthesized  # start with the last
         visited_states = []
@@ -139,7 +139,7 @@ class Status(Process):
             for trans_for_completeness in [
                 t for t in ProcessModel.transitions if current_state == t["dest"]
             ]:
-                nr_incomplete += stat["status"]["currently"][
+                nr_incomplete += stat["colrev_status"]["currently"][
                     str(trans_for_completeness["source"])
                 ]
 
@@ -148,45 +148,47 @@ class Status(Process):
             if current_state == RecordState.md_imported:
                 break
             current_state = t["source"]  # go a step back
-            non_completed += stat["status"]["currently"][str(current_state)]
+            non_completed += stat["colrev_status"]["currently"][str(current_state)]
 
-        stat["status"]["currently"]["non_completed"] = non_completed
+        stat["colrev_status"]["currently"]["non_completed"] = non_completed
 
-        stat["status"]["currently"]["non_processed"] = (
-            stat["status"]["currently"]["md_imported"]
-            + stat["status"]["currently"]["md_retrieved"]
-            + stat["status"]["currently"]["md_needs_manual_preparation"]
-            + stat["status"]["currently"]["md_prepared"]
+        stat["colrev_status"]["currently"]["non_processed"] = (
+            stat["colrev_status"]["currently"]["md_imported"]
+            + stat["colrev_status"]["currently"]["md_retrieved"]
+            + stat["colrev_status"]["currently"]["md_needs_manual_preparation"]
+            + stat["colrev_status"]["currently"]["md_prepared"]
         )
 
-        stat["status"]["currently"]["md_duplicates_removed"] = md_duplicates_removed
-        stat["status"]["overall"]["md_retrieved"] = self.get_nr_search()
-        stat["status"]["currently"]["md_retrieved"] = (
-            stat["status"]["overall"]["md_retrieved"] - record_links
+        stat["colrev_status"]["currently"][
+            "md_duplicates_removed"
+        ] = md_duplicates_removed
+        stat["colrev_status"]["overall"]["md_retrieved"] = self.get_nr_search()
+        stat["colrev_status"]["currently"]["md_retrieved"] = (
+            stat["colrev_status"]["overall"]["md_retrieved"] - record_links
         )
         stat["completeness_condition"] = (0 == nr_incomplete) and (
-            0 == stat["status"]["currently"]["md_retrieved"]
+            0 == stat["colrev_status"]["currently"]["md_retrieved"]
         )
 
-        stat["status"]["currently"]["exclusion"] = exclusion_statistics
+        stat["colrev_status"]["currently"]["exclusion"] = exclusion_statistics
 
-        stat["status"]["overall"]["rev_screen"] = stat["status"]["overall"][
-            "pdf_prepared"
-        ]
-        stat["status"]["overall"]["rev_prescreen"] = stat["status"]["overall"][
-            "md_processed"
-        ]
-        stat["status"]["currently"]["pdf_needs_retrieval"] = stat["status"][
-            "currently"
-        ]["rev_prescreen_included"]
+        stat["colrev_status"]["overall"]["rev_screen"] = stat["colrev_status"][
+            "overall"
+        ]["pdf_prepared"]
+        stat["colrev_status"]["overall"]["rev_prescreen"] = stat["colrev_status"][
+            "overall"
+        ]["md_processed"]
+        stat["colrev_status"]["currently"]["pdf_needs_retrieval"] = stat[
+            "colrev_status"
+        ]["currently"]["rev_prescreen_included"]
 
         # note: 10 steps
         stat["atomic_steps"] = (
             10 * st_o[str(RecordState.md_imported)]
-            - stat["status"]["currently"]["md_duplicates_removed"] * 8
-            - stat["status"]["currently"]["rev_prescreen_excluded"] * 7
-            - stat["status"]["currently"]["pdf_not_available"] * 6
-            - stat["status"]["currently"]["rev_excluded"]
+            - stat["colrev_status"]["currently"]["md_duplicates_removed"] * 8
+            - stat["colrev_status"]["currently"]["rev_prescreen_excluded"] * 7
+            - stat["colrev_status"]["currently"]["pdf_not_available"] * 6
+            - stat["colrev_status"]["currently"]["rev_excluded"]
         )
         stat["completed_atomic_steps"] = completed_atomic_steps
         self.REVIEW_MANAGER.logger.debug(
@@ -274,7 +276,7 @@ class Status(Process):
 
         environment_instructions = []
 
-        if stat["status"]["currently"]["md_imported"] > 10:
+        if stat["colrev_status"]["currently"]["md_imported"] > 10:
             with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as r:
                 outlets = []
                 for line in r.readlines():
@@ -380,7 +382,7 @@ class Status(Process):
         if len(missing_files) > 0:
             review_instructions.append(
                 {
-                    "msg": "record with status requiring a PDF file but missing "
+                    "msg": "record with colrev_status requiring a PDF file but missing "
                     + f"the path (file = ...): {missing_files}"
                 }
             )
@@ -456,7 +458,8 @@ class Status(Process):
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
-                            "msg": f"Resolve committed status of {transitioned_record}",
+                            "msg": "Resolve committed colrev_status "
+                            + f"of {transitioned_record}",
                             "priority": "yes",
                         }
                     )
@@ -534,7 +537,7 @@ class Status(Process):
             "screen": "Screen records",
             "data": "Extract data/synthesize records",
         }
-        if stat["status"]["currently"]["md_retrieved"] > 0:
+        if stat["colrev_status"]["currently"]["md_retrieved"] > 0:
             instruction = {
                 "msg": msgs["load"],
                 "cmd": "colrev load",
@@ -679,7 +682,7 @@ class Status(Process):
 
                 # TODO : all the following: should all search results be imported?!
                 if SHARE_STAT_REQ == "PROCESSED":
-                    if 0 == stat["status"]["currently"]["non_processed"]:
+                    if 0 == stat["colrev_status"]["currently"]["non_processed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -701,7 +704,7 @@ class Status(Process):
                 # a PRE_SCREEN or INCLUSION_SCREEN is needed
                 if SHARE_STAT_REQ == "SCREENED":
                     # TODO : the following condition is probably not sufficient
-                    if 0 == stat["review_status"]["currently"]["pdf_prepared"]:
+                    if 0 == stat["colrev_status"]["currently"]["pdf_prepared"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -719,7 +722,7 @@ class Status(Process):
                         }
 
                 if SHARE_STAT_REQ == "COMPLETED":
-                    if 0 == stat["review_status"]["currently"]["non_completed"]:
+                    if 0 == stat["colrev_status"]["currently"]["non_completed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -804,7 +807,7 @@ class Status(Process):
         print(stat)
         return
 
-    def print_review_status(self, statuts_info: dict) -> None:
+    def print_review_status(self, status_info: dict) -> None:
 
         # Principle: first column shows total records/PDFs in each stage
         # the second column shows
@@ -819,7 +822,7 @@ class Status(Process):
             print("  - No records added yet")
         else:
 
-            stat = statuts_info["status"]
+            stat = status_info["colrev_status"]
 
             print(" Search")
             perc_curated = 0
@@ -830,7 +833,7 @@ class Status(Process):
             )
             if denominator > 0:
 
-                perc_curated = statuts_info["status"]["CURATED_records"] / (denominator)
+                perc_curated = stat["CURATED_records"] / (denominator)
             if stat["overall"]["md_prepared"] > 0:
                 self.stat_print(
                     False,
@@ -838,7 +841,7 @@ class Status(Process):
                     stat["overall"]["md_retrieved"],
                     "*",
                     f"curated ({round(perc_curated*100, 2)}%)",
-                    str(statuts_info["status"]["CURATED_records"]),
+                    str(stat["CURATED_records"]),
                 )
             else:
                 self.stat_print(

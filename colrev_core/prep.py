@@ -61,6 +61,13 @@ class Preparation(Process):
     fields_to_keep = [
         "ID",
         "ENTRYTYPE",
+        "colrev_status",
+        "colrev_origin",
+        "colrev_masterdata_provenance",
+        "colrev_masterdata",
+        "colrev_data_provenance",
+        "colrev_pid",
+        "colrev_id",
         "author",
         "year",
         "title",
@@ -79,9 +86,7 @@ class Preparation(Process):
         "book-author",
         "keywords",
         "file",
-        "status",
         "fulltext",
-        "origin",
         "publisher",
         "dblp_key",
         "sem_scholar_id",
@@ -100,10 +105,6 @@ class Preparation(Process):
         "note",
         "issn",
         "language",
-        "colrev_masterdata_provenance",
-        "colrev_masterdata",
-        "colrev_data_provenance",
-        "colrev_pid",
     ]
     fields_to_drop = [
         "type",
@@ -252,8 +253,8 @@ class Preparation(Process):
 
     def prep_curated(self, RECORD: Record) -> Record:
         if RECORD.is_curated():
-            if RecordState.md_imported == RECORD.data["status"]:
-                RECORD.data["status"] = RecordState.md_prepared
+            if RecordState.md_imported == RECORD.data["colrev_status"]:
+                RECORD.data["colrev_status"] = RecordState.md_prepared
         return RECORD
 
     def correct_recordtype(self, RECORD: Record) -> Record:
@@ -545,7 +546,7 @@ class Preparation(Process):
         if retrieved:
 
             for k, v in retrieved_record.items():
-                if k in ["origin", "ID", "grobid-version"]:
+                if k in ["colrev_origin", "ID", "grobid-version"]:
                     continue
                 if k in ["keywords", "url"]:
                     continue
@@ -1585,7 +1586,9 @@ class Preparation(Process):
                         < 70
                     ):
                         # TODO : update man_prep_hints:
-                        RECORD.data["status"] = RecordState.md_needs_manual_preparation
+                        RECORD.data[
+                            "colrev_status"
+                        ] = RecordState.md_needs_manual_preparation
                         RECORD.data[
                             "man_prep_hints"
                         ] = f"Disagreement with doi metadata ({k}: {v})"
@@ -1608,7 +1611,9 @@ class Preparation(Process):
                         )
                         < 70
                     ):
-                        RECORD.data["status"] = RecordState.md_needs_manual_preparation
+                        RECORD.data[
+                            "colrev_status"
+                        ] = RecordState.md_needs_manual_preparation
                         RECORD.data[
                             "man_prep_hints"
                         ] = f"Disagreement with url metadata ({k}: {v})"
@@ -1660,7 +1665,7 @@ class Preparation(Process):
             ]
         )
         if not self.alphabet_detector.only_alphabet_chars(str_to_check, "LATIN"):
-            RECORD.data["status"] = RecordState.rev_prescreen_excluded
+            RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
             RECORD.data["prescreen_exclusion"] = "script:non_latin_alphabet"
 
         return RECORD
@@ -1677,7 +1682,7 @@ class Preparation(Process):
                 RECORD.data["language"].replace("English", "en").replace("ENG", "en")
             )
             if RECORD.data["language"] not in self.languages_to_include:
-                RECORD.data["status"] = RecordState.rev_prescreen_excluded
+                RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
                 RECORD.data[
                     "prescreen_exclusion"
                 ] = f"language of title not in [{','.join(self.languages_to_include)}]"
@@ -1700,7 +1705,7 @@ class Preparation(Process):
                 if conf > 0.95:
                     return RECORD
 
-        RECORD.data["status"] = RecordState.rev_prescreen_excluded
+        RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
         RECORD.data[
             "prescreen_exclusion"
         ] = f"language of title not in [{','.join(self.languages_to_include)}]"
@@ -1710,10 +1715,10 @@ class Preparation(Process):
     def __check_potential_retracts(self, RECORD: Record) -> Record:
         # Note : we retrieved metadata in get_md_from_crossref()
         if RECORD.data.get("crossmark", "") == "True":
-            RECORD.data["status"] = RecordState.md_needs_manual_preparation
+            RECORD.data["colrev_status"] = RecordState.md_needs_manual_preparation
             RECORD.data["man_prep_hints"] = "crossmark_restriction_potential_retract"
         if RECORD.data.get("warning", "") == "Withdrawn (according to DBLP)":
-            RECORD.data["status"] = RecordState.md_needs_manual_preparation
+            RECORD.data["colrev_status"] = RecordState.md_needs_manual_preparation
             RECORD.data["man_prep_hints"] = "Withdrawn (according to DBLP)"
         return RECORD
 
@@ -1739,8 +1744,8 @@ class Preparation(Process):
 
     def get_crossref_record(self, record) -> dict:
         # Note : the ID of the crossrefed record may have changed.
-        # we need to trace based on the origin
-        crossref_origin = record["origin"]
+        # we need to trace based on the colrev_origin
+        crossref_origin = record["colrev_origin"]
         crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
         crossref_origin = crossref_origin + "/" + record["crossref"]
         for record_string in self.__read_next_record_str():
@@ -1748,7 +1753,7 @@ class Preparation(Process):
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 record = db.entries[0]
-                if record["origin"] == crossref_origin:
+                if record["colrev_origin"] == crossref_origin:
                     return record
         return {}
 
@@ -1831,7 +1836,7 @@ class Preparation(Process):
         if "crossmark" in RECORD.data:
             return RECORD
         if RECORD.is_curated():
-            RECORD.data.update(status=RecordState.md_prepared)
+            RECORD.data.update(colrev_status=RecordState.md_prepared)
             return RECORD
 
         self.REVIEW_MANAGER.logger.debug(
@@ -1848,13 +1853,13 @@ class Preparation(Process):
         )
 
         if not RECORD.masterdata_is_complete():
-            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
+            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
         elif RECORD.has_incomplete_fields():
-            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
+            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
         elif RECORD.has_inconsistent_fields():
-            RECORD.data.update(status=RecordState.md_needs_manual_preparation)
+            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
         else:
-            RECORD.data.update(status=RecordState.md_prepared)
+            RECORD.data.update(colrev_status=RecordState.md_prepared)
 
         return RECORD
 
@@ -1862,8 +1867,8 @@ class Preparation(Process):
 
         RECORD = item["record"]
 
-        # if RecordState.md_imported != record["status"]:
-        if RECORD.data["status"] not in [
+        # if RecordState.md_imported != record["colrev_status"]:
+        if RECORD.data["colrev_status"] not in [
             RecordState.md_imported,
             # RecordState.md_prepared, # avoid changing prepared records
             RecordState.md_needs_manual_preparation,
@@ -1941,9 +1946,8 @@ class Preparation(Process):
                     print("\n")
                     time.sleep(0.7)
 
-            # TODO : reinclude the following:
             if (
-                preparation_record["status"]
+                preparation_record["colrev_status"]
                 in [
                     RecordState.rev_prescreen_excluded,
                     RecordState.md_prepared,
@@ -1963,14 +1967,14 @@ class Preparation(Process):
             RECORD.data = preparation_record.copy()
             if (
                 RecordState.md_needs_manual_preparation
-                == preparation_record["status"]
+                == preparation_record["colrev_status"]
             ):
                 RECORD = self.log_notifications(RECORD, unprepared_record)
         else:
             if self.DEBUG_MODE:
                 if (
                     RecordState.md_needs_manual_preparation
-                    == preparation_record["status"]
+                    == preparation_record["colrev_status"]
                 ):
                     self.REVIEW_MANAGER.logger.debug(
                         "Resetting values (instead of saving them)."
@@ -1990,7 +1994,7 @@ class Preparation(Process):
             [
                 record
                 for record in preparation_batch
-                if record["status"] == RecordState.md_needs_manual_preparation
+                if record["colrev_status"] == RecordState.md_needs_manual_preparation
             ]
         )
         if nr_recs > 0:
@@ -2002,7 +2006,7 @@ class Preparation(Process):
             [
                 record
                 for record in preparation_batch
-                if record["status"] == RecordState.rev_prescreen_excluded
+                if record["colrev_status"] == RecordState.rev_prescreen_excluded
             ]
         )
         if nr_recs > 0:
@@ -2019,7 +2023,7 @@ class Preparation(Process):
         record_list = [
             r
             for r in record_list
-            if str(r["status"])
+            if str(r["colrev_status"])
             in [
                 str(RecordState.md_prepared),
                 str(RecordState.md_needs_manual_preparation),
@@ -2029,7 +2033,7 @@ class Preparation(Process):
         for r in [
             r
             for r in record_list
-            if str(r["status"])
+            if str(r["colrev_status"])
             not in [
                 str(RecordState.md_prepared),
                 str(RecordState.md_needs_manual_preparation),
@@ -2037,7 +2041,7 @@ class Preparation(Process):
         ]:
             msg = (
                 f"{r['ID']}: status must be md_prepared/md_needs_manual_preparation "
-                + f'(is {r["status"]})'
+                + f'(is {r["colrev_status"]})'
             )
             self.REVIEW_MANAGER.logger.error(msg)
             self.REVIEW_MANAGER.report_logger.error(msg)
@@ -2063,12 +2067,13 @@ class Preparation(Process):
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
             prior_db = bibtexparser.loads(filecontents)
             for prior_record in prior_db.entries:
-                if str(prior_record["status"]) != str(RecordState.md_imported):
+                if str(prior_record["colrev_status"]) != str(RecordState.md_imported):
                     continue
                 for record_to_unmerge, record in record_reset_list:
 
                     if any(
-                        o in prior_record["origin"] for o in record["origin"].split(";")
+                        o in prior_record["colrev_origin"]
+                        for o in record["colrev_origin"].split(";")
                     ):
                         self.REVIEW_MANAGER.report_logger.info(
                             f'reset({record["ID"]}) to'
@@ -2083,7 +2088,12 @@ class Preparation(Process):
                         break
                 # Stop if all original records have been found
                 if (
-                    len([x["status"] != "md_imported" for x, y in record_reset_list])
+                    len(
+                        [
+                            x["colrev_status"] != "md_imported"
+                            for x, y in record_reset_list
+                        ]
+                    )
                     == 0
                 ):
                     break
@@ -2095,7 +2105,9 @@ class Preparation(Process):
         # retrieve the original record from the search/source file
         for record_to_unmerge, record in record_reset_list:
             PREP_MAN.append_to_non_dupe_db(record_to_unmerge, record)
-            record_to_unmerge.update(status=RecordState.md_needs_manual_preparation)
+            record_to_unmerge.update(
+                colrev_status=RecordState.md_needs_manual_preparation
+            )
 
         return
 
@@ -2135,7 +2147,9 @@ class Preparation(Process):
 
         for record in records.values():
             prior_record_l = [
-                x for x in prior_bib_db.entries if x["origin"] == record["origin"]
+                x
+                for x in prior_bib_db.entries
+                if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(prior_record_l) != 1:
                 continue
@@ -2193,10 +2207,10 @@ class Preparation(Process):
 
         for record in tqdm(records.values()):
 
-            previous_status = record["status"]
+            previous_status = record["colrev_status"]
             # TODO : the source_url should be a list (with newlines)?
             record = self.get_record_from_local_index(record)
-            record["status"] = previous_status
+            record["colrev_status"] = previous_status
 
             continue
             if "CURATED" == record.get("metadata_source", ""):
@@ -2216,17 +2230,17 @@ class Preparation(Process):
                             )
 
             if "doi" not in record:
-                previous_status = record["status"]
+                previous_status = record["colrev_status"]
                 record = self.get_md_from_crossref(record)
-                record["status"] = previous_status
+                record["colrev_status"] = previous_status
 
             if "dblp_key" not in record:
-                previous_status = record["status"]
+                previous_status = record["colrev_status"]
                 record = self.get_md_from_dblp(record)
-                record["status"] = previous_status
+                record["colrev_status"] = previous_status
 
             # polish based on TEI
-            if record["status"] not in [
+            if record["colrev_status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
@@ -2267,9 +2281,9 @@ class Preparation(Process):
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[
-                {"status": RecordState.md_imported},
-                {"status": RecordState.md_prepared},
-                {"status": RecordState.md_needs_manual_preparation},
+                {"colrev_status": RecordState.md_imported},
+                {"colrev_status": RecordState.md_prepared},
+                {"colrev_status": RecordState.md_needs_manual_preparation},
             ],
         )
 
@@ -2385,9 +2399,9 @@ class Preparation(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         [
-            r.update(status=RecordState.md_imported)
+            r.update(colrev_status=RecordState.md_imported)
             for r in records.values()
-            if reprocess_state == r["status"]
+            if reprocess_state == r["colrev_status"]
         ]
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         return
@@ -2397,7 +2411,7 @@ class Preparation(Process):
         for PDF_INDEX in PDF_INDICES:
             if not PDF_INDEX:
                 continue
-            if PDF_INDEX["filename"] in item["origin"]:
+            if PDF_INDEX["filename"] in item["colrev_origin"]:
                 return PDF_INDEX
         return {}
 
@@ -2431,15 +2445,18 @@ class Preparation(Process):
             records = bib_db.entries
             # Cast status to Enum
             records = [
-                {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
+                {
+                    k: RecordState[v] if ("colrev_status" == k) else v
+                    for k, v in r.items()
+                }
                 for r in records
             ]
             for record in records:
                 if RecordState.md_imported != record.get("state", ""):
                     self.REVIEW_MANAGER.logger.info(
-                        f"Setting status to md_imported {record['ID']}"
+                        f"Setting colrev_status to md_imported {record['ID']}"
                     )
-                    record["status"] = RecordState.md_imported
+                    record["colrev_status"] = RecordState.md_imported
             debug_ids_list = [r["ID"] for r in records]
             debug_ids = ",".join(debug_ids_list)
             self.REVIEW_MANAGER.logger.info("Imported record (retrieved from file)")
@@ -2507,7 +2524,7 @@ class Preparation(Process):
                 "journal": "Communications of the Association for Information Systems",
                 "volume": "46",
                 "year": "2020",
-                "status": RecordState.md_prepared,  # type: ignore
+                "colrev_status": RecordState.md_prepared,  # type: ignore
             }
             RET_REC = self.get_md_from_dblp(Record(test_rec.copy()))
             if 0 != len(RET_REC.data):
@@ -2559,7 +2576,7 @@ class Preparation(Process):
             self.REVIEW_MANAGER.logger.info(
                 "The script will replay the preparation procedures"
                 " step-by-step, allow you to identify potential errors, trace them to "
-                "their origin and correct them."
+                "their colrev_origin and correct them."
             )
             input("\nPress Enter to continue")
             print("\n\n")

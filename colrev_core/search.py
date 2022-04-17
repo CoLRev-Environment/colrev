@@ -22,6 +22,7 @@ from pdf2image import convert_from_path
 from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 
 
 class Search(Process):
@@ -426,7 +427,7 @@ class Search(Process):
 
         # default: rev_included/rev_synthesized and no selection clauses
         for record in records.values():
-            if record["status"] not in [
+            if record["colrev_status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
@@ -514,8 +515,8 @@ class Search(Process):
             records = records + [record_to_import]
 
         keys_to_drop = [
-            "status",
-            "origin",
+            "colrev_status",
+            "colrev_origin",
             "excl_criteria",
         ]
 
@@ -592,8 +593,8 @@ class Search(Process):
         records = records + records_to_import
 
         keys_to_drop = [
-            "status",
-            "origin",
+            "colrev_status",
+            "colrev_origin",
             "excl_criteria",
             "excl_criteria",
             "metadata_source",
@@ -655,7 +656,7 @@ class Search(Process):
             c_rec_l = [
                 r
                 for r in records.values()
-                if f"{search_source}/{x['ID']}" in r["origin"].split(";")
+                if f"{search_source}/{x['ID']}" in r["colrev_origin"].split(";")
             ]
             if len(c_rec_l) == 1:
                 c_rec = c_rec_l.pop()
@@ -727,13 +728,13 @@ class Search(Process):
                 to_remove = []
                 source_ids = [x["ID"] for x in search_db.entries]
                 for record in records.values():
-                    if str(feed_file.name) in record["origin"]:
+                    if str(feed_file.name) in record["colrev_origin"]:
                         if (
-                            record["origin"].split(";")[0].split("/")[1]
+                            record["colrev_origin"].split(";")[0].split("/")[1]
                             not in source_ids
                         ):
-                            print("REMOVE " + record["origin"])
-                            to_remove.append(record["origin"])
+                            print("REMOVE " + record["colrev_origin"])
+                            to_remove.append(record["colrev_origin"])
 
                 for r in to_remove:
                     self.REVIEW_MANAGER.logger.debug(
@@ -744,7 +745,9 @@ class Search(Process):
                     )
 
                 records = {
-                    k: v for k, v in records.items() if v["origin"] not in to_remove
+                    k: v
+                    for k, v in records.items()
+                    if v["colrev_origin"] not in to_remove
                 }
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -897,7 +900,7 @@ class Search(Process):
         def get_record_from_pdf_grobid(record) -> dict:
             from colrev_core.environment import EnvironmentManager
 
-            if RecordState.md_prepared == record.get("status", "NA"):
+            if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
             grobid_client.check_grobid_availability()
 
@@ -1077,11 +1080,11 @@ class Search(Process):
                     ID += 1
                     new_r["ID"] = f"{ID}".rjust(10, "0")
 
-                    if "status" in new_r:
-                        if "CURATED" != new_r.get("metadata_source", "NA"):
-                            del new_r["status"]
+                    if "colrev_status" in new_r:
+                        if Record(new_r).is_curated():
+                            del new_r["colrev_status"]
                         else:
-                            new_r["status"] = str(new_r["status"])
+                            new_r["colrev_status"] = str(new_r["colrev_status"])
 
             records = records + new_records
 

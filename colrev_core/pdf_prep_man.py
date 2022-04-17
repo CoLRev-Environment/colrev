@@ -35,7 +35,7 @@ class PDFPrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.pdf_needs_manual_preparation}]
+            conditions=[{"colrev_status": RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(
@@ -54,7 +54,7 @@ class PDFPrepMan(Process):
 
     def set_data(self, record: dict) -> None:
 
-        record.update(status=RecordState.pdf_prepared)
+        record.update(colrev_status=RecordState.pdf_prepared)
 
         if "pdf_prep_hints" in record:
             del record["pdf_prep_hints"]
@@ -87,7 +87,7 @@ class PDFPrepMan(Process):
         crosstab = []
         for record in records.values():
 
-            if RecordState.pdf_needs_manual_preparation != record["status"]:
+            if RecordState.pdf_needs_manual_preparation != record["colrev_status"]:
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -155,7 +155,7 @@ class PDFPrepMan(Process):
         records_list = [
             record
             for record in records.values()
-            if RecordState.pdf_needs_manual_preparation == record["status"]
+            if RecordState.pdf_needs_manual_preparation == record["colrev_status"]
         ]
 
         # Casting to string (in particular the RecordState Enum)
@@ -171,7 +171,7 @@ class PDFPrepMan(Process):
 
         col_names = [
             "ID",
-            "origin",
+            "colrev_origin",
             "author",
             "title",
             "year",
@@ -217,7 +217,9 @@ class PDFPrepMan(Process):
         for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
-                x for x in bib_db_changed if x["origin"] == record["origin"]
+                x
+                for x in bib_db_changed
+                if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:
                 changed_record = changed_record_l.pop()

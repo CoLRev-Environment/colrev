@@ -25,7 +25,7 @@ class Prescreen(Process):
         tbl = []
         for record in records.vaules():
 
-            if record["status"] in [
+            if record["colrev_status"] in [
                 RecordState.md_imported,
                 RecordState.md_retrieved,
                 RecordState.md_needs_manual_preparation,
@@ -35,16 +35,16 @@ class Prescreen(Process):
 
             inclusion_1, inclusion_2 = "NA", "NA"
 
-            if RecordState.md_processed == record["status"]:
+            if RecordState.md_processed == record["colrev_status"]:
                 inclusion_1 = "TODO"
-            elif RecordState.rev_prescreen_excluded == record["status"]:
+            elif RecordState.rev_prescreen_excluded == record["colrev_status"]:
                 inclusion_1 = "no"
             else:
                 inclusion_1 = "yes"
                 inclusion_2 = "TODO"
-                if RecordState.rev_excluded == record["status"]:
+                if RecordState.rev_excluded == record["colrev_status"]:
                     inclusion_2 = "no"
-                if record["status"] in [
+                if record["colrev_status"] in [
                     RecordState.rev_included,
                     RecordState.rev_synthesized,
                 ]:
@@ -111,13 +111,13 @@ class Prescreen(Process):
             if screened_record.get("ID", "") in records:
                 record = records[screened_record.get("ID", "")]
                 if "no" == screened_record.get("inclusion_1", ""):
-                    record["status"] = RecordState.rev_prescreen_excluded
+                    record["colrev_status"] = RecordState.rev_prescreen_excluded
                 if "yes" == screened_record.get("inclusion_1", ""):
-                    record["status"] = RecordState.rev_prescreen_included
+                    record["colrev_status"] = RecordState.rev_prescreen_included
                 if "no" == screened_record.get("inclusion_2", ""):
-                    record["status"] = RecordState.rev_excluded
+                    record["colrev_status"] = RecordState.rev_excluded
                 if "yes" == screened_record.get("inclusion_2", ""):
-                    record["status"] = RecordState.rev_included
+                    record["colrev_status"] = RecordState.rev_included
                 if "" != screened_record.get("excl_criteria", ""):
                     record["excl_criteria"] = screened_record.get("excl_criteria", "")
 
@@ -133,13 +133,13 @@ class Prescreen(Process):
         saved_args["include_all"] = ""
         PAD = 50
         for record in records.values():
-            if record["status"] != RecordState.md_processed:
+            if record["colrev_status"] != RecordState.md_processed:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "Included in prescreen (automatically)"
             )
-            record.update(status=RecordState.rev_prescreen_included)
+            record.update(colrev_status=RecordState.rev_prescreen_included)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -157,7 +157,7 @@ class Prescreen(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.md_processed}]
+            conditions=[{"colrev_status": RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
@@ -170,14 +170,14 @@ class Prescreen(Process):
                 f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "status", str(RecordState.rev_prescreen_included)
+                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_included)
             )
         else:
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "status", str(RecordState.rev_prescreen_excluded)
+                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_excluded)
             )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

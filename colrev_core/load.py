@@ -137,14 +137,14 @@ class Loader(Process):
 
         record_list = []
         for record in search_records:
-            record.update(origin=f"{filepath.name}/{record['ID']}")
+            record.update(colrev_origin=f"{filepath.name}/{record['ID']}")
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if "status" not in record:
-                record.update(status=RecordState.md_retrieved)
-            elif record["status"] in [
+            if "colrev_status" not in record:
+                record.update(colrev_status=RecordState.md_retrieved)
+            elif record["colrev_status"] in [
                 str(RecordState.md_processed),
                 str(RecordState.rev_prescreen_included),
                 str(RecordState.rev_prescreen_excluded),
@@ -158,7 +158,7 @@ class Loader(Process):
             ]:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record["status"] = RecordState.md_prepared
+                record["colrev_status"] = RecordState.md_prepared
 
             if "doi" in record:
                 record.update(
@@ -184,7 +184,7 @@ class Loader(Process):
             f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
         )
 
-        if RecordState.md_retrieved != record["status"]:
+        if RecordState.md_retrieved != record["colrev_status"]:
             return record
 
         # For better readability of the git diff:
@@ -224,7 +224,7 @@ class Loader(Process):
         RECORD.import_provenance()
         record = RECORD.get_data()
 
-        record.update(status=RecordState.md_imported)
+        record.update(colrev_status=RecordState.md_imported)
 
         return record
 
@@ -699,10 +699,10 @@ class Loader(Process):
 
             for old_id, new_id in IDs_to_update:
                 self.REVIEW_MANAGER.logger.info(
-                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
                 )
                 self.REVIEW_MANAGER.report_logger.info(
-                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
                 )
                 self.__inplace_change_second(
                     corresponding_bib_file, f"{old_id},", f"{new_id},"
@@ -776,7 +776,9 @@ class Loader(Process):
                 )
 
             search_records_list = [
-                x for x in search_records_list if x["origin"] not in imported_origins
+                x
+                for x in search_records_list
+                if x["colrev_origin"] not in imported_origins
             ]
             to_import = len(search_records_list)
             if 0 == to_import:

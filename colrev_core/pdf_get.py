@@ -125,7 +125,7 @@ class PDF_Retrieval(Process):
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
                         record.update(file=str(pdf_filepath))
-                        record.update(status=RecordState.rev_prescreen_included)
+                        record.update(colrev_status=RecordState.rev_prescreen_included)
                     else:
                         os.remove(pdf_filepath)
                 else:
@@ -163,7 +163,7 @@ class PDF_Retrieval(Process):
     def retrieve_pdf(self, item: dict) -> dict:
         record = item["record"]
 
-        if str(RecordState.rev_prescreen_included) != str(record["status"]):
+        if str(RecordState.rev_prescreen_included) != str(record["colrev_status"]):
             return record
 
         retrieval_scripts: typing.List[typing.Dict[str, typing.Any]] = [
@@ -183,9 +183,9 @@ class PDF_Retrieval(Process):
                     f'{retrieval_script["script"].__name__}'
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
-                record.update(status=RecordState.pdf_imported)
+                record.update(colrev_status=RecordState.pdf_imported)
             else:
-                record.update(status=RecordState.pdf_needs_manual_retrieval)
+                record.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
 
         return record
 
@@ -243,7 +243,9 @@ class PDF_Retrieval(Process):
                 source_rec = {}
                 if feed_filename != "":
                     source_origin_l = [
-                        o for o in record["origin"].split(";") if feed_filename in o
+                        o
+                        for o in record["colrev_origin"].split(";")
+                        if feed_filename in o
                     ]
                     if len(source_origin_l) == 1:
                         source_origin = source_origin_l[0]
@@ -348,11 +350,11 @@ class PDF_Retrieval(Process):
                         max_sim_record = record
                 if max_sim_record:
                     if max_similarity > 0.5:
-                        if RecordState.pdf_prepared == max_sim_record["status"]:
+                        if RecordState.pdf_prepared == max_sim_record["colrev_status"]:
                             continue
 
                         max_sim_record.update(file=str(file))
-                        max_sim_record.update(status=RecordState.pdf_imported)
+                        max_sim_record.update(colrev_status=RecordState.pdf_imported)
 
                         self.REVIEW_MANAGER.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
@@ -362,8 +364,8 @@ class PDF_Retrieval(Process):
                         )
                         # max_sim_record = \
                         #     pdf_prep.validate_pdf_metadata(max_sim_record)
-                        # status = max_sim_record['status']
-                        # if RecordState.pdf_needs_manual_preparation == status:
+                        # colrev_status = max_sim_record['colrev_status']
+                        # if RecordState.pdf_needs_manual_preparation == colrev_status:
                         #     # revert?
 
         return records
@@ -410,7 +412,7 @@ class PDF_Retrieval(Process):
 
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.rev_prescreen_included}],
+            conditions=[{"colrev_status": RecordState.rev_prescreen_included}],
         )
 
         prep_data = {
@@ -438,14 +440,14 @@ class PDF_Retrieval(Process):
     def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:
 
         for record in records.values():
-            if record["status"] == RecordState.rev_prescreen_included:
+            if record["colrev_status"] == RecordState.rev_prescreen_included:
                 if "file" in record:
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
-                        record["status"] = RecordState.pdf_imported
+                        record["colrev_status"] = RecordState.pdf_imported
                         self.REVIEW_MANAGER.logger.info(
-                            f'Set status to pdf_imported for {record["ID"]}'
+                            f'Set colrev_status to pdf_imported for {record["ID"]}'
                         )
                     else:
                         print(

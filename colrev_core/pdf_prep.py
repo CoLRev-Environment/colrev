@@ -128,19 +128,19 @@ class PDF_Preparation(Process):
             )
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         except PDFTextExtractionNotAllowed:
             msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         except PDFSyntaxError:
             msg = f'{record["file"]}'.ljust(PAD, " ") + "PDFSyntaxError"
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         return record
 
@@ -197,7 +197,7 @@ class PDF_Preparation(Process):
     @timeout_decorator.timeout(60, use_signals=False)
     def pdf_check_ocr(self, record: dict, PAD: int) -> dict:
 
-        if RecordState.pdf_imported != record["status"]:
+        if RecordState.pdf_imported != record["colrev_status"]:
             return record
 
         # TODO : allow for other languages in this and the following if statement
@@ -215,7 +215,7 @@ class PDF_Preparation(Process):
                 + "Validation error (Language not English)"
             )
             self.REVIEW_MANAGER.report_logger.error(msg)
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
         return record
 
@@ -330,7 +330,7 @@ class PDF_Preparation(Process):
     @timeout_decorator.timeout(60, use_signals=False)
     def validate_pdf_metadata(self, record: dict, PAD: int) -> dict:
 
-        if RecordState.pdf_imported != record["status"]:
+        if RecordState.pdf_imported != record["colrev_status"]:
             return record
 
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
@@ -362,7 +362,7 @@ class PDF_Preparation(Process):
                 record["pdf_prep_hints"] = (
                     record.get("pdf_prep_hints", "") + "; " + hint
                 )
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
         return record
 
@@ -422,7 +422,7 @@ class PDF_Preparation(Process):
     @timeout_decorator.timeout(60, use_signals=False)
     def validate_completeness(self, record: dict, PAD: int) -> dict:
 
-        if RecordState.pdf_imported != record["status"]:
+        if RecordState.pdf_imported != record["colrev_status"]:
             return record
 
         full_version_purchase_notice = (
@@ -439,7 +439,7 @@ class PDF_Preparation(Process):
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; not_full_version"
             )
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return record
 
         pages_metadata = record.get("pages", "NA")
@@ -463,7 +463,7 @@ class PDF_Preparation(Process):
             record["pdf_prep_hints"] = (
                 record.get("pdf_prep_hints", "") + "; no_pages_in_metadata"
             )
-            record.update(status=RecordState.pdf_needs_manual_preparation)
+            record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return record
 
         nr_pages_metadata = self.__get_nr_pages_in_metadata(pages_metadata)
@@ -487,7 +487,7 @@ class PDF_Preparation(Process):
                 record["pdf_prep_hints"] = (
                     record.get("pdf_prep_hints", "") + "; nr_pages_not_matching"
                 )
-                record.update(status=RecordState.pdf_needs_manual_preparation)
+                record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         return record
 
     def __get_coverpages(self, pdf):
@@ -747,7 +747,7 @@ class PDF_Preparation(Process):
     def prepare_pdf(self, item: dict) -> dict:
         record = item["record"]
 
-        if RecordState.pdf_imported != record["status"] or "file" not in record:
+        if RecordState.pdf_imported != record["colrev_status"] or "file" not in record:
             return record
 
         PAD = len(record["ID"]) + 35
@@ -770,7 +770,8 @@ class PDF_Preparation(Process):
 
         original_filename = record["file"]
 
-        # Note: if there are problems status is set to pdf_needs_manual_preparation
+        # Note: if there are problems
+        # colrev_status is set to pdf_needs_manual_preparation
         # if it remains 'imported', all preparation checks have passed
         self.REVIEW_MANAGER.report_logger.info(f'prepare({record["ID"]})')
         for prep_script in prep_scripts:
@@ -781,7 +782,7 @@ class PDF_Preparation(Process):
                 if isinstance(prepped_record, dict):
                     record = prepped_record
                 else:
-                    record["status"] = RecordState.pdf_needs_manual_preparation
+                    record["colrev_status"] = RecordState.pdf_needs_manual_preparation
             except (
                 subprocess.CalledProcessError,
                 timeout_decorator.timeout_decorator.TimeoutError,
@@ -791,13 +792,13 @@ class PDF_Preparation(Process):
                     f'(in {prep_script["script"].__name__} : {err})'
                 )
                 pass
-                record["status"] = RecordState.pdf_needs_manual_preparation
+                record["colrev_status"] = RecordState.pdf_needs_manual_preparation
 
             except Exception as e:
                 print(e)
-                record["status"] = RecordState.pdf_needs_manual_preparation
+                record["colrev_status"] = RecordState.pdf_needs_manual_preparation
 
-            failed = RecordState.pdf_needs_manual_preparation == record["status"]
+            failed = RecordState.pdf_needs_manual_preparation == record["colrev_status"]
             msg = (
                 f'{prep_script["script"].__name__}({record["ID"]}):'.ljust(PAD, " ")
                 + " "
@@ -812,12 +813,12 @@ class PDF_Preparation(Process):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
-        if RecordState.pdf_imported == record["status"]:
-            record.update(status=RecordState.pdf_prepared)
+        if RecordState.pdf_imported == record["colrev_status"]:
+            record.update(colrev_status=RecordState.pdf_prepared)
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
             record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
 
-            # status == pdf_imported : means successful
+            # colrev_status == pdf_imported : means successful
             # create *_backup.pdf if record["file"] was changed
             if original_filename != record["file"]:
 
@@ -876,7 +877,7 @@ class PDF_Preparation(Process):
         )
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.pdf_imported}],
+            conditions=[{"colrev_status": RecordState.pdf_imported}],
         )
 
         prep_data = {
@@ -906,12 +907,12 @@ class PDF_Preparation(Process):
         [
             r.update(pdf_prep_hints="")
             for r in records.values()
-            if r["status"] == RecordState.pdf_needs_manual_preparation
+            if r["colrev_status"] == RecordState.pdf_needs_manual_preparation
         ]
         [
-            r.update(status=RecordState.pdf_imported)
+            r.update(colrev_status=RecordState.pdf_imported)
             for r in records.values()
-            if r["status"] == RecordState.pdf_needs_manual_preparation
+            if r["colrev_status"] == RecordState.pdf_needs_manual_preparation
         ]
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         return

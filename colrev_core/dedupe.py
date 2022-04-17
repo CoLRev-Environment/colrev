@@ -43,13 +43,13 @@ class Dedupe(Process):
     # https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
 
     # - If the results list does not contain a 'score' value, it is generated
-    #   manually and we cannot set the 'status' to md_processed
+    #   manually and we cannot set the 'colrev_status' to md_processed
     # - If the results list contains a 'score value'
 
     def __prep_references(self, references: pd.DataFrame) -> dict:
 
-        if "status" in references:
-            references["status"] = references["status"].astype(str)
+        if "colrev_status" in references:
+            references["colrev_status"] = references["colrev_status"].astype(str)
 
         if "volume" not in references:
             references["volume"] = "nan"
@@ -140,7 +140,7 @@ class Dedupe(Process):
                     "number",
                     "pages",
                     "colrev_id",
-                    "status",
+                    "colrev_status",
                 ]
             ),
             1,
@@ -174,7 +174,7 @@ class Dedupe(Process):
         Do a little bit of data cleaning with the help of Unidecode and Regex.
         Things like casing, extra spaces, quotes and new lines can be ignored.
         """
-        if k in ["ID", "ENTRYTYPE", "status"]:
+        if k in ["ID", "ENTRYTYPE", "colrev_status"]:
             return column
 
         column = str(column)
@@ -203,11 +203,11 @@ class Dedupe(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
-        # there should be no semicolons in origin!
+        # there should be no semicolons in colrev_origin!
         records_queue = [
             x
             for x in records.values()
-            if x["status"]
+            if x["colrev_status"]
             not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
         ]
 
@@ -216,7 +216,7 @@ class Dedupe(Process):
             x
             for x in records_queue
             if not (
-                RecordState.rev_prescreen_excluded == x["status"]
+                RecordState.rev_prescreen_excluded == x["colrev_status"]
                 and "script:non_latin_alphabet" == x.get("prescreen_exclusion", "")
             )
         ]
@@ -253,13 +253,13 @@ class Dedupe(Process):
 
         ret_dict: typing.Dict[str, typing.Any] = {}
 
-        # Possible extension: in the readData, we may want to append the status
+        # Possible extension: in the readData, we may want to append the colrev_status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
         data_d = self.__readData()
 
         ret_dict["n_new"] = len(
-            [d for d, v in data_d.items() if "md_prepared" == v["status"]]
+            [d for d, v in data_d.items() if "md_prepared" == v["colrev_status"]]
         )
 
         if len(data_d) < min_n:
@@ -325,8 +325,10 @@ class Dedupe(Process):
 
     def merge_r1_r2(self, main_record: dict, dupe_record: dict) -> dict:
 
-        origins = main_record["origin"].split(";") + dupe_record["origin"].split(";")
-        main_record["origin"] = ";".join(list(set(origins)))
+        origins = main_record["colrev_origin"].split(";") + dupe_record[
+            "colrev_origin"
+        ].split(";")
+        main_record["colrev_origin"] = ";".join(list(set(origins)))
 
         if "CURATED" != main_record.get("metadata_source", ""):
             for k in self.md_keys:
@@ -351,8 +353,12 @@ class Dedupe(Process):
 
     def same_source_merge(self, main_record: dict, dupe_record: dict) -> bool:
 
-        main_rec_sources = [x.split("/")[0] for x in main_record["origin"].split(";")]
-        dupe_rec_sources = [x.split("/")[0] for x in dupe_record["origin"].split(";")]
+        main_rec_sources = [
+            x.split("/")[0] for x in main_record["colrev_origin"].split(";")
+        ]
+        dupe_rec_sources = [
+            x.split("/")[0] for x in dupe_record["colrev_origin"].split(";")
+        ]
         same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
         if len(same_sources) > 0:
             return True
@@ -374,13 +380,13 @@ class Dedupe(Process):
     def apply_merges(self, results: list, remaining_non_dupe: bool = False):
         """Apply automated deduplication decisions
 
-        Level: IDs (not origins), requiring IDs to be immutable after md_prepared
+        Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
 
-        record['status'] can only be set to md_processed after running the
+        record['colrev_status'] can only be set to md_processed after running the
         active-learning classifier and checking whether the record is not part of
         any other duplicate-cluster
         - If the results list does not contain a 'score' value, it is generated
-        manually and we cannot set the 'status' to md_processed
+        manually and we cannot set the 'colrev_status' to md_processed
         - If the results list contains a 'score value'
 
         """
@@ -397,7 +403,7 @@ class Dedupe(Process):
 
         for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
             if non_dupe in records:
-                records[non_dupe].update(status=RecordState.md_processed)
+                records[non_dupe].update(colrev_status=RecordState.md_processed)
 
         for dupe in [x for x in results if "duplicate" == x["decision"]]:
 
@@ -437,8 +443,8 @@ class Dedupe(Process):
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record in records.values():
-                if record["status"] == RecordState.md_prepared:
-                    record["status"] = RecordState.md_processed
+                if record["colrev_status"] == RecordState.md_prepared:
+                    record["colrev_status"] = RecordState.md_processed
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -448,9 +454,9 @@ class Dedupe(Process):
     def apply_manual_deduplication_decisions(self, results: list):
         """Apply manual deduplication decisions
 
-        Level: IDs (not origins), requiring IDs to be immutable after md_prepared
+        Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
 
-        Note : record['status'] can only be set to md_processed after running the
+        Note : record['colrev_status'] can only be set to md_processed after running the
         active-learning classifier and checking whether the record is not part of
         any other duplicate-cluster
         """
@@ -571,7 +577,7 @@ class Dedupe(Process):
                                 manual_non_duplicates = ID_list_to_unmerge.copy()
                                 manual_non_duplicates.remove(r["ID"])
 
-                                r["status"] = RecordState.md_processed
+                                r["colrev_status"] = RecordState.md_processed
                                 r_dict = {r["ID"]: r}
                                 records.append(r_dict)
                                 self.REVIEW_MANAGER.logger.info(f'Restored {r["ID"]}')
@@ -911,7 +917,7 @@ class Dedupe(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        origins = [record["origin"].split(";") for record in records.values()]
+        origins = [record["colrev_origin"].split(";") for record in records.values()]
         origins = [item.split("/")[0] for sublist in origins for item in sublist]
         origins = list(set(origins))
 
@@ -923,7 +929,7 @@ class Dedupe(Process):
 
         for record in records.values():
 
-            rec_sources = [x.split("/")[0] for x in record["origin"].split(";")]
+            rec_sources = [x.split("/")[0] for x in record["colrev_origin"].split(";")]
 
             duplicated_sources = [
                 item for item, count in Counter(rec_sources).items() if count > 1
@@ -932,17 +938,21 @@ class Dedupe(Process):
                 all_cases = []
                 for ds in duplicated_sources:
                     cases = [
-                        o.split("/")[1] for o in record["origin"].split(";") if ds in o
+                        o.split("/")[1]
+                        for o in record["colrev_origin"].split(";")
+                        if ds in o
                     ]
                     all_cases.append(f"{ds}: {cases}")
                 same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
 
             cut_list = [
-                x for k, x in cuts.items() if set(x["origins"]) == set(rec_sources)
+                x
+                for k, x in cuts.items()
+                if set(x["colrev_origins"]) == set(rec_sources)
             ]
             if len(cut_list) != 1:
                 print(cut_list)
-                print(record["ID"], record["origin"])
+                print(record["ID"], record["colrev_origin"])
                 continue
             cut = cut_list[0]
             cut["records"].append(record["ID"])
@@ -1087,7 +1097,7 @@ class Dedupe(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # Note: Because we only introduce individual (non-merged records),
-        # there should be no semicolons in origin!
+        # there should be no semicolons in colrev_origin!
         records_queue = [
             record for ID, record in records.items() if ID in data["queue"]
         ]

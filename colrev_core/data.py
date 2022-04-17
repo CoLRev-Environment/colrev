@@ -38,7 +38,7 @@ class Data(Process):
         return [
             ID
             for ID, record in records.items()
-            if record["status"]
+            if record["colrev_status"]
             in [RecordState.rev_included, RecordState.rev_synthesized]
         ]
 
@@ -110,7 +110,7 @@ class Data(Process):
         records_for_data_extraction = [
             ID
             for ID, record in records.items()
-            if record["status"]
+            if record["colrev_status"]
             in [RecordState.rev_included, RecordState.rev_synthesized]
         ]
 
@@ -421,7 +421,7 @@ class Data(Process):
         enlit_list = []
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         for relevant_record_id in self.get_record_ids_for_synthesis(records):
-            enlit_status = str(records[relevant_record_id]["status"])
+            enlit_status = str(records[relevant_record_id]["colrev_status"])
             enlit_status = enlit_status.replace("rev_included", "").replace(
                 "rev_synthesized", "synthesized"
             )
@@ -430,7 +430,7 @@ class Data(Process):
                     "ID": relevant_record_id,
                     "score": 0,
                     "score_intensity": 0,
-                    "status": enlit_status,
+                    "colrev_status": enlit_status,
                 }
             )
 
@@ -530,12 +530,12 @@ class Data(Process):
             if "STRUCTURED" in DATA_FORMAT and ID not in structured_data_extracted:
                 continue
 
-            record.update(status=RecordState.rev_synthesized)
+            record.update(colrev_status=RecordState.rev_synthesized)
             self.REVIEW_MANAGER.report_logger.info(
-                f" {ID}".ljust(self.PAD, " ") + "set status to synthesized"
+                f" {ID}".ljust(self.PAD, " ") + "set colrev_status to synthesized"
             )
             self.REVIEW_MANAGER.logger.info(
-                f" {ID}".ljust(self.PAD, " ") + "set status to synthesized"
+                f" {ID}".ljust(self.PAD, " ") + "set colrev_status to synthesized"
             )
 
         CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
@@ -582,7 +582,7 @@ class Data(Process):
         included_papers = [
             ID
             for ID, record in records.items()
-            if record["status"]
+            if record["colrev_status"]
             in [RecordState.rev_synthesized, RecordState.rev_included]
         ]
         observations = references[references["ID"].isin(included_papers)].copy()

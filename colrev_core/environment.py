@@ -235,7 +235,7 @@ class EnvironmentManager:
                 cp_REVIEW_MANAGER = ReviewManager(path_str=repo["source_url"])
                 CHECK_PROCESS = CheckProcess(cp_REVIEW_MANAGER)
                 repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
-                repo["size"] = repo_stat["status"]["overall"]["md_processed"]
+                repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
                     repo["progress"] = round(
                         repo_stat["completed_atomic_steps"] / repo_stat["atomic_steps"],
@@ -531,7 +531,7 @@ class LocalIndex:
         cid_to_index = Record(record).create_colrev_id()
 
         # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) if "status" == k else v for k, v in record.items()}
+        record = {k: str(v) if "colrev_status" == k else v for k, v in record.items()}
         if "colrev_id" in record:
             if isinstance(record["colrev_id"], list):
                 record["colrev_id"] = ";".join(record["colrev_id"])
@@ -635,18 +635,6 @@ class LocalIndex:
 
         return
 
-    def __append_j_variation(
-        self, j_variations: list, origin_record: dict, record: dict
-    ) -> list:
-
-        if "journal" not in origin_record or "journal" not in record:
-            return j_variations
-        else:
-            if origin_record["journal"] != record["journal"]:
-                j_variations.append([origin_record["journal"], record["journal"]])
-
-        return j_variations
-
     def __retrieve_based_on_colrev_id(self, cids_to_retrieve: list) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
@@ -738,7 +726,7 @@ class LocalIndex:
             if "colref_pdf_id" in record:
                 del record["colref_pdf_id"]
 
-        record["status"] = RecordState.md_prepared
+        record["colrev_status"] = RecordState.md_prepared
 
         return record
 
@@ -783,7 +771,7 @@ class LocalIndex:
             records_list = [
                 r
                 for r in records.values()
-                if r["status"]
+                if r["colrev_status"]
                 not in [
                     RecordState.md_retrieved,
                     RecordState.md_imported,
@@ -798,7 +786,7 @@ class LocalIndex:
                     del record["excl_criteria"]
                 # Note: if the colrev_pdf_id has not been checked,
                 # we cannot use it for retrieval or preparation.
-                if record["status"] not in [
+                if record["colrev_status"] not in [
                     RecordState.pdf_prepared,
                     RecordState.rev_excluded,
                     RecordState.rev_included,

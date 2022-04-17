@@ -32,7 +32,7 @@ class PrepMan(Process):
         origins = []
         crosstab = []
         for record in records.values():
-            if RecordState.md_imported != record["status"]:
+            if RecordState.md_imported != record["colrev_status"]:
                 if record["ENTRYTYPE"] in overall_types["ENTRYTYPE"]:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = (
                         overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] + 1
@@ -40,7 +40,7 @@ class PrepMan(Process):
                 else:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if RecordState.md_needs_manual_preparation != record["status"]:
+            if RecordState.md_needs_manual_preparation != record["colrev_status"]:
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -57,22 +57,25 @@ class PrepMan(Process):
                     if "change-score" in hint:
                         continue
                     # Note: if something causes the needs_manual_preparation
-                    # it is caused by all origins
-                    for orig in record.get("origin", "NA").split(";"):
+                    # it is caused by all colrev_origins
+                    for orig in record.get("colrev_origin", "NA").split(";"):
                         crosstab.append([orig[: orig.rfind("/")], hint.lstrip()])
 
             origins.append(
-                [x[: x.rfind("/")] for x in record.get("origin", "NA").split(";")]
+                [
+                    x[: x.rfind("/")]
+                    for x in record.get("colrev_origin", "NA").split(";")
+                ]
             )
 
-        crosstab_df = pd.DataFrame(crosstab, columns=["origin", "hint"])
+        crosstab_df = pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
 
         if crosstab_df.empty:
             print("No records to prepare manually.")
         else:
             tabulated = pd.pivot_table(
-                crosstab_df[["origin", "hint"]],
-                index=["origin"],
+                crosstab_df[["colrev_origin", "hint"]],
+                index=["colrev_origin"],
                 columns=["hint"],
                 aggfunc=len,
                 fill_value=0,
@@ -122,7 +125,7 @@ class PrepMan(Process):
         records_list = [
             record
             for record in records.values()
-            if RecordState.md_needs_manual_preparation == record["status"]
+            if RecordState.md_needs_manual_preparation == record["colrev_status"]
         ]
 
         # Casting to string (in particular the RecordState Enum)
@@ -138,7 +141,7 @@ class PrepMan(Process):
 
         col_names = [
             "ID",
-            "origin",
+            "colrev_origin",
             "author",
             "title",
             "year",
@@ -199,7 +202,9 @@ class PrepMan(Process):
         for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
-                x for x in bib_db_changed if x["origin"] == record["origin"]
+                x
+                for x in bib_db_changed
+                if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:
                 changed_record = changed_record_l.pop()
@@ -215,7 +220,9 @@ class PrepMan(Process):
                         del record[k]
                     if v == "RESET":
                         prior_record_l = [
-                            x for x in prior_records if x["origin"] == record["origin"]
+                            x
+                            for x in prior_records
+                            if x["colrev_origin"] == record["colrev_origin"]
                         ]
                         if len(prior_record_l) == 1:
                             prior_record = prior_record_l.pop()
@@ -266,10 +273,10 @@ class PrepMan(Process):
         record_to_unmerge = {k: str(v) for k, v in record_to_unmerge.items()}
         record = {k: str(v) for k, v in record.items()}
 
-        del record_to_unmerge["origin"]
-        del record["origin"]
-        del record_to_unmerge["status"]
-        del record["status"]
+        del record_to_unmerge["colrev_origin"]
+        del record["colrev_origin"]
+        del record_to_unmerge["colrev_status"]
+        del record["colrev_status"]
         if "man_prep_hints" in record_to_unmerge:
             del record_to_unmerge["man_prep_hints"]
         if "man_prep_hints" in record:
@@ -300,7 +307,7 @@ class PrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.md_needs_manual_preparation}]
+            conditions=[{"colrev_status": RecordState.md_needs_manual_preparation}]
         )
 
         md_prep_man_data = {
@@ -318,7 +325,7 @@ class PrepMan(Process):
 
         PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
 
-        record.update(status=RecordState.md_prepared)
+        record.update(colrev_status=RecordState.md_prepared)
         record.update(metadata_source="MAN_PREP")
         record = PREPARATION.drop_fields(record)
 

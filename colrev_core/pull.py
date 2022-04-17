@@ -35,7 +35,7 @@ class Pull(Process):
         import multiprocessing as mp
 
         def pull_record(record):
-            previous_status = record["status"]
+            previous_status = record["colrev_status"]
             # TODO : removethe following
             previous_source_url = record.get("source_url", "")
             previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
@@ -44,7 +44,7 @@ class Pull(Process):
             # TODO : the source_url should be a list (with newlines)?
 
             record = PREPARATION.get_record_from_local_index(record)
-            record["status"] = previous_status
+            record["colrev_status"] = previous_status
 
             if "" != previous_source_url:
                 record["source_url"] = previous_source_url

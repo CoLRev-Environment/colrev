@@ -31,7 +31,7 @@ class Validate(Process):
                 common_strings=True,
             ).parse_file(bibtex_file, partial=True)
             for record in individual_bib_db.entries:
-                record["origin"] = bib_file.stem + "/" + record["ID"]
+                record["colrev_origin"] = bib_file.stem + "/" + record["ID"]
 
         return individual_bib_db.entries
 
@@ -55,13 +55,13 @@ class Validate(Process):
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
-            del record["status"]
-            # del record['origin']
-            for cur_record_link in record["origin"].split(";"):
+            del record["colrev_status"]
+            # del record['colrev_origin']
+            for cur_record_link in record["colrev_origin"].split(";"):
                 prior_records = [
                     x
                     for x in search_records
-                    if cur_record_link in x["origin"].split(",")
+                    if cur_record_link in x["colrev_origin"].split(",")
                 ]
                 for prior_record in prior_records:
                     similarity = Record.get_record_similarity(
@@ -92,7 +92,7 @@ class Validate(Process):
             self.REVIEW_MANAGER.logger.info(
                 "Difference: " + str(round(difference, 4)) + "\n\n"
             )
-            record_1 = [x for x in search_records if record_link == x["origin"]]
+            record_1 = [x for x in search_records if record_link == x["colrev_origin"]]
             self.REVIEW_MANAGER.pp.pprint(record_1[0])
             record_2 = [x for x in records if eid == x["ID"]]
             self.REVIEW_MANAGER.pp.pprint(record_2[0])
@@ -123,13 +123,13 @@ class Validate(Process):
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
-            if ";" in record["origin"]:
+            if ";" in record["colrev_origin"]:
                 merged_records = True
-                els = record["origin"].split(";")
+                els = record["colrev_origin"].split(";")
                 duplicate_el_pairs = list(itertools.combinations(els, 2))
                 for el_1, el_2 in duplicate_el_pairs:
-                    record_1 = [x for x in search_records if el_1 == x["origin"]]
-                    record_2 = [x for x in search_records if el_2 == x["origin"]]
+                    record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
+                    record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
 
                     similarity = Record.get_record_similarity(
                         Record(record_1[0]), Record(record_2[0])
@@ -154,9 +154,9 @@ class Validate(Process):
             print(
                 "Differences between merged records:" + f" {round(difference, 4)}\n\n"
             )
-            record_1 = [x for x in search_records if el_1 == x["origin"]]
+            record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
             self.REVIEW_MANAGER.pp.pprint(record_1[0])
-            record_2 = [x for x in search_records if el_2 == x["origin"]]
+            record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
             self.REVIEW_MANAGER.pp.pprint(record_2[0])
 
             if "n" == input("continue (y/n)?"):

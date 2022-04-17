@@ -315,6 +315,14 @@ class ReviewManager:
                         del record["manual_duplicate"]
                     if "manual_non_duplicate" in record:
                         del record["manual_non_duplicate"]
+                    if "origin" in record:
+                        record["colrev_record"] = record["record"]
+                        del record["origin"]
+                    if "status" in record:
+                        record["colrev_status"] = record["status"]
+                        del record["status"]
+                    if "metadata_source" in record:
+                        del record["metadata_source"]
 
                 self.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_DATASET.add_record_changes()
@@ -1101,7 +1109,7 @@ class ReviewManager:
                     debug_part = False
                     while line:
                         # For more efficient debugging (loading of dict with Enum)
-                        if "'status" == line.lstrip()[:7] and "<RecordState." in line:
+                        if "colrev_status" in line and "<RecordState." in line:
                             line = line.replace("<RecordState", "RecordState")
                             line = line[: line.rfind(":")] + line[line.rfind(">") + 1 :]
                         if "[DEBUG]" in line or debug_part:
