@@ -830,6 +830,9 @@ class LocalIndex:
         except InvalidGitRepositoryError:
             print(f"InvalidGitRepositoryError: {source_url}")
             pass
+        except KeyError as e:
+            print(f"KeyError: {e}")
+            pass
         return
 
     def index_records(self) -> None:
