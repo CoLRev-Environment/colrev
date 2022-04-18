@@ -900,7 +900,7 @@ class Preparation(Process):
             # if "year" in record:
             #     query = query + "_" + record["year"]
 
-            for RETRIEVED_RECORD in self.retrieve_dblp_records(query):
+            for RETRIEVED_RECORD in self.retrieve_dblp_records(query=query):
                 similarity = PrepRecord.get_retrieval_similarity(
                     RECORD, RETRIEVED_RECORD
                 )
@@ -1841,7 +1841,9 @@ class Preparation(Process):
 
         return PrepRecord(retrieved_record)
 
-    def retrieve_dblp_records(self, query: str) -> list:
+    def retrieve_dblp_records(self, query: str = None, url: str = None) -> list:
+        assert query is not None or url is not None
+
         def dblp_json_to_dict(item: dict) -> dict:
             # To test in browser:
             # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
@@ -1939,11 +1941,14 @@ class Preparation(Process):
         api_url = "https://dblp.org/search/publ/api?q="
         items = []
 
-        query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-        url = api_url + query.replace(" ", "+") + "&format=json"
+        if query:
+            query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
+            url = api_url + query.replace(" ", "+") + "&format=json"
         headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
         self.REVIEW_MANAGER.logger.debug(url)
-        ret = self.session.request("GET", url, headers=headers, timeout=self.TIMEOUT)
+        ret = self.session.request(
+            "GET", url, headers=headers, timeout=self.TIMEOUT  # type: ignore
+        )
         ret.raise_for_status()
         if ret.status_code == 500:
             return []

@@ -130,6 +130,7 @@ class Search(Process):
         return writer
 
     def search_crossref(self, params, feed_file):
+        from colrev_core.prep import PrepRecord
 
         if "journal_issn" not in params["scope"]:
             print("Error: journal_issn not in params")
@@ -204,8 +205,12 @@ class Search(Process):
                         record["ID"] = str(max_id).rjust(6, "0")
                         if "ENTRYTYPE" not in record:
                             record["ENTRYTYPE"] = "misc"
-                        record["metadata_source"] = "CROSSREF"
-                        record = self.PREPARATION.get_link_from_doi(record)
+                        record["source_url"] = (
+                            "https://api.crossref.org/works/" + item["DOI"]
+                        )
+                        record = self.PREPARATION.get_link_from_doi(
+                            PrepRecord(record)
+                        ).get_data()
                         available_ids.append(record["doi"])
                         records.append(record)
                         max_id += 1
@@ -269,6 +274,7 @@ class Search(Process):
         return venue_abbrev
 
     def search_dblp(self, params, feed_file):
+        from colrev_core.prep import Preparation
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -303,10 +309,9 @@ class Search(Process):
             # TODO : tbd how the abbreviated venue_key can be retrieved
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
-            headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
             start = 1980
             if len(records) > 100:
-                start = datetime.now().year - 1
+                start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
                 print(year)
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
@@ -321,46 +326,39 @@ class Search(Process):
                     )
                     f += batch_size
                     print(url)
-                    ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-                    ret.raise_for_status()
-                    if ret.status_code == 500:
-                        return
 
-                    data = json.loads(ret.text)
-                    if "hits" not in data["result"]:
-                        print("no hits")
-                        break
-                    if "hit" not in data["result"]["hits"]:
-                        print("no hit")
-                        break
-                    hits = data["result"]["hits"]["hit"]
-
-                    for hit in hits:
-                        item = hit["info"]
-
-                        retrieved_record = self.PREPARATION.dblp_json_to_record(item)
+                    retrieved = False
+                    PREPARATION = Preparation(
+                        self.REVIEW_MANAGER, notify_state_transition_process=False
+                    )
+                    for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
+                        retrieved = True
 
                         if (
                             f"{params['scope']['venue_key']}/"
-                            not in retrieved_record["dblp_key"]
+                            not in RETRIEVED_RECORD.data["dblp_key"]
                         ):
                             continue
-                        retrieved_record["dblp_key"] = (
-                            "https://dblp.org/rec/" + retrieved_record["dblp_key"]
+                        RETRIEVED_RECORD.data["dblp_key"] = (
+                            "https://dblp.org/rec/" + RETRIEVED_RECORD.data["dblp_key"]
                         )
 
-                        if retrieved_record["dblp_key"] not in available_ids:
-                            retrieved_record["ID"] = str(max_id).rjust(6, "0")
-                            if retrieved_record.get("ENTRYTYPE", "") not in [
+                        if RETRIEVED_RECORD.data["dblp_key"] not in available_ids:
+                            RETRIEVED_RECORD.data["ID"] = str(max_id).rjust(6, "0")
+                            if RETRIEVED_RECORD.data.get("ENTRYTYPE", "") not in [
                                 "article",
                                 "inproceedings",
                             ]:
                                 continue
                                 # retrieved_record["ENTRYTYPE"] = "misc"
-                            if "pages" in retrieved_record:
-                                del retrieved_record["pages"]
-                            available_ids.append(retrieved_record["dblp_key"])
-                            retrieved_record["metadata_source"] = "DBLP"
+                            if "pages" in RETRIEVED_RECORD.data:
+                                del RETRIEVED_RECORD.data["pages"]
+                            available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
+
+                            RETRIEVED_RECORD.data["source_url"] = (
+                                RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
+                            )
+
                             records = [
                                 {
                                     k: v.replace("\n", "").replace("\r", "")
@@ -368,7 +366,7 @@ class Search(Process):
                                 }
                                 for r in records
                             ]
-                            records.append(retrieved_record)
+                            records.append(RETRIEVED_RECORD.data)
                             max_id += 1
 
                     # Note : we may have to set temporary IDs
@@ -392,6 +390,9 @@ class Search(Process):
                         fi.write(
                             bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
                         )
+
+                    if not retrieved:
+                        break
 
         except requests.exceptions.HTTPError:
             pass

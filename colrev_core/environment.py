@@ -657,6 +657,7 @@ class LocalIndex:
         for cid_to_retrieve in cids_to_retrieve:
             try:
                 # match_phrase := exact match
+                # TODO : the following requires some testing.
                 resp = self.os.search(
                     index=self.RECORD_INDEX,
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
