@@ -69,7 +69,7 @@ class Status(Process):
         stat: dict = {"colrev_status": {}}
         colrev_masterdata_items = [x[5] for x in record_header_list]
         stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in colrev_masterdata_items if "CURATED:" in x]
+            [x for x in colrev_masterdata_items if "CURATED" in x]
         )
 
         exclusion_statistics = {}

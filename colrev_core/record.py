@@ -108,6 +108,11 @@ class Record:
             origins = self.data["colrev_origin"].split(";")
         else:
             origins = []
+
+        # Note : to cover legacy fieldname:
+        if "origin" in self.data:
+            origins = self.data["origin"].split(";")
+
         return origins
 
     def shares_origins(self, other_record) -> bool:

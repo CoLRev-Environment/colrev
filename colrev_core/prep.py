@@ -43,6 +43,13 @@ logging.getLogger("requests_cache").setLevel(logging.ERROR)
 
 
 class PrepRecord(Record):
+    # Note: add methods that are called multiple times
+    # TODO : or includ all functionality?
+    # distinguish:
+    # 1. independent processing operation (format, ...)
+    # 2. processing operation using curated data
+    # 3. processing operation using external, non-curated data (-> fuse_best_fields)
+
     def __init__(self, data: dict):
         super().__init__(data)
 
@@ -2012,7 +2019,10 @@ class Preparation(Process):
                 RECORD.add_masterdata_provenance_hint(missing_field, "missing")
 
         if RECORD.has_inconsistent_fields():
-            msg += f'; {RECORD.data["ENTRYTYPE"]} but {RECORD.get_inconsistencies()}'
+            msg += (
+                f"; {RECORD.get_inconsistencies()} field(s) inconsistent with"
+                + f' ENTRYTYPE {RECORD.data["ENTRYTYPE"]}'
+            )
 
         if RECORD.has_incomplete_fields():
             for incomplete_field in RECORD.get_incomplete_fields():

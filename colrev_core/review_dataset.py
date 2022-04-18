@@ -342,16 +342,23 @@ class ReviewDataset:
             }
             yield records_dict
 
-    def save_records_dict(self, recs_dict):
+    def save_records_dict(self, recs_dict_in):
         """Save the records dict"""
         import bibtexparser
         from bibtexparser.bibdatabase import BibDatabase
+
+        recs_dict = recs_dict_in.copy()
 
         MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
         # Cast to string (in particular the RecordState Enum)
         max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
         for record in recs_dict.values():
+
+            # TBD : if we do this, we create more git diff changes...
+            # if "" == record.get("colrev_masterdata_provenance", "NA"):
+            #     del record["colrev_masterdata_provenance"]
+
             # separated by ;
             for field in ["colrev_id"]:
                 if field in record:
@@ -385,10 +392,6 @@ class ReviewDataset:
             }
             for r in recs_dict.values()
         ]
-
-        for record in records:
-            if "LOCAL_PAPER_INDEX" == record.get("metadata_source", ""):
-                record["metadata_source"] = "CURATED"
 
         records.sort(key=lambda x: x["ID"])
 
@@ -1179,7 +1182,7 @@ class ReviewDataset:
         return record_l[0]
 
     def update_colrev_ids(self) -> None:
-        from colrev_core.record import Record
+        from colrev_core.record import Record, NotEnoughDataToIdentifyException
         from tqdm import tqdm
 
         self.REVIEW_MANAGER.logger.info(
@@ -1190,6 +1193,10 @@ class ReviewDataset:
             origin_records = self.load_origin_records()
             for rec in tqdm(recs_dict.values()):
                 RECORD = Record(rec)
+                try:
+                    RECORD.create_colrev_id()
+                except NotEnoughDataToIdentifyException:
+                    pass
                 origins = RECORD.get_origins()
                 RECORD.add_colrev_ids([origin_records[origin] for origin in origins])
             for history_recs in self.load_from_git_history():

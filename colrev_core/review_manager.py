@@ -306,8 +306,6 @@ class ReviewManager:
 
         def migrate_0_4_0(self) -> bool:
 
-            self.REVIEW_DATASET.update_colrev_ids()
-
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():
@@ -323,9 +321,19 @@ class ReviewManager:
                         del record["status"]
                     if "metadata_source" in record:
                         del record["metadata_source"]
+                    if "source_url" in record:
+                        record["colrev_masterdata"] = "CURATED:" + record["source_url"]
+                        del record["source_url"]
+                    else:
+                        record["colrev_masterdata"] = "ORIGINAL"
+                    # Note : for curated repositories
+                    # record["colrev_masterdata"] = "CURATED"
 
                 self.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_DATASET.add_record_changes()
+
+            # Note: the order is important in this case.
+            self.REVIEW_DATASET.update_colrev_ids()
 
             return True
 

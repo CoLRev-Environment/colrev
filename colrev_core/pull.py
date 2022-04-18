@@ -18,10 +18,18 @@ class Pull(Process):
         return
 
     def pull_project(self) -> None:
-        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-        origin = git_repo.remotes.origin
-        self.REVIEW_MANAGER.logger.info(f"Pull changes from {git_repo.remotes.origin}")
-        res = origin.pull()
+        try:
+            git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+            origin = git_repo.remotes.origin
+            self.REVIEW_MANAGER.logger.info(
+                f"Pull changes from {git_repo.remotes.origin}"
+            )
+            res = origin.pull()
+        except AttributeError:
+            self.REVIEW_MANAGER.logger.info("No remote detected for pull")
+            pass
+            return
+
         if 4 == res[0].flags:
             self.REVIEW_MANAGER.logger.info("No updates")
         elif 64 == res[0].flags:
