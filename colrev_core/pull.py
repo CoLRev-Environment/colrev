@@ -9,10 +9,12 @@ class Pull(Process):
 
     def main(self, records_only: bool = False, project_only: bool = False) -> None:
 
-        if not project_only:
+        if project_only:
             self.pull_project()
-
-        if not records_only:
+        elif records_only:
+            self.pull_records_from_index()
+        else:
+            self.pull_project()
             self.pull_records_from_index()
 
         return
@@ -38,20 +40,24 @@ class Pull(Process):
             self.REVIEW_MANAGER.logger.info(f"Returned flag {res[0].flags}")
 
     def pull_records_from_index(self) -> None:
-        from colrev_core.prep import Preparation
+        from colrev_core.prep import Preparation, PrepRecord
         from pathos.multiprocessing import ProcessPool
         import multiprocessing as mp
 
+        self.REVIEW_MANAGER.logger.info("Pull records from index")
+
         def pull_record(record):
             previous_status = record["colrev_status"]
-            # TODO : removethe following
+            # TODO : remove the following
             previous_source_url = record.get("source_url", "")
             previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
             prev_dblp_key = record.get("dblp_key", "")
 
-            # TODO : the source_url should be a list (with newlines)?
+            RECORD = PrepRecord(record)
+            RETRIEVED_RECORD = PREPARATION.get_record_from_local_index(RECORD)
+            RECORD.fuse_best_fields(RETRIEVED_RECORD, "LOCAL_INDEX")
 
-            record = PREPARATION.get_record_from_local_index(record)
+            record = RECORD.get_data()
             record["colrev_status"] = previous_status
 
             if "" != previous_source_url:

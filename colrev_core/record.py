@@ -118,6 +118,15 @@ class Record:
     def shares_origins(self, other_record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
 
+    def get_source_repo(self) -> str:
+        # priority: return source_link first (then check for source_path)
+        if "source_link" in self.data:
+            if "http" in self.data["source_link"]:
+                return self.data["source_link"]
+        if "source_path" in self.data:
+            return self.data["source_path"]
+        return "NO_SOURCE_INFO"
+
     def get_field(self, field_key: str, default=None):
         if default is not None:
             try:
@@ -143,10 +152,9 @@ class Record:
     def update_field(self, field: str, value, source: str, comment: str = "") -> None:
         self.data[field] = value
         if field in self.identifying_fields:
-            # TODO: parse, replace if already exists
-            self.data["colrev_masterdata_provenance"] = f"{field}:{source};{comment}"
+            self.add_masterdata_provenance(field, source, comment)
         else:
-            self.data["colrev_data_provenance"] = f"{field}:{source};{comment}"
+            self.add_data_provenance(field, source, comment)
         return
 
     def add_colrev_ids(self, records: typing.List[dict]) -> None:
@@ -223,7 +231,7 @@ class Record:
             return True
         return False
 
-    def fuse_best_fields(self, MERGING_RECORD, source: str):
+    def fuse_best_fields(self, MERGING_RECORD, default_source: str):
         """Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
@@ -317,6 +325,9 @@ class Record:
             if key in Record.identifying_fields and self.is_curated():
                 continue
 
+            source = MERGING_RECORD.get_provenance_field_source(
+                key, default=default_source
+            )
             if val:
                 if "author" == key:
                     if "author" in self.data:
@@ -374,14 +385,17 @@ class Record:
 
                 else:
                     # keep existing values per default
-                    if key in self.data:
+                    # and do not override provenance fields
+                    if key in self.data or key in [
+                        "colrev_masterdata_provenance",
+                        "colrev_data_provenance",
+                        "colrev_id",
+                        "colrev_status",
+                        "colrev_origin",
+                    ]:
                         pass
                     else:
-                        self.data[key] = str(val)
-        if "CURATED:" in source:
-            if "colrev_masterdata_provenance" in self.data:
-                del self.data["colrev_masterdata_provenance"]
-            self.data["colrev_masterdata"] = source
+                        self.update_field(key, str(val), source)
 
         return
 
@@ -576,8 +590,22 @@ class Record:
                     print(f"problem with masterdata_provenance_item {item}")
         return colrev_masterdata_provenance_dict
 
+    def get_provenance_field_source(self, field, default="ORIGINAL") -> str:
+
+        if field in self.identifying_fields:
+            md_p_dict = self.load_masterdata_provenance()
+            if field in md_p_dict:
+                if "source" in md_p_dict[field]:
+                    return md_p_dict[field]["source"]
+        else:
+            d_p_dict = self.load_data_provenance()
+            if field in d_p_dict:
+                if "source" in d_p_dict[field]:
+                    return d_p_dict[field]["source"]
+
+        return default
+
     def set_masterdata_provenance(self, md_p_dict: dict):
-        # TODO: test this!
         parsed = ""
         for k, v in md_p_dict.items():
             parsed += (
@@ -596,6 +624,88 @@ class Record:
             md_p_dict[field] = {"source": "original", "note": f"{hint}"}
         self.set_masterdata_provenance(md_p_dict)
         return
+
+    def add_masterdata_provenance(self, field, source, hint: str = ""):
+        md_p_dict = self.load_masterdata_provenance()
+        if field in md_p_dict:
+            if "" != hint:
+                md_p_dict[field]["note"] += f",{hint}"
+            else:
+                md_p_dict[field]["note"] = ""
+            md_p_dict[field]["source"] = source
+        else:
+            md_p_dict[field] = {"source": source, "note": f"{hint}"}
+        self.set_masterdata_provenance(md_p_dict)
+        return
+
+    def load_data_provenance(self) -> dict:
+        colrev_data_provenance_dict = {}
+        if "colrev_data_provenance" in self.data:
+            if "" == self.data["colrev_data_provenance"]:
+                return {}
+            for item in self.data["colrev_data_provenance"].split("\n"):
+                elements = item.split(";")
+                elements.remove("")
+                if 2 == len(elements):
+                    key, source = elements.pop(0).split(":", 1)
+                    note = elements.pop(0)
+                    colrev_data_provenance_dict[key] = {
+                        "source": source,
+                        "note": note,
+                    }
+                else:
+                    print(f"problem with data_provenance_item {item}")
+        return colrev_data_provenance_dict
+
+    def set_data_provenance(self, md_p_dict: dict):
+        # TODO: test this!
+        parsed = ""
+        for k, v in md_p_dict.items():
+            parsed += (
+                f"{k.replace(';', ',')}:"
+                + f"{v['source'].replace(';', ',')};"
+                + f"{v['note'].replace(';', ',')};\n"
+            )
+        self.data["colrev_data_provenance"] = parsed.rstrip("\n")
+        return
+
+    def add_data_provenance(self, field, source, hint: str = ""):
+        md_p_dict = self.load_data_provenance()
+        if field in md_p_dict:
+            if "" != hint:
+                md_p_dict[field]["note"] += f",{hint}"
+            else:
+                md_p_dict[field]["note"] = ""
+            md_p_dict[field]["source"] = source
+        else:
+            md_p_dict[field] = {"source": source, "note": f"{hint}"}
+        self.set_data_provenance(md_p_dict)
+        return
+
+    def complete_provenance(self, source_info) -> bool:
+        """Complete provenance information for LocalIndex"""
+
+        for key in list(self.data.keys()):
+
+            if key in [
+                "source_link",
+                "source_url",
+                "colrev_id",
+                "colrev_masterdata",
+                "colrev_status",
+                "ENTRYTYPE",
+                "ID",
+                "source_path",
+            ]:
+                continue
+
+            if key in self.identifying_fields:
+                if not self.is_curated:
+                    self.add_masterdata_provenance(key, source_info, "")
+            else:
+                self.add_data_provenance(key, source_info, "")
+
+        return True
 
     def get_incomplete_fields(self) -> list:
         incomplete_fields = []

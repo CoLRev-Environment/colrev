@@ -1076,28 +1076,8 @@ class Preparation(Process):
         except (RecordNotInIndexException, NotFoundError):
             pass
             try:
-                if RECORD.is_curated():
-                    pass
-                # TODO: Records can be CURATED without being indexed (??)
-                # This requires a different retrieval mechanism
-                # (not LOCAL_INDEX.retrieve(...))
-                #     # ...
-                #     if (
-                #         retrieved_record["colrev_masterdata"]
-                #         == RECORD.data["colrev_masterdata"]
-                #     ):
-                #         # Keep all fields of the original record
-                #         retrieved_record = RECORD.get_data()
-                #         # Update the essential metadata
-                #         for key in self.fields_to_keep:
-                #             if key in ind_rec:
-                #                 retrieved_record = ind_rec[key]
-                #         # Add complementary fields if they are not yet avilable
-                #         for k, v in ind_rec.items():
-                #             if k not in retrieved_record:
-                #                 retrieved_record[k] = v
-
-                else:
+                # Note: Records can be CURATED without being indexed
+                if not RECORD.is_curated():
                     retrieved_record = LOCAL_INDEX.retrieve_from_toc(
                         RECORD.data, self.RETRIEVAL_SIMILARITY, include_file=False
                     )
@@ -1123,20 +1103,9 @@ class Preparation(Process):
                     cur_project_source_paths.append(shared_url)
                     break
 
-            # if not any(
-            #     x in cur_project_source_paths
-            #     for x in str(retrieved_record.get("source_url", "")).split(";")
-            # ):
-
-            # TODO : check: don't list the same repository as its own source_url
-            # (source_url s should point to other/external repos)
-
             # extend fields_to_keep (to retrieve all fields from the index)
             for k in retrieved_record.keys():
-                # Note : the source_url field will be removed at the end
-                # but if we include it here, it will be printed to the
-                # detailed report (and is available for tracing errors)
-                if k not in self.fields_to_keep and k != "source_url":
+                if k not in self.fields_to_keep:
                     self.fields_to_keep.append(k)
 
         return RECORD
@@ -2592,7 +2561,7 @@ class Preparation(Process):
                 "name": "get_record_from_local_index",
                 "script": self.get_record_from_local_index,
                 "source_correction_hint": "correct the metadata in the source "
-                "repository (as linked in the source_url field)",
+                "repository (as linked in the provenance field)",
             },
             {
                 "name": "remove_nicknames",
