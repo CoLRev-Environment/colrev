@@ -480,14 +480,19 @@ class LocalIndex:
             except (TEI_Exception, AttributeError, SerialisationError):
                 pass
 
-        if "colrev_status" in record:
-            del record["colrev_status"]
         RECORD = Record(record)
         source_info = RECORD.data.get(
             "source_link", RECORD.data.get("source_path", "NA")
         )
         if "NA" != source_info:
             RECORD.complete_provenance(source_info)
+
+        if "colrev_status" in RECORD.data:
+            del RECORD.data["colrev_status"]
+        if "source_link" in RECORD.data:
+            del RECORD.data["source_link"]
+        if "source_path" in RECORD.data:
+            del RECORD.data["source_path"]
 
         self.os.index(index=self.RECORD_INDEX, id=hash, body=RECORD.get_data())
 
@@ -515,6 +520,11 @@ class LocalIndex:
             )
             if "NA" != source_info:
                 RECORD.complete_provenance(source_info)
+
+            if "source_link" in RECORD.data:
+                del RECORD.data["source_link"]
+            if "source_path" in RECORD.data:
+                del RECORD.data["source_path"]
             record = RECORD.get_data()
 
             # amend saved record
@@ -680,9 +690,8 @@ class LocalIndex:
             if "colrev_id" in record:
                 del record["colrev_id"]
 
-        # TODO (after reindex): remove the following
-        if "metadata_source" in record:
-            del record["metadata_source"]
+        if "local_curated_metadata" in record:
+            del record["local_curated_metadata"]
 
         if "source_path" in record:
             del record["source_path"]
@@ -747,6 +756,9 @@ class LocalIndex:
         ]:
             if "colrev_pdf_id" in record:
                 del record["colrev_pdf_id"]
+
+        if "colrev/curated_metadata" in record["source_path"]:
+            record["local_curated_metadata"] = "yes"
 
         # To fix pdf_hash fields that should have been renamed
         if "pdf_hash" in record:
@@ -1057,21 +1069,27 @@ class LocalIndex:
         try:
             r1_index = self.__retrieve_based_on_colrev_id(record1_colrev_id)
             r2_index = self.__retrieve_based_on_colrev_id(record2_colrev_id)
-            # Same repo (source_link) and in LocalIndex implies status > md_processed
+            # Same repo (colrev_masterdata = CURATED: ...) and in LocalIndex
+            # implies status > md_processed
             # ie., no duplicates if IDs differ
-            if r1_index["source_link"] == r2_index["source_link"]:
-                if r1_index["ID"] == r2_index["ID"]:
-                    return "yes"
-                else:
-                    return "no"
+            if (
+                "CURATED:" in r1_index["colrev_masterdata"]
+                and "CURATED:" in r2_index["colrev_masterdata"]
+            ):
+                if r1_index["colrev_masterdata"] == r2_index["colrev_masterdata"]:
+                    if r1_index["ID"] == r2_index["ID"]:
+                        return "yes"
+                    else:
+                        return "no"
 
             # Note : We know that records are not duplicates when they are
-            # part of curated_metadata repositories and their IDs are not identical
+            # part of curated_metadata repositories ('local_curated_metadata')
+            #  and their IDs are not identical
             # For the same journal, only deduplicated records are indexed
             # We make sure that journals are only indexed once
             if (
-                "colrev/curated_metadata" in r1_index["source_path"]
-                and "colrev/curated_metadata" in r2_index["source_path"]
+                "local_curated_metadata" in r1_index["source_path"]
+                and "local_curated_metadata" in r2_index["source_path"]
             ):
 
                 if not set(Record(r1_index).get_colrev_id()).isdisjoint(

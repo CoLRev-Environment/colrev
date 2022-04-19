@@ -696,6 +696,7 @@ class Record:
                 "ENTRYTYPE",
                 "ID",
                 "source_path",
+                "local_curated_metadata",
             ]:
                 continue
 
