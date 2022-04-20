@@ -2033,8 +2033,8 @@ class Preparation(Process):
         #  preparation_record will change and eventually replace record (if successful)
         preparation_record = RECORD.data.copy()
 
-        # unprepared_record will not change (for diffs)
-        unprepared_record = PrepRecord(RECORD.data.copy())
+        # UNPREPARED_RECORD will not change (for diffs)
+        UNPREPARED_RECORD = PrepRecord(RECORD.data.copy())
 
         # Note: we require (almost) perfect matches for the scripts.
         # Cases with higher dissimilarity will be handled in the prep_man.py
@@ -2122,7 +2122,7 @@ class Preparation(Process):
                 RecordState.md_needs_manual_preparation
                 == preparation_record["colrev_status"]
             ):
-                RECORD = self.log_notifications(RECORD, unprepared_record)
+                RECORD = self.log_notifications(RECORD, UNPREPARED_RECORD)
         else:
             if self.DEBUG_MODE:
                 if (

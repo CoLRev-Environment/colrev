@@ -553,7 +553,7 @@ class TEI:
         return tei_bib_db
 
     def mark_references(self, records):
-        from colrev_core import dedupe
+        from colrev_core.record import Record
 
         tei_records = self.get_bibliography(self.root)
         for record in tei_records:
@@ -568,8 +568,8 @@ class TEI:
                     RecordState.rev_synthesized,
                 ]:
                     continue
-                rec_sim = dedupe.get_record_similarity(
-                    record.copy(), local_record.copy()
+                rec_sim = Record.get_record_similarity(
+                    Record(record), Record(local_record)
                 )
                 if rec_sim > max_sim:
                     max_sim_record = local_record

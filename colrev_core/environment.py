@@ -314,7 +314,7 @@ class LocalIndex:
     RECORD_INDEX = "record_index"
     TOC_INDEX = "toc_index"
 
-    # Note: we need the source_link and source_path fields for is_duplicate()
+    # Note: we need the local_curated_metadata field for is_duplicate()
 
     def __init__(self):
 

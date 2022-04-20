@@ -1359,7 +1359,7 @@ class ReviewDataset:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def check_corrections_of_curated_records(self) -> None:
-        from colrev_core.environment import LocalIndex
+        from colrev_core.environment import LocalIndex, Resources
         from colrev_core.environment import RecordNotInIndexException
         from colrev_core.prep import Preparation
         from colrev_core.record import Record
@@ -1453,34 +1453,35 @@ class ReviewDataset:
                     # after the previous condition, we know that the curated record
                     # has been corrected
                     corrected_curated_record = curated_record.copy()
-                    if "CURATED" == corrected_curated_record.get("metadata_source", ""):
+                    if Record(corrected_curated_record).is_curated():
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = self.LOCAL_INDEX.retrieve(
                                 prior_cr
                             )
-                            # print(original_curated_record["source_url"])
-                            if not Path(original_curated_record["source_url"]).is_dir():
-                                original_curated_record = (
-                                    self.LOCAL_INDEX.set_source_path(
-                                        original_curated_record
-                                    )
-                                )
-                            if not Path(original_curated_record["source_url"]).is_dir():
+
+                            # Note : this is a simple heuristic:
+                            curation_path = Resources.curations_path / Path(
+                                original_curated_record["colrev_masterdata"].split("/")[
+                                    -1
+                                ]
+                            )
+                            if not curation_path.is_dir():
                                 print(
                                     "Source path of indexed record not available "
-                                    f'({original_curated_record["source_url"]})'
+                                    f'({original_curated_record["ID"]} - '
+                                    f'{original_curated_record["colrev_masterdata"]})'
                                 )
                                 continue
                         except RecordNotInIndexException:
                             pass
                             original_curated_record = prior_cr.copy()
 
-                    original_curated_record["colrev_id"] = Record(
-                        original_curated_record
-                    ).create_colrev_id()
+                        original_curated_record["colrev_id"] = Record(
+                            original_curated_record
+                        ).create_colrev_id()
 
-                    if "DBLP" == corrected_curated_record.get("metadata_source", ""):
+                    elif "DBLP" == corrected_curated_record.get("metadata_source", ""):
                         # Note : don't use PREPARATION.get_md_from_dblp
                         # because it will fuse_best_fields
                         ret = requests.get(
@@ -1520,6 +1521,8 @@ class ReviewDataset:
                             del original_curated_record["timestamp"]
                         if "biburl" in original_curated_record:
                             del original_curated_record["biburl"]
+                    else:
+                        continue  # probably?
 
                     # Cast to string for persistence
                     original_curated_record = {
@@ -1538,13 +1541,9 @@ class ReviewDataset:
                         del corrected_curated_record["pages"]
                     # if "dblp_key" in corrected_curated_record:
                     #     del corrected_curated_record["dblp_key"]
-                    if "metadata_source" in corrected_curated_record:
-                        del corrected_curated_record["metadata_source"]
                     if "colrev_status" in corrected_curated_record:
                         del corrected_curated_record["colrev_status"]
 
-                    if "metadata_source" in original_curated_record:
-                        del original_curated_record["metadata_source"]
                     if "colrev_status" in original_curated_record:
                         del original_curated_record["colrev_status"]
 
@@ -1555,7 +1554,6 @@ class ReviewDataset:
                     keys_to_ignore = [
                         "excl_criteria",
                         "colrev_status",
-                        "metadata_source",
                         "source_url",
                         "ID",
                         "grobid-version",
