@@ -83,7 +83,6 @@ class Sync:
                     for item in res["hits"]["hits"]:  # type: ignore
                         listed_item[citation_key].append(item["_source"])
                     self.non_unique_for_import.append(listed_item)
-            print(f"Loaded {len(self.non_unique_for_import)} papers")
         else:
             print("Not found paper.md")
 
@@ -114,6 +113,15 @@ class Sync:
             self.records_to_import.append(record)
         return
 
+    def format_ref(self, v) -> str:
+        formatted_ref = (
+            f"{v.get('author', '')} ({v.get('year', '')}) "
+            + f"{v.get('title', '')}. "
+            + f"{v.get('journal', '')}{v.get('booktitle', '')}, "
+            + f"{v.get('volume', '')} ({v.get('number', '')})"
+        )
+        return formatted_ref
+
     def add_to_bib(self) -> None:
 
         references_file = Path("references.bib")
@@ -130,10 +138,19 @@ class Sync:
                 records = feed_db.entries
 
         available_ids = [r["ID"] for r in records]
+        added = []
         for record_to_import in self.records_to_import:
             if record_to_import["ID"] not in available_ids:
                 records.append(record_to_import)
                 available_ids.append(record_to_import["ID"])
+                added.append(record_to_import)
+
+        if len(added) > 0:
+            print("Loaded:")
+            for element in added:
+                print(" - " + self.format_ref(element))
+
+            print(f"Loaded {len(self.non_unique_for_import)} papers")
 
         # Casting to string (in particular the RecordState Enum)
         records = [
