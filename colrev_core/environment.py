@@ -13,6 +13,7 @@ from lxml.etree import SerialisationError
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import ConnectionError
+from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -424,7 +425,11 @@ class LocalIndex:
                 try:
                     self.os.get(index=self.RECORD_INDEX, id="test")
                     break
-                except (requests.exceptions.RequestException, ConnectionError):
+                except (
+                    requests.exceptions.RequestException,
+                    ConnectionError,
+                    TransportError,
+                ):
                     time.sleep(3)
                     pass
                 except NotFoundError:
