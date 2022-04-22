@@ -31,7 +31,6 @@ class Sync:
     }
 
     def __init__(self):
-        self.LOCAL_INDEX = LocalIndex()
         self.records_to_import = []
         self.non_unique_for_import = []
 
@@ -53,6 +52,8 @@ class Sync:
             for citation_key in citation_keys:
                 if citation_key in IDs_in_bib:
                     continue
+
+                self.LOCAL_INDEX = LocalIndex()
 
                 query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
                 res = self.LOCAL_INDEX.os.search(
