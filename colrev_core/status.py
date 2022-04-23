@@ -48,7 +48,7 @@ class Status(Process):
         stat = self.get_status_freq()
         return stat["completeness_condition"]
 
-    def get_excl_criteria(self, ec_string: str) -> list:
+    def get_exclusion_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def get_status_freq(self) -> dict:
@@ -57,7 +57,7 @@ class Status(Process):
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
         status_list = [x[2] for x in record_header_list]
-        excl_criteria = [x[3] for x in record_header_list if x[3] != ""]
+        exclusion_criteria = [x[3] for x in record_header_list if x[3] != ""]
         md_duplicates_removed = sum((x[1].count(";")) for x in record_header_list)
 
         origin_list = [x[1] for x in record_header_list]
@@ -73,10 +73,10 @@ class Status(Process):
         )
 
         exclusion_statistics = {}
-        if excl_criteria:
-            criteria = self.get_excl_criteria(excl_criteria[0])
+        if exclusion_criteria:
+            criteria = self.get_exclusion_criteria(exclusion_criteria[0])
             exclusion_statistics = {crit: 0 for crit in criteria}
-            for exclusion_case in excl_criteria:
+            for exclusion_case in exclusion_criteria:
                 for crit in criteria:
                     if crit + "=yes" in exclusion_case:
                         exclusion_statistics[crit] += 1

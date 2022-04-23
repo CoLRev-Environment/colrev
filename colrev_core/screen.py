@@ -20,7 +20,7 @@ class Screen(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        excl_criteria = self.get_exclusion_criteria(records.values())
+        exclusion_criteria = self.get_exclusion_criteria(records.values())
 
         saved_args = locals()
         saved_args["include_all"] = ""
@@ -31,7 +31,9 @@ class Screen(Process):
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
             )
-            record.update(excl_criteria=";".join([e + "=no" for e in excl_criteria]))
+            record.update(
+                exclusion_criteria=";".join([e + "=no" for e in exclusion_criteria])
+            )
             record.update(colrev_status=RecordState.rev_included)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
@@ -42,24 +44,28 @@ class Screen(Process):
 
         return
 
-    def __get_excl_criteria(self, ec_string: str) -> list:
+    def __get_exclusion_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def get_exclusion_criteria_from_str(self, ec_string: str) -> list:
         if ec_string != "":
-            excl_criteria = self.__get_excl_criteria(ec_string)
+            exclusion_criteria = self.__get_exclusion_criteria(ec_string)
         else:
-            excl_criteria_str = input("Exclusion criteria (comma separated or NA)")
-            excl_criteria = excl_criteria_str.split(",")
-            if "" in excl_criteria:
-                excl_criteria.remove("")
-        if "NA" in excl_criteria:
-            excl_criteria.remove("NA")
+            exclusion_criteria_str = input("Exclusion criteria (comma separated or NA)")
+            exclusion_criteria = exclusion_criteria_str.split(",")
+            if "" in exclusion_criteria:
+                exclusion_criteria.remove("")
+        if "NA" in exclusion_criteria:
+            exclusion_criteria.remove("NA")
 
-        return excl_criteria
+        return exclusion_criteria
 
     def get_exclusion_criteria(self, records: typing.List[dict]) -> list:
-        ec_list = [str(x.get("excl_criteria")) for x in records if "excl_criteria" in x]
+        ec_list = [
+            str(x.get("exclusion_criteria"))
+            for x in records
+            if "exclusion_criteria" in x
+        ]
         if 0 == len(ec_list):
             ec_string = ""
         else:

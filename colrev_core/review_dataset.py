@@ -178,13 +178,13 @@ class ReviewDataset:
             colrev_status.find("{") + 1 : colrev_status.rfind("}")
         ]
 
-        excl_criteria, file, colrev_masterdata = "", "", ""
+        exclusion_criteria, file, colrev_masterdata = "", "", ""
         while items:
             item = items.pop(0)
 
-            # excl_criteria can only be in line 4 (but it is optional)
-            if "excl_criteria" in item:
-                excl_criteria = item[item.find("{") + 1 : item.rfind("}")]
+            # exclusion_criteria can only be in line 4 (but it is optional)
+            if "exclusion_criteria" in item:
+                exclusion_criteria = item[item.find("{") + 1 : item.rfind("}")]
                 continue
 
             # file is optional and could be in lines 4-7
@@ -198,7 +198,7 @@ class ReviewDataset:
             ID,
             colrev_origin,
             colrev_status,
-            excl_criteria,
+            exclusion_criteria,
             file,
             colrev_masterdata,
         ]
@@ -995,7 +995,7 @@ class ReviewDataset:
                         file = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_status" == line.lstrip()[:13]:
                         status = line[line.find("{") + 1 : line.rfind("}")]
-                    if "excl_criteria" == line.lstrip()[:13]:
+                    if "exclusion_criteria" == line.lstrip()[:18]:
                         excl_crit = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_origin" == line.strip()[:13]:
                         origin = line[line.find("{") + 1 : line.rfind("}")]
@@ -1348,7 +1348,7 @@ class ReviewDataset:
             )
         return
 
-    def __get_excl_criteria(self, ec_string: str) -> list:
+    def __get_exclusion_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def check_corrections_of_curated_records(self) -> None:
@@ -1545,7 +1545,7 @@ class ReviewDataset:
                     change_items = list(changes)
 
                     keys_to_ignore = [
-                        "excl_criteria",
+                        "exclusion_criteria",
                         "colrev_status",
                         "source_url",
                         "ID",
@@ -1633,7 +1633,7 @@ class ReviewDataset:
         if data["exclusion_criteria_list"]:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
-                criteria = self.__get_excl_criteria(exclusion_criteria)
+                criteria = self.__get_exclusion_criteria(exclusion_criteria)
                 pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
                 pattern_inclusion = "=no;".join(criteria) + "=no"
             else:

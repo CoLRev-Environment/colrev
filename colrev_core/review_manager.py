@@ -319,6 +319,9 @@ class ReviewManager:
                     if "status" in record:
                         record["colrev_status"] = record["status"]
                         del record["status"]
+                    if "excl_criteria" in record:
+                        record["exclusion_criteria"] = record["excl_criteria"]
+                        del record["excl_criteria"]
                     if "metadata_source" in record:
                         del record["metadata_source"]
                     if "source_url" in record:

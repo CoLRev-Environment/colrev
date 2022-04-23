@@ -518,7 +518,7 @@ class Search(Process):
         keys_to_drop = [
             "colrev_status",
             "colrev_origin",
-            "excl_criteria",
+            "exclusion_criteria",
         ]
 
         records = [
@@ -596,8 +596,7 @@ class Search(Process):
         keys_to_drop = [
             "colrev_status",
             "colrev_origin",
-            "excl_criteria",
-            "excl_criteria",
+            "exclusion_criteria",
             "metadata_source",
         ]
         records = [

@@ -50,15 +50,9 @@ class Prescreen(Process):
                 ]:
                     inclusion_2 = "yes"
 
-            # excl_criteria = {}
-            # if "excl_criteria" in record:
-            #     for ecrit in record["excl_criteria"].split(";"):
-            #         criteria = {ecrit.split("=")[0]: ecrit.split("=")[1]}
-            #         excl_criteria.update(criteria)
-
-            excl_criteria = record.get("excl_criteria", "NA")
-            if excl_criteria == "NA" and inclusion_2 == "yes":
-                excl_criteria = "TODO"
+            exclusion_criteria = record.get("exclusion_criteria", "NA")
+            if exclusion_criteria == "NA" and inclusion_2 == "yes":
+                exclusion_criteria = "TODO"
 
             row = {
                 "ID": record["ID"],
@@ -74,9 +68,9 @@ class Prescreen(Process):
                 "abstract": record.get("abstract", ""),
                 "inclusion_1": inclusion_1,
                 "inclusion_2": inclusion_2,
-                "excl_criteria": excl_criteria,
+                "exclusion_criteria": exclusion_criteria,
             }
-            # row.update    (excl_criteria)
+            # row.update    (exclusion_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -118,8 +112,10 @@ class Prescreen(Process):
                     record["colrev_status"] = RecordState.rev_excluded
                 if "yes" == screened_record.get("inclusion_2", ""):
                     record["colrev_status"] = RecordState.rev_included
-                if "" != screened_record.get("excl_criteria", ""):
-                    record["excl_criteria"] = screened_record.get("excl_criteria", "")
+                if "" != screened_record.get("exclusion_criteria", ""):
+                    record["exclusion_criteria"] = screened_record.get(
+                        "exclusion_criteria", ""
+                    )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 

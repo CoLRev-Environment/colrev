@@ -749,8 +749,8 @@ class LocalIndex:
         ]:
             return
 
-        if "excl_criteria" in record:
-            del record["excl_criteria"]
+        if "exclusion_criteria" in record:
+            del record["exclusion_criteria"]
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
         if record["colrev_status"] not in [
