@@ -374,7 +374,7 @@ class Dedupe(Process):
             rec_ID2 = records[dupe["ID2"]]
 
             # Heuristic: Merge into curated record
-            if Record(rec_ID2).is_curated():
+            if Record(rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -446,7 +446,7 @@ class Dedupe(Process):
             rec_ID2 = records[ID2]
 
             # Heuristic: Merge into curated record
-            if Record(rec_ID2).is_curated():
+            if Record(rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:

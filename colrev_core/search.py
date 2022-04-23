@@ -1078,7 +1078,7 @@ class Search(Process):
                     new_r["ID"] = f"{ID}".rjust(10, "0")
 
                     if "colrev_status" in new_r:
-                        if Record(new_r).is_curated():
+                        if Record(new_r).masterdata_is_curated():
                             del new_r["colrev_status"]
                         else:
                             new_r["colrev_status"] = str(new_r["colrev_status"])

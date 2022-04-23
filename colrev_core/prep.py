@@ -575,7 +575,7 @@ class Preparation(Process):
         return RECORD
 
     def prep_curated(self, RECORD: PrepRecord) -> PrepRecord:
-        if RECORD.is_curated():
+        if RECORD.masterdata_is_curated():
             if RecordState.md_imported == RECORD.data["colrev_status"]:
                 RECORD.data["colrev_status"] = RecordState.md_prepared
         return RECORD
@@ -1077,7 +1077,7 @@ class Preparation(Process):
             pass
             try:
                 # Note: Records can be CURATED without being indexed
-                if not RECORD.is_curated():
+                if not RECORD.masterdata_is_curated():
                     retrieved_record = LOCAL_INDEX.retrieve_from_toc(
                         RECORD.data, self.RETRIEVAL_SIMILARITY, include_file=False
                     )
@@ -1200,7 +1200,7 @@ class Preparation(Process):
 
     def correct_recordtype(self, RECORD: PrepRecord) -> PrepRecord:
 
-        if RECORD.has_inconsistent_fields() and not RECORD.is_curated():
+        if RECORD.has_inconsistent_fields() and not RECORD.masterdata_is_curated():
             pass
         else:
             return RECORD
@@ -1269,7 +1269,7 @@ class Preparation(Process):
         RECORD.check_potential_retracts()
         if "crossmark" in RECORD.data:
             return RECORD
-        if RECORD.is_curated():
+        if RECORD.masterdata_is_curated():
             RECORD.data.update(colrev_status=RecordState.md_prepared)
             return RECORD
 

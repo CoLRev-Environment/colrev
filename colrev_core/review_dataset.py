@@ -511,7 +511,7 @@ class ReviewDataset:
 
         for record_ID, record in records.items():
             RECORD = Record(record)
-            if RECORD.is_curated():
+            if RECORD.masterdata_is_curated():
                 continue
             self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
             if selected_IDs is not None:
@@ -1439,7 +1439,7 @@ class ReviewDataset:
                     # after the previous condition, we know that the curated record
                     # has been corrected
                     corrected_curated_record = curated_record.copy()
-                    if Record(corrected_curated_record).is_curated():
+                    if Record(corrected_curated_record).masterdata_is_curated():
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = self.LOCAL_INDEX.retrieve(

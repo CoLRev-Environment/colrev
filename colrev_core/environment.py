@@ -579,7 +579,7 @@ class LocalIndex:
         return toc_key
 
     def __toc_index(self, record) -> None:
-        if not Record(record).is_curated():
+        if not Record(record).masterdata_is_curated():
             return
 
         if record.get("ENTRYTYPE", "") in ["article", "inproceedings"]:

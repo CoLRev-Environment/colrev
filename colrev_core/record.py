@@ -87,7 +87,7 @@ class Record:
     def get_data(self) -> dict:
         return self.data
 
-    def is_curated(self) -> bool:
+    def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata", "")
 
     def set_status(self, target_state) -> None:
@@ -179,7 +179,7 @@ class Record:
         return
 
     def masterdata_is_complete(self) -> bool:
-        if self.is_curated():
+        if self.masterdata_is_curated():
             return True
         if not any(
             v == "UNKNOWN" for k, v in self.data.items() if k in self.identifying_fields
@@ -295,7 +295,7 @@ class Record:
             ].split(";")
             self.data["colrev_origin"] = ";".join(list(set(origins)))
 
-        # if not self.is_curated():
+        # if not self.masterdata_is_curated():
         #     for k in self.identifying_fields:
         #         if k in MERGING_RECORD.data and k not in self.data:
         #             self.data[k] = MERGING_RECORD.data[k]
@@ -307,9 +307,9 @@ class Record:
         #     if k in MERGING_RECORD.data and k not in self.data:
         #         self.data[k] = MERGING_RECORD.data[k]
 
-        # Note : no need to check "not self.is_curated()":
+        # Note : no need to check "not self.masterdata_is_curated()":
         # this should enable updates of curated metadata
-        if MERGING_RECORD.is_curated() and not self.is_curated():
+        if MERGING_RECORD.masterdata_is_curated() and not self.masterdata_is_curated():
             self.data["colrev_masterdata"] = MERGING_RECORD.data["colrev_masterdata"]
             if "colrev_masterdata_provenance" in self.data:
                 del self.data["colrev_masterdata_provenance"]
@@ -345,11 +345,14 @@ class Record:
             if key in Record.identifying_fields:
 
                 # Always update from curated MERGING_RECORDs
-                if MERGING_RECORD.is_curated():
+                if MERGING_RECORD.masterdata_is_curated():
                     self.data[key] = MERGING_RECORD.data[key]
 
                 # Do not change if MERGING_RECORD is not curated
-                elif self.is_curated and not MERGING_RECORD.is_curated():
+                elif (
+                    self.masterdata_is_curated
+                    and not MERGING_RECORD.masterdata_is_curated()
+                ):
                     continue
 
                 # Fuse best fields if none is curated
@@ -820,7 +823,7 @@ class Record:
                 continue
 
             if key in self.identifying_fields:
-                if not self.is_curated:
+                if not self.masterdata_is_curated:
                     self.add_masterdata_provenance(key, source_info, "")
             else:
                 self.add_data_provenance(key, source_info, "")
