@@ -62,23 +62,25 @@ class PDF_Retrieval(Process):
 
         url = "https://api.unpaywall.org/v2/{doi}"
 
-        r = requests.get(url, params={"email": self.EMAIL})
+        try:
+            r = requests.get(url, params={"email": self.EMAIL})
 
-        if r.status_code == 404:
-            return "NA"
-
-        if r.status_code == 500:
-            if retry < 3:
-                return self.__unpaywall(doi, retry + 1)
-            else:
+            if r.status_code == 404:
                 return "NA"
 
-        best_loc = None
-        try:
+            if r.status_code == 500:
+                if retry < 3:
+                    return self.__unpaywall(doi, retry + 1)
+                else:
+                    return "NA"
+
+            best_loc = None
             best_loc = r.json()["best_oa_location"]
         except json.decoder.JSONDecodeError:
             return "NA"
         except KeyError:
+            return "NA"
+        except requests.exceptions.RequestException:
             return "NA"
 
         if not r.json()["is_oa"] or best_loc is None:
