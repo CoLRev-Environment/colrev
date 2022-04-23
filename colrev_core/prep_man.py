@@ -19,6 +19,7 @@ class PrepMan(Process):
         )
 
     def prep_man_stats(self) -> None:
+        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
@@ -50,8 +51,14 @@ class PrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if "man_prep_hints" in record:
-                hints = record["man_prep_hints"].split(";")
+            if "colrev_masterdata_provenance" in record:
+                RECORD = Record(record)
+                prov_d = RECORD.load_masterdata_provenance()
+                hints = []
+                for k, v in prov_d.items():
+                    if v["note"] != "":
+                        hints.append(f'{k} - {v["note"]}')
+
                 prep_man_hints.append([hint.lstrip() for hint in hints])
                 for hint in hints:
                     if "change-score" in hint:
@@ -277,10 +284,6 @@ class PrepMan(Process):
         del record["colrev_origin"]
         del record_to_unmerge["colrev_status"]
         del record["colrev_status"]
-        if "man_prep_hints" in record_to_unmerge:
-            del record_to_unmerge["man_prep_hints"]
-        if "man_prep_hints" in record:
-            del record["man_prep_hints"]
 
         non_dupe_db.entries.append(record_to_unmerge)
         non_dupe_db.entries.append(record)
@@ -326,6 +329,7 @@ class PrepMan(Process):
         PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
 
         record.update(colrev_status=RecordState.md_prepared)
+        # TODO: no longer metadata_source
         record.update(metadata_source="MAN_PREP")
         record = PREPARATION.drop_fields(record)
 

@@ -186,9 +186,49 @@ class Record:
         return False
 
     def set_masterdata_complete(self) -> None:
+        md_p_dict = self.load_masterdata_provenance()
+
         for identifying_field in self.identifying_fields:
             if "UNKNOWN" == self.data.get(identifying_field, "NA"):
                 del self.data[identifying_field]
+            if identifying_field in md_p_dict:
+                note = md_p_dict[identifying_field]["note"]
+                if "missing" in note:
+                    md_p_dict[identifying_field]["note"] = note.replace("missing", "")
+                    self.set_masterdata_provenance(md_p_dict)
+        return
+
+    def set_masterdata_consistent(self) -> None:
+        md_p_dict = self.load_masterdata_provenance()
+        for identifying_field in self.identifying_fields:
+            if identifying_field in md_p_dict:
+                note = md_p_dict[identifying_field]["note"]
+                if "inconsistent with ENTRYTYPE" in note:
+                    md_p_dict[identifying_field]["note"] = note.replace(
+                        "inconsistent with ENTRYTYPE", ""
+                    )
+                    self.set_masterdata_provenance(md_p_dict)
+        return
+
+    def set_fields_complete(self) -> None:
+        md_p_dict = self.load_masterdata_provenance()
+        for identifying_field in self.identifying_fields:
+            if identifying_field in md_p_dict:
+                note = md_p_dict[identifying_field]["note"]
+                if "incomplete" in note:
+                    md_p_dict[identifying_field]["note"] = note.replace(
+                        "incomplete", ""
+                    )
+                    self.set_masterdata_provenance(md_p_dict)
+        return
+
+    def reset_pdf_provenance_hints(self) -> None:
+        d_p_dict = self.load_data_provenance()
+        if "file" in d_p_dict:
+            # TODO : check note and remove hints selectively
+            # note = d_p_dict['file']['note']
+            d_p_dict["file"]["note"] = ""
+            self.set_data_provenance(d_p_dict)
         return
 
     def missing_fields(self) -> list:
@@ -240,6 +280,15 @@ class Record:
 
         def select_best_author(default: str, candidate: str) -> str:
             best_author = default
+
+            # Prefer complete version
+            if (
+                "and others" in default.lower()
+                and "and others" not in candidate.lower()
+            ):
+                return candidate
+            if "et al" in default.lower() and "et al" not in candidate.lower():
+                return candidate
 
             default_mostly_upper = percent_upper_chars(default) > 0.8
             candidate_mostly_upper = percent_upper_chars(candidate) > 0.8
@@ -577,17 +626,15 @@ class Record:
             if "" == self.data["colrev_masterdata_provenance"]:
                 return {}
             for item in self.data["colrev_masterdata_provenance"].split("\n"):
-                elements = item.split(";")
-                elements.remove("")
-                if 2 == len(elements):
-                    key, source = elements.pop(0).split(":")
-                    note = elements.pop(0)
-                    colrev_masterdata_provenance_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
-                else:
-                    print(f"problem with masterdata_provenance_item {item}")
+                key_source = item[: item[:-1].rfind(";")]
+                note = item[item[:-1].rfind(";") + 1 : -1]
+                key, source = key_source.split(":", 1)
+                colrev_masterdata_provenance_dict[key] = {
+                    "source": source,
+                    "note": note,
+                }
+                # else:
+                #     print(f"problem with masterdata_provenance_item {item}")
         return colrev_masterdata_provenance_dict
 
     def get_provenance_field_source(self, field, default="ORIGINAL") -> str:
@@ -608,10 +655,13 @@ class Record:
     def set_masterdata_provenance(self, md_p_dict: dict):
         parsed = ""
         for k, v in md_p_dict.items():
+            v["note"] = (
+                v["note"].replace(";", ",").replace(",,", ",").rstrip(",").lstrip(",")
+            )
             parsed += (
                 f"{k.replace(';', ',')}:"
-                + f"{v['source'].replace(';', ',')};"
-                + f"{v['note'].replace(';', ',')};\n"
+                + f"{v['source']};"  # Note : some dois have semicolons...
+                + f"{v['note']};\n"
             )
         self.data["colrev_masterdata_provenance"] = parsed.rstrip("\n")
         return
@@ -619,9 +669,10 @@ class Record:
     def add_masterdata_provenance_hint(self, field, hint):
         md_p_dict = self.load_masterdata_provenance()
         if field in md_p_dict:
-            md_p_dict[field]["note"] += f",{hint}"
+            if hint not in md_p_dict[field]["note"]:
+                md_p_dict[field]["note"] += f",{hint}"
         else:
-            md_p_dict[field] = {"source": "original", "note": f"{hint}"}
+            md_p_dict[field] = {"source": "ORIGINAL", "note": f"{hint}"}
         self.set_masterdata_provenance(md_p_dict)
         return
 
@@ -644,17 +695,16 @@ class Record:
             if "" == self.data["colrev_data_provenance"]:
                 return {}
             for item in self.data["colrev_data_provenance"].split("\n"):
-                elements = item.split(";")
-                elements.remove("")
-                if 2 == len(elements):
-                    key, source = elements.pop(0).split(":", 1)
-                    note = elements.pop(0)
-                    colrev_data_provenance_dict[key] = {
-                        "source": source,
-                        "note": note,
-                    }
-                else:
-                    print(f"problem with data_provenance_item {item}")
+                key_source = item[: item[:-1].rfind(";")]
+                note = item[item[:-1].rfind(";") + 1 : -1]
+                key, source = key_source.split(":", 1)
+                colrev_data_provenance_dict[key] = {
+                    "source": source,
+                    "note": note,
+                }
+
+                # else:
+                #     print(f"problem with data_provenance_item {item}")
         return colrev_data_provenance_dict
 
     def set_data_provenance(self, md_p_dict: dict):
@@ -663,7 +713,7 @@ class Record:
         for k, v in md_p_dict.items():
             parsed += (
                 f"{k.replace(';', ',')}:"
-                + f"{v['source'].replace(';', ',')};"
+                + f"{v['source']};"  # Note : some dois have semicolons...
                 + f"{v['note'].replace(';', ',')};\n"
             )
         self.data["colrev_data_provenance"] = parsed.rstrip("\n")

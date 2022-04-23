@@ -170,10 +170,16 @@ class PrepRecord(Record):
         # Note : we retrieved metadata in get_masterdata_from_crossref()
         if self.data.get("crossmark", "") == "True":
             self.data["colrev_status"] = RecordState.md_needs_manual_preparation
-            self.data["man_prep_hints"] = "crossmark_restriction_potential_retract"
+            if "note" in self.data:
+                self.data["note"] += ", crossmark_restriction_potential_retract"
+            else:
+                self.data["note"] = "crossmark_restriction_potential_retract"
         if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
             self.data["colrev_status"] = RecordState.md_needs_manual_preparation
-            self.data["man_prep_hints"] = "Withdrawn (according to DBLP)"
+            if "note" in self.data:
+                self.data["note"] += ", withdrawn (according to DBLP)"
+            else:
+                self.data["note"] = "withdrawn (according to DBLP)"
         return
 
 
@@ -274,7 +280,6 @@ class Preparation(Process):
         "bibsource",
         "timestamp",
         "biburl",
-        "man_prep_hints",
     ]
 
     # Note : the followin objects have heavy memory footprints and should be
@@ -539,7 +544,7 @@ class Preparation(Process):
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_hint(
-                            k, f"Disagreement with doi metadata ({v})"
+                            k, f"disagreement with doi metadata ({v})"
                         )
 
         if "url" in RECORD.data:
@@ -563,7 +568,7 @@ class Preparation(Process):
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_hint(
-                            k, f"Disagreement with doi metadata ({v})"
+                            k, f"disagreement with website metadata ({v})"
                         )
 
         return RECORD
@@ -1144,6 +1149,13 @@ class Preparation(Process):
                     .rstrip(",")
                 )
                 RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
+                if field in [
+                    "colrev_masterdata_provenance",
+                    "colrev_data_provenance",
+                    "doi",
+                ]:
+                    continue
+                # Note : some dois (and their provenance) contain html entities
                 RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
         if RECORD.data.get("volume", "") == "ahead-of-print":
@@ -1617,7 +1629,11 @@ class Preparation(Process):
                     record["crossmark"] = "True"
 
         for k, v in record.items():
-            record[k] = html.unescape(v).replace("{", "").replace("}", "")
+            record[k] = v.replace("{", "").replace("}", "")
+            if k in ["colrev_masterdata_provenance", "colrev_data_provenance", "doi"]:
+                continue
+            # Note : some dois (and their provenance) contain html entities
+            record[k] = html.unescape(v)
 
         return record
 
@@ -1980,7 +1996,6 @@ class Preparation(Process):
         self, RECORD: PrepRecord, UNPREPARED_RECORD: PrepRecord
     ) -> PrepRecord:
 
-        msg = ""
         change = 1 - Record.get_record_similarity(RECORD, UNPREPARED_RECORD)
         if change > 0.1:
             self.REVIEW_MANAGER.report_logger.info(
@@ -1988,31 +2003,32 @@ class Preparation(Process):
                 + f"Change score: {round(change, 2)}"
             )
 
-        if not RECORD.masterdata_is_complete():
-            for missing_field in RECORD.missing_fields():
+        # if not RECORD.masterdata_is_complete():
+        missing_fields = RECORD.missing_fields()
+        if missing_fields:
+            for missing_field in missing_fields:
                 RECORD.add_masterdata_provenance_hint(missing_field, "missing")
+        else:
+            RECORD.set_masterdata_complete()
 
-        if RECORD.has_inconsistent_fields():
-            msg += (
-                f"; {RECORD.get_inconsistencies()} field(s) inconsistent with"
-                + f' ENTRYTYPE {RECORD.data["ENTRYTYPE"]}'
-            )
+        # if RECORD.has_inconsistent_fields():
+        inconsistencies = RECORD.get_inconsistencies()
+        if inconsistencies:
+            for inconsistency in inconsistencies:
+                RECORD.add_masterdata_provenance_hint(
+                    inconsistency,
+                    "inconsistent with ENTRYTYPE",
+                )
+        else:
+            RECORD.set_masterdata_consistent()
 
-        if RECORD.has_incomplete_fields():
-            for incomplete_field in RECORD.get_incomplete_fields():
+        # if RECORD.has_incomplete_fields():
+        incomplete_fields = RECORD.get_incomplete_fields()
+        if incomplete_fields:
+            for incomplete_field in incomplete_fields:
                 RECORD.add_masterdata_provenance_hint(incomplete_field, "incomplete")
-
-        if change > 0.1:
-            msg += f"; change-score: {change}"
-
-        if msg != "":
-            if "man_prep_hints" not in RECORD.data:
-                RECORD.data["man_prep_hints"] = ""
-            else:
-                RECORD.data["man_prep_hints"] = RECORD.data["man_prep_hints"] + ";"
-            RECORD.data["man_prep_hints"] = RECORD.data["man_prep_hints"] + msg.strip(
-                ";"
-            ).lstrip(" ")
+        else:
+            RECORD.set_fields_complete()
 
         return RECORD
 
@@ -2099,13 +2115,11 @@ class Preparation(Process):
                     print("\n")
                     time.sleep(0.7)
 
-            if (
-                preparation_record["colrev_status"]
-                in [
-                    RecordState.rev_prescreen_excluded,
-                    RecordState.md_prepared,
-                ]
-                or "Disagreement with " in preparation_record.get("man_prep_hints", "")
+            if preparation_record["colrev_status"] in [
+                RecordState.rev_prescreen_excluded,
+                RecordState.md_prepared,
+            ] or "disagreement with " in preparation_record.get(
+                "colrev_masterdata_provenance", ""
             ):
                 RECORD.data = preparation_record.copy()
                 # break
@@ -2138,7 +2152,6 @@ class Preparation(Process):
         # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
         # for preparation_detail in preparation_details:
         #     self.REVIEW_MANAGER.report_logger.info(preparation_detail)
-
         return RECORD
 
     def __log_details(self, preparation_batch: list) -> None:
@@ -2751,7 +2764,7 @@ class Preparation(Process):
                 preparation_batch_IDs = [x["ID"] for x in preparation_batch]
                 self.REVIEW_MANAGER.reorder_log(preparation_batch_IDs)
 
-                # Note: probably for formatting...
+                # Note: for formatting...
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

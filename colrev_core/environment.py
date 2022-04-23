@@ -770,11 +770,6 @@ class LocalIndex:
             record["colref_pdf_id"] = "cpid1:" + record["pdf_hash"]
             del record["pdf_hash"]
 
-        if "pdf_prep_hints" in record:
-            del record["pdf_prep_hints"]
-        if "pdf_processed" in record:
-            del record["pdf_processed"]
-
         if "colrev_origin" in record:
             del record["colrev_origin"]
 

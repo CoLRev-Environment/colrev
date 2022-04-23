@@ -925,7 +925,7 @@ class ReviewDataset:
         return
 
     def format_main_references(self) -> bool:
-        from colrev_core.prep import Preparation
+        from colrev_core.prep import Preparation, PrepRecord
         from colrev_core.process import FormatProcess
 
         PREPARATION = Preparation(
@@ -939,26 +939,19 @@ class ReviewDataset:
             if "colrev_status" not in record:
                 print(f'Error: no status field in record ({record["ID"]})')
                 continue
+
+            RECORD = PrepRecord(record)
+
             if record["colrev_status"] == RecordState.md_needs_manual_preparation:
-                prior = record.get("man_prep_hints", "")
-                if "man_prep_hints" in record:
-                    del record["man_prep_hints"]
-                record = PREPARATION.log_notifications(record, record.copy())
-                record = PREPARATION.update_metadata_status(record)
-                if record["colrev_status"] == RecordState.md_prepared:
-                    record["metadata_source"] = "MANUAL"
-                if RecordState.md_needs_manual_preparation == record["colrev_status"]:
-                    if "change-score" in prior:
-                        record["man_prep_hints"] += (
-                            "; " + prior[prior.find("change-score") :]
-                        )
-                else:
-                    if record.get("man_prep_hints", "NA") == "":
-                        del record["man_prep_hints"]
+
+                # Note : this updates the masterdata provenance:
+                RECORD = PREPARATION.log_notifications(RECORD, RECORD)
+                RECORD = PREPARATION.update_metadata_status(RECORD)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
-                if "pdf_prep_hints" in record:
-                    del record["pdf_prep_hints"]
+                RECORD.reset_pdf_provenance_hints()
+
+            record = RECORD.get_data()
 
         self.save_records_dict(records)
         CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
@@ -1581,8 +1574,10 @@ class ReviewDataset:
                     if len(change_items) == 0:
                         continue
 
-                    if len(corrected_curated_record["colrev_origin"].split(";")) > len(
-                        original_curated_record["colrev_origin"].split(";")
+                    if len(
+                        corrected_curated_record.get("colrev_origin", "").split(";")
+                    ) > len(
+                        original_curated_record.get("colrev_origin", "").split(";")
                     ):
                         if (
                             "dblp_key" in corrected_curated_record

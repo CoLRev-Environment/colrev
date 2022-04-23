@@ -53,11 +53,13 @@ class PDFPrepMan(Process):
         return cpid1
 
     def set_data(self, record: dict) -> None:
+        from colrev_core.record import Record
 
         record.update(colrev_status=RecordState.pdf_prepared)
 
-        if "pdf_prep_hints" in record:
-            del record["pdf_prep_hints"]
+        RECORD = Record(record)
+        RECORD.reset_pdf_provenance_hints()
+        record = RECORD.get_data()
 
         pdf_path = Path(self.REVIEW_MANAGER.path + record["file"])
         record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
@@ -74,6 +76,7 @@ class PDFPrepMan(Process):
 
     def pdf_prep_man_stats(self) -> None:
         import pandas as pd
+        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
@@ -97,12 +100,16 @@ class PDFPrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if "pdf_prep_hints" in record:
-                hints = record["pdf_prep_hints"].split(";")
-                prep_man_hints.append([hint.lstrip() for hint in hints])
+            RECORD = Record(record)
+            prov_d = RECORD.load_data_provenance()
 
-                for hint in hints:
-                    crosstab.append([record["journal"], hint.lstrip()])
+            if "file" in prov_d:
+                if prov_d["file"]["note"] != "":
+                    for hint in prov_d["file"]["note"].split(","):
+                        prep_man_hints.append(hint.lstrip())
+
+            for hint in prep_man_hints:
+                crosstab.append([record["journal"], hint.lstrip()])
 
         crosstab_df = pd.DataFrame(crosstab, columns=["journal", "hint"])
 

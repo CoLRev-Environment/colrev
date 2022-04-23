@@ -71,12 +71,12 @@ class LoadRecord(Record):
         incomplete_fields = self.get_incomplete_fields()
         for incomplete_field in incomplete_fields:
             if incomplete_field in colrev_masterdata_provenance:
-                add_info = f", {incomplete_field} incomplete"
+                add_info = ", incomplete"
                 colrev_masterdata_provenance[incomplete_field]["note"] += add_info
             else:
                 colrev_masterdata_provenance[incomplete_field] = {
                     "source": "ORIGINAL",
-                    "note": f"{incomplete_field} incomplete",
+                    "note": "incomplete",
                 }
 
         self.set_masterdata_provenance(colrev_masterdata_provenance)
