@@ -48,7 +48,8 @@ class PrepRecord(Record):
     # distinguish:
     # 1. independent processing operation (format, ...)
     # 2. processing operation using curated data
-    # 3. processing operation using external, non-curated data (-> fuse_best_fields)
+    # 3. processing operation using external, non-curated data
+    #  (-> merge/fuse_best_field)
 
     def __init__(self, data: dict):
         super().__init__(data)
@@ -772,7 +773,7 @@ class Preparation(Process):
                     f"(>{self.RETRIEVAL_SIMILARITY})"
                 )
 
-                RECORD.fuse_best_fields(
+                RECORD.merge(
                     RETRIEVED_RECORD,
                     RETRIEVED_RECORD.data.get("sem_scholar_id", "SEMANTIC_SCHOLAR"),
                 )
@@ -823,7 +824,7 @@ class Preparation(Process):
                             RECORD, RETRIEVED_RECORD
                         )
                         if similarity > self.RETRIEVAL_SIMILARITY:
-                            RECORD.fuse_best_fields(RETRIEVED_RECORD, url)
+                            RECORD.merge(RETRIEVED_RECORD, url)
 
                             self.REVIEW_MANAGER.report_logger.debug(
                                 "Retrieved metadata based on doi from"
@@ -872,7 +873,7 @@ class Preparation(Process):
                     source_link = (
                         f"https://api.crossref.org/works/{RETRIEVED_RECORD.data['doi']}"
                     )
-                    RECORD.fuse_best_fields(RETRIEVED_RECORD, source_link)
+                    RECORD.merge(RETRIEVED_RECORD, source_link)
                     self.get_link_from_doi(RECORD)
                     RECORD.set_masterdata_complete()
                     RECORD.set_status(RecordState.md_prepared)
@@ -915,13 +916,7 @@ class Preparation(Process):
                         f"dblp similarity: {similarity} "
                         f"(>{self.RETRIEVAL_SIMILARITY})"
                     )
-                    RECORD.fuse_best_fields(
-                        RETRIEVED_RECORD, RETRIEVED_RECORD.data["dblp_key"]
-                    )
-                    # TODO : check whether the following
-                    # is fully covered by fuse_best_fields
-                    # dblp_key = "https://dblp.org/rec/" + item["key"]
-                    # RECORD.data["dblp_key"] = dblp_key
+                    RECORD.merge(RETRIEVED_RECORD, RETRIEVED_RECORD.data["dblp_key"])
                     RECORD.set_masterdata_complete()
                     RECORD.set_status(RecordState.md_prepared)
                 else:
@@ -1092,9 +1087,7 @@ class Preparation(Process):
 
         if retrieved:
             RETRIEVED_RECORD = PrepRecord(retrieved_record)
-            RECORD.fuse_best_fields(
-                RETRIEVED_RECORD, RETRIEVED_RECORD.data["colrev_masterdata"]
-            )
+            RECORD.merge(RETRIEVED_RECORD, RETRIEVED_RECORD.data["colrev_masterdata"])
 
             if "colrev_masterdata_provenance" in RECORD.data:
                 del RECORD.data["colrev_masterdata_provenance"]
@@ -1366,7 +1359,7 @@ class Preparation(Process):
         LOADER = Loader(self.REVIEW_MANAGER, notify_state_transition_process=False)
         LOADER.start_zotero_translators()
 
-        # TODO : change to the similar fuse_best_fields structure?
+        # TODO : change to the similar merge()/fuse_best_field structure?
 
         try:
             content_type_header = {"Content-type": "text/plain"}
@@ -1910,7 +1903,7 @@ class Preparation(Process):
                     retrieved_record["author"] = author_string
 
             if "key" in item:
-                retrieved_record["dblp_key"] = item["key"]
+                retrieved_record["dblp_key"] = "https://dblp.org/rec/" + item["key"]
 
             if "doi" in item:
                 retrieved_record["doi"] = item["doi"].upper()
@@ -1976,7 +1969,7 @@ class Preparation(Process):
             retrieved_json = json.loads(ret.text)
             retrieved_record = self.crossref_json_to_record(retrieved_json)
             RETRIEVED_RECORD = PrepRecord(retrieved_record)
-            RECORD.fuse_best_fields(RETRIEVED_RECORD, url)
+            RECORD.merge(RETRIEVED_RECORD, url)
             RECORD.set_masterdata_complete()
             RECORD.set_status(RecordState.md_prepared)
 

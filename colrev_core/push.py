@@ -243,7 +243,7 @@ class Push(Process):
             for (type, key, change) in list(change_item["changes"]):
                 # Note : by retricting changes to essential_md_keys,
                 # we also prevent changes in
-                # "colrev_status", "colrev_origin", "metadata_source", "file"
+                # "colrev_status", "colrev_origin", "file"
 
                 # Note: the most important thing is to update the metadata.
 

@@ -74,7 +74,6 @@ def debug_load() -> None:
             "number": "6",
             "pages": "624--644",
             "volume": "24",
-            "metadata_source": "ORIGINAL",
         }
     ]
 
@@ -95,7 +94,6 @@ def debug_pdf_get():
         "ID": "GuoLiuNault2021",
         "colrev_origin": "MISQ.bib/0000000826",
         "colrev_status": RecordState.md_imported,
-        "metadata_source": "ORIGINAL",
         "author": "Guo, Hong and Liu, Yipeng and Nault, Barrie R.",
         "file": "pdfs/GuoLiuNault2021.pdf",
         "journal": "MIS Quarterly",
@@ -164,7 +162,6 @@ def debug_pdf_prep():
         "author": "Bødker, Mads",
         "file": "pdfs/42_1/Hua2018_User Service Innovatio.pdf",
         "journal": "MIS Quarterly",
-        "metadata_source": "ORIGINAL",
         "number": "1",
         "title": "Provisioning Interoperable Disaster Management Systems",
         "volume": "45",

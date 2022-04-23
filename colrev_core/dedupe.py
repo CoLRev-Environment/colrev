@@ -14,19 +14,6 @@ from colrev_core.record import RecordState
 
 
 class Dedupe(Process):
-
-    md_keys = [
-        "author",
-        "title",
-        "year",
-        "journal",
-        "booktitle",
-        "volume",
-        "number",
-        "pages",
-    ]
-    complementary_keys = ["doi", "url", "abstract", "dblk_key"]
-
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
@@ -323,34 +310,6 @@ class Dedupe(Process):
 
         return ret_dict
 
-    def merge_r1_r2(self, main_record: dict, dupe_record: dict) -> dict:
-
-        origins = main_record["colrev_origin"].split(";") + dupe_record[
-            "colrev_origin"
-        ].split(";")
-        main_record["colrev_origin"] = ";".join(list(set(origins)))
-
-        if "CURATED" != main_record.get("metadata_source", ""):
-            for k in self.md_keys:
-                if k in dupe_record and k not in main_record:
-                    main_record[k] = dupe_record[k]
-
-        if "pages" in dupe_record and "pages" not in main_record:
-            main_record["pages"] = dupe_record["pages"]
-
-        for k in self.complementary_keys:
-            if k in dupe_record and k not in main_record:
-                main_record[k] = dupe_record[k]
-
-        if "file" in main_record and "file" in dupe_record:
-            main_record["file"] = (
-                main_record["file"] + ";" + dupe_record.get("file", "")
-            )
-        elif "file" in dupe_record and "file" not in main_record:
-            main_record["file"] = dupe_record["file"]
-
-        return main_record
-
     def same_source_merge(self, main_record: dict, dupe_record: dict) -> bool:
 
         main_rec_sources = [
@@ -390,6 +349,7 @@ class Dedupe(Process):
         - If the results list contains a 'score value'
 
         """
+        from colrev_core.record import Record
 
         # The merging also needs to consider whether IDs are propagated
         # Completeness of comparisons should be ensured by the
@@ -414,7 +374,7 @@ class Dedupe(Process):
             rec_ID2 = records[dupe["ID2"]]
 
             # Heuristic: Merge into curated record
-            if "CURATED" == rec_ID2.get("metadata_source", ""):
+            if Record(rec_ID2).is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -426,7 +386,10 @@ class Dedupe(Process):
                 self.export_same_source_merge(main_record, dupe_record)
                 continue
 
-            main_record = self.merge_r1_r2(main_record, dupe_record)
+            MAIN_RECORD = Record(main_record).merge(
+                Record(dupe_record), default_source="merged"
+            )
+            main_record = MAIN_RECORD.get_data()
 
             if "score" in dupe:
                 conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
@@ -460,6 +423,7 @@ class Dedupe(Process):
         active-learning classifier and checking whether the record is not part of
         any other duplicate-cluster
         """
+        from colrev_core.record import Record
 
         # The merging also needs to consider whether IDs are propagated
 
@@ -482,7 +446,7 @@ class Dedupe(Process):
             rec_ID2 = records[ID2]
 
             # Heuristic: Merge into curated record
-            if "CURATED" == rec_ID2.get("metadata_source", ""):
+            if Record(rec_ID2).is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -499,7 +463,10 @@ class Dedupe(Process):
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
 
-            main_record = self.merge_r1_r2(main_record, dupe_record)
+            MAIN_RECORD = Record(main_record).merge(
+                Record(dupe_record), default_source="merged"
+            )
+            main_record = MAIN_RECORD.get_data()
 
             self.REVIEW_MANAGER.report_logger.info(
                 f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"

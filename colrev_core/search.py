@@ -510,9 +510,7 @@ class Search(Process):
                 if len(res) == 0:
                     continue
             self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
-            if "metadata_source" in record_to_import:
-                if "CURATED" != record_to_import["metadata_source"]:
-                    del record_to_import["metadata_source"]
+
             records = records + [record_to_import]
 
         keys_to_drop = [
@@ -597,7 +595,6 @@ class Search(Process):
             "colrev_status",
             "colrev_origin",
             "exclusion_criteria",
-            "metadata_source",
         ]
         records = [
             {key: item[key] for key in item.keys() if key not in keys_to_drop}

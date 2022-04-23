@@ -455,25 +455,20 @@ class ReviewDataset:
         writer.display_order = [
             "colrev_origin",  # must be in second line
             "colrev_status",  # must be in third line
-            "metadata_source",
-            "excl_criteria",
-            "man_prep_hints",
-            "pdf_processed",
-            "file",  # Note : do not change this order (parsers rely on it)
             "colrev_masterdata",
             "colrev_masterdata_provenance",
             "colrev_data_provenance",
             "colrev_file_provenance",
             "colrev_id",
-            "prescreen_exclusion",
             "colrev_pdf_id",
-            "potential_dupes",
+            "exclusion_criteria",
+            "file",  # Note : do not change this order (parsers rely on it)
+            "prescreen_exclusion",
             "doi",
             "grobid-version",
             "dblp_key",
             "sem_scholar_id",
             "wos_accession_number",
-            "source_url",
             "author",
             "booktitle",
             "journal",
@@ -1358,8 +1353,6 @@ class ReviewDataset:
         from colrev_core.record import Record
         from dictdiffer import diff
         import io
-        import requests
-        import re
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
@@ -1474,46 +1467,50 @@ class ReviewDataset:
                             original_curated_record
                         ).create_colrev_id()
 
-                    elif "DBLP" == corrected_curated_record.get("metadata_source", ""):
-                        # Note : don't use PREPARATION.get_md_from_dblp
-                        # because it will fuse_best_fields
-                        ret = requests.get(
-                            corrected_curated_record["dblp_key"] + ".html?view=bibtex"
-                        )
-                        bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
-                        gr = bibtex_regex.search(ret.text)
-                        if gr:
-                            bibtex_str = gr.group(0)[18:-6]
-                            dblp_bib = bibtexparser.loads(bibtex_str)
-                            original_curated_record = dblp_bib.entries.pop()
-                            original_curated_record = {
-                                k: v.replace("\n", " ")
-                                for k, v in original_curated_record.items()
-                            }
-                            original_curated_record[
-                                "source_url"
-                            ] = "metadata_source=DBLP"
-                            original_curated_record["colrev_origin"] = prior_cr[
-                                "colrev_origin"
-                            ]
-                        else:
-                            continue
+                    # TODO : deactivated export of DBLP corrections
+                    # metadata_source has been dropped.
+                    # corrections would have to be generated on a per-field basis
+                    # elif "DBLP" ==
+                    #  corrected_curated_record.get("metadata_source", ""):
+                    #     # Note : don't use PREPARATION.get_md_from_dblp
+                    #     # because it will fuse_best_fields
+                    #     ret = requests.get(
+                    #         corrected_curated_record["dblp_key"] + ".html?view=bibtex"
+                    #     )
+                    #     bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
+                    #     gr = bibtex_regex.search(ret.text)
+                    #     if gr:
+                    #         bibtex_str = gr.group(0)[18:-6]
+                    #         dblp_bib = bibtexparser.loads(bibtex_str)
+                    #         original_curated_record = dblp_bib.entries.pop()
+                    #         original_curated_record = {
+                    #             k: v.replace("\n", " ")
+                    #             for k, v in original_curated_record.items()
+                    #         }
+                    #         original_curated_record[
+                    #             "source_url"
+                    #         ] = "metadata_source=DBLP"
+                    #         original_curated_record["colrev_origin"] = prior_cr[
+                    #             "colrev_origin"
+                    #         ]
+                    #     else:
+                    #         continue
 
-                        # Note : we don't want to correct the following fields:
-                        if "booktitle" in corrected_curated_record:
-                            original_curated_record[
-                                "booktitle"
-                            ] = corrected_curated_record["booktitle"]
-                        if "editor" in original_curated_record:
-                            del original_curated_record["editor"]
-                        if "publisher" in original_curated_record:
-                            del original_curated_record["publisher"]
-                        if "bibsource" in original_curated_record:
-                            del original_curated_record["bibsource"]
-                        if "timestamp" in original_curated_record:
-                            del original_curated_record["timestamp"]
-                        if "biburl" in original_curated_record:
-                            del original_curated_record["biburl"]
+                    #     # Note : we don't want to correct the following fields:
+                    #     if "booktitle" in corrected_curated_record:
+                    #         original_curated_record[
+                    #             "booktitle"
+                    #         ] = corrected_curated_record["booktitle"]
+                    #     if "editor" in original_curated_record:
+                    #         del original_curated_record["editor"]
+                    #     if "publisher" in original_curated_record:
+                    #         del original_curated_record["publisher"]
+                    #     if "bibsource" in original_curated_record:
+                    #         del original_curated_record["bibsource"]
+                    #     if "timestamp" in original_curated_record:
+                    #         del original_curated_record["timestamp"]
+                    #     if "biburl" in original_curated_record:
+                    #         del original_curated_record["biburl"]
                     else:
                         continue  # probably?
 

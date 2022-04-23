@@ -24,6 +24,8 @@ class Record:
         "pages",
     ]
 
+    complementary_keys = ["doi", "url", "abstract", "dblk_key"]
+
     # Based on https://en.wikipedia.org/wiki/BibTeX
     record_field_requirements = {
         "article": ["author", "title", "journal", "year", "volume", "number"],
@@ -271,10 +273,100 @@ class Record:
             return True
         return False
 
-    def fuse_best_fields(self, MERGING_RECORD, default_source: str):
-        """Apply heuristics to create a fusion of the best fields based on
+    def merge(self, MERGING_RECORD, default_source: str):
+        """General-purpose record merging
+        for preparation, curated/non-curated records and records with origins
+
+
+        Apply heuristics to create a fusion of the best fields based on
         quality heuristics"""
 
+        # self.REVIEW_MANAGER.logger.debug(
+        #     "Fuse retrieved record " "(select fields with the highest quality)"
+        # )
+        # self.REVIEW_MANAGER.logger.debug(MERGING_RECORD)
+
+        # NOTE : the following block was originally dedupe-merge-records
+        # TODO : consider fuse_best_fields... (if not curated)
+
+        if "colrev_origin" in MERGING_RECORD.data:
+            origins = self.data["colrev_origin"].split(";") + MERGING_RECORD.data[
+                "colrev_origin"
+            ].split(";")
+            self.data["colrev_origin"] = ";".join(list(set(origins)))
+
+        # if not self.is_curated():
+        #     for k in self.identifying_fields:
+        #         if k in MERGING_RECORD.data and k not in self.data:
+        #             self.data[k] = MERGING_RECORD.data[k]
+
+        # if "pages" in MERGING_RECORD.data and "pages" not in self.data:
+        #     self.data["pages"] = MERGING_RECORD.data["pages"]
+
+        # for k in self.complementary_keys:
+        #     if k in MERGING_RECORD.data and k not in self.data:
+        #         self.data[k] = MERGING_RECORD.data[k]
+
+        # Note : no need to check "not self.is_curated()":
+        # this should enable updates of curated metadata
+        if MERGING_RECORD.is_curated() and not self.is_curated():
+            self.data["colrev_masterdata"] = MERGING_RECORD.data["colrev_masterdata"]
+            if "colrev_masterdata_provenance" in self.data:
+                del self.data["colrev_masterdata_provenance"]
+
+            for k in list(self.data.keys()):
+                if k in Record.identifying_fields:
+                    del self.data[k]
+
+        # TODO : TBD: merge colrev_ids?
+
+        for key, val in MERGING_RECORD.data.items():
+            if "" == val:
+                continue
+            if not val:
+                continue
+
+            # do not override provenance, ID, ... fields
+            if key in [
+                "ID",
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_id",
+                "colrev_status",
+                "colrev_origin",
+            ]:
+                continue
+
+            source = MERGING_RECORD.get_provenance_field_source(
+                key, default=default_source
+            )
+
+            # Part 1: identifying fields
+            if key in Record.identifying_fields:
+
+                # Always update from curated MERGING_RECORDs
+                if MERGING_RECORD.is_curated():
+                    self.data[key] = MERGING_RECORD.data[key]
+
+                # Do not change if MERGING_RECORD is not curated
+                elif self.is_curated and not MERGING_RECORD.is_curated():
+                    continue
+
+                # Fuse best fields if none is curated
+                else:
+                    self.fuse_best_field(MERGING_RECORD, key, val, source)
+
+            # Part 2: other fields
+            else:
+                # keep existing values per default
+                if key in self.data:
+                    pass
+                else:
+                    self.update_field(key, str(val), source)
+
+        return
+
+    def fuse_best_field(self, MERGING_RECORD, key, val, source) -> None:
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
@@ -355,97 +447,74 @@ class Record:
                 best_journal = candidate
 
             # self.REVIEW_MANAGER.logger.debug(
-            #     f"best_jour62nal({default}, \n"
+            #     f"best_journal({default}, \n"
             #     f"                                      {candidate}) = \n"
             #     f"                                      {best_journal}"
             # )
 
             return best_journal
 
-        # self.REVIEW_MANAGER.logger.debug(
-        #     "Fuse retrieved record " "(select fields with the highest quality)"
-        # )
-        # self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(merging_record))
-        for key, val in MERGING_RECORD.data.items():
-            if "" == val:
-                continue
+        if "author" == key:
+            if "author" in self.data:
+                best_author = select_best_author(
+                    self.data["author"], MERGING_RECORD.data["author"]
+                )
+                if self.data["author"] != best_author:
+                    self.update_field("author", best_author, source)
+            else:
+                self.update_field("author", str(val), source)
 
-            # Do not change fields for curated records
-            if key in Record.identifying_fields and self.is_curated():
-                continue
+        elif "pages" == key:
+            if "pages" in self.data:
+                best_pages = select_best_pages(
+                    self.data["pages"], MERGING_RECORD.data["pages"]
+                )
+                if self.data["pages"] != best_pages:
+                    self.update_field("pages", best_pages, source)
 
-            source = MERGING_RECORD.get_provenance_field_source(
-                key, default=default_source
-            )
-            if val:
-                if "author" == key:
-                    if "author" in self.data:
-                        best_author = select_best_author(
-                            self.data["author"], MERGING_RECORD.data["author"]
-                        )
-                        if self.data["author"] != best_author:
-                            self.update_field("author", best_author, source)
-                    else:
-                        self.update_field("author", str(val), source)
+            else:
+                self.update_field("pages", str(val), source)
 
-                elif "pages" == key:
-                    if "pages" in self.data:
-                        best_pages = select_best_pages(
-                            self.data["pages"], MERGING_RECORD.data["pages"]
-                        )
-                        if self.data["pages"] != best_pages:
-                            self.update_field("pages", best_pages, source)
+        elif "title" == key:
+            if "title" in self.data:
+                best_title = select_best_title(
+                    self.data["title"], MERGING_RECORD.data["title"]
+                )
+                if self.data["title"] != best_title:
+                    self.update_field("title", best_title, source)
 
-                    else:
-                        self.update_field("pages", str(val), source)
+            else:
+                self.update_field("title", str(val), source)
 
-                elif "title" == key:
-                    if "title" in self.data:
-                        best_title = select_best_title(
-                            self.data["title"], MERGING_RECORD.data["title"]
-                        )
-                        if self.data["title"] != best_title:
-                            self.update_field("title", best_title, source)
+        elif "journal" == key:
+            if "journal" in self.data:
+                best_journal = select_best_journal(
+                    self.data["journal"], MERGING_RECORD.data["journal"]
+                )
+                if self.data["journal"] != best_journal:
+                    self.update_field("journal", best_journal, source)
+            else:
+                self.update_field("journal", str(val), source)
 
-                    else:
-                        self.update_field("title", str(val), source)
+        elif "booktitle" == key:
+            if "booktitle" in self.data:
+                best_booktitle = select_best_journal(
+                    self.data["booktitle"], MERGING_RECORD.data["booktitle"]
+                )
+                if self.data["booktitle"] != best_booktitle:
+                    # TBD: custom select_best_booktitle?
+                    self.update_field("booktitle", best_booktitle, source)
 
-                elif "journal" == key:
-                    if "journal" in self.data:
-                        best_journal = select_best_journal(
-                            self.data["journal"], MERGING_RECORD.data["journal"]
-                        )
-                        if self.data["journal"] != best_journal:
-                            self.update_field("journal", best_journal, source)
-                    else:
-                        self.update_field("journal", str(val), source)
+            else:
+                self.update_field("booktitle", str(val), source)
 
-                elif "booktitle" == key:
-                    if "booktitle" in self.data:
-                        best_booktitle = select_best_journal(
-                            self.data["booktitle"], MERGING_RECORD.data["booktitle"]
-                        )
-                        if self.data["booktitle"] != best_booktitle:
-                            # TBD: custom select_best_booktitle?
-                            self.update_field("booktitle", best_booktitle, source)
-
-                    else:
-                        self.update_field("booktitle", str(val), source)
-
-                else:
-                    # keep existing values per default
-                    # and do not override provenance fields
-                    if key in self.data or key in [
-                        "colrev_masterdata_provenance",
-                        "colrev_data_provenance",
-                        "colrev_id",
-                        "colrev_status",
-                        "colrev_origin",
-                    ]:
-                        pass
-                    else:
-                        self.update_field(key, str(val), source)
-
+        elif "file" == key:
+            if "file" in self.data:
+                self.data["file"] = (
+                    self.data["file"] + ";" + MERGING_RECORD.data.get("file", "")
+                )
+            else:
+                self.data["file"] = MERGING_RECORD.data["file"]
         return
 
     @classmethod
