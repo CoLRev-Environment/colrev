@@ -302,6 +302,17 @@ def local_index(param):
     return
 
 
+def corrections():
+    REVIEW_MANAGER = ReviewManager()
+
+    from colrev_core.process import CheckProcess
+
+    CheckProcess(REVIEW_MANAGER)
+    REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
+
+    return
+
+
 def main(operation: str, param):
 
     operations = {
@@ -311,6 +322,7 @@ def main(operation: str, param):
         "data": debug_data,
         "local_index": local_index,
         "tei": debug_tei_tools,
+        "corrections": corrections,
     }
 
     func = operations.get(operation, lambda: "not implemented")

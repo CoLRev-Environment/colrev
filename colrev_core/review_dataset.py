@@ -1399,7 +1399,9 @@ class ReviewDataset:
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 
-            if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
+            # TBD: whether/how to detect dblp. Previously:
+            # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
+            if "{CURATED:" in record_string:
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 r = db.entries[0]
@@ -1410,7 +1412,9 @@ class ReviewDataset:
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
 
-                if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
+                # TBD: whether/how to detect dblp. Previously:
+                # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
+                if "{CURATED:" in record_string:
                     parser = BibTexParser(customization=convert_to_unicode)
                     db = bibtexparser.loads(record_string, parser=parser)
                     r = db.entries[0]
@@ -1427,9 +1431,11 @@ class ReviewDataset:
                     for y in x["colrev_origin"].split(";")
                 )
             ]
+
             if len(prior_crl) == 0:
                 self.REVIEW_MANAGER.logger.debug("No prior records found")
                 continue
+
             for prior_cr in prior_crl:
 
                 if not all(
@@ -1467,7 +1473,7 @@ class ReviewDataset:
                             original_curated_record
                         ).create_colrev_id()
 
-                    # TODO : deactivated export of DBLP corrections
+                    # deactivated export of DBLP corrections:
                     # metadata_source has been dropped.
                     # corrections would have to be generated on a per-field basis
                     # elif "DBLP" ==
@@ -1547,9 +1553,11 @@ class ReviewDataset:
                         "source_url",
                         "ID",
                         "grobid-version",
-                        "pdf_hash",
+                        "colrev_pdf_id",
                         "file",
                         "colrev_origin",
+                        "colrev_data_provenance",
+                        "sem_scholar_id",
                     ]
 
                     selected_change_items = []
