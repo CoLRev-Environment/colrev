@@ -120,7 +120,7 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
 .. |cslactivity| image:: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
    :height: 12pt
 
-.. |elasticsearchactivity| image:: https://img.shields.io/github/commit-activity/y/elastic/elasticsearch?color=green&style=plastic
+.. |opensearchactivity| image:: https://img.shields.io/github/commit-activity/y/opensearch-project/OpenSearch?color=green&style=plastic
    :height: 12pt
 
 .. list-table::
@@ -166,9 +166,9 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
    * - `CSL <https://github.com/citation-style-language/styles>`_ \*: formatting citations
      - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`__
      - |cslactivity|
-   * - `Elasticsearch <https://github.com/elastic/elasticsearch>`_ \*: searching local projects
-     - `multiple <https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt>`__
-     - |elasticsearchactivity|
+   * - `OpenSearch <https://github.com/opensearch-project/OpenSearch>`_ \*: searching local projects
+     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/master/LICENSE.txt>`__
+     - |opensearchactivity|
 
 \* dynamically loaded
 
