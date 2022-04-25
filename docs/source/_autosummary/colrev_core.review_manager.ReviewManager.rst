@@ -40,3 +40,9 @@ colrev\_core.review\_manager.ReviewManager
    .. autosummary::
 
       ~ReviewManager.notified_next_process
+      ~ReviewManager.force_mode
+      ~ReviewManager.path
+      ~ReviewManager.report_logger
+      ~ReviewManager.logger
+      ~ReviewManager.REVIEW_DATASET
+      ~ReviewManager.sources

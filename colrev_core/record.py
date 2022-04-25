@@ -23,8 +23,7 @@ class Record:
         "number",
         "pages",
     ]
-
-    complementary_keys = ["doi", "url", "abstract", "dblk_key"]
+    """Identifying fields considered for masterdata provenance"""
 
     # Based on https://en.wikipedia.org/wiki/BibTeX
     record_field_requirements = {
@@ -40,6 +39,7 @@ class Record:
         "unpublished": ["title", "author", "year"],
         "misc": ["author", "title", "year"],
     }
+    """Fields requirements for respective ENTRYTYPE"""
 
     # book, inbook: author <- editor
 
@@ -54,16 +54,18 @@ class Record:
         "techreport": ["volume", "issue", "number", "journal", "booktitle"],
         "unpublished": ["volume", "issue", "number", "journal", "booktitle"],
     }
+    """Fields considered inconsistent with the respective ENTRYTYPE"""
 
-    pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+    __pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
         self.data = data
+        """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
         # to maintain high performance and ensure pickle-abiligy (in multiprocessing)
 
     def __repr__(self) -> str:
-        return self.pp.pformat(self.data)
+        return self.__pp.pformat(self.data)
 
     def __str__(self) -> str:
 
@@ -79,7 +81,7 @@ class Record:
             k: v for k, v in self.data.items() if k in complementary_keys_order
         }
         ret_str = (
-            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+            self.__pp.pformat(ik_sorted)[:-1] + "\n" + self.__pp.pformat(ck_sorted)[1:]
         )
 
         return ret_str
@@ -302,10 +304,6 @@ class Record:
 
         # if "pages" in MERGING_RECORD.data and "pages" not in self.data:
         #     self.data["pages"] = MERGING_RECORD.data["pages"]
-
-        # for k in self.complementary_keys:
-        #     if k in MERGING_RECORD.data and k not in self.data:
-        #         self.data[k] = MERGING_RECORD.data[k]
 
         # Note : no need to check "not self.masterdata_is_curated()":
         # this should enable updates of curated metadata
@@ -1035,20 +1033,37 @@ class Record:
 class RecordState(Enum):
     # without the md_retrieved state, we could not display the load transition
     md_retrieved = auto()
+    """Record is retrieved and stored in the ./search directory"""
     md_imported = auto()
+    """Record is imported into the MAIN_REFERENCES"""
     md_needs_manual_preparation = auto()
+    """Record requires manual preparation
+    (colrev_masterdata_provenance provides hints)"""
     md_prepared = auto()
+    """Record is prepared (no missing or incomplete fields, inconsistencies checked)"""
     md_processed = auto()
+    """Record has been checked for duplicate associations
+    with any record in RecordState md_processed or later"""
     rev_prescreen_excluded = auto()
+    """Record was excluded in the prescreen (based on titles/abstracts)"""
     rev_prescreen_included = auto()
+    """Record was included in the prescreen (based on titles/abstracts)"""
     pdf_needs_manual_retrieval = auto()
+    """Record marked for manual PDF retrieval"""
     pdf_imported = auto()
+    """PDF imported and marked for preparation"""
     pdf_not_available = auto()
+    """PDF is not available"""
     pdf_needs_manual_preparation = auto()
+    """PDF marked for manual preparation"""
     pdf_prepared = auto()
+    """PDF prepared"""
     rev_excluded = auto()
+    """Record excluded in screen (full-text)"""
     rev_included = auto()
+    """Record included in screen (full-text)"""
     rev_synthesized = auto()
+    """Record synthesized"""
     # Note : TBD: rev_coded
 
     def __str__(self):

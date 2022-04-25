@@ -18,6 +18,4 @@ colrev\_core.process.FormatProcess
 
       ~FormatProcess.check_precondition
       ~FormatProcess.check_process_model_precondition
-      ~FormatProcess.get_source_state
-      ~FormatProcess.require_clean_repo_general
       ~FormatProcess.run_process

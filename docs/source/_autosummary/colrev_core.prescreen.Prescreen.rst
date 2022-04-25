@@ -21,9 +21,7 @@ colrev\_core.prescreen.Prescreen
       ~Prescreen.create_prescreen_split
       ~Prescreen.export_table
       ~Prescreen.get_data
-      ~Prescreen.get_source_state
       ~Prescreen.import_table
       ~Prescreen.include_all_in_prescreen
-      ~Prescreen.require_clean_repo_general
       ~Prescreen.run_process
       ~Prescreen.set_data

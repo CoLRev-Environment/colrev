@@ -19,14 +19,12 @@ colrev\_core.pdf\_prep.PDF\_Preparation
       ~PDF_Preparation.check_precondition
       ~PDF_Preparation.check_process_model_precondition
       ~PDF_Preparation.get_colrev_pdf_id
-      ~PDF_Preparation.get_source_state
       ~PDF_Preparation.get_text_from_pdf
       ~PDF_Preparation.main
       ~PDF_Preparation.pdf_check_ocr
       ~PDF_Preparation.prepare_pdf
       ~PDF_Preparation.remove_coverpage
       ~PDF_Preparation.remove_last_page
-      ~PDF_Preparation.require_clean_repo_general
       ~PDF_Preparation.run_process
       ~PDF_Preparation.update_colrev_pdf_ids
       ~PDF_Preparation.validate_completeness

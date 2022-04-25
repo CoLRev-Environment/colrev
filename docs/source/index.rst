@@ -10,22 +10,22 @@ Collaborative Literature Reviews
 This project aims at improving the literature review process in terms of efficiency, trustworthiness, and richness.
 To accomplish this, CoLRev combines the transparent collaboration model of git with robust content-based identification schemes, and a model for content curation and reuse.
 
-**Development status**: `Currently recommend for users with technical experience <technical_documentation/roadmap.html>`_.
+**Development status**: `Recommend for users with technical experience <./technical_documentation/roadmap.html>`_.
 
 Getting started
 -----------------
 
-After `installing CoLRev <guides/documentation.html#installation>`_, use the command-line interface
+After `installing CoLRev <guides/manual.html#installation>`_, use the command-line interface
 
 .. code-block::
 
    colrev status
 
-The status command displays the current state of the review and guides you to the next steps (see `CoLRev operations <guides/documentation.html>`_).
-After each step, make sure to `check the changes <guides/documentation.html#analyze-changes>`_, effectively following a three-step cycle:
+The status command displays the current state of the review and guides you to the next steps (`CoLRev operations <guides/manual.html>`_).
+After each operation, `check the changes <guides/manual.html#analyze-changes>`_ to complete the three-step cycle:
 
 .. figure:: ../figures/workflow-simple.svg
-   :width: 450
+   :width: 400
    :align: center
    :alt: Workflow cycle
 
@@ -75,7 +75,7 @@ A key feature of CoLRev is its collaboration and content curation model, which m
 
 Reuse of community-curated data is built into each step and can significantly reduce the efforts required.
 The more records are curated, the more you can focus on the search, prescreen/screen and synthesis.
-Further details are provided in the `documentation <guides/documentation.html>`_.
+Further details are provided in the `manual <guides/manual.html>`_.
 
 Credits
 -----------------
@@ -105,7 +105,7 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
 .. |zoterotranslatoractivity| image:: https://img.shields.io/github/commit-activity/y/zotero/translators?color=green&style=plastic
    :height: 12pt
 
-.. |ocrmypdfactivity| image:: https://img.shields.io/github/commit-activity/y/jbarlow83/OCRmyPDF?color=green&style=plastic
+.. |ocrmypdfactivity| image:: https://img.shields.io/github/commit-activity/y/ocrmypdf/OCRmyPDF?color=green&style=plastic
    :height: 12pt
 
 .. |tesseractactivity| image:: https://img.shields.io/github/commit-activity/y/tesseract-ocr/tesseract?color=green&style=plastic
@@ -134,22 +134,22 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
      - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`__
      - |gitactivity|
    * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
-     - `MIT <https://github.com/pre-commit/pre-commit/blob/master/LICENSE>`__
+     - `MIT <https://github.com/pre-commit/pre-commit/blob/main/LICENSE>`__
      - |precommitactivity|
    * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
      - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`__
      - |dockerpyactivity|
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
-     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/master/LICENSE>`__
+     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/main/LICENSE>`__
      - |pandasactivity|
    * - `Zotero translators <https://github.com/zotero/translators>`_ \*: record import
-     - `GPL <https://github.com/zotero/translators/blob/master/COPYING>`__
+     - GPL
      - |zoterotranslatoractivity|
    * - `PDFMiner.six <https://github.com/pdfminer/pdfminer.six>`_ : PDF management
-     - `MIT <https://github.com/pdfminer/pdfminer.six/blob/develop/LICENSE>`__
+     - `MIT <https://github.com/pdfminer/pdfminer.six/blob/master/LICENSE>`__
      - |pdfmineractivity|
-   * - `OCRmyPDF <https://github.com/jbarlow83/OCRmyPDF>`_ \*: OCR tasks
-     - `MPL-2.0 <https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE>`__
+   * - `OCRmyPDF <https://github.com/ocrmypdf/OCRmyPDF>`_ \*: OCR tasks
+     - `MPL-2.0 <https://github.com/ocrmypdf/OCRmyPDF/blob/master/LICENSE>`__
      - |ocrmypdfactivity|
    * - `Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ \*: OCR tasks
      - `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`__
@@ -167,7 +167,7 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
      - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`__
      - |cslactivity|
    * - `OpenSearch <https://github.com/opensearch-project/OpenSearch>`_ \*: searching local projects
-     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/master/LICENSE.txt>`__
+     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt>`__
      - |opensearchactivity|
 
 \* dynamically loaded
@@ -222,7 +222,6 @@ Please refer to the present GitHub project:
 
    guides/manual
    cli
-   guides/extensions
    guides/best_practices
 
 .. toctree::
@@ -234,6 +233,6 @@ Please refer to the present GitHub project:
    api
    Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
    GitHub repository <https://github.com/geritwagner/colrev_core>
-   technical_documentation/extension_development
+   technical_documentation/extensions
    technical_documentation/roadmap
    technical_documentation/about

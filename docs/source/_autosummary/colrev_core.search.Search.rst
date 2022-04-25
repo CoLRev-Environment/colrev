@@ -21,11 +21,9 @@ colrev\_core.search.Search
       ~Search.check_process_model_precondition
       ~Search.get_colrev_pdf_id
       ~Search.get_pdf_cpid_path
-      ~Search.get_source_state
       ~Search.get_venue_abbreviated
       ~Search.parse_parameters
       ~Search.parse_sources
-      ~Search.require_clean_repo_general
       ~Search.run_process
       ~Search.search_backward
       ~Search.search_crossref

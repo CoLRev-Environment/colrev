@@ -21,8 +21,18 @@ from colrev_core.tei import TEI_TimeoutException
 
 
 class Data(Process):
-    PAD = 0
+    """Class supporting structured and unstructured
+    data extraction, analysis and synthesis"""
+
+    __PAD = 0
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
+    """Tag for appending new records in paper.md
+
+    In the paper.md, the IDs of new records marked for synthesis
+    will be appended after this tag.
+
+    If IDs are moved to other parts of the manuscript,
+    the corresponding record will be marked as rev_synthesized."""
 
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
@@ -138,12 +148,12 @@ class Data(Process):
                     for missing_record in missing_records:
                         writer.write(missing_record)
                         self.REVIEW_MANAGER.report_logger.info(
-                            f" {missing_record}".ljust(self.PAD, " ")
+                            f" {missing_record}".ljust(self.__PAD, " ")
                             + f" added to {PAPER.name}"
                         )
 
                         self.REVIEW_MANAGER.logger.info(
-                            f" {missing_record}".ljust(self.PAD, " ")
+                            f" {missing_record}".ljust(self.__PAD, " ")
                             + f" added to {PAPER.name}"
                         )
 
@@ -182,10 +192,10 @@ class Data(Process):
                 for missing_record in missing_records:
                     writer.write(missing_record)
                     self.REVIEW_MANAGER.report_logger.info(
-                        f" {missing_record}".ljust(self.PAD, " ") + " added"
+                        f" {missing_record}".ljust(self.__PAD, " ") + " added"
                     )
                     self.REVIEW_MANAGER.logger.info(
-                        f" {missing_record}".ljust(self.PAD, " ") + " added"
+                        f" {missing_record}".ljust(self.__PAD, " ") + " added"
                     )
 
         return
@@ -462,7 +472,7 @@ class Data(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        self.PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
+        self.__PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
 
@@ -532,10 +542,10 @@ class Data(Process):
 
             record.update(colrev_status=RecordState.rev_synthesized)
             self.REVIEW_MANAGER.report_logger.info(
-                f" {ID}".ljust(self.PAD, " ") + "set colrev_status to synthesized"
+                f" {ID}".ljust(self.__PAD, " ") + "set colrev_status to synthesized"
             )
             self.REVIEW_MANAGER.logger.info(
-                f" {ID}".ljust(self.PAD, " ") + "set colrev_status to synthesized"
+                f" {ID}".ljust(self.__PAD, " ") + "set colrev_status to synthesized"
             )
 
         CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
@@ -596,9 +606,11 @@ class Data(Process):
 
         self.REVIEW_MANAGER.logger.info("Create sample profile")
 
+        # RED = "\033[91m"
+        # END = "\033[0m"
         # if not status.get_completeness_condition():
         #     self.REVIEW_MANAGER.logger.warning(
-        #  f"{colors.RED}Sample not completely processed!{colors.END}")
+        #  f"{RED}Sample not completely processed!{END}")
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -654,15 +666,9 @@ class Data(Process):
         return
 
 
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
-
-
 class ManuscriptRecordSourceTagError(Exception):
+    """NEW_RECORD_SOURCE_TAG not found in paper.md"""
+
     def __init__(self, msg):
         self.message = f" {msg}"
         super().__init__(self.message)

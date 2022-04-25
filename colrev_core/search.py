@@ -95,10 +95,6 @@ class Search(Process):
             },
         ]
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        return
-
     def __get_bibtex_writer(self) -> BibTexWriter:
 
         writer = BibTexWriter()
@@ -175,45 +171,50 @@ class Search(Process):
                     max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
                 )
 
-            for item in w1:
-                if "DOI" in item:
-                    if item["DOI"].upper() not in available_ids:
-                        record = self.PREPARATION.crossref_json_to_record(item)
+            try:
+                for item in w1:
+                    if "DOI" in item:
+                        if item["DOI"].upper() not in available_ids:
+                            record = self.PREPARATION.crossref_json_to_record(item)
 
-                        # TODO : collect list of records for more efficient selection
-                        # select once (parse result to list of dicts?)
-                        if "selection_clause" in params:
-                            res = []
-                            try:
-                                rec_df = pd.DataFrame.from_records([record])
-                                # print(rec_df)
-                                res = ps.sqldf(query, locals())
-                            except PandaSQLException:
-                                # print(e)
-                                pass
+                            # TODO : collect list of records
+                            # for more efficient selection
+                            # select once (parse result to list of dicts?)
+                            if "selection_clause" in params:
+                                res = []
+                                try:
+                                    rec_df = pd.DataFrame.from_records([record])
+                                    # print(rec_df)
+                                    res = ps.sqldf(query, locals())
+                                except PandaSQLException:
+                                    # print(e)
+                                    pass
 
-                            if len(res) == 0:
+                                if len(res) == 0:
+                                    continue
+
+                            # Note : do not download "empty" records
+                            if "" == record.get("author", "") and "" == record.get(
+                                "title", ""
+                            ):
                                 continue
 
-                        # Note : do not download "empty" records
-                        if "" == record.get("author", "") and "" == record.get(
-                            "title", ""
-                        ):
-                            continue
-
-                        print(record["doi"])
-                        record["ID"] = str(max_id).rjust(6, "0")
-                        if "ENTRYTYPE" not in record:
-                            record["ENTRYTYPE"] = "misc"
-                        record["source_url"] = (
-                            "https://api.crossref.org/works/" + item["DOI"]
-                        )
-                        record = self.PREPARATION.get_link_from_doi(
-                            PrepRecord(record)
-                        ).get_data()
-                        available_ids.append(record["doi"])
-                        records.append(record)
-                        max_id += 1
+                            print(record["doi"])
+                            record["ID"] = str(max_id).rjust(6, "0")
+                            if "ENTRYTYPE" not in record:
+                                record["ENTRYTYPE"] = "misc"
+                            record["source_url"] = (
+                                "https://api.crossref.org/works/" + item["DOI"]
+                            )
+                            record = self.PREPARATION.get_link_from_doi(
+                                PrepRecord(record)
+                            ).get_data()
+                            available_ids.append(record["doi"])
+                            records.append(record)
+                            max_id += 1
+            except requests.exceptions.JSONDecodeError as e:
+                print(e)
+                pass
 
             # Note : we may have to set temporary IDs
             # (and replace them after the following sort operation) ?!
@@ -339,9 +340,6 @@ class Search(Process):
                             not in RETRIEVED_RECORD.data["dblp_key"]
                         ):
                             continue
-                        RETRIEVED_RECORD.data["dblp_key"] = (
-                            "https://dblp.org/rec/" + RETRIEVED_RECORD.data["dblp_key"]
-                        )
 
                         if RETRIEVED_RECORD.data["dblp_key"] not in available_ids:
                             RETRIEVED_RECORD.data["ID"] = str(max_id).rjust(6, "0")

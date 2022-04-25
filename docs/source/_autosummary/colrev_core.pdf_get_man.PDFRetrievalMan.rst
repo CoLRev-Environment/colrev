@@ -21,8 +21,6 @@ colrev\_core.pdf\_get\_man.PDFRetrievalMan
       ~PDFRetrievalMan.export_retrieval_table
       ~PDFRetrievalMan.get_data
       ~PDFRetrievalMan.get_pdf_get_man
-      ~PDFRetrievalMan.get_source_state
       ~PDFRetrievalMan.pdfs_retrieved_manually
-      ~PDFRetrievalMan.require_clean_repo_general
       ~PDFRetrievalMan.run_process
       ~PDFRetrievalMan.set_data

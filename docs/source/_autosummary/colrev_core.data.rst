@@ -21,7 +21,6 @@ colrev\_core.data
       :nosignatures:
 
       Data
-      colors
 
 
 

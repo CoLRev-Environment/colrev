@@ -21,8 +21,6 @@ colrev\_core.screen.Screen
       ~Screen.get_data
       ~Screen.get_exclusion_criteria
       ~Screen.get_exclusion_criteria_from_str
-      ~Screen.get_source_state
       ~Screen.include_all_in_screen
-      ~Screen.require_clean_repo_general
       ~Screen.run_process
       ~Screen.set_data

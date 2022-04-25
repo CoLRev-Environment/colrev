@@ -18,7 +18,5 @@ colrev\_core.trace.Trace
 
       ~Trace.check_precondition
       ~Trace.check_process_model_precondition
-      ~Trace.get_source_state
       ~Trace.main
-      ~Trace.require_clean_repo_general
       ~Trace.run_process

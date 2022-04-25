@@ -30,16 +30,23 @@ from colrev_core.review_dataset import PropagatedIDChange
 
 
 class ReviewManager:
+    """
+    Class for managing individual CoLRev review project (repositories)
+    """
 
     notified_next_process = None
+    """ReviewManager was notified for the upcoming process and
+    will provide access to the ReviewDataset"""
 
     def __init__(self, path_str: str = None, force_mode: bool = False) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
         self.force_mode = force_mode
+        """Force mode variable (bool)"""
 
         if path_str is not None:
             self.path = Path(path_str)
+            """Path of the project repository"""
         else:
             self.path = Path.cwd()
 
@@ -48,14 +55,18 @@ class ReviewManager:
 
         if self.config["DEBUG_MODE"]:
             self.report_logger = self.__setup_report_logger(logging.DEBUG)
+            """Logger for the commit report"""
             self.logger = self.__setup_logger(logging.DEBUG)
+            """Logger for processing information"""
         else:
             self.report_logger = self.__setup_report_logger(logging.INFO)
             self.logger = self.__setup_logger(logging.INFO)
 
         self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
         self.REVIEW_DATASET = ReviewDataset(self)
+        """The review dataset object"""
         self.sources = self.REVIEW_DATASET.load_sources()
+        """Information on sources (search directory)"""
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])

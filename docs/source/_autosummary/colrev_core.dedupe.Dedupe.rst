@@ -26,9 +26,7 @@ colrev\_core.dedupe.Dedupe
       ~Dedupe.fix_errors
       ~Dedupe.get_data
       ~Dedupe.get_info
-      ~Dedupe.get_source_state
       ~Dedupe.main
-      ~Dedupe.require_clean_repo_general
       ~Dedupe.run_process
       ~Dedupe.same_source_merge
       ~Dedupe.setup_active_learning_dedupe

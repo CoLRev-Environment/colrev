@@ -16,4 +16,14 @@ colrev\_core.clone.Clone
    .. autosummary::
       :nosignatures:
 
-      ~Clone.pull_git_repo
+      ~Clone.clone_git_repo
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Clone.git_url

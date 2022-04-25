@@ -29,9 +29,7 @@ colrev\_core.status.Status
       ~Status.get_priority_transition
       ~Status.get_remote_commit_differences
       ~Status.get_review_instructions
-      ~Status.get_source_state
       ~Status.get_status_freq
       ~Status.print_review_status
-      ~Status.require_clean_repo_general
       ~Status.run_process
       ~Status.stat_print

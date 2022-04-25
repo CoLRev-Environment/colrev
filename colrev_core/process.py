@@ -70,27 +70,6 @@ class Process:
         # Note: we call REVIEW_MANAGER.notify() in the subclasses
         # to make sure that the REVIEW_MANAGER calls the right check_preconditions()
 
-    def get_source_state(process):
-        if any([x["trigger"] == process.type.name for x in ProcessModel.transitions]):
-            source_state = [
-                x["source"]
-                for x in ProcessModel.transitions
-                if x["trigger"] == process.type.name
-            ]
-            return source_state[0]
-        elif any(
-            [
-                x["trigger"] == process.type.name
-                for x in ProcessModel.transitions_non_processing
-            ]
-        ):
-            source_state = [
-                x["source"]
-                for x in ProcessModel.transitions_non_processing
-                if x["trigger"] == process.type.name
-            ]
-            return source_state[0]
-
     def run_process(self, *args):
         self.processing_function(*args)
 
@@ -99,8 +78,70 @@ class Process:
         if self.force_mode:
             return
 
+        def require_clean_repo_general(
+            git_repo: git.Repo = None, ignore_pattern: list = None
+        ) -> bool:
+
+            if git_repo is None:
+                git_repo = git.Repo()
+
+            # Note : not considering untracked files.
+
+            if len(git_repo.index.diff("HEAD")) == 0:
+                unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
+                if (
+                    self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+                    in unstaged_changes
+                ):
+                    git_repo.index.add(
+                        [self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+                    )
+                if self.REVIEW_MANAGER.paths["PAPER_RELATIVE"] in unstaged_changes:
+                    git_repo.index.add([self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]])
+
+            # Principle: working tree always has to be clean
+            # because processing functions may change content
+            if git_repo.is_dirty(index=False):
+                changedFiles = [item.a_path for item in git_repo.index.diff(None)]
+                raise UnstagedGitChangesError(changedFiles)
+
+            if git_repo.is_dirty():
+                if ignore_pattern is None:
+                    changedFiles = [
+                        item.a_path for item in git_repo.index.diff(None)
+                    ] + [
+                        x.a_path
+                        for x in git_repo.head.commit.diff()
+                        if x.a_path
+                        not in [str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])]
+                    ]
+                    if len(changedFiles) > 0:
+                        raise CleanRepoRequiredError(changedFiles, "")
+                else:
+                    changedFiles = [
+                        item.a_path
+                        for item in git_repo.index.diff(None)
+                        if not any(str(ip) in item.a_path for ip in ignore_pattern)
+                    ] + [
+                        x.a_path
+                        for x in git_repo.head.commit.diff()
+                        if not any(str(ip) in x.a_path for ip in ignore_pattern)
+                    ]
+                    if (
+                        str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
+                        in changedFiles
+                    ):
+                        changedFiles.remove(
+                            str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
+                        )
+                    if changedFiles:
+                        raise CleanRepoRequiredError(
+                            changedFiles, ",".join([str(x) for x in ignore_pattern])
+                        )
+            return True
+
         if ProcessType.load == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[
                     self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
                     self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
@@ -111,54 +152,54 @@ class Process:
         elif ProcessType.prep == self.type:
 
             if self.notify_state_transition_process:
-                self.require_clean_repo_general()
+                require_clean_repo_general()
                 self.check_process_model_precondition()
 
         elif ProcessType.prep_man == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
             )
             self.check_process_model_precondition()
 
         elif ProcessType.dedupe == self.type:
-            self.require_clean_repo_general()
+            require_clean_repo_general()
             self.check_process_model_precondition()
 
         elif ProcessType.prescreen == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
             )
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_get == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             )
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             )
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_prep == self.type:
-            self.require_clean_repo_general()
+            require_clean_repo_general()
             self.check_process_model_precondition()
 
         elif ProcessType.pdf_prep_man == self.type:
-            # self.require_clean_repo_general(
+            # require_clean_repo_general(
             #     ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             # )
             # self.check_process_model_precondition()
             pass
 
         elif ProcessType.screen == self.type:
-            self.require_clean_repo_general()
+            require_clean_repo_general()
             self.check_process_model_precondition()
 
         elif ProcessType.data == self.type:
-            self.require_clean_repo_general(
+            require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
             )
             self.check_process_model_precondition()
@@ -176,63 +217,6 @@ class Process:
         )
         PROCESS_MODEL.check_process_precondition(self)
         return
-
-    def require_clean_repo_general(
-        self, git_repo: git.Repo = None, ignore_pattern: list = None
-    ) -> bool:
-
-        if git_repo is None:
-            git_repo = git.Repo()
-
-        # Note : not considering untracked files.
-
-        if len(git_repo.index.diff("HEAD")) == 0:
-            unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
-            if (
-                self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
-                in unstaged_changes
-            ):
-                git_repo.index.add(
-                    [self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
-                )
-            if self.REVIEW_MANAGER.paths["PAPER_RELATIVE"] in unstaged_changes:
-                git_repo.index.add([self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]])
-
-        # Principle: working tree always has to be clean
-        # because processing functions may change content
-        if git_repo.is_dirty(index=False):
-            changedFiles = [item.a_path for item in git_repo.index.diff(None)]
-            raise UnstagedGitChangesError(changedFiles)
-
-        if git_repo.is_dirty():
-            if ignore_pattern is None:
-                changedFiles = [item.a_path for item in git_repo.index.diff(None)] + [
-                    x.a_path
-                    for x in git_repo.head.commit.diff()
-                    if x.a_path
-                    not in [str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])]
-                ]
-                if len(changedFiles) > 0:
-                    raise CleanRepoRequiredError(changedFiles, "")
-            else:
-                changedFiles = [
-                    item.a_path
-                    for item in git_repo.index.diff(None)
-                    if not any(str(ip) in item.a_path for ip in ignore_pattern)
-                ] + [
-                    x.a_path
-                    for x in git_repo.head.commit.diff()
-                    if not any(str(ip) in x.a_path for ip in ignore_pattern)
-                ]
-                if str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"]) in changedFiles:
-                    changedFiles.remove(
-                        str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
-                    )
-                if changedFiles:
-                    raise CleanRepoRequiredError(
-                        changedFiles, ",".join([str(x) for x in ignore_pattern])
-                    )
-        return True
 
 
 class FormatProcess(Process):

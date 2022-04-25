@@ -68,8 +68,7 @@ colrev\_core.prep.PrepRecord
 
    .. autosummary::
 
-      ~PrepRecord.complementary_keys
       ~PrepRecord.identifying_fields
-      ~PrepRecord.pp
       ~PrepRecord.record_field_inconsistencies
       ~PrepRecord.record_field_requirements
+      ~PrepRecord.data

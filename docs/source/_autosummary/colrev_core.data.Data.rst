@@ -25,13 +25,11 @@ colrev\_core.data.Data
       ~Data.get_data_extracted
       ~Data.get_data_page_missing
       ~Data.get_record_ids_for_synthesis
-      ~Data.get_source_state
       ~Data.get_structured_data_extracted
       ~Data.get_synthesized_ids
       ~Data.get_to_synthesize_in_manuscript
       ~Data.main
       ~Data.profile
-      ~Data.require_clean_repo_general
       ~Data.retrieve_package_file
       ~Data.run_process
       ~Data.update_manuscript
@@ -48,4 +46,3 @@ colrev\_core.data.Data
    .. autosummary::
 
       ~Data.NEW_RECORD_SOURCE_TAG
-      ~Data.PAD

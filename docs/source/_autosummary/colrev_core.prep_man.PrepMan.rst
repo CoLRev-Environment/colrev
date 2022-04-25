@@ -22,8 +22,6 @@ colrev\_core.prep\_man.PrepMan
       ~PrepMan.check_process_model_precondition
       ~PrepMan.extract_needs_prep_man
       ~PrepMan.get_data
-      ~PrepMan.get_source_state
       ~PrepMan.prep_man_stats
-      ~PrepMan.require_clean_repo_general
       ~PrepMan.run_process
       ~PrepMan.set_data

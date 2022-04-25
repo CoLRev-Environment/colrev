@@ -62,8 +62,7 @@ colrev\_core.record.Record
 
    .. autosummary::
 
-      ~Record.complementary_keys
       ~Record.identifying_fields
-      ~Record.pp
       ~Record.record_field_inconsistencies
       ~Record.record_field_requirements
+      ~Record.data

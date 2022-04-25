@@ -63,8 +63,7 @@ colrev\_core.load.LoadRecord
 
    .. autosummary::
 
-      ~LoadRecord.complementary_keys
       ~LoadRecord.identifying_fields
-      ~LoadRecord.pp
       ~LoadRecord.record_field_inconsistencies
       ~LoadRecord.record_field_requirements
+      ~LoadRecord.data

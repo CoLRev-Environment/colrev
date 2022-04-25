@@ -35,7 +35,6 @@ colrev\_core.prep.Preparation
       ~Preparation.get_masterdata_from_doi
       ~Preparation.get_masterdata_from_open_library
       ~Preparation.get_record_from_local_index
-      ~Preparation.get_source_state
       ~Preparation.get_year_from_vol_iss_jour_crossref
       ~Preparation.global_ids_consistency_check
       ~Preparation.log_notifications
@@ -47,7 +46,6 @@ colrev\_core.prep.Preparation
       ~Preparation.remove_nicknames
       ~Preparation.remove_redundant_fields
       ~Preparation.remove_urls_with_500_errors
-      ~Preparation.require_clean_repo_general
       ~Preparation.reset
       ~Preparation.reset_ids
       ~Preparation.reset_records

@@ -18,7 +18,5 @@ colrev\_core.paper.Paper
 
       ~Paper.check_precondition
       ~Paper.check_process_model_precondition
-      ~Paper.get_source_state
       ~Paper.main
-      ~Paper.require_clean_repo_general
       ~Paper.run_process

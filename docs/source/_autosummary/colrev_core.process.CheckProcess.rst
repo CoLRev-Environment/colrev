@@ -18,6 +18,4 @@ colrev\_core.process.CheckProcess
 
       ~CheckProcess.check_precondition
       ~CheckProcess.check_process_model_precondition
-      ~CheckProcess.get_source_state
-      ~CheckProcess.require_clean_repo_general
       ~CheckProcess.run_process

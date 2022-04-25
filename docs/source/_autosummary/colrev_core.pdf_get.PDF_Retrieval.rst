@@ -21,11 +21,9 @@ colrev\_core.pdf\_get.PDF\_Retrieval
       ~PDF_Retrieval.check_process_model_precondition
       ~PDF_Retrieval.copy_pdfs_to_repo
       ~PDF_Retrieval.get_colrev_pdf_id
-      ~PDF_Retrieval.get_source_state
       ~PDF_Retrieval.link_pdf
       ~PDF_Retrieval.main
       ~PDF_Retrieval.relink_files
       ~PDF_Retrieval.rename_pdfs
-      ~PDF_Retrieval.require_clean_repo_general
       ~PDF_Retrieval.retrieve_pdf
       ~PDF_Retrieval.run_process

@@ -18,9 +18,7 @@ colrev\_core.push.Push
 
       ~Push.check_precondition
       ~Push.check_process_model_precondition
-      ~Push.get_source_state
       ~Push.main
       ~Push.push_project
       ~Push.push_record_corrections
-      ~Push.require_clean_repo_general
       ~Push.run_process

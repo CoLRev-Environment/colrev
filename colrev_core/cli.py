@@ -11,7 +11,7 @@ pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
 
 
-def custom_startswith(string, incomplete):
+def __custom_startswith(string, incomplete):
     """A custom completion matching that supports case insensitive matching"""
     if os.environ.get("_CLICK_COMPLETION_COMMAND_CASE_INSENSITIVE_COMPLETE"):
         string = string.lower()
@@ -19,7 +19,7 @@ def custom_startswith(string, incomplete):
     return string.startswith(incomplete)
 
 
-click_completion.core.startswith = custom_startswith
+click_completion.core.startswith = __custom_startswith
 click_completion.init()
 
 

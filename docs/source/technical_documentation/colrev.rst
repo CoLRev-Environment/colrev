@@ -59,11 +59,11 @@ Architecture
 CoLRev relies on a modular and extensible platform. It consists of the following components:
 
 - `CoLRev-core`_: a platform engine operating the CoLRev framework and a reference implementation covering each step of the process
-- `CoLRev`_: a command-line interface offering convenient and user-friendly access to the reference implementation (see `overview <../guides/overview.html>`_)
+- `CoLRev`_: a command-line interface offering convenient and user-friendly access to the reference implementation (see `manual <../guides/manual.html>`_)
 - `CoLRev-hooks`_ : a pre-commit hooks allowing the platform engine to validate compliance with CoLRev
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <resources/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+Extensions are available in the `extensions section <../guides/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 
 The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
