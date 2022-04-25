@@ -17,7 +17,6 @@ colrev\_core.pdf\_prep.PDF\_Preparation
       :nosignatures:
 
       ~PDF_Preparation.check_precondition
-      ~PDF_Preparation.check_process_model_precondition
       ~PDF_Preparation.get_colrev_pdf_id
       ~PDF_Preparation.get_text_from_pdf
       ~PDF_Preparation.main
@@ -25,7 +24,6 @@ colrev\_core.pdf\_prep.PDF\_Preparation
       ~PDF_Preparation.prepare_pdf
       ~PDF_Preparation.remove_coverpage
       ~PDF_Preparation.remove_last_page
-      ~PDF_Preparation.run_process
       ~PDF_Preparation.update_colrev_pdf_ids
       ~PDF_Preparation.validate_completeness
       ~PDF_Preparation.validate_pdf_metadata

@@ -37,7 +37,6 @@ class Process:
         self,
         REVIEW_MANAGER,
         type: ProcessType,
-        fun=None,
         notify_state_transition_process=True,
         debug=False,
     ):
@@ -46,11 +45,6 @@ class Process:
         self.force_mode = self.REVIEW_MANAGER.force_mode
 
         self.type = type
-        if fun is None:
-            self.interactive = True
-        else:
-            self.interactive = False
-        self.processing_function = fun
 
         self.notify_state_transition_process = notify_state_transition_process
         if notify_state_transition_process:
@@ -70,12 +64,17 @@ class Process:
         # Note: we call REVIEW_MANAGER.notify() in the subclasses
         # to make sure that the REVIEW_MANAGER calls the right check_preconditions()
 
-    def run_process(self, *args):
-        self.processing_function(*args)
-
     def check_precondition(self) -> None:
+        """Check the process precondition"""
 
         if self.force_mode:
+            return
+
+        def check_process_model_precondition() -> None:
+            PROCESS_MODEL = ProcessModel(
+                process=self.type, REVIEW_MANAGER=self.REVIEW_MANAGER
+            )
+            PROCESS_MODEL.check_process_precondition(self)
             return
 
         def require_clean_repo_general(
@@ -147,62 +146,62 @@ class Process:
                     self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
                 ]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.prep == self.type:
 
             if self.notify_state_transition_process:
                 require_clean_repo_general()
-                self.check_process_model_precondition()
+                check_process_model_precondition()
 
         elif ProcessType.prep_man == self.type:
             require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.dedupe == self.type:
             require_clean_repo_general()
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.prescreen == self.type:
             require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.pdf_get == self.type:
             require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.pdf_get_man == self.type:
             require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.pdf_prep == self.type:
             require_clean_repo_general()
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.pdf_prep_man == self.type:
             # require_clean_repo_general(
             #     ignore_pattern=[self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]]
             # )
-            # self.check_process_model_precondition()
+            # check_process_model_precondition()
             pass
 
         elif ProcessType.screen == self.type:
             require_clean_repo_general()
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.data == self.type:
             require_clean_repo_general(
                 ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
             )
-            self.check_process_model_precondition()
+            check_process_model_precondition()
 
         elif ProcessType.format == self.type:
             pass
@@ -211,35 +210,21 @@ class Process:
         elif ProcessType.check == self.type:
             pass
 
-    def check_process_model_precondition(self) -> None:
-        PROCESS_MODEL = ProcessModel(
-            process=self.type, REVIEW_MANAGER=self.REVIEW_MANAGER
-        )
-        PROCESS_MODEL.check_process_precondition(self)
-        return
-
 
 class FormatProcess(Process):
-    def __init__(self, REVIEW_MANAGER, fun=None, notify: bool = True):
-        super().__init__(REVIEW_MANAGER, ProcessType.format, fun)
+    def __init__(self, REVIEW_MANAGER, notify: bool = True):
+        super().__init__(REVIEW_MANAGER, ProcessType.format)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
-    def check_precondition(self) -> None:
-        return
-
 
 class CheckProcess(Process):
-    def __init__(self, REVIEW_MANAGER, fun=None):
+    def __init__(self, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.check,
-            fun,
             notify_state_transition_process=False,
         )
-
-    def check_precondition(self) -> None:
-        return
 
 
 non_processing_transitions = [

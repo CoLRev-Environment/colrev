@@ -16,17 +16,11 @@ colrev\_core.dedupe.Dedupe
    .. autosummary::
       :nosignatures:
 
-      ~Dedupe.append_merges
       ~Dedupe.apply_manual_deduplication_decisions
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
-      ~Dedupe.check_process_model_precondition
       ~Dedupe.cluster_tuples
-      ~Dedupe.export_same_source_merge
       ~Dedupe.fix_errors
-      ~Dedupe.get_data
       ~Dedupe.get_info
-      ~Dedupe.main
-      ~Dedupe.run_process
-      ~Dedupe.same_source_merge
       ~Dedupe.setup_active_learning_dedupe
+      ~Dedupe.simple_dedupe

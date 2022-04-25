@@ -17,5 +17,3 @@ colrev\_core.process.CheckProcess
       :nosignatures:
 
       ~CheckProcess.check_precondition
-      ~CheckProcess.check_process_model_precondition
-      ~CheckProcess.run_process

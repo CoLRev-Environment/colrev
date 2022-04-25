@@ -309,7 +309,6 @@ class Preparation(Process):
         super().__init__(
             REVIEW_MANAGER,
             type=ProcessType.prep,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
             debug=(debug != "NA"),
         )

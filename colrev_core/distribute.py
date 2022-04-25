@@ -20,17 +20,6 @@ class Distribute(Process):
             notify_state_transition_process=False,
         )
 
-    def get_last_ID(self, bib_file: Path) -> str:
-        current_ID = "1"
-        if bib_file.is_file():
-            with open(bib_file) as f:
-                line = f.readline()
-                while line:
-                    if "@" in line[:3]:
-                        current_ID = line[line.find("{") + 1 : line.rfind(",")]
-                    line = f.readline()
-        return current_ID
-
     def main(self, path_str: str, target: Path) -> None:
         from colrev_core.tei import TEI
 
@@ -39,6 +28,17 @@ class Distribute(Process):
         # path_str: could also be a url
         # option: chdir (to target repo)?
         # file: copy or move?
+
+        def get_last_ID(bib_file: Path) -> str:
+            current_ID = "1"
+            if bib_file.is_file():
+                with open(bib_file) as f:
+                    line = f.readline()
+                    while line:
+                        if "@" in line[:3]:
+                            current_ID = line[line.find("{") + 1 : line.rfind(",")]
+                        line = f.readline()
+            return current_ID
 
         path = Path.cwd() / Path(path_str)
         if path.is_file():
@@ -87,7 +87,7 @@ class Distribute(Process):
                 writer = self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
 
                 if 0 != len(import_db.entries):
-                    ID = int(self.get_last_ID(target_bib_file))
+                    ID = int(get_last_ID(target_bib_file))
                     ID += 1
                 else:
                     ID = 1

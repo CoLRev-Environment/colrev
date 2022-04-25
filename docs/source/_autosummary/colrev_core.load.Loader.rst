@@ -18,12 +18,10 @@ colrev\_core.load.Loader
 
       ~Loader.apply_source_heuristics
       ~Loader.check_precondition
-      ~Loader.check_process_model_precondition
       ~Loader.get_search_files
       ~Loader.get_unique_id
       ~Loader.main
       ~Loader.resolve_non_unique_IDs
-      ~Loader.run_process
       ~Loader.start_zotero_translators
       ~Loader.validate_file_formats
       ~Loader.zotero_service_available

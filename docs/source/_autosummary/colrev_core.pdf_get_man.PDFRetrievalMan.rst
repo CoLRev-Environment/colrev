@@ -17,10 +17,8 @@ colrev\_core.pdf\_get\_man.PDFRetrievalMan
       :nosignatures:
 
       ~PDFRetrievalMan.check_precondition
-      ~PDFRetrievalMan.check_process_model_precondition
       ~PDFRetrievalMan.export_retrieval_table
       ~PDFRetrievalMan.get_data
       ~PDFRetrievalMan.get_pdf_get_man
       ~PDFRetrievalMan.pdfs_retrieved_manually
-      ~PDFRetrievalMan.run_process
       ~PDFRetrievalMan.set_data

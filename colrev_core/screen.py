@@ -17,6 +17,7 @@ class Screen(Process):
     def include_all_in_screen(
         self,
     ) -> None:
+        """Include all records in the screen"""
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -44,23 +45,27 @@ class Screen(Process):
 
         return
 
-    def __get_exclusion_criteria(self, ec_string: str) -> list:
-        return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
-
-    def get_exclusion_criteria_from_str(self, ec_string: str) -> list:
-        if ec_string != "":
-            exclusion_criteria = self.__get_exclusion_criteria(ec_string)
-        else:
-            exclusion_criteria_str = input("Exclusion criteria (comma separated or NA)")
-            exclusion_criteria = exclusion_criteria_str.split(",")
-            if "" in exclusion_criteria:
-                exclusion_criteria.remove("")
-        if "NA" in exclusion_criteria:
-            exclusion_criteria.remove("NA")
-
-        return exclusion_criteria
-
     def get_exclusion_criteria(self, records: typing.List[dict]) -> list:
+        """Get the list of exclusion criteria from records (dict)"""
+
+        def get_exclusion_criteria(ec_string: str) -> list:
+            return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
+
+        def get_exclusion_criteria_from_str(ec_string: str) -> list:
+            if ec_string != "":
+                exclusion_criteria = get_exclusion_criteria(ec_string)
+            else:
+                exclusion_criteria_str = input(
+                    "Exclusion criteria (comma separated or NA)"
+                )
+                exclusion_criteria = exclusion_criteria_str.split(",")
+                if "" in exclusion_criteria:
+                    exclusion_criteria.remove("")
+            if "NA" in exclusion_criteria:
+                exclusion_criteria.remove("NA")
+
+            return exclusion_criteria
+
         ec_list = [
             str(x.get("exclusion_criteria"))
             for x in records
@@ -70,9 +75,10 @@ class Screen(Process):
             ec_string = ""
         else:
             ec_string = ec_list.pop()
-        return self.get_exclusion_criteria_from_str(ec_string)
+        return get_exclusion_criteria_from_str(ec_string)
 
     def get_data(self) -> dict:
+        """Get the data (records to screen)"""
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len(
@@ -87,6 +93,7 @@ class Screen(Process):
         return screen_data
 
     def set_data(self, record: dict, PAD: int = 40) -> None:
+        """Set data (screening decision for a record)"""
 
         if RecordState.rev_included == record["colrev_status"]:
             self.REVIEW_MANAGER.report_logger.info(

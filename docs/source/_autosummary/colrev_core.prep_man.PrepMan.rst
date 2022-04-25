@@ -19,9 +19,7 @@ colrev\_core.prep\_man.PrepMan
       ~PrepMan.append_to_non_dupe_db
       ~PrepMan.apply_prep_man
       ~PrepMan.check_precondition
-      ~PrepMan.check_process_model_precondition
       ~PrepMan.extract_needs_prep_man
       ~PrepMan.get_data
       ~PrepMan.prep_man_stats
-      ~PrepMan.run_process
       ~PrepMan.set_data

@@ -39,7 +39,6 @@ class Search(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.check,
-            fun=self.update,
             notify_state_transition_process=notify_state_transition_process,
         )
 

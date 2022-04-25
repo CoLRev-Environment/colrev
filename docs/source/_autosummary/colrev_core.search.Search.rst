@@ -18,13 +18,11 @@ colrev\_core.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
-      ~Search.check_process_model_precondition
       ~Search.get_colrev_pdf_id
       ~Search.get_pdf_cpid_path
       ~Search.get_venue_abbreviated
       ~Search.parse_parameters
       ~Search.parse_sources
-      ~Search.run_process
       ~Search.search_backward
       ~Search.search_crossref
       ~Search.search_dblp

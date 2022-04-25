@@ -17,10 +17,7 @@ colrev\_core.screen.Screen
       :nosignatures:
 
       ~Screen.check_precondition
-      ~Screen.check_process_model_precondition
       ~Screen.get_data
       ~Screen.get_exclusion_criteria
-      ~Screen.get_exclusion_criteria_from_str
       ~Screen.include_all_in_screen
-      ~Screen.run_process
       ~Screen.set_data

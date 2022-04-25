@@ -28,7 +28,6 @@ class PDF_Retrieval(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.pdf_get,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
 

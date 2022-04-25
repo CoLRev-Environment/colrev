@@ -3,14 +3,20 @@ Collaborative Literature Reviews
 ========================================
 
 .. figure:: ../figures/logo_small.png
-   :width: 300
+   :width: 250
    :align: center
    :alt: Logo
 
-This project aims at improving the literature review process in terms of efficiency, trustworthiness, and richness.
-To accomplish this, CoLRev combines the transparent collaboration model of git with robust content-based identification schemes, and a model for content curation and reuse.
+CoLRev provides an open-source next-generation environment for collaborative reviews.
+To accomplish major improvements in efficiency, trustworthiness, and richness, CoLRev innovates in key areas:
 
-**Development status**: `Recommend for users with technical experience <./technical_documentation/roadmap.html>`_.
+- leveraging the transparent collaboration model of **git** for the whole literature review process
+- implementing a comprehensive **data provenance** model and **robust identification** schemes
+- desigining a **fault-tolerant and self-explanatory** workflow
+- providing **state-of-the-art algorithms** for each step of the review process
+- creating an open and extensible ecosystem of **file-based interfaces**
+- fostering **typological pluralism** through different forms of data analysis
+- advancing a built-in model for **content curation** and reuse
 
 Getting started
 -----------------
@@ -80,7 +86,7 @@ Further details are provided in the `manual <guides/manual.html>`_.
 Credits
 -----------------
 
-The broader vision is better tool-support for the literature review process. To achieve this, CoLRev adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
+CoLRev adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
 
 The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 

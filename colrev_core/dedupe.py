@@ -222,6 +222,7 @@ class Dedupe(Process):
         return references
 
     def setup_active_learning_dedupe(self, retrain: bool, min_n: int = 50):
+        """Prepare data for active learning setup"""
         import dedupe
         from pathlib import Path
 
@@ -310,32 +311,6 @@ class Dedupe(Process):
 
         return ret_dict
 
-    def same_source_merge(self, main_record: dict, dupe_record: dict) -> bool:
-
-        main_rec_sources = [
-            x.split("/")[0] for x in main_record["colrev_origin"].split(";")
-        ]
-        dupe_rec_sources = [
-            x.split("/")[0] for x in dupe_record["colrev_origin"].split(";")
-        ]
-        same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
-        if len(same_sources) > 0:
-            return True
-
-        return False
-
-    def export_same_source_merge(self, main_record: dict, dupe_record: dict) -> None:
-
-        merge_info = main_record["ID"] + "," + dupe_record["ID"]
-        same_source_merge_file = Path("same_source_merges.txt")
-        with same_source_merge_file.open("a") as f:
-            f.write(merge_info + "\n")
-        self.REVIEW_MANAGER.logger.warning(
-            f"Prevented same-source merge: ({merge_info})"
-        )
-
-        return
-
     def apply_merges(self, results: list, remaining_non_dupe: bool = False):
         """Apply automated deduplication decisions
 
@@ -353,11 +328,33 @@ class Dedupe(Process):
 
         # The merging also needs to consider whether IDs are propagated
         # Completeness of comparisons should be ensured by the
-        # append_merges procedure (which ensures that all prior records
-        # in global queue_order are considered before completing
-        # the comparison/adding records ot the csvs)
+        # dedupe clustering routine
 
-        # results = list(itertools.chain(*results))
+        def same_source_merge(main_record: dict, dupe_record: dict) -> bool:
+
+            main_rec_sources = [
+                x.split("/")[0] for x in main_record["colrev_origin"].split(";")
+            ]
+            dupe_rec_sources = [
+                x.split("/")[0] for x in dupe_record["colrev_origin"].split(";")
+            ]
+            same_sources = set(main_rec_sources).intersection(set(dupe_rec_sources))
+            if len(same_sources) > 0:
+                return True
+
+            return False
+
+        def export_same_source_merge(main_record: dict, dupe_record: dict) -> None:
+
+            merge_info = main_record["ID"] + "," + dupe_record["ID"]
+            same_source_merge_file = Path("same_source_merges.txt")
+            with same_source_merge_file.open("a") as f:
+                f.write(merge_info + "\n")
+            self.REVIEW_MANAGER.logger.warning(
+                f"Prevented same-source merge: ({merge_info})"
+            )
+
+            return
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -381,9 +378,9 @@ class Dedupe(Process):
                 main_record = rec_ID1
                 dupe_record = rec_ID2
 
-            if self.same_source_merge(main_record, dupe_record):
+            if same_source_merge(main_record, dupe_record):
                 # TODO: option: allow-same-source-merges
-                self.export_same_source_merge(main_record, dupe_record)
+                export_same_source_merge(main_record, dupe_record)
                 continue
 
             MAIN_RECORD = Record(main_record).merge(
@@ -486,7 +483,7 @@ class Dedupe(Process):
         return
 
     def fix_errors(self) -> None:
-        """Errors are highlighted in the Excel files"""
+        """Fix errors as highlighted in the Excel files"""
 
         import bibtexparser
 
@@ -604,6 +601,7 @@ class Dedupe(Process):
         return
 
     def cluster_tuples(self, deduper, partition_threshold, auto_merge_threshold):
+        """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
@@ -859,6 +857,7 @@ class Dedupe(Process):
         return
 
     def get_info(self) -> dict:
+        """Get info on cuts (overlap of search sources) and same source merges"""
         import itertools
         from collections import Counter
 
@@ -968,7 +967,7 @@ class Dedupe(Process):
         details_col = references.columns.get_loc("details")
         return references.iloc[:, [ck_col, sim_col, details_col]]
 
-    def append_merges(self, batch_item: dict) -> dict:
+    def __append_merges(self, batch_item: dict) -> dict:
 
         self.REVIEW_MANAGER.logger.debug(f'append_merges {batch_item["record"]}')
 
@@ -1092,7 +1091,7 @@ class Dedupe(Process):
         for ndx in range(0, it_len, n):
             yield batch_data[ndx : min(ndx + n, it_len)]
 
-    def get_data(self):
+    def __get_data(self):
 
         # Note: this would also be a place to set
         # records as "no-duplicate" by definition
@@ -1125,14 +1124,20 @@ class Dedupe(Process):
 
         return dedupe_data
 
-    def main(self) -> None:
+    def simple_dedupe(self) -> None:
+        """Pairwise identification of duplicates based on static similarity measure
+
+        This procedure should only be used in small samples on which active learning
+        models cannot be trained.
+        """
+
         saved_args = locals()
 
         self.REVIEW_MANAGER.logger.info(
             "Pairwise identification of duplicates based on static similarity measure"
         )
 
-        dedupe_data = self.get_data()
+        dedupe_data = self.__get_data()
 
         i = 1
         for dedupe_batch in self.__batch(dedupe_data):
@@ -1141,7 +1146,7 @@ class Dedupe(Process):
             i += 1
             dedupe_batch_results = []
             for item in dedupe_batch:
-                dedupe_batch_results.append(self.append_merges(item))
+                dedupe_batch_results.append(self.__append_merges(item))
 
             # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
 

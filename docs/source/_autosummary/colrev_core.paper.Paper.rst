@@ -17,6 +17,4 @@ colrev\_core.paper.Paper
       :nosignatures:
 
       ~Paper.check_precondition
-      ~Paper.check_process_model_precondition
       ~Paper.main
-      ~Paper.run_process

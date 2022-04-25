@@ -17,6 +17,4 @@ colrev\_core.trace.Trace
       :nosignatures:
 
       ~Trace.check_precondition
-      ~Trace.check_process_model_precondition
       ~Trace.main
-      ~Trace.run_process

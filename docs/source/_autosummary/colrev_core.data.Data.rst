@@ -20,7 +20,6 @@ colrev\_core.data.Data
       ~Data.authorship_heuristic
       ~Data.check_new_record_source_tag
       ~Data.check_precondition
-      ~Data.check_process_model_precondition
       ~Data.enlit_heuristic
       ~Data.get_data_extracted
       ~Data.get_data_page_missing
@@ -31,7 +30,6 @@ colrev\_core.data.Data
       ~Data.main
       ~Data.profile
       ~Data.retrieve_package_file
-      ~Data.run_process
       ~Data.update_manuscript
       ~Data.update_structured_data
       ~Data.update_synthesized_status

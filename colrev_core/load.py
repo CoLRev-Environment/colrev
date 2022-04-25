@@ -93,7 +93,6 @@ class Loader(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.load,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
 

@@ -17,7 +17,4 @@ colrev\_core.distribute.Distribute
       :nosignatures:
 
       ~Distribute.check_precondition
-      ~Distribute.check_process_model_precondition
-      ~Distribute.get_last_ID
       ~Distribute.main
-      ~Distribute.run_process

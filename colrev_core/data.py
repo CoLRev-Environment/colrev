@@ -39,7 +39,6 @@ class Data(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.data,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
 

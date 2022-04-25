@@ -18,12 +18,10 @@ colrev\_core.pdf\_prep\_man.PDFPrepMan
 
       ~PDFPrepMan.apply_pdf_prep_man
       ~PDFPrepMan.check_precondition
-      ~PDFPrepMan.check_process_model_precondition
       ~PDFPrepMan.extract_coverpage
       ~PDFPrepMan.extract_needs_pdf_prep_man
       ~PDFPrepMan.get_colrev_pdf_id
       ~PDFPrepMan.get_data
       ~PDFPrepMan.pdf_prep_man_stats
       ~PDFPrepMan.pdfs_prepared_manually
-      ~PDFPrepMan.run_process
       ~PDFPrepMan.set_data

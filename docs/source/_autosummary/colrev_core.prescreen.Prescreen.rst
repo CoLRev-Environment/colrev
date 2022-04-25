@@ -17,11 +17,9 @@ colrev\_core.prescreen.Prescreen
       :nosignatures:
 
       ~Prescreen.check_precondition
-      ~Prescreen.check_process_model_precondition
       ~Prescreen.create_prescreen_split
       ~Prescreen.export_table
       ~Prescreen.get_data
       ~Prescreen.import_table
       ~Prescreen.include_all_in_prescreen
-      ~Prescreen.run_process
       ~Prescreen.set_data

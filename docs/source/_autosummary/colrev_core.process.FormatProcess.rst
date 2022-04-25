@@ -17,5 +17,3 @@ colrev\_core.process.FormatProcess
       :nosignatures:
 
       ~FormatProcess.check_precondition
-      ~FormatProcess.check_process_model_precondition
-      ~FormatProcess.run_process

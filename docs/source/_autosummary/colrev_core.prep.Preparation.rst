@@ -18,7 +18,6 @@ colrev\_core.prep.Preparation
 
       ~Preparation.check_DBs_availability
       ~Preparation.check_precondition
-      ~Preparation.check_process_model_precondition
       ~Preparation.correct_recordtype
       ~Preparation.crossref_json_to_record
       ~Preparation.drop_fields
@@ -54,7 +53,6 @@ colrev\_core.prep.Preparation
       ~Preparation.retrieve_doi_metadata
       ~Preparation.retrieve_md_from_url
       ~Preparation.retrieve_record_from_semantic_scholar
-      ~Preparation.run_process
       ~Preparation.set_ids
       ~Preparation.update_doi_md
       ~Preparation.update_metadata_status
