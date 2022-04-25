@@ -108,16 +108,6 @@ There is a broad consensus across disciplines concerning the differences between
 - Steps (differences: in the data extraction, analysis, and synthesis stage)
 - Qualities (including transparency and systematicity)
 
-
-Local review environments
-------------------------------------
-
-- Elements (include a figure and explanation):
-    - feed repositories (update & distribute)
-    - local topic repositories (e.g., zettelkasten) (often private)
-    - paper projects (often shared)
-- Best practices for collaboration and sharing setups with students/colleagues
-
 Further resources
 ------------------------------------
 

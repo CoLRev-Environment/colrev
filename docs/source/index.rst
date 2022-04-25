@@ -2,10 +2,15 @@
 Collaborative Literature Reviews
 ========================================
 
+.. figure:: ../figures/logo_small.png
+   :width: 300
+   :align: center
+   :alt: Logo
+
 This project aims at improving the literature review process in terms of efficiency, trustworthiness, and richness.
 To accomplish this, CoLRev combines the transparent collaboration model of git with robust content-based identification schemes, and a model for content curation and reuse.
 
-**Development status**: Currently recommend for users with technical experience. Once CoLRev has matured, UIs should make it accessible to a broader user base. CoLRev is the result of intense prototyping, research and development. We use it for our own projects and believe it is ready to be released - after all, git ensures that your work is never lost.
+**Development status**: `Currently recommend for users with technical experience <technical_documentation/roadmap.html>`_.
 
 Getting started
 -----------------
@@ -21,9 +26,10 @@ After each step, make sure to `check the changes <guides/documentation.html#anal
 
 .. figure:: ../figures/workflow-simple.svg
    :width: 450
+   :align: center
    :alt: Workflow cycle
 
-Conducting a literature review should be as simple as running the following operations (each one followed by `gitk`/`git status` and `colrev status`):
+Conducting a literature review should be as simple as running the following operations:
 
 .. code-block:: bash
 
@@ -60,20 +66,21 @@ Conducting a literature review should be as simple as running the following oper
       # Build the paper
       colrev paper
 
-A key feature of CoLRev is that reuse of community-curated data is built into each step:
+A key feature of CoLRev is its collaboration and content curation model, which makes it easy to use and update curated data while collaborating on a CoLRev project
 
 .. figure:: ../figures/reuse-vision.svg
    :width: 800
+   :align: center
    :alt: Reuse vision
 
-For CoLRev curated data, the efforts required for the preparation steps is reduced significantly.
+Reuse of community-curated data is built into each step and can significantly reduce the efforts required.
 The more records are curated, the more you can focus on the search, prescreen/screen and synthesis.
 Further details are provided in the `documentation <guides/documentation.html>`_.
 
 Credits
 -----------------
 
-The broader vision is better tool-support for the literature review process. To achieve this, CoLRev adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- select custom tools or rely on the powerful reference implementation of CoLRev.
+The broader vision is better tool-support for the literature review process. To achieve this, CoLRev adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
 
 The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 
@@ -124,68 +131,68 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
      - License
      - Activity
    * - `git <https://github.com/git/git>`_ \*: versioning and collaboration
-     - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`_
+     - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`__
      - |gitactivity|
    * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
-     - `MIT <https://github.com/pre-commit/pre-commit/blob/master/LICENSE>`_
+     - `MIT <https://github.com/pre-commit/pre-commit/blob/master/LICENSE>`__
      - |precommitactivity|
    * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
-     - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`_
+     - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`__
      - |dockerpyactivity|
    * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
-     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/master/LICENSE>`_
+     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/master/LICENSE>`__
      - |pandasactivity|
    * - `Zotero translators <https://github.com/zotero/translators>`_ \*: record import
-     - `GPL <https://github.com/zotero/translators/blob/master/COPYING>`_
+     - `GPL <https://github.com/zotero/translators/blob/master/COPYING>`__
      - |zoterotranslatoractivity|
    * - `PDFMiner.six <https://github.com/pdfminer/pdfminer.six>`_ : PDF management
-     - `MIT <https://github.com/pdfminer/pdfminer.six/blob/develop/LICENSE>`_
+     - `MIT <https://github.com/pdfminer/pdfminer.six/blob/develop/LICENSE>`__
      - |pdfmineractivity|
    * - `OCRmyPDF <https://github.com/jbarlow83/OCRmyPDF>`_ \*: OCR tasks
-     - `MPL-2.0 <https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE>`_
+     - `MPL-2.0 <https://github.com/jbarlow83/OCRmyPDF/blob/master/LICENSE>`__
      - |ocrmypdfactivity|
    * - `Tesseract OCR <https://github.com/tesseract-ocr/tesseract>`_ \*: OCR tasks
-     - `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`_
+     - `Apache-2.0 <https://github.com/tesseract-ocr/tesseract/blob/main/LICENSE>`__
      - |tesseractactivity|
    * - `GROBID <https://github.com/kermitt2/grobid>`_ \*: parsing annotated PDF content
-     - `Apache 2.0 <https://github.com/kermitt2/grobid/blob/master/LICENSE>`_
+     - `Apache 2.0 <https://github.com/kermitt2/grobid/blob/master/LICENSE>`__
      - |grobidactivity|
    * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification
-     - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`_
+     - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`__
      - |dedupeioactivity|
    * - `pandoc <https://github.com/jgm/pandoc>`_ \*: creating manuscripts
-     - `GPL 2 <https://github.com/jgm/pandoc/blob/master/COPYRIGHT>`_
+     - `GPL 2 <https://github.com/jgm/pandoc/blob/master/COPYRIGHT>`__
      - |pandocactivity|
    * - `CSL <https://github.com/citation-style-language/styles>`_ \*: formatting citations
-     - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`_
+     - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`__
      - |cslactivity|
    * - `Elasticsearch <https://github.com/elastic/elasticsearch>`_ \*: searching local projects
-     - `multiple <https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt>`_
+     - `multiple <https://github.com/elastic/elasticsearch/blob/master/LICENSE.txt>`__
      - |elasticsearchactivity|
 
 \* dynamically loaded
 
-.. list-table:: Sources for metadata preparation and PDF retrieval
+.. list-table::
    :widths: 54 24 22
    :header-rows: 1
 
-   * - Source (type)
+   * - Sources for data preparation and retrieval
      - Field
      - Size
-   * - `Crossref <https://www.crossref.org/>`_ (curated metadata)
-     - Cross-discipline
+   * - `Crossref <https://www.crossref.org/>`_ (officially deposited metadata)
+     - Cross-disciplinary
      - > 125,000,000
    * - `Semantic Scholar <https://www.semanticscholar.org/>`_ (metadata)
-     - Cross-discipline
+     - Cross-disciplinary
      - > 175,000,000
    * - `dblp <https://dblp.org/>`_ (curated metadata)
      - IT/IS
      - > 5,750,000
    * - `Open Library <https://openlibrary.org/>`_ (curated metadata, books)
-     - Cross-discipline
+     - Cross-disciplinary
      - > 20,000,000
    * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
-     - Cross-discipline
+     - Cross-disciplinary
      - > 30,000,000
 
 How to cite
@@ -213,7 +220,8 @@ Please refer to the present GitHub project:
    :maxdepth: 1
    :caption: Guidelines
 
-   guides/documentation
+   guides/manual
+   cli
    guides/extensions
    guides/best_practices
 
@@ -223,6 +231,7 @@ Please refer to the present GitHub project:
    :maxdepth: 1
 
    technical_documentation/colrev
+   api
    Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
    GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extension_development

@@ -1,30 +1,30 @@
 
-Documentation
+Manual
 ==================================
 
 Installation:
 
-- :any:`Installation`
+- :std:ref:`Installation`
 
 Workflow:
 
-- :any:`CoLRev status`
-- :any:`Analyze changes`
-- :any:`Curated repositories`
+- :std:ref:`CoLRev status`
+- :std:ref:`Analyze changes`
+- :std:ref:`Curated repositories`
 
 Processing operations:
 
-- :any:`Init`
-- :any:`Search`
-- :any:`Load`
-- :any:`Prepare`
-- :any:`Dedupe`
-- :any:`Prescreen`
-- :any:`PDF get`
-- :any:`PDF prep`
-- :any:`Screen`
-- :any:`Data`
-- :any:`Paper`
+- :std:ref:`Init`
+- :std:ref:`Search`
+- :std:ref:`Load`
+- :std:ref:`Prepare`
+- :std:ref:`Dedupe`
+- :std:ref:`Prescreen`
+- :std:ref:`PDF get`
+- :std:ref:`PDF prep`
+- :std:ref:`Screen`
+- :std:ref:`Data`
+- :std:ref:`Paper`
 
 Hint: `colrev status` should provide all necessary instructions for you project.
 
@@ -133,7 +133,7 @@ Instead of initializing a new repository, you can also pull an existing one:
 
 .. code:: bash
 
-	git pull https://github.com/u_name/repo_name.git
+	colrev pull https://github.com/u_name/repo_name.git
 
 .. _Search:
 

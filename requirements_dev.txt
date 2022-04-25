@@ -5,6 +5,7 @@ flake8==3.7.8
 pip==19.2.3
 pytest==6.2.4
 Sphinx==1.8.5
+sphinx_click==4.0.3
 tox==3.14.0
 twine==1.14.0
 versioneer==0.20

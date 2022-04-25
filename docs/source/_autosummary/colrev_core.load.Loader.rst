@@ -1,0 +1,31 @@
+colrev\_core.load.Loader
+========================
+
+.. currentmodule:: colrev_core.load
+
+.. autoclass:: Loader
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~Loader.apply_source_heuristics
+      ~Loader.check_precondition
+      ~Loader.check_process_model_precondition
+      ~Loader.get_search_files
+      ~Loader.get_source_state
+      ~Loader.get_unique_id
+      ~Loader.main
+      ~Loader.require_clean_repo_general
+      ~Loader.resolve_non_unique_IDs
+      ~Loader.run_process
+      ~Loader.start_zotero_translators
+      ~Loader.validate_file_formats
+      ~Loader.zotero_service_available

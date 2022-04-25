@@ -2,7 +2,7 @@
 Extensions
 ====================================
 
-Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_ and guidelines on extension development are available in `this section <architecture/extension_development.html>`_.
+Extensions of CoLRev are available on `GitHub <https://github.com/topics/colrev-extension>`_ and guidelines on extension development are available in `this section <../technical_documentation/extension_development.html>`_.
 A few examples are summarized below.
 
 
