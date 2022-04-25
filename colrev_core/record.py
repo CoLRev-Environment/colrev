@@ -56,7 +56,17 @@ class Record:
     }
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
-    __pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+    provenance_keys = [
+        "colrev_masterdata",
+        "colrev_masterdata_provenance",
+        "colrev_origin",
+        "colrev_status",
+        "colrev_id",
+        "colrev_data_provenance",
+        "colrev_pdf_id",
+    ]
+
+    pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
         self.data = data
@@ -65,23 +75,25 @@ class Record:
         # to maintain high performance and ensure pickle-abiligy (in multiprocessing)
 
     def __repr__(self) -> str:
-        return self.__pp.pformat(self.data)
+        return self.pp.pformat(self.data)
 
     def __str__(self) -> str:
 
-        identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
             k for k in self.identifying_fields if k in self.data
         ]
         complementary_keys_order = [
-            k for k, v in self.data.items() if k not in identifying_keys_order
+            k for k, v in self.data.items() if k not in self.identifying_keys_order
         ]
 
-        ik_sorted = {k: v for k, v in self.data.items() if k in identifying_keys_order}
+        ik_sorted = {
+            k: v for k, v in self.data.items() if k in self.identifying_keys_order
+        }
         ck_sorted = {
             k: v for k, v in self.data.items() if k in complementary_keys_order
         }
         ret_str = (
-            self.__pp.pformat(ik_sorted)[:-1] + "\n" + self.__pp.pformat(ck_sorted)[1:]
+            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
         )
 
         return ret_str

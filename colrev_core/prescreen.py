@@ -7,7 +7,36 @@ import pandas as pd
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
+
+
+class PrescreenRecord(Record):
+    def __init__(self, data: dict):
+        super().__init__(data)
+
+    def __str__(self) -> str:
+
+        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+            k for k in self.identifying_fields if k in self.data
+        ]
+        complementary_keys_order = [
+            k for k, v in self.data.items() if k not in self.identifying_keys_order
+        ]
+
+        ik_sorted = {
+            k: v for k, v in self.data.items() if k in self.identifying_keys_order
+        }
+        ck_sorted = {
+            k: v
+            for k, v in self.data.items()
+            if k in complementary_keys_order and k not in self.provenance_keys
+        }
+        ret_str = (
+            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+        )
+
+        return ret_str
 
 
 class Prescreen(Process):

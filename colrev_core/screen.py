@@ -1,9 +1,17 @@
 #! /usr/bin/env python
 import typing
 
+from colrev_core.prescreen import PrescreenRecord
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+
+
+class ScreenRecord(PrescreenRecord):
+
+    # Note : currently still identical with PrescreenRecord
+    def __init__(self, data: dict):
+        super().__init__(data)
 
 
 class Screen(Process):
