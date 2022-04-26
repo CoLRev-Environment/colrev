@@ -695,6 +695,9 @@ class LocalIndex:
             if "colrev_id" in record:
                 del record["colrev_id"]
 
+        if "excl_criteria" in record:
+            del record["excl_criteria"]
+
         if "local_curated_metadata" in record:
             del record["local_curated_metadata"]
 
