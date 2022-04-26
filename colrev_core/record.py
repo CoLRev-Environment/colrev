@@ -64,6 +64,7 @@ class Record:
         "colrev_id",
         "colrev_data_provenance",
         "colrev_pdf_id",
+        "MOVED_DUPE",
     ]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -287,7 +288,7 @@ class Record:
             return True
         return False
 
-    def merge(self, MERGING_RECORD, default_source: str):
+    def merge(self, MERGING_RECORD, default_source: str) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
 

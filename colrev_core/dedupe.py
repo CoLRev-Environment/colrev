@@ -383,9 +383,8 @@ class Dedupe(Process):
                 export_same_source_merge(main_record, dupe_record)
                 continue
 
-            MAIN_RECORD = Record(main_record).merge(
-                Record(dupe_record), default_source="merged"
-            )
+            MAIN_RECORD = Record(main_record)
+            MAIN_RECORD.merge(Record(dupe_record), default_source="merged")
             main_record = MAIN_RECORD.get_data()
 
             if "score" in dupe:
@@ -459,10 +458,8 @@ class Dedupe(Process):
                 main_record = records[main_record["MOVED_DUPE"]]
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
-
-            MAIN_RECORD = Record(main_record).merge(
-                Record(dupe_record), default_source="merged"
-            )
+            MAIN_RECORD = Record(main_record)
+            MAIN_RECORD.merge(Record(dupe_record), default_source="merged")
             main_record = MAIN_RECORD.get_data()
 
             self.REVIEW_MANAGER.report_logger.info(
@@ -470,12 +467,11 @@ class Dedupe(Process):
             )
             removed_duplicates.append(dupe_rec_id)
 
-        # TODO : test the "MOVED_DUPE" part:
-        records = {
-            k: v if "MOVED_DUPE" not in v else {}
-            for k, v in records
-            if k not in removed_duplicates
-        }
+        for record in records.values():
+            if "MOVED_DUPE" in record:
+                del record["MOVED_DUPE"]
+        for removed_duplicate in removed_duplicates:
+            del records[removed_duplicate]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -891,7 +887,10 @@ class Dedupe(Process):
         same_source_merges = []
         for L in range(1, len(origins) + 1):
             for subset in itertools.combinations(origins, L):
-                cuts["/".join(list(subset))] = {"origins": list(subset), "records": []}
+                cuts["/".join(list(subset))] = {
+                    "colrev_origins": list(subset),
+                    "records": [],
+                }
 
         for record in records.values():
 
