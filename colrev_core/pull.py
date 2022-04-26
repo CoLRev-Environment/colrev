@@ -55,7 +55,12 @@ class Pull(Process):
 
             RECORD = PrepRecord(record)
             RETRIEVED_RECORD = PREPARATION.get_record_from_local_index(RECORD)
-            RECORD.fuse_best_fields(RETRIEVED_RECORD, "LOCAL_INDEX")
+            source_info = "LOCAL_INDEX"
+            if "CURATED:" in RETRIEVED_RECORD.data["colrev_masterdata"]:
+                source_info = RETRIEVED_RECORD.data["colrev_masterdata"].replace(
+                    "CURATED:", ""
+                )
+            RECORD.merge(RETRIEVED_RECORD, source_info)
 
             record = RECORD.get_data()
             record["colrev_status"] = previous_status
