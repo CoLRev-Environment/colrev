@@ -1354,6 +1354,9 @@ class ReviewDataset:
         from dictdiffer import diff
         import io
 
+        if not self.MAIN_REFERENCES_FILE.is_file():
+            return
+
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
         self.LOCAL_INDEX = LocalIndex()
