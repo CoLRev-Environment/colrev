@@ -478,6 +478,40 @@ class Dedupe(Process):
 
         return
 
+    def source_comparison(self) -> None:
+        """Exports a spreadsheet to support analyses of records that are not
+        in all sources (for curated repositories)"""
+
+        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+        source_names = [x["filename"] for x in source_details]
+        print("sources: " + ",".join(source_names))
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = {
+            k: v
+            for k, v in records.items()
+            if not all(x in v["colrev_origin"] for x in source_names)
+        }
+        if len(records) == 0:
+            print("No records unmatched")
+            return
+
+        for record in records.values():
+            origins = record["colrev_origin"].split(";")
+            for source_name in source_names:
+                if not any(source_name in origin for origin in origins):
+                    record[source_name] = ""
+                else:
+                    record[source_name] = [
+                        origin for origin in origins if source_name in origin
+                    ][0]
+            record["merge_with"] = ""
+
+        records_df = pd.DataFrame.from_records(list(records.values()))
+        records_df.to_excel("source_comparison.xlsx", index=False)
+        print("Exported source_comparison.xlsx")
+        return
+
     def fix_errors(self) -> None:
         """Fix errors as highlighted in the Excel files"""
 
