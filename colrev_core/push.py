@@ -49,6 +49,9 @@ class Push(Process):
                 change_sets[source_url] = [output]
 
         for source_url, change_itemset in change_sets.items():
+            if not Path(source_url).is_dir:
+                print(f"Path {source_url} is not a dir. Skipping...")
+                continue
             print()
             if "metadata_source=" in source_url:
                 self.REVIEW_MANAGER.logger.info(f"Share corrections with {source_url}")
