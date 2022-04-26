@@ -140,7 +140,7 @@ class Loader(Process):
 
         files = [
             f
-            for f_ in [search_dir.glob(f"*.{e}") for e in supported_extensions]
+            for f_ in [search_dir.glob(f"**/*.{e}") for e in supported_extensions]
             for f in f_
         ]
 
