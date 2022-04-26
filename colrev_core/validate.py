@@ -70,8 +70,6 @@ class Validate(Process):
                     change_diff.append([record["ID"], cur_record_link, similarity])
 
         change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
-        # sort according to similarity
-        change_diff.sort(key=lambda x: x[2], reverse=True)
 
         if 0 == len(change_diff):
             self.REVIEW_MANAGER.logger.info("No substantial differences found.")
@@ -82,6 +80,9 @@ class Validate(Process):
                 xlab=True,
                 showSummary=True,
             )
+
+        # sort according to similarity
+        change_diff.sort(key=lambda x: x[2], reverse=True)
         input("continue")
 
         for eid, record_link, difference in change_diff:
@@ -138,14 +139,14 @@ class Validate(Process):
 
         change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
 
-        # sort according to similarity
-        change_diff.sort(key=lambda x: x[2], reverse=True)
-
         if 0 == len(change_diff):
             if merged_records:
                 self.REVIEW_MANAGER.logger.info("No substantial differences found.")
             else:
                 self.REVIEW_MANAGER.logger.info("No merged records")
+
+        # sort according to similarity
+        change_diff.sort(key=lambda x: x[2], reverse=True)
 
         for el_1, el_2, difference in change_diff:
             # Escape sequence to clear terminal output for each new comparison
