@@ -802,7 +802,7 @@ class Loader(Process):
 
         return number_in_bib
 
-    def main(self, keep_ids: bool = False) -> None:
+    def main(self, keep_ids: bool = False, combine_commits=False) -> None:
 
         saved_args = locals()
         if not keep_ids:
@@ -864,17 +864,21 @@ class Loader(Process):
                     selected_IDs=search_records.keys(),
                 )
 
-            self.REVIEW_MANAGER.logger.info("Add changes and create commit")
+            if not combine_commits:
+                self.REVIEW_MANAGER.logger.info("Add changes and create commit")
+
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 str(self.REVIEW_MANAGER.paths["SOURCES"])
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            self.REVIEW_MANAGER.create_commit(
-                f"Load {saved_args['file']}", saved_args=saved_args
-            )
+            if not combine_commits:
+
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                self.REVIEW_MANAGER.create_commit(
+                    f"Load {saved_args['file']}", saved_args=saved_args
+                )
 
             imported_origins = self.__get_currently_imported_origin_list()
             len_after = len(imported_origins)
@@ -894,6 +898,9 @@ class Loader(Process):
 
             print("\n")
 
+        if combine_commits and self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_MANAGER.create_commit("Load (multiple)", saved_args=saved_args)
         return
 
 
