@@ -523,6 +523,18 @@ class TEI:
             journal_title = ""
         return journal_title
 
+    def __get_entrytype(self, reference) -> str:
+        ENTRYTYPE = "misc"
+        if reference.find(self.ns["tei"] + "monogr") is not None:
+            monogr_node = reference.find(self.ns["tei"] + "monogr")
+            title_node = monogr_node.find(self.ns["tei"] + "title")
+            if title_node is not None:
+                if "j" == title_node.get("level", "NA"):
+                    ENTRYTYPE = "article"
+                else:
+                    ENTRYTYPE = "book"
+        return ENTRYTYPE
+
     def get_bibliography(self):
         from lxml.etree import XMLSyntaxError
 
@@ -531,17 +543,43 @@ class TEI:
         for bibliography in bibliographies:
             for reference in bibliography:
                 try:
-                    ref_rec = {
-                        "ID": self.__get_reference_bibliography_id(reference),
-                        "tei_id": self.__get_reference_bibliography_tei_id(reference),
-                        "author": self.__get_reference_author_string(reference),
-                        "title": self.__get_reference_title_string(reference),
-                        "year": self.__get_reference_year_string(reference),
-                        "journal": self.__get_reference_journal_string(reference),
-                        "volume": self.__get_reference_volume_string(reference),
-                        "number": self.__get_reference_number_string(reference),
-                        "pages": self.__get_reference_page_string(reference),
-                    }
+                    ENTRYTYPE = self.__get_entrytype(reference)
+                    if "article" == ENTRYTYPE:
+                        ref_rec = {
+                            "ID": self.__get_reference_bibliography_id(reference),
+                            "ENTRYTYPE": ENTRYTYPE,
+                            "tei_id": self.__get_reference_bibliography_tei_id(
+                                reference
+                            ),
+                            "author": self.__get_reference_author_string(reference),
+                            "title": self.__get_reference_title_string(reference),
+                            "year": self.__get_reference_year_string(reference),
+                            "journal": self.__get_reference_journal_string(reference),
+                            "volume": self.__get_reference_volume_string(reference),
+                            "number": self.__get_reference_number_string(reference),
+                            "pages": self.__get_reference_page_string(reference),
+                        }
+                    elif "book" == ENTRYTYPE:
+                        ref_rec = {
+                            "ID": self.__get_reference_bibliography_id(reference),
+                            "ENTRYTYPE": ENTRYTYPE,
+                            "tei_id": self.__get_reference_bibliography_tei_id(
+                                reference
+                            ),
+                            "author": self.__get_reference_author_string(reference),
+                            "title": self.__get_reference_title_string(reference),
+                            "year": self.__get_reference_year_string(reference),
+                        }
+                    elif "misc" == ENTRYTYPE:
+                        ref_rec = {
+                            "ID": self.__get_reference_bibliography_id(reference),
+                            "ENTRYTYPE": ENTRYTYPE,
+                            "tei_id": self.__get_reference_bibliography_tei_id(
+                                reference
+                            ),
+                            "author": self.__get_reference_author_string(reference),
+                            "title": self.__get_reference_title_string(reference),
+                        }
                 except XMLSyntaxError:
                     pass
                     continue
@@ -551,6 +589,24 @@ class TEI:
                 tei_bib_db.append(ref_rec)
 
         return tei_bib_db
+
+    def get_citations_per_section(self) -> dict:
+        section_citations = {}
+        sections = self.root.iter(self.ns["tei"] + "head")
+        for section in sections:
+            section_name = section.text
+            if section_name is None:
+                continue
+            citation_nodes = section.getparent().iter(self.ns["tei"] + "ref")
+            citations = [
+                x.get("target", "NA").replace("#", "")
+                for x in citation_nodes
+                if "bibr" == x.get("type", "NA")
+            ]
+            citations = list(filter(lambda a: a != "NA", citations))
+            if len(citations) > 0:
+                section_citations[section_name.lower()] = citations
+        return section_citations
 
     def mark_references(self, records):
         from colrev_core.record import Record
