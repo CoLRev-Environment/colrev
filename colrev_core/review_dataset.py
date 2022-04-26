@@ -1606,11 +1606,14 @@ class ReviewDataset:
                         #         ]
                         #     }
 
-                    # Note: this is a quick fix:
-                    if "source_url" not in original_curated_record:
-                        original_curated_record["source_url"] = "DBLP"
+                    # TODO : cover non-masterdata corrections
+                    if "colrev_masterdata" not in original_curated_record:
+                        continue
+
                     dict_to_save = {
-                        "source_url": original_curated_record.get("source_url"),
+                        "source_url": original_curated_record[
+                            "colrev_masterdata"
+                        ].replace("CURATED:"),
                         "original_curated_record": original_curated_record,
                         "changes": change_items,
                     }
