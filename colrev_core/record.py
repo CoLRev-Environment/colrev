@@ -110,11 +110,14 @@ class Record:
 
         if RecordState.md_prepared == target_state:
             if self.masterdata_is_complete():
-                colrev_id = self.create_colrev_id()
-                if "colrev_id" not in self.data:
-                    self.data["colrev_id"] = colrev_id
-                # else should not happen because colrev_ids should only be
-                # created once records are prepared (complete)
+                try:
+                    colrev_id = self.create_colrev_id()
+                    if "colrev_id" not in self.data:
+                        self.data["colrev_id"] = colrev_id
+                    # else should not happen because colrev_ids should only be
+                    # created once records are prepared (complete)
+                except NotEnoughDataToIdentifyException:
+                    pass
             else:
                 target_state = RecordState.md_needs_manual_preparation
 
