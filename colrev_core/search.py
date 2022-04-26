@@ -930,7 +930,6 @@ class Search(Process):
 
             TEI_INSTANCE = TEI(
                 pdf_path=pdf_path,
-                notify_state_transition_process=False,
             )
 
             extracted_record = TEI_INSTANCE.get_metadata()

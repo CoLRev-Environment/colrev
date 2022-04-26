@@ -23,7 +23,6 @@ class TEI:
         self,
         pdf_path: Path = None,
         tei_path: Path = None,
-        notify_state_transition_process: bool = True,
     ):
         """Creates a TEI file
         modes of operation:

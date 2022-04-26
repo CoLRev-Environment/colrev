@@ -47,7 +47,6 @@ class Distribute(Process):
                 TEI_INSTANCE = TEI(
                     self.REVIEW_MANAGER,
                     path,
-                    notify_state_transition_process=False,
                 )
                 record = TEI_INSTANCE.get_metadata()
 

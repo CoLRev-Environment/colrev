@@ -479,7 +479,6 @@ class LocalIndex:
                     TEI_INSTANCE = TEI(
                         pdf_path=Path(record["file"]),
                         tei_path=tei_path,
-                        notify_state_transition_process=False,
                     )
                     record["fulltext"] = TEI_INSTANCE.get_tei_str()
             except (TEI_Exception, AttributeError, SerialisationError):
@@ -548,7 +547,6 @@ class LocalIndex:
                         TEI_INSTANCE = TEI(
                             pdf_path=Path(record["file"]),
                             tei_path=tei_path,
-                            notify_state_transition_process=False,
                         )
                         SAVED_RECORD.data["fulltext"] = TEI_INSTANCE.get_tei_str()
                 except (TEI_Exception, AttributeError, SerialisationError):
