@@ -1,4 +1,4 @@
-colrev\_core.validate
+﻿colrev\_core.validate
 =====================
 
 .. automodule:: colrev_core.validate

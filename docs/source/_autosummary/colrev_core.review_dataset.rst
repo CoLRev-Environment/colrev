@@ -1,4 +1,4 @@
-colrev\_core.review\_dataset
+﻿colrev\_core.review\_dataset
 ============================
 
 .. automodule:: colrev_core.review_dataset

@@ -1,4 +1,4 @@
-colrev\_core.push
+﻿colrev\_core.push
 =================
 
 .. automodule:: colrev_core.push

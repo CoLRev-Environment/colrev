@@ -1,4 +1,4 @@
-colrev\_core.prescreen
+﻿colrev\_core.prescreen
 ======================
 
 .. automodule:: colrev_core.prescreen
@@ -21,3 +21,4 @@ colrev\_core.prescreen
       :nosignatures:
 
       Prescreen
+      PrescreenRecord

@@ -1,4 +1,4 @@
-colrev\_core.status
+﻿colrev\_core.status
 ===================
 
 .. automodule:: colrev_core.status

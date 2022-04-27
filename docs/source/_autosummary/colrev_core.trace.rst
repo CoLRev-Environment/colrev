@@ -1,4 +1,4 @@
-colrev\_core.trace
+﻿colrev\_core.trace
 ==================
 
 .. automodule:: colrev_core.trace

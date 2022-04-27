@@ -1,4 +1,4 @@
-colrev\_core.screen
+﻿colrev\_core.screen
 ===================
 
 .. automodule:: colrev_core.screen
@@ -21,3 +21,4 @@ colrev\_core.screen
       :nosignatures:
 
       Screen
+      ScreenRecord

@@ -1,4 +1,4 @@
-colrev\_core.pdf\_get
+﻿colrev\_core.pdf\_get
 =====================
 
 .. automodule:: colrev_core.pdf_get

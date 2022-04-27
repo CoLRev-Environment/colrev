@@ -1,4 +1,4 @@
-colrev\_core.dedupe
+﻿colrev\_core.dedupe
 ===================
 
 .. automodule:: colrev_core.dedupe

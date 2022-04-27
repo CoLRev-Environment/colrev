@@ -1,4 +1,4 @@
-colrev\_core.data
+﻿colrev\_core.data
 =================
 
 .. automodule:: colrev_core.data

@@ -1,4 +1,4 @@
-colrev\_core.tei
+﻿colrev\_core.tei
 ================
 
 .. automodule:: colrev_core.tei

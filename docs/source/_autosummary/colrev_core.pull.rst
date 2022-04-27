@@ -1,4 +1,4 @@
-colrev\_core.pull
+﻿colrev\_core.pull
 =================
 
 .. automodule:: colrev_core.pull

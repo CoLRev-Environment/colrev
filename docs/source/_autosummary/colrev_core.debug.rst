@@ -1,4 +1,4 @@
-colrev\_core.debug
+﻿colrev\_core.debug
 ==================
 
 .. automodule:: colrev_core.debug

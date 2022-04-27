@@ -1,4 +1,4 @@
-colrev\_core.grobid\_client
+﻿colrev\_core.grobid\_client
 ===========================
 
 .. automodule:: colrev_core.grobid_client

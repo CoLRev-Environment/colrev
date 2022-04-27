@@ -1,4 +1,4 @@
-colrev\_core.review\_manager
+﻿colrev\_core.review\_manager
 ============================
 
 .. automodule:: colrev_core.review_manager

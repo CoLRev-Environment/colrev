@@ -1,4 +1,4 @@
-colrev\_core.load\_custom
+﻿colrev\_core.load\_custom
 =========================
 
 .. automodule:: colrev_core.load_custom

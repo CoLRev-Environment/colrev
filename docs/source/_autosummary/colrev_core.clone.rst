@@ -1,4 +1,4 @@
-colrev\_core.clone
+﻿colrev\_core.clone
 ==================
 
 .. automodule:: colrev_core.clone

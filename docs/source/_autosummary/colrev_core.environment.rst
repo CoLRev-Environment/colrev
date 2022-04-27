@@ -1,4 +1,4 @@
-colrev\_core.environment
+﻿colrev\_core.environment
 ========================
 
 .. automodule:: colrev_core.environment

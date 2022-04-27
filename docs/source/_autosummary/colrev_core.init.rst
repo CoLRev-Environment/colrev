@@ -1,4 +1,4 @@
-colrev\_core.init
+﻿colrev\_core.init
 =================
 
 .. automodule:: colrev_core.init

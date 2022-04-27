@@ -1,4 +1,4 @@
-colrev\_core.pdf\_prep
+﻿colrev\_core.pdf\_prep
 ======================
 
 .. automodule:: colrev_core.pdf_prep

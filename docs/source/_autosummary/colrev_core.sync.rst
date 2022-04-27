@@ -1,4 +1,4 @@
-colrev\_core.sync
+﻿colrev\_core.sync
 =================
 
 .. automodule:: colrev_core.sync

@@ -1,4 +1,4 @@
-colrev\_core.paper
+﻿colrev\_core.paper
 ==================
 
 .. automodule:: colrev_core.paper

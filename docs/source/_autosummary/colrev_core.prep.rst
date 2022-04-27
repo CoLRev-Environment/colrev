@@ -1,4 +1,4 @@
-colrev\_core.prep
+﻿colrev\_core.prep
 =================
 
 .. automodule:: colrev_core.prep

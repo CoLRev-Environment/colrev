@@ -7,13 +7,13 @@ Collaborative Literature Reviews
    :align: center
    :alt: Logo
 
-CoLRev provides an open-source next-generation environment for collaborative reviews.
+CoLRev is an open-source next-generation environment for collaborative reviews.
 To accomplish major improvements in efficiency, trustworthiness, and richness, CoLRev innovates in key areas:
 
 - leveraging the transparent collaboration model of **git** for the whole literature review process
 - desigining a **fault-tolerant and self-explanatory** workflow
 - implementing a comprehensive **data provenance** model and **robust identification** schemes
-- providing **state-of-the-art algorithms** for each step of the review process
+- incorporating **state-of-the-art algorithms** to provide end-to-end process support
 - creating an open and extensible ecosystem of **file-based interfaces**
 - fostering **typological pluralism** through different forms of data analysis
 - advancing a built-in model for **content curation** and reuse
@@ -72,17 +72,17 @@ Conducting a literature review should be as simple as running the following oper
       # Build the paper
       colrev paper
 
-A key feature of CoLRev is its collaboration and content curation model, which makes it easy to use and update curated data while collaborating on a CoLRev project
+A CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a content curation model.
+The corresponding *colrev pull* and *colrev push* operations make it easy to reuse and update record data from multiple curated repositories while collaborating on a specific project
 
 .. figure:: ../figures/reuse-vision.svg
    :width: 800
    :align: center
    :alt: Reuse vision
 
-Reuse of community-curated data is built into each step and can significantly reduce the efforts required.
-The more records are curated, the more you can focus on the search, prescreen/screen and synthesis.
-Further details are provided in the `manual <guides/manual.html>`_.
-
+Reuse of community-curated data from different sources is built into each step.
+It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
+The more records are curated, the more you can focus on the search, screen and synthesis.
 
 Citing CoLRev
 -----------------
@@ -110,8 +110,9 @@ Please refer to the present GitHub project:
    :caption: Guidelines
 
    guides/manual
-   cli
+   guides/cli
    guides/best_practices
+   guides/help
 
 .. toctree::
    :hidden:
@@ -119,8 +120,7 @@ Please refer to the present GitHub project:
    :maxdepth: 1
 
    technical_documentation/colrev
-   api
-   Contribution guide <https://github.com/geritwagner/colrev_core/blob/main/CONTRIBUTING.md>
+   technical_documentation/api
    GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extensions
    technical_documentation/roadmap

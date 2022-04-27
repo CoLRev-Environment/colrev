@@ -1,4 +1,4 @@
-colrev\_core.record
+﻿colrev\_core.record
 ===================
 
 .. automodule:: colrev_core.record

@@ -1,4 +1,4 @@
-colrev\_core.process
+﻿colrev\_core.process
 ====================
 
 .. automodule:: colrev_core.process

@@ -1,4 +1,4 @@
-colrev\_core.search
+﻿colrev\_core.search
 ===================
 
 .. automodule:: colrev_core.search

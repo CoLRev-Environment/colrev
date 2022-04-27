@@ -1,4 +1,4 @@
-colrev\_core.distribute
+﻿colrev\_core.distribute
 =======================
 
 .. automodule:: colrev_core.distribute
