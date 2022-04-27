@@ -67,6 +67,8 @@ class Record:
         "MOVED_DUPE",
     ]
 
+    preferred_sources = ["https://api.crossref.org/works/"]
+
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, data: dict):
@@ -364,7 +366,7 @@ class Record:
 
                 # Do not change if MERGING_RECORD is not curated
                 elif (
-                    self.masterdata_is_curated
+                    self.masterdata_is_curated()
                     and not MERGING_RECORD.masterdata_is_curated()
                 ):
                     continue
@@ -384,39 +386,61 @@ class Record:
         return
 
     def fuse_best_field(self, MERGING_RECORD, key, val, source) -> None:
+        # Note : the assumption is that we need masterdata_provenance hints
+        # only for authors
+
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
-        def select_best_author(default: str, candidate: str) -> str:
-            best_author = default
+        def select_best_author(RECORD: Record, MERGING_RECORD: Record) -> str:
+            record_author_provenance = RECORD.load_masterdata_provenance()
+            merging_record_author_provenance = (
+                MERGING_RECORD.load_masterdata_provenance()
+            )
 
             # Prefer complete version
             if (
-                "and others" in default.lower()
-                and "and others" not in candidate.lower()
+                "author" in record_author_provenance
+                and "author" not in merging_record_author_provenance
             ):
-                return candidate
-            if "et al" in default.lower() and "et al" not in candidate.lower():
-                return candidate
+                if "incomplete" in record_author_provenance["author"].get("hint", ""):
+                    return MERGING_RECORD.data["author"]
+            elif (
+                "author" in record_author_provenance
+                and "author" in merging_record_author_provenance
+            ):
+                if "incomplete" in record_author_provenance["author"].get(
+                    "hint", ""
+                ) and "incomplete" not in merging_record_author_provenance[
+                    "author"
+                ].get(
+                    "hint", ""
+                ):
+                    return MERGING_RECORD.data["author"]
 
-            default_mostly_upper = percent_upper_chars(default) > 0.8
-            candidate_mostly_upper = percent_upper_chars(candidate) > 0.8
+            default_mostly_upper = percent_upper_chars(RECORD.data["author"]) > 0.8
+            candidate_mostly_upper = (
+                percent_upper_chars(MERGING_RECORD.data["author"]) > 0.8
+            )
 
+            # Prefer title case (not all-caps)
             if default_mostly_upper and not candidate_mostly_upper:
-                best_author = candidate
+                return MERGING_RECORD.data["author"]
 
-            # Heuristics for missing first names (e.g., in doi.org/crossref metadata)
-            if ", and " in default and ", and " not in candidate:
-                return candidate
-            if "," == default.rstrip()[-1:] and "," != candidate.rstrip()[-1:]:
-                best_author = candidate
+            # Prefer sources
+            if "author" in merging_record_author_provenance:
+                if any(
+                    x in merging_record_author_provenance["author"]["source"]
+                    for x in self.preferred_sources
+                ):
+                    return MERGING_RECORD.data["author"]
 
             # self.REVIEW_MANAGER.logger.debug(
             #     f"best_author({default}, \n"
             #     f"                                      {candidate}) = \n"
             #     f"                                      {best_author}"
             # )
-            return best_author
+            return RECORD.data["author"]
 
         def select_best_pages(default: str, candidate: str) -> str:
             best_pages = default
@@ -473,9 +497,7 @@ class Record:
 
         if "author" == key:
             if "author" in self.data:
-                best_author = select_best_author(
-                    self.data["author"], MERGING_RECORD.data["author"]
-                )
+                best_author = select_best_author(self, MERGING_RECORD)
                 if self.data["author"] != best_author:
                     self.update_field("author", best_author, source)
             else:
@@ -497,8 +519,7 @@ class Record:
                 best_title = select_best_title(
                     self.data["title"], MERGING_RECORD.data["title"]
                 )
-                if self.data["title"] != best_title:
-                    self.update_field("title", best_title, source)
+                self.update_field("title", best_title, source)
 
             else:
                 self.update_field("title", str(val), source)
@@ -508,8 +529,7 @@ class Record:
                 best_journal = select_best_journal(
                     self.data["journal"], MERGING_RECORD.data["journal"]
                 )
-                if self.data["journal"] != best_journal:
-                    self.update_field("journal", best_journal, source)
+                self.update_field("journal", best_journal, source)
             else:
                 self.update_field("journal", str(val), source)
 
@@ -518,9 +538,8 @@ class Record:
                 best_booktitle = select_best_journal(
                     self.data["booktitle"], MERGING_RECORD.data["booktitle"]
                 )
-                if self.data["booktitle"] != best_booktitle:
-                    # TBD: custom select_best_booktitle?
-                    self.update_field("booktitle", best_booktitle, source)
+                # TBD: custom select_best_booktitle?
+                self.update_field("booktitle", best_booktitle, source)
 
             else:
                 self.update_field("booktitle", str(val), source)
@@ -532,6 +551,8 @@ class Record:
                 )
             else:
                 self.data["file"] = MERGING_RECORD.data["file"]
+        else:
+            self.update_field(key, str(val), source)
         return
 
     @classmethod
@@ -775,6 +796,18 @@ class Record:
         self.set_masterdata_provenance(md_p_dict)
         return
 
+    def add_provenance_all(self, source):
+        md_p_dict = self.load_masterdata_provenance()
+        d_p_dict = self.load_data_provenance()
+        for field in self.data.keys():
+            if field in self.identifying_fields:
+                md_p_dict[field] = {"source": source, "note": ""}
+            else:
+                d_p_dict[field] = {"source": source, "note": ""}
+        self.set_masterdata_provenance(md_p_dict)
+        self.set_data_provenance(d_p_dict)
+        return
+
     def load_data_provenance(self) -> dict:
         colrev_data_provenance_dict = {}
         if "colrev_data_provenance" in self.data:
@@ -850,8 +883,17 @@ class Record:
             if key in ["title", "journal", "booktitle", "author"]:
                 if self.data[key].endswith("...") or self.data[key].endswith("…"):
                     incomplete_fields.append(key)
-        if self.data.get("author", "").endswith("and others"):
-            incomplete_fields.append("author")
+
+                if "author" == key:
+                    if (
+                        self.data[key].endswith("and others")
+                        or self.data[key].endswith("et al.")
+                        # heuristics for missing first names:
+                        or ", and " in self.data[key]
+                        or self.data[key].rstrip().endswith(",")
+                    ):
+                        incomplete_fields.append(key)
+
         return incomplete_fields
 
     @classmethod

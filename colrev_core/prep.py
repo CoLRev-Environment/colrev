@@ -753,6 +753,8 @@ class Preparation(Process):
             url = search_api_url + RECORD.data.get("title", "").replace(" ", "+")
 
             RETRIEVED_RECORD = self.retrieve_record_from_semantic_scholar(url, RECORD)
+            if "sem_scholar_id" not in RETRIEVED_RECORD.data:
+                return RECORD
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
@@ -774,7 +776,7 @@ class Preparation(Process):
 
                 RECORD.merge(
                     RETRIEVED_RECORD,
-                    RETRIEVED_RECORD.data.get("sem_scholar_id", "SEMANTIC_SCHOLAR"),
+                    RETRIEVED_RECORD.data["sem_scholar_id"],
                 )
 
             else:
@@ -851,6 +853,7 @@ class Preparation(Process):
 
                 RETRIEVED_REC_L = self.__crossref_query(RECORD)
                 RETRIEVED_RECORD = RETRIEVED_REC_L.pop()
+
                 retries = 0
                 while not RETRIEVED_RECORD and retries < self.MAX_RETRIES_ON_ERROR:
                     retries += 1
@@ -884,6 +887,8 @@ class Preparation(Process):
                     )
 
             except requests.exceptions.RequestException:
+                pass
+            except IndexError:
                 pass
             except KeyboardInterrupt:
                 sys.exit()
@@ -936,6 +941,7 @@ class Preparation(Process):
 
         try:
             # TODO : integrate more functionality into __open_library_json_to_record()
+            url = "NA"
             if "isbn" in RECORD.data:
                 isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
@@ -949,7 +955,7 @@ class Preparation(Process):
 
                 item = json.loads(ret.text)
 
-            if "isbn" not in RECORD.data:
+            else:
                 base_url = "https://openlibrary.org/search.json?"
                 url = ""
                 if RECORD.data.get("author", "NA").split(",")[0]:
@@ -990,13 +996,12 @@ class Preparation(Process):
                     return RECORD
                 item = items[0]
 
-            RETRIEVED_RECORD = self.__open_library_json_to_record(item)
+            RETRIEVED_RECORD = self.__open_library_json_to_record(item, url)
 
-            for key, val in RETRIEVED_RECORD.data.items():
-                RECORD.update_field(key, val, "OPEN_LIBRARY")
+            RECORD.merge(RETRIEVED_RECORD, url)
 
-            if "title" in RECORD.data and "booktitle" in RECORD.data:
-                del RECORD.data["booktitle"]
+            # if "title" in RECORD.data and "booktitle" in RECORD.data:
+            #     del RECORD.data["booktitle"]
 
         except requests.exceptions.RequestException:
             pass
@@ -1717,20 +1722,25 @@ class Preparation(Process):
                 # logger.debug(f'similarity: {similarity}')
                 # pp.pprint(retrieved_record)
 
+                RETRIEVED_RECORD = PrepRecord(retrieved_record)
+                RETRIEVED_RECORD.add_provenance_all(
+                    f'https://api.crossref.org/works/{retrieved_record["doi"]}'
+                )
+
                 if jour_vol_iss_list:
-                    record_list.append(retrieved_record)
+                    record_list.append(RETRIEVED_RECORD)
                 if most_similar < similarity:
                     most_similar = similarity
-                    most_similar_record = retrieved_record
+                    most_similar_record = RETRIEVED_RECORD.get_data()
         except json.decoder.JSONDecodeError:
             pass
         except requests.exceptions.RequestException:
             return []
 
-        if jour_vol_iss_list:
-            return [PrepRecord(r) for r in record_list]
-        else:
-            return [PrepRecord(most_similar_record)]
+        if not jour_vol_iss_list:
+            record_list = [PrepRecord(most_similar_record)]
+
+        return record_list
 
     def retrieve_record_from_semantic_scholar(
         self, url: str, RECORD_IN: PrepRecord
@@ -1790,9 +1800,11 @@ class Preparation(Process):
         for key in keys_to_drop:
             del retrieved_record[key]
 
-        return PrepRecord(retrieved_record)
+        REC = PrepRecord(retrieved_record)
+        REC.add_provenance_all(record_retrieval_url)
+        return REC
 
-    def __open_library_json_to_record(self, item: dict) -> PrepRecord:
+    def __open_library_json_to_record(self, item: dict, url=str) -> PrepRecord:
         retrieved_record: dict = {}
 
         if "author_name" in item:
@@ -1816,7 +1828,9 @@ class Preparation(Process):
         if "isbn" in item:
             retrieved_record.update(isbn=str(item["isbn"][0]))
 
-        return PrepRecord(retrieved_record)
+        REC = PrepRecord(retrieved_record)
+        REC.add_provenance_all(url)
+        return REC
 
     def retrieve_dblp_records(self, query: str = None, url: str = None) -> list:
         assert query is not None or url is not None
@@ -1939,6 +1953,7 @@ class Preparation(Process):
         items = [hit["info"] for hit in hits]
         dblp_dicts = [dblp_json_to_dict(item) for item in items]
         RETRIEVED_RECORDS = [PrepRecord(dblp_dict) for dblp_dict in dblp_dicts]
+        [R.add_provenance_all(R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
         return RETRIEVED_RECORDS
 
     def retrieve_doi_metadata(self, RECORD: PrepRecord) -> PrepRecord:
@@ -1968,6 +1983,7 @@ class Preparation(Process):
             retrieved_json = json.loads(ret.text)
             retrieved_record = self.crossref_json_to_record(retrieved_json)
             RETRIEVED_RECORD = PrepRecord(retrieved_record)
+            RETRIEVED_RECORD.add_provenance_all(url)
             RECORD.merge(RETRIEVED_RECORD, url)
             RECORD.set_masterdata_complete()
             RECORD.set_status(RecordState.md_prepared)
@@ -1984,18 +2000,10 @@ class Preparation(Process):
 
         return RECORD
 
-    def log_notifications(
+    def update_masterdata_provenance(
         self, RECORD: PrepRecord, UNPREPARED_RECORD: PrepRecord
     ) -> PrepRecord:
 
-        change = 1 - Record.get_record_similarity(RECORD, UNPREPARED_RECORD)
-        if change > 0.1:
-            self.REVIEW_MANAGER.report_logger.info(
-                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
-                + f"Change score: {round(change, 2)}"
-            )
-
-        # if not RECORD.masterdata_is_complete():
         missing_fields = RECORD.missing_fields()
         if missing_fields:
             for missing_field in missing_fields:
@@ -2003,7 +2011,6 @@ class Preparation(Process):
         else:
             RECORD.set_masterdata_complete()
 
-        # if RECORD.has_inconsistent_fields():
         inconsistencies = RECORD.get_inconsistencies()
         if inconsistencies:
             for inconsistency in inconsistencies:
@@ -2014,13 +2021,19 @@ class Preparation(Process):
         else:
             RECORD.set_masterdata_consistent()
 
-        # if RECORD.has_incomplete_fields():
         incomplete_fields = RECORD.get_incomplete_fields()
         if incomplete_fields:
             for incomplete_field in incomplete_fields:
                 RECORD.add_masterdata_provenance_hint(incomplete_field, "incomplete")
         else:
             RECORD.set_fields_complete()
+
+        change = 1 - Record.get_record_similarity(RECORD, UNPREPARED_RECORD)
+        if change > 0.1:
+            self.REVIEW_MANAGER.report_logger.info(
+                f' {RECORD.data["ID"]}'.ljust(self.PAD, " ")
+                + f"Change score: {round(change, 2)}"
+            )
 
         return RECORD
 
@@ -2128,7 +2141,7 @@ class Preparation(Process):
                 RecordState.md_needs_manual_preparation
                 == preparation_record["colrev_status"]
             ):
-                RECORD = self.log_notifications(RECORD, UNPREPARED_RECORD)
+                RECORD = self.update_masterdata_provenance(RECORD, UNPREPARED_RECORD)
         else:
             if self.DEBUG_MODE:
                 if (

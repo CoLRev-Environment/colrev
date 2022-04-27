@@ -144,7 +144,7 @@ class Loader(Process):
             for f in f_
         ]
 
-        return files
+        return sorted(files)
 
     def __getbib(self, file: Path) -> typing.List[dict]:
         with open(file) as bibtex_file:
@@ -843,15 +843,25 @@ class Loader(Process):
             if 0 == to_import:
                 continue
 
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
             for sr in search_records_list:
                 sr = self.__import_record(sr)
 
+                # Make sure IDs are unique / do not replace existing records
+                order = 0
+                letters = list(string.ascii_lowercase)
+                next_unique_ID = sr["ID"]
+                appends: list = []
+                while next_unique_ID in records:
+                    if len(appends) == 0:
+                        order += 1
+                        appends = [p for p in itertools.product(letters, repeat=order)]
+                    next_unique_ID = sr["ID"] + "".join(list(appends.pop(0)))
+                sr["ID"] = next_unique_ID
+                records[sr["ID"]] = sr
+
             self.REVIEW_MANAGER.logger.info("Save records to references.bib")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-            search_records = {
-                r["ID"]: {k: v for k, v in r.items()} for r in search_records_list
-            }
-            records = {**records, **search_records}
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
             # TBD: does the following create errors!?
@@ -861,7 +871,7 @@ class Loader(Process):
                 self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                     records,
-                    selected_IDs=search_records.keys(),
+                    selected_IDs=[r["ID"] for r in search_records_list],
                 )
 
             if not combine_commits:
@@ -885,16 +895,30 @@ class Loader(Process):
             imported = len_after - len_before
 
             if imported != to_import:
-                self.REVIEW_MANAGER.logger.error(
-                    f"PROBLEM: delta: {to_import - imported} "
-                    "records missing (negative: too much)"
-                )
+
+                origins_to_import = [o["colrev_origin"] for o in search_records_list]
+
+                # self.REVIEW_MANAGER.pp.pprint(search_records_list)
+                # print(origins_to_import)
+                # self.REVIEW_MANAGER.pp.pprint(imported_origins)
+
                 self.REVIEW_MANAGER.logger.error(f"len_before: {len_before}")
-                self.REVIEW_MANAGER.logger.error(
-                    f"Records not yet imported: {to_import}"
-                )
                 self.REVIEW_MANAGER.logger.error(f"len_after: {len_after}")
-                self.REVIEW_MANAGER.logger.error([x["ID"] for x in search_records])
+                if to_import - imported > 0:
+                    self.REVIEW_MANAGER.logger.error(
+                        f"PROBLEM: delta: {to_import - imported} records missing"
+                    )
+
+                    missing_origins = [
+                        o for o in origins_to_import if o not in imported_origins
+                    ]
+                    self.REVIEW_MANAGER.logger.error(
+                        f"Records not yet imported: {missing_origins}"
+                    )
+                else:
+                    self.REVIEW_MANAGER.logger.error(
+                        f"PROBLEM: delta: {to_import - imported} records too much"
+                    )
 
             print("\n")
 

@@ -937,10 +937,13 @@ class ReviewDataset:
 
             RECORD = PrepRecord(record)
 
-            if record["colrev_status"] == RecordState.md_needs_manual_preparation:
+            if record["colrev_status"] in [
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_imported,
+            ]:
+                RECORD = PREPARATION.update_masterdata_provenance(RECORD, RECORD)
 
-                # Note : this updates the masterdata provenance:
-                RECORD = PREPARATION.log_notifications(RECORD, RECORD)
+            if record["colrev_status"] == RecordState.md_needs_manual_preparation:
                 RECORD = PREPARATION.update_metadata_status(RECORD)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
