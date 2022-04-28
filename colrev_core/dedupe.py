@@ -471,7 +471,8 @@ class Dedupe(Process):
             if "MOVED_DUPE" in record:
                 del record["MOVED_DUPE"]
         for removed_duplicate in removed_duplicates:
-            del records[removed_duplicate]
+            if removed_duplicate in records:
+                del records[removed_duplicate]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
