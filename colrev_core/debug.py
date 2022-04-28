@@ -3,7 +3,7 @@ import logging
 import pprint
 from pathlib import Path  # noqa F401
 
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 from colrev_core.review_manager import ReviewManager
 
 logger = logging.getLogger("colrev_core")
@@ -74,7 +74,6 @@ def debug_load() -> None:
             "number": "6",
             "pages": "624--644",
             "volume": "24",
-            "metadata_source": "ORIGINAL",
         }
     ]
 
@@ -93,13 +92,12 @@ def debug_pdf_get():
     record = {
         "ENTRYTYPE": "article",
         "ID": "GuoLiuNault2021",
+        "colrev_origin": "MISQ.bib/0000000826",
+        "colrev_status": RecordState.md_imported,
         "author": "Guo, Hong and Liu, Yipeng and Nault, Barrie R.",
         "file": "pdfs/GuoLiuNault2021.pdf",
         "journal": "MIS Quarterly",
-        "metadata_source": "ORIGINAL",
         "number": "1",
-        "origin": "MISQ.bib/0000000826",
-        "status": RecordState.md_imported,
         "title": "Provisioning Interoperable Disaster Management Systems",
         "volume": "45",
         "year": "2021",
@@ -117,8 +115,8 @@ def debug_data():
     from colrev_core.data import Data
 
     DATA = Data()
-    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-    included = DATA.get_records_for_synthesis(records)
+    records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+    included = DATA.get_record_ids_for_synthesis(records)
 
     DATA.update_manuscript(records, included)
 
@@ -147,8 +145,8 @@ def debug_pdf_prep():
     # from pdfminer.pdfdocument import PDFDocument
     # from pdfminer.pdfinterp import resolve1
     # from pdfminer.pdfparser import PDFParser
-    # records = REVIEW_MANAGER.load_records()
-    # record = [x for x in records if x["ID"] == "Johns2006"].pop()
+    # records = REVIEW_MANAGER.load_records_dict()
+    # record = records["Johns2006"]
     # with open(record["file"], "rb") as file:
     #     parser = PDFParser(file)
     #     document = PDFDocument(parser)
@@ -159,13 +157,12 @@ def debug_pdf_prep():
     record = {
         "ENTRYTYPE": "article",
         "ID": "GuoLiuNault2021",
+        "colrev_origin": "MISQ.bib/0000000826",
+        "colrev_status": RecordState.pdf_imported,
         "author": "Bødker, Mads",
         "file": "pdfs/42_1/Hua2018_User Service Innovatio.pdf",
         "journal": "MIS Quarterly",
-        "metadata_source": "ORIGINAL",
         "number": "1",
-        "origin": "MISQ.bib/0000000826",
-        "status": RecordState.pdf_imported,
         "title": "Provisioning Interoperable Disaster Management Systems",
         "volume": "45",
         "year": "2021",
@@ -182,12 +179,14 @@ def get_non_unique_colrev_pdf_ids() -> None:
     import pandas as pd
 
     REVIEW_MANAGER = ReviewManager()
-    records = REVIEW_MANAGER.REVIEW_DATASET.load_records()
+    records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
     import collections
 
     colrev_pdf_ids = [
-        x["colrev_pdf_id"].split(":")[1] for x in records if "colrev_pdf_id" in x
+        x["colrev_pdf_id"].split(":")[1]
+        for x in records.values()
+        if "colrev_pdf_id" in x
     ]
     colrev_pdf_ids = [
         item for item, count in collections.Counter(colrev_pdf_ids).items() if count > 1
@@ -303,6 +302,17 @@ def local_index(param):
     return
 
 
+def corrections():
+    REVIEW_MANAGER = ReviewManager()
+
+    from colrev_core.process import CheckProcess
+
+    CheckProcess(REVIEW_MANAGER)
+    REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
+
+    return
+
+
 def main(operation: str, param):
 
     operations = {
@@ -312,6 +322,7 @@ def main(operation: str, param):
         "data": debug_data,
         "local_index": local_index,
         "tei": debug_tei_tools,
+        "corrections": corrections,
     }
 
     func = operations.get(operation, lambda: "not implemented")

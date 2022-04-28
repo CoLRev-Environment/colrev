@@ -49,7 +49,7 @@ Thereby, CoLRev implements a conservative strategy to prevent merge conflicts pe
 This seems appropriate for most cases in which the search and preparation is completed individually and with high degrees of automation.
 To override this rule, experts can use the configuration to set the SHARE_STAT_REQ to 'NONE'.
 
-When a git merge conflict occurs, a git diff tool (e.g., `Github client <https://github.blog/2018-11-14-github-desktop-1-5/#merge-conflict-resolution>`_) can be useful to resolve the conflict.
+When a git merge conflict occurs, a git diff tool (e.g., `Github client <https://desktop.github.com/>`_) can be useful to resolve the conflict.
 It asks the user to resolve the issue (select what should be retained by modifying the file accordingly) and inserts merge conflict markers in the file and stopping the merge process.
 Using a diff tool, you can select the versions to be retained.
 
@@ -107,16 +107,6 @@ There is a broad consensus across disciplines concerning the differences between
 
 - Steps (differences: in the data extraction, analysis, and synthesis stage)
 - Qualities (including transparency and systematicity)
-
-
-Local review environments
-------------------------------------
-
-- Elements (include a figure and explanation):
-    - feed repositories (update & distribute)
-    - local topic repositories (e.g., zettelkasten) (often private)
-    - paper projects (often shared)
-- Best practices for collaboration and sharing setups with students/colleagues
 
 Further resources
 ------------------------------------

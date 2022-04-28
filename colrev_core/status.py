@@ -1,13 +1,17 @@
 #! /usr/bin/env python3
 import io
+import multiprocessing
 import typing
 from collections import Counter
 from pathlib import Path
 
 import git
+from git.exc import InvalidGitRepositoryError
+from git.exc import NoSuchPathError
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.review_manager import ReviewManager
 
 
 class Status(Process):
@@ -44,16 +48,16 @@ class Status(Process):
         stat = self.get_status_freq()
         return stat["completeness_condition"]
 
-    def get_excl_criteria(self, ec_string: str) -> list:
+    def get_exclusion_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def get_status_freq(self) -> dict:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
         from colrev_core.process import ProcessModel
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
         status_list = [x[2] for x in record_header_list]
-        excl_criteria = [x[3] for x in record_header_list if x[3] != ""]
+        exclusion_criteria = [x[3] for x in record_header_list if x[3] != ""]
         md_duplicates_removed = sum((x[1].count(";")) for x in record_header_list)
 
         origin_list = [x[1] for x in record_header_list]
@@ -62,36 +66,36 @@ class Status(Process):
             nr_record_links = origin.count(";")
             record_links += nr_record_links + 1
 
-        stat: dict = {"status": {}}
-        metadata_sources = [x[5] for x in record_header_list]
-        stat["status"]["CURATED_records"] = len(
-            [x for x in metadata_sources if "CURATED" == x]
+        stat: dict = {"colrev_status": {}}
+        colrev_masterdata_items = [x[5] for x in record_header_list]
+        stat["colrev_status"]["CURATED_records"] = len(
+            [x for x in colrev_masterdata_items if "CURATED" in x]
         )
 
         exclusion_statistics = {}
-        if excl_criteria:
-            criteria = self.get_excl_criteria(excl_criteria[0])
+        if exclusion_criteria:
+            criteria = self.get_exclusion_criteria(exclusion_criteria[0])
             exclusion_statistics = {crit: 0 for crit in criteria}
-            for exclusion_case in excl_criteria:
+            for exclusion_case in exclusion_criteria:
                 for crit in criteria:
                     if crit + "=yes" in exclusion_case:
                         exclusion_statistics[crit] += 1
 
-        stat["status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
-        stat["status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
+        stat["colrev_status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
+        stat["colrev_status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
 
         currently_stats = dict(Counter(status_list))
         for currently_stat, val in currently_stats.items():
-            stat["status"]["currently"][currently_stat] = val
-            stat["status"]["overall"][currently_stat] = val
+            stat["colrev_status"]["currently"][currently_stat] = val
+            stat["colrev_status"]["overall"][currently_stat] = val
 
         atomic_step_number = 0
         completed_atomic_steps = 0
 
         self.REVIEW_MANAGER.logger.debug(
-            "Set overall status statistics (going backwards)"
+            "Set overall colrev_status statistics (going backwards)"
         )
-        st_o = stat["status"]["overall"]
+        st_o = stat["colrev_status"]["overall"]
         non_completed = 0
         current_state = RecordState.rev_synthesized  # start with the last
         visited_states = []
@@ -139,7 +143,7 @@ class Status(Process):
             for trans_for_completeness in [
                 t for t in ProcessModel.transitions if current_state == t["dest"]
             ]:
-                nr_incomplete += stat["status"]["currently"][
+                nr_incomplete += stat["colrev_status"]["currently"][
                     str(trans_for_completeness["source"])
                 ]
 
@@ -148,45 +152,47 @@ class Status(Process):
             if current_state == RecordState.md_imported:
                 break
             current_state = t["source"]  # go a step back
-            non_completed += stat["status"]["currently"][str(current_state)]
+            non_completed += stat["colrev_status"]["currently"][str(current_state)]
 
-        stat["status"]["currently"]["non_completed"] = non_completed
+        stat["colrev_status"]["currently"]["non_completed"] = non_completed
 
-        stat["status"]["currently"]["non_processed"] = (
-            stat["status"]["currently"]["md_imported"]
-            + stat["status"]["currently"]["md_retrieved"]
-            + stat["status"]["currently"]["md_needs_manual_preparation"]
-            + stat["status"]["currently"]["md_prepared"]
+        stat["colrev_status"]["currently"]["non_processed"] = (
+            stat["colrev_status"]["currently"]["md_imported"]
+            + stat["colrev_status"]["currently"]["md_retrieved"]
+            + stat["colrev_status"]["currently"]["md_needs_manual_preparation"]
+            + stat["colrev_status"]["currently"]["md_prepared"]
         )
 
-        stat["status"]["currently"]["md_duplicates_removed"] = md_duplicates_removed
-        stat["status"]["overall"]["md_retrieved"] = self.get_nr_search()
-        stat["status"]["currently"]["md_retrieved"] = (
-            stat["status"]["overall"]["md_retrieved"] - record_links
+        stat["colrev_status"]["currently"][
+            "md_duplicates_removed"
+        ] = md_duplicates_removed
+        stat["colrev_status"]["overall"]["md_retrieved"] = self.get_nr_search()
+        stat["colrev_status"]["currently"]["md_retrieved"] = (
+            stat["colrev_status"]["overall"]["md_retrieved"] - record_links
         )
         stat["completeness_condition"] = (0 == nr_incomplete) and (
-            0 == stat["status"]["currently"]["md_retrieved"]
+            0 == stat["colrev_status"]["currently"]["md_retrieved"]
         )
 
-        stat["status"]["currently"]["exclusion"] = exclusion_statistics
+        stat["colrev_status"]["currently"]["exclusion"] = exclusion_statistics
 
-        stat["status"]["overall"]["rev_screen"] = stat["status"]["overall"][
-            "pdf_prepared"
-        ]
-        stat["status"]["overall"]["rev_prescreen"] = stat["status"]["overall"][
-            "md_processed"
-        ]
-        stat["status"]["currently"]["pdf_needs_retrieval"] = stat["status"][
-            "currently"
-        ]["rev_prescreen_included"]
+        stat["colrev_status"]["overall"]["rev_screen"] = stat["colrev_status"][
+            "overall"
+        ]["pdf_prepared"]
+        stat["colrev_status"]["overall"]["rev_prescreen"] = stat["colrev_status"][
+            "overall"
+        ]["md_processed"]
+        stat["colrev_status"]["currently"]["pdf_needs_retrieval"] = stat[
+            "colrev_status"
+        ]["currently"]["rev_prescreen_included"]
 
         # note: 10 steps
         stat["atomic_steps"] = (
             10 * st_o[str(RecordState.md_imported)]
-            - stat["status"]["currently"]["md_duplicates_removed"] * 8
-            - stat["status"]["currently"]["rev_prescreen_excluded"] * 7
-            - stat["status"]["currently"]["pdf_not_available"] * 6
-            - stat["status"]["currently"]["rev_excluded"]
+            - stat["colrev_status"]["currently"]["md_duplicates_removed"] * 8
+            - stat["colrev_status"]["currently"]["rev_prescreen_excluded"] * 7
+            - stat["colrev_status"]["currently"]["pdf_not_available"] * 6
+            - stat["colrev_status"]["currently"]["rev_excluded"]
         )
         stat["completed_atomic_steps"] = completed_atomic_steps
         self.REVIEW_MANAGER.logger.debug(
@@ -194,7 +200,7 @@ class Status(Process):
         )
         return stat
 
-    def get_priority_transition(self, current_states: set) -> list:
+    def get_priority_transition(self, current_origin_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
@@ -202,12 +208,13 @@ class Status(Process):
         search_states = ["rev_synthesized"]
         while True:
             if any(
-                search_state in list(current_states) for search_state in search_states
+                search_state in current_origin_states_dict.values()
+                for search_state in search_states
             ):
                 earliest_state = [
                     search_state
                     for search_state in search_states
-                    if search_state in current_states
+                    if search_state in current_origin_states_dict.values()
                 ]
             search_states = [
                 str(x["source"])
@@ -227,11 +234,11 @@ class Status(Process):
         # print(f'priority_transitions: {priority_transitions}')
         return list(set(priority_transitions))
 
-    def get_active_processing_functions(self, current_states_set) -> list:
+    def get_active_processing_functions(self, current_origin_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         active_processing_functions = []
-        for state in current_states_set:
+        for state in current_origin_states_dict.values():
             srec = ProcessModel(state=state)
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
@@ -267,14 +274,11 @@ class Status(Process):
         return [nr_commits_behind, nr_commits_ahead]
 
     def get_environment_instructions(self, stat: dict) -> list:
-        from colrev_core.review_manager import ReviewManager
-        from git.exc import NoSuchPathError
-        from git.exc import InvalidGitRepositoryError
         from colrev_core.environment import EnvironmentManager
 
         environment_instructions = []
 
-        if stat["status"]["currently"]["md_imported"] > 10:
+        if stat["colrev_status"]["currently"]["md_imported"] > 10:
             with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as r:
                 outlets = []
                 for line in r.readlines():
@@ -322,34 +326,47 @@ class Status(Process):
 
         local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
-        for registered_path in registered_paths:
 
-            try:
-                REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
-            except (NoSuchPathError, InvalidGitRepositoryError):
-                pass
-                instruction = {
-                    "msg": "Locally registered repo no longer exists.",
-                    "cmd": f"colrev env --unregister {registered_path}",
-                }
-                environment_instructions.append(instruction)
-                continue
-            if "curated_metadata" in str(registered_path):
-                if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
-                    instruction = {
-                        "msg": "Updates available for curated repo "
-                        f"({registered_path}).",
-                        "cmd": "colrev env --update",
-                    }
-                    environment_instructions.append(instruction)
+        # Note : we can use many parallel processes
+        # because append_registered_repo_instructions mainly waits for the network
+        # it does not use a lot of CPU capacity
+        pool = multiprocessing.Pool(processes=30)
+        add_instructions = pool.map(
+            self.append_registered_repo_instructions, registered_paths
+        )
+        environment_instructions += list(filter(None, add_instructions))
+
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
             instruction = {
                 "msg": "Corrections to share with curated repositories.",
-                "cmd": "colrev env --apply_corrections",
+                "cmd": "colrev push -r",
             }
             environment_instructions.append(instruction)
 
         return environment_instructions
+
+    @classmethod
+    def append_registered_repo_instructions(cls, registered_path):
+        try:
+            REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
+        except (NoSuchPathError, InvalidGitRepositoryError):
+            pass
+            instruction = {
+                "msg": "Locally registered repo no longer exists.",
+                "cmd": f"colrev env --unregister {registered_path}",
+            }
+            # environment_instructions.append(instruction)
+            return instruction
+        if "curated_metadata" in str(registered_path):
+            if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
+                instruction = {
+                    "msg": "Updates available for curated repo "
+                    f"({registered_path}).",
+                    "cmd": "colrev env --update",
+                }
+                # environment_instructions.append(instruction)
+                return instruction
+        return {}
 
     def get_review_instructions(self, stat) -> list:
 
@@ -380,7 +397,7 @@ class Status(Process):
         if len(missing_files) > 0:
             review_instructions.append(
                 {
-                    "msg": "record with status requiring a PDF file but missing "
+                    "msg": "record with colrev_status requiring a PDF file but missing "
                     + f"the path (file = ...): {missing_files}"
                 }
             )
@@ -397,12 +414,10 @@ class Status(Process):
                 }
             )
 
-        current_record_state_list = (
-            self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        current_origin_states_dict = (
+            self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict()
         )
-        current_states_set = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set(
-            current_record_state_list
-        )
+
         # temporarily override for testing
         # current_states_set = {'pdf_imported', 'pdf_needs_retrieval'}
         # from colrev_core.process import ProcessModel
@@ -431,37 +446,36 @@ class Status(Process):
 
             from colrev_core.process import ProcessModel
 
-            committed_record_states_list = (
-                self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list_from_file_obj(
+            committed_origin_states_dict = (
+                self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict(
                     io.StringIO(filecontents.decode("utf-8"))
                 )
             )
 
-            record_state_items = [
-                record_state
-                for record_state in current_record_state_list
-                if record_state not in committed_record_states_list
-            ]
             transitioned_records = []
-            for item in record_state_items:
-                # TODO : we should match the current and committed records based
-                # on their origins because IDs may change (e.g., in the preparation)
-                transitioned_record = {"ID": item[0], "dest": item[1]}
+            for (
+                committed_origin,
+                committed_colrev_status,
+            ) in committed_origin_states_dict.items():
+                transitioned_record = {
+                    "origin": committed_origin,
+                    "source": committed_colrev_status,
+                }
 
-                source_state = [
-                    rec[1] for rec in committed_record_states_list if rec[0] == item[0]
-                ]
-                if len(source_state) != 1:
-
+                if committed_origin not in current_origin_states_dict:
                     print(f"Error (no source_state): {transitioned_record}")
                     review_instructions.append(
                         {
-                            "msg": f"Resolve committed status of {transitioned_record}",
+                            "msg": "Resolve committed colrev_status "
+                            + f"of {transitioned_record}",
                             "priority": "yes",
                         }
                     )
                     continue
-                transitioned_record["source"] = source_state[0]
+
+                transitioned_record["dest"] = current_origin_states_dict[
+                    committed_origin
+                ]
 
                 process_type = [
                     x["trigger"]
@@ -509,14 +523,18 @@ class Status(Process):
                 instruction["priority"] = "yes"
                 review_instructions.append(instruction)
 
-        self.REVIEW_MANAGER.logger.debug(f"current_states_set: {current_states_set}")
+        self.REVIEW_MANAGER.logger.debug(
+            f"current_origin_states_dict: {current_origin_states_dict}"
+        )
         active_processing_functions = self.get_active_processing_functions(
-            current_states_set
+            current_origin_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"active_processing_functions: {active_processing_functions}"
         )
-        priority_processing_functions = self.get_priority_transition(current_states_set)
+        priority_processing_functions = self.get_priority_transition(
+            current_origin_states_dict
+        )
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )
@@ -534,7 +552,7 @@ class Status(Process):
             "screen": "Screen records",
             "data": "Extract data/synthesize records",
         }
-        if stat["status"]["currently"]["md_retrieved"] > 0:
+        if stat["colrev_status"]["currently"]["md_retrieved"] > 0:
             instruction = {
                 "msg": msgs["load"],
                 "cmd": "colrev load",
@@ -679,7 +697,7 @@ class Status(Process):
 
                 # TODO : all the following: should all search results be imported?!
                 if SHARE_STAT_REQ == "PROCESSED":
-                    if 0 == stat["status"]["currently"]["non_processed"]:
+                    if 0 == stat["colrev_status"]["currently"]["non_processed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -701,7 +719,7 @@ class Status(Process):
                 # a PRE_SCREEN or INCLUSION_SCREEN is needed
                 if SHARE_STAT_REQ == "SCREENED":
                     # TODO : the following condition is probably not sufficient
-                    if 0 == stat["review_status"]["currently"]["pdf_prepared"]:
+                    if 0 == stat["colrev_status"]["currently"]["pdf_prepared"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -719,7 +737,7 @@ class Status(Process):
                         }
 
                 if SHARE_STAT_REQ == "COMPLETED":
-                    if 0 == stat["review_status"]["currently"]["non_completed"]:
+                    if 0 == stat["colrev_status"]["currently"]["non_completed"]:
                         collaboration_instructions["status"] = {
                             "title": "Sharing: currently ready for sharing",
                             "level": "SUCCESS",
@@ -804,7 +822,7 @@ class Status(Process):
         print(stat)
         return
 
-    def print_review_status(self, statuts_info: dict) -> None:
+    def print_review_status(self, status_info: dict) -> None:
 
         # Principle: first column shows total records/PDFs in each stage
         # the second column shows
@@ -819,7 +837,7 @@ class Status(Process):
             print("  - No records added yet")
         else:
 
-            stat = statuts_info["status"]
+            stat = status_info["colrev_status"]
 
             print(" Search")
             perc_curated = 0
@@ -830,7 +848,7 @@ class Status(Process):
             )
             if denominator > 0:
 
-                perc_curated = statuts_info["status"]["CURATED_records"] / (denominator)
+                perc_curated = stat["CURATED_records"] / (denominator)
             if stat["overall"]["md_prepared"] > 0:
                 self.stat_print(
                     False,
@@ -838,7 +856,7 @@ class Status(Process):
                     stat["overall"]["md_retrieved"],
                     "*",
                     f"curated ({round(perc_curated*100, 2)}%)",
-                    str(statuts_info["status"]["CURATED_records"]),
+                    str(stat["CURATED_records"]),
                 )
             else:
                 self.stat_print(

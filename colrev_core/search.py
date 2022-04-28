@@ -22,6 +22,7 @@ from pdf2image import convert_from_path
 from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 
 
 class Search(Process):
@@ -38,7 +39,6 @@ class Search(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.check,
-            fun=self.update,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -94,10 +94,6 @@ class Search(Process):
             },
         ]
 
-    def check_precondition(self) -> None:
-        super().require_clean_repo_general()
-        return
-
     def __get_bibtex_writer(self) -> BibTexWriter:
 
         writer = BibTexWriter()
@@ -129,6 +125,7 @@ class Search(Process):
         return writer
 
     def search_crossref(self, params, feed_file):
+        from colrev_core.prep import PrepRecord
 
         if "journal_issn" not in params["scope"]:
             print("Error: journal_issn not in params")
@@ -173,41 +170,50 @@ class Search(Process):
                     max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
                 )
 
-            for item in w1:
-                if "DOI" in item:
-                    if item["DOI"].upper() not in available_ids:
-                        record = self.PREPARATION.crossref_json_to_record(item)
+            try:
+                for item in w1:
+                    if "DOI" in item:
+                        if item["DOI"].upper() not in available_ids:
+                            record = self.PREPARATION.crossref_json_to_record(item)
 
-                        # TODO : collect list of records for more efficient selection
-                        # select once (parse result to list of dicts?)
-                        if "selection_clause" in params:
-                            res = []
-                            try:
-                                rec_df = pd.DataFrame.from_records([record])
-                                # print(rec_df)
-                                res = ps.sqldf(query, locals())
-                            except PandaSQLException:
-                                # print(e)
-                                pass
+                            # TODO : collect list of records
+                            # for more efficient selection
+                            # select once (parse result to list of dicts?)
+                            if "selection_clause" in params:
+                                res = []
+                                try:
+                                    rec_df = pd.DataFrame.from_records([record])
+                                    # print(rec_df)
+                                    res = ps.sqldf(query, locals())
+                                except PandaSQLException:
+                                    # print(e)
+                                    pass
 
-                            if len(res) == 0:
+                                if len(res) == 0:
+                                    continue
+
+                            # Note : do not download "empty" records
+                            if "" == record.get("author", "") and "" == record.get(
+                                "title", ""
+                            ):
                                 continue
 
-                        # Note : do not download "empty" records
-                        if "" == record.get("author", "") and "" == record.get(
-                            "title", ""
-                        ):
-                            continue
-
-                        print(record["doi"])
-                        record["ID"] = str(max_id).rjust(6, "0")
-                        if "ENTRYTYPE" not in record:
-                            record["ENTRYTYPE"] = "misc"
-                        record["metadata_source"] = "CROSSREF"
-                        record = self.PREPARATION.get_link_from_doi(record)
-                        available_ids.append(record["doi"])
-                        records.append(record)
-                        max_id += 1
+                            print(record["doi"])
+                            record["ID"] = str(max_id).rjust(6, "0")
+                            if "ENTRYTYPE" not in record:
+                                record["ENTRYTYPE"] = "misc"
+                            record["source_url"] = (
+                                "https://api.crossref.org/works/" + item["DOI"]
+                            )
+                            record = self.PREPARATION.get_link_from_doi(
+                                PrepRecord(record)
+                            ).get_data()
+                            available_ids.append(record["doi"])
+                            records.append(record)
+                            max_id += 1
+            except requests.exceptions.JSONDecodeError as e:
+                print(e)
+                pass
 
             # Note : we may have to set temporary IDs
             # (and replace them after the following sort operation) ?!
@@ -268,6 +274,7 @@ class Search(Process):
         return venue_abbrev
 
     def search_dblp(self, params, feed_file):
+        from colrev_core.prep import Preparation
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -302,10 +309,9 @@ class Search(Process):
             # TODO : tbd how the abbreviated venue_key can be retrieved
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
-            headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
             start = 1980
             if len(records) > 100:
-                start = datetime.now().year - 1
+                start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
                 print(year)
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
@@ -320,46 +326,36 @@ class Search(Process):
                     )
                     f += batch_size
                     print(url)
-                    ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-                    ret.raise_for_status()
-                    if ret.status_code == 500:
-                        return
 
-                    data = json.loads(ret.text)
-                    if "hits" not in data["result"]:
-                        print("no hits")
-                        break
-                    if "hit" not in data["result"]["hits"]:
-                        print("no hit")
-                        break
-                    hits = data["result"]["hits"]["hit"]
-
-                    for hit in hits:
-                        item = hit["info"]
-
-                        retrieved_record = self.PREPARATION.dblp_json_to_record(item)
+                    retrieved = False
+                    PREPARATION = Preparation(
+                        self.REVIEW_MANAGER, notify_state_transition_process=False
+                    )
+                    for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
+                        retrieved = True
 
                         if (
                             f"{params['scope']['venue_key']}/"
-                            not in retrieved_record["dblp_key"]
+                            not in RETRIEVED_RECORD.data["dblp_key"]
                         ):
                             continue
-                        retrieved_record["dblp_key"] = (
-                            "https://dblp.org/rec/" + retrieved_record["dblp_key"]
-                        )
 
-                        if retrieved_record["dblp_key"] not in available_ids:
-                            retrieved_record["ID"] = str(max_id).rjust(6, "0")
-                            if retrieved_record.get("ENTRYTYPE", "") not in [
+                        if RETRIEVED_RECORD.data["dblp_key"] not in available_ids:
+                            RETRIEVED_RECORD.data["ID"] = str(max_id).rjust(6, "0")
+                            if RETRIEVED_RECORD.data.get("ENTRYTYPE", "") not in [
                                 "article",
                                 "inproceedings",
                             ]:
                                 continue
                                 # retrieved_record["ENTRYTYPE"] = "misc"
-                            if "pages" in retrieved_record:
-                                del retrieved_record["pages"]
-                            available_ids.append(retrieved_record["dblp_key"])
-                            retrieved_record["metadata_source"] = "DBLP"
+                            if "pages" in RETRIEVED_RECORD.data:
+                                del RETRIEVED_RECORD.data["pages"]
+                            available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
+
+                            RETRIEVED_RECORD.data["source_url"] = (
+                                RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
+                            )
+
                             records = [
                                 {
                                     k: v.replace("\n", "").replace("\r", "")
@@ -367,7 +363,7 @@ class Search(Process):
                                 }
                                 for r in records
                             ]
-                            records.append(retrieved_record)
+                            records.append(RETRIEVED_RECORD.data)
                             max_id += 1
 
                     # Note : we may have to set temporary IDs
@@ -392,6 +388,9 @@ class Search(Process):
                             bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
                         )
 
+                    if not retrieved:
+                        break
+
         except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
@@ -405,7 +404,7 @@ class Search(Process):
         return
 
     def search_backward(self, params: dict, feed_file: Path) -> None:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
         from colrev_core import grobid_client
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
@@ -422,11 +421,11 @@ class Search(Process):
             "(this would allow us to avoid redundant queries...)"
         )
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # default: rev_included/rev_synthesized and no selection clauses
-        for record in records:
-            if record["status"] not in [
+        for record in records.values():
+            if record["colrev_status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
@@ -486,16 +485,16 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.info(
             f'Loading records from {params["scope"]["url"]}'
         )
-        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        records_to_import = [
-            x for x in records_to_import if x["ID"] not in imported_ids
-        ]
-        records_to_import = [
-            {k: str(v) for k, v in r.items()} for r in records_to_import
+        records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records_to_import = {
+            ID: rec for ID, rec in records_to_import.items() if ID not in imported_ids
+        }
+        records_to_import_list = [
+            {k: str(v) for k, v in r.items()} for r in records_to_import.values()
         ]
 
         self.REVIEW_MANAGER.logger.info("Importing selected records")
-        for record_to_import in tqdm(records_to_import):
+        for record_to_import in tqdm(records_to_import_list):
             if "selection_clause" in params:
                 res = []
                 try:
@@ -508,17 +507,13 @@ class Search(Process):
                 if len(res) == 0:
                     continue
             self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
-            if "metadata_source" in record_to_import:
-                if "CURATED" != record_to_import["metadata_source"]:
-                    del record_to_import["metadata_source"]
+
             records = records + [record_to_import]
 
         keys_to_drop = [
-            "status",
-            "origin",
-            "excl_criteria",
-            "manual_non_duplicate",
-            "manual_duplicate",
+            "colrev_status",
+            "colrev_origin",
+            "exclusion_criteria",
         ]
 
         records = [
@@ -594,12 +589,9 @@ class Search(Process):
         records = records + records_to_import
 
         keys_to_drop = [
-            "status",
-            "origin",
-            "excl_criteria",
-            "manual_non_duplicate",
-            "excl_criteria",
-            "metadata_source",
+            "colrev_status",
+            "colrev_origin",
+            "exclusion_criteria",
         ]
         records = [
             {key: item[key] for key in item.keys() if key not in keys_to_drop}
@@ -641,7 +633,7 @@ class Search(Process):
         from pdfminer.pdfparser import PDFParser
         from colrev_core.pdf_prep import PDF_Preparation
 
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         skip_duplicates = True
 
@@ -650,15 +642,15 @@ class Search(Process):
         )
 
         def update_if_pdf_renamed(
-            x: dict, records: typing.List[typing.Dict], search_source: Path
+            x: dict, records: typing.Dict, search_source: Path
         ) -> bool:
             UPDATED = True
             NOT_UPDATED = False
 
             c_rec_l = [
                 r
-                for r in records
-                if f"{search_source}/{x['ID']}" in r["origin"].split(";")
+                for r in records.values()
+                if f"{search_source}/{x['ID']}" in r["colrev_origin"].split(";")
             ]
             if len(c_rec_l) == 1:
                 c_rec = c_rec_l.pop()
@@ -697,9 +689,9 @@ class Search(Process):
                     common_strings=True,
                 ).parse_file(target_db, partial=True)
 
-            records = []
+            records = {}
             if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
             to_remove: typing.List[str] = []
             for x in search_db.entries:
@@ -729,14 +721,14 @@ class Search(Process):
 
                 to_remove = []
                 source_ids = [x["ID"] for x in search_db.entries]
-                for record in records:
-                    if str(feed_file.name) in record["origin"]:
+                for record in records.values():
+                    if str(feed_file.name) in record["colrev_origin"]:
                         if (
-                            record["origin"].split(";")[0].split("/")[1]
+                            record["colrev_origin"].split(";")[0].split("/")[1]
                             not in source_ids
                         ):
-                            print("REMOVE " + record["origin"])
-                            to_remove.append(record["origin"])
+                            print("REMOVE " + record["colrev_origin"])
+                            to_remove.append(record["colrev_origin"])
 
                 for r in to_remove:
                     self.REVIEW_MANAGER.logger.debug(
@@ -746,8 +738,12 @@ class Search(Process):
                         f"remove from index (PDF path no longer exists): {r}"
                     )
 
-                records = [x for x in records if x["origin"] not in to_remove]
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+                records = {
+                    k: v
+                    for k, v in records.items()
+                    if v["colrev_origin"] not in to_remove
+                }
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             return
@@ -898,7 +894,7 @@ class Search(Process):
         def get_record_from_pdf_grobid(record) -> dict:
             from colrev_core.environment import EnvironmentManager
 
-            if RecordState.md_prepared == record.get("status", "NA"):
+            if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
             grobid_client.check_grobid_availability()
 
@@ -934,7 +930,6 @@ class Search(Process):
 
             TEI_INSTANCE = TEI(
                 pdf_path=pdf_path,
-                notify_state_transition_process=False,
             )
 
             extracted_record = TEI_INSTANCE.get_metadata()
@@ -1078,11 +1073,11 @@ class Search(Process):
                     ID += 1
                     new_r["ID"] = f"{ID}".rjust(10, "0")
 
-                    if "status" in new_r:
-                        if "CURATED" != new_r.get("metadata_source", "NA"):
-                            del new_r["status"]
+                    if "colrev_status" in new_r:
+                        if Record(new_r).masterdata_is_curated():
+                            del new_r["colrev_status"]
                         else:
-                            new_r["status"] = str(new_r["status"])
+                            new_r["colrev_status"] = str(new_r["colrev_status"])
 
             records = records + new_records
 

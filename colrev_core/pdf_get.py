@@ -12,10 +12,9 @@ from pdf2image import convert_from_path
 from pdfminer.high_level import extract_text
 
 from colrev_core import grobid_client
-from colrev_core import utils
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 
 
@@ -29,7 +28,6 @@ class PDF_Retrieval(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.pdf_get,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -41,9 +39,9 @@ class PDF_Retrieval(Process):
 
     def copy_pdfs_to_repo(self) -> None:
         self.REVIEW_MANAGER.logger.info("Copy PDFs to dir")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        for record in records:
+        for record in records.values():
             if "file" in record:
                 fpath = Path(record["file"])
                 if fpath.is_symlink():
@@ -63,23 +61,25 @@ class PDF_Retrieval(Process):
 
         url = "https://api.unpaywall.org/v2/{doi}"
 
-        r = requests.get(url, params={"email": self.EMAIL})
+        try:
+            r = requests.get(url, params={"email": self.EMAIL})
 
-        if r.status_code == 404:
-            return "NA"
-
-        if r.status_code == 500:
-            if retry < 3:
-                return self.__unpaywall(doi, retry + 1)
-            else:
+            if r.status_code == 404:
                 return "NA"
 
-        best_loc = None
-        try:
+            if r.status_code == 500:
+                if retry < 3:
+                    return self.__unpaywall(doi, retry + 1)
+                else:
+                    return "NA"
+
+            best_loc = None
             best_loc = r.json()["best_oa_location"]
         except json.decoder.JSONDecodeError:
             return "NA"
         except KeyError:
+            return "NA"
+        except requests.exceptions.RequestException:
             return "NA"
 
         if not r.json()["is_oa"] or best_loc is None:
@@ -126,7 +126,7 @@ class PDF_Retrieval(Process):
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
                         record.update(file=str(pdf_filepath))
-                        record.update(status=RecordState.rev_prescreen_included)
+                        record.update(colrev_status=RecordState.rev_prescreen_included)
                     else:
                         os.remove(pdf_filepath)
                 else:
@@ -150,7 +150,7 @@ class PDF_Retrieval(Process):
         LOCAL_INDEX = LocalIndex()
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record, include_file=True)
-            # self.REVIEW_MANAGER.pp.pprint(retrieved_record)
+            # print(Record(retrieved_record))
         except RecordNotInIndexException:
             pass
             return record
@@ -164,7 +164,7 @@ class PDF_Retrieval(Process):
     def retrieve_pdf(self, item: dict) -> dict:
         record = item["record"]
 
-        if str(RecordState.rev_prescreen_included) != str(record["status"]):
+        if str(RecordState.rev_prescreen_included) != str(record["colrev_status"]):
             return record
 
         retrieval_scripts: typing.List[typing.Dict[str, typing.Any]] = [
@@ -184,9 +184,9 @@ class PDF_Retrieval(Process):
                     f'{retrieval_script["script"].__name__}'
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
-                record.update(status=RecordState.pdf_imported)
+                record.update(colrev_status=RecordState.pdf_imported)
             else:
-                record.update(status=RecordState.pdf_needs_manual_retrieval)
+                record.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
 
         return record
 
@@ -234,7 +234,7 @@ class PDF_Retrieval(Process):
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
-            for record in records:
+            for record in records.values():
                 if "file" not in record:
                     continue
 
@@ -244,7 +244,9 @@ class PDF_Retrieval(Process):
                 source_rec = {}
                 if feed_filename != "":
                     source_origin_l = [
-                        o for o in record["origin"].split(";") if feed_filename in o
+                        o
+                        for o in record["colrev_origin"].split(";")
+                        if feed_filename in o
                     ]
                     if len(source_origin_l) == 1:
                         source_origin = source_origin_l[0]
@@ -293,10 +295,10 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Checking PDFs in same directory to reassig when the cpid is identical"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = relink_pdf_files(records)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit("Relink PDFs")
@@ -305,12 +307,14 @@ class PDF_Retrieval(Process):
 
     def check_existing_unlinked_pdfs(
         self,
-        records: typing.List[dict],
-    ) -> typing.List[dict]:
+        records: typing.Dict,
+    ) -> typing.Dict:
         from glob import glob
+        from colrev_core.record import Record
 
-        IDs = [x["ID"] for x in records]
-        linked_pdfs = [str(Path(x["file"]).resolve()) for x in records if "file" in x]
+        linked_pdfs = [
+            str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
+        ]
 
         pdf_files = glob(
             str(self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]) + "/**.pdf", recursive=True
@@ -328,7 +332,7 @@ class PDF_Retrieval(Process):
         )
         grobid_client.start_grobid()
         for file in unlinked_pdfs:
-            if file.stem not in IDs:
+            if file.stem not in records.keys():
 
                 TEI_INSTANCE = TEI(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
@@ -338,18 +342,20 @@ class PDF_Retrieval(Process):
 
                 max_similarity = 0.0
                 max_sim_record = None
-                for record in records:
-                    sim = utils.get_record_similarity(pdf_record, record.copy())
+                for record in records.values():
+                    sim = Record.get_record_similarity(
+                        Record(pdf_record), Record(record.copy())
+                    )
                     if sim > max_similarity:
                         max_similarity = sim
                         max_sim_record = record
                 if max_sim_record:
                     if max_similarity > 0.5:
-                        if RecordState.pdf_prepared == max_sim_record["status"]:
+                        if RecordState.pdf_prepared == max_sim_record["colrev_status"]:
                             continue
 
                         max_sim_record.update(file=str(file))
-                        max_sim_record.update(status=RecordState.pdf_imported)
+                        max_sim_record.update(colrev_status=RecordState.pdf_imported)
 
                         self.REVIEW_MANAGER.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
@@ -359,19 +365,18 @@ class PDF_Retrieval(Process):
                         )
                         # max_sim_record = \
                         #     pdf_prep.validate_pdf_metadata(max_sim_record)
-                        # status = max_sim_record['status']
-                        # if RecordState.pdf_needs_manual_preparation == status:
+                        # colrev_status = max_sim_record['colrev_status']
+                        # if RecordState.pdf_needs_manual_preparation == colrev_status:
                         #     # revert?
 
         return records
 
-    def rename_pdfs(self, records: typing.List[dict] = []) -> typing.List[dict]:
+    def rename_pdfs(self) -> None:
         self.REVIEW_MANAGER.logger.info("Rename PDFs")
 
-        if 0 == len(records):
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        for record in records:
+        for record in records.values():
             if "file" not in record:
                 continue
 
@@ -391,10 +396,10 @@ class PDF_Retrieval(Process):
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return records
+        return
 
     def __get_data(self) -> dict:
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
@@ -408,7 +413,7 @@ class PDF_Retrieval(Process):
 
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.rev_prescreen_included}],
+            conditions=[{"colrev_status": RecordState.rev_prescreen_included}],
         )
 
         prep_data = {
@@ -433,26 +438,24 @@ class PDF_Retrieval(Process):
                 batch = []
         yield batch
 
-    def __set_status_if_file_linked(
-        self, records: typing.List[dict]
-    ) -> typing.List[dict]:
+    def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:
 
-        for record in records:
-            if record["status"] == RecordState.rev_prescreen_included:
+        for record in records.values():
+            if record["colrev_status"] == RecordState.rev_prescreen_included:
                 if "file" in record:
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
-                        record["status"] = RecordState.pdf_imported
+                        record["colrev_status"] = RecordState.pdf_imported
                         self.REVIEW_MANAGER.logger.info(
-                            f'Set status to pdf_imported for {record["ID"]}'
+                            f'Set colrev_status to pdf_imported for {record["ID"]}'
                         )
                     else:
                         print(
                             "Warning: record with file field but no existing PDF "
                             f'({record["ID"]}: {record["file"]}'
                         )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
@@ -466,7 +469,7 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.report_logger.info("Get PDFs")
         self.REVIEW_MANAGER.logger.info("Get PDFs")
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = self.__set_status_if_file_linked(records)
         records = self.check_existing_unlinked_pdfs(records)
 
@@ -495,7 +498,7 @@ class PDF_Retrieval(Process):
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
-            records = self.rename_pdfs()
+            self.rename_pdfs()
 
             self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
 

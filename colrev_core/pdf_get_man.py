@@ -7,7 +7,7 @@ import pandas as pd
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class PDFRetrievalMan(Process):
@@ -19,14 +19,14 @@ class PDFRetrievalMan(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def get_pdf_get_man(self, records: typing.List[dict]) -> list:
+    def get_pdf_get_man(self, records: typing.Dict) -> list:
         missing_records = []
-        for record in records:
-            if record["status"] == RecordState.pdf_needs_manual_retrieval:
+        for record in records.values():
+            if record["colrev_status"] == RecordState.pdf_needs_manual_retrieval:
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, records: typing.List[dict]) -> None:
+    def export_retrieval_table(self, records: typing.Dict) -> None:
         missing_records = self.get_pdf_get_man(records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
@@ -68,7 +68,7 @@ class PDFRetrievalMan(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.pdf_needs_manual_retrieval}]
+            conditions=[{"colrev_status": RecordState.pdf_needs_manual_retrieval}]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(
@@ -79,7 +79,7 @@ class PDFRetrievalMan(Process):
     def set_data(self, record, filepath: Path, PAD: int = 40) -> None:
 
         if filepath is None:
-            record.update(status=RecordState.pdf_not_available)
+            record.update(colrev_status=RecordState.pdf_not_available)
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
             )
@@ -88,7 +88,7 @@ class PDFRetrievalMan(Process):
             )
 
         else:
-            record.update(status=RecordState.pdf_imported)
+            record.update(colrev_status=RecordState.pdf_imported)
             record.update(file=str(filepath))
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"

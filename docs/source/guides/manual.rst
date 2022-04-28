@@ -1,30 +1,30 @@
 
-Documentation
+Manual
 ==================================
 
 Installation:
 
-- :any:`Installation`
+- :std:ref:`Installation`
 
 Workflow:
 
-- :any:`CoLRev status`
-- :any:`Analyze changes`
-- :any:`Curated repositories`
+- :std:ref:`CoLRev status`
+- :std:ref:`Analyze changes`
+- :std:ref:`Curated repositories`
 
 Processing operations:
 
-- :any:`Init`
-- :any:`Search`
-- :any:`Load`
-- :any:`Prepare`
-- :any:`Dedupe`
-- :any:`Prescreen`
-- :any:`PDF get`
-- :any:`PDF prep`
-- :any:`Screen`
-- :any:`Data`
-- :any:`Paper`
+- :std:ref:`Init`
+- :std:ref:`Search`
+- :std:ref:`Load`
+- :std:ref:`Prepare`
+- :std:ref:`Dedupe`
+- :std:ref:`Prescreen`
+- :std:ref:`PDF get`
+- :std:ref:`PDF prep`
+- :std:ref:`Screen`
+- :std:ref:`Data`
+- :std:ref:`Paper`
 
 Hint: `colrev status` should provide all necessary instructions for you project.
 
@@ -127,13 +127,13 @@ Init
     Url for the curated metadata repository.
 
 
-Once the repository is set up, you can share it with your team (see `instructions <overview.html#collaborate-in-a-team>`_).
+Once the repository is set up, you can share it with your team (see `instructions <best_practices.html#collaborate-in-a-team>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
 
 .. code:: bash
 
-	git pull https://github.com/u_name/repo_name.git
+	colrev pull https://github.com/u_name/repo_name.git
 
 .. _Search:
 
@@ -478,7 +478,7 @@ Data
 - a manuscript-based synthesis
     - structured data extraction (diffs are displayed using `daff <https://github.com/paulfitz/daff>`_ or the `browser extension <https://chrome.google.com/webstore/detail/github-csv-diff/ngpdjmibpbemokfbmapemhpbmgacebhg/>`_)
 
-To select the data format, please consult the best practices for different `types of reviews <../guides/best_practices.html#types-of-literature-reviews>`_.
+To select the data format, please consult the best practices for different `types of reviews <./best_practices.html#types-of-literature-reviews>`_.
 
 To set the data format, run
 
@@ -523,7 +523,7 @@ Paper
 
 	colrev paper [options]
 
-Links and references for standalone literature reviews are available in the `best practices <../resources/best_practices.html>`_ section.
+Links and references for standalone literature reviews are available in the `best practices <./best_practices.html>`_ section.
 
 
 References

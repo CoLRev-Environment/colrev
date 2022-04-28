@@ -10,7 +10,7 @@ from PyPDF2 import PdfFileWriter
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class PDFPrepMan(Process):
@@ -35,7 +35,7 @@ class PDFPrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.pdf_needs_manual_preparation}]
+            conditions=[{"colrev_status": RecordState.pdf_needs_manual_preparation}]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(
@@ -53,11 +53,13 @@ class PDFPrepMan(Process):
         return cpid1
 
     def set_data(self, record: dict) -> None:
+        from colrev_core.record import Record
 
-        record.update(status=RecordState.pdf_prepared)
+        record.update(colrev_status=RecordState.pdf_prepared)
 
-        if "pdf_prep_hints" in record:
-            del record["pdf_prep_hints"]
+        RECORD = Record(record)
+        RECORD.reset_pdf_provenance_hints()
+        record = RECORD.get_data()
 
         pdf_path = Path(self.REVIEW_MANAGER.path + record["file"])
         record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
@@ -74,20 +76,21 @@ class PDFPrepMan(Process):
 
     def pdf_prep_man_stats(self) -> None:
         import pandas as pd
+        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         self.REVIEW_MANAGER.logger.info("Calculate statistics")
         stats: dict = {"ENTRYTYPE": {}}
 
         prep_man_hints = []
         crosstab = []
-        for record in records:
+        for record in records.values():
 
-            if RecordState.pdf_needs_manual_preparation != record["status"]:
+            if RecordState.pdf_needs_manual_preparation != record["colrev_status"]:
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -97,12 +100,16 @@ class PDFPrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if "pdf_prep_hints" in record:
-                hints = record["pdf_prep_hints"].split(";")
-                prep_man_hints.append([hint.lstrip() for hint in hints])
+            RECORD = Record(record)
+            prov_d = RECORD.load_data_provenance()
 
-                for hint in hints:
-                    crosstab.append([record["journal"], hint.lstrip()])
+            if "file" in prov_d:
+                if prov_d["file"]["note"] != "":
+                    for hint in prov_d["file"]["note"].split(","):
+                        prep_man_hints.append(hint.lstrip())
+
+            for hint in prep_man_hints:
+                crosstab.append([record["journal"], hint.lstrip()])
 
         crosstab_df = pd.DataFrame(crosstab, columns=["journal", "hint"])
 
@@ -150,28 +157,28 @@ class PDFPrepMan(Process):
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records = [
+        records_list = [
             record
-            for record in records
-            if RecordState.pdf_needs_manual_preparation == record["status"]
+            for record in records.values()
+            if RecordState.pdf_needs_manual_preparation == record["colrev_status"]
         ]
 
         # Casting to string (in particular the RecordState Enum)
-        records = [{k: str(v) for k, v in r.items()} for r in records]
+        records_list = [{k: str(v) for k, v in r.items()} for r in records_list]
 
         bib_db = BibDatabase()
-        bib_db.entries = records
+        bib_db.entries = records_list
         bibtex_str = bibtexparser.dumps(bib_db)
         with open(prep_bib_path, "w") as out:
             out.write(bibtex_str)
 
-        bib_db_df = pd.DataFrame.from_records(records)
+        bib_db_df = pd.DataFrame.from_records(records_list)
 
         col_names = [
             "ID",
-            "origin",
+            "colrev_origin",
             "author",
             "title",
             "year",
@@ -213,11 +220,13 @@ class PDFPrepMan(Process):
 
                 bib_db_changed = bib_db.entries
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
-                x for x in bib_db_changed if x["origin"] == record["origin"]
+                x
+                for x in bib_db_changed
+                if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:
                 changed_record = changed_record_l.pop()
@@ -232,7 +241,7 @@ class PDFPrepMan(Process):
                     if v == "":
                         del record[k]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
         return

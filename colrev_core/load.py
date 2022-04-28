@@ -19,7 +19,68 @@ from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import Record
+from colrev_core.record import RecordState
+
+
+class LoadRecord(Record):
+    def __init__(self, data: dict):
+        super().__init__(data)
+
+    def import_provenance(self) -> None:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
+        if "colrev_masterdata_provenance" in self.data:
+            colrev_masterdata_provenance = self.load_masterdata_provenance()
+        else:
+            colrev_masterdata_provenance = {}
+
+        # Note : only add provenance data for the fields with problems
+        # Implicitly, the other fields have source=original and no problems.
+        if "colrev_masterdata" not in self.data:
+            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+            for required_field in required_fields:
+                if required_field in self.data:
+                    if percent_upper_chars(self.data[required_field]) > 0.8:
+                        colrev_masterdata_provenance[required_field] = {
+                            "source": "ORIGINAL",
+                            "note": "mostly upper case",
+                        }
+                else:
+                    self.data[required_field] = "UNKNOWN"
+            if "colrev_masterdata" not in self.data:
+                self.data["colrev_masterdata"] = "ORIGINAL"
+
+        inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
+        for inconsistent_field in inconsistent_fields:
+            if inconsistent_field in self.data:
+                # TODO : really set to ORIGINAL?
+                if inconsistent_field in colrev_masterdata_provenance:
+                    add_info = (
+                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
+                else:
+                    colrev_masterdata_provenance[inconsistent_field] = {
+                        "source": "ORIGINAL",
+                        "note": (
+                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
+                        ),
+                    }
+        incomplete_fields = self.get_incomplete_fields()
+        for incomplete_field in incomplete_fields:
+            if incomplete_field in colrev_masterdata_provenance:
+                add_info = ", incomplete"
+                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
+            else:
+                colrev_masterdata_provenance[incomplete_field] = {
+                    "source": "ORIGINAL",
+                    "note": "incomplete",
+                }
+
+        self.set_masterdata_provenance(colrev_masterdata_provenance)
+        return
 
 
 class Loader(Process):
@@ -32,7 +93,6 @@ class Loader(Process):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.load,
-            fun=self.main,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -80,11 +140,11 @@ class Loader(Process):
 
         files = [
             f
-            for f_ in [search_dir.glob(f"*.{e}") for e in supported_extensions]
+            for f_ in [search_dir.glob(f"**/*.{e}") for e in supported_extensions]
             for f in f_
         ]
 
-        return files
+        return sorted(files)
 
     def __getbib(self, file: Path) -> typing.List[dict]:
         with open(file) as bibtex_file:
@@ -136,14 +196,14 @@ class Loader(Process):
 
         record_list = []
         for record in search_records:
-            record.update(origin=f"{filepath.name}/{record['ID']}")
+            record.update(colrev_origin=f"{filepath.name}/{record['ID']}")
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if "status" not in record:
-                record.update(status=RecordState.md_retrieved)
-            elif record["status"] in [
+            if "colrev_status" not in record:
+                record.update(colrev_status=RecordState.md_retrieved)
+            elif record["colrev_status"] in [
                 str(RecordState.md_processed),
                 str(RecordState.rev_prescreen_included),
                 str(RecordState.rev_prescreen_excluded),
@@ -157,7 +217,7 @@ class Loader(Process):
             ]:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record["status"] = RecordState.md_prepared
+                record["colrev_status"] = RecordState.md_prepared
 
             if "doi" in record:
                 record.update(
@@ -183,7 +243,7 @@ class Loader(Process):
             f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
         )
 
-        if RecordState.md_retrieved != record["status"]:
+        if RecordState.md_retrieved != record["colrev_status"]:
             return record
 
         # For better readability of the git diff:
@@ -219,9 +279,11 @@ class Loader(Process):
             record.update(number=record["issue"])
             del record["issue"]
 
-        if "metadata_source" not in record:
-            record.update(metadata_source="ORIGINAL")
-        record.update(status=RecordState.md_imported)
+        RECORD = LoadRecord(record)
+        RECORD.import_provenance()
+        record = RECORD.get_data()
+
+        record.update(colrev_status=RecordState.md_imported)
 
         return record
 
@@ -696,10 +758,10 @@ class Loader(Process):
 
             for old_id, new_id in IDs_to_update:
                 self.REVIEW_MANAGER.logger.info(
-                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
                 )
                 self.REVIEW_MANAGER.report_logger.info(
-                    f"Resolve ID to ensure unique origins: {old_id} -> {new_id}"
+                    f"Resolve ID to ensure unique colrev_origins: {old_id} -> {new_id}"
                 )
                 self.__inplace_change_second(
                     corresponding_bib_file, f"{old_id},", f"{new_id},"
@@ -740,7 +802,7 @@ class Loader(Process):
 
         return number_in_bib
 
-    def main(self, keep_ids: bool = False) -> None:
+    def main(self, keep_ids: bool = False, combine_commits=False) -> None:
 
         saved_args = locals()
         if not keep_ids:
@@ -763,8 +825,8 @@ class Loader(Process):
 
             self.resolve_non_unique_IDs(corresponding_bib_file)
 
-            search_records = self.__load_records(corresponding_bib_file)
-            nr_search_recs = len(search_records)
+            search_records_list = self.__load_records(corresponding_bib_file)
+            nr_search_recs = len(search_records_list)
 
             nr_in_bib = self.__get_nr_in_bib(corresponding_bib_file)
             if nr_in_bib != nr_search_recs:
@@ -772,20 +834,35 @@ class Loader(Process):
                     f"ERROR in bib file:  {corresponding_bib_file}"
                 )
 
-            search_records = [
-                x for x in search_records if x["origin"] not in imported_origins
+            search_records_list = [
+                x
+                for x in search_records_list
+                if x["colrev_origin"] not in imported_origins
             ]
-            to_import = len(search_records)
+            to_import = len(search_records_list)
             if 0 == to_import:
                 continue
 
-            for sr in search_records:
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+            for sr in search_records_list:
                 sr = self.__import_record(sr)
 
+                # Make sure IDs are unique / do not replace existing records
+                order = 0
+                letters = list(string.ascii_lowercase)
+                next_unique_ID = sr["ID"]
+                appends: list = []
+                while next_unique_ID in records:
+                    if len(appends) == 0:
+                        order += 1
+                        appends = [p for p in itertools.product(letters, repeat=order)]
+                    next_unique_ID = sr["ID"] + "".join(list(appends.pop(0)))
+                sr["ID"] = next_unique_ID
+                records[sr["ID"]] = sr
+
             self.REVIEW_MANAGER.logger.info("Save records to references.bib")
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-            records += search_records
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
             # TBD: does the following create errors!?
             # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
@@ -794,39 +871,60 @@ class Loader(Process):
                 self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                     records,
-                    selected_IDs=[x["ID"] for x in search_records],
+                    selected_IDs=[r["ID"] for r in search_records_list],
                 )
 
-            self.REVIEW_MANAGER.logger.info("Add changes and create commit")
+            if not combine_commits:
+                self.REVIEW_MANAGER.logger.info("Add changes and create commit")
+
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 str(self.REVIEW_MANAGER.paths["SOURCES"])
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            self.REVIEW_MANAGER.create_commit(
-                f"Load {saved_args['file']}", saved_args=saved_args
-            )
+            if not combine_commits:
+
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                self.REVIEW_MANAGER.create_commit(
+                    f"Load {saved_args['file']}", saved_args=saved_args
+                )
 
             imported_origins = self.__get_currently_imported_origin_list()
             len_after = len(imported_origins)
             imported = len_after - len_before
 
             if imported != to_import:
-                self.REVIEW_MANAGER.logger.error(
-                    f"PROBLEM: delta: {to_import - imported} "
-                    "records missing (negative: too much)"
-                )
+
+                origins_to_import = [o["colrev_origin"] for o in search_records_list]
+
+                # self.REVIEW_MANAGER.pp.pprint(search_records_list)
+                # print(origins_to_import)
+                # self.REVIEW_MANAGER.pp.pprint(imported_origins)
+
                 self.REVIEW_MANAGER.logger.error(f"len_before: {len_before}")
-                self.REVIEW_MANAGER.logger.error(
-                    f"Records not yet imported: {to_import}"
-                )
                 self.REVIEW_MANAGER.logger.error(f"len_after: {len_after}")
-                self.REVIEW_MANAGER.logger.error([x["ID"] for x in search_records])
+                if to_import - imported > 0:
+                    self.REVIEW_MANAGER.logger.error(
+                        f"PROBLEM: delta: {to_import - imported} records missing"
+                    )
+
+                    missing_origins = [
+                        o for o in origins_to_import if o not in imported_origins
+                    ]
+                    self.REVIEW_MANAGER.logger.error(
+                        f"Records not yet imported: {missing_origins}"
+                    )
+                else:
+                    self.REVIEW_MANAGER.logger.error(
+                        f"PROBLEM: delta: {to_import - imported} records too much"
+                    )
 
             print("\n")
 
+        if combine_commits and self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+            self.REVIEW_MANAGER.create_commit("Load (multiple)", saved_args=saved_args)
         return
 
 

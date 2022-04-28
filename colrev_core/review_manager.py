@@ -3,14 +3,11 @@ import ast
 import configparser
 import importlib
 import io
-import itertools
-import json
 import logging
 import multiprocessing as mp
 import os
 import pprint
 import re
-import string
 import sys
 import tempfile
 import typing
@@ -33,16 +30,23 @@ from colrev_core.review_dataset import PropagatedIDChange
 
 
 class ReviewManager:
+    """
+    Class for managing individual CoLRev review project (repositories)
+    """
 
     notified_next_process = None
+    """ReviewManager was notified for the upcoming process and
+    will provide access to the ReviewDataset"""
 
     def __init__(self, path_str: str = None, force_mode: bool = False) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
         self.force_mode = force_mode
+        """Force mode variable (bool)"""
 
         if path_str is not None:
             self.path = Path(path_str)
+            """Path of the project repository"""
         else:
             self.path = Path.cwd()
 
@@ -51,14 +55,18 @@ class ReviewManager:
 
         if self.config["DEBUG_MODE"]:
             self.report_logger = self.__setup_report_logger(logging.DEBUG)
+            """Logger for the commit report"""
             self.logger = self.__setup_logger(logging.DEBUG)
+            """Logger for processing information"""
         else:
             self.report_logger = self.__setup_report_logger(logging.INFO)
             self.logger = self.__setup_logger(logging.INFO)
 
         self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
         self.REVIEW_DATASET = ReviewDataset(self)
+        """The review dataset object"""
         self.sources = self.REVIEW_DATASET.load_sources()
+        """Information on sources (search directory)"""
 
         try:
             self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
@@ -286,16 +294,16 @@ class ReviewManager:
             return
 
         def migrate_0_3_0(self) -> bool:
-            records = self.REVIEW_DATASET.load_records()
-            if len(records) > 0:
-                for record in records:
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
                     if "LOCAL_INDEX" == record.get("metadata_source", ""):
                         record["metadata_source"] = "CURATED"
                     if "pdf_hash" in record:
                         record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
                         del record["pdf_hash"]
 
-                self.REVIEW_DATASET.save_records(records)
+                self.REVIEW_DATASET.save_records_dict(records)
                 self.REVIEW_DATASET.add_record_changes()
 
             inplace_change(
@@ -309,6 +317,38 @@ class ReviewManager:
 
         def migrate_0_4_0(self) -> bool:
 
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
+                    if "manual_duplicate" in record:
+                        del record["manual_duplicate"]
+                    if "manual_non_duplicate" in record:
+                        del record["manual_non_duplicate"]
+                    if "origin" in record:
+                        record["colrev_origin"] = record["origin"]
+                        del record["origin"]
+                    if "status" in record:
+                        record["colrev_status"] = record["status"]
+                        del record["status"]
+                    if "excl_criteria" in record:
+                        record["exclusion_criteria"] = record["excl_criteria"]
+                        del record["excl_criteria"]
+                    if "metadata_source" in record:
+                        del record["metadata_source"]
+                    if "source_url" in record:
+                        record["colrev_masterdata"] = "CURATED:" + record["source_url"]
+                        del record["source_url"]
+                    else:
+                        record["colrev_masterdata"] = "ORIGINAL"
+                    # Note : for curated repositories
+                    # record["colrev_masterdata"] = "CURATED"
+
+                self.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_DATASET.add_record_changes()
+
+            # Note: the order is important in this case.
+            self.REVIEW_DATASET.update_colrev_ids()
+
             return True
 
         # next version should be:
@@ -320,9 +360,12 @@ class ReviewManager:
             {"from": "0.4.0", "to": upcoming_version, "script": migrate_0_4_0},
         ]
 
-        self.logger.info(f"Current CoLRev version: {current_version}")
+        # Start with the first step if the version is older:
+        if last_version not in [x["from"] for x in migration_scripts]:
+            last_version = "0.3.0"
 
-        while last_version in [x["from"] for x in migration_scripts]:
+        while current_version in [x["from"] for x in migration_scripts]:
+            self.logger.info(f"Current CoLRev version: {last_version}")
 
             migrator = [x for x in migration_scripts if x["from"] == last_version].pop()
 
@@ -348,11 +391,17 @@ class ReviewManager:
                 break
 
         if self.REVIEW_DATASET.has_changes():
-            self.create_commit("Upgrade to CoLRev 0.3.0")
+            self.create_commit(f"Upgrade to CoLRev {upcoming_version}")
+        else:
+            self.logger.info("Nothing to do.")
+            self.logger.info(
+                "If the update notification occurs again, run\n "
+                "git commit -n -m --allow-empty 'update colrev'"
+            )
 
         return
 
-    def __check_repository_setup(self) -> None:
+    def check_repository_setup(self) -> None:
         from git.exc import GitCommandError
 
         # 1. git repository?
@@ -528,7 +577,7 @@ class ReviewManager:
             {"script": EnvironmentManager.check_docker_installed, "params": []},
             {"script": EnvironmentManager.build_docker_images, "params": []},
             {"script": self.__check_git_conflicts, "params": []},
-            {"script": self.__check_repository_setup, "params": []},
+            {"script": self.check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},
         ]
 
@@ -1088,7 +1137,7 @@ class ReviewManager:
                     debug_part = False
                     while line:
                         # For more efficient debugging (loading of dict with Enum)
-                        if "'status" == line.lstrip()[:7] and "<RecordState." in line:
+                        if "colrev_status" in line and "<RecordState." in line:
                             line = line.replace("<RecordState", "RecordState")
                             line = line[: line.rfind(":")] + line[line.rfind(">") + 1 :]
                         if "[DEBUG]" in line or debug_part:
@@ -1114,6 +1163,7 @@ class ReviewManager:
             )
             if "Update pre-commit-config" in msg:
                 script = "pre-commit autoupdate"
+            # TODO: test and update the following
             if "__apply_correction" in script:
                 script = "apply_corrections"
 
@@ -1121,6 +1171,7 @@ class ReviewManager:
                 git_author = git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"])
             else:
                 git_author = git.Actor(f"script:{script}", "")
+            # TODO: test and update the following
             if "apply_correction" in script:
                 cmsg = msg
             else:
@@ -1144,277 +1195,6 @@ class ReviewManager:
             return True
         else:
             return False
-
-    def apply_corrections(self) -> None:
-
-        self.logger.info("Collect corrections for curated repositories")
-
-        # group by target-repo to bundle changes in a commit
-        change_sets = {}  # type: ignore
-        for correction in self.paths["CORRECTIONS_PATH"].glob("*.json"):
-            with open(correction) as json_file:
-                output = json.load(json_file)
-            output["file"] = correction
-            source_url = output["source_url"]
-
-            if len(change_sets) == 0:
-                change_sets[source_url] = [output]
-                continue
-            if source_url in [p for p, c in change_sets.items()]:
-                change_sets[source_url].append(output)
-            else:
-                change_sets[source_url] = [output]
-
-        for source_url, change_itemset in change_sets.items():
-            print()
-            if "metadata_source=" in source_url:
-                self.logger.info(f"Share corrections with {source_url}")
-            else:
-                self.logger.info(f"Apply corrections to {source_url}")
-            for item in change_itemset:
-                self.pp.pprint(item["changes"])
-            if "y" == input("\nConfirm changes? (y/n)"):
-                if "metadata_source=" in source_url:
-                    self.__share_correction(source_url, change_itemset)
-                else:
-                    self.__apply_correction(source_url, change_itemset)
-
-                print(
-                    "\nThank you for supporting other researchers "
-                    "by sharing your corrections ❤\n"
-                )
-        return
-
-    def __share_correction(self, source_url, change_list) -> None:
-
-        prepared_change_list = []
-        for change in change_list:
-            prepared_change_list.append(
-                {
-                    "record": change["original_curated_record"],
-                    "changes": change["changes"],
-                }
-            )
-
-        corrections = self.pp.pformat(prepared_change_list)
-
-        text = (
-            "Dear Sir or Madam,\n\nwe have noticed potential corrections and "
-            + "would like to share them with you.\nThe potentical changes are:\n\n"
-            + f"{corrections}\n\nBest regards\n\n"
-        )
-
-        if "metadata_source=DBLP" == source_url:
-            file_path = Path("dblp-corrections-mail.txt")
-            dblp_header = (
-                "Send to: dblp@dagstuhl.de\n\n"
-                + "Subject: Potential correction to DBLP metadata\n\n"
-            )
-
-            text = dblp_header + text
-            file_path.write_text(text)
-
-            print(f"\nPlease send the e-mail (prepared in the file {file_path})")
-            input("Press Enter to confirm")
-
-            for change_item in change_list:
-                if Path(change_item["file"]).is_file():
-                    Path(change_item["file"]).unlink()
-
-        return
-
-    def __apply_correction(self, source_url, change_list) -> None:
-        from colrev_core.process import CheckProcess
-        from bibtexparser.bibdatabase import BibDatabase
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
-        import bibtexparser
-        from colrev_core.review_dataset import RecordNotInRepoException
-
-        # TBD: other modes of accepting changes?
-        # e.g., only-metadata, no-changes, all(including optional fields)
-        check_REVIEW_MANAGER = ReviewManager(path_str=source_url)
-        CHECK_PROCESS = CheckProcess(check_REVIEW_MANAGER)
-        REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
-        git_repo = REVIEW_DATASET.get_repo()
-        if REVIEW_DATASET.behind_remote():
-            self.logger.error(
-                "Repo behind remote. Pull first to avoid conflicts.\n"
-                f"colrev env --update {CHECK_PROCESS.REVIEW_MANAGER.path}"
-            )
-            return
-
-        if git_repo.is_dirty():
-            return
-
-        essential_md_keys = [
-            "title",
-            "author",
-            "journal",
-            "year",
-            "booktitle",
-            "number",
-            "volume",
-            "issue",
-            "author",
-            "doi",
-        ]
-
-        records = REVIEW_DATASET.load_records()
-        pull_request_msgs = []
-        for change_item in change_list:
-            original_curated_record = change_item["original_curated_record"]
-
-            try:
-                record = REVIEW_DATASET.retrieve_by_colrev_id(
-                    original_curated_record, records
-                )
-            except RecordNotInRepoException:
-                pass
-                print("record not found")
-                continue
-
-            record_branch_name = record["ID"]
-            counter = 1
-            new_record_branch_name = record_branch_name
-            while new_record_branch_name in [ref.name for ref in git_repo.references]:
-                new_record_branch_name = f"{record_branch_name}_{counter}"
-                counter += 1
-
-            record_branch_name = new_record_branch_name
-            git_repo.git.branch(record_branch_name)
-
-            remote = git_repo.remote()
-            prev_branch_name = git_repo.active_branch.name
-            for head in git_repo.heads:
-                if head.name == record_branch_name:
-                    head.checkout()
-            # git_repo.heads.update.checkout()
-
-            corrections_bib_path = CHECK_PROCESS.REVIEW_MANAGER.paths[
-                "SEARCHDIR"
-            ] / Path("corrections.bib")
-            if corrections_bib_path.is_file():
-                with open(corrections_bib_path) as target_db:
-                    corrections_bib = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
-            else:
-                corrections_bib = BibDatabase()
-                new_record = {
-                    "filename": str(corrections_bib_path.name),
-                    "search_type": "OTHER",
-                    "source_name": "corrections",
-                    "source_url": str(corrections_bib_path.name),
-                    "search_parameters": "",
-                    "comment": "",
-                }
-
-                sources = REVIEW_DATASET.load_sources()
-                sources.append(new_record)
-                REVIEW_DATASET.save_sources(sources)
-
-            # append original record to search/corrections.bib
-            # add ID as an origin to record
-            rec_for_reset = record.copy()
-            prior_rec = record.copy()
-
-            order = 0
-            letters = list(string.ascii_lowercase)
-            temp_ID = prior_rec["ID"]
-            next_unique_ID = temp_ID
-            other_ids = [x["ID"] for x in corrections_bib.entries]
-            appends: list = []
-            while next_unique_ID in other_ids:
-                if len(appends) == 0:
-                    order += 1
-                    appends = [p for p in itertools.product(letters, repeat=order)]
-                next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
-            prior_rec["ID"] = next_unique_ID
-
-            if "status" in prior_rec:
-                del prior_rec["status"]
-            if "origin" in prior_rec:
-                del prior_rec["origin"]
-            if "metadata_source" in prior_rec:
-                del prior_rec["metadata_source"]
-            if "doi" in prior_rec:
-                del prior_rec["doi"]
-            if "colrev_pdf_id" in prior_rec:
-                del prior_rec["colrev_pdf_id"]
-            if "grobid-version" in prior_rec:
-                del prior_rec["grobid-version"]
-            if "file" in prior_rec:
-                del prior_rec["file"]
-            corrections_bib.entries.append(prior_rec)
-            record["origin"] = (
-                record["origin"] + f";{corrections_bib_path.name}/{prior_rec['ID']}"
-            )
-
-            for (type, key, change) in list(change_item["changes"]):
-                if key in ["status", "origin", "metadata_source", "file"]:
-                    continue
-
-                # Note: the most important thing is to update the metadata.
-                # we can create a copy/duplicate representation (/search) later
-                if key not in essential_md_keys:
-                    continue
-                # TODO : deal with add/remove
-                if type != "change":
-                    continue
-
-                record[key] = change[1]
-
-            corrections_bib.entries = sorted(
-                corrections_bib.entries, key=lambda d: d["ID"]
-            )
-
-            bibtex_str = bibtexparser.dumps(
-                corrections_bib, writer=self.REVIEW_DATASET.get_bibtex_writer()
-            )
-
-            with open(corrections_bib_path, "w") as out:
-                out.write(bibtex_str)
-
-            crb_path = str(
-                CHECK_PROCESS.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]
-                / Path("corrections.bib")
-            )
-            REVIEW_DATASET.add_changes(crb_path)
-            REVIEW_DATASET.add_changes(
-                str(CHECK_PROCESS.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
-            )
-            REVIEW_DATASET.save_records(records)
-            REVIEW_DATASET.add_record_changes()
-            CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
-
-            git_repo.remotes.origin.push(
-                refspec=f"{record_branch_name}:{record_branch_name}"
-            )
-
-            for head in git_repo.heads:
-                if head.name == prev_branch_name:
-                    head.checkout()
-            if "github.com" in remote.url:
-                pull_request_msgs.append(
-                    "\nTo create a pull request for your changes go "
-                    f"to {str(remote.url).rstrip('.git')}/compare/{record_branch_name}"
-                )
-
-            # reset the record - each branch should have changes for one record
-            for k, v in rec_for_reset.items():
-                record[k] = v
-
-            if Path(change_item["file"]).is_file():
-                Path(change_item["file"]).unlink()
-
-        for pull_request_msg in pull_request_msgs:
-            print(pull_request_msg)
-        # https://github.com/geritwagner/information_systems_papers/compare/update?expand=1
-        # TODO : handle cases where update branch already exists
-        return
 
 
 class MissingDependencyError(Exception):

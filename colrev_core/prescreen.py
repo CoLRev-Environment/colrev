@@ -7,7 +7,36 @@ import pandas as pd
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import Record
+from colrev_core.record import RecordState
+
+
+class PrescreenRecord(Record):
+    def __init__(self, data: dict):
+        super().__init__(data)
+
+    def __str__(self) -> str:
+
+        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+            k for k in self.identifying_fields if k in self.data
+        ]
+        complementary_keys_order = [
+            k for k, v in self.data.items() if k not in self.identifying_keys_order
+        ]
+
+        ik_sorted = {
+            k: v for k, v in self.data.items() if k in self.identifying_keys_order
+        }
+        ck_sorted = {
+            k: v
+            for k, v in self.data.items()
+            if k in complementary_keys_order and k not in self.provenance_keys
+        }
+        ret_str = (
+            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+        )
+
+        return ret_str
 
 
 class Prescreen(Process):
@@ -20,12 +49,12 @@ class Prescreen(Process):
 
     def export_table(self, export_table_format: str) -> None:
         self.REVIEW_MANAGER.logger.info("Loading records for export")
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         tbl = []
-        for record in records:
+        for record in records.vaules():
 
-            if record["status"] in [
+            if record["colrev_status"] in [
                 RecordState.md_imported,
                 RecordState.md_retrieved,
                 RecordState.md_needs_manual_preparation,
@@ -35,30 +64,24 @@ class Prescreen(Process):
 
             inclusion_1, inclusion_2 = "NA", "NA"
 
-            if RecordState.md_processed == record["status"]:
+            if RecordState.md_processed == record["colrev_status"]:
                 inclusion_1 = "TODO"
-            elif RecordState.rev_prescreen_excluded == record["status"]:
+            elif RecordState.rev_prescreen_excluded == record["colrev_status"]:
                 inclusion_1 = "no"
             else:
                 inclusion_1 = "yes"
                 inclusion_2 = "TODO"
-                if RecordState.rev_excluded == record["status"]:
+                if RecordState.rev_excluded == record["colrev_status"]:
                     inclusion_2 = "no"
-                if record["status"] in [
+                if record["colrev_status"] in [
                     RecordState.rev_included,
                     RecordState.rev_synthesized,
                 ]:
                     inclusion_2 = "yes"
 
-            # excl_criteria = {}
-            # if "excl_criteria" in record:
-            #     for ecrit in record["excl_criteria"].split(";"):
-            #         criteria = {ecrit.split("=")[0]: ecrit.split("=")[1]}
-            #         excl_criteria.update(criteria)
-
-            excl_criteria = record.get("excl_criteria", "NA")
-            if excl_criteria == "NA" and inclusion_2 == "yes":
-                excl_criteria = "TODO"
+            exclusion_criteria = record.get("exclusion_criteria", "NA")
+            if exclusion_criteria == "NA" and inclusion_2 == "yes":
+                exclusion_criteria = "TODO"
 
             row = {
                 "ID": record["ID"],
@@ -74,9 +97,9 @@ class Prescreen(Process):
                 "abstract": record.get("abstract", ""),
                 "inclusion_1": inclusion_1,
                 "inclusion_2": inclusion_2,
-                "excl_criteria": excl_criteria,
+                "exclusion_criteria": exclusion_criteria,
             }
-            # row.update    (excl_criteria)
+            # row.update    (exclusion_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -93,7 +116,7 @@ class Prescreen(Process):
 
     def import_table(self, import_table_path: str) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         if not Path(import_table_path).is_file():
             self.REVIEW_MANAGER.logger.error(
                 f"Did not find {import_table_path} - exiting."
@@ -107,50 +130,43 @@ class Prescreen(Process):
             "import_table not completed (exclusion_criteria not yet imported)"
         )
 
-        for x in [
-            [
-                x.get("ID", ""),
-                x.get("inclusion_1", ""),
-                x.get("inclusion_2", ""),
-                x.get("excl_criteria", ""),
-            ]
-            for x in screened_records
-        ]:
-            record_list = [e for e in records if e["ID"] == x[0]]
-            if len(record_list) == 1:
-                record: dict = record_list.pop()
-                if x[1] == "no":
-                    record["status"] = RecordState.rev_prescreen_excluded
-                if x[1] == "yes":
-                    record["status"] = RecordState.rev_prescreen_included
-                if x[2] == "no":
-                    record["status"] = RecordState.rev_excluded
-                if x[2] == "yes":
-                    record["status"] = RecordState.rev_included
-                if x[3] != "":
-                    record["excl_criteria"] = x[3]
+        for screened_record in screened_records:
+            if screened_record.get("ID", "") in records:
+                record = records[screened_record.get("ID", "")]
+                if "no" == screened_record.get("inclusion_1", ""):
+                    record["colrev_status"] = RecordState.rev_prescreen_excluded
+                if "yes" == screened_record.get("inclusion_1", ""):
+                    record["colrev_status"] = RecordState.rev_prescreen_included
+                if "no" == screened_record.get("inclusion_2", ""):
+                    record["colrev_status"] = RecordState.rev_excluded
+                if "yes" == screened_record.get("inclusion_2", ""):
+                    record["colrev_status"] = RecordState.rev_included
+                if "" != screened_record.get("exclusion_criteria", ""):
+                    record["exclusion_criteria"] = screened_record.get(
+                        "exclusion_criteria", ""
+                    )
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
 
         return
 
     def include_all_in_prescreen(self) -> None:
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         saved_args = locals()
         saved_args["include_all"] = ""
         PAD = 50
-        for record in records:
-            if record["status"] != RecordState.md_processed:
+        for record in records.values():
+            if record["colrev_status"] != RecordState.md_processed:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "Included in prescreen (automatically)"
             )
-            record.update(status=RecordState.rev_prescreen_included)
+            record.update(colrev_status=RecordState.rev_prescreen_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
             "Pre-screen (include_all)", manual_author=False, saved_args=saved_args
@@ -166,7 +182,7 @@ class Prescreen(Process):
         )
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.md_processed}]
+            conditions=[{"colrev_status": RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
@@ -179,14 +195,14 @@ class Prescreen(Process):
                 f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "status", str(RecordState.rev_prescreen_included)
+                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_included)
             )
         else:
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "status", str(RecordState.rev_prescreen_excluded)
+                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_excluded)
             )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

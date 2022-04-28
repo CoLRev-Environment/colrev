@@ -19,8 +19,7 @@ from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
 from yaml import safe_load
 
-from colrev_core import utils
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class ReviewDataset:
@@ -106,6 +105,30 @@ class ReviewDataset:
             for record_header_str in self.__read_next_record_header_str()
         ]
 
+    def get_origin_state_dict(self, file_object=None) -> dict:
+        ret_dict = {}
+
+        def append_origin_state_pair(r_header: str):
+            rhlines = r_header.split("\n")
+            rhl0, rhl1, rhl2 = (
+                line[line.find("{") + 1 : line.rfind("}")] for line in rhlines[0:3]
+            )
+            origins = rhl1
+            if "colrev_status" not in rhlines[2]:
+                raise StatusFieldValueError(origins, "colrev_status", "NA")
+            colrev_status = rhl2
+            for origin in origins.split(";"):
+                ret_dict[origin] = colrev_status
+            return
+
+        if not self.MAIN_REFERENCES_FILE.is_file():
+            return {}
+        [
+            append_origin_state_pair(record_header_str)
+            for record_header_str in self.__read_next_record_header_str(file_object)
+        ]
+        return ret_dict
+
     def get_record_header_list(self) -> list:
         """Get the record_header_list"""
 
@@ -131,43 +154,54 @@ class ReviewDataset:
             line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:3]
         )
         ID = rhl0
-        if "status" not in rhlines[2]:
-            raise StatusFieldValueError(ID, "status", "NA")
-        status = rhl2[:-1]  # to replace the trailing }
-        return [ID, status]
+        if "colrev_status" not in rhlines[2]:
+            raise StatusFieldValueError(ID, "colrev_status", "NA")
+        colrev_status = rhl2[:-1]  # to replace the trailing }
+        return [ID, colrev_status]
 
     def __get_record_header_item(self, r_header: str) -> list:
         items = r_header.split("\n")[0:8]
 
         ID = items.pop(0)
 
-        origin = items.pop(0)
-        if "origin" not in origin:
+        colrev_origin = items.pop(0)
+        if "colrev_origin" not in colrev_origin:
             raise RecordFormatError(f"{ID} has status=NA")
-        origin = origin[origin.find("{") + 1 : origin.rfind("}")]
+        colrev_origin = colrev_origin[
+            colrev_origin.find("{") + 1 : colrev_origin.rfind("}")
+        ]
 
-        status = items.pop(0)
-        if "status" not in status:
-            raise StatusFieldValueError(ID, "status", "NA")
-        status = status[status.find("{") + 1 : status.rfind("}")]
+        colrev_status = items.pop(0)
+        if "colrev_status" not in colrev_status:
+            raise StatusFieldValueError(ID, "colrev_status", "NA")
+        colrev_status = colrev_status[
+            colrev_status.find("{") + 1 : colrev_status.rfind("}")
+        ]
 
-        excl_criteria, file, metadata_source = "", "", ""
+        exclusion_criteria, file, colrev_masterdata = "", "", ""
         while items:
             item = items.pop(0)
 
-            # excl_criteria can only be in line 4 (but it is optional)
-            if "excl_criteria" in item:
-                excl_criteria = item[item.find("{") + 1 : item.rfind("}")]
+            # exclusion_criteria can only be in line 4 (but it is optional)
+            if "exclusion_criteria" in item:
+                exclusion_criteria = item[item.find("{") + 1 : item.rfind("}")]
                 continue
 
             # file is optional and could be in lines 4-7
             if "file" in item:
                 file = item[item.find("{") + 1 : item.rfind("}")]
 
-            if "metadata_source" in item:
-                metadata_source = item[item.find("{") + 1 : item.rfind("}")]
+            if "colrev_masterdata" in item:
+                colrev_masterdata = item[item.find("{") + 1 : item.rfind("}")]
 
-        return [ID, origin, status, excl_criteria, file, metadata_source]
+        return [
+            ID,
+            colrev_origin,
+            colrev_status,
+            exclusion_criteria,
+            file,
+            colrev_masterdata,
+        ]
 
     def retrieve_records_from_history(
         self, original_records: typing.List[typing.Dict], condition_state: RecordState
@@ -189,15 +223,17 @@ class ReviewDataset:
         for commit_id, cmsg, filecontents in list(revlist):
             prior_db = bibtexparser.loads(filecontents)
             for prior_record in prior_db.entries:
-                if str(prior_record["status"]) != str(condition_state):
+                if str(prior_record["colrev_status"]) != str(condition_state):
                     continue
                 for original_record in original_records:
 
                     if any(
-                        o in prior_record["origin"]
-                        for o in original_record["origin"].split(";")
+                        o in prior_record["colrev_origin"]
+                        for o in original_record["colrev_origin"].split(";")
                     ):
-                        prior_record["status"] = RecordState[prior_record["status"]]
+                        prior_record["colrev_status"] = RecordState[
+                            prior_record["colrev_status"]
+                        ]
                         prior_records.append(prior_record)
                         # only take the latest version (i.e., drop the record)
                         # Note: only append the first one if origins were in
@@ -209,8 +245,9 @@ class ReviewDataset:
 
         return prior_records
 
-    def load_records(self) -> typing.List[dict]:
+    def load_records_dict(self) -> dict:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
+        from colrev_core.review_dataset import ReviewManagerNotNofiedError
 
         if self.REVIEW_MANAGER.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
@@ -218,8 +255,10 @@ class ReviewDataset:
         from bibtexparser.bparser import BibTexParser
         from bibtexparser.customization import convert_to_unicode
 
-        if self.MAIN_REFERENCES_FILE.is_file():
-            with open(self.MAIN_REFERENCES_FILE) as target_db:
+        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+
+        if MAIN_REFERENCES_FILE.is_file():
+            with open(MAIN_REFERENCES_FILE) as target_db:
                 bib_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -229,51 +268,156 @@ class ReviewDataset:
                 records = bib_db.entries
 
                 # Cast status to Enum
-                records = [
-                    {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-                    for r in records
-                ]
-
                 # DOIs are case sensitive -> use upper case.
-                records = [
-                    {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
+                records_dict = {
+                    r["ID"]: {
+                        k: RecordState[v]
+                        if ("colrev_status" == k)
+                        else v.upper()
+                        if ("doi" == k)
+                        else v
+                        for k, v in r.items()
+                    }
                     for r in records
-                ]
+                }
 
         else:
-            records = []
+            records_dict = {}
 
-        return records
+        return records_dict
 
-    def save_records(self, records: typing.List[dict]) -> None:
-        """Save the records"""
+    def load_origin_records(self) -> dict:
+        from bibtexparser.bparser import BibTexParser
+        from bibtexparser.customization import convert_to_unicode
+
+        origin_records: typing.Dict[str, typing.Any] = {}
+        sources = [x["filename"] for x in self.REVIEW_MANAGER.sources]
+        for source in sources:
+            source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
+            if source_file.is_file():
+                with open(source_file) as target_db:
+                    bib_db = BibTexParser(
+                        customization=convert_to_unicode,
+                        ignore_nonstandard_types=False,
+                        common_strings=True,
+                    ).parse_file(target_db, partial=True)
+
+                    records = bib_db.entries
+
+                    # Cast status to Enum
+                    # DOIs are case sensitive -> use upper case.
+                    records_dict = {
+                        f"{source}/{r['ID']}": {k: v for k, v in r.items()}
+                        for r in records
+                    }
+                    origin_records = {**origin_records, **records_dict}
+
+        return origin_records
+
+    def load_from_git_history(self):
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
+        revlist = (
+            (
+                commit.hexsha,
+                commit.message,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+        )
+
+        for commit_id, cmsg, filecontents in list(revlist):
+            prior_db = bibtexparser.loads(filecontents)
+            prior_db.entries
+            records_dict = {
+                r["ID"]: {
+                    k: RecordState[v]
+                    if ("colrev_status" == k)
+                    else v.upper()
+                    if ("doi" == k)
+                    else v
+                    for k, v in r.items()
+                }
+                for r in prior_db.entries
+            }
+            yield records_dict
+
+    def save_records_dict(self, recs_dict_in):
+        """Save the records dict"""
+        import bibtexparser
+        from bibtexparser.bibdatabase import BibDatabase
+
+        recs_dict = recs_dict_in.copy()
+
+        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
         # Cast to string (in particular the RecordState Enum)
-        records = [{k: str(v) for k, v in r.items()} for r in records]
-        for record in records:
-            if "LOCAL_PAPER_INDEX" == record.get("metadata_source", ""):
-                record["metadata_source"] = "CURATED"
+        max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
+        for record in recs_dict.values():
+
+            # TBD : if we do this, we create more git diff changes...
+            # if "" == record.get("colrev_masterdata_provenance", "NA"):
+            #     del record["colrev_masterdata_provenance"]
+
+            # separated by ;
+            for field in ["colrev_id"]:
+                if field in record:
+                    if isinstance(record[field], str):
+                        record[field] = [
+                            element.lstrip().rstrip().replace("\n", "")
+                            for element in record[field].split(";")
+                        ]
+            # separated by \n
+            for field in [
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_file_provenance",
+            ]:
+                if field in record:
+                    if isinstance(record[field], str):
+                        # anticipate/prevent removal of last char:
+                        record[field] += ";"
+                        record[field] = [
+                            # Note : [:-1] - removes last ;
+                            # which is added by list_indent
+                            element.lstrip().rstrip()[:-1]
+                            for element in record[field].split("\n")
+                        ]
+
+        list_indent = ";\n" + " " * max_len
+        records = [
+            {
+                k: list_indent.join(v) if isinstance(v, list) else str(v)
+                for k, v in r.items()
+            }
+            for r in recs_dict.values()
+        ]
 
         records.sort(key=lambda x: x["ID"])
 
         bib_db = BibDatabase()
         bib_db.entries = records
 
-        bibtex_str = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
+        bibtex_str = bibtexparser.dumps(
+            bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+        )
 
-        with open(self.MAIN_REFERENCES_FILE, "w") as out:
+        with open(MAIN_REFERENCES_FILE, "w") as out:
             out.write(bibtex_str)
 
-        # Casting to RecordState (in case the records are used afterwards)
-        records = [
-            {k: RecordState[v] if ("status" == k) else v for k, v in r.items()}
-            for r in records
-        ]
+        # TBD: the caseing may not be necessary
+        # because we create a new list of dicts when casting to strings...
+        # # Casting to RecordState (in case the records are used afterwards)
+        # records = [
+        #     {k: RecordState[v] if ("colrev_status" == k) else v for k, v in r.items()}
+        #     for r in records
+        # ]
 
-        # DOIs are case sensitive -> use upper case.
-        records = [
-            {k: v.upper() if ("doi" == k) else v for k, v in r.items()} for r in records
-        ]
+        # # DOIs are case sensitive -> use upper case.
+        # records = [
+        #     {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
+        #      for r in records
+        # ]
 
         return
 
@@ -290,9 +434,11 @@ class ReviewDataset:
                 working_tree=True,
             )
         else:
-            records = self.load_records()
-            records = [x for x in records if id != x["ID"]]
-            self.save_records(records)
+            records = self.load_records_dict()
+            records = {
+                ID: record for ID, record in records.items() if ID not in id.split(",")
+            }
+            self.save_records_dict(records)
             self.add_record_changes()
 
         self.REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
@@ -307,21 +453,22 @@ class ReviewDataset:
         # Note: IDs should be at the beginning to facilitate git versioning
         # order: hard-coded in get_record_status_item()
         writer.display_order = [
-            "origin",  # must be in second line
-            "status",  # must be in third line
-            "metadata_source",
-            "excl_criteria",
-            "man_prep_hints",
-            "pdf_processed",
+            "colrev_origin",  # must be in second line
+            "colrev_status",  # must be in third line
+            "colrev_masterdata",
+            "colrev_masterdata_provenance",
+            "colrev_data_provenance",
+            "colrev_file_provenance",
+            "colrev_id",
+            "colrev_pdf_id",
+            "exclusion_criteria",
             "file",  # Note : do not change this order (parsers rely on it)
             "prescreen_exclusion",
-            "colrev_pdf_id",
-            "potential_dupes",
             "doi",
             "grobid-version",
             "dblp_key",
+            "sem_scholar_id",
             "wos_accession_number",
-            "source_url",
             "author",
             "booktitle",
             "journal",
@@ -344,11 +491,12 @@ class ReviewDataset:
         return writer
 
     def set_IDs(
-        self, records: typing.List[dict] = [], selected_IDs: list = None
-    ) -> typing.List[dict]:
+        self, records: typing.Dict = {}, selected_IDs: list = None
+    ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         from colrev_core.prep import Preparation
+        from colrev_core.record import Record
         from colrev_core.environment import LocalIndex
 
         self.LOCAL_INDEX = LocalIndex()
@@ -357,24 +505,25 @@ class ReviewDataset:
         )
 
         if len(records) == 0:
-            records = self.load_records()
+            records = self.load_records_dict()
 
-        ID_list = [record["ID"] for record in records]
+        ID_list = list(records.keys())
 
-        for record in records:
-            if "CURATED" == record.get("metadata_source", ""):
+        for record_ID, record in records.items():
+            RECORD = Record(record)
+            if RECORD.masterdata_is_curated():
                 continue
-            self.REVIEW_MANAGER.logger.debug(f'Set ID for {record["ID"]}')
+            self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
             if selected_IDs is not None:
-                if record["ID"] not in selected_IDs:
+                if record_ID not in selected_IDs:
                     continue
-            elif str(record["status"]) not in [
+            elif str(record["colrev_status"]) not in [
                 str(RecordState.md_imported),
                 str(RecordState.md_prepared),
             ]:
                 continue
 
-            old_id = record["ID"]
+            old_id = record_ID
             new_id = self.__generate_ID_blacklist(
                 record, ID_list, record_in_bib_db=True, raise_error=False
             )
@@ -385,14 +534,12 @@ class ReviewDataset:
                 if old_id in ID_list:
                     ID_list.remove(old_id)
 
-        records = sorted(records, key=lambda d: d["ID"])
-
-        self.save_records(records)
+        self.save_records_dict(records)
 
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
-        records = self.load_records()
-        self.save_records(records)
+        records = self.load_records_dict()
+        self.save_records_dict(records)
         self.add_record_changes()
 
         return records
@@ -439,6 +586,35 @@ class ReviewDataset:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
+        import re
+        import unicodedata
+
+        def rmdiacritics(char: str) -> str:
+            """
+            Return the base character of char, by "removing" any
+            diacritics like accents or curls and strokes and the like.
+            """
+            desc = unicodedata.name(char)
+            cutoff = desc.find(" WITH ")
+            if cutoff != -1:
+                desc = desc[:cutoff]
+                try:
+                    char = unicodedata.lookup(desc)
+                except KeyError:
+                    pass  # removing "WITH ..." produced an invalid name
+            return char
+
+        def remove_accents(input_str: str) -> str:
+            try:
+                nfkd_form = unicodedata.normalize("NFKD", input_str)
+                wo_ac_list = [
+                    rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
+                ]
+                wo_ac = "".join(wo_ac_list)
+            except ValueError:
+                wo_ac = input_str
+                pass
+            return wo_ac
 
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
@@ -493,7 +669,7 @@ class ReviewDataset:
                 temp_ID = temp_ID.capitalize()
             # Replace special characters
             # (because IDs may be used as file names)
-            temp_ID = utils.remove_accents(temp_ID)
+            temp_ID = remove_accents(temp_ID)
             temp_ID = re.sub(r"\(.*\)", "", temp_ID)
             temp_ID = re.sub("[^0-9a-zA-Z]+", "", temp_ID)
 
@@ -580,7 +756,7 @@ class ReviewDataset:
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 record = db.entries[0]
-                record["status"] = RecordState[record["status"]]
+                record["colrev_status"] = RecordState[record["colrev_status"]]
                 if conditions is not None:
                     for condition in conditions:
                         for key, value in condition.items():
@@ -634,7 +810,7 @@ class ReviewDataset:
     def update_record_by_ID(self, new_record: dict, delete: bool = False) -> None:
 
         ID = new_record["ID"]
-        new_record["status"] = str(new_record["status"])
+        new_record["colrev_status"] = str(new_record["colrev_status"])
         bib_db = BibDatabase()
         bib_db.entries = [new_record]
         replacement = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
@@ -744,7 +920,7 @@ class ReviewDataset:
         return
 
     def format_main_references(self) -> bool:
-        from colrev_core.prep import Preparation
+        from colrev_core.prep import Preparation, PrepRecord
         from colrev_core.process import FormatProcess
 
         PREPARATION = Preparation(
@@ -753,34 +929,29 @@ class ReviewDataset:
 
         FormatProcess(self.REVIEW_MANAGER)  # to notify
 
-        records = self.load_records()
-        for record in records:
-            if "status" not in record:
+        records = self.load_records_dict()
+        for record in records.values():
+            if "colrev_status" not in record:
                 print(f'Error: no status field in record ({record["ID"]})')
                 continue
-            if record["status"] == RecordState.md_needs_manual_preparation:
-                prior = record.get("man_prep_hints", "")
-                if "man_prep_hints" in record:
-                    del record["man_prep_hints"]
-                record = PREPARATION.log_notifications(record, record.copy())
-                record = PREPARATION.update_metadata_status(record)
-                if record["status"] == RecordState.md_prepared:
-                    record["metadata_source"] = "MANUAL"
-                if RecordState.md_needs_manual_preparation == record["status"]:
-                    if "change-score" in prior:
-                        record["man_prep_hints"] += (
-                            "; " + prior[prior.find("change-score") :]
-                        )
-                else:
-                    if record.get("man_prep_hints", "NA") == "":
-                        del record["man_prep_hints"]
 
-            if record["status"] == RecordState.pdf_prepared:
-                if "pdf_prep_hints" in record:
-                    del record["pdf_prep_hints"]
+            RECORD = PrepRecord(record)
 
-        records = sorted(records, key=lambda d: d["ID"])
-        self.save_records(records)
+            if record["colrev_status"] in [
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_imported,
+            ]:
+                RECORD = PREPARATION.update_masterdata_provenance(RECORD, RECORD)
+
+            if record["colrev_status"] == RecordState.md_needs_manual_preparation:
+                RECORD = PREPARATION.update_metadata_status(RECORD)
+
+            if record["colrev_status"] == RecordState.pdf_prepared:
+                RECORD.reset_pdf_provenance_hints()
+
+            record = RECORD.get_data()
+
+        self.save_records_dict(records)
         CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]
@@ -820,11 +991,11 @@ class ReviewDataset:
                         ID = line[line.find("{") + 1 : line.rfind(",")]
                     if "file" == line.lstrip()[:4]:
                         file = line[line.find("{") + 1 : line.rfind("}")]
-                    if "status" == line.lstrip()[:6]:
+                    if "colrev_status" == line.lstrip()[:13]:
                         status = line[line.find("{") + 1 : line.rfind("}")]
-                    if "excl_criteria" == line.lstrip()[:13]:
+                    if "exclusion_criteria" == line.lstrip()[:18]:
                         excl_crit = line[line.find("{") + 1 : line.rfind("}")]
-                    if "origin" == line.strip()[:6]:
+                    if "colrev_origin" == line.strip()[:13]:
                         origin = line[line.find("{") + 1 : line.rfind("}")]
                 if "Comment" == ID:
                     continue
@@ -870,10 +1041,10 @@ class ReviewDataset:
                     data["exclusion_criteria_list"].append(ec_case)
 
                 # TODO : the origins of a record could be in multiple states
-                if "status" in prior:
+                if "colrev_status" in prior:
                     prior_status = [
                         stat
-                        for (org, stat) in prior["status"]
+                        for (org, stat) in prior["colrev_status"]
                         if org in origin.split(";")
                     ]
                 else:
@@ -892,9 +1063,11 @@ class ReviewDataset:
                     if len(proc_transition_list) == 0 and prior_status[0] != status:
                         data["start_states"].append(prior_status[0])
                         if prior_status[0] not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(ID, "status", prior_status[0])
+                            raise StatusFieldValueError(
+                                ID, "colrev_status", prior_status[0]
+                            )
                         if status not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(ID, "status", status)
+                            raise StatusFieldValueError(ID, "colrev_status", status)
 
                         raise StatusTransitionError(
                             f"invalid state transition ({ID}):"
@@ -923,7 +1096,7 @@ class ReviewDataset:
                 paths=str(MAIN_REFERENCES_RELATIVE)
             )
         )
-        prior: dict = {"status": [], "persisted_IDs": []}
+        prior: dict = {"colrev_status": [], "persisted_IDs": []}
         filecontents = list(revlist)[0][1]
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
@@ -932,13 +1105,13 @@ class ReviewDataset:
             for line in record_string.split("\n"):
                 if "@" in line[:3]:
                     ID = line[line.find("{") + 1 : line.rfind(",")]
-                if "status" == line.lstrip()[:6]:
+                if "colrev_status" == line.lstrip()[:13]:
                     status = line[line.find("{") + 1 : line.rfind("}")]
-                if "origin" == line.strip()[:6]:
+                if "colrev_origin" == line.strip()[:13]:
                     origin = line[line.find("{") + 1 : line.rfind("}")]
             if "NA" != ID:
                 for orig in origin.split(";"):
-                    prior["status"].append([orig, status])
+                    prior["colrev_status"].append([orig, status])
                     if str(RecordState.md_processed) == status:
                         prior["persisted_IDs"].append([orig, ID])
 
@@ -979,30 +1152,59 @@ class ReviewDataset:
         return IDs
 
     def retrieve_by_colrev_id(
-        self, indexed_record: dict, records: typing.List[typing.Dict]
+        self, indexed_record_dict: dict, records: typing.List[typing.Dict]
     ) -> dict:
-        from colrev_core.environment import LocalIndex
+        from colrev_core.record import Record
 
-        # TODO: how do we deal with cases where changes lead to a
-        # different colrev_id? (add previous colrev_id when creating corrections?)
+        INDEXED_RECORD = Record(indexed_record_dict)
 
-        self.LOCAL_INDEX = LocalIndex()
-        if "colrev_id" in indexed_record:
-            indexed_record_colrev_id = indexed_record["colrev_id"]
+        if "colrev_id" in INDEXED_RECORD.data:
+            cid_to_retrieve = INDEXED_RECORD.get_colrev_id()
         else:
-            indexed_record_colrev_id = self.LOCAL_INDEX.get_colrev_id(indexed_record)
+            cid_to_retrieve = [INDEXED_RECORD.create_colrev_id()]
 
         record_l = [
             x
             for x in records
-            if self.LOCAL_INDEX.get_colrev_id(x) == indexed_record_colrev_id
+            if any(cid in Record(x).get_colrev_id() for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
         return record_l[0]
 
+    def update_colrev_ids(self) -> None:
+        from colrev_core.record import Record, NotEnoughDataToIdentifyException
+        from tqdm import tqdm
+
+        self.REVIEW_MANAGER.logger.info(
+            "Create colrev_id list from origins and history"
+        )
+        recs_dict = self.load_records_dict()
+        if len(recs_dict) > 0:
+            origin_records = self.load_origin_records()
+            for rec in tqdm(recs_dict.values()):
+                RECORD = Record(rec)
+                try:
+                    RECORD.create_colrev_id()
+                except NotEnoughDataToIdentifyException:
+                    pass
+                origins = RECORD.get_origins()
+                RECORD.add_colrev_ids([origin_records[origin] for origin in origins])
+            for history_recs in self.load_from_git_history():
+                for hist_rec in tqdm(history_recs.values()):
+                    for rec in recs_dict.values():
+                        RECORD = Record(rec)
+                        HIST_RECORD = Record(hist_rec)
+                        # TODO : acces hist_rec based on an origin-key record-list?
+                        if RECORD.shares_origins(HIST_RECORD):
+                            RECORD.add_colrev_ids([HIST_RECORD.get_data()])
+
+            self.save_records_dict(recs_dict)
+            self.add_record_changes()
+        return
+
     def get_missing_files(self) -> list:
-        from colrev_core.process import RecordState
+        from colrev_core.record import RecordState
 
         # excluding pdf_not_available
         file_required_status = [
@@ -1024,7 +1226,7 @@ class ReviewDataset:
                         break
                     if "@" in line[:3]:
                         ID = line[line.find("{") + 1 : line.rfind(",")]
-                    if "status" == line.lstrip()[:6]:
+                    if "colrev_status" == line.lstrip()[:13]:
                         status = line[line.find("{") + 1 : line.rfind("}")]
                 if "Comment" == ID:
                     continue
@@ -1144,17 +1346,19 @@ class ReviewDataset:
             )
         return
 
-    def __get_excl_criteria(self, ec_string: str) -> list:
+    def __get_exclusion_criteria(self, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def check_corrections_of_curated_records(self) -> None:
-        from colrev_core.environment import LocalIndex
+        from colrev_core.environment import LocalIndex, Resources
         from colrev_core.environment import RecordNotInIndexException
         from colrev_core.prep import Preparation
+        from colrev_core.record import Record
         from dictdiffer import diff
         import io
-        import requests
-        import re
+
+        if not self.MAIN_REFERENCES_FILE.is_file():
+            return
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
@@ -1175,7 +1379,7 @@ class ReviewDataset:
             "issue",
             "author",
             "doi",
-            "origin",  # Note : for merges
+            "colrev_origin",  # Note : for merges
         ]
 
         self.REVIEW_MANAGER.logger.debug("Retrieve prior bib")
@@ -1201,7 +1405,9 @@ class ReviewDataset:
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
         for record_string in self.__read_next_record_str(prior_db_str):
 
-            if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
+            # TBD: whether/how to detect dblp. Previously:
+            # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
+            if "{CURATED:" in record_string:
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
                 r = db.entries[0]
@@ -1212,7 +1418,9 @@ class ReviewDataset:
         with open(self.MAIN_REFERENCES_FILE) as f:
             for record_string in self.__read_next_record_str(f):
 
-                if any(x in record_string for x in ["{CURATED}", "{DBLP}"]):
+                # TBD: whether/how to detect dblp. Previously:
+                # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
+                if "{CURATED:" in record_string:
                     parser = BibTexParser(customization=convert_to_unicode)
                     db = bibtexparser.loads(record_string, parser=parser)
                     r = db.entries[0]
@@ -1225,13 +1433,15 @@ class ReviewDataset:
                 x
                 for x in prior["curated_records"]
                 if any(
-                    y in curated_record["origin"].split(";")
-                    for y in x["origin"].split(";")
+                    y in curated_record["colrev_origin"].split(";")
+                    for y in x["colrev_origin"].split(";")
                 )
             ]
+
             if len(prior_crl) == 0:
                 self.REVIEW_MANAGER.logger.debug("No prior records found")
                 continue
+
             for prior_cr in prior_crl:
 
                 if not all(
@@ -1241,71 +1451,80 @@ class ReviewDataset:
                     # after the previous condition, we know that the curated record
                     # has been corrected
                     corrected_curated_record = curated_record.copy()
-                    if "CURATED" == corrected_curated_record.get("metadata_source", ""):
+                    if Record(corrected_curated_record).masterdata_is_curated():
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = self.LOCAL_INDEX.retrieve(
                                 prior_cr
                             )
-                            # print(original_curated_record["source_url"])
-                            if not Path(original_curated_record["source_url"]).is_dir():
-                                original_curated_record = (
-                                    self.LOCAL_INDEX.set_source_path(
-                                        original_curated_record
-                                    )
-                                )
-                            if not Path(original_curated_record["source_url"]).is_dir():
+
+                            # Note : this is a simple heuristic:
+                            curation_path = Resources.curations_path / Path(
+                                original_curated_record["colrev_masterdata"].split("/")[
+                                    -1
+                                ]
+                            )
+                            if not curation_path.is_dir():
                                 print(
                                     "Source path of indexed record not available "
-                                    f'({original_curated_record["source_url"]})'
+                                    f'({original_curated_record["ID"]} - '
+                                    f'{original_curated_record["colrev_masterdata"]})'
                                 )
                                 continue
                         except RecordNotInIndexException:
                             pass
                             original_curated_record = prior_cr.copy()
 
-                    original_curated_record[
-                        "colrev_id"
-                    ] = self.LOCAL_INDEX.get_colrev_id(original_curated_record)
+                        original_curated_record["colrev_id"] = Record(
+                            original_curated_record
+                        ).create_colrev_id()
 
-                    if "DBLP" == corrected_curated_record.get("metadata_source", ""):
-                        # Note : don't use PREPARATION.get_md_from_dblp
-                        # because it will fuse_best_fields
-                        ret = requests.get(
-                            corrected_curated_record["dblp_key"] + ".html?view=bibtex"
-                        )
-                        bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
-                        gr = bibtex_regex.search(ret.text)
-                        if gr:
-                            bibtex_str = gr.group(0)[18:-6]
-                            dblp_bib = bibtexparser.loads(bibtex_str)
-                            original_curated_record = dblp_bib.entries.pop()
-                            original_curated_record = {
-                                k: v.replace("\n", " ")
-                                for k, v in original_curated_record.items()
-                            }
-                            original_curated_record[
-                                "source_url"
-                            ] = "metadata_source=DBLP"
-                            original_curated_record["origin"] = prior_cr["origin"]
-                        else:
-                            continue
+                    # deactivated export of DBLP corrections:
+                    # metadata_source has been dropped.
+                    # corrections would have to be generated on a per-field basis
+                    # elif "DBLP" ==
+                    #  corrected_curated_record.get("metadata_source", ""):
+                    #     # Note : don't use PREPARATION.get_md_from_dblp
+                    #     # because it will fuse_best_fields
+                    #     ret = requests.get(
+                    #         corrected_curated_record["dblp_key"] + ".html?view=bibtex"
+                    #     )
+                    #     bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
+                    #     gr = bibtex_regex.search(ret.text)
+                    #     if gr:
+                    #         bibtex_str = gr.group(0)[18:-6]
+                    #         dblp_bib = bibtexparser.loads(bibtex_str)
+                    #         original_curated_record = dblp_bib.entries.pop()
+                    #         original_curated_record = {
+                    #             k: v.replace("\n", " ")
+                    #             for k, v in original_curated_record.items()
+                    #         }
+                    #         original_curated_record[
+                    #             "source_url"
+                    #         ] = "metadata_source=DBLP"
+                    #         original_curated_record["colrev_origin"] = prior_cr[
+                    #             "colrev_origin"
+                    #         ]
+                    #     else:
+                    #         continue
 
-                        # Note : we don't want to correct the following fields:
-                        if "booktitle" in corrected_curated_record:
-                            original_curated_record[
-                                "booktitle"
-                            ] = corrected_curated_record["booktitle"]
-                        if "editor" in original_curated_record:
-                            del original_curated_record["editor"]
-                        if "publisher" in original_curated_record:
-                            del original_curated_record["publisher"]
-                        if "bibsource" in original_curated_record:
-                            del original_curated_record["bibsource"]
-                        if "timestamp" in original_curated_record:
-                            del original_curated_record["timestamp"]
-                        if "biburl" in original_curated_record:
-                            del original_curated_record["biburl"]
+                    #     # Note : we don't want to correct the following fields:
+                    #     if "booktitle" in corrected_curated_record:
+                    #         original_curated_record[
+                    #             "booktitle"
+                    #         ] = corrected_curated_record["booktitle"]
+                    #     if "editor" in original_curated_record:
+                    #         del original_curated_record["editor"]
+                    #     if "publisher" in original_curated_record:
+                    #         del original_curated_record["publisher"]
+                    #     if "bibsource" in original_curated_record:
+                    #         del original_curated_record["bibsource"]
+                    #     if "timestamp" in original_curated_record:
+                    #         del original_curated_record["timestamp"]
+                    #     if "biburl" in original_curated_record:
+                    #         del original_curated_record["biburl"]
+                    else:
+                        continue  # probably?
 
                     # Cast to string for persistence
                     original_curated_record = {
@@ -1324,56 +1543,52 @@ class ReviewDataset:
                         del corrected_curated_record["pages"]
                     # if "dblp_key" in corrected_curated_record:
                     #     del corrected_curated_record["dblp_key"]
-                    if "metadata_source" in corrected_curated_record:
-                        del corrected_curated_record["metadata_source"]
-                    if "status" in corrected_curated_record:
-                        del corrected_curated_record["status"]
+                    if "colrev_status" in corrected_curated_record:
+                        del corrected_curated_record["colrev_status"]
 
-                    if "metadata_source" in original_curated_record:
-                        del original_curated_record["metadata_source"]
-                    if "status" in original_curated_record:
-                        del original_curated_record["status"]
+                    if "colrev_status" in original_curated_record:
+                        del original_curated_record["colrev_status"]
 
                     # TODO : export only essential changes?
                     changes = diff(original_curated_record, corrected_curated_record)
                     change_items = list(changes)
 
-                    # TODO : The export of corrections/changes does not seem to work yet
-                    # change: the key is in x[1]
-                    change_items = [
-                        (x[0], x[1], x[2])
-                        for x in change_items
-                        if x[1]
-                        not in [
-                            "excl_criteria",
-                            "status",
-                            "metadata_source",
-                            "source_url",
-                            "ID",
-                            "grobid-version",
-                        ]
+                    keys_to_ignore = [
+                        "exclusion_criteria",
+                        "colrev_status",
+                        "source_url",
+                        "ID",
+                        "grobid-version",
+                        "colrev_pdf_id",
+                        "file",
+                        "colrev_origin",
+                        "colrev_data_provenance",
+                        "sem_scholar_id",
                     ]
 
-                    # add: the key is in x[2][0]
-                    change_items = [
-                        (x[0], x[1], x[2])
-                        for x in change_items
-                        if x[2][0]
-                        not in [
-                            "excl_criteria",
-                            "status",
-                            "metadata_source",
-                            "source_url",
-                            "ID",
-                            "grobid-version",
-                        ]
-                    ]
+                    selected_change_items = []
+                    for change_item in change_items:
+                        type, key, val = change_item
+                        if "add" == type:
+                            for add_item in val:
+                                add_item_key, add_item_val = add_item
+                                if add_item_key not in keys_to_ignore:
+                                    selected_change_items.append(
+                                        ("add", "", [(add_item_key, add_item_val)])
+                                    )
+                        elif "change" == type:
+                            if key not in keys_to_ignore:
+                                selected_change_items.append(change_item)
+
+                    change_items = selected_change_items
 
                     if len(change_items) == 0:
                         continue
 
-                    if len(corrected_curated_record["origin"].split(";")) > len(
-                        original_curated_record["origin"].split(";")
+                    if len(
+                        corrected_curated_record.get("colrev_origin", "").split(";")
+                    ) > len(
+                        original_curated_record.get("colrev_origin", "").split(";")
                     ):
                         if (
                             "dblp_key" in corrected_curated_record
@@ -1397,11 +1612,14 @@ class ReviewDataset:
                         #         ]
                         #     }
 
-                    # Note: this is a quick fix:
-                    if "source_url" not in original_curated_record:
-                        original_curated_record["source_url"] = "DBLP"
+                    # TODO : cover non-masterdata corrections
+                    if "colrev_masterdata" not in original_curated_record:
+                        continue
+
                     dict_to_save = {
-                        "source_url": original_curated_record.get("source_url"),
+                        "source_url": original_curated_record[
+                            "colrev_masterdata"
+                        ].replace("CURATED:"),
                         "original_curated_record": original_curated_record,
                         "changes": change_items,
                     }
@@ -1411,7 +1629,7 @@ class ReviewDataset:
                     fp.parent.mkdir(exist_ok=True)
 
                     with open(fp, "w", encoding="utf8") as corrections_file:
-                        json.dump(dict_to_save, corrections_file)
+                        json.dump(dict_to_save, corrections_file, indent=4)
 
                     # TODO : combine merge-record corrections
 
@@ -1429,7 +1647,7 @@ class ReviewDataset:
         if data["exclusion_criteria_list"]:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
-                criteria = self.__get_excl_criteria(exclusion_criteria)
+                criteria = self.__get_exclusion_criteria(exclusion_criteria)
                 pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
                 pattern_inclusion = "=no;".join(criteria) + "=no"
             else:

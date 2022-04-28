@@ -7,7 +7,7 @@ import pandas as pd
 from colrev_core import prep
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import RecordState
+from colrev_core.record import RecordState
 
 
 class PrepMan(Process):
@@ -19,11 +19,12 @@ class PrepMan(Process):
         )
 
     def prep_man_stats(self) -> None:
+        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         self.REVIEW_MANAGER.logger.info("Calculate statistics")
         stats: dict = {"ENTRYTYPE": {}}
@@ -31,8 +32,8 @@ class PrepMan(Process):
         prep_man_hints = []
         origins = []
         crosstab = []
-        for record in records:
-            if RecordState.md_imported != record["status"]:
+        for record in records.values():
+            if RecordState.md_imported != record["colrev_status"]:
                 if record["ENTRYTYPE"] in overall_types["ENTRYTYPE"]:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = (
                         overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] + 1
@@ -40,7 +41,7 @@ class PrepMan(Process):
                 else:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if RecordState.md_needs_manual_preparation != record["status"]:
+            if RecordState.md_needs_manual_preparation != record["colrev_status"]:
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -50,29 +51,38 @@ class PrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if "man_prep_hints" in record:
-                hints = record["man_prep_hints"].split(";")
+            if "colrev_masterdata_provenance" in record:
+                RECORD = Record(record)
+                prov_d = RECORD.load_masterdata_provenance()
+                hints = []
+                for k, v in prov_d.items():
+                    if v["note"] != "":
+                        hints.append(f'{k} - {v["note"]}')
+
                 prep_man_hints.append([hint.lstrip() for hint in hints])
                 for hint in hints:
                     if "change-score" in hint:
                         continue
                     # Note: if something causes the needs_manual_preparation
-                    # it is caused by all origins
-                    for orig in record.get("origin", "NA").split(";"):
+                    # it is caused by all colrev_origins
+                    for orig in record.get("colrev_origin", "NA").split(";"):
                         crosstab.append([orig[: orig.rfind("/")], hint.lstrip()])
 
             origins.append(
-                [x[: x.rfind("/")] for x in record.get("origin", "NA").split(";")]
+                [
+                    x[: x.rfind("/")]
+                    for x in record.get("colrev_origin", "NA").split(";")
+                ]
             )
 
-        crosstab_df = pd.DataFrame(crosstab, columns=["origin", "hint"])
+        crosstab_df = pd.DataFrame(crosstab, columns=["colrev_origin", "hint"])
 
         if crosstab_df.empty:
             print("No records to prepare manually.")
         else:
             tabulated = pd.pivot_table(
-                crosstab_df[["origin", "hint"]],
-                index=["origin"],
+                crosstab_df[["colrev_origin", "hint"]],
+                index=["colrev_origin"],
                 columns=["hint"],
                 aggfunc=len,
                 fill_value=0,
@@ -117,28 +127,28 @@ class PrepMan(Process):
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
         )
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records = [
+        records_list = [
             record
-            for record in records
-            if RecordState.md_needs_manual_preparation == record["status"]
+            for record in records.values()
+            if RecordState.md_needs_manual_preparation == record["colrev_status"]
         ]
 
         # Casting to string (in particular the RecordState Enum)
-        records = [{k: str(v) for k, v in r.items()} for r in records]
+        records_list = [{k: str(v) for k, v in r.items()} for r in records_list]
 
         bib_db = BibDatabase()
-        bib_db.entries = records
+        bib_db.entries = records_list
         bibtex_str = bibtexparser.dumps(bib_db)
         with open(prep_bib_path, "w") as out:
             out.write(bibtex_str)
 
-        bib_db_df = pd.DataFrame.from_records(records)
+        bib_db_df = pd.DataFrame.from_records(records_list)
 
         col_names = [
             "ID",
-            "origin",
+            "colrev_origin",
             "author",
             "title",
             "year",
@@ -195,11 +205,13 @@ class PrepMan(Process):
         prior_records = prior_bib_db.entries
 
         records_to_reset = []
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records()
-        for record in records:
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
-                x for x in bib_db_changed if x["origin"] == record["origin"]
+                x
+                for x in bib_db_changed
+                if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:
                 changed_record = changed_record_l.pop()
@@ -215,7 +227,9 @@ class PrepMan(Process):
                         del record[k]
                     if v == "RESET":
                         prior_record_l = [
-                            x for x in prior_records if x["origin"] == record["origin"]
+                            x
+                            for x in prior_records
+                            if x["colrev_origin"] == record["colrev_origin"]
                         ]
                         if len(prior_record_l) == 1:
                             prior_record = prior_record_l.pop()
@@ -226,7 +240,7 @@ class PrepMan(Process):
         if len(records_to_reset) > 0:
             PREPARATION.reset(records_to_reset)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
         return
@@ -262,20 +276,14 @@ class PrepMan(Process):
         record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
         max_id += 1
         record["ID"] = str(max_id).rjust(9, "0")
-        record_to_unmerge["manual_non_duplicate"] = record["ID"]
-        record["manual_non_duplicate"] = record_to_unmerge["ID"]
 
         record_to_unmerge = {k: str(v) for k, v in record_to_unmerge.items()}
         record = {k: str(v) for k, v in record.items()}
 
-        del record_to_unmerge["origin"]
-        del record["origin"]
-        del record_to_unmerge["status"]
-        del record["status"]
-        if "man_prep_hints" in record_to_unmerge:
-            del record_to_unmerge["man_prep_hints"]
-        if "man_prep_hints" in record:
-            del record["man_prep_hints"]
+        del record_to_unmerge["colrev_origin"]
+        del record["colrev_origin"]
+        del record_to_unmerge["colrev_status"]
+        del record["colrev_status"]
 
         non_dupe_db.entries.append(record_to_unmerge)
         non_dupe_db.entries.append(record)
@@ -302,7 +310,7 @@ class PrepMan(Process):
         PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"status": RecordState.md_needs_manual_preparation}]
+            conditions=[{"colrev_status": RecordState.md_needs_manual_preparation}]
         )
 
         md_prep_man_data = {
@@ -317,11 +325,15 @@ class PrepMan(Process):
         return md_prep_man_data
 
     def set_data(self, record, PAD: int = 40) -> None:
+        from colrev_core.record import Record
 
         PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
-
-        record.update(status=RecordState.md_prepared)
-        record.update(metadata_source="MAN_PREP")
+        record.update(colrev_status=RecordState.md_prepared)
+        RECORD = Record(record)
+        RECORD.set_masterdata_complete()
+        RECORD.set_masterdata_consistent()
+        RECORD.set_fields_complete()
+        record = RECORD.get_data()
         record = PREPARATION.drop_fields(record)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
