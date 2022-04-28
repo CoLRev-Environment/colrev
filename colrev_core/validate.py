@@ -25,7 +25,7 @@ class Validate(Process):
 
     def load_search_records(self, bib_file: Path) -> list:
 
-        with open(bib_file) as bibtex_file:
+        with open(bib_file, encoding="utf8") as bibtex_file:
             individual_bib_db = bibtexparser.bparser.BibTexParser(
                 customization=convert_to_unicode,
                 common_strings=True,

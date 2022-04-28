@@ -32,7 +32,7 @@ class Distribute(Process):
         def get_last_ID(bib_file: Path) -> str:
             current_ID = "1"
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "@" in line[:3]:
@@ -62,7 +62,7 @@ class Distribute(Process):
                 target_bib_file = target / "search/local_import.bib"
                 self.REVIEW_MANAGER.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-                    with open(target_bib_file) as target_bib:
+                    with open(target_bib_file, encoding="utf8") as target_bib:
                         import_db = BibTexParser(
                             customization=convert_to_unicode,
                             ignore_nonstandard_types=False,
@@ -96,7 +96,7 @@ class Distribute(Process):
                 import_db.entries.append(record)
 
                 bibtex_str = bibtexparser.dumps(import_db, writer)
-                with open(target_bib_file, "w") as f:
+                with open(target_bib_file, "w", encoding="utf8") as f:
                     f.write(bibtex_str)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(target_bib_file))
 

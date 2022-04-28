@@ -100,18 +100,18 @@ class Initializer:
         private_config["general"]["GIT_ACTOR"] = committer_name
         private_config["general"]["CPUS"] = "4"
         private_config["general"]["DEBUG_MODE"] = "no"
-        with open("private_config.ini", "w") as configfile:
+        with open("private_config.ini", "w", encoding="utf8") as configfile:
             private_config.write(configfile)
 
         shared_config = configparser.ConfigParser()
         shared_config.add_section("general")
         shared_config["general"]["SHARE_STAT_REQ"] = self.SHARE_STAT_REQ
-        with open("shared_config.ini", "w") as configfile:
+        with open("shared_config.ini", "w", encoding="utf8") as configfile:
             shared_config.write(configfile)
 
         # Note: need to write the .gitignore because file would otherwise be
         # ignored in the template directory.
-        f = open(".gitignore", "w")
+        f = open(".gitignore", "w", encoding="utf8")
         f.write(
             "*.bib.sav\n"
             + "private_config.ini\n"
@@ -189,12 +189,12 @@ class Initializer:
     def __inplace_change(
         self, filename: Path, old_string: str, new_string: str
     ) -> None:
-        with open(filename) as f:
+        with open(filename, encoding="utf8") as f:
             s = f.read()
             if old_string not in s:
                 logging.info(f'"{old_string}" not found in {filename}.')
                 return
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf8") as f:
             s = s.replace(old_string, new_string)
             f.write(s)
         return
@@ -204,7 +204,7 @@ class Initializer:
 
         filedata = pkgutil.get_data(__name__, str(template_file))
         if filedata:
-            with open(target, "w") as file:
+            with open(target, "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
         return
 

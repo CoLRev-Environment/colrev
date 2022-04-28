@@ -78,7 +78,7 @@ class PDF_Preparation(Process):
 
         text_list: list = []
         pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
-        with open(pdf_path, "rb") as fh:
+        with open(pdf_path, "rb", encoding="utf8") as fh:
             try:
                 for page in PDFPage.get_pages(
                     fh,
@@ -104,7 +104,7 @@ class PDF_Preparation(Process):
 
     def __get_pages_in_pdf(self, record: dict) -> dict:
         pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
-        with open(pdf_path, "rb") as file:
+        with open(pdf_path, "rb", encoding="utf8") as file:
             parser = PDFParser(file)
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
@@ -636,19 +636,19 @@ class PDF_Preparation(Process):
             if i in pages:
                 continue
             writer.addPage(pdfReader.getPage(i))
-        with open(pdf_path, "wb") as outfile:
+        with open(pdf_path, "wb", encoding="utf8") as outfile:
             writer.write(outfile)
         if type == "coverpage":
             writer_cp = PdfFileWriter()
             writer_cp.addPage(pdfReader.getPage(0))
             filepath = Path(pdf_path)
-            with open(self.cp_path / filepath.name, "wb") as outfile:
+            with open(self.cp_path / filepath.name, "wb", encoding="utf8") as outfile:
                 writer_cp.write(outfile)
         if type == "last_page":
             writer_lp = PdfFileWriter()
             writer_lp.addPage(pdfReader.getPage(pdfReader.getNumPages()))
             filepath = Path(pdf_path)
-            with open(self.lp_path / filepath.name, "wb") as outfile:
+            with open(self.lp_path / filepath.name, "wb", encoding="utf8") as outfile:
                 writer_lp.write(outfile)
         return
 

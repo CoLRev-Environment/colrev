@@ -22,7 +22,7 @@ def set_debug_mode(activate: bool) -> None:
         private_config["general"]["debug_mode"] = "yes"
     else:
         private_config["general"]["debug_mode"] = "no"
-    with open(config_path, "w") as f:
+    with open(config_path, "w", encoding="utf8") as f:
         private_config.write(f)
 
     return
@@ -49,7 +49,7 @@ def debug_load() -> None:
     #     print(search_file)
     #     sfn = search_file.stem
     #     search_file_origins = [x for x in origin_list if sfn in x]
-    #     with open(search_file) as f:
+    #     with open(search_file, encoding="utf8") as f:
     #         line = f.readline()
     #         while line:
     #             if "@" in line[:3]:
@@ -147,7 +147,7 @@ def debug_pdf_prep():
     # from pdfminer.pdfparser import PDFParser
     # records = REVIEW_MANAGER.load_records_dict()
     # record = records["Johns2006"]
-    # with open(record["file"], "rb") as file:
+    # with open(record["file"], "rb", encoding="utf8") as file:
     #     parser = PDFParser(file)
     #     document = PDFDocument(parser)
     #     pages_in_file = resolve1(document.catalog["Pages"])["Count"]

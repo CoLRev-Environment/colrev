@@ -301,7 +301,7 @@ class Dedupe(Process):
                 self.REVIEW_MANAGER.logger.info(
                     f"Reading pre-labeled training data from {training_file.name}"
                 )
-                with open(training_file, "rb") as f:
+                with open(training_file, "rb", encoding="utf8") as f:
                     deduper.prepare_training(data_d, f)
             else:
                 deduper.prepare_training(data_d)
@@ -348,7 +348,7 @@ class Dedupe(Process):
 
             merge_info = main_record["ID"] + "," + dupe_record["ID"]
             same_source_merge_file = Path("same_source_merges.txt")
-            with same_source_merge_file.open("a") as f:
+            with same_source_merge_file.open("a", encoding="utf8") as f:
                 f.write(merge_info + "\n")
             self.REVIEW_MANAGER.logger.warning(
                 f"Prevented same-source merge: ({merge_info})"

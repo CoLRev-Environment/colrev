@@ -58,14 +58,14 @@ class TEI:
             try:
                 r = requests.post(
                     grobid_client.get_grobid_url() + "/api/processFulltextDocument",
-                    files={"input": open(str(pdf_path), "rb")},
+                    files={"input": open(str(pdf_path), "rb", encoding="utf8")},
                     data=options,
                 )
 
                 # Possible extension: get header only (should be more efficient)
                 # r = requests.post(
                 #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
-                #     files=dict(input=open(filepath, "rb")),
+                #     files=dict(input=open(filepath, "rb"), encoding="utf8"),
                 #     data=header_data,
                 # )
 
@@ -79,11 +79,11 @@ class TEI:
 
                 if tei_path is not None:
                     tei_path.parent.mkdir(exist_ok=True, parents=True)
-                    with open(tei_path, "wb") as tf:
+                    with open(tei_path, "wb", encoding="utf8") as tf:
                         tf.write(r.content)
 
                     # Note : reopen/write to prevent format changes in the enhancement
-                    with open(tei_path, "rb") as tf:
+                    with open(tei_path, "rb", encoding="utf8") as tf:
                         xml_fstring = tf.read()
                     self.root = etree.fromstring(xml_fstring)
 
@@ -94,7 +94,7 @@ class TEI:
                 print(str(pdf_path))
                 pass
         elif tei_path is not None:
-            with open(tei_path) as ts:
+            with open(tei_path, encoding="utf8") as ts:
                 xml_string = ts.read()
             if "[BAD_INPUT_DATA]" in xml_string[:100]:
                 raise TEI_Exception()

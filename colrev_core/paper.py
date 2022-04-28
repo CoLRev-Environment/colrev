@@ -36,7 +36,7 @@ class Paper(Process):
 
             url = WORD_TEMPLATE_URL
             r = requests.get(str(url))
-            with open(WORD_TEMPLATE_FILENAME, "wb") as output:
+            with open(WORD_TEMPLATE_FILENAME, "wb", encoding="utf8") as output:
                 output.write(r.content)
         else:
             WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])

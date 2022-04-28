@@ -147,7 +147,7 @@ class Loader(Process):
         return sorted(files)
 
     def __getbib(self, file: Path) -> typing.List[dict]:
-        with open(file) as bibtex_file:
+        with open(file, encoding="utf8") as bibtex_file:
             contents = bibtex_file.read()
             bib_r = re.compile(r"@.*{.*,", re.M)
             if len(re.findall(bib_r, contents)) == 0:
@@ -158,7 +158,7 @@ class Loader(Process):
                     f"Replace Early Access Date in bibfile before loading! {file.name}"
                 )
 
-        with open(file) as bibtex_file:
+        with open(file, encoding="utf8") as bibtex_file:
             db = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=True,
@@ -183,7 +183,7 @@ class Loader(Process):
             self.REVIEW_MANAGER.logger.error(
                 "broken bib file (not imported all records)"
             )
-            with open(filepath) as f:
+            with open(filepath, encoding="utf8") as f:
                 line = f.readline()
                 while line:
                     if "@" in line[:3]:
@@ -359,7 +359,7 @@ class Loader(Process):
 
         self.start_zotero_translators()
 
-        files = {"file": open(file, "rb")}
+        files = {"file": open(file, "rb", encoding="utf8")}
         headers = {"Content-type": "text/plain"}
         r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
         headers = {"Content-type": "application/json"}
@@ -386,7 +386,7 @@ class Loader(Process):
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
         grobid_client.check_grobid_availability()
-        with open(file) as f:
+        with open(file, encoding="utf8") as f:
             if file.suffix == ".md":
                 references = [line.rstrip() for line in f if "#" not in line[:2]]
             else:
@@ -508,7 +508,7 @@ class Loader(Process):
             grobid_client.get_grobid_url() + "/api/processHeaderDocument",
             headers={"Accept": "application/x-bibtex"},
             params={"consolidateHeader": "1"},
-            files=dict(input=open(file, "rb")),
+            files=dict(input=open(file, "rb"), encoding="utf8"),
         )
 
         if 200 == r.status_code:
@@ -535,7 +535,7 @@ class Loader(Process):
 
         r = requests.post(
             grobid_client.get_grobid_url() + "/api/processReferences",
-            files=dict(input=open(file, "rb")),
+            files=dict(input=open(file, "rb"), encoding="utf8"),
             data={"consolidateHeader": "0", "consolidateCitations": "1"},
             headers={"Accept": "application/x-bibtex"},
         )
@@ -567,7 +567,7 @@ class Loader(Process):
 
         SOURCES = self.REVIEW_MANAGER.paths["SOURCES"]
         source_name = "NA"
-        with open(SOURCES) as f:
+        with open(SOURCES, encoding="utf8") as f:
             sources_df = pd.json_normalize(safe_load(f))
             sources = sources_df.to_dict("records")
             if sfp in [x["filename"] for x in sources]:
@@ -684,7 +684,7 @@ class Loader(Process):
                     )
                     db = BibDatabase()
                     db.entries = records
-                    with open(corresponding_bib_file, "w") as fi:
+                    with open(corresponding_bib_file, "w", encoding="utf8") as fi:
                         fi.write(bibtexparser.dumps(db))
         else:
             self.REVIEW_MANAGER.report_logger.info(
@@ -714,7 +714,7 @@ class Loader(Process):
         self, filename: Path, old_string: str, new_string: str
     ) -> None:
         new_file_lines = []
-        with open(filename) as f:
+        with open(filename, encoding="utf8") as f:
             first_read = False
             replaced = False
             for line in f.readlines():
@@ -728,14 +728,14 @@ class Loader(Process):
             # s = f.read()
             # if old_string not in s:
             #     return
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf8") as f:
             for s in new_file_lines:
                 f.write(s)
         return
 
     def resolve_non_unique_IDs(self, corresponding_bib_file: Path) -> None:
 
-        with open(corresponding_bib_file) as bibtex_file:
+        with open(corresponding_bib_file, encoding="utf8") as bibtex_file:
             db = BibTexParser(
                 customization=convert_to_unicode,
                 ignore_nonstandard_types=True,
@@ -766,7 +766,7 @@ class Loader(Process):
                 self.__inplace_change_second(
                     corresponding_bib_file, f"{old_id},", f"{new_id},"
                 )
-            # with open(corresponding_bib_file, "w") as fi:
+            # with open(corresponding_bib_file, "w", encoding="utf8") as fi:
             #     fi.write(bibtexparser.dumps(db))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.create_commit(
@@ -790,7 +790,7 @@ class Loader(Process):
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
         number_in_bib = 0
-        with open(file_path) as f:
+        with open(file_path, encoding="utf8") as f:
             line = f.readline()
             while line:
                 # Note: the '﻿' occured in some bibtex files

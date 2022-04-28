@@ -21,7 +21,7 @@ class Status(Process):
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
         number_in_bib = 0
-        with open(file_path) as f:
+        with open(file_path, encoding="utf8") as f:
             line = f.readline()
             while line:
                 # Note: the '﻿' occured in some bibtex files
@@ -279,7 +279,7 @@ class Status(Process):
         environment_instructions = []
 
         if stat["colrev_status"]["currently"]["md_imported"] > 10:
-            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as r:
+            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8") as r:
                 outlets = []
                 for line in r.readlines():
 

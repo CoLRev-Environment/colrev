@@ -116,7 +116,7 @@ class PDF_Retrieval(Process):
                     },
                 )
                 if 200 == res.status_code:
-                    with open(pdf_filepath, "wb") as f:
+                    with open(pdf_filepath, "wb", encoding="utf8") as f:
                         f.write(res.content)
                     if self.__is_pdf(pdf_filepath):
                         self.REVIEW_MANAGER.report_logger.info(
@@ -217,7 +217,7 @@ class PDF_Retrieval(Process):
                     feed_filepath = Path("search/" + feed["filename"])
                     if feed_filepath.is_file():
                         feed_filename = feed["filename"]
-                        with open(Path("search/" + feed["filename"])) as target_db:
+                        with open(Path("search/" + feed["filename"]), encoding="utf8") as target_db:
                             bib_db = BibTexParser(
                                 customization=convert_to_unicode,
                                 ignore_nonstandard_types=False,
@@ -285,7 +285,7 @@ class PDF_Retrieval(Process):
                     bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
                 )
 
-                with open(feed_filepath, "w") as out:
+                with open(feed_filepath, "w", encoding="utf8") as out:
                     out.write(bibtex_str)
 
             if feed_filepath != "":

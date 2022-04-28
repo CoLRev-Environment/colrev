@@ -171,7 +171,7 @@ class PDFPrepMan(Process):
         bib_db = BibDatabase()
         bib_db.entries = records_list
         bibtex_str = bibtexparser.dumps(bib_db)
-        with open(prep_bib_path, "w") as out:
+        with open(prep_bib_path, "w", encoding="utf8") as out:
             out.write(bibtex_str)
 
         bib_db_df = pd.DataFrame.from_records(records_list)
@@ -211,7 +211,7 @@ class PDFPrepMan(Process):
             from bibtexparser.bparser import BibTexParser
             from bibtexparser.customization import convert_to_unicode
 
-            with open("prep-references.bib") as target_db:
+            with open("prep-references.bib", encoding="utf8") as target_db:
                 bib_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -258,9 +258,9 @@ class PDFPrepMan(Process):
         writer = PdfFileWriter()
         for i in range(1, pdfReader.getNumPages()):
             writer.addPage(pdfReader.getPage(i))
-        with open(filepath, "wb") as outfile:
+        with open(filepath, "wb", encoding="utf8") as outfile:
             writer.write(outfile)
-        with open(cp_path / filepath.name, "wb") as outfile:
+        with open(cp_path / filepath.name, "wb", encoding="utf8") as outfile:
             writer_cp.write(outfile)
         return
 
