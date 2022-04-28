@@ -1281,7 +1281,7 @@ class Preparation(Process):
         if "crossmark" in RECORD.data:
             return RECORD
         if RECORD.masterdata_is_curated():
-            RECORD.data.update(colrev_status=RecordState.md_prepared)
+            RECORD.set_status(RecordState.md_prepared)
             return RECORD
 
         self.REVIEW_MANAGER.logger.debug(
@@ -1297,14 +1297,14 @@ class Preparation(Process):
             f"{RECORD.has_incomplete_fields()}"
         )
 
-        if not RECORD.masterdata_is_complete():
-            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
-        elif RECORD.has_incomplete_fields():
-            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
-        elif RECORD.has_inconsistent_fields():
-            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
+        if (
+            not RECORD.masterdata_is_complete()
+            or RECORD.has_incomplete_fields()
+            or RECORD.has_inconsistent_fields()
+        ):
+            RECORD.set_status(RecordState.md_needs_manual_preparation)
         else:
-            RECORD.data.update(colrev_status=RecordState.md_prepared)
+            RECORD.set_status(RecordState.md_prepared)
 
         return RECORD
 
@@ -2034,6 +2034,13 @@ class Preparation(Process):
                 RECORD.add_masterdata_provenance_hint(incomplete_field, "incomplete")
         else:
             RECORD.set_fields_complete()
+
+        defect_fields = RECORD.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
+                RECORD.add_masterdata_provenance_hint(defect_field, "quality_defect")
+        else:
+            RECORD.remove_quality_defect_notes()
 
         change = 1 - Record.get_record_similarity(RECORD, UNPREPARED_RECORD)
         if change > 0.1:

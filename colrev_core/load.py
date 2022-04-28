@@ -79,6 +79,18 @@ class LoadRecord(Record):
                     "note": "incomplete",
                 }
 
+        defect_fields = self.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
+                if defect_field in colrev_masterdata_provenance:
+                    add_info = ", quality_defect"
+                    colrev_masterdata_provenance[defect_field]["note"] += add_info
+                else:
+                    colrev_masterdata_provenance[defect_field] = {
+                        "source": "ORIGINAL",
+                        "note": "quality_defect",
+                    }
+
         self.set_masterdata_provenance(colrev_masterdata_provenance)
         return
 
