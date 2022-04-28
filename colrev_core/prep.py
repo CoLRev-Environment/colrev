@@ -405,6 +405,13 @@ class Preparation(Process):
     #
 
     def exclude_non_latin_alphabets(self, RECORD: PrepRecord) -> PrepRecord:
+        def mostly_latin_alphabet(str_to_check) -> bool:
+            assert len(str_to_check) != 0
+            nr_non_latin = 0
+            for c in str_to_check:
+                if not self.alphabet_detector.only_alphabet_chars(c, "LATIN"):
+                    nr_non_latin += 1
+            return nr_non_latin / len(str_to_check) > 0.75
 
         str_to_check = " ".join(
             [
@@ -414,7 +421,7 @@ class Preparation(Process):
                 RECORD.data.get("booktitle", ""),
             ]
         )
-        if not self.alphabet_detector.only_alphabet_chars(str_to_check, "LATIN"):
+        if mostly_latin_alphabet(str_to_check):
             RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
             RECORD.data["prescreen_exclusion"] = "script:non_latin_alphabet"
 
