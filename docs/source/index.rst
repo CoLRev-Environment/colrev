@@ -82,22 +82,14 @@ The corresponding *colrev pull* and *colrev push* operations make it easy to reu
 
 Reuse of community-curated data from different sources is built into each operation.
 It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
-The more records are curated, the more you can focus on the search, screen and synthesis.
+The more records are curated, the more you can focus on the synthesis.
 
 Citing CoLRev
 -----------------
 
-Please refer to the present GitHub project:
+Please `cite <_static/colrev_citation.bib>`__ the `GitHub project <https://github.com/geritwagner/colrev_core>`__:
 
-.. code-block:: BibTeX
-
-   @misc{colrev,
-   author = {Wagner, G. and Prester, J.},
-   title = {CoLRev - A Framework for Colaborative Literature Reviews},
-   howpublished = {\url{https://github.com/geritwagner/colrev_core}},
-   publisher = {GitHub},
-   year = {2022},
-   }
+Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev_core.
 
 .. toctree::
    :hidden:
