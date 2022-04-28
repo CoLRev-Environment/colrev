@@ -33,6 +33,7 @@ class Search(Process):
     def __init__(
         self,
         REVIEW_MANAGER,
+        force_mode=False,
         notify_state_transition_process=True,
     ):
 
@@ -43,6 +44,8 @@ class Search(Process):
         )
 
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+
+        self.force_mode = force_mode
 
         self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         self.PREPARATION = Preparation(
@@ -310,7 +313,7 @@ class Search(Process):
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
-            if len(records) > 100:
+            if len(records) > 100 and not self.force_mode:
                 start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
                 print(year)
@@ -366,6 +369,9 @@ class Search(Process):
                             records.append(RETRIEVED_RECORD.data)
                             max_id += 1
 
+                    if not retrieved:
+                        break
+
                     # Note : we may have to set temporary IDs
                     # (and replace them after the following sort operation) ?!
                     records = sorted(
@@ -387,9 +393,6 @@ class Search(Process):
                         fi.write(
                             bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
                         )
-
-                    if not retrieved:
-                        break
 
         except requests.exceptions.HTTPError:
             pass
@@ -802,7 +805,7 @@ class Search(Process):
         if len(broken_filepaths) > 0:
             broken_filepath_str = "\n ".join(broken_filepaths)
             self.REVIEW_MANAGER.logger.error(
-                f'skipping PDFs with ";" in filepath: {broken_filepath_str}'
+                f'skipping PDFs with ";" in filepath: \n{broken_filepath_str}'
             )
             pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
 
@@ -898,7 +901,7 @@ class Search(Process):
                 return record
             grobid_client.check_grobid_availability()
 
-            pdf_path = self.REVIEW_MANAGER / Path(record["file"])
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
 
             # Note: activate the following when new grobid version is released (> 0.7)
             # Note: we have more control and transparency over the consolidation
@@ -1015,8 +1018,6 @@ class Search(Process):
 
                 record = {k: v for k, v in record.items() if v is not None}
                 record = {k: v for k, v in record.items() if v != "NA"}
-
-                record["file"] = str(pdf_path.relative_to(self.REVIEW_MANAGER.path))
 
                 # add details based on path
                 record = update_fields_based_on_pdf_dirs(record)
@@ -1374,8 +1375,24 @@ class Search(Process):
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
         feed_paths = [x for x in sources if "FEED" == x["search_type"]]
-        for feed_item in feed_paths:
 
+        if selection_str is not None:
+            if "all" != selection_str:
+                feed_paths_selected = [
+                    f
+                    for f in feed_paths
+                    if f["search_parameters"][0]["endpoint"] in selection_str.split(",")
+                ]
+            if len(feed_paths_selected) != 0:
+                feed_paths = feed_paths_selected
+            else:
+                available_options = ", ".join(
+                    [f["search_parameters"][0]["endpoint"] for f in feed_paths]
+                )
+                print(f"Error: {selection_str} not in {available_options}")
+                return
+
+        for feed_item in feed_paths:
             feed_file = Path.cwd() / Path("search") / Path(feed_item["filename"])
             search_param = feed_item["search_parameters"][0]
             if search_param["endpoint"] not in [
@@ -1385,11 +1402,6 @@ class Search(Process):
                     f'Endpoint not supported: {feed_item["search_endpoint"]} (skipping)'
                 )
                 continue
-
-            if selection_str is not None:
-                if "all" != selection_str:
-                    if search_param["endpoint"] not in selection_str:
-                        continue
 
             script = [
                 s
