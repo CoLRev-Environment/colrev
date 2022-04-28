@@ -36,7 +36,6 @@ colrev\_core.prep.Preparation
       ~Preparation.get_record_from_local_index
       ~Preparation.get_year_from_vol_iss_jour_crossref
       ~Preparation.global_ids_consistency_check
-      ~Preparation.log_notifications
       ~Preparation.main
       ~Preparation.prep_curated
       ~Preparation.prepare
@@ -55,6 +54,7 @@ colrev\_core.prep.Preparation
       ~Preparation.retrieve_record_from_semantic_scholar
       ~Preparation.set_ids
       ~Preparation.update_doi_md
+      ~Preparation.update_masterdata_provenance
       ~Preparation.update_metadata_status
 
 

@@ -20,6 +20,7 @@ colrev\_core.record.Record
       ~Record.add_data_provenance
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_hint
+      ~Record.add_provenance_all
       ~Record.complete_provenance
       ~Record.create_colrev_id
       ~Record.fuse_best_field
@@ -64,6 +65,7 @@ colrev\_core.record.Record
 
       ~Record.identifying_fields
       ~Record.pp
+      ~Record.preferred_sources
       ~Record.provenance_keys
       ~Record.record_field_inconsistencies
       ~Record.record_field_requirements

@@ -20,6 +20,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.add_data_provenance
       ~LoadRecord.add_masterdata_provenance
       ~LoadRecord.add_masterdata_provenance_hint
+      ~LoadRecord.add_provenance_all
       ~LoadRecord.complete_provenance
       ~LoadRecord.create_colrev_id
       ~LoadRecord.fuse_best_field
@@ -65,6 +66,7 @@ colrev\_core.load.LoadRecord
 
       ~LoadRecord.identifying_fields
       ~LoadRecord.pp
+      ~LoadRecord.preferred_sources
       ~LoadRecord.provenance_keys
       ~LoadRecord.record_field_inconsistencies
       ~LoadRecord.record_field_requirements

@@ -20,6 +20,7 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.add_data_provenance
       ~ScreenRecord.add_masterdata_provenance
       ~ScreenRecord.add_masterdata_provenance_hint
+      ~ScreenRecord.add_provenance_all
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.create_colrev_id
       ~ScreenRecord.fuse_best_field
@@ -64,6 +65,7 @@ colrev\_core.screen.ScreenRecord
 
       ~ScreenRecord.identifying_fields
       ~ScreenRecord.pp
+      ~ScreenRecord.preferred_sources
       ~ScreenRecord.provenance_keys
       ~ScreenRecord.record_field_inconsistencies
       ~ScreenRecord.record_field_requirements

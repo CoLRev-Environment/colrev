@@ -21,6 +21,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.add_data_provenance
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_hint
+      ~PrepRecord.add_provenance_all
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
@@ -70,6 +71,7 @@ colrev\_core.prep.PrepRecord
 
       ~PrepRecord.identifying_fields
       ~PrepRecord.pp
+      ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys
       ~PrepRecord.record_field_inconsistencies
       ~PrepRecord.record_field_requirements

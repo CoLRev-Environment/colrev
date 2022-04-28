@@ -80,7 +80,7 @@ The corresponding *colrev pull* and *colrev push* operations make it easy to reu
    :align: center
    :alt: Reuse vision
 
-Reuse of community-curated data from different sources is built into each step.
+Reuse of community-curated data from different sources is built into each operation.
 It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
 The more records are curated, the more you can focus on the search, screen and synthesis.
 
@@ -121,7 +121,6 @@ Please refer to the present GitHub project:
 
    technical_documentation/colrev
    technical_documentation/api
-   GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extensions
    technical_documentation/roadmap
    technical_documentation/credits
