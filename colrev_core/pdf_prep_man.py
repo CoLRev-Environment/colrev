@@ -258,9 +258,9 @@ class PDFPrepMan(Process):
         writer = PdfFileWriter()
         for i in range(1, pdfReader.getNumPages()):
             writer.addPage(pdfReader.getPage(i))
-        with open(filepath, "wb", encoding="utf8") as outfile:
+        with open(filepath, "wb") as outfile:
             writer.write(outfile)
-        with open(cp_path / filepath.name, "wb", encoding="utf8") as outfile:
+        with open(cp_path / filepath.name, "wb") as outfile:
             writer_cp.write(outfile)
         return
 

@@ -449,7 +449,7 @@ class Search(Process):
                 f"backward_search_{record['ID']}.bib"
             )
             bib_content = r.text.encode("utf-8")
-            with open(bib_filename, "wb", encoding="utf8") as f:
+            with open(bib_filename, "wb") as f:
                 f.write(bib_content)
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(bib_filename))
@@ -938,7 +938,7 @@ class Search(Process):
                 if val:
                     record[key] = str(val)
 
-            fp = open(pdf_path, "rb", encoding="utf8")
+            fp = open(pdf_path, "rb")
             parser = PDFParser(fp)
             doc = PDFDocument(parser)
 
@@ -984,7 +984,7 @@ class Search(Process):
             try:
                 record = get_record_from_pdf_grobid(record)
 
-                file = open(pdf_path, "rb", encoding="utf8")
+                file = open(pdf_path, "rb")
                 parser = PDFParser(file)
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]

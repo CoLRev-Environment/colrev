@@ -359,7 +359,7 @@ class Loader(Process):
 
         self.start_zotero_translators()
 
-        files = {"file": open(file, "rb", encoding="utf8")}
+        files = {"file": open(file, "rb")}
         headers = {"Content-type": "text/plain"}
         r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
         headers = {"Content-type": "application/json"}

@@ -51,7 +51,7 @@ def start_grobid() -> None:
             [start_cmd],
             shell=True,
             stdin=None,
-            stdout=open(os.devnull, "wb", encoding="utf8"),
+            stdout=open(os.devnull, "wb"),
             stderr=None,
             close_fds=True,
         )

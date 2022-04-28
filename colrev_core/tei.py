@@ -58,7 +58,7 @@ class TEI:
             try:
                 r = requests.post(
                     grobid_client.get_grobid_url() + "/api/processFulltextDocument",
-                    files={"input": open(str(pdf_path), "rb", encoding="utf8")},
+                    files={"input": open(str(pdf_path), "rb")},
                     data=options,
                 )
 
@@ -79,11 +79,11 @@ class TEI:
 
                 if tei_path is not None:
                     tei_path.parent.mkdir(exist_ok=True, parents=True)
-                    with open(tei_path, "wb", encoding="utf8") as tf:
+                    with open(tei_path, "wb") as tf:
                         tf.write(r.content)
 
                     # Note : reopen/write to prevent format changes in the enhancement
-                    with open(tei_path, "rb", encoding="utf8") as tf:
+                    with open(tei_path, "rb") as tf:
                         xml_fstring = tf.read()
                     self.root = etree.fromstring(xml_fstring)
 

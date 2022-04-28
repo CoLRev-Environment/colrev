@@ -116,7 +116,7 @@ class PDF_Retrieval(Process):
                     },
                 )
                 if 200 == res.status_code:
-                    with open(pdf_filepath, "wb", encoding="utf8") as f:
+                    with open(pdf_filepath, "wb") as f:
                         f.write(res.content)
                     if self.__is_pdf(pdf_filepath):
                         self.REVIEW_MANAGER.report_logger.info(

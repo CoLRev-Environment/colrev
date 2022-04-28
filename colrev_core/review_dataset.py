@@ -770,7 +770,7 @@ class ReviewDataset:
 
         val = val_str.encode("utf-8")
         current_ID_str = "NA"
-        with open(self.MAIN_REFERENCES_FILE, "r+b", encoding="utf8") as fd:
+        with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -816,7 +816,7 @@ class ReviewDataset:
         replacement = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
 
         current_ID_str = "NA"
-        with open(self.MAIN_REFERENCES_FILE, "r+b", encoding="utf8") as fd:
+        with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -874,7 +874,7 @@ class ReviewDataset:
 
         current_ID_str = "NOTSET"
         if self.MAIN_REFERENCES_FILE.is_file():
-            with open(self.MAIN_REFERENCES_FILE, "r+b", encoding="utf8") as fd:
+            with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
                 seekpos = fd.tell()
                 line = fd.readline()
                 while line:

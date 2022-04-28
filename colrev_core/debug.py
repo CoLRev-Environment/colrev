@@ -147,7 +147,7 @@ def debug_pdf_prep():
     # from pdfminer.pdfparser import PDFParser
     # records = REVIEW_MANAGER.load_records_dict()
     # record = records["Johns2006"]
-    # with open(record["file"], "rb", encoding="utf8") as file:
+    # with open(record["file"], "rb") as file:
     #     parser = PDFParser(file)
     #     document = PDFDocument(parser)
     #     pages_in_file = resolve1(document.catalog["Pages"])["Count"]

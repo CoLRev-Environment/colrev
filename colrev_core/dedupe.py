@@ -301,7 +301,7 @@ class Dedupe(Process):
                 self.REVIEW_MANAGER.logger.info(
                     f"Reading pre-labeled training data from {training_file.name}"
                 )
-                with open(training_file, "rb", encoding="utf8") as f:
+                with open(training_file, "rb") as f:
                     deduper.prepare_training(data_d, f)
             else:
                 deduper.prepare_training(data_d)
