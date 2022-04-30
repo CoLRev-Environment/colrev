@@ -1112,7 +1112,9 @@ class ReviewManager:
                     "[('change', 'journal',",
                     "[('change', 'booktitle',",
                 ]
-                temp = tempfile.NamedTemporaryFile()
+                temp = tempfile.NamedTemporaryFile(
+                    dir=str(self.paths["REPORT"].parents[0])
+                )
                 self.paths["REPORT"].rename(temp.name)
                 with open(temp.name) as reader, open(
                     self.paths["REPORT"], "w"
@@ -1131,6 +1133,8 @@ class ReviewManager:
                             writer.write(line)
 
                         line = reader.readline()
+
+                Path(temp.name).unlink()
 
                 with open("report.log") as f:
                     line = f.readline()
