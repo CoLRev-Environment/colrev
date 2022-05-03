@@ -10,7 +10,6 @@ import tempfile
 import typing
 from contextlib import redirect_stdout
 from dataclasses import asdict
-from dataclasses import dataclass
 from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
@@ -20,16 +19,8 @@ import yaml
 from dacite import from_dict
 
 from colrev_core import review_dataset
-from colrev_core.data import DataConfiguration
 from colrev_core.data import ManuscriptRecordSourceTagError
-from colrev_core.dedupe import DedupeConfiguration
 from colrev_core.environment import EnvironmentManager
-from colrev_core.load import LoadConfiguration
-from colrev_core.paper import Paperconfiguration
-from colrev_core.pdf_get import PDFGetConfiguration
-from colrev_core.pdf_prep import PDFPrepConfiguration
-from colrev_core.prep import PrepConfiguration
-from colrev_core.prescreen import PrescreenConfiguration
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import UnstagedGitChangesError
@@ -37,37 +28,7 @@ from colrev_core.review_dataset import DuplicatesError
 from colrev_core.review_dataset import FieldError
 from colrev_core.review_dataset import OriginError
 from colrev_core.review_dataset import PropagatedIDChange
-from colrev_core.screen import ScreenConfiguration
-from colrev_core.search import SearchConfiguration
-
-
-class IDPpattern(Enum):
-    first_author_year = "FIRST_AUTHOR_YEAR"
-    three_authors_year = "THREE_AUTHORS_YEAR"
-
-
-@dataclass
-class ProjectConfiguration:
-    id_pattern: IDPpattern
-    review_type: str
-    share_stat_req: str
-    delay_automated_processing: str  # TODO: should be bool
-    curated_fields: typing.List[str]
-
-
-@dataclass
-class Configuration:
-    project: ProjectConfiguration
-    search: SearchConfiguration
-    load: LoadConfiguration
-    prep: PrepConfiguration
-    dedupe: DedupeConfiguration
-    prescreen: PrescreenConfiguration
-    pdf_get: PDFGetConfiguration
-    pdf_prep: PDFPrepConfiguration
-    screen: ScreenConfiguration
-    data: DataConfiguration
-    paper: Paperconfiguration
+from colrev_core.settings import Configuration
 
 
 class ReviewManager:
@@ -179,6 +140,8 @@ class ReviewManager:
             def convert_value(obj):
                 if isinstance(obj, Enum):
                     return obj.value
+                if isinstance(obj, Path):
+                    return str(obj)
                 return obj
 
             return {k: convert_value(v) for k, v in data}
@@ -186,6 +149,8 @@ class ReviewManager:
         exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
         with open("settings.json", "w") as outfile:
             json.dump(exported_dict, outfile, indent=4)
+        self.REVIEW_DATASET.add_changes("settings.json")
+
         return
 
     def __get_file_paths(self, repository_dir_str: Path) -> dict:
@@ -389,11 +354,12 @@ class ReviewManager:
                         del record["excl_criteria"]
                     if "metadata_source" in record:
                         del record["metadata_source"]
-                    if "source_url" in record:
-                        record["colrev_masterdata"] = "CURATED:" + record["source_url"]
-                        del record["source_url"]
-                    else:
-                        record["colrev_masterdata"] = "ORIGINAL"
+                    # if "source_url" in record:
+                    #     record["colrev_masterdata"] = \
+                    #           "CURATED:" + record["source_url"]
+                    #     del record["source_url"]
+                    # else:
+                    #     record["colrev_masterdata"] = "ORIGINAL"
                     # Note : for curated repositories
                     # record["colrev_masterdata"] = "CURATED"
 
@@ -420,7 +386,7 @@ class ReviewManager:
                         sources_df = pd.json_normalize(yaml.safe_load(f))
                         sources = sources_df.to_dict("records")
                         print(sources)
-                settings["search"] = sources
+                settings["search"]["sources"] = sources
                 with open("settings.json", "w") as outfile:
                     json.dump(settings, outfile, indent=4)
                 print(settings)
@@ -428,6 +394,10 @@ class ReviewManager:
             self.REVIEW_DATASET.add_setting_changes()
             self.REVIEW_DATASET.remove_file(str(old_sources_path))
 
+            Path("shared_config.ini").unlink()
+            self.REVIEW_DATASET.remove_file("shared_config.ini")
+            if Path("private_config.ini").is_file():
+                Path("private_config.ini").unlink()
             return True
 
         # next version should be:

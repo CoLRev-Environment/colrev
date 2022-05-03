@@ -1,16 +1,8 @@
 #! /usr/bin/env python
-import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-
-
-@dataclass
-class Paperconfiguration:
-    csl: typing.Optional[str]
-    word_template: typing.Optional[str]
 
 
 class Paper(Process):
@@ -19,10 +11,22 @@ class Paper(Process):
 
     def main(self) -> None:
         import os
-        import requests
         import docker
 
         from colrev_core.environment import EnvironmentManager
+
+        paper_endpoint_settings_l = [
+            e
+            for e in self.REVIEW_MANAGER.settings.data.data_format
+            if "MANUSCRIPT" == e.endpoint
+        ]
+
+        if len(paper_endpoint_settings_l) != 1:
+            self.REVIEW_MANAGER.logger.error(
+                "No paper endpoint specified in settings.data.data_format"
+            )
+            return
+        paper_endpoint_settings = paper_endpoint_settings_l[0]
 
         if not self.REVIEW_MANAGER.paths["PAPER"].is_file():
             self.REVIEW_MANAGER.logger.error("File paper.md does not exist.")
@@ -33,26 +37,18 @@ class Paper(Process):
 
         EnvironmentManager.build_docker_images()
 
+        CSL_FILE = paper_endpoint_settings.csl_style
+        WORD_TEMPLATE = paper_endpoint_settings.word_template
+        assert Path(WORD_TEMPLATE).is_file()
+        assert Path(CSL_FILE).is_file()
+
         uid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
         gid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
-
-        CSL_FILE = self.REVIEW_MANAGER.settings.paper.csl
-        WORD_TEMPLATE_URL = self.REVIEW_MANAGER.settings.paper.word_template
-        WORD_TEMPLATE_FILENAME = Path(WORD_TEMPLATE_URL).name
-
-        if not Path(WORD_TEMPLATE_FILENAME).is_file():
-
-            url = WORD_TEMPLATE_URL
-            r = requests.get(str(url))
-            with open(WORD_TEMPLATE_FILENAME, "wb") as output:
-                output.write(r.content)
-        else:
-            WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.settings.paper.word_template)
 
         script = (
             "paper.md --citeproc --bibliography references.bib "
             + f"--csl {CSL_FILE} "
-            + f"--reference-doc {WORD_TEMPLATE_FILENAME} "
+            + f"--reference-doc {WORD_TEMPLATE} "
             + "--output paper.docx"
         )
 

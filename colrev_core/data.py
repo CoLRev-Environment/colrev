@@ -6,7 +6,6 @@ import re
 import tempfile
 import typing
 from collections import Counter
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -19,30 +18,6 @@ from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_TimeoutException
-
-
-@dataclass
-class Field:
-    name: str
-    explanation: str
-    data_type: str
-
-
-@dataclass
-class DataStructuredFormat:
-    fields: typing.Optional[typing.List[Field]] = None
-
-
-@dataclass
-class DataPaperFormat:
-    endpoint: str
-    template: typing.Optional[str] = None
-    csl_style: typing.Optional[str] = None
-
-
-@dataclass
-class DataConfiguration:
-    data_format: typing.List[typing.Union[DataPaperFormat, DataStructuredFormat]]
 
 
 class Data(Process):
@@ -490,16 +465,48 @@ class Data(Process):
 
         return enlit_list
 
+    def retrieve_default_word_template(self) -> str:
+        template_name = "APA-7.docx"
+
+        filedata = pkgutil.get_data(__name__, str(Path("template/APA-7.docx")))
+        if filedata:
+            with open(Path(template_name), "wb") as file:
+                file.write(filedata)
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(template_name)
+        return template_name
+
+    def retrieve_default_csl(self) -> str:
+        csl_link = (
+            "https://raw.githubusercontent.com/"
+            + "citation-style-language/styles/master/apa.csl"
+        )
+        r = requests.get(csl_link, allow_redirects=True)
+        open(Path(csl_link).name, "wb").write(r.content)
+        csl = Path(csl_link).name
+        return csl
+
+
+    def add_data_endpoint(self, data_endpoint) -> None:
+
+        self.REVIEW_MANAGER.settings.data.data_format.append(data_endpoint)
+        self.REVIEW_MANAGER.save_settings()
+
+        return
+
     def main(self) -> None:
 
         saved_args = locals()
+
+        data_endpoints = self.REVIEW_MANAGER.settings.data.data_format
+        if 0 == len(data_endpoints):
+            raise NoDataEndpointsRegistered()
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         self.__PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
         included = self.get_record_ids_for_synthesis(records)
-
         if 0 == len(included):
             self.REVIEW_MANAGER.report_logger.info(
                 "No records included yet (use colrev_core screen)"
@@ -509,22 +516,21 @@ class Data(Process):
             )
 
         else:
-
-            DATA_FORMAT = self.REVIEW_MANAGER.settings.data.data_format
-            if "TEI" in DATA_FORMAT:
-                records = self.update_tei(records, included)
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            if "MANUSCRIPT" in DATA_FORMAT:
-                records = self.update_manuscript(records, included)
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                    self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]
-                )
-            if "STRUCTURED" in DATA_FORMAT:
-                records = self.update_structured_data(records, included)
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                    self.REVIEW_MANAGER.paths["DATA_RELATIVE"]
-                )
+            for DATA_FORMAT in data_endpoints:
+                if "TEI" == DATA_FORMAT.endpoint:
+                    records = self.update_tei(records, included)
+                    self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+                    self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                if "MANUSCRIPT" == DATA_FORMAT.endpoint:
+                    records = self.update_manuscript(records, included)
+                    self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                        self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]
+                    )
+                if "STRUCTURED" == DATA_FORMAT.endpoint:
+                    records = self.update_structured_data(records, included)
+                    self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                        self.REVIEW_MANAGER.paths["DATA_RELATIVE"]
+                    )
 
             self.update_synthesized_status()
 
@@ -557,11 +563,17 @@ class Data(Process):
         synthesized_in_manuscript = self.get_synthesized_ids(records, PAPER)
         structured_data_extracted = self.get_structured_data_extracted(records, DATA)
 
-        DATA_FORMAT = self.REVIEW_MANAGER.settings.data.data_format
+        DATA_FORMATS = self.REVIEW_MANAGER.settings.data.data_format
         for ID, record in records.items():
-            if "MANUSCRIPT" in DATA_FORMAT and ID not in synthesized_in_manuscript:
+            if (
+                "MANUSCRIPT" in [e.endpoint for e in DATA_FORMATS]
+                and ID not in synthesized_in_manuscript
+            ):
                 continue
-            if "STRUCTURED" in DATA_FORMAT and ID not in structured_data_extracted:
+            if (
+                "STRUCTURED" in [e.endpoint for e in DATA_FORMATS]
+                and ID not in structured_data_extracted
+            ):
                 continue
 
             record.update(colrev_status=RecordState.rev_synthesized)
@@ -688,6 +700,15 @@ class Data(Process):
         self.REVIEW_MANAGER.logger.info(f"Files are available in {output_dir.name}")
 
         return
+
+
+class NoDataEndpointsRegistered(Exception):
+    """No data endpoints (data_format field) registered in settings.json"""
+
+    def __init__(self):
+        super().__init__(
+            "No data endpoints (data_format field) registered in settings.json"
+        )
 
 
 class ManuscriptRecordSourceTagError(Exception):

@@ -4,7 +4,6 @@ import re
 import shutil
 import string
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import bibtexparser
@@ -21,12 +20,6 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
 from colrev_core.record import RecordState
-
-
-@dataclass
-class LoadConfiguration:
-    fields_to_keep: typing.List[str]
-    fields_to_drop: typing.List[str]
 
 
 class LoadRecord(Record):

@@ -7,8 +7,9 @@
     "curated_fields": []
   },
   "search": {"sources": []},
-  "load": {"fields_to_keep": [], "fields_to_drop": []},
+  "load": {},
   "prep": {
+    "fields_to_keep": [],
     "prep_rounds": [
         {
             "name": "exclusion",
@@ -86,10 +87,14 @@
     ]
   },
   "dedupe": {"merge_threshold": 0.8, "partition_threshold": 0.5},
-  "prescreen": {},
+  "prescreen": {"plugin": null,
+                "mode": null},
   "pdf_get": {"pdf_path_type": "symlink"},
   "pdf_prep": {},
-  "screen": {"process": {}, "criteria": []},
-  "data": {"data_format": []},
-  "paper": {}
+  "screen": {"process": {"overlapp": null,
+              "mode": null,
+              "parallel_independent": null},
+            "criteria": []
+        },
+  "data": {"data_format": []}
 }

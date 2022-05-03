@@ -541,7 +541,7 @@ class ReviewDataset:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
-        from colrev_core.review_manager import IDPpattern
+        from colrev_core.settings import IDPpattern
         import re
         import unicodedata
 
@@ -1131,9 +1131,7 @@ class ReviewDataset:
         from colrev_core.record import Record, NotEnoughDataToIdentifyException
         from tqdm import tqdm
 
-        self.REVIEW_MANAGER.logger.info(
-            "Create colrev_id list from origins and history"
-        )
+        self.REVIEW_MANAGER.logger.info("Create colrev_id list from origins")
         recs_dict = self.load_records_dict()
         if len(recs_dict) > 0:
             origin_records = self.load_origin_records()
@@ -1144,15 +1142,22 @@ class ReviewDataset:
                 except NotEnoughDataToIdentifyException:
                     pass
                 origins = RECORD.get_origins()
-                RECORD.add_colrev_ids([origin_records[origin] for origin in origins])
-            for history_recs in self.load_from_git_history():
-                for hist_rec in tqdm(history_recs.values()):
-                    for rec in recs_dict.values():
-                        RECORD = Record(rec)
-                        HIST_RECORD = Record(hist_rec)
-                        # TODO : acces hist_rec based on an origin-key record-list?
-                        if RECORD.shares_origins(HIST_RECORD):
-                            RECORD.add_colrev_ids([HIST_RECORD.get_data()])
+                RECORD.add_colrev_ids(
+                    [
+                        origin_records[origin]
+                        for origin in origins
+                        if origin in origin_records
+                    ]
+                )
+            # Note : we may create origins from history for curated repositories
+            # for history_recs in self.load_from_git_history():
+            #     for hist_rec in tqdm(history_recs.values()):
+            #         for rec in recs_dict.values():
+            #             RECORD = Record(rec)
+            #             HIST_RECORD = Record(hist_rec)
+            #             # TODO : acces hist_rec based on an origin-key record-list?
+            #             if RECORD.shares_origins(HIST_RECORD):
+            #                 RECORD.add_colrev_ids([HIST_RECORD.get_data()])
 
             self.save_records_dict(recs_dict)
             self.add_record_changes()
@@ -1755,9 +1760,9 @@ class ReviewDataset:
         SEARCHDIR = self.REVIEW_MANAGER.paths["SEARCHDIR"]
 
         for search_file in SEARCHDIR.glob("*.bib"):
-            if Path(search_file.name) not in [x.filename for x in sources]:
+            if search_file.name not in [str(x.filename) for x in sources]:
                 raise SearchDetailsError(
-                    "Search file not in sources.yaml " f"({search_file.name})"
+                    f"Search file not in settings.json: ({search_file.name})"
                 )
 
         # date_regex = r"^\d{4}-\d{2}-\d{2}$"

@@ -9,7 +9,6 @@ import sys
 import time
 import typing
 import urllib
-from dataclasses import dataclass
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote
@@ -41,18 +40,6 @@ from colrev_core.record import RecordState
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
-
-
-@dataclass
-class PrepRound:
-    name: str
-    similarity: float
-    scripts: typing.List[str]
-
-
-@dataclass
-class PrepConfiguration:
-    prep_rounds: typing.List[PrepRound]
 
 
 class PrepRecord(Record):
@@ -261,40 +248,6 @@ class Preparation(Process):
         "issn",
         "language",
     ]
-    fields_to_drop = [
-        "type",
-        "organization",
-        "unique-id",
-        "month",
-        "researcherid-numbers",
-        "orcid-numbers",
-        "article-number",
-        "author_keywords",
-        "source",
-        "affiliation",
-        "document_type",
-        "art_number",
-        "grobid-version",
-        "doc-delivery-number",
-        "da",
-        "usage-count-last-180-days",
-        "usage-count-since-2013",
-        "doc-delivery-number",
-        "research-areas",
-        "web-of-science-categories",
-        "number-of-cited-references",
-        "times-cited",
-        "journal-iso",
-        "oa",
-        "keywords-plus",
-        "funding-text",
-        "funding-acknowledgement",
-        "day",
-        "related",
-        "bibsource",
-        "timestamp",
-        "biburl",
-    ]
 
     # Note : the followin objects have heavy memory footprints and should be
     # class (not object) properties to keep parallel processing as
@@ -330,6 +283,8 @@ class Preparation(Process):
         self.RETRIEVAL_SIMILARITY = similarity
 
         self.languages_to_include = languages_to_include.split(",")
+
+        self.fields_to_keep += self.REVIEW_MANAGER.settings.prep.fields_to_keep
 
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
@@ -1188,9 +1143,7 @@ class Preparation(Process):
         for key in list(RECORD.data.keys()):
             if key not in self.fields_to_keep:
                 RECORD.data.pop(key)
-                # warn if fields are dropped that are not in fields_to_drop
-                if key not in self.fields_to_drop:
-                    self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
+                self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
         for key in list(RECORD.data.keys()):
             if key in self.fields_to_keep:
                 continue
@@ -2132,7 +2085,7 @@ class Preparation(Process):
             if diffs:
                 # print(PREPARATION_RECORD)
                 change_report = (
-                    f'{prep_script["script"].__name__}'
+                    f"{prep_script}"
                     f'({preparation_record["ID"]})'
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
@@ -2416,8 +2369,8 @@ class Preparation(Process):
         debug_ids: str = "NA",
         debug_file: str = "NA",
     ) -> None:
-
         """Preparation of records"""
+        from colrev_core.settings import PrepRound
 
         saved_args = locals()
 

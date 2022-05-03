@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import csv
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -10,12 +9,6 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
 from colrev_core.record import RecordState
-
-
-@dataclass
-class PrescreenConfiguration:
-    plugin: typing.Optional[str]
-    mode: typing.Optional[str]
 
 
 class PrescreenRecord(Record):

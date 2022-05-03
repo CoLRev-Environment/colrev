@@ -7,7 +7,6 @@ import shutil
 import subprocess
 import typing
 import unicodedata
-from dataclasses import dataclass
 from pathlib import Path
 
 import imagehash
@@ -30,11 +29,6 @@ from colrev_core.environment import LocalIndex
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
-
-
-@dataclass
-class PDFPrepConfiguration:
-    pass
 
 
 class PDF_Preparation(Process):

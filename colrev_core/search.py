@@ -3,7 +3,6 @@ import hashlib
 import json
 import re
 import typing
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -24,27 +23,7 @@ from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
-
-
-@dataclass
-class SearchSource:
-    filename: Path
-    search_type: str  # TODO : use enum here
-    source_name: str
-    source_url: str
-
-    search_parameters: str
-    # TODO:
-    # - endpoint: dblp
-    #   params: SCOPE venue_key='journals/dss' ' \
-    # 'AND journal_abbreviated='Decis. Support Syst.'
-
-    comment: typing.Optional[str]
-
-
-@dataclass
-class SearchConfiguration:
-    sources: typing.List[SearchSource]
+from colrev_core.settings import SearchEndpoint
 
 
 class Search(Process):
@@ -1131,9 +1110,9 @@ class Search(Process):
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
-    def parse_parameters(self, search_params: dict) -> dict:
+    def parse_parameters(self, search_params: SearchEndpoint) -> dict:
 
-        query = search_params["params"]
+        query = search_params.params
         params = {}
         selection_str = query
         if "WHERE " in query:
@@ -1175,7 +1154,7 @@ class Search(Process):
             for scope_item in scope_part_str.split(" AND "):
                 key, value = scope_item.split("=")
                 if "url" in key:
-                    if "dblp" == search_params["endpoint"]:
+                    if "dblp" == search_params.endpoint:
                         params["scope"]["venue_key"] = (  # type: ignore
                             value.replace("/index.html", "")
                             .replace("https://dblp.org/db/", "")
@@ -1396,28 +1375,28 @@ class Search(Process):
 
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        feed_paths = [x for x in sources if "FEED" == x["search_type"]]
+        feed_paths = [x for x in sources if "FEED" == x.search_type]
 
         if selection_str is not None:
             if "all" != selection_str:
                 feed_paths_selected = [
                     f
                     for f in feed_paths
-                    if f["search_parameters"][0]["endpoint"] in selection_str.split(",")
+                    if f.search_parameters[0].endpoint in selection_str.split(",")
                 ]
             if len(feed_paths_selected) != 0:
                 feed_paths = feed_paths_selected
             else:
                 available_options = ", ".join(
-                    [f["search_parameters"][0]["endpoint"] for f in feed_paths]
+                    [f.search_parameters[0].endpoint for f in feed_paths]
                 )
                 print(f"Error: {selection_str} not in {available_options}")
                 return
 
         for feed_item in feed_paths:
-            feed_file = Path.cwd() / Path("search") / Path(feed_item["filename"])
-            search_param = feed_item["search_parameters"][0]
-            if search_param["endpoint"] not in [
+            feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
+            search_param = feed_item.search_parameters[0]
+            if search_param.endpoint not in [
                 x["search_endpoint"] for x in self.search_scripts
             ]:
                 print(
@@ -1428,11 +1407,11 @@ class Search(Process):
             script = [
                 s
                 for s in self.search_scripts
-                if s["search_endpoint"] == search_param["endpoint"]
+                if s["search_endpoint"] == search_param.endpoint
             ][0]
             params = self.parse_parameters(search_param)
 
-            print(f"Retrieve from {search_param['endpoint']}: {params}")
+            print(f"Retrieve from {search_param.endpoint}: {params}")
 
             script["script"](params, feed_file)
 

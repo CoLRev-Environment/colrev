@@ -6,7 +6,7 @@
     "delay_automated_processing": "True"
   },
   "search": {"sources": []},
-  "load": {"fields_to_keep": [], "fields_to_drop": []},
+  "load": {"fields_to_keep": []},
   "prep": {
     "prep_rounds": [
         {
@@ -102,13 +102,11 @@
     ]
   },
   "data": {
-    "data_format": [{
-      "endpoint": "manuscript",
+    "data_format": {"manuscript": {
       "template": "https://.../MISQ.docx",
       "csl_style": "https:/...."
     },
-    {
-      "endpoint": "structured",
+    "structured": {
       "fields": [
         {
           "name": "field1",
@@ -117,7 +115,7 @@
         }
       ]
     }
-  ]
+    }
   },
 
   "paper": {

@@ -3,7 +3,6 @@ import json
 import os
 import shutil
 import typing
-from dataclasses import dataclass
 from pathlib import Path
 
 import imagehash
@@ -17,11 +16,6 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 from colrev_core.tei import TEI
-
-
-@dataclass
-class PDFGetConfiguration:
-    pdf_path_type: str
 
 
 class PDF_Retrieval(Process):
@@ -49,13 +43,14 @@ class PDF_Retrieval(Process):
         for record in records.values():
             if "file" in record:
                 fpath = Path(record["file"])
+                new_fpath = fpath.absolute()
                 if fpath.is_symlink():
-                    new_fpath = fpath.absolute()
                     linked_file = fpath.resolve()
                     if linked_file.is_file():
                         fpath.unlink()
                         shutil.copyfile(linked_file, new_fpath)
-                if new_fpath.is_file():
+                        self.REVIEW_MANAGER.logger.info(f'Copied PDF ({record["ID"]})')
+                elif new_fpath.is_file():
                     self.REVIEW_MANAGER.logger.warning(
                         f'No need to copy PDF - already exits ({record["ID"]})'
                     )
