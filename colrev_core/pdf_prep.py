@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import typing
 import unicodedata
+from dataclasses import dataclass
 from pathlib import Path
 
 import imagehash
@@ -31,6 +32,11 @@ from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 
 
+@dataclass
+class PDFPrepConfiguration:
+    pass
+
+
 class PDF_Preparation(Process):
 
     roman_pages_pattern = re.compile(
@@ -47,12 +53,14 @@ class PDF_Preparation(Process):
         REVIEW_MANAGER,
         reprocess: bool = False,
         notify_state_transition_process: bool = True,
+        debug: bool = False,
     ):
 
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.pdf_prep,
             notify_state_transition_process=notify_state_transition_process,
+            debug=debug,
         )
 
         logging.getLogger("pdfminer").setLevel(logging.ERROR)
@@ -65,10 +73,9 @@ class PDF_Preparation(Process):
         self.lp_path = LocalIndex.local_environment_path / Path(".lastpages")
         self.lp_path.mkdir(exist_ok=True)
 
-        self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"] * 2
+        self.CPUS = 8
 
         self.language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
@@ -868,7 +875,7 @@ class PDF_Preparation(Process):
                 linked_file.rename(target_fname)
                 record["file"] = str(target_fname.relative_to(self.REVIEW_MANAGER.path))
 
-            if not self.DEBUG_MODE:
+            if not self.REVIEW_MANAGER.DEBUG_MODE:
                 # Delete temporary PDFs for which processing has failed:
                 if target_fname.is_file():
                     for fpath in self.PDF_DIRECTORY.glob("*.pdf"):
@@ -974,7 +981,7 @@ class PDF_Preparation(Process):
 
         pdf_prep_batch = self.__batch(pdf_prep_data_batch["items"])
 
-        if self.DEBUG_MODE:
+        if self.REVIEW_MANAGER.DEBUG_MODE:
             for item in pdf_prep_batch:
                 record = item["record"]
                 print(record["ID"])

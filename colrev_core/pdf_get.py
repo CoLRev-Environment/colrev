@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import imagehash
@@ -18,6 +19,11 @@ from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 
 
+@dataclass
+class PDFGetConfiguration:
+    pdf_path_type: str
+
+
 class PDF_Retrieval(Process):
     def __init__(
         self,
@@ -31,8 +37,7 @@ class PDF_Retrieval(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
+        self.CPUS = 4
 
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
@@ -62,7 +67,7 @@ class PDF_Retrieval(Process):
         url = "https://api.unpaywall.org/v2/{doi}"
 
         try:
-            r = requests.get(url, params={"email": self.EMAIL})
+            r = requests.get(url, params={"email": self.REVIEW_MANAGER.EMAIL})
 
             if r.status_code == 404:
                 return "NA"
@@ -425,7 +430,7 @@ class PDF_Retrieval(Process):
         return prep_data
 
     def __batch(self, items: typing.List[typing.Dict]):
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
+        # TODO : no longer batch...
         batch = []
         for item in items:
             batch.append(
@@ -433,9 +438,6 @@ class PDF_Retrieval(Process):
                     "record": item,
                 }
             )
-            if len(batch) == n:
-                yield batch
-                batch = []
         yield batch
 
     def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:

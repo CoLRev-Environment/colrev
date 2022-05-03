@@ -3,6 +3,7 @@ import hashlib
 import json
 import re
 import typing
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
@@ -25,9 +26,29 @@ from colrev_core.process import ProcessType
 from colrev_core.record import Record
 
 
+@dataclass
+class SearchSource:
+    filename: Path
+    search_type: str  # TODO : use enum here
+    source_name: str
+    source_url: str
+
+    search_parameters: str
+    # TODO:
+    # - endpoint: dblp
+    #   params: SCOPE venue_key='journals/dss' ' \
+    # 'AND journal_abbreviated='Decis. Support Syst.'
+
+    comment: typing.Optional[str]
+
+
+@dataclass
+class SearchConfiguration:
+    sources: typing.List[SearchSource]
+
+
 class Search(Process):
 
-    EMAIL = ""
     TIMEOUT = 10
 
     def __init__(
@@ -47,7 +68,6 @@ class Search(Process):
 
         self.force_mode = force_mode
 
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
         self.PREPARATION = Preparation(
             REVIEW_MANAGER, notify_state_transition_process=False
         )
@@ -242,7 +262,7 @@ class Search(Process):
         venue_abbrev = ""
 
         api_url = "https://dblp.org/search/publ/api?q="
-        headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+        headers = {"user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         query = (
             venue_key.replace("journals/", "journal /").replace("conf/", "Conference /")
             + "+"
@@ -562,6 +582,9 @@ class Search(Process):
                 f"SELECT colrev_id FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
+            # TODO : update to opensearch standard
+            # https://github.com/opensearch-project/opensearch-py/issues/98
+            # see extract_references.py (methods repo)
             resp = LOCAL_INDEX.os.sql.query(body={"query": query})
             IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
 
@@ -1061,12 +1084,11 @@ class Search(Process):
 
             for pdf_path in pdf_batch:
                 new_records.append(index_pdf(pdf_path))
-            # if self.REVIEW_MANAGER.config["DEBUG_MODE"]:
-            # else:
-            #     # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
-            #     # p = Pool(ncpus=4)
-            #     # new_records = p.map(index_pdf, pdf_batch)
-            #     new_records = p_map(index_pdf, pdf_batch)
+            # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
+            # p = Pool(ncpus=4)
+            # new_records = p.map(index_pdf, pdf_batch)
+            # alternatively:
+            # new_records = p_map(index_pdf, pdf_batch)
 
             if 0 != len(new_records):
                 for new_r in new_records:

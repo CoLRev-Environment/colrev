@@ -1,8 +1,16 @@
 #! /usr/bin/env python
+import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+
+
+@dataclass
+class Paperconfiguration:
+    csl: typing.Optional[str]
+    word_template: typing.Optional[str]
 
 
 class Paper(Process):
@@ -28,8 +36,8 @@ class Paper(Process):
         uid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
         gid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
 
-        CSL_FILE = self.REVIEW_MANAGER.config["CSL"]
-        WORD_TEMPLATE_URL = self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"]
+        CSL_FILE = self.REVIEW_MANAGER.settings.paper.csl
+        WORD_TEMPLATE_URL = self.REVIEW_MANAGER.settings.paper.word_template
         WORD_TEMPLATE_FILENAME = Path(WORD_TEMPLATE_URL).name
 
         if not Path(WORD_TEMPLATE_FILENAME).is_file():
@@ -39,7 +47,7 @@ class Paper(Process):
             with open(WORD_TEMPLATE_FILENAME, "wb") as output:
                 output.write(r.content)
         else:
-            WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.config["WORD_TEMPLATE_URL"])
+            WORD_TEMPLATE_URL = Path(self.REVIEW_MANAGER.settings.paper.word_template)
 
         script = (
             "paper.md --citeproc --bibliography references.bib "

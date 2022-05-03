@@ -3,6 +3,7 @@
 import logging
 import re
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import git
@@ -11,6 +12,12 @@ import pandas as pd
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+
+
+@dataclass
+class DedupeConfiguration:
+    merge_threshold: float
+    partition_threshold: float
 
 
 class Dedupe(Process):
@@ -1107,7 +1114,8 @@ class Dedupe(Process):
         # self.REVIEW_MANAGER.pp.pprint(references.values())
         references = pd.DataFrame(references.values())
 
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
+        # TODO : simplify this function (e.g., batch size n no longer needed)
+        n = 100
         items_start = data["items_start"]
         it_len = len(data["queue"])
         batch_data = []

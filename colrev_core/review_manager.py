@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
-import ast
-import configparser
 import importlib
 import io
 import logging
-import multiprocessing as mp
 import os
 import pprint
 import re
@@ -12,14 +9,27 @@ import sys
 import tempfile
 import typing
 from contextlib import redirect_stdout
+from dataclasses import asdict
+from dataclasses import dataclass
+from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
 
 import git
 import yaml
+from dacite import from_dict
 
 from colrev_core import review_dataset
+from colrev_core.data import DataConfiguration
 from colrev_core.data import ManuscriptRecordSourceTagError
+from colrev_core.dedupe import DedupeConfiguration
+from colrev_core.environment import EnvironmentManager
+from colrev_core.load import LoadConfiguration
+from colrev_core.paper import Paperconfiguration
+from colrev_core.pdf_get import PDFGetConfiguration
+from colrev_core.pdf_prep import PDFPrepConfiguration
+from colrev_core.prep import PrepConfiguration
+from colrev_core.prescreen import PrescreenConfiguration
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import UnstagedGitChangesError
@@ -27,6 +37,37 @@ from colrev_core.review_dataset import DuplicatesError
 from colrev_core.review_dataset import FieldError
 from colrev_core.review_dataset import OriginError
 from colrev_core.review_dataset import PropagatedIDChange
+from colrev_core.screen import ScreenConfiguration
+from colrev_core.search import SearchConfiguration
+
+
+class IDPpattern(Enum):
+    first_author_year = "FIRST_AUTHOR_YEAR"
+    three_authors_year = "THREE_AUTHORS_YEAR"
+
+
+@dataclass
+class ProjectConfiguration:
+    id_pattern: IDPpattern
+    review_type: str
+    share_stat_req: str
+    delay_automated_processing: str  # TODO: should be bool
+    curated_fields: typing.List[str]
+
+
+@dataclass
+class Configuration:
+    project: ProjectConfiguration
+    search: SearchConfiguration
+    load: LoadConfiguration
+    prep: PrepConfiguration
+    dedupe: DedupeConfiguration
+    prescreen: PrescreenConfiguration
+    pdf_get: PDFGetConfiguration
+    pdf_prep: PDFPrepConfiguration
+    screen: ScreenConfiguration
+    data: DataConfiguration
+    paper: Paperconfiguration
 
 
 class ReviewManager:
@@ -38,7 +79,9 @@ class ReviewManager:
     """ReviewManager was notified for the upcoming process and
     will provide access to the ReviewDataset"""
 
-    def __init__(self, path_str: str = None, force_mode: bool = False) -> None:
+    def __init__(
+        self, path_str: str = None, force_mode: bool = False, debug_mode: bool = False
+    ) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
         self.force_mode = force_mode
@@ -51,9 +94,15 @@ class ReviewManager:
             self.path = Path.cwd()
 
         self.paths = self.__get_file_paths(self.path)
-        self.config = self.__load_config()
 
-        if self.config["DEBUG_MODE"]:
+        self.settings = self.load_settings()
+
+        if debug_mode:
+            self.DEBUG_MODE = True
+        else:
+            self.DEBUG_MODE = False
+
+        if self.DEBUG_MODE:
             self.report_logger = self.__setup_report_logger(logging.DEBUG)
             """Logger for the commit report"""
             self.logger = self.__setup_logger(logging.DEBUG)
@@ -62,41 +111,95 @@ class ReviewManager:
             self.report_logger = self.__setup_report_logger(logging.INFO)
             self.logger = self.__setup_logger(logging.INFO)
 
+        global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+        if 2 != len(global_git_vars):
+            logging.error("Global git variables (user name and email) not available.")
+            return
+        self.COMMITTER, self.EMAIL = global_git_vars
+
         self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
         self.REVIEW_DATASET = ReviewDataset(self)
         """The review dataset object"""
         self.sources = self.REVIEW_DATASET.load_sources()
         """Information on sources (search directory)"""
 
-        try:
-            self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
-        except ValueError:
-            self.logger.error(
-                f'Could not load DATA_FORMAT ({self.config["DATA_FORMAT"] }), '
-                "using fallback"
-            )
-            self.config["DATA_FORMAT"] = ["MANUSCRIPT"]
-            pass
-
-        if self.config["DEBUG_MODE"]:
+        if self.DEBUG_MODE:
             print("\n\n")
             self.logger.debug("Created review manager instance")
-            self.logger.debug(f" config: {self.pp.pformat(self.config)}")
+            self.logger.debug(f" settings: {self.pp.pformat(self.settings)}")
+
+    def load_settings(self) -> Configuration:
+        import dacite
+        import json
+        import pkgutil
+
+        # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
+
+        # possible extension : integrate/merge global, default settings
+        # from colrev_core.environment import EnvironmentManager
+        # def selective_merge(base_obj, delta_obj):
+        #     if not isinstance(base_obj, dict):
+        #         return delta_obj
+        #     common_keys = set(base_obj).intersection(delta_obj)
+        #     new_keys = set(delta_obj).difference(common_keys)
+        #     for k in common_keys:
+        #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
+        #     for k in new_keys:
+        #         base_obj[k] = delta_obj[k]
+        #     return base_obj
+        # print(selective_merge(default_settings, project_settings))
+
+        if not self.paths["SETTINGS"].is_file():
+            filedata = pkgutil.get_data(__name__, "template/settings.json")
+            if filedata:
+                settings = json.loads(filedata.decode("utf-8"))
+                with open("settings.json", "w", encoding="utf8") as file:
+                    json.dump(settings, file, indent=4)
+
+        with open(self.paths["SETTINGS"]) as f:
+            loaded_settings = json.load(f)
+
+        converters = {Path: Path, Enum: Enum}
+
+        # TODO : check validation
+        # (e..g, non-float values for prep/similarity do not through errors)
+
+        settings = from_dict(
+            data_class=Configuration,
+            data=loaded_settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+
+        return settings
+
+    def save_settings(self) -> None:
+        import json
+
+        def custom_asdict_factory(data):
+            def convert_value(obj):
+                if isinstance(obj, Enum):
+                    return obj.value
+                return obj
+
+            return {k: convert_value(v) for k, v in data}
+
+        exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
+        with open("settings.json", "w") as outfile:
+            json.dump(exported_dict, outfile, indent=4)
+        return
 
     def __get_file_paths(self, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
         main_refs = "references.bib"
         data = "data.csv"
         pdf_dir = "pdfs"
-        sources = "sources.yaml"
         paper = "paper.md"
-        shared_config = "shared_config.ini"
-        private_config = "private_config.ini"
         readme = "readme.md"
         report = "report.log"
         search_dir = "search"
         status = "status.yaml"
         corrections = ".corrections"
+        settings = "settings.json"
         return {
             "REPO_DIR": repository_dir,
             "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -105,14 +208,8 @@ class ReviewManager:
             "DATA": repository_dir.joinpath(data),
             "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
             "PDF_DIRECTORY": repository_dir.joinpath(pdf_dir),
-            "SOURCES_RELATIVE": Path(sources),
-            "SOURCES": repository_dir.joinpath(sources),
             "PAPER_RELATIVE": Path(paper),
             "PAPER": repository_dir.joinpath(paper),
-            "SHARED_CONFIG_RELATIVE": Path(shared_config),
-            "SHARED_CONFIG": repository_dir.joinpath(shared_config),
-            "PRIVATE_CONFIG_RELATIVE": Path(private_config),
-            "PRIVATE_CONFIG": repository_dir.joinpath(private_config),
             "README_RELATIVE": Path(readme),
             "README": repository_dir.joinpath(readme),
             "REPORT_RELATIVE": Path(report),
@@ -122,56 +219,9 @@ class ReviewManager:
             "STATUS_RELATIVE": Path(status),
             "STATUS": repository_dir.joinpath(status),
             "CORRECTIONS_PATH": repository_dir.joinpath(corrections),
+            "SETTINGS": repository_dir.joinpath(settings),
+            "SETTINGS_RELATIVE": Path(settings),
         }
-
-    def __load_config(self) -> dict:
-        local_config = configparser.ConfigParser()
-        confs = []
-        if self.paths["SHARED_CONFIG"].is_file():
-            confs.append(self.paths["SHARED_CONFIG"])
-        if self.paths["PRIVATE_CONFIG"].is_file():
-            confs.append(self.paths["PRIVATE_CONFIG"])
-        local_config.read(confs)
-
-        csl_fallback = (
-            "https://raw.githubusercontent.com/citation-style-language/"
-            + "styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl"
-        )
-
-        word_template_url_fallback = (
-            "https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx"
-        )
-        config = dict(
-            DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
-                "general", "DELAY_AUTOMATED_PROCESSING", fallback=True
-            ),
-            BATCH_SIZE=local_config.getint("general", "BATCH_SIZE", fallback=500),
-            SHARE_STAT_REQ=local_config.get(
-                "general", "SHARE_STAT_REQ", fallback="PROCESSED"
-            ),
-            CPUS=local_config.getint("general", "CPUS", fallback=mp.cpu_count() - 1),
-            EMAIL=local_config.get(
-                "general", "EMAIL", fallback=self.__email_fallback()
-            ),
-            GIT_ACTOR=local_config.get(
-                "general", "GIT_ACTOR", fallback=self.__actor_fallback()
-            ),
-            DEBUG_MODE=local_config.getboolean("general", "DEBUG_MODE", fallback=False),
-            DATA_FORMAT=local_config.get(
-                "general", "DATA_FORMAT", fallback='["MANUSCRIPT"]'
-            ),
-            ID_PATTERN=local_config.get(
-                "general", "ID_PATTERN", fallback="THREE_AUTHORS_YEAR"
-            ),
-            CSL=local_config.get("general", "CSL", fallback=csl_fallback),
-            WORD_TEMPLATE_URL=local_config.get(
-                "general", "WORD_TEMPLATE_URL", fallback=word_template_url_fallback
-            ),
-            PDF_PATH_TYPE=local_config.get(
-                "general", "PDF_PATH_TYPE", fallback="SYMLINK"
-            ),
-        )
-        return config
 
     def get_remote_url(self):
         git_repo = self.REVIEW_DATASET.get_repo()
@@ -316,6 +366,10 @@ class ReviewManager:
             return False
 
         def migrate_0_4_0(self) -> bool:
+            import pandas as pd
+            import yaml
+            import json
+            import pkgutil
 
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
@@ -348,6 +402,31 @@ class ReviewManager:
 
             # Note: the order is important in this case.
             self.REVIEW_DATASET.update_colrev_ids()
+
+            if not Path("settings.json").is_file():
+                filedata = pkgutil.get_data(__name__, "template/settings.json")
+                if not filedata:
+                    print("error reading file")
+                    return False
+                settings = json.loads(filedata.decode("utf-8"))
+            else:
+                with open("settings.json") as f:
+                    settings = json.load(f)
+
+            old_sources_path = Path("sources.yaml")
+            if old_sources_path.is_file():
+                if old_sources_path.is_file():
+                    with open(old_sources_path) as f:
+                        sources_df = pd.json_normalize(yaml.safe_load(f))
+                        sources = sources_df.to_dict("records")
+                        print(sources)
+                settings["search"] = sources
+                with open("settings.json", "w") as outfile:
+                    json.dump(settings, outfile, indent=4)
+                print(settings)
+            old_sources_path.unlink()
+            self.REVIEW_DATASET.add_setting_changes()
+            self.REVIEW_DATASET.remove_file(str(old_sources_path))
 
             return True
 
@@ -1099,7 +1178,7 @@ class ReviewManager:
             self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
 
             hook_skipping = False
-            if not self.config["DEBUG_MODE"]:
+            if not self.DEBUG_MODE:
                 hook_skipping = True
 
             processing_report = ""
@@ -1133,8 +1212,6 @@ class ReviewManager:
                             writer.write(line)
 
                         line = reader.readline()
-
-                Path(temp.name).unlink()
 
                 with open("report.log") as f:
                     line = f.readline()
@@ -1172,7 +1249,7 @@ class ReviewManager:
                 script = "apply_corrections"
 
             if manual_author:
-                git_author = git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"])
+                git_author = git.Actor(self.COMMITTER, self.EMAIL)
             else:
                 git_author = git.Actor(f"script:{script}", "")
             # TODO: test and update the following
@@ -1188,7 +1265,7 @@ class ReviewManager:
             self.REVIEW_DATASET.create_commit(
                 cmsg,
                 author=git_author,
-                committer=git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"]),
+                committer=git.Actor(self.COMMITTER, self.EMAIL),
                 hook_skipping=hook_skipping,
             )
 

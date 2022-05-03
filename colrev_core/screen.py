@@ -1,10 +1,30 @@
 #! /usr/bin/env python
 import typing
+from dataclasses import dataclass
 
 from colrev_core.prescreen import PrescreenRecord
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+
+
+@dataclass
+class ScreenCriterion:
+    name: str
+    explanation: str
+
+
+@dataclass
+class ScreeningProcessConfig:
+    overlapp: typing.Optional[int]
+    mode: typing.Optional[str]
+    parallel_independent: typing.Optional[str]
+
+
+@dataclass
+class ScreenConfiguration:
+    process: ScreeningProcessConfig
+    criteria: typing.List[ScreenCriterion]
 
 
 class ScreenRecord(PrescreenRecord):

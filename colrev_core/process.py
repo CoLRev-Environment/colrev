@@ -51,12 +51,12 @@ class Process:
             self.REVIEW_MANAGER.notify(self)
         else:
             self.REVIEW_MANAGER.notify(self, state_transition=False)
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
+
         if debug:
-            self.REVIEW_MANAGER.config["DEBUG_MODE"] = True
-            # self.REVIEW_MANAGER.logger.setLevel(logging.DEBUG)
-        self.DEBUG_MODE = self.REVIEW_MANAGER.config["DEBUG_MODE"]
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
+            self.REVIEW_MANAGER.DEBUG_MODE = True
+        else:
+            self.REVIEW_MANAGER.DEBUG_MODE = False
+        self.CPUS = 4
 
         # Note: the following call seems to block the flow (if debug is enabled)
         # self.REVIEW_MANAGER.logger.debug(f"Created {self.type} process")
@@ -143,7 +143,7 @@ class Process:
             require_clean_repo_general(
                 ignore_pattern=[
                     self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"],
-                    self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"],
+                    self.REVIEW_MANAGER.paths["SETTINGS_RELATIVE"],
                 ]
             )
             check_process_model_precondition()
@@ -395,7 +395,7 @@ class ProcessModel:
 
     def check_process_precondition(self, process: Process) -> None:
 
-        if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+        if "True" == self.REVIEW_MANAGER.settings.project.delay_automated_processing:
             cur_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set()
             self.REVIEW_MANAGER.logger.debug(f"cur_state_list: {cur_state_list}")
             self.REVIEW_MANAGER.logger.debug(f"precondition: {self.state}")

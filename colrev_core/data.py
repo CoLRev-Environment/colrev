@@ -6,6 +6,7 @@ import re
 import tempfile
 import typing
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -18,6 +19,30 @@ from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 from colrev_core.tei import TEI
 from colrev_core.tei import TEI_TimeoutException
+
+
+@dataclass
+class Field:
+    name: str
+    explanation: str
+    data_type: str
+
+
+@dataclass
+class DataStructuredFormat:
+    fields: typing.Optional[typing.List[Field]] = None
+
+
+@dataclass
+class DataPaperFormat:
+    endpoint: str
+    template: typing.Optional[str] = None
+    csl_style: typing.Optional[str] = None
+
+
+@dataclass
+class DataConfiguration:
+    data_format: typing.List[typing.Union[DataPaperFormat, DataStructuredFormat]]
 
 
 class Data(Process):
@@ -485,7 +510,7 @@ class Data(Process):
 
         else:
 
-            DATA_FORMAT = self.REVIEW_MANAGER.config["DATA_FORMAT"]
+            DATA_FORMAT = self.REVIEW_MANAGER.settings.data.data_format
             if "TEI" in DATA_FORMAT:
                 records = self.update_tei(records, included)
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
@@ -532,7 +557,7 @@ class Data(Process):
         synthesized_in_manuscript = self.get_synthesized_ids(records, PAPER)
         structured_data_extracted = self.get_structured_data_extracted(records, DATA)
 
-        DATA_FORMAT = self.REVIEW_MANAGER.config["DATA_FORMAT"]
+        DATA_FORMAT = self.REVIEW_MANAGER.settings.data.data_format
         for ID, record in records.items():
             if "MANUSCRIPT" in DATA_FORMAT and ID not in synthesized_in_manuscript:
                 continue

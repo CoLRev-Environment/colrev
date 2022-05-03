@@ -357,6 +357,10 @@ class Status(Process):
             }
             # environment_instructions.append(instruction)
             return instruction
+        except Exception as e:
+            print(f"Error in {registered_path}: {e}")
+            pass
+            return {}
         if "curated_metadata" in str(registered_path):
             if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
                 instruction = {
@@ -538,7 +542,9 @@ class Status(Process):
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )
-
+        delay_automated_processing = (
+            self.REVIEW_MANAGER.settings.project.delay_automated_processing
+        )
         msgs = {
             "load": "Import search results",
             "prep": "Prepare records",
@@ -574,7 +580,7 @@ class Status(Process):
                     if "priority" not in keys:
                         instruction["priority"] = "yes"
                 else:
-                    if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+                    if "True" == delay_automated_processing:
                         continue
                 review_instructions.append(instruction)
 
@@ -594,7 +600,7 @@ class Status(Process):
             }
             review_instructions.append(instruction)
 
-        if "MANUSCRIPT" == self.REVIEW_MANAGER.config["DATA_FORMAT"]:
+        if "MANUSCRIPT" in self.REVIEW_MANAGER.settings.data.data_format:
             instruction = {
                 "msg": "Build the paper",
                 "cmd": "colrev paper",
@@ -605,7 +611,7 @@ class Status(Process):
 
     def get_collaboration_instructions(self, stat) -> dict:
 
-        SHARE_STAT_REQ = self.REVIEW_MANAGER.config["SHARE_STAT_REQ"]
+        SHARE_STAT_REQ = self.REVIEW_MANAGER.settings.project.share_stat_req
         found_a_conflict = False
         # git_repo = REVIEW_MANAGER.get_repo()
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))

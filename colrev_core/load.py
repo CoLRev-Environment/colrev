@@ -4,6 +4,7 @@ import re
 import shutil
 import string
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import bibtexparser
@@ -13,7 +14,6 @@ import requests
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from yaml import safe_load
 
 from colrev_core import grobid_client
 from colrev_core import load_custom
@@ -21,6 +21,12 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
 from colrev_core.record import RecordState
+
+
+@dataclass
+class LoadConfiguration:
+    fields_to_keep: typing.List[str]
+    fields_to_drop: typing.List[str]
 
 
 class LoadRecord(Record):
@@ -299,14 +305,13 @@ class Loader(Process):
 
         return record
 
-    def apply_source_heuristics(
-        self, new_record: dict, sfp: Path, original: Path
-    ) -> dict:
+    def apply_source_heuristics(self, original: Path) -> str:
         """Apply heuristics to identify source"""
+
         if str(original).endswith("_ref_list.bib"):
-            new_record["source_name"] = "PDF reference section"
+            return "PDF reference section"
         if original.suffix == ".pdf":
-            new_record["source_name"] = "PDF"
+            return "PDF"
         data = ""
         # TODO : deal with misleading file extensions.
         try:
@@ -315,10 +320,9 @@ class Loader(Process):
             pass
         for source in [x for x in load_custom.scripts if "heuristic" in x]:
             if source["heuristic"](original, data):
-                new_record["source_name"] = source["source_name"]
-                break
+                return source["source_name"]
 
-        return new_record
+        return "NA"
 
     def zotero_service_available(self) -> bool:
         import requests
@@ -577,15 +581,13 @@ class Loader(Process):
         self, records: typing.List[dict], sfp: str
     ) -> typing.List[dict]:
 
-        SOURCES = self.REVIEW_MANAGER.paths["SOURCES"]
+        sources = self.REVIEW_MANAGER.settings.search.sources
         source_name = "NA"
-        with open(SOURCES) as f:
-            sources_df = pd.json_normalize(safe_load(f))
-            sources = sources_df.to_dict("records")
-            if sfp in [x["filename"] for x in sources]:
-                source_name = [
-                    x["source_name"] for x in sources if sfp == x["filename"]
-                ].pop()
+
+        if Path(sfp) in [x.filename for x in sources]:
+            source_name = [
+                x.source_name for x in sources if Path(sfp) == x.filename
+            ].pop()
 
         # Note : field name corrections etc. that should be fixed before the preparation
         # stages should be source-specific (in the load_custom.scripts):
@@ -787,12 +789,6 @@ class Loader(Process):
 
         return
 
-    def __add_sources(self) -> None:
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
-        )
-        return
-
     def __get_currently_imported_origin_list(self) -> list:
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
         imported_origins = [x[1].split(";") for x in record_header_list]
@@ -821,7 +817,7 @@ class Loader(Process):
             del saved_args["keep_ids"]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.check_sources()
-        self.__add_sources()
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
         for search_file in self.get_search_files():
 
             corresponding_bib_file = self.__convert_to_bib(search_file)
@@ -889,9 +885,7 @@ class Loader(Process):
             if not combine_commits:
                 self.REVIEW_MANAGER.logger.info("Add changes and create commit")
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                str(self.REVIEW_MANAGER.paths["SOURCES"])
-            )
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
 

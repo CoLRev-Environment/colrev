@@ -1,4 +1,3 @@
-import configparser
 import logging
 import pprint
 from pathlib import Path  # noqa F401
@@ -8,24 +7,6 @@ from colrev_core.review_manager import ReviewManager
 
 logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-
-
-def set_debug_mode(activate: bool) -> None:
-
-    config_path = Path("private_config.ini")
-    private_config = configparser.ConfigParser()
-    if config_path.is_file():
-        private_config.read(config_path)
-    if "general" not in private_config.sections():
-        private_config.add_section("general")
-    if activate:
-        private_config["general"]["debug_mode"] = "yes"
-    else:
-        private_config["general"]["debug_mode"] = "no"
-    with open(config_path, "w") as f:
-        private_config.write(f)
-
-    return
 
 
 def debug_load() -> None:
