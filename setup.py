@@ -22,7 +22,7 @@ requirements = [
     "cx_Freeze==6.10",
     "daff==1.3.46",
     "dictdiffer==0.8.1",
-    "docker_py==1.10.6",
+    "docker==5.0.3",
     "GitPython==3.1.24",
     "ImageHash==4.2.0",
     "lingua-language-detector==1.0.1",
