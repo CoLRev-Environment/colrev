@@ -162,7 +162,7 @@ class EnvironmentManager:
 
         try:
             null = open("/dev/null", "w", encoding="utf8")
-            subprocess.Popen("git", stdout=null, stderr=null, encoding="utf8")
+            subprocess.Popen("git", stdout=null, stderr=null)
             null.close()
         except OSError:
             pass
@@ -176,7 +176,7 @@ class EnvironmentManager:
 
         try:
             null = open("/dev/null", "w", encoding="utf8")
-            subprocess.Popen("docker", stdout=null, stderr=null, encoding="utf8")
+            subprocess.Popen("docker", stdout=null, stderr=null)
             null.close()
         except OSError:
             pass

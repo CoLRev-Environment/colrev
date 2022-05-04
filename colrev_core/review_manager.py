@@ -893,14 +893,14 @@ class ReviewManager:
             + sys_v[: sys_v.find(" ")]
         )
 
-        stream = os.popen("git --version", encoding="utf8")
+        stream = os.popen("git --version")
         git_v = stream.read()
         report = (
             report
             + "\n   - Git:".ljust(33, " ")
             + git_v.replace("git ", "").replace("\n", "")
         )
-        stream = os.popen("docker --version", encoding="utf8")
+        stream = os.popen("docker --version")
         docker_v = stream.read()
         report = (
             report
