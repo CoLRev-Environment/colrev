@@ -486,7 +486,6 @@ class Data(Process):
         csl = Path(csl_link).name
         return csl
 
-
     def add_data_endpoint(self, data_endpoint) -> None:
 
         self.REVIEW_MANAGER.settings.data.data_format.append(data_endpoint)

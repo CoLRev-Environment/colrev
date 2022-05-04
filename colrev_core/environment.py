@@ -298,7 +298,7 @@ class EnvironmentManager:
 class LocalIndex:
 
     global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url"]
-    max_len_sha256 = 2 ** 256
+    max_len_sha256 = 2**256
 
     local_environment_path = Path.home().joinpath("colrev")
 
