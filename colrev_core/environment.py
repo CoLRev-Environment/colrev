@@ -272,26 +272,37 @@ class EnvironmentManager:
             for x in EnvironmentManager.load_local_registry()
             if "colrev/curated_metadata/" in x["source_url"]
         ]:
-            with open(f"{source_url}/readme.md") as f:
-                first_line = f.readline()
-            curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
+            try:
+                with open(f"{source_url}/readme.md") as f:
+                    first_line = f.readline()
+                curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
-            with open(f"{source_url}/references.bib") as r:
-                outlets = []
-                for line in r.readlines():
+                with open(f"{source_url}/references.bib") as r:
+                    outlets = []
+                    for line in r.readlines():
+                        # Note : the second part ("journal:"/"booktitle:")
+                        # ensures that data provenance fields are skipped
+                        if (
+                            "journal" == line.lstrip()[:7]
+                            and "journal:" != line.lstrip()[:8]
+                        ):
+                            journal = line[line.find("{") + 1 : line.rfind("}")]
+                            outlets.append(journal)
+                        if (
+                            "booktitle" == line.lstrip()[:9]
+                            and "booktitle:" != line.lstrip()[:10]
+                        ):
+                            booktitle = line[line.find("{") + 1 : line.rfind("}")]
+                            outlets.append(booktitle)
 
-                    if "journal" == line.lstrip()[:7]:
-                        journal = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(journal)
-                    if "booktitle" == line.lstrip()[:9]:
-                        booktitle = line[line.find("{") + 1 : line.rfind("}")]
-                        outlets.append(booktitle)
-
-                if len(set(outlets)) != 1:
-                    raise CuratedOutletNotUnique(
-                        "Error: Duplicate outlets in curated_metadata of "
-                        f"{source_url} : {','.join(list(set(outlets)))}"
-                    )
+                    if len(set(outlets)) != 1:
+                        raise CuratedOutletNotUnique(
+                            "Error: Duplicate outlets in curated_metadata of "
+                            f"{source_url} : {','.join(list(set(outlets)))}"
+                        )
+            except FileNotFoundError as e:
+                print(e)
+                pass
         return curated_outlets
 
 
