@@ -484,14 +484,14 @@ class Dedupe(Process):
         in all sources (for curated repositories)"""
 
         source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        source_names = [x["filename"] for x in source_details]
-        print("sources: " + ",".join(source_names))
+        source_filenames = [x.filename for x in source_details]
+        print("sources: " + ",".join(source_filenames))
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = {
             k: v
             for k, v in records.items()
-            if not all(x in v["colrev_origin"] for x in source_names)
+            if not all(x in v["colrev_origin"] for x in source_filenames)
         }
         if len(records) == 0:
             print("No records unmatched")
@@ -499,12 +499,12 @@ class Dedupe(Process):
 
         for record in records.values():
             origins = record["colrev_origin"].split(";")
-            for source_name in source_names:
-                if not any(source_name in origin for origin in origins):
-                    record[source_name] = ""
+            for source_filename in source_filenames:
+                if not any(source_filename in origin for origin in origins):
+                    record[source_filename] = ""
                 else:
-                    record[source_name] = [
-                        origin for origin in origins if source_name in origin
+                    record[source_filename] = [
+                        origin for origin in origins if source_filename in origin
                     ][0]
             record["merge_with"] = ""
 

@@ -205,19 +205,20 @@ class PDF_Retrieval(Process):
         import bibtexparser
 
         def relink_pdf_files(records):
+            from colrev_core.settings import SearchType
 
             # Relink files in source file
             sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-            feeds = [x for x in sources if "FEED" == x["search_type"]]
+            feeds = [x for x in sources if SearchType.FEED == x.search_type]
             feed_filename = ""
             feed_filepath = ""
             source_records = []
             for feed in feeds:
-                if "pdfs_directory" == feed["search_parameters"][0]["endpoint"]:
-                    feed_filepath = Path("search/" + feed["filename"])
+                if "{{file}}" == feed.source_identifier:
+                    feed_filepath = Path("search") / feed.filename
                     if feed_filepath.is_file():
-                        feed_filename = feed["filename"]
-                        with open(Path("search/" + feed["filename"])) as target_db:
+                        feed_filename = feed.filename
+                        with open(Path("search") / feed.filename) as target_db:
                             bib_db = BibTexParser(
                                 customization=convert_to_unicode,
                                 ignore_nonstandard_types=False,

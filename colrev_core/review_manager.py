@@ -386,6 +386,26 @@ class ReviewManager:
                         sources_df = pd.json_normalize(yaml.safe_load(f))
                         sources = sources_df.to_dict("records")
                         print(sources)
+                for source in sources:
+                    if "dblp" == source["search_parameters"][0]["endpoint"]:
+                        source["source_identifier"] = "https://dblp.org/search/publ/api"
+                    elif "crossref" == source["search_parameters"][0]["endpoint"]:
+                        source["source_identifier"] = "https://api.crossref.org/works/"
+                    else:
+                        source["source_identifier"] = source["search_parameters"][0][
+                            "endpoint"
+                        ]
+
+                    source["search_parameters"] = source["search_parameters"][0][
+                        "params"
+                    ]
+                    if "source_url" in source:
+                        del source["source_url"]
+                    if "source_name" in source:
+                        del source["source_name"]
+                    if "last_sync" in source:
+                        del source["last_sync"]
+
                 settings["search"]["sources"] = sources
                 with open("settings.json", "w") as outfile:
                     json.dump(settings, outfile, indent=4)

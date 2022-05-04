@@ -28,19 +28,26 @@ class ProjectConfiguration:
 # Search
 
 
-@dataclass
-class SearchEndpoint:
-    endpoint: str
-    params: str
+class SearchType(Enum):
+    DB = "DB"
+    TOC = "TOC"
+    BACK_CIT = "BACK_CIT"
+    FORW_CIT = "FORW_CIT"
+    PDFS = "PDFS"
+    OTHER = "OTHER"
+    FEED = "FEED"
+    COLREV_REPO = "COLREV_REPO"
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 @dataclass
 class SearchSource:
     filename: Path
-    search_type: str  # TODO : use enum here
-    source_name: str
-    source_url: str
-    search_parameters: typing.List[SearchEndpoint]
+    search_type: SearchType
+    source_identifier: str
+    search_parameters: str
     comment: typing.Optional[str]
 
 

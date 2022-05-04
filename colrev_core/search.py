@@ -23,7 +23,6 @@ from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
-from colrev_core.settings import SearchEndpoint
 
 
 class Search(Process):
@@ -53,43 +52,37 @@ class Search(Process):
 
         self.search_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
-                "search_endpoint": "dblp",
-                "source_url": "https://dblp.org/",
+                "source_identifier": "{{dblp_key}}",
                 "script": self.search_dblp,
                 "validate_params": self.validate_dblp_params,
                 "mode": "all",
             },
             {
-                "search_endpoint": "crossref",
-                "source_url": "https://crossref.org/",
+                "source_identifier": "https://api.crossref.org/works/{{doi}}",
                 "script": self.search_crossref,
                 "validate_params": self.validate_crossref_params,
                 "mode": "all",
             },
             {
-                "search_endpoint": "backward_search",
-                "source_url": "",
+                "source_identifier": "backward_search",
                 "script": self.search_backward,
                 "validate_params": self.validate_backwardsearch_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "project",
-                "source_url": "",
+                "source_identifier": "project",
                 "script": self.search_project,
                 "validate_params": self.validate_project_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "index",
-                "source_url": "",
+                "source_identifier": "index",
                 "script": self.search_index,
                 "validate_params": self.validate_index_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "pdfs_directory",
-                "source_url": "",
+                "source_identifier": "{{file}}",
                 "script": self.search_pdfs_dir,
                 "validate_params": self.validate_pdfs_dir_params,
                 "mode": "individual",
@@ -1110,9 +1103,9 @@ class Search(Process):
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
-    def parse_parameters(self, search_params: SearchEndpoint) -> dict:
+    def parse_parameters(self, search_params: str) -> dict:
 
-        query = search_params.params
+        query = search_params
         params = {}
         selection_str = query
         if "WHERE " in query:
@@ -1154,7 +1147,7 @@ class Search(Process):
             for scope_item in scope_part_str.split(" AND "):
                 key, value = scope_item.split("=")
                 if "url" in key:
-                    if "dblp" == search_params.endpoint:
+                    if "https://dblp.org/db/" in value:
                         params["scope"]["venue_key"] = (  # type: ignore
                             value.replace("/index.html", "")
                             .replace("https://dblp.org/db/", "")
@@ -1351,18 +1344,24 @@ class Search(Process):
             feed_file_path = Path.cwd() / Path("search") / Path(filename)
             assert not feed_file_path.is_file()
 
+            if "crossref" == source:
+                source = "https://api.crossref.org/works/{{doi}}"
+            elif "dblp" == source:
+                source = "{{dblp_key}}"
+
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
                 "filename": filename,
                 "search_type": "FEED",
-                "source_name": source,
-                "source_url": "",
-                "search_parameters": [{"endpoint": source, "params": selection}],
+                "source_identifier": source,
+                "search_parameters": selection,
                 "comment": "",
             }
             self.REVIEW_MANAGER.pp.pprint(source_details)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.append_sources(source_details)
+            self.REVIEW_MANAGER.sources.append(source_details)
+            self.REVIEW_MANAGER.save_settings()
+
             self.REVIEW_MANAGER.create_commit(
                 f"Add search source {filename}", saved_args=saved_args
             )
@@ -1372,10 +1371,12 @@ class Search(Process):
         return
 
     def update(self, selection_str: str) -> None:
+        from colrev_core.settings import SearchType
 
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        feed_paths = [x for x in sources if "FEED" == x.search_type]
+
+        feed_paths = [x for x in sources if SearchType.FEED == x.search_type]
 
         if selection_str is not None:
             if "all" != selection_str:
@@ -1395,23 +1396,24 @@ class Search(Process):
 
         for feed_item in feed_paths:
             feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
-            search_param = feed_item.search_parameters[0]
-            if search_param.endpoint not in [
-                x["search_endpoint"] for x in self.search_scripts
+
+            if feed_item.source_identifier not in [
+                x["source_identifier"] for x in self.search_scripts
             ]:
                 print(
-                    f'Endpoint not supported: {feed_item["search_endpoint"]} (skipping)'
+                    "Endpoint not supported:"
+                    f' {feed_item["source_identifier"]} (skipping)'
                 )
                 continue
 
             script = [
                 s
                 for s in self.search_scripts
-                if s["search_endpoint"] == search_param.endpoint
+                if s["source_identifier"] == feed_item.source_identifier
             ][0]
-            params = self.parse_parameters(search_param)
+            params = self.parse_parameters(feed_item.search_parameters)
 
-            print(f"Retrieve from {search_param.endpoint}: {params}")
+            print(f"Retrieve from {feed_item.source_identifier}: {params}")
 
             script["script"](params, feed_file)
 

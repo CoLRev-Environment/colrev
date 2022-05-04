@@ -21,18 +21,6 @@ from colrev_core.record import RecordState
 
 
 class ReviewDataset:
-
-    search_type_opts = [
-        "DB",
-        "TOC",
-        "BACK_CIT",
-        "FORW_CIT",
-        "PDFS",
-        "OTHER",
-        "FEED",
-        "COLREV_REPO",
-    ]
-
     def __init__(self, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
@@ -1754,7 +1742,8 @@ class ReviewDataset:
         return
 
     def check_sources(self) -> None:
-        search_type_opts = self.search_type_opts
+        from colrev_core.settings import SearchType
+
         sources = self.REVIEW_MANAGER.settings.search.sources
 
         SEARCHDIR = self.REVIEW_MANAGER.paths["SEARCHDIR"]
@@ -1775,10 +1764,9 @@ class ReviewDataset:
                 )
                 # raise SearchDetailsError('File not found: "
                 #                       f"{search_record["filename"]}')
-
-            if search_record.search_type not in search_type_opts:
+            if str(search_record.search_type) not in SearchType._member_names_:
                 raise SearchDetailsError(
-                    f"{search_record.search_type} not in {search_type_opts}"
+                    f"{search_record.search_type} not in {SearchType._member_names_}"
                 )
             # if "completion_date" in search_record:
             #     if not re.search(date_regex, search_record["completion_date"]):

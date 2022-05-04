@@ -73,8 +73,7 @@ class Distribute(Process):
                     new_record = {
                         "filename": str(target_bib_file.name),
                         "search_type": "OTHER",
-                        "source_name": "Local import",
-                        "source_url": str(target_bib_file.name),
+                        "source_identifier": "Local import",
                         "search_parameters": "",
                         "comment": "",
                     }

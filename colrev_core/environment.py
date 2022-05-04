@@ -70,8 +70,7 @@ class EnvironmentManager:
 
         updated_registry_df = pd.DataFrame(updated_registry)
         orderedCols = [
-            "filename",
-            "source_name",
+            "repo_name",
             "source_url",
         ]
         for x in [x for x in updated_registry_df.columns if x not in orderedCols]:
@@ -105,8 +104,7 @@ class EnvironmentManager:
             print(f"Creating {cls.paths['REGISTRY']}")
 
         new_record = {
-            "filename": path_to_register.stem,
-            "source_name": path_to_register.stem,
+            "repo_name": path_to_register.stem,
             "source_url": path_to_register,
         }
         git_repo = git.Repo(path_to_register)
