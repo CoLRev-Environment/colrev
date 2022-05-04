@@ -14,6 +14,7 @@ import typing
 from contextlib import redirect_stdout
 from importlib.metadata import version
 from pathlib import Path
+import shutil
 
 import git
 import yaml
@@ -1106,8 +1107,10 @@ class ReviewManager:
                     "[('change', 'journal',",
                     "[('change', 'booktitle',",
                 ]
-                temp = tempfile.NamedTemporaryFile()
-                self.paths["REPORT"].rename(temp.name)
+                temp = tempfile.NamedTemporaryFile(mode='r+b', delete=False)
+                with open(self.paths["REPORT"], 'r+b') as f:
+                    shutil.copyfileobj(f, temp)
+                # self.paths["REPORT"].rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
                     self.paths["REPORT"], "w"
                 ) as writer:
