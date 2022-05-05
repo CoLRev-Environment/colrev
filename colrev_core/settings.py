@@ -69,6 +69,10 @@ class LoadConfiguration:
 
 @dataclass
 class PrepRound:
+    """The scripts are either in Prepare.prep_scripts, in a custom project script
+    (the script in settings.json must have the same name), or otherwise in a
+    python package (locally installed)."""
+
     name: str
     similarity: float
     scripts: typing.List[str]

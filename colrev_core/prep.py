@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import collections
 import html
+import importlib
 import json
 import logging
 import multiprocessing as mp
@@ -2063,11 +2064,37 @@ class Preparation(Process):
             if settings_prep_script in self.prep_scripts:
                 prep_script = self.prep_scripts[settings_prep_script]
 
-            # TODO : allow custom/external scripts
+            # custom/external scripts
+            elif settings_prep_script in self._custom_prep_scripts:
+                try:
+                    prep_script = {
+                        "name": settings_prep_script,
+                        "script": self._custom_prep_scripts[
+                            settings_prep_script
+                        ].prepare,
+                    }
+                except Exception as e:
+                    print(e)
+                    pass
+                    return RECORD
 
+            elif settings_prep_script in self._module_prep_scripts:
+                try:
+                    prep_script = {
+                        "name": settings_prep_script,
+                        "script": self._module_prep_scripts[
+                            settings_prep_script
+                        ].prepare,
+                    }
+                except Exception as e:
+                    print(e)
+                    pass
+                    return RECORD
             else:
-                # if prep_script["name"] not in item["prep_round"]["scripts"]:
-                print("prep_script not available in colrev_core.prep (prep_script)")
+                print(
+                    f"prep_script ({settings_prep_script}) not available "
+                    "in colrev_core.prep (prep_script)"
+                )
                 continue
 
             # startTime = datetime.now()
@@ -2594,6 +2621,39 @@ class Preparation(Process):
                 prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
             else:
                 prepare_data = load_prep_data()
+
+            # https://dev.to/charlesw001/plugin-architecture-in-python-jla
+            # TODO : script to validate CustomPrepare (has a name/prepare function)
+            # TODO : the same module/custom_script could contain multiple functions...
+            list_custom_scripts = [
+                s
+                for s in prep_round.scripts
+                if Path(s + ".py").is_file() and s not in self.prep_scripts
+            ]
+            self._custom_prep_scripts = {}
+            if list_custom_scripts != []:
+                sys.path.append(".")  # to import custom scripts from the project dir
+                for plugin_script in list_custom_scripts:
+                    if Path(plugin_script + ".py").is_file():
+                        self._custom_prep_scripts[
+                            plugin_script
+                        ] = importlib.import_module(plugin_script, ".").CustomPrepare()
+
+            list_module_scripts = [
+                s
+                for s in prep_round.scripts
+                if not Path(s + ".py").is_file() and s not in self.prep_scripts
+            ]
+            self._module_prep_scripts = {}
+            if list_module_scripts != []:
+                for plugin_script in list_module_scripts:
+                    if not Path(plugin_script + ".py").is_file():
+                        self._module_prep_scripts[
+                            plugin_script
+                        ] = importlib.import_module(plugin_script).CustomPrepare()
+
+                # from inspect import getmembers, isfunction
+                # print(getmembers(plugin, isfunction))
 
             # Note : can set selected prep scripts/rounds in the settings...
             # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:
