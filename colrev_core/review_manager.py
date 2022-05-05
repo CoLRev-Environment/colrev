@@ -387,18 +387,27 @@ class ReviewManager:
                         sources = sources_df.to_dict("records")
                         print(sources)
                 for source in sources:
-                    if "dblp" == source["search_parameters"][0]["endpoint"]:
-                        source["source_identifier"] = "https://dblp.org/search/publ/api"
-                    elif "crossref" == source["search_parameters"][0]["endpoint"]:
-                        source["source_identifier"] = "https://api.crossref.org/works/"
-                    else:
-                        source["source_identifier"] = source["search_parameters"][0][
-                            "endpoint"
-                        ]
+                    if len(source["search_parameters"]) > 0:
+                        if "dblp" == source["search_parameters"][0]["endpoint"]:
+                            source[
+                                "source_identifier"
+                            ] = "https://dblp.org/search/publ/api"
+                        elif "crossref" == source["search_parameters"][0]["endpoint"]:
+                            source[
+                                "source_identifier"
+                            ] = "https://api.crossref.org/works/"
+                        else:
+                            source["source_identifier"] = source["search_parameters"][
+                                0
+                            ]["endpoint"]
 
-                    source["search_parameters"] = source["search_parameters"][0][
-                        "params"
-                    ]
+                        source["search_parameters"] = source["search_parameters"][0][
+                            "params"
+                        ]
+                    else:
+                        source["search_parameters"] = ""
+                        source["source_identifier"] = source.get("source_url", "")
+
                     if "source_url" in source:
                         del source["source_url"]
                     if "source_name" in source:
