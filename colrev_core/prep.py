@@ -2642,13 +2642,12 @@ class Preparation(Process):
                 if Path(s + ".py").is_file() and s not in self.prep_scripts
             ]
             self._custom_prep_scripts = {}
-            if list_custom_scripts != []:
-                sys.path.append(".")  # to import custom scripts from the project dir
-                for plugin_script in list_custom_scripts:
-                    if Path(plugin_script + ".py").is_file():
-                        self._custom_prep_scripts[
-                            plugin_script
-                        ] = importlib.import_module(plugin_script, ".").CustomPrepare()
+            sys.path.append(".")  # to import custom scripts from the project dir
+            for plugin_script in list_custom_scripts:
+                if Path(plugin_script + ".py").is_file():
+                    self._custom_prep_scripts[plugin_script] = importlib.import_module(
+                        plugin_script, "."
+                    ).CustomPrepare()
 
             list_module_scripts = [
                 s
@@ -2656,12 +2655,11 @@ class Preparation(Process):
                 if not Path(s + ".py").is_file() and s not in self.prep_scripts
             ]
             self._module_prep_scripts = {}
-            if list_module_scripts != []:
-                for plugin_script in list_module_scripts:
-                    if not Path(plugin_script + ".py").is_file():
-                        self._module_prep_scripts[
-                            plugin_script
-                        ] = importlib.import_module(plugin_script).CustomPrepare()
+            for plugin_script in list_module_scripts:
+                if not Path(plugin_script + ".py").is_file():
+                    self._module_prep_scripts[plugin_script] = importlib.import_module(
+                        plugin_script
+                    ).CustomPrepare()
 
                 # from inspect import getmembers, isfunction
                 # print(getmembers(plugin, isfunction))
