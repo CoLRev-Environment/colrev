@@ -300,6 +300,92 @@ class Preparation(Process):
 
         self.CPUS = self.CPUS * 15
 
+        # Note: for these scripts, only the similarity changes.
+        self.prep_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+            "exclude_non_latin_alphabets": {
+                "script": self.exclude_non_latin_alphabets,
+            },
+            "exclude_languages": {
+                "script": self.exclude_languages,
+            },
+            "remove_urls_with_500_errors": {
+                "script": self.remove_urls_with_500_errors,
+            },
+            "remove_broken_IDs": {
+                "script": self.remove_broken_IDs,
+            },
+            "global_ids_consistency_check": {
+                "script": self.global_ids_consistency_check,
+            },
+            "prep_curated": {
+                "script": self.prep_curated,
+            },
+            "format": {
+                "script": self.format,
+            },
+            "resolve_crossrefs": {
+                "script": self.resolve_crossrefs,
+            },
+            "get_doi_from_sem_scholar": {
+                "script": self.get_doi_from_sem_scholar,
+                "source_correction_hint": "fill out the online form: "
+                "https://www.semanticscholar.org/faq#correct-error",
+            },
+            "get_doi_from_urls": {"script": self.get_doi_from_urls},
+            "get_masterdata_from_doi": {
+                "script": self.get_masterdata_from_doi,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_masterdata_from_crossref": {
+                "script": self.get_masterdata_from_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_masterdata_from_dblp": {
+                "script": self.get_masterdata_from_dblp,
+                "source_correction_hint": "send and email to dblp@dagstuhl.de"
+                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
+            },
+            "get_masterdata_from_open_library": {
+                "script": self.get_masterdata_from_open_library,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_year_from_vol_iss_jour_crossref": {
+                "script": self.get_year_from_vol_iss_jour_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_record_from_local_index": {
+                "script": self.get_record_from_local_index,
+                "source_correction_hint": "correct the metadata in the source "
+                "repository (as linked in the provenance field)",
+            },
+            "remove_nicknames": {
+                "script": self.remove_nicknames,
+            },
+            "format_minor": {
+                "script": self.format_minor,
+            },
+            "drop_fields": {
+                "script": self.drop_fields,
+            },
+            "remove_redundant_fields": {
+                "script": self.remove_redundant_fields,
+            },
+            "correct_recordtype": {
+                "script": self.correct_recordtype,
+            },
+            "update_metadata_status": {
+                "script": self.update_metadata_status,
+            },
+        }
+
     def check_DBs_availability(self) -> None:
         try:
             test_rec = {
@@ -2403,6 +2489,20 @@ class Preparation(Process):
 
         self.check_DBs_availability()
 
+        if self.REVIEW_MANAGER.DEBUG_MODE:
+            print("\n\n\n")
+            self.REVIEW_MANAGER.logger.info("Start debug prep\n")
+            self.REVIEW_MANAGER.logger.info(
+                "The script will replay the preparation procedures"
+                " step-by-step, allow you to identify potential errors, trace them to "
+                "their colrev_origin and correct them."
+            )
+            input("\nPress Enter to continue")
+            print("\n\n")
+
+        if not keep_ids:
+            del saved_args["keep_ids"]
+
         def load_prep_data():
             from colrev_core.record import RecordState
 
@@ -2424,14 +2524,31 @@ class Preparation(Process):
             prep_data = {
                 "nr_tasks": nr_tasks,
                 "PAD": PAD,
-                "items": items,
+                "items": list(items),
                 "prior_ids": prior_ids,
             }
             self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
             return prep_data
 
-        def batch(items, prep_round: PrepRound):
+        def get_preparation_batch(prep_round: PrepRound):
 
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
+            else:
+                prepare_data = load_prep_data()
+
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                self.REVIEW_MANAGER.logger.info(
+                    "In this round, we set the similarity "
+                    f"threshold ({self.RETRIEVAL_SIMILARITY})"
+                )
+                input("Press Enter to continue")
+                print("\n\n")
+                self.REVIEW_MANAGER.logger.info(
+                    f"prepare_data: " f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}"
+                )
+            self.PAD = prepare_data["PAD"]
+            items = prepare_data["items"]
             batch = []
             for item in items:
                 batch.append(
@@ -2505,108 +2622,7 @@ class Preparation(Process):
             }
             return prep_data
 
-        if self.REVIEW_MANAGER.DEBUG_MODE:
-            print("\n\n\n")
-            self.REVIEW_MANAGER.logger.info("Start debug prep\n")
-            self.REVIEW_MANAGER.logger.info(
-                "The script will replay the preparation procedures"
-                " step-by-step, allow you to identify potential errors, trace them to "
-                "their colrev_origin and correct them."
-            )
-            input("\nPress Enter to continue")
-            print("\n\n")
-
-        if not keep_ids:
-            del saved_args["keep_ids"]
-
-        # Note: for these scripts, only the similarity changes.
-        self.prep_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
-            "exclude_non_latin_alphabets": {
-                "script": self.exclude_non_latin_alphabets,
-            },
-            "exclude_languages": {
-                "script": self.exclude_languages,
-            },
-            "remove_urls_with_500_errors": {
-                "script": self.remove_urls_with_500_errors,
-            },
-            "remove_broken_IDs": {
-                "script": self.remove_broken_IDs,
-            },
-            "global_ids_consistency_check": {
-                "script": self.global_ids_consistency_check,
-            },
-            "prep_curated": {
-                "script": self.prep_curated,
-            },
-            "format": {
-                "script": self.format,
-            },
-            "resolve_crossrefs": {
-                "script": self.resolve_crossrefs,
-            },
-            "get_doi_from_sem_scholar": {
-                "script": self.get_doi_from_sem_scholar,
-                "source_correction_hint": "fill out the online form: "
-                "https://www.semanticscholar.org/faq#correct-error",
-            },
-            "get_doi_from_urls": {"script": self.get_doi_from_urls},
-            "get_masterdata_from_doi": {
-                "script": self.get_masterdata_from_doi,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            "get_masterdata_from_crossref": {
-                "script": self.get_masterdata_from_crossref,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            "get_masterdata_from_dblp": {
-                "script": self.get_masterdata_from_dblp,
-                "source_correction_hint": "send and email to dblp@dagstuhl.de"
-                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
-            },
-            "get_masterdata_from_open_library": {
-                "script": self.get_masterdata_from_open_library,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            "get_year_from_vol_iss_jour_crossref": {
-                "script": self.get_year_from_vol_iss_jour_crossref,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            "get_record_from_local_index": {
-                "script": self.get_record_from_local_index,
-                "source_correction_hint": "correct the metadata in the source "
-                "repository (as linked in the provenance field)",
-            },
-            "remove_nicknames": {
-                "script": self.remove_nicknames,
-            },
-            "format_minor": {
-                "script": self.format_minor,
-            },
-            "drop_fields": {
-                "script": self.drop_fields,
-            },
-            "remove_redundant_fields": {
-                "script": self.remove_redundant_fields,
-            },
-            "correct_recordtype": {
-                "script": self.correct_recordtype,
-            },
-            "update_metadata_status": {
-                "script": self.update_metadata_status,
-            },
-        }
-
-        for i, prep_round in enumerate(self.REVIEW_MANAGER.settings.prep.prep_rounds):
-
+        def setup_prep_round(i, prep_round):
             if i == 1:
                 self.FIRST_ROUND = True
             else:
@@ -2616,11 +2632,6 @@ class Preparation(Process):
                 self.LAST_ROUND = True
             else:
                 self.LAST_ROUND = False
-
-            if self.REVIEW_MANAGER.DEBUG_MODE:
-                prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
-            else:
-                prepare_data = load_prep_data()
 
             # https://dev.to/charlesw001/plugin-architecture-in-python-jla
             # TODO : script to validate CustomPrepare (has a name/prepare function)
@@ -2671,20 +2682,13 @@ class Preparation(Process):
             self.REVIEW_MANAGER.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
+            return
 
-            if self.REVIEW_MANAGER.DEBUG_MODE:
-                self.REVIEW_MANAGER.logger.info(
-                    "In this round, we set the similarity "
-                    f"threshold ({self.RETRIEVAL_SIMILARITY})"
-                )
-                input("Press Enter to continue")
-                print("\n\n")
-                self.REVIEW_MANAGER.logger.info(
-                    f"prepare_data: " f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}"
-                )
-            self.PAD = prepare_data["PAD"]
+        for i, prep_round in enumerate(self.REVIEW_MANAGER.settings.prep.prep_rounds):
 
-            preparation_batch = batch(prepare_data["items"], prep_round)
+            setup_prep_round(i, prep_round)
+
+            preparation_batch = get_preparation_batch(prep_round)
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 # Note: preparation_batch is not turned into a list of records.
