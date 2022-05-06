@@ -7,8 +7,8 @@ Collaborative Literature Reviews
    :align: center
    :alt: Logo
 
-CoLRev is an open-source next-generation environment for collaborative reviews.
-To accomplish major improvements in efficiency, trustworthiness, and richness, CoLRev innovates in key areas:
+CoLRev is an open-source environment for collaborative reviews.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated annotations, CoLRev innovates in key areas:
 
 - leveraging the transparent collaboration model of **git** for the whole literature review process
 - desigining a **fault-tolerant, configurable, and self-explanatory** workflow

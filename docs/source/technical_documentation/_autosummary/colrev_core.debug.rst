@@ -24,4 +24,3 @@ colrev\_core.debug
       get_non_unique_colrev_pdf_ids
       local_index
       main
-      set_debug_mode

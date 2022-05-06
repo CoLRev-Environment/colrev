@@ -19,6 +19,7 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.analyze
       ~LocalIndex.check_opensearch_docker_available
       ~LocalIndex.duplicate_outlets
+      ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_from_index_exact_match
       ~LocalIndex.get_source_link
       ~LocalIndex.index

@@ -72,7 +72,6 @@ colrev\_core.prep.Preparation
       ~Preparation.alphabet_detector
       ~Preparation.cache_path
       ~Preparation.doi_regex
-      ~Preparation.fields_to_drop
       ~Preparation.fields_to_keep
       ~Preparation.language_detector
       ~Preparation.requests_headers
