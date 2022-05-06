@@ -389,13 +389,11 @@ class ReviewManager:
                 for source in sources:
                     if len(source["search_parameters"]) > 0:
                         if "dblp" == source["search_parameters"][0]["endpoint"]:
-                            source[
-                                "source_identifier"
-                            ] = "https://dblp.org/search/publ/api"
+                            source["source_identifier"] = "{{dblp_key}}"
                         elif "crossref" == source["search_parameters"][0]["endpoint"]:
                             source[
                                 "source_identifier"
-                            ] = "https://api.crossref.org/works/"
+                            ] = "https://api.crossref.org/works/{{doi}}"
                         else:
                             source["source_identifier"] = source["search_parameters"][
                                 0
