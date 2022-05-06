@@ -2,14 +2,14 @@
 Help
 ==================================
 
-We are here to help you and others who may struggle with the same issue.
-Here's how you can help us help you.
+We are here to help you and others who may struggle with the same issues.
+Here is how you can help us help you.
 
 Identify the source
 ------------------------------
 
-CoLRev orchestrates many powerful libraries and data sources.
-In addition, the setup of your local machine and the local CoLRev environment may prevent us from replicating the issue.
+CoLRev uses many powerful libraries and data sources.
+In addition, the particular setup of your local machine and CoLRev environment may prevent us from replicating issues.
 We need your help in narrowing down the source of the issue.
 For example,
 

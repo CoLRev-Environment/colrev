@@ -26,7 +26,7 @@ Processing operations:
 - :std:ref:`Data`
 - :std:ref:`Paper`
 
-Hint: `colrev status` should provide all necessary instructions for you project.
+Hint: `colrev status` should provide all necessary instructions for your project.
 
 .. _Installation:
 
@@ -62,7 +62,7 @@ It consists of the following (as shown in the screenshot below):
 Analyze changes
 -------------------------
 
-After each step, check and validate the changes using git status, gitk, and colrev status:
+After each step, check and validate the changes using a git `client of your choice <https://git-scm.com/downloads/guis>`_:
 
 .. code-block:: bash
 
@@ -70,7 +70,7 @@ After each step, check and validate the changes using git status, gitk, and colr
       gitk
       colrev status
 
-Using a git `client of your choice <https://git-scm.com/downloads/guis>`_, you can validate the individual changes and the commit report for each version.
+Using git, you can validate the individual changes and the commit report for each version.
 Instructions on how to correct and trace errors are available in the guidelines for the respective step.
 
 CoLRev also ensures that the git-diffs are readable:

@@ -6,7 +6,7 @@ Collaborate in a team
 -------------------------
 
 
-Collaborative reviews based on a shared git repository (repositories can be hosted at `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
+Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
 .. code-block:: bash
 
@@ -29,11 +29,11 @@ Collaborative reviews based on a shared git repository (repositories can be host
       git commit -m 'resolve'
 
 
-Merging different versions of the same repository is challenging, but git uses powerful heuristics and successfully merges different versions (branches) most of the time.
-This allows us to work on a review project in distributed and asynchronous settings.
+Merging different versions of the same repository is challenging, but git uses powerful heuristics and successfully merges different versions (branches) automatically in most cases.
+This allows us to work on a review project in a distributed and asynchronous manner.
 
 In some situations, it is impossible to define (automated) rules to decide which change is the right one for the merged version.
-For example, two researchers could change the title field of the same record.
+For example, two researchers may change the title field of the same record.
 In those cases, git raises a **merge conflict**.
 This means, git does not arbitrarily decide which change is discarded and which change is retained for the merged commit.
 It asks the user to decide.
@@ -50,8 +50,8 @@ This seems appropriate for most cases in which the search and preparation is com
 To override this rule, experts can use the configuration to set the SHARE_STAT_REQ to 'NONE'.
 
 When a git merge conflict occurs, a git diff tool (e.g., `Github client <https://desktop.github.com/>`_) can be useful to resolve the conflict.
-It asks the user to resolve the issue (select what should be retained by modifying the file accordingly) and inserts merge conflict markers in the file and stopping the merge process.
-Using a diff tool, you can select the versions to be retained.
+It asks the user to resolve the issue (select what should be retained by modifying the file accordingly) and inserts merge conflict markers in the file to stop the merge process.
+Using a diff tool, you can select which version should be retained.
 
 
 Forms of reviews
