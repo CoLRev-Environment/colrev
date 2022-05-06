@@ -262,7 +262,6 @@ class Preparation(Process):
     session = requests_cache.CachedSession(
         str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
     )
-    session.remove_expired_responses()
 
     def __init__(
         self,
@@ -2634,8 +2633,9 @@ class Preparation(Process):
             return prep_data
 
         def setup_prep_round(i, prep_round):
-            if i == 1:
+            if i == 0:
                 self.FIRST_ROUND = True
+
             else:
                 self.FIRST_ROUND = False
 
@@ -2643,7 +2643,6 @@ class Preparation(Process):
                 self.LAST_ROUND = True
             else:
                 self.LAST_ROUND = False
-
             # https://dev.to/charlesw001/plugin-architecture-in-python-jla
             # TODO : script to validate CustomPrepare (has a name/prepare function)
             # TODO : the same module/custom_script could contain multiple functions...
@@ -2685,6 +2684,8 @@ class Preparation(Process):
             # use one mode/run to avoid multiple commits
 
             self.REVIEW_MANAGER.logger.info(f"Prepare ({prep_round.name})")
+            if self.FIRST_ROUND:
+                self.session.remove_expired_responses()  # Note : this takes long...
 
             self.RETRIEVAL_SIMILARITY = prep_round.similarity  # type: ignore
             saved_args["similarity"] = self.RETRIEVAL_SIMILARITY
