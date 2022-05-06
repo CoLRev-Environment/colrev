@@ -30,7 +30,6 @@ requirements = [
     "nameparser==1.0.6",
     "opensearch-py==1.1.0",
     "pandas==1.2.5",
-    "pdfminer==20191125",
     "pdfminer.six==20211012",
     "pdf2image==1.16.0",
     "pathos==0.2.8",
