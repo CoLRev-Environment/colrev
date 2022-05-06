@@ -32,6 +32,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
       ~PrescreenRecord.get_provenance_field_source
+      ~PrescreenRecord.get_quality_defects
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
@@ -45,6 +46,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.merge
       ~PrescreenRecord.missing_fields
       ~PrescreenRecord.remove_accents
+      ~PrescreenRecord.remove_quality_defect_notes
       ~PrescreenRecord.reset_pdf_provenance_hints
       ~PrescreenRecord.set_data_provenance
       ~PrescreenRecord.set_fields_complete

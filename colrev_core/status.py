@@ -30,7 +30,6 @@ class Status(Process):
                     if "@comment" not in line[:10].lower():
                         number_in_bib += 1
                 line = f.readline()
-
         return number_in_bib
 
     def get_nr_search(self) -> int:
@@ -326,7 +325,6 @@ class Status(Process):
 
         local_registry = EnvironmentManager.load_local_registry()
         registered_paths = [Path(x["source_url"]) for x in local_registry]
-
         # Note : we can use many parallel processes
         # because append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
@@ -357,6 +355,10 @@ class Status(Process):
             }
             # environment_instructions.append(instruction)
             return instruction
+        except Exception as e:
+            print(f"Error in {registered_path}: {e}")
+            pass
+            return {}
         if "curated_metadata" in str(registered_path):
             if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
                 instruction = {
@@ -483,19 +485,24 @@ class Status(Process):
                     if str(x["source"]) == transitioned_record["source"]
                     and str(x["dest"]) == transitioned_record["dest"]
                 ]
-                if len(process_type) == 0:
+                if (
+                    len(process_type) == 0
+                    and transitioned_record["source"] != transitioned_record["dest"]
+                ):
                     review_instructions.append(
                         {
                             "msg": "Resolve invalid transition of "
-                            + f"{transitioned_record['ID']} from "
+                            # + f"{transitioned_record['ID']} from "
                             + f"{transitioned_record['source']} to "
                             + f" {transitioned_record['dest']}",
                             "priority": "yes",
                         }
                     )
                     continue
-                transitioned_record["process_type"] = process_type[0]
-                transitioned_records.append(transitioned_record)
+
+                if len(process_type) > 0:
+                    transitioned_record["process_type"] = process_type[0]
+                    transitioned_records.append(transitioned_record)
 
             in_progress_processes = list(
                 {x["process_type"] for x in transitioned_records}
@@ -538,7 +545,9 @@ class Status(Process):
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
         )
-
+        delay_automated_processing = (
+            self.REVIEW_MANAGER.settings.project.delay_automated_processing
+        )
         msgs = {
             "load": "Import search results",
             "prep": "Prepare records",
@@ -574,7 +583,7 @@ class Status(Process):
                     if "priority" not in keys:
                         instruction["priority"] = "yes"
                 else:
-                    if self.REVIEW_MANAGER.config["DELAY_AUTOMATED_PROCESSING"]:
+                    if "True" == delay_automated_processing:
                         continue
                 review_instructions.append(instruction)
 
@@ -594,7 +603,7 @@ class Status(Process):
             }
             review_instructions.append(instruction)
 
-        if "MANUSCRIPT" == self.REVIEW_MANAGER.config["DATA_FORMAT"]:
+        if "MANUSCRIPT" in self.REVIEW_MANAGER.settings.data.data_format:
             instruction = {
                 "msg": "Build the paper",
                 "cmd": "colrev paper",
@@ -605,7 +614,7 @@ class Status(Process):
 
     def get_collaboration_instructions(self, stat) -> dict:
 
-        SHARE_STAT_REQ = self.REVIEW_MANAGER.config["SHARE_STAT_REQ"]
+        SHARE_STAT_REQ = self.REVIEW_MANAGER.settings.project.share_stat_req
         found_a_conflict = False
         # git_repo = REVIEW_MANAGER.get_repo()
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
@@ -777,6 +786,7 @@ class Status(Process):
             "environment_instructions": self.get_environment_instructions(stat),
             "collaboration_instructions": self.get_collaboration_instructions(stat),
         }
+
         self.REVIEW_MANAGER.logger.debug(
             f"instructions: {self.REVIEW_MANAGER.pp.pformat(instructions)}"
         )

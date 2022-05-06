@@ -47,5 +47,4 @@ colrev\_core.search.Search
 
    .. autosummary::
 
-      ~Search.EMAIL
       ~Search.TIMEOUT

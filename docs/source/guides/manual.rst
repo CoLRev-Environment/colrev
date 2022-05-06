@@ -96,8 +96,8 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
 
 .. code-block:: bash
 
-      colrev local-index add --url https://github.com/u_name/repo_name
-      colrev local-index
+      colrev env --install https://github.com/u_name/repo_name
+      colrev env --index
 
 See `reuse of community-curated data <../technical_documentation/colrev.html#reuse>`_ for details.
 

@@ -32,6 +32,7 @@ colrev\_core.record.Record
       ~Record.get_inconsistencies
       ~Record.get_origins
       ~Record.get_provenance_field_source
+      ~Record.get_quality_defects
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed
@@ -45,6 +46,7 @@ colrev\_core.record.Record
       ~Record.merge
       ~Record.missing_fields
       ~Record.remove_accents
+      ~Record.remove_quality_defect_notes
       ~Record.reset_pdf_provenance_hints
       ~Record.set_data_provenance
       ~Record.set_fields_complete

@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import collections
 import html
+import importlib
 import json
 import logging
 import multiprocessing as mp
@@ -248,40 +249,6 @@ class Preparation(Process):
         "issn",
         "language",
     ]
-    fields_to_drop = [
-        "type",
-        "organization",
-        "unique-id",
-        "month",
-        "researcherid-numbers",
-        "orcid-numbers",
-        "article-number",
-        "author_keywords",
-        "source",
-        "affiliation",
-        "document_type",
-        "art_number",
-        "grobid-version",
-        "doc-delivery-number",
-        "da",
-        "usage-count-last-180-days",
-        "usage-count-since-2013",
-        "doc-delivery-number",
-        "research-areas",
-        "web-of-science-categories",
-        "number-of-cited-references",
-        "times-cited",
-        "journal-iso",
-        "oa",
-        "keywords-plus",
-        "funding-text",
-        "funding-acknowledgement",
-        "day",
-        "related",
-        "bibsource",
-        "timestamp",
-        "biburl",
-    ]
 
     # Note : the followin objects have heavy memory footprints and should be
     # class (not object) properties to keep parallel processing as
@@ -295,7 +262,6 @@ class Preparation(Process):
     session = requests_cache.CachedSession(
         str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
     )
-    session.remove_expired_responses()
 
     def __init__(
         self,
@@ -318,6 +284,8 @@ class Preparation(Process):
 
         self.languages_to_include = languages_to_include.split(",")
 
+        self.fields_to_keep += self.REVIEW_MANAGER.settings.prep.fields_to_keep
+
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
         # It performs particularly well for short strings (single words/word pairs)
@@ -330,6 +298,92 @@ class Preparation(Process):
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
         self.CPUS = self.CPUS * 15
+
+        # Note: for these scripts, only the similarity changes.
+        self.prep_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+            "exclude_non_latin_alphabets": {
+                "script": self.exclude_non_latin_alphabets,
+            },
+            "exclude_languages": {
+                "script": self.exclude_languages,
+            },
+            "remove_urls_with_500_errors": {
+                "script": self.remove_urls_with_500_errors,
+            },
+            "remove_broken_IDs": {
+                "script": self.remove_broken_IDs,
+            },
+            "global_ids_consistency_check": {
+                "script": self.global_ids_consistency_check,
+            },
+            "prep_curated": {
+                "script": self.prep_curated,
+            },
+            "format": {
+                "script": self.format,
+            },
+            "resolve_crossrefs": {
+                "script": self.resolve_crossrefs,
+            },
+            "get_doi_from_sem_scholar": {
+                "script": self.get_doi_from_sem_scholar,
+                "source_correction_hint": "fill out the online form: "
+                "https://www.semanticscholar.org/faq#correct-error",
+            },
+            "get_doi_from_urls": {"script": self.get_doi_from_urls},
+            "get_masterdata_from_doi": {
+                "script": self.get_masterdata_from_doi,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_masterdata_from_crossref": {
+                "script": self.get_masterdata_from_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_masterdata_from_dblp": {
+                "script": self.get_masterdata_from_dblp,
+                "source_correction_hint": "send and email to dblp@dagstuhl.de"
+                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
+            },
+            "get_masterdata_from_open_library": {
+                "script": self.get_masterdata_from_open_library,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_year_from_vol_iss_jour_crossref": {
+                "script": self.get_year_from_vol_iss_jour_crossref,
+                "source_correction_hint": "ask the publisher to correct the metadata"
+                " (see https://www.crossref.org/blog/"
+                "metadata-corrections-updates-and-additions-in-metadata-manager/",
+            },
+            "get_record_from_local_index": {
+                "script": self.get_record_from_local_index,
+                "source_correction_hint": "correct the metadata in the source "
+                "repository (as linked in the provenance field)",
+            },
+            "remove_nicknames": {
+                "script": self.remove_nicknames,
+            },
+            "format_minor": {
+                "script": self.format_minor,
+            },
+            "drop_fields": {
+                "script": self.drop_fields,
+            },
+            "remove_redundant_fields": {
+                "script": self.remove_redundant_fields,
+            },
+            "correct_recordtype": {
+                "script": self.correct_recordtype,
+            },
+            "update_metadata_status": {
+                "script": self.update_metadata_status,
+            },
+        }
 
     def check_DBs_availability(self) -> None:
         try:
@@ -454,7 +508,7 @@ class Preparation(Process):
         )
         # Format: ENGLISH
 
-        if self.DEBUG_MODE:
+        if self.REVIEW_MANAGER.DEBUG_MODE:
             print(RECORD.data["title"].lower())
             self.REVIEW_MANAGER.pp.pprint(confidenceValues)
         for lang, conf in confidenceValues:
@@ -808,7 +862,9 @@ class Preparation(Process):
         if "NA" != url:
             try:
                 self.REVIEW_MANAGER.logger.debug(f"Retrieve doi-md from {url}")
-                headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+                headers = {
+                    "user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"
+                }
                 ret = self.session.request(
                     "GET", url, headers=headers, timeout=self.TIMEOUT
                 )
@@ -1173,9 +1229,7 @@ class Preparation(Process):
         for key in list(RECORD.data.keys()):
             if key not in self.fields_to_keep:
                 RECORD.data.pop(key)
-                # warn if fields are dropped that are not in fields_to_drop
-                if key not in self.fields_to_drop:
-                    self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
+                self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
         for key in list(RECORD.data.keys()):
             if key in self.fields_to_keep:
                 continue
@@ -1184,6 +1238,17 @@ class Preparation(Process):
 
         if RECORD.data.get("publisher", "") in ["researchgate.net"]:
             del RECORD.data["publisher"]
+
+        if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
+            # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
+            # because it creates problems with multiprocessing
+            LOCAL_INDEX = LocalIndex()
+
+            fields_to_remove = LOCAL_INDEX.get_fields_to_remove(RECORD.get_data())
+            for field_to_remove in fields_to_remove:
+                if field_to_remove in RECORD.data:
+                    del RECORD.data[field_to_remove]
+
         return RECORD
 
     def remove_redundant_fields(self, RECORD: PrepRecord) -> PrepRecord:
@@ -1321,7 +1386,7 @@ class Preparation(Process):
         # from requests.adapters import Retry
         # example for testing: ({'doi':'10.1177/02683962221086300'})
         # s = requests.Session()
-        # headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
+        # headers = {"user-agent": f"{__name__} (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         # retries = Retry(total=5, backoff_factor=1, status_forcelist=[ 502, 503, 504 ])
         # s.mount('https://', HTTPAdapter(max_retries=retries))
         # ret = s.get(url, headers=headers)
@@ -1686,7 +1751,7 @@ class Preparation(Process):
             params["query"] = query_field
 
         url = api_url + urllib.parse.urlencode(params)
-        headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
+        headers = {"user-agent": f"{__name__} (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         record_list = []
         try:
             self.REVIEW_MANAGER.logger.debug(url)
@@ -1754,7 +1819,7 @@ class Preparation(Process):
     ) -> PrepRecord:
 
         self.REVIEW_MANAGER.logger.debug(url)
-        headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
+        headers = {"user-agent": f"{__name__} (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         ret = self.session.request("GET", url, headers=headers, timeout=self.TIMEOUT)
         ret.raise_for_status()
 
@@ -1854,7 +1919,9 @@ class Preparation(Process):
                 venue = venue_string
                 api_url = "https://dblp.org/search/venue/api?q="
                 url = api_url + venue_string.replace(" ", "+") + "&format=json"
-                headers = {"user-agent": f"{__name__} (mailto:{self.EMAIL})"}
+                headers = {
+                    "user-agent": f"{__name__} (mailto:{self.REVIEW_MANAGER.EMAIL})"
+                }
                 try:
                     ret = self.session.request(
                         "GET", url, headers=headers, timeout=self.TIMEOUT
@@ -1942,7 +2009,7 @@ class Preparation(Process):
         if query:
             query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
             url = api_url + query.replace(" ", "+") + "&format=json"
-        headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+        headers = {"user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         self.REVIEW_MANAGER.logger.debug(url)
         ret = self.session.request(
             "GET", url, headers=headers, timeout=self.TIMEOUT  # type: ignore
@@ -2086,18 +2153,52 @@ class Preparation(Process):
             + f" called with: \n{self.REVIEW_MANAGER.pp.pformat(short_form)}\n\n"
         )
 
-        for prep_script in self.prep_scripts:
-            if prep_script["name"] not in item["mode"]["scripts"]:
+        for settings_prep_script in item["prep_round_scripts"]:
+
+            # Note : we have to select scripts here because pathus/multiprocessing
+            # does not support functions as parameters
+            if settings_prep_script in self.prep_scripts:
+                prep_script = self.prep_scripts[settings_prep_script]
+
+            # custom/external scripts
+            elif settings_prep_script in self._custom_prep_scripts:
+                try:
+                    prep_script = {
+                        "name": settings_prep_script,
+                        "script": self._custom_prep_scripts[
+                            settings_prep_script
+                        ].prepare,
+                    }
+                except Exception as e:
+                    print(e)
+                    pass
+                    return RECORD
+
+            elif settings_prep_script in self._module_prep_scripts:
+                try:
+                    prep_script = {
+                        "name": settings_prep_script,
+                        "script": self._module_prep_scripts[
+                            settings_prep_script
+                        ].prepare,
+                    }
+                except Exception as e:
+                    print(e)
+                    pass
+                    return RECORD
+            else:
+                print(
+                    f"prep_script ({settings_prep_script}) not available "
+                    "in colrev_core.prep (prep_script)"
+                )
                 continue
 
             # startTime = datetime.now()
 
             prior = preparation_record.copy()
 
-            if self.DEBUG_MODE:
-                self.REVIEW_MANAGER.logger.info(
-                    f'{prep_script["script"].__name__}(...) called'
-                )
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                self.REVIEW_MANAGER.logger.info(f"{prep_script}(...) called")
 
             PREPARATION_RECORD = PrepRecord(preparation_record)
             PREPARATION_RECORD = prep_script["script"](PREPARATION_RECORD)
@@ -2107,12 +2208,12 @@ class Preparation(Process):
             if diffs:
                 # print(PREPARATION_RECORD)
                 change_report = (
-                    f'{prep_script["script"].__name__}'
+                    f"{prep_script}"
                     f'({preparation_record["ID"]})'
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
                 preparation_details.append(change_report)
-                if self.DEBUG_MODE:
+                if self.REVIEW_MANAGER.DEBUG_MODE:
                     self.REVIEW_MANAGER.logger.info(change_report)
                     self.REVIEW_MANAGER.logger.info(
                         "To correct errors in the script,"
@@ -2130,7 +2231,7 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.logger.debug(
                     f"{prep_script['script'].__name__} changed: -"
                 )
-                if self.DEBUG_MODE:
+                if self.REVIEW_MANAGER.DEBUG_MODE:
                     print("\n")
                     time.sleep(0.7)
 
@@ -2157,7 +2258,7 @@ class Preparation(Process):
             ):
                 RECORD = self.update_masterdata_provenance(RECORD, UNPREPARED_RECORD)
         else:
-            if self.DEBUG_MODE:
+            if self.REVIEW_MANAGER.DEBUG_MODE:
                 if (
                     RecordState.md_needs_manual_preparation
                     == preparation_record["colrev_status"]
@@ -2391,12 +2492,26 @@ class Preparation(Process):
         debug_ids: str = "NA",
         debug_file: str = "NA",
     ) -> None:
-
         """Preparation of records"""
+        from colrev_core.settings import PrepRound
 
         saved_args = locals()
 
         self.check_DBs_availability()
+
+        if self.REVIEW_MANAGER.DEBUG_MODE:
+            print("\n\n\n")
+            self.REVIEW_MANAGER.logger.info("Start debug prep\n")
+            self.REVIEW_MANAGER.logger.info(
+                "The script will replay the preparation procedures"
+                " step-by-step, allow you to identify potential errors, trace them to "
+                "their colrev_origin and correct them."
+            )
+            input("\nPress Enter to continue")
+            print("\n\n")
+
+        if not keep_ids:
+            del saved_args["keep_ids"]
 
         def load_prep_data():
             from colrev_core.record import RecordState
@@ -2419,20 +2534,37 @@ class Preparation(Process):
             prep_data = {
                 "nr_tasks": nr_tasks,
                 "PAD": PAD,
-                "items": items,
+                "items": list(items),
                 "prior_ids": prior_ids,
             }
             self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
             return prep_data
 
-        def batch(items, mode: dict):
+        def get_preparation_batch(prep_round: PrepRound):
 
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
+            else:
+                prepare_data = load_prep_data()
+
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                self.REVIEW_MANAGER.logger.info(
+                    "In this round, we set the similarity "
+                    f"threshold ({self.RETRIEVAL_SIMILARITY})"
+                )
+                input("Press Enter to continue")
+                print("\n\n")
+                self.REVIEW_MANAGER.logger.info(
+                    f"prepare_data: " f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}"
+                )
+            self.PAD = prepare_data["PAD"]
+            items = prepare_data["items"]
             batch = []
             for item in items:
                 batch.append(
                     {
                         "record": PrepRecord(item),
-                        "mode": mode,
+                        "prep_round_scripts": prep_round.scripts,
                     }
                 )
             return batch
@@ -2500,254 +2632,75 @@ class Preparation(Process):
             }
             return prep_data
 
-        if self.DEBUG_MODE:
-            print("\n\n\n")
-            self.REVIEW_MANAGER.logger.info("Start debug prep\n")
-            self.REVIEW_MANAGER.logger.info(
-                "The script will replay the preparation procedures"
-                " step-by-step, allow you to identify potential errors, trace them to "
-                "their colrev_origin and correct them."
-            )
-            input("\nPress Enter to continue")
-            print("\n\n")
+        def setup_prep_round(i, prep_round):
+            if i == 0:
+                self.FIRST_ROUND = True
 
-        if not keep_ids:
-            del saved_args["keep_ids"]
-
-        # Note: for these scripts, only the similarity changes.
-        self.prep_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {
-                "name": "exclude_non_latin_alphabets",
-                "script": self.exclude_non_latin_alphabets,
-            },
-            {
-                "name": "exclude_languages",
-                "script": self.exclude_languages,
-            },
-            {
-                "name": "remove_urls_with_500_errors",
-                "script": self.remove_urls_with_500_errors,
-            },
-            {
-                "name": "remove_broken_IDs",
-                "script": self.remove_broken_IDs,
-            },
-            {
-                "name": "global_ids_consistency_check",
-                "script": self.global_ids_consistency_check,
-            },
-            {
-                "name": "prep_curated",
-                "script": self.prep_curated,
-            },
-            {
-                "name": "format",
-                "script": self.format,
-            },
-            {
-                "name": "resolve_crossrefs",
-                "script": self.resolve_crossrefs,
-            },
-            {
-                "name": "get_doi_from_sem_scholar",
-                "script": self.get_doi_from_sem_scholar,
-                "source_correction_hint": "fill out the online form: "
-                "https://www.semanticscholar.org/faq#correct-error",
-            },
-            {"name": "get_doi_from_urls", "script": self.get_doi_from_urls},
-            {
-                "name": "get_masterdata_from_doi",
-                "script": self.get_masterdata_from_doi,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "name": "get_masterdata_from_crossref",
-                "script": self.get_masterdata_from_crossref,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "name": "get_masterdata_from_dblp",
-                "script": self.get_masterdata_from_dblp,
-                "source_correction_hint": "send and email to dblp@dagstuhl.de"
-                " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)",
-            },
-            {
-                "name": "get_masterdata_from_open_library",
-                "script": self.get_masterdata_from_open_library,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "name": "get_year_from_vol_iss_jour_crossref",
-                "script": self.get_year_from_vol_iss_jour_crossref,
-                "source_correction_hint": "ask the publisher to correct the metadata"
-                " (see https://www.crossref.org/blog/"
-                "metadata-corrections-updates-and-additions-in-metadata-manager/",
-            },
-            {
-                "name": "get_record_from_local_index",
-                "script": self.get_record_from_local_index,
-                "source_correction_hint": "correct the metadata in the source "
-                "repository (as linked in the provenance field)",
-            },
-            {
-                "name": "remove_nicknames",
-                "script": self.remove_nicknames,
-            },
-            {
-                "name": "format_minor",
-                "script": self.format_minor,
-            },
-            {
-                "name": "drop_fields",
-                "script": self.drop_fields,
-            },
-            {
-                "name": "remove_redundant_fields",
-                "script": self.remove_redundant_fields,
-            },
-            {
-                "name": "correct_recordtype",
-                "script": self.correct_recordtype,
-            },
-            {
-                "name": "update_metadata_status",
-                "script": self.update_metadata_status,
-            },
-        ]
-
-        modes = [
-            {
-                "name": "exclusion",
-                "similarity": 1.0,
-                "scripts": [
-                    "exclude_non_latin_alphabets",
-                    "exclude_languages",
-                ],
-            },
-            {
-                "name": "high_confidence",
-                "similarity": 0.99,
-                "scripts": [
-                    "remove_urls_with_500_errors",
-                    "remove_broken_IDs",
-                    "global_ids_consistency_check",
-                    "prep_curated",
-                    "format",
-                    "resolve_crossrefs",
-                    "get_doi_from_sem_scholar",
-                    "get_doi_from_urls",
-                    "get_masterdata_from_doi",
-                    "get_masterdata_from_crossref",
-                    "get_masterdata_from_dblp",
-                    "get_masterdata_from_open_library",
-                    "get_year_from_vol_iss_jour_crossref",
-                    "get_record_from_local_index",
-                    "remove_nicknames",
-                    "format_minor",
-                    "drop_fields",
-                    "update_metadata_status",
-                ],
-            },
-            {
-                "name": "medium_confidence",
-                "similarity": 0.9,
-                "scripts": [
-                    "prep_curated",
-                    "get_doi_from_sem_scholar",
-                    "get_doi_from_urls",
-                    "get_masterdata_from_doi",
-                    "get_masterdata_from_crossref",
-                    "get_masterdata_from_dblp",
-                    "get_masterdata_from_open_library",
-                    "get_year_from_vol_iss_jour_crossref",
-                    "get_record_from_local_index",
-                    "remove_nicknames",
-                    "remove_redundant_fields",
-                    "format_minor",
-                    "drop_fields",
-                    "update_metadata_status",
-                ],
-            },
-            {
-                "name": "low_confidence",
-                "similarity": 0.80,
-                "scripts": [
-                    "prep_curated",
-                    "correct_recordtype",
-                    "get_doi_from_sem_scholar",
-                    "get_doi_from_urls",
-                    "get_masterdata_from_doi",
-                    "get_masterdata_from_crossref",
-                    "get_masterdata_from_dblp",
-                    "get_masterdata_from_open_library",
-                    "get_year_from_vol_iss_jour_crossref",
-                    "get_record_from_local_index",
-                    "remove_nicknames",
-                    "remove_redundant_fields",
-                    "format_minor",
-                    "drop_fields",
-                    "update_metadata_status",
-                ],
-            },
-        ]
-
-        self.FIRST_ROUND = True
-        self.LAST_ROUND = False
-
-        while 0 != len(modes):
-
-            if self.DEBUG_MODE:
-                prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
             else:
-                prepare_data = load_prep_data()
+                self.FIRST_ROUND = False
 
-            if self.FIRST_ROUND and not self.DEBUG_MODE:
-                if prepare_data["nr_tasks"] < 20:
-                    self.REVIEW_MANAGER.logger.info(
-                        "Less than 20 records: prepare in one batch."
-                    )
-                    modes = [m for m in modes if "low_confidence" == m["name"]]
-                    # use one mode/run to avoid multiple commits
-
-            mode = modes.pop(0)
-            if len(modes) == 0:
+            if i == len(self.REVIEW_MANAGER.settings.prep.prep_rounds) - 1:
                 self.LAST_ROUND = True
+            else:
+                self.LAST_ROUND = False
+            # https://dev.to/charlesw001/plugin-architecture-in-python-jla
+            # TODO : script to validate CustomPrepare (has a name/prepare function)
+            # TODO : the same module/custom_script could contain multiple functions...
+            list_custom_scripts = [
+                s
+                for s in prep_round.scripts
+                if Path(s + ".py").is_file() and s not in self.prep_scripts
+            ]
+            self._custom_prep_scripts = {}
+            sys.path.append(".")  # to import custom scripts from the project dir
+            for plugin_script in list_custom_scripts:
+                if Path(plugin_script + ".py").is_file():
+                    self._custom_prep_scripts[plugin_script] = importlib.import_module(
+                        plugin_script, "."
+                    ).CustomPrepare()
 
-            self.REVIEW_MANAGER.logger.info(f"Prepare ({mode['name']})")
+            list_module_scripts = [
+                s
+                for s in prep_round.scripts
+                if not Path(s + ".py").is_file() and s not in self.prep_scripts
+            ]
+            self._module_prep_scripts = {}
+            for plugin_script in list_module_scripts:
+                if not Path(plugin_script + ".py").is_file():
+                    self._module_prep_scripts[plugin_script] = importlib.import_module(
+                        plugin_script
+                    ).CustomPrepare()
 
-            self.RETRIEVAL_SIMILARITY = mode["similarity"]  # type: ignore
+                # from inspect import getmembers, isfunction
+                # print(getmembers(plugin, isfunction))
+
+            # Note : can set selected prep scripts/rounds in the settings...
+            # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:
+            #     if prepare_data["nr_tasks"] < 20:
+            #         self.REVIEW_MANAGER.logger.info(
+            #             "Less than 20 records: prepare in one batch."
+            #         )
+            #         modes = [m for m in modes if "low_confidence" == m["name"]]
+            # use one mode/run to avoid multiple commits
+
+            self.REVIEW_MANAGER.logger.info(f"Prepare ({prep_round.name})")
+            if self.FIRST_ROUND:
+                self.session.remove_expired_responses()  # Note : this takes long...
+
+            self.RETRIEVAL_SIMILARITY = prep_round.similarity  # type: ignore
             saved_args["similarity"] = self.RETRIEVAL_SIMILARITY
             self.REVIEW_MANAGER.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
+            return
 
-            if self.DEBUG_MODE:
-                if "high_confidence" == mode["name"]:
-                    self.REVIEW_MANAGER.logger.info(
-                        "In this round, we set "
-                        "a very conservative similarity threshold "
-                        f"({self.RETRIEVAL_SIMILARITY})"
-                    )
-                else:
-                    self.REVIEW_MANAGER.logger.info(
-                        "In this round, we lower the similarity "
-                        f"threshold ({self.RETRIEVAL_SIMILARITY})"
-                    )
-                input("Press Enter to continue")
-                print("\n\n")
-            # self.REVIEW_MANAGER.logger.debug(f"prepare_data: "
-            # f"{self.REVIEW_MANAGER.pp.pformat(prepare_data)}")
-            self.PAD = prepare_data["PAD"]
+        for i, prep_round in enumerate(self.REVIEW_MANAGER.settings.prep.prep_rounds):
 
-            preparation_batch = batch(prepare_data["items"], mode)
+            setup_prep_round(i, prep_round)
 
-            if self.DEBUG_MODE:
+            preparation_batch = get_preparation_batch(prep_round)
+
+            if self.REVIEW_MANAGER.DEBUG_MODE:
                 # Note: preparation_batch is not turned into a list of records.
                 preparation_batch_items = preparation_batch
                 preparation_batch = []
@@ -2760,7 +2713,7 @@ class Preparation(Process):
                 # from p_tqdm import p_map
                 # preparation_batch = p_map(self.prepare, preparation_batch)
 
-                if "exclude_languages" in mode["scripts"]:  # type: ignore
+                if "exclude_languages" in prep_round.scripts:  # type: ignore
                     pool = ProcessPool(nodes=mp.cpu_count() // 2)
                 else:
                     pool = ProcessPool(nodes=self.CPUS)
@@ -2770,7 +2723,7 @@ class Preparation(Process):
                 pool.join()
                 pool.clear()
 
-            if not self.DEBUG_MODE:
+            if not self.REVIEW_MANAGER.DEBUG_MODE:
                 preparation_batch = [x.get_data() for x in preparation_batch]
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
                     preparation_batch
@@ -2789,14 +2742,12 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(
-                    f"Prepare records ({mode['name']})", saved_args=saved_args
+                    f"Prepare records ({prep_round.name})", saved_args=saved_args
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
 
-            self.FIRST_ROUND = False
-
-        if not keep_ids and not self.DEBUG_MODE:
+        if not keep_ids and not self.REVIEW_MANAGER.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
             self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
 

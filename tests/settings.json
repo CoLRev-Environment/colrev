@@ -1,0 +1,125 @@
+{
+  "project": {
+    "id_pattern": "THREE_AUTHORS_YEAR",
+    "review_type": "NA",
+    "share_stat_req":"processed",
+    "delay_automated_processing": "True"
+  },
+  "search": {"sources": []},
+  "load": {"fields_to_keep": []},
+  "prep": {
+    "prep_rounds": [
+        {
+            "name": "exclusion",
+            "similarity": 1.0,
+            "scripts": [
+                "exclude_non_latin_alphabets",
+                "exclude_languages"
+            ]
+        },
+        {
+            "name": "high_confidence",
+            "similarity": 0.99,
+            "scripts": [
+                "remove_urls_with_500_errors",
+                "remove_broken_IDs",
+                "global_ids_consistency_check",
+                "prep_curated",
+                "format",
+                "resolve_crossrefs",
+                "get_doi_from_sem_scholar",
+                "get_doi_from_urls",
+                "get_masterdata_from_doi",
+                "get_masterdata_from_crossref",
+                "get_masterdata_from_dblp",
+                "get_masterdata_from_open_library",
+                "get_year_from_vol_iss_jour_crossref",
+                "get_record_from_local_index",
+                "remove_nicknames",
+                "format_minor",
+                "drop_fields",
+                "update_metadata_status"
+            ]
+        },
+        {
+            "name": "medium_confidence",
+            "similarity": 0.9,
+            "scripts": [
+                "prep_curated",
+                "get_doi_from_sem_scholar",
+                "get_doi_from_urls",
+                "get_masterdata_from_doi",
+                "get_masterdata_from_crossref",
+                "get_masterdata_from_dblp",
+                "get_masterdata_from_open_library",
+                "get_year_from_vol_iss_jour_crossref",
+                "get_record_from_local_index",
+                "remove_nicknames",
+                "remove_redundant_fields",
+                "format_minor",
+                "drop_fields",
+                "update_metadata_status"
+            ]
+        },
+        {
+            "name": "low_confidence",
+            "similarity": 0.8,
+            "scripts": [
+                "prep_curated",
+                "correct_recordtype",
+                "get_doi_from_sem_scholar",
+                "get_doi_from_urls",
+                "get_masterdata_from_doi",
+                "get_masterdata_from_crossref",
+                "get_masterdata_from_dblp",
+                "get_masterdata_from_open_library",
+                "get_year_from_vol_iss_jour_crossref",
+                "get_record_from_local_index",
+                "remove_nicknames",
+                "remove_redundant_fields",
+                "format_minor",
+                "drop_fields",
+                "update_metadata_status"
+            ]
+        }
+    ]
+  },
+  "dedupe": {"partition_threshold": 0.5, "cluster_threshold": 0.9},
+  "prescreen": {"plugin": "asreview", "mode": "include_all"},
+  "pdf_get": {"pdf_path_type": "symlink"},
+  "pdf_prep": {},
+  "screen": {
+    "process": {"overlapp": 20, "mode": "include_all", "parallel_independent": "True"},
+    "criteria": [
+      {
+        "name": "criterion_1",
+        "explanation": "explanation of criterion 1"
+      },
+      {
+        "name": "criterion_2",
+        "explanation": "explanation of criterion 2"
+      }
+    ]
+  },
+  "data": {
+    "data_format": {"manuscript": {
+      "template": "https://.../MISQ.docx",
+      "csl_style": "https:/...."
+    },
+    "structured": {
+      "fields": [
+        {
+          "name": "field1",
+          "explanation": "Field 1 ....",
+          "data_type": "str"
+        }
+      ]
+    }
+    }
+  },
+
+  "paper": {
+    "csl": "https://raw.githubusercontent.com/citation-style-language/styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl",
+    "word_template": "https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx"
+  }
+}

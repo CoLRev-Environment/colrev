@@ -1,6 +1,4 @@
 #! /usr/bin/env python
-import typing
-
 from colrev_core.prescreen import PrescreenRecord
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -29,7 +27,7 @@ class Screen(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        exclusion_criteria = self.get_exclusion_criteria(records.values())
+        exclusion_criteria = self.get_exclusion_criteria()
 
         saved_args = locals()
         saved_args["include_all"] = ""
@@ -53,37 +51,15 @@ class Screen(Process):
 
         return
 
-    def get_exclusion_criteria(self, records: typing.List[dict]) -> list:
-        """Get the list of exclusion criteria from records (dict)"""
+    def get_exclusion_criteria(self) -> list:
+        """Get the list of exclusion criteria from settings"""
 
-        def get_exclusion_criteria(ec_string: str) -> list:
-            return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
+        return [c.name for c in self.REVIEW_MANAGER.settings.screen.criteria]
 
-        def get_exclusion_criteria_from_str(ec_string: str) -> list:
-            if ec_string != "":
-                exclusion_criteria = get_exclusion_criteria(ec_string)
-            else:
-                exclusion_criteria_str = input(
-                    "Exclusion criteria (comma separated or NA)"
-                )
-                exclusion_criteria = exclusion_criteria_str.split(",")
-                if "" in exclusion_criteria:
-                    exclusion_criteria.remove("")
-            if "NA" in exclusion_criteria:
-                exclusion_criteria.remove("NA")
-
-            return exclusion_criteria
-
-        ec_list = [
-            str(x.get("exclusion_criteria"))
-            for x in records
-            if "exclusion_criteria" in x
-        ]
-        if 0 == len(ec_list):
-            ec_string = ""
-        else:
-            ec_string = ec_list.pop()
-        return get_exclusion_criteria_from_str(ec_string)
+    def set_exclusion_criteria(self, exclusion_criteria) -> None:
+        self.REVIEW_MANAGER.settings.screen.criteria = exclusion_criteria
+        self.REVIEW_MANAGER.save_settings()
+        return
 
     def get_data(self) -> dict:
         """Get the data (records to screen)"""

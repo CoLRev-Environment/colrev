@@ -32,6 +32,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.get_inconsistencies
       ~LoadRecord.get_origins
       ~LoadRecord.get_provenance_field_source
+      ~LoadRecord.get_quality_defects
       ~LoadRecord.get_record_similarity
       ~LoadRecord.get_similarity
       ~LoadRecord.get_similarity_detailed
@@ -46,6 +47,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.merge
       ~LoadRecord.missing_fields
       ~LoadRecord.remove_accents
+      ~LoadRecord.remove_quality_defect_notes
       ~LoadRecord.reset_pdf_provenance_hints
       ~LoadRecord.set_data_provenance
       ~LoadRecord.set_fields_complete

@@ -18,7 +18,7 @@ colrev\_core.review\_dataset.ReviewDataset
 
       ~ReviewDataset.add_changes
       ~ReviewDataset.add_record_changes
-      ~ReviewDataset.append_sources
+      ~ReviewDataset.add_setting_changes
       ~ReviewDataset.behind_remote
       ~ReviewDataset.check_corrections_of_curated_records
       ~ReviewDataset.check_main_references_duplicates
@@ -53,6 +53,7 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.propagated_ID
       ~ReviewDataset.pull_if_repo_clean
       ~ReviewDataset.read_next_record
+      ~ReviewDataset.remove_file
       ~ReviewDataset.replace_field
       ~ReviewDataset.reprocess_id
       ~ReviewDataset.reset_log_if_no_changes
@@ -63,17 +64,6 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.retrieve_records_from_history
       ~ReviewDataset.save_record_list_by_ID
       ~ReviewDataset.save_records_dict
-      ~ReviewDataset.save_sources
       ~ReviewDataset.set_IDs
       ~ReviewDataset.update_colrev_ids
       ~ReviewDataset.update_record_by_ID
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~ReviewDataset.search_type_opts

@@ -23,10 +23,12 @@ colrev\_core.review\_manager.ReviewManager
       ~ReviewManager.get_remote_url
       ~ReviewManager.get_status
       ~ReviewManager.in_virtualenv
+      ~ReviewManager.load_settings
       ~ReviewManager.notify
       ~ReviewManager.reorder_log
       ~ReviewManager.report
       ~ReviewManager.reset_log
+      ~ReviewManager.save_settings
       ~ReviewManager.sharing
       ~ReviewManager.update_status_yaml
       ~ReviewManager.upgrade_colrev

@@ -21,3 +21,4 @@ colrev\_core.screen.Screen
       ~Screen.get_exclusion_criteria
       ~Screen.include_all_in_screen
       ~Screen.set_data
+      ~Screen.set_exclusion_criteria
