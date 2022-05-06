@@ -114,7 +114,7 @@ class ReviewManager:
             filedata = pkgutil.get_data(__name__, "template/settings.json")
             if filedata:
                 settings = json.loads(filedata.decode("utf-8"))
-                with open("settings.json", "w", encoding="utf8") as file:
+                with open(self.paths["SETTINGS"], "w", encoding="utf8") as file:
                     json.dump(settings, file, indent=4)
 
         with open(self.paths["SETTINGS"]) as f:
@@ -394,6 +394,11 @@ class ReviewManager:
                             source[
                                 "source_identifier"
                             ] = "https://api.crossref.org/works/{{doi}}"
+                        elif (
+                            "pdfs_directory"
+                            == source["search_parameters"][0]["endpoint"]
+                        ):
+                            source["source_identifier"] = "{{file}}"
                         else:
                             source["source_identifier"] = source["search_parameters"][
                                 0
@@ -406,6 +411,12 @@ class ReviewManager:
                         source["search_parameters"] = ""
                         source["source_identifier"] = source.get("source_url", "")
 
+                    if (
+                        source["comment"] != source["comment"]
+                        or "NA" == source["comment"]
+                    ):  # NaN
+                        source["comment"] = ""
+
                     if "source_url" in source:
                         del source["source_url"]
                     if "source_name" in source:
@@ -417,12 +428,14 @@ class ReviewManager:
                 with open("settings.json", "w") as outfile:
                     json.dump(settings, outfile, indent=4)
                 print(settings)
-            old_sources_path.unlink()
+            if old_sources_path.is_file():
+                old_sources_path.unlink()
+                self.REVIEW_DATASET.remove_file(str(old_sources_path))
             self.REVIEW_DATASET.add_setting_changes()
-            self.REVIEW_DATASET.remove_file(str(old_sources_path))
 
-            Path("shared_config.ini").unlink()
-            self.REVIEW_DATASET.remove_file("shared_config.ini")
+            if Path("shared_config.ini").is_file():
+                Path("shared_config.ini").unlink()
+                self.REVIEW_DATASET.remove_file("shared_config.ini")
             if Path("private_config.ini").is_file():
                 Path("private_config.ini").unlink()
             return True
@@ -757,20 +770,22 @@ class ReviewManager:
         try:
 
             for check_script in check_scripts:
-                if [] == check_script["params"]:
-                    self.logger.debug(f'{check_script["script"].__name__}() called')
-                    check_script["script"]()
-                else:
-                    self.logger.debug(
-                        f'{check_script["script"].__name__}(params) called'
-                    )
-                    if type(check_script["params"]) == list:
-                        check_script["script"](*check_script["params"])
+                try:
+                    if [] == check_script["params"]:
+                        self.logger.debug(f'{check_script["script"].__name__}() called')
+                        check_script["script"]()
                     else:
-                        check_script["script"](check_script["params"])
-                self.logger.debug(f'{check_script["script"].__name__}: passed\n')
-        except PropagatedIDChange:
-            pass
+                        self.logger.debug(
+                            f'{check_script["script"].__name__}(params) called'
+                        )
+                        if type(check_script["params"]) == list:
+                            check_script["script"](*check_script["params"])
+                        else:
+                            check_script["script"](check_script["params"])
+                    self.logger.debug(f'{check_script["script"].__name__}: passed\n')
+                except PropagatedIDChange as e:
+                    print(e)
+                    pass
         except (
             MissingDependencyError,
             GitConflictError,

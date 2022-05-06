@@ -327,6 +327,11 @@ class Search(Process):
                         self.REVIEW_MANAGER, notify_state_transition_process=False
                     )
                     for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
+                        if "colrev_data_provenance" in RETRIEVED_RECORD.data:
+                            del RETRIEVED_RECORD.data["colrev_data_provenance"]
+                        if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
+                            del RETRIEVED_RECORD.data["colrev_masterdata_provenance"]
+
                         retrieved = True
 
                         if (
@@ -347,9 +352,9 @@ class Search(Process):
                                 del RETRIEVED_RECORD.data["pages"]
                             available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
 
-                            RETRIEVED_RECORD.data["source_url"] = (
-                                RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
-                            )
+                            # RETRIEVED_RECORD.data["source_url"] = (
+                            #     RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
+                            # )
 
                             records = [
                                 {

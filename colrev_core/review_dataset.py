@@ -234,7 +234,7 @@ class ReviewDataset:
         from bibtexparser.customization import convert_to_unicode
 
         origin_records: typing.Dict[str, typing.Any] = {}
-        sources = [x["filename"] for x in self.REVIEW_MANAGER.sources]
+        sources = [x.filename for x in self.REVIEW_MANAGER.sources]
         for source in sources:
             source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
             if source_file.is_file():
@@ -1226,6 +1226,8 @@ class ReviewDataset:
         return
 
     def check_main_references_origin(self, prior: dict, data: dict) -> None:
+        import itertools
+
         # Check whether each record has an origin
         if not len(data["entries_without_origin"]) == 0:
             raise OriginError(
@@ -1244,7 +1246,7 @@ class ReviewDataset:
             raise OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = [x[1] for x in data["origin_list"]]
+        origins = list(itertools.chain(*data["origin_list"]))
         non_unique_origins = []
         for org in origins:
             if origins.count(org) > 1:
