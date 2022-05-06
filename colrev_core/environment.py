@@ -585,6 +585,43 @@ class LocalIndex:
 
         return toc_key
 
+    def get_fields_to_remove(self, record: dict) -> list:
+        """Compares the record to available toc items and
+        returns fields to remove (if any)"""
+
+        fields_to_remove = []
+        if "volume" in record.keys() and "number" in record.keys():
+
+            toc_key_full = self.__get_toc_key(record)
+
+            wo_nr = record.copy()
+            del wo_nr["number"]
+            toc_key_wo_nr = self.__get_toc_key(wo_nr)
+            if not self.os.exists(
+                index=self.TOC_INDEX, id=toc_key_full
+            ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_nr):
+                fields_to_remove.append("number")
+
+            wo_vol = record.copy()
+            del wo_vol["volume"]
+            toc_key_wo_vol = self.__get_toc_key(wo_vol)
+            if not self.os.exists(
+                index=self.TOC_INDEX, id=toc_key_full
+            ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol):
+                fields_to_remove.append("volume")
+
+            wo_vol_nr = record.copy()
+            del wo_vol_nr["volume"]
+            del wo_vol_nr["number"]
+            toc_key_wo_vol_nr = self.__get_toc_key(wo_vol_nr)
+            if not self.os.exists(
+                index=self.TOC_INDEX, id=toc_key_full
+            ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol_nr):
+                fields_to_remove.append("number")
+                fields_to_remove.append("volume")
+
+        return fields_to_remove
+
     def __toc_index(self, record) -> None:
         if not Record(record).masterdata_is_curated():
             return

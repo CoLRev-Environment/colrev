@@ -1239,6 +1239,17 @@ class Preparation(Process):
 
         if RECORD.data.get("publisher", "") in ["researchgate.net"]:
             del RECORD.data["publisher"]
+
+        if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
+            # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
+            # because it creates problems with multiprocessing
+            LOCAL_INDEX = LocalIndex()
+
+            fields_to_remove = LOCAL_INDEX.get_fields_to_remove(RECORD.get_data())
+            for field_to_remove in fields_to_remove:
+                if field_to_remove in RECORD.data:
+                    del RECORD.data[field_to_remove]
+
         return RECORD
 
     def remove_redundant_fields(self, RECORD: PrepRecord) -> PrepRecord:
