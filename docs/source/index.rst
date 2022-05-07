@@ -14,7 +14,7 @@ To make major improvements in terms of efficiency and trustworthiness and to aut
 - desigining a **fault-tolerant, configurable, and self-explanatory** workflow
 - implementing a comprehensive **data provenance** model and a **robust identification** scheme
 - incorporating **state-of-the-art algorithms** to provide end-to-end process support
-- creating an open and extensible ecosystem of **file-based interfaces** following open data standards
+- creating an extensible ecosystem of **file-based interfaces** following open data standards
 - fostering **typological pluralism** through different forms of data analysis
 - advancing a built-in model for **content curation** and reuse
 
