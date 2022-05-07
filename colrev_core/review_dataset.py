@@ -1900,6 +1900,20 @@ class ReviewDataset:
             return True
         return False
 
+    def remote_ahead(self) -> bool:
+        nr_commits_behind = 0
+        CONNECTED_REMOTE = 0 != len(self.__git_repo.remotes)
+        if CONNECTED_REMOTE:
+            origin = self.__git_repo.remotes.origin
+            if origin.exists():
+                (
+                    nr_commits_behind,
+                    nr_commits_ahead,
+                ) = self.get_remote_commit_differences(self.__git_repo)
+        if nr_commits_ahead > 0:
+            return True
+        return False
+
     def pull_if_repo_clean(self):
         if not self.__git_repo.is_dirty():
             o = self.__git_repo.remotes.origin
