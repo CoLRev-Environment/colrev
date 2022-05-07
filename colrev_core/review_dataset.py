@@ -121,7 +121,7 @@ class ReviewDataset:
             colrev_status.find("{") + 1 : colrev_status.rfind("}")
         ]
 
-        exclusion_criteria, file, colrev_masterdata = "", "", ""
+        exclusion_criteria, file, colrev_masterdata_provenance = "", "", ""
         while items:
             item = items.pop(0)
 
@@ -134,8 +134,10 @@ class ReviewDataset:
             if "file" in item:
                 file = item[item.find("{") + 1 : item.rfind("}")]
 
-            if "colrev_masterdata" in item:
-                colrev_masterdata = item[item.find("{") + 1 : item.rfind("}")]
+            if "colrev_masterdata_provenance" in item:
+                colrev_masterdata_provenance = item[
+                    item.find("{") + 1 : item.rfind("}")
+                ]
 
         return [
             ID,
@@ -143,7 +145,7 @@ class ReviewDataset:
             colrev_status,
             exclusion_criteria,
             file,
-            colrev_masterdata,
+            colrev_masterdata_provenance,
         ]
 
     def retrieve_records_from_history(
@@ -398,7 +400,6 @@ class ReviewDataset:
         writer.display_order = [
             "colrev_origin",  # must be in second line
             "colrev_status",  # must be in third line
-            "colrev_masterdata",
             "colrev_masterdata_provenance",
             "colrev_data_provenance",
             "colrev_file_provenance",
@@ -1412,15 +1413,18 @@ class ReviewDataset:
 
                             # Note : this is a simple heuristic:
                             curation_path = Resources.curations_path / Path(
-                                original_curated_record["colrev_masterdata"].split("/")[
-                                    -1
-                                ]
+                                original_curated_record[
+                                    "colrev_masterdata_provenance"
+                                ].split("/")[-1]
                             )
                             if not curation_path.is_dir():
+                                prov_inf = original_curated_record[
+                                    "colrev_masterdata_provenance"
+                                ]
                                 print(
                                     "Source path of indexed record not available "
                                     f'({original_curated_record["ID"]} - '
-                                    f'{original_curated_record["colrev_masterdata"]})'
+                                    f"{prov_inf})"
                                 )
                                 continue
                         except RecordNotInIndexException:
@@ -1565,12 +1569,12 @@ class ReviewDataset:
                         #     }
 
                     # TODO : cover non-masterdata corrections
-                    if "colrev_masterdata" not in original_curated_record:
+                    if "colrev_masterdata_provenance" not in original_curated_record:
                         continue
 
                     dict_to_save = {
                         "source_url": original_curated_record[
-                            "colrev_masterdata"
+                            "colrev_masterdata_provenance"
                         ].replace("CURATED:"),
                         "original_curated_record": original_curated_record,
                         "changes": change_items,

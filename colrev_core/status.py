@@ -66,10 +66,6 @@ class Status(Process):
             record_links += nr_record_links + 1
 
         stat: dict = {"colrev_status": {}}
-        colrev_masterdata_items = [x[5] for x in record_header_list]
-        stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in colrev_masterdata_items if "CURATED" in x]
-        )
 
         exclusion_statistics = {}
         if exclusion_criteria:
@@ -184,6 +180,16 @@ class Status(Process):
         stat["colrev_status"]["currently"]["pdf_needs_retrieval"] = stat[
             "colrev_status"
         ]["currently"]["rev_prescreen_included"]
+
+        colrev_masterdata_items = [x[5] for x in record_header_list]
+        stat["colrev_status"]["CURATED_records"] = len(
+            [x for x in colrev_masterdata_items if "CURATED" in x]
+        )
+        # Note : 'title' in curated_fields: simple heuristic for masterdata curation
+        if self.REVIEW_MANAGER.settings.project.curated_masterdata:
+            stat["colrev_status"]["CURATED_records"] = stat["colrev_status"]["overall"][
+                "md_processed"
+            ]
 
         # note: 10 steps
         stat["atomic_steps"] = (

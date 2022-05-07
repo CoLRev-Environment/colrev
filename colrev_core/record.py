@@ -57,7 +57,6 @@ class Record:
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
     provenance_keys = [
-        "colrev_masterdata",
         "colrev_masterdata_provenance",
         "colrev_origin",
         "colrev_status",
@@ -105,7 +104,7 @@ class Record:
         return self.data
 
     def masterdata_is_curated(self) -> bool:
-        return "CURATED" in self.data.get("colrev_masterdata", "")
+        return "CURATED" in self.data.get("colrev_masterdata_provenance", "")
 
     def set_status(self, target_state) -> None:
         from colrev_core.record import RecordState
@@ -331,9 +330,9 @@ class Record:
         # Note : no need to check "not self.masterdata_is_curated()":
         # this should enable updates of curated metadata
         if MERGING_RECORD.masterdata_is_curated() and not self.masterdata_is_curated():
-            self.data["colrev_masterdata"] = MERGING_RECORD.data["colrev_masterdata"]
-            if "colrev_masterdata_provenance" in self.data:
-                del self.data["colrev_masterdata_provenance"]
+            self.data["colrev_masterdata_provenance"] = MERGING_RECORD.data[
+                "colrev_masterdata_provenance"
+            ]
 
             for k in list(self.data.keys()):
                 if k in Record.identifying_fields:
@@ -867,7 +866,6 @@ class Record:
                 "source_link",
                 "source_url",
                 "colrev_id",
-                "colrev_masterdata",
                 "colrev_status",
                 "ENTRYTYPE",
                 "ID",
