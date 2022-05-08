@@ -7,6 +7,7 @@ from pathlib import Path
 # Note : to avoid performance issues on startup (ReviewManager, parsing settings)
 # the settings dataclasses should be in one file (13s compared to 0.3s)
 
+# https://stackoverflow.com/questions/66807878/pretty-print-dataclasses-prettier
 
 # Project
 
@@ -170,6 +171,7 @@ class DataConfiguration:
 
 @dataclass
 class Configuration:
+
     project: ProjectConfiguration
     search: SearchConfiguration
     load: LoadConfiguration
@@ -180,3 +182,7 @@ class Configuration:
     pdf_prep: PDFPrepConfiguration
     screen: ScreenConfiguration
     data: DataConfiguration
+
+
+if __name__ == "__main__":
+    pass

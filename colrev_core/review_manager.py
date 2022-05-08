@@ -87,7 +87,7 @@ class ReviewManager:
         if self.DEBUG_MODE:
             print("\n\n")
             self.logger.debug("Created review manager instance")
-            self.logger.debug(f" settings: {self.pp.pformat(self.settings)}")
+            self.logger.debug(f"Settings: {self.pp.pformat(self.settings)}")
 
     def load_settings(self) -> Configuration:
         import dacite

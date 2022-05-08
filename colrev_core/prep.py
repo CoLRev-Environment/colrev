@@ -2200,7 +2200,9 @@ class Preparation(Process):
             prior = preparation_record.copy()
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
-                self.REVIEW_MANAGER.logger.info(f"{prep_script}(...) called")
+                self.REVIEW_MANAGER.logger.info(
+                    f"{prep_script['script'].__name__}(...) called"
+                )
 
             PREPARATION_RECORD = PrepRecord(preparation_record)
             PREPARATION_RECORD = prep_script["script"](PREPARATION_RECORD)
@@ -2210,7 +2212,7 @@ class Preparation(Process):
             if diffs:
                 # print(PREPARATION_RECORD)
                 change_report = (
-                    f"{prep_script}"
+                    f"{prep_script['script'].__name__}"
                     f'({preparation_record["ID"]})'
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
@@ -2543,7 +2545,6 @@ class Preparation(Process):
             return prep_data
 
         def get_preparation_batch(prep_round: PrepRound):
-
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 prepare_data = load_prep_data_for_debug(debug_ids, debug_file)
             else:
@@ -2695,6 +2696,9 @@ class Preparation(Process):
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
             return
+
+        if "NA" != debug_ids:
+            self.REVIEW_MANAGER.DEBUG_MODE = True
 
         for i, prep_round in enumerate(self.REVIEW_MANAGER.settings.prep.prep_rounds):
 
