@@ -837,11 +837,15 @@ class LocalIndex:
             if isinstance(record["colrev_id"], list):
                 record["colrev_id"] = ";".join(record["colrev_id"])
 
-        if "CURATED" == record.get("colrev_masterdata", ""):
+        if "CURATED" == record.get("colrev_masterdata_provenance", ""):
             if "source_path" in record:
-                record["colrev_masterdata"] = "CURATED:" + record["source_path"]
+                record["colrev_masterdata_provenance"] = (
+                    "CURATED:" + record["source_path"]
+                )
             if "source_link" in record:
-                record["colrev_masterdata"] = "CURATED:" + record["source_link"]
+                record["colrev_masterdata_provenance"] = (
+                    "CURATED:" + record["source_link"]
+                )
 
         try:
 
@@ -1116,14 +1120,17 @@ class LocalIndex:
         try:
             r1_index = self.__retrieve_based_on_colrev_id(record1_colrev_id)
             r2_index = self.__retrieve_based_on_colrev_id(record2_colrev_id)
-            # Same repo (colrev_masterdata = CURATED: ...) and in LocalIndex
+            # Same repo (colrev_masterdata_provenance = CURATED: ...) and in LocalIndex
             # implies status > md_processed
             # ie., no duplicates if IDs differ
             if (
-                "CURATED:" in r1_index["colrev_masterdata"]
-                and "CURATED:" in r2_index["colrev_masterdata"]
+                "CURATED:" in r1_index["colrev_masterdata_provenance"]
+                and "CURATED:" in r2_index["colrev_masterdata_provenance"]
             ):
-                if r1_index["colrev_masterdata"] == r2_index["colrev_masterdata"]:
+                if (
+                    r1_index["colrev_masterdata_provenance"]
+                    == r2_index["colrev_masterdata_provenance"]
+                ):
                     if r1_index["ID"] == r2_index["ID"]:
                         return "yes"
                     else:

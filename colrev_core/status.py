@@ -66,10 +66,6 @@ class Status(Process):
             record_links += nr_record_links + 1
 
         stat: dict = {"colrev_status": {}}
-        colrev_masterdata_items = [x[5] for x in record_header_list]
-        stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in colrev_masterdata_items if "CURATED" in x]
-        )
 
         exclusion_statistics = {}
         if exclusion_criteria:
@@ -184,6 +180,16 @@ class Status(Process):
         stat["colrev_status"]["currently"]["pdf_needs_retrieval"] = stat[
             "colrev_status"
         ]["currently"]["rev_prescreen_included"]
+
+        colrev_masterdata_items = [x[5] for x in record_header_list]
+        stat["colrev_status"]["CURATED_records"] = len(
+            [x for x in colrev_masterdata_items if "CURATED" in x]
+        )
+        # Note : 'title' in curated_fields: simple heuristic for masterdata curation
+        if self.REVIEW_MANAGER.settings.project.curated_masterdata:
+            stat["colrev_status"]["CURATED_records"] = stat["colrev_status"]["overall"][
+                "md_processed"
+            ]
 
         # note: 10 steps
         stat["atomic_steps"] = (
@@ -353,21 +359,33 @@ class Status(Process):
                 "msg": "Locally registered repo no longer exists.",
                 "cmd": f"colrev env --unregister {registered_path}",
             }
-            # environment_instructions.append(instruction)
             return instruction
         except Exception as e:
             print(f"Error in {registered_path}: {e}")
             pass
             return {}
         if "curated_metadata" in str(registered_path):
-            if REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote():
+            if (
+                REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote()
+                and not REPO_REVIEW_MANAGER.REVIEW_DATASET.remote_ahead()
+            ):
                 instruction = {
                     "msg": "Updates available for curated repo "
                     f"({registered_path}).",
                     "cmd": "colrev env --update",
                 }
-                # environment_instructions.append(instruction)
                 return instruction
+            elif (
+                REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote()
+                and REPO_REVIEW_MANAGER.REVIEW_DATASET.remote_ahead()
+            ):
+                instruction = {
+                    "msg": "Local/remote branch diverged for curated repo "
+                    f"({registered_path}).",
+                    "cmd": f"cd '{registered_path}' && git pull --rebase",
+                }
+                return instruction
+
         return {}
 
     def get_review_instructions(self, stat) -> list:
@@ -678,7 +696,7 @@ class Status(Process):
                         "level": "WARNING",
                         "msg": "Once you have committed your changes, get the latest "
                         + "remote changes",
-                        "cmd_after": "git add FILENAME \n git commit -m 'MSG' \n "
+                        "cmd_after": "git add FILENAME \n  git commit -m 'MSG' \n  "
                         + "git pull --rebase",
                     }
                     collaboration_instructions["items"].append(item)

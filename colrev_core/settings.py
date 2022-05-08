@@ -21,7 +21,8 @@ class ProjectConfiguration:
     id_pattern: IDPpattern
     review_type: str
     share_stat_req: str
-    delay_automated_processing: str  # TODO: should be bool
+    delay_automated_processing: bool
+    curated_masterdata: bool
     curated_fields: typing.List[str]
 
 

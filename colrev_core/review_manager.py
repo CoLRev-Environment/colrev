@@ -354,6 +354,21 @@ class ReviewManager:
                         del record["excl_criteria"]
                     if "metadata_source" in record:
                         del record["metadata_source"]
+
+                    if "colrev_masterdata" in record:
+                        if record["colrev_masterdata"] == "ORIGINAL":
+                            del record["colrev_masterdata"]
+                        else:
+                            record["colrev_masterdata_provenance"] = record[
+                                "colrev_masterdata"
+                            ]
+                            del record["colrev_masterdata"]
+
+                    if "curated_metadata" in str(self.path):
+                        if "colrev_masterdata_provenance" in record:
+                            if "CURATED" == record["colrev_masterdata_provenance"]:
+                                record["colrev_masterdata_provenance"] = ""
+
                     # if "source_url" in record:
                     #     record["colrev_masterdata"] = \
                     #           "CURATED:" + record["source_url"]
@@ -438,6 +453,16 @@ class ReviewManager:
                 self.REVIEW_DATASET.remove_file("shared_config.ini")
             if Path("private_config.ini").is_file():
                 Path("private_config.ini").unlink()
+
+            if "curated_metadata" in str(self.path):
+                self.settings.project.curated_masterdata = True
+                self.settings.project.curated_fields = [
+                    "doi",
+                    "url",
+                    "dblp_key",
+                ]
+                self.save_settings()
+
             return True
 
         # next version should be:

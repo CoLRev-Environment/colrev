@@ -207,7 +207,6 @@ class Preparation(Process):
         "colrev_status",
         "colrev_origin",
         "colrev_masterdata_provenance",
-        "colrev_masterdata",
         "colrev_data_provenance",
         "colrev_pid",
         "colrev_id",
@@ -1154,7 +1153,10 @@ class Preparation(Process):
 
         if retrieved:
             RETRIEVED_RECORD = PrepRecord(retrieved_record)
-            RECORD.merge(RETRIEVED_RECORD, RETRIEVED_RECORD.data["colrev_masterdata"])
+            RECORD.merge(
+                RETRIEVED_RECORD,
+                RETRIEVED_RECORD.data.get("colrev_masterdata_provenance", "CURATED"),
+            )
 
             if "colrev_masterdata_provenance" in RECORD.data:
                 del RECORD.data["colrev_masterdata_provenance"]

@@ -56,10 +56,10 @@ class Pull(Process):
             RECORD = PrepRecord(record)
             RETRIEVED_RECORD = PREPARATION.get_record_from_local_index(RECORD)
             source_info = "LOCAL_INDEX"
-            if "CURATED:" in RETRIEVED_RECORD.data["colrev_masterdata"]:
-                source_info = RETRIEVED_RECORD.data["colrev_masterdata"].replace(
-                    "CURATED:", ""
-                )
+            if "CURATED:" in RETRIEVED_RECORD.data["colrev_masterdata_provenance"]:
+                source_info = RETRIEVED_RECORD.data[
+                    "colrev_masterdata_provenance"
+                ].replace("CURATED:", "")
             RECORD.merge(RETRIEVED_RECORD, source_info)
 
             record = RECORD.get_data()

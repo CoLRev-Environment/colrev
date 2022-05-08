@@ -30,6 +30,7 @@ class LoadRecord(Record):
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
+        # Initialize colrev_masterdata_provenance
         if "colrev_masterdata_provenance" in self.data:
             colrev_masterdata_provenance = self.load_masterdata_provenance()
         else:
@@ -69,60 +70,35 @@ class LoadRecord(Record):
 
             del self.data["colrev_source_identifier"]
 
-        # Note : only add provenance data for the fields with problems
-        # Implicitly, the other fields have source=original and no problems.
-        if "colrev_masterdata" not in self.data:
+        if not self.masterdata_is_curated():
             required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
             for required_field in required_fields:
                 if required_field in self.data:
                     if percent_upper_chars(self.data[required_field]) > 0.8:
-                        colrev_masterdata_provenance[required_field] = {
-                            "source": "ORIGINAL",
-                            "note": "mostly upper case",
-                        }
+                        self.add_masterdata_provenance_hint(
+                            required_field, "mostly upper case"
+                        )
                 else:
                     self.data[required_field] = "UNKNOWN"
-            if "colrev_masterdata" not in self.data:
-                self.data["colrev_masterdata"] = "ORIGINAL"
 
         inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
         for inconsistent_field in inconsistent_fields:
             if inconsistent_field in self.data:
-                # TODO : really set to ORIGINAL?
-                if inconsistent_field in colrev_masterdata_provenance:
-                    add_info = (
-                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                    )
-                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
-                else:
-                    colrev_masterdata_provenance[inconsistent_field] = {
-                        "source": "ORIGINAL",
-                        "note": (
-                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
-                        ),
-                    }
+                inconsistency_hint = (
+                    f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                )
+                self.add_masterdata_provenance_hint(
+                    inconsistent_field, inconsistency_hint
+                )
+
         incomplete_fields = self.get_incomplete_fields()
         for incomplete_field in incomplete_fields:
-            if incomplete_field in colrev_masterdata_provenance:
-                add_info = ", incomplete"
-                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
-            else:
-                colrev_masterdata_provenance[incomplete_field] = {
-                    "source": "ORIGINAL",
-                    "note": "incomplete",
-                }
+            self.add_masterdata_provenance_hint(incomplete_field, "incomplete")
 
         defect_fields = self.get_quality_defects()
         if defect_fields:
             for defect_field in defect_fields:
-                if defect_field in colrev_masterdata_provenance:
-                    add_info = ", quality_defect"
-                    colrev_masterdata_provenance[defect_field]["note"] += add_info
-                else:
-                    colrev_masterdata_provenance[defect_field] = {
-                        "source": "ORIGINAL",
-                        "note": "quality_defect",
-                    }
+                self.add_masterdata_provenance_hint(defect_field, "quality_defect")
 
         self.set_data_provenance(colrev_data_provenance)
         self.set_masterdata_provenance(colrev_masterdata_provenance)
