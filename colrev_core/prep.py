@@ -1158,9 +1158,6 @@ class Preparation(Process):
                 RETRIEVED_RECORD.data.get("colrev_masterdata_provenance", "CURATED"),
             )
 
-            if "colrev_masterdata_provenance" in RECORD.data:
-                del RECORD.data["colrev_masterdata_provenance"]
-
             git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
             cur_project_source_paths = [str(self.REVIEW_MANAGER.path)]
             for remote in git_repo.remotes:

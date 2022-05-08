@@ -837,16 +837,6 @@ class LocalIndex:
             if isinstance(record["colrev_id"], list):
                 record["colrev_id"] = ";".join(record["colrev_id"])
 
-        if "CURATED" == record.get("colrev_masterdata_provenance", ""):
-            if "source_path" in record:
-                record["colrev_masterdata_provenance"] = (
-                    "CURATED:" + record["source_path"]
-                )
-            if "source_link" in record:
-                record["colrev_masterdata_provenance"] = (
-                    "CURATED:" + record["source_link"]
-                )
-
         try:
 
             cid_to_index = Record(record).create_colrev_id()
@@ -924,8 +914,14 @@ class LocalIndex:
             # source_path for corrections and
             # source_link to reduce prep_record_for_return procedure
             source_link = source_url  # Default to avoid setting it to the previous one
-            [record.update(source_path=source_url) for record in records.values()]
             source_link = self.get_source_link(list(records.values())[0])
+            if CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_masterdata:
+                [
+                    record.update(colrev_masterdata_provenance=f"CURATED:{source_url}")
+                    for record in records.values()
+                ]
+
+            [record.update(source_path=source_url) for record in records.values()]
             [record.update(source_link=source_link) for record in records.values()]
             [
                 record.update(file=source_url / Path(record["file"]))
