@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 from pathlib import Path
 
+from colrev_core.data import NoDataEndpointsRegistered
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -22,10 +23,8 @@ class Paper(Process):
         ]
 
         if len(paper_endpoint_settings_l) != 1:
-            self.REVIEW_MANAGER.logger.error(
-                "No paper endpoint specified in settings.data.data_format"
-            )
-            return
+            raise NoPaperEndpointRegistered()
+
         paper_endpoint_settings = paper_endpoint_settings_l[0]
 
         if not self.REVIEW_MANAGER.paths["PAPER"].is_file():
@@ -69,6 +68,13 @@ class Paper(Process):
             pass
 
         return
+
+
+class NoPaperEndpointRegistered(NoDataEndpointsRegistered):
+    """No paper endpoint registered in settings.json"""
+
+    def __init__(self):
+        super().__init__()
 
 
 if __name__ == "__main__":
