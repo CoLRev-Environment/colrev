@@ -105,15 +105,16 @@ def debug_data():
 
 
 def debug_tei_tools(param) -> None:
-    from colrev_core.tei import TEI
-    from colrev_core import grobid_client
+    from colrev_core.environment import TEIParser
+    from colrev_core.environment import GrobidService
 
     logger.debug("Start grobid")
-    grobid_client.start_grobid()
+    GROBID_SERVICE = GrobidService()
+    GROBID_SERVICE.start()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    TEI_INSTANCE = TEI(pdf_path=filepath)
+    TEI_INSTANCE = TEIParser(pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
     return

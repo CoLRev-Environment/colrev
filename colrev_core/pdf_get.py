@@ -11,11 +11,11 @@ from p_tqdm import p_map
 from pdf2image import convert_from_path
 from pdfminer.high_level import extract_text
 
-from colrev_core import grobid_client
+from colrev_core.environment import GrobidService
+from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
-from colrev_core.tei import TEI
 
 
 class PDF_Retrieval(Process):
@@ -331,11 +331,12 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Starting GROBID service to extract metadata from PDFs"
         )
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
         for file in unlinked_pdfs:
             if file.stem not in records.keys():
 
-                TEI_INSTANCE = TEI(pdf_path=file)
+                TEI_INSTANCE = TEIParser(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:

@@ -405,13 +405,14 @@ class Search(Process):
 
     def search_backward(self, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
         print(params)
         print(feed_file)
         print(
@@ -439,7 +440,7 @@ class Search(Process):
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processReferences",
+                GROBID_SERVICE.GROBID_URL + "/api/processReferences",
                 files=dict(input=open(pdf_path, "rb")),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
@@ -627,10 +628,10 @@ class Search(Process):
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
-        from colrev_core.tei import TEI
-        from colrev_core.tei import TEI_Exception
+        from colrev_core.environment import TEIParser
+        from colrev_core.environment import TEI_Exception
         from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfinterp import resolve1
         from pdfminer.pdfparser import PDFParser
@@ -832,7 +833,8 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
         else:
             self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
@@ -895,11 +897,13 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(record) -> dict:
-            from colrev_core.environment import EnvironmentManager
+            from colrev_core.environment import EnvironmentManager, GrobidService
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
-            grobid_client.check_grobid_availability()
+
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.check_grobid_availability()
 
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
 
@@ -910,7 +914,7 @@ class Search(Process):
 
             # # https://github.com/kermitt2/grobid/issues/837
             # r = requests.post(
-            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
             #     headers={"Accept": "application/x-bibtex"},
             #     params=header_data,
             #     files=dict(input=open(pdf_path, "rb")),
@@ -931,7 +935,7 @@ class Search(Process):
             # print(f"Response: {r.text}")
             # return {}
 
-            TEI_INSTANCE = TEI(
+            TEI_INSTANCE = TEIParser(
                 pdf_path=pdf_path,
             )
 

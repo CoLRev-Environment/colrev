@@ -14,7 +14,6 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
-from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -412,7 +411,10 @@ class Loader(Process):
         return db.entries
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
         with open(file) as f:
             if file.suffix == ".md":
                 references = [line.rstrip() for line in f if "#" not in line[:2]]
@@ -426,7 +428,7 @@ class Loader(Process):
             options["consolidateCitations"] = "1"
             options["citations"] = ref
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processCitation",
+                GROBID_SERVICE.GROBID_URL + "/api/processCitation",
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -528,11 +530,14 @@ class Loader(Process):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def __pdf2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         # https://github.com/kermitt2/grobid/issues/837
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            GrobidService.GROBID_URL + "/api/processHeaderDocument",
             headers={"Accept": "application/x-bibtex"},
             params={"consolidateHeader": "1"},
             files=dict(input=open(file, "rb")),
@@ -558,10 +563,13 @@ class Loader(Process):
         return []
 
     def __pdfRefs2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processReferences",
+            GrobidService.GROBID_URL + "/api/processReferences",
             files=dict(input=open(file, "rb")),
             data={"consolidateHeader": "0", "consolidateCitations": "1"},
             headers={"Accept": "application/x-bibtex"},
@@ -653,6 +661,7 @@ class Loader(Process):
         return None
 
     def __convert_to_bib(self, sfpath: Path) -> Path:
+        from colrev_core.environment import GrobidService
 
         corresponding_bib_file = sfpath.with_suffix(".bib")
 
@@ -671,7 +680,8 @@ class Loader(Process):
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
             self.REVIEW_MANAGER.logger.info("Start grobid")
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
