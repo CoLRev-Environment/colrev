@@ -941,7 +941,7 @@ class ReviewManager:
             report = report.rstrip(" \\\n") + "\n"
             try:
                 last_commit_sha = self.REVIEW_DATASET.get_last_commit_sha()
-                report = report + f"   On git repo with version {last_commit_sha}\n"
+                report = report + f"   On commit {last_commit_sha}\n"
             except ValueError:
                 pass
 
