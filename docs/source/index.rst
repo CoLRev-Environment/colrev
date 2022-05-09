@@ -8,13 +8,13 @@ Collaborative Literature Reviews
    :alt: Logo
 
 CoLRev is an open-source environment for collaborative reviews.
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated annotations, CoLRev innovates in key areas:
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated content, CoLRev innovates in key areas:
 
 - leveraging the transparent collaboration model of **git** for the entire literature review process
-- desigining a **fault-tolerant, configurable, and self-explanatory** workflow
-- implementing a comprehensive **data provenance** model and a **robust identification** scheme
-- incorporating **state-of-the-art algorithms** to provide end-to-end process support
+- desigining a **self-explanatory, fault-tolerant, and configurable** user workflow
 - creating an extensible ecosystem of **file-based interfaces** following open data standards
+- implementing a **granular data provenance** model and a **robust identification** scheme
+- incorporating **state-of-the-art algorithms** to provide end-to-end process support
 - fostering **typological pluralism** through different forms of data analysis
 - advancing a built-in model for **content curation** and reuse
 
@@ -30,7 +30,7 @@ After `installing CoLRev <guides/manual.html#installation>`_, use the command-li
 The status command displays the current state of the review and guides you to the next steps (`CoLRev operations <guides/manual.html>`_).
 After each operation, `check the changes <guides/manual.html#analyze-changes>`_ to complete the three-step cycle:
 
-.. figure:: ../figures/workflow-simple.svg
+.. figure:: ../figures/workflow.svg
    :width: 400
    :align: center
    :alt: Workflow cycle
@@ -98,7 +98,7 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 
 .. toctree::
    :hidden:
-   :maxdepth: 1
+   :maxdepth: 2
    :caption: Guidelines
 
    guides/manual

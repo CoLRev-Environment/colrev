@@ -21,3 +21,14 @@ colrev\_core.paper
       :nosignatures:
 
       Paper
+
+
+
+
+
+   .. rubric:: Exceptions
+
+   .. autosummary::
+      :toctree:
+
+      NoPaperEndpointRegistered

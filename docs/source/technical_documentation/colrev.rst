@@ -4,93 +4,103 @@ The CoLRev Framework
 
 The Collaborative Literature Reviews (CoLRev) framework provides a standardized environment, an extensible core engine, and a reference implementation for conducting highly collaborative reviews with a team of researchers and state-of-the-art algorithms.
 
-This document consists of the following sections:
-
-- :any:`definitions`
-- :any:`assumptions`
+- :any:`preliminaries`
+- :any:`git_lr`
+- :any:`user_workflow`
+- :any:`ecosystem_data_standards`
+- :any:`provenance_model`
+- :any:`algorithms`
+- :any:`typological_plurism`
+- :any:`curation_model`
 - :any:`architecture`
-- :any:`Generic user workflow`
-- :any:`Shared model for the steps of the review process`
-- :any:`Standardized data structures`
-- :any:`Versioning and collaboration principles`
-- :any:`Reuse`
-- :any:`Guiding principles`
 
-.. _definitions:
+..
+   Note : this page should mirror the areas of innovation (first page)
 
-Definitions
+.. _preliminaries:
+
+Preleminaries
 ---------------
+
+Definitions:
 
 A **literature review** is a collaborative process involving researcher-crowd-machine ensembles, which takes records (search results in the form of metadata) and full-text documents as qualitative, semi-structured input to develop a synthesis. The result can take different forms, including codified standalone review papers, published web repositories, or a locally curated living reviews.
 
-.. _assumptions:
+Guiding principles
 
-Assumptions
-------------
+- **Fit**: adaptability/configurability: research goals, type of review, methodological coherence, disciplines, expertise of users - design for humans/self-explanatory
+- **Rigor**: selection and improvement of the best algorithms, transparency of changes, suggesting rigorous defaults, reporting is at the discretion of users
+- **Openness**: related to data, software and users - especially design for reuse of curated data, of the best algorithms, of prior reviews (each project should enable the broadest extent of reuse scenarios, ideally even those that were not anticipated at the time of publication)
 
-Processes generating the metadata, references, full-text documents are inherently decentralized and error prone, and, as a result, each record (metadata or PDF) can have multiple **data quality issues**.
-For example, there can be errors in the reference sections of primary papers, in the database indices, or in the machine-readability of PDFs.
-As a direct implication, metadata and PDFs, like data in any other research method, require dedicated preparation steps.
+..
+   Open source software (facilitate competition without lock-in, extensibility)
+   Leverage powerful tools and libraries (benefit from their ongoing improvements)
+   Integration with other tools/environments
+   Transparency
+   Design for humans (set reasonable defaults that are in line with a systematic approach, make commands and code self-explanatory, human processing time is valuable - prefer supervised execution and correction of algorithms to highly labor-intensive manual editing when algorithm performance is reasonably high, make it easy to identify, trace and correct errors in the project and at source)
 
-There is **variance in how accurately authors, crowds and algorithms perform** (e.g., performance of duplicate detection algorithms or disagreements in the screening process).
-As an implication, control of process reliability (and constant improvement of algorithms) is needed, which requires transparency of atomic changes.
-As an implication of error-prone data generation processes and variance in processing accuracy, efficient error-tracing and debugging functionality must be built-in.
+   Assumptions:
 
-With ever growing volumes and heterogeneity of research, there is a growing **need to allocate efforts rationally and evidence-based**.
-Literature reviews, in their current form, do not effectively leverage data from prior reviews (e.g., in the duplicate detection process, the preparation of metadata and PDFs, or the classification of documents).
-As an implication, a clear vision for effectively leveraging evidence and establishing reuse paths (e.g., crowdsourcing) is needed.
+   Processes generating the metadata, references, full-text documents are inherently decentralized and error prone, and, as a result, each record (metadata or PDF) can have multiple **data quality issues**.
+   For example, there can be errors in the reference sections of primary papers, in the database indices, or in the machine-readability of PDFs.
+   As a direct implication, metadata and PDFs, like data in any other research method, require dedicated preparation steps.
 
-Efficient and transparent access to changes is of critical importance to:
+   There is **variance in how accurately authors, crowds and algorithms perform** (e.g., performance of duplicate detection algorithms or disagreements in the screening process).
+   As an implication, control of process reliability (and constant improvement of algorithms) is needed, which requires transparency of atomic changes.
+   As an implication of error-prone data generation processes and variance in processing accuracy, efficient error-tracing and debugging functionality must be built-in.
 
-- develop confidence in the review process
-- communicate and justify the trustworthiness of the results
-- improve individual contributions (e.g., train research assistants, to validate algorithms)
-- be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
-- efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
+   With ever growing volumes and heterogeneity of research, there is a growing **need to allocate efforts rationally and evidence-based**.
+   Literature reviews, in their current form, do not effectively leverage data from prior reviews (e.g., in the duplicate detection process, the preparation of metadata and PDFs, or the classification of documents).
+   As an implication, a clear vision for effectively leveraging evidence and establishing reuse paths (e.g., crowdsourcing) is needed.
 
-.. figure:: ../../figures/macro_framework.svg
-   :alt: Macro framework
+   Efficient and transparent access to changes is of critical importance to:
 
-.. _architecture:
+   - develop confidence in the review process
+   - communicate and justify the trustworthiness of the results
+   - improve individual contributions (e.g., train research assistants, to validate algorithms)
+   - be in a position to identify and remove contributions of individuals (algorithms or researchers) in case systematic errors are introduced
+   - efficiently extract data on individual steps (e.g., deduplication) for reuse (e.g., crowdsourcing)
 
-Architecture
----------------------
-
-CoLRev relies on a modular and extensible platform. It consists of the following components:
-
-- `CoLRev-core`_: a platform engine operating the CoLRev framework and a reference implementation covering each step of the process
-- `CoLRev`_: a command-line interface offering convenient and user-friendly access to the reference implementation (see `manual <../guides/manual.html>`_)
-- `CoLRev-hooks`_ : a pre-commit hooks allowing the platform engine to validate compliance with CoLRev
-
-Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <../guides/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+   .. figure:: ../../figures/macro_framework.svg
+      :alt: Macro framework
 
 
-The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
-Essentially, the ReviewManager operates in three modes:
+.. _git_lr:
 
-- Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
-- Supervised: ReviewManager is notified before a process is started, usually interactive processes requiring frequent user input (e.g., screening)
-- Consulted: ReviewManager is called after files have been modified and checked for consistency (e.g., writing the synthesis)
+Git for literature reviews
+----------------------------------------------
 
-In addition, the ReviewManager keeps a detailed `report <../guides/changes.html#git-commit-report>`_ of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset.
+leveraging the transparent collaboration model of git for the entire literature review process
 
-.. _Generic user workflow:
+Established frameworks for reproducible research using git do not apply to literature reviews:
 
-Generic user workflow
--------------------------
+  - **Dynamics**: Common notions of raw/immutable input data do not apply. In literature reviews, data and interpretations evolve dynamically throughout the process.
+  - **Non-determinism**: Common notions of deterministic computational processing operations do not apply. In literature reviews, processing operations are often manual, rely on external (changing) data sources and are inherently non-deterministic.
+  - **Atomicity**: Common notions of processing the dataset as a whole are insufficient, i.e., the in-memory-processing model, as exemplified by the tidyverse pipe operators, does not apply. In literature reviews, processing occurs on a per-paper basis, requiring validation and (potentially) corrections on a more granular level.
+  - **Structure**: Common notions of data as structured lists-of-unique-observations do not apply. In literature reviews, search results (metadata) are retrieved redundantly from multiple sources (to compensate for imperfect coverage/errors in the retrieval procedures) and associations between structured metadata and semi-structured full-text documents can form complex, layered graphs.
 
-In its basic form, the workflow consists of iteratively calling ```colrev status``` > ```colrev [process]``` > ```git [process]```
-It is self-explanatory with ```colrev status``` recommending the next ```colrev [process]``` or ```git [process]```
 
-.. figure:: ../../figures/workflow-cycle.svg
-   :width: 700
-   :alt: Workflow cycle
+Versioning and collaboration principles
 
-.. _Shared model for the steps of the review process:
+- CoLRev builds on git as the most capable collaborative versioning system currently available.
+- Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
+- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
+- A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
+- A commit corresponds to an individual processing step
+- Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
+- Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether robots or researchers edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify).
+- One-branch principle (do not consider branching in the pipeline (yet??))
+- Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
+- Git versions should be frequent but also well thought-through and checked/reviewed
+- Committed changes should be as small as possible for collaboration/merging purposes (also for checking/restoring)
+- Scripts should add their changes to the index
+
+A key lessons from the tidyverse (R) is that a shared philosophy of the data is instrumental for collaboration, as well as the application and development of functionality provided by complementary packages.
+
+The notion of atomic processing of individual records underlines the need for a shared model of the review process.
+Such a state model will shape the data structures, the processing operations and workflow and the content curation.
 
 Shared model for the steps of the review process
--------------------------------------------------------------------
 
 Effectively synchronizing work across teams of researchers, applying algorithms, and incorporating crowd-sourced changes requires a model defining a shared understanding of the review process.
 The model is enforced by the platform engine and the command-line interface provides convenience access to the reference implementation.
@@ -102,10 +112,30 @@ Key considerations are documented in the guides for the reference implementation
    :width: 700
    :alt: Overview of states
 
-.. _Standardized data structures:
 
-Standardized data structures
----------------------------------
+
+.. _user_workflow:
+
+The user workflow model
+----------------------------------------------
+
+desigining a self-explanatory, fault-tolerant, and configurable user workflow
+
+
+In its basic form, the workflow consists of iteratively calling ```colrev status``` > ```colrev [process]``` > ```git [process]```
+It is self-explanatory with ```colrev status``` recommending the next ```colrev [process]``` or ```git [process]```
+
+.. figure:: ../../figures/workflow.svg
+   :width: 400
+   :align: center
+   :alt: Workflow cycle
+
+.. _ecosystem_data_standards:
+
+Ecosystem and data standards
+----------------------------------------------
+
+creating an extensible ecosystem of file-based interfaces following open data standards
 
 The CoLRev framework is based on an opinionated and scientifically grounded selection of data structures, file-paths and operating principles.
 Ideally, constraining the set of possible data formatting and storage options improves workflow efficiency (because tools and researchers share the same philosophy of data) freeing time and mental energy for literature analysis and synthesis.
@@ -160,28 +190,33 @@ BibTeX:
 .. _CoLRev-hooks: https://github.com/geritwagner/colrev-hooks
 .. _CoLRev-extensions: https://github.com/topics/colrev-extension
 
-.. _Versioning and collaboration principles:
+.. _provenance_model:
 
-Versioning and collaboration principles
---------------------------------------------------
+The data provenance model
+----------------------------------------------
 
-- CoLRev builds on git as the most capable collaborative versioning system currently available.
-- Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
-- Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
-- A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
-- A commit corresponds to an individual processing step
-- Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
-- Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether robots or researchers edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify).
-- One-branch principle (do not consider branching in the pipeline (yet??))
-- Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
-- Git versions should be frequent but also well thought-through and checked/reviewed
-- Committed changes should be as small as possible for collaboration/merging purposes (also for checking/restoring)
-- Scripts should add their changes to the index
+implementing a granular data provenance model and a robust identification scheme
 
-.. _Reuse:
+.. _algorithms:
 
-Reuse
---------------------------------------------------
+State-of-the-art algorithms
+----------------------------------------------
+
+incorporating state-of-the-art algorithms to provide end-to-end process support
+
+.. _typological_plurism:
+
+Typological pluralism
+----------------------------------------------
+
+fostering typological pluralism through different forms of data analysis
+
+.. _curation_model:
+
+The content curation model
+----------------------------------------------
+
+advancing a built-in model for content curation and reuse
 
 Reuse of community-curated data is a built-in feature of CoLRev, aimed at saving efforts across projects as well as increasing accuracy and richness of the process.
 Per default, every CoLRev repository that is registered locally makes its data accessible to all other local repositories.
@@ -204,13 +239,27 @@ This includes:
 
 The colrev_cml_assistant extension provides an environment supporting researchers in curating shared repositories based on crowdsourcing and machine-learning.
 
-.. _Guiding principles:
 
-Guiding principles
+.. _architecture:
+
+Architecture
 ---------------------
 
-- Open source software (facilitate competition without lock-in, extensibility)
-- Leverage powerful tools and libraries (benefit from their ongoing improvements)
-- Integration with other tools/environments
-- Transparency
-- Design for humans (set reasonable defaults that are in line with a systematic approach, make commands and code self-explanatory, human processing time is valuable - prefer supervised execution and correction of algorithms to highly labor-intensive manual editing when algorithm performance is reasonably high, make it easy to identify, trace and correct errors in the project and at source)
+CoLRev relies on a modular and extensible platform. It consists of the following components:
+
+- `CoLRev-core`_: a platform engine operating the CoLRev framework and a reference implementation covering each step of the process
+- `CoLRev`_: a command-line interface offering convenient and user-friendly access to the reference implementation (see `manual <../guides/manual.html>`_)
+- `CoLRev-hooks`_ : a pre-commit hooks allowing the platform engine to validate compliance with CoLRev
+
+Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
+Extensions are available in the `extensions section <../guides/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+
+
+The **ReviewManager**, as the main interface to the CoLRev engine, supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
+Essentially, the ReviewManager operates in three modes:
+
+- Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
+- Supervised: ReviewManager is notified before a process is started, usually interactive processes requiring frequent user input (e.g., screening)
+- Consulted: ReviewManager is called after files have been modified and checked for consistency (e.g., writing the synthesis)
+
+In addition, the ReviewManager keeps a detailed `report <../guides/changes.html#git-commit-report>`_ of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset.
