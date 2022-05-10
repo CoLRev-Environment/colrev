@@ -21,7 +21,6 @@ colrev\_core.data.Data
       ~Data.authorship_heuristic
       ~Data.check_new_record_source_tag
       ~Data.check_precondition
-      ~Data.enlit_heuristic
       ~Data.get_data_extracted
       ~Data.get_data_page_missing
       ~Data.get_record_ids_for_synthesis
@@ -30,6 +29,7 @@ colrev\_core.data.Data
       ~Data.get_to_synthesize_in_manuscript
       ~Data.main
       ~Data.profile
+      ~Data.reading_heuristics
       ~Data.retrieve_default_csl
       ~Data.retrieve_default_word_template
       ~Data.retrieve_package_file

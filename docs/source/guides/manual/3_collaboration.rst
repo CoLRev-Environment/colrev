@@ -1,12 +1,6 @@
 
-3. Collaboration and Curation
+3. Collaboration
 ==================================
-
-
-.. _Collaboration:
-
-Collaboration
--------------------------
 
 Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
 
@@ -56,18 +50,3 @@ To override this rule, experts can use the configuration to set the SHARE_STAT_R
 When a git merge conflict occurs, a git diff tool (e.g., `Github client <https://desktop.github.com/>`_) can be useful to resolve the conflict.
 It asks the user to resolve the issue (select what should be retained by modifying the file accordingly) and inserts merge conflict markers in the file to stop the merge process.
 Using a diff tool, you can select which version should be retained.
-
-.. _Curated repositories:
-
-Curation
----------------------------------------------
-
-Literature reviews are much more efficient, accurate, and rich if you rely on curated community repositories (e.g., reuse of prepared metadata, duplicate matchings, PDF hashes).
-Search available curations on `GitHub <https://github.com/topics/colrev-curation>`_, add curated repositories, and help create a reuse-index:
-
-.. code-block:: bash
-
-      colrev env --install https://github.com/u_name/repo_name
-      colrev env --index
-
-See `reuse of community-curated data <../technical_documentation/colrev.html#reuse>`_ for details.

@@ -34,8 +34,10 @@ CoLRev is implemented in Python and should be compatible with Windows, MacOS, an
 
    manual/2_operations
 
-   manual/3_collaboration_curation
+   manual/3_collaboration
 
-   manual/4_appendix
+   manual/4_curation
+
+   manual/A_appendix
 
 The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.
