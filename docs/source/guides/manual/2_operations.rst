@@ -408,9 +408,9 @@ Depending on the data format, the :program:`colrev data` command
 
     Generate a sample profile.
 
-.. option:: --enlit
+.. option:: --reading_heuristics
 
-    Calculate ENLIT heuristic (intra-corpus influence) to prioritize reading (see [WagnerEtAl2020]_).
+    Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see [WagnerEtAl2020]_).
 
 .. _Paper:
 

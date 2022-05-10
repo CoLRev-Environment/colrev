@@ -425,7 +425,7 @@ class Data(Process):
 
         return records
 
-    def enlit_heuristic(self):
+    def reading_heuristics(self):
 
         enlit_list = []
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
