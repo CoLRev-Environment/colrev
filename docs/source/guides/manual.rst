@@ -12,42 +12,8 @@ Our goal is to provide a manual that is self-contained. Yet, it can help to be f
 
 The manual is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_ and endorses the `Code of Conduct <https://www.contributor-covenant.org/version/2/0/code_of_conduct/>`_ for contributions.
 
-..
-    Installation:
 
-    - :std:ref:`Installation`
-    - :std:ref:`Settings`
-
-    Workflow:
-
-    - :std:ref:`CoLRev status`
-    - :std:ref:`Analyze changes`
-    - :std:ref:`Curated repositories`
-
-    Processing operations:
-
-    - :std:ref:`Init` and settings
-    - :std:ref:`Search`
-    - :std:ref:`Load`
-    - :std:ref:`Prepare`
-    - :std:ref:`Dedupe`
-    - :std:ref:`Prescreen`
-    - :std:ref:`PDF get`
-    - :std:ref:`PDF prep`
-    - :std:ref:`Screen`
-    - :std:ref:`Data`
-    - :std:ref:`Paper`
-
-
-    Collaboration:
-
-    - :std:ref:`Collaboration`
-
-
-    Appendix:
-
-    - :std:ref:`Extensions`
-
+TBD: should the collaboration/curation come after the workflow/operations?
 
 .. toctree::
    :maxdepth: 2
@@ -55,8 +21,10 @@ The manual is available under the `Creative Commons Attribution-NonCommercial-No
 
    manual/1_installation_settings
 
-
    manual/2_workflow
-   manual/2_1_workflow_status
 
    manual/3_operations
+
+   manual/4_collaboration_curation
+
+   manual/5_appendix

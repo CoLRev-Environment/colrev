@@ -1,6 +1,0 @@
-
-CoLRev operations - Init
-==================================
-
-
-TODO
