@@ -1,11 +1,11 @@
 
-Collaboration and Curation
+3. Collaboration and Curation
 ==================================
 
 
 .. _Collaboration:
 
-Collaborate in a team
+Collaboration
 -------------------------
 
 Collaborative reviews based on a shared git repository (repositories can be hosted on `GitHub <https://docs.github.com/en/get-started/quickstart/create-a-repo>`_ or other git hosting services)
@@ -59,7 +59,7 @@ Using a diff tool, you can select which version should be retained.
 
 .. _Curated repositories:
 
-Curated repositories
+Curation
 ---------------------------------------------
 
 Literature reviews are much more efficient, accurate, and rich if you rely on curated community repositories (e.g., reuse of prepared metadata, duplicate matchings, PDF hashes).

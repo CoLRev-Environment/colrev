@@ -245,6 +245,12 @@ The colrev_cml_assistant extension provides an environment supporting researcher
 Architecture
 ---------------------
 
+
+.. figure:: ../../figures/architecture.svg
+    :align: center
+    :figwidth: 800px
+
+
 CoLRev relies on a modular and extensible platform. It consists of the following components:
 
 - `CoLRev-core`_: a platform engine operating the CoLRev framework and a reference implementation covering each step of the process

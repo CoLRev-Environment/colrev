@@ -1,5 +1,5 @@
 
-Operations
+2. Operations
 ==================================
 
 TODO : add introductory paragraph and reduce options (link to the cli reference)
@@ -15,21 +15,6 @@ Init
 
 	colrev init [options]
 
-.. program:: colrev init
-
-.. option:: --name
-
-    Name of the project
-
-.. option:: --curated_metadata
-
-    Use a template for curated metadata repositories.
-
-.. option:: --url
-
-    Url for the curated metadata repository.
-
-
 Once the repository is set up, you can share it with your team (see `instructions <best_practices.html#collaborate-in-a-team>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
@@ -37,6 +22,111 @@ Instead of initializing a new repository, you can also pull an existing one:
 .. code:: bash
 
 	colrev pull https://github.com/u_name/repo_name.git
+
+Settings
+
+.. code-block:: json
+
+      {
+      "project": {
+         "id_pattern": "THREE_AUTHORS_YEAR",
+         "review_type": "NA",
+         "share_stat_req":"processed",
+         "delay_automated_processing": true,
+         "curated_masterdata": false,
+         "curated_fields": []
+      },
+      "search": {"sources": []},
+      "load": {},
+      "prep": {
+         "fields_to_keep": [],
+         "prep_rounds": [
+            {
+                  "name": "exclusion",
+                  "similarity": 1.0,
+                  "scripts": [
+                     "exclude_non_latin_alphabets",
+                     "exclude_languages"
+                  ]
+            },
+            {
+                  "name": "high_confidence",
+                  "similarity": 0.99,
+                  "scripts": [
+                     "remove_urls_with_500_errors",
+                     "remove_broken_IDs",
+                     "global_ids_consistency_check",
+                     "prep_curated",
+                     "format",
+                     "resolve_crossrefs",
+                     "get_doi_from_urls",
+                     "get_masterdata_from_doi",
+                     "get_masterdata_from_crossref",
+                     "get_masterdata_from_dblp",
+                     "get_masterdata_from_open_library",
+                     "get_year_from_vol_iss_jour_crossref",
+                     "get_record_from_local_index",
+                     "remove_nicknames",
+                     "format_minor",
+                     "drop_fields",
+                     "update_metadata_status"
+                  ]
+            },
+            {
+                  "name": "medium_confidence",
+                  "similarity": 0.9,
+                  "scripts": [
+                     "prep_curated",
+                     "get_doi_from_sem_scholar",
+                     "get_doi_from_urls",
+                     "get_masterdata_from_doi",
+                     "get_masterdata_from_crossref",
+                     "get_masterdata_from_dblp",
+                     "get_masterdata_from_open_library",
+                     "get_year_from_vol_iss_jour_crossref",
+                     "get_record_from_local_index",
+                     "remove_nicknames",
+                     "remove_redundant_fields",
+                     "format_minor",
+                     "drop_fields",
+                     "update_metadata_status"
+                  ]
+            },
+            {
+                  "name": "low_confidence",
+                  "similarity": 0.8,
+                  "scripts": [
+                     "prep_curated",
+                     "correct_recordtype",
+                     "get_doi_from_sem_scholar",
+                     "get_doi_from_urls",
+                     "get_masterdata_from_doi",
+                     "get_masterdata_from_crossref",
+                     "get_masterdata_from_dblp",
+                     "get_masterdata_from_open_library",
+                     "get_year_from_vol_iss_jour_crossref",
+                     "get_record_from_local_index",
+                     "remove_nicknames",
+                     "remove_redundant_fields",
+                     "format_minor",
+                     "drop_fields",
+                     "update_metadata_status"
+                  ]
+            }
+         ]
+      },
+      "dedupe": {"merge_threshold": 0.8, "partition_threshold": 0.5},
+      "prescreen": {"plugin": null,
+                     "mode": null},
+      "pdf_get": {"pdf_path_type": "symlink"},
+      "pdf_prep": {},
+      "screen": {"process": {"overlapp": null,
+                  "mode": null,
+                  "parallel_independent": null},
+                  "criteria": []
+            },
+      "data": {"data_format": []}
+      }
 
 .. _Search:
 
@@ -54,10 +144,6 @@ Search
 .. code:: bash
 
 	colrev search [options]
-
-.. option:: --add TEXT
-
-    Add a new search query.
 
 .. code:: bash
 
@@ -84,7 +170,6 @@ Note:
 - The query syntax is based on `sqlite <https://www.sqlite.org/lang.html>`_ (pandasql). You can test and debug your queries `here <https://sqliteonline.com/>`_.
 - Journal ISSNs for crossref searches can be retrieved from the `ISSN Portal <https://portal.issn.org/>`_
 
-
 .. _Load:
 
 Load
@@ -104,12 +189,6 @@ Load
 .. code:: bash
 
 	colrev load [options]
-
-.. program: colrev load
-
-.. option:: --keep_ids, -k
-
-    Do not change the record IDs. Useful when importing an existing sample.
 
 Formats
 
@@ -142,48 +221,6 @@ Operating assumptions and principles:
 
 	colrev prep [options]
 
-.. program:: colrev prep
-
-.. option:: --similarity
-
-    Retrieval similarity threshold
-
-.. option:: --reprocess
-
-	Prepare all records with status md_needs_manual_preparation
-
-.. option:: --keep_ids
-
-	Do not change the record IDs. Useful when importing an existing sample.
-
-.. option:: --reset_records ID1,ID2,ID3
-
-    Reset record metadata of records ID1,ID2,ID3 to the imported version.
-
-.. option:: --reset_ids
-
-    Reset IDs that have been changed (to fix the sort order in MAIN_REFERENCES)
-
-.. option:: --set_ids
-
-    Generate and set IDs
-
-.. option:: --update
-
-    Update metadata (based on DOIs)
-
-.. option:: --polish
-
-    Polish the metadata without changing the record status.
-
-    Based on the enhanced TEIs, it conducts a frequency analysis of the reference sections and checks how included and synthesized papers are cited.
-    Titles and journals are set to the most frequent values.
-
-.. option:: --debug ID
-
-    Debug the preparation process to identify, trace and correct potential errors.
-
-
 When records cannot be prepared automatically, we recommend opening the references.bib with a reference manager (such as Jabref) and preparing the remaining records manually. For example, JabRef allows you to filter records for the *needs_manual_preparation* status:
 
 .. figure:: ../../../figures/man_prep_jabref.png
@@ -206,11 +243,6 @@ In addition, :program:`colrev prep-man` provides an interactive convenience func
 .. option:: --apply
 
     Apply manual preparation (csv)
-
-.. option:: --stats
-
-    Print statistics of records with status md_needs_manual_preparation
-
 
 
 Tracing and correcting errors
@@ -246,10 +278,6 @@ Dedupe
 .. option:: --fix_errors
 
     Load errors as highlighted in the spreadsheets (duplicates_to_validate.xlsx, non_duplicates_to_validate.xlsx) and fix them.
-
-.. option:: --retrain
-
-    Retrain the duplicate classifier (removing the training data and the model settings).
 
 .. figure:: ../../../figures/duplicate_validation.png
    :alt: Validation of duplicates
@@ -295,18 +323,6 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
 	colrev pdf-get [options]
 
-.. option:: --copy-to-repo
-
-    Copy PDFs to the repository (otherwise, links are created, but PDFs remain in their original locations)
-
-.. option:: --rename
-
-    Automatically rename PDFs (to their local IDs)
-
-.. option:: --relink_files ID1,ID2
-
-    Search for the PDF (based on the pdf_hash) and update the file link accordingly. Useful when PDFs are renamed or moved to subdirectories.
-
 Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, use `colrev config -s PDF_PATH_TYPE=COPY`
 
 :program:`colrev pdf-get-man` goes through the list of missing PDFs and asks the researcher to retrieve it:
@@ -335,26 +351,11 @@ PDF prep
 
 	colrev pdf-prep [options]
 
-.. option:: --update_hashes
-
-    Regenerate pdf_hashes
-
-.. option:: --reprocess
-
-    Prepare all PDFs again (pdf_needs_manual_preparation)
-
-..
-	--get_hashes : a convenience function
-
 When PDFs cannot be prepared automatically, :program:`colrev pdf-prep-man` provides an interactive convenience function.
 
 .. code:: bash
 
 	colrev pdf-prep-man [options]
-
-.. option:: --stats
-
-    Print statistics of records with status pdf_needs_manual_preparation
 
 .. _Screen:
 
@@ -410,9 +411,6 @@ Depending on the data format, the :program:`colrev data` command
 .. option:: --enlit
 
     Calculate ENLIT heuristic (intra-corpus influence) to prioritize reading (see [WagnerEtAl2020]_).
-
-..
-    copy-pdfs: a convenience function
 
 .. _Paper:
 

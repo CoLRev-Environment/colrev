@@ -21,10 +21,14 @@ To make major improvements in terms of efficiency and trustworthiness and to aut
 Getting started
 -----------------
 
-After `installing CoLRev <guides/manual.html#installation>`_, use the command-line interface
+After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_:
 
 .. code-block::
 
+   # Install
+   pip install colrev
+
+   # ... and start with the main command
    colrev status
 
 The status command displays the current state of the review and guides you to the next steps (`CoLRev operations <guides/manual.html>`_).
