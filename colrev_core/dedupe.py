@@ -379,9 +379,22 @@ class Dedupe(Process):
                 dupe_record = rec_ID2
 
             if same_source_merge(main_record, dupe_record):
-                # TODO: option: allow-same-source-merges
-                export_same_source_merge(main_record, dupe_record)
-                continue
+                if "apply" != self.REVIEW_MANAGER.settings.dedupe.same_source_merges:
+                    print(
+                        "Warning: applying same source merge: "
+                        f"{main_record} - {dupe_record}"
+                    )
+                elif (
+                    "prevent" == self.REVIEW_MANAGER.settings.dedupe.same_source_merges
+                ):
+                    export_same_source_merge(main_record, dupe_record)
+                    continue  # with next pair
+                else:
+                    print(
+                        "Invalid setting: dedupe.same_source_merges: "
+                        f"{self.REVIEW_MANAGER.settings.dedupe.same_source_merges}"
+                    )
+                    continue  # with next pair
 
             MAIN_RECORD = Record(main_record)
             MAIN_RECORD.merge(Record(dupe_record), default_source="merged")

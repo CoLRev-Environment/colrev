@@ -83,7 +83,11 @@
         }
     ]
   },
-  "dedupe": {"merge_threshold": 0.8, "partition_threshold": 0.5},
+"dedupe": {
+    "merge_threshold": 0.8,
+    "partition_threshold": 0.5,
+    "same_source_merges": "prevent"
+},
   "prescreen": {"plugin": null,
                 "mode": null},
   "pdf_get": {"pdf_path_type": "symlink"},

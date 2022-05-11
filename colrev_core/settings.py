@@ -93,6 +93,7 @@ class PrepConfiguration:
 class DedupeConfiguration:
     merge_threshold: float
     partition_threshold: float
+    same_source_merges: str  # TODO : "prevent" or "apply"
 
 
 # Prescreen
