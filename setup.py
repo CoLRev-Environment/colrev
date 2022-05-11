@@ -43,6 +43,7 @@ requirements = [
     "tqdm==4.61.1",
     "transitions==0.8.10",
     "timeout_decorator==0.5.0",
+    "zope.interface==5.4.0",
 ]
 # 'configparser>=5.0'
 

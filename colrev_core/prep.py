@@ -19,6 +19,7 @@ import dictdiffer
 import git
 import requests
 import requests_cache
+import zope.interface
 from alphabet_detector import AlphabetDetector
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
@@ -183,6 +184,11 @@ class PrepRecord(Record):
             else:
                 self.data["note"] = "withdrawn (according to DBLP)"
         return
+
+
+class PrepScript(zope.interface.Interface):
+    def prepare(self, x):
+        pass
 
 
 class Preparation(Process):
@@ -2487,6 +2493,22 @@ class Preparation(Process):
 
         return
 
+    def setup_custom_script(self) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, "template/custom_prep_script.py")
+        if filedata:
+            with open("custom_prep_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes("custom_prep_script.py")
+
+        prep_round = self.REVIEW_MANAGER.settings.prep.prep_rounds[-1]
+        prep_round.scripts.append("custom_prep_script")
+        self.REVIEW_MANAGER.save_settings()
+
+        return
+
     def main(
         self,
         keep_ids: bool = False,
@@ -2633,6 +2655,8 @@ class Preparation(Process):
             return prep_data
 
         def setup_prep_round(i, prep_round):
+            from zope.interface.verify import verifyObject
+
             if i == 0:
                 self.FIRST_ROUND = True
 
@@ -2658,6 +2682,7 @@ class Preparation(Process):
                     self._custom_prep_scripts[plugin_script] = importlib.import_module(
                         plugin_script, "."
                     ).CustomPrepare()
+                    verifyObject(PrepScript, self._custom_prep_scripts[plugin_script])
 
             list_module_scripts = [
                 s
@@ -2673,6 +2698,10 @@ class Preparation(Process):
 
                 # from inspect import getmembers, isfunction
                 # print(getmembers(plugin, isfunction))
+
+            # Note : we add the script automatically (not as part of the settings.json)
+            # because it must always be executed at the end
+            prep_round.scripts.append("update_metadata_status")
 
             # Note : can set selected prep scripts/rounds in the settings...
             # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:

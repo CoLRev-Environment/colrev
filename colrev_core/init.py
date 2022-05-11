@@ -118,7 +118,8 @@ class Initializer:
             + ".corrections\n"
             + ".ipynb_checkpoints/\n"
             + "pdfs\n"
-            + "requests_cache.sqlite"
+            + "requests_cache.sqlite\n"
+            + "__pycache__"
         )
         f.close()
         return

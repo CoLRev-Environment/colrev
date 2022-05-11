@@ -39,8 +39,7 @@
                 "get_record_from_local_index",
                 "remove_nicknames",
                 "format_minor",
-                "drop_fields",
-                "update_metadata_status"
+                "drop_fields"
             ]
         },
         {
@@ -59,8 +58,7 @@
                 "remove_nicknames",
                 "remove_redundant_fields",
                 "format_minor",
-                "drop_fields",
-                "update_metadata_status"
+                "drop_fields"
             ]
         },
         {
@@ -80,8 +78,7 @@
                 "remove_nicknames",
                 "remove_redundant_fields",
                 "format_minor",
-                "drop_fields",
-                "update_metadata_status"
+                "drop_fields"
             ]
         }
     ]

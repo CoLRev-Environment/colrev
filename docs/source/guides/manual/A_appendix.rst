@@ -136,18 +136,5 @@ Custom script extensions
 
 Store the following script in the project dir and include filename in settings
 
-.. code-block:: python
-
-   #!/usr/bin/env python3
-
-   class CustomPrepare:
-      @classmethod
-      def prepare(cls, PREP_RECORD):
-
-         PREP_RECORD.data["journal"] = PREP_RECORD.data["journal"].replace('MISQ', 'MIS Quarterly')
-
-         return PREP_RECORD
-
-
-   if __name__ == "__main__":
-      pass
+.. literalinclude:: ../../../../colrev_core/template/custom_prep_script.py
+   :language: python

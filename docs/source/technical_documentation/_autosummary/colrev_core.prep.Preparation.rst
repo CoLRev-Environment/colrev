@@ -53,6 +53,7 @@ colrev\_core.prep.Preparation
       ~Preparation.retrieve_md_from_url
       ~Preparation.retrieve_record_from_semantic_scholar
       ~Preparation.set_ids
+      ~Preparation.setup_custom_script
       ~Preparation.update_doi_md
       ~Preparation.update_masterdata_provenance
       ~Preparation.update_metadata_status
