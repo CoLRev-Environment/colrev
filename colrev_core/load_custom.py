@@ -181,26 +181,22 @@ def load_scopus_source(records: typing.List[dict]) -> typing.List[dict]:
 
 scripts: typing.List[typing.Dict[str, typing.Any]] = [
     {
-        "source_name": "AISeLibrary",
-        "source_url": "https://aisel.aisnet.org/",
+        "source_identifier": "https://aisel.aisnet.org/",
         "heuristic": ais_heuristic,
         "load_script": load_ais_source,
     },
     {
-        "source_name": "GoogleScholar",
-        "source_url": "googlescholar.com",
+        "source_identifier": "https://scholar.google.com/",
         "heuristic": gs_heuristic,
         "load_script": load_gs_source,
     },
     {
-        "source_name": "WebOfScience",
-        "source_url": "www.webofscience.com",
+        "source_identifier": "http://apps.webofknowledge.com/",
         "heuristic": wos_heuristic,
         "load_script": load_wos_source,
     },
     {
-        "source_name": "Scopus",
-        "source_url": "www.scopus.com",
+        "source_identifier": "http://www.scopus.com/",
         "heuristic": scopus_heuristic,
         "load_script": load_scopus_source,
     },

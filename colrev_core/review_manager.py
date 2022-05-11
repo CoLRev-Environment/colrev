@@ -1,26 +1,27 @@
 #!/usr/bin/env python3
-import ast
-import configparser
 import importlib
 import io
 import logging
-import multiprocessing as mp
 import os
 import pprint
 import re
+import shutil
 import sys
 import tempfile
 import typing
 from contextlib import redirect_stdout
+from dataclasses import asdict
+from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
-import shutil
 
 import git
 import yaml
+from dacite import from_dict
 
 from colrev_core import review_dataset
 from colrev_core.data import ManuscriptRecordSourceTagError
+from colrev_core.environment import EnvironmentManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import UnstagedGitChangesError
@@ -28,6 +29,7 @@ from colrev_core.review_dataset import DuplicatesError
 from colrev_core.review_dataset import FieldError
 from colrev_core.review_dataset import OriginError
 from colrev_core.review_dataset import PropagatedIDChange
+from colrev_core.settings import Configuration
 
 
 class ReviewManager:
@@ -39,7 +41,9 @@ class ReviewManager:
     """ReviewManager was notified for the upcoming process and
     will provide access to the ReviewDataset"""
 
-    def __init__(self, path_str: str = None, force_mode: bool = False) -> None:
+    def __init__(
+        self, path_str: str = None, force_mode: bool = False, debug_mode: bool = False
+    ) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
         self.force_mode = force_mode
@@ -52,9 +56,15 @@ class ReviewManager:
             self.path = Path.cwd()
 
         self.paths = self.__get_file_paths(self.path)
-        self.config = self.__load_config()
 
-        if self.config["DEBUG_MODE"]:
+        self.settings = self.load_settings()
+
+        if debug_mode:
+            self.DEBUG_MODE = True
+        else:
+            self.DEBUG_MODE = False
+
+        if self.DEBUG_MODE:
             self.report_logger = self.__setup_report_logger(logging.DEBUG)
             """Logger for the commit report"""
             self.logger = self.__setup_logger(logging.DEBUG)
@@ -63,41 +73,99 @@ class ReviewManager:
             self.report_logger = self.__setup_report_logger(logging.INFO)
             self.logger = self.__setup_logger(logging.INFO)
 
+        global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+        if 2 != len(global_git_vars):
+            logging.error("Global git variables (user name and email) not available.")
+            return
+        self.COMMITTER, self.EMAIL = global_git_vars
+
         self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
         self.REVIEW_DATASET = ReviewDataset(self)
         """The review dataset object"""
         self.sources = self.REVIEW_DATASET.load_sources()
         """Information on sources (search directory)"""
 
-        try:
-            self.config["DATA_FORMAT"] = ast.literal_eval(self.config["DATA_FORMAT"])
-        except ValueError:
-            self.logger.error(
-                f'Could not load DATA_FORMAT ({self.config["DATA_FORMAT"] }), '
-                "using fallback"
-            )
-            self.config["DATA_FORMAT"] = ["MANUSCRIPT"]
-            pass
-
-        if self.config["DEBUG_MODE"]:
+        if self.DEBUG_MODE:
             print("\n\n")
             self.logger.debug("Created review manager instance")
-            self.logger.debug(f" config: {self.pp.pformat(self.config)}")
+            self.logger.debug(f"Settings: {self.pp.pformat(self.settings)}")
+
+    def load_settings(self) -> Configuration:
+        import dacite
+        import json
+        import pkgutil
+
+        # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
+
+        # possible extension : integrate/merge global, default settings
+        # from colrev_core.environment import EnvironmentManager
+        # def selective_merge(base_obj, delta_obj):
+        #     if not isinstance(base_obj, dict):
+        #         return delta_obj
+        #     common_keys = set(base_obj).intersection(delta_obj)
+        #     new_keys = set(delta_obj).difference(common_keys)
+        #     for k in common_keys:
+        #         base_obj[k] = selective_merge(base_obj[k], delta_obj[k])
+        #     for k in new_keys:
+        #         base_obj[k] = delta_obj[k]
+        #     return base_obj
+        # print(selective_merge(default_settings, project_settings))
+
+        if not self.paths["SETTINGS"].is_file():
+            filedata = pkgutil.get_data(__name__, "template/settings.json")
+            if filedata:
+                settings = json.loads(filedata.decode("utf-8"))
+                with open(self.paths["SETTINGS"], "w", encoding="utf8") as file:
+                    json.dump(settings, file, indent=4)
+
+        with open(self.paths["SETTINGS"]) as f:
+            loaded_settings = json.load(f)
+
+        converters = {Path: Path, Enum: Enum}
+
+        # TODO : check validation
+        # (e..g, non-float values for prep/similarity do not through errors)
+
+        settings = from_dict(
+            data_class=Configuration,
+            data=loaded_settings,
+            config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
+        )
+
+        return settings
+
+    def save_settings(self) -> None:
+        import json
+
+        def custom_asdict_factory(data):
+            def convert_value(obj):
+                if isinstance(obj, Enum):
+                    return obj.value
+                if isinstance(obj, Path):
+                    return str(obj)
+                return obj
+
+            return {k: convert_value(v) for k, v in data}
+
+        exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
+        with open("settings.json", "w") as outfile:
+            json.dump(exported_dict, outfile, indent=4)
+        self.REVIEW_DATASET.add_changes("settings.json")
+
+        return
 
     def __get_file_paths(self, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
         main_refs = "references.bib"
         data = "data.csv"
         pdf_dir = "pdfs"
-        sources = "sources.yaml"
         paper = "paper.md"
-        shared_config = "shared_config.ini"
-        private_config = "private_config.ini"
         readme = "readme.md"
         report = "report.log"
         search_dir = "search"
         status = "status.yaml"
         corrections = ".corrections"
+        settings = "settings.json"
         return {
             "REPO_DIR": repository_dir,
             "MAIN_REFERENCES_RELATIVE": Path(main_refs),
@@ -106,14 +174,8 @@ class ReviewManager:
             "DATA": repository_dir.joinpath(data),
             "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
             "PDF_DIRECTORY": repository_dir.joinpath(pdf_dir),
-            "SOURCES_RELATIVE": Path(sources),
-            "SOURCES": repository_dir.joinpath(sources),
             "PAPER_RELATIVE": Path(paper),
             "PAPER": repository_dir.joinpath(paper),
-            "SHARED_CONFIG_RELATIVE": Path(shared_config),
-            "SHARED_CONFIG": repository_dir.joinpath(shared_config),
-            "PRIVATE_CONFIG_RELATIVE": Path(private_config),
-            "PRIVATE_CONFIG": repository_dir.joinpath(private_config),
             "README_RELATIVE": Path(readme),
             "README": repository_dir.joinpath(readme),
             "REPORT_RELATIVE": Path(report),
@@ -123,56 +185,9 @@ class ReviewManager:
             "STATUS_RELATIVE": Path(status),
             "STATUS": repository_dir.joinpath(status),
             "CORRECTIONS_PATH": repository_dir.joinpath(corrections),
+            "SETTINGS": repository_dir.joinpath(settings),
+            "SETTINGS_RELATIVE": Path(settings),
         }
-
-    def __load_config(self) -> dict:
-        local_config = configparser.ConfigParser()
-        confs = []
-        if self.paths["SHARED_CONFIG"].is_file():
-            confs.append(self.paths["SHARED_CONFIG"])
-        if self.paths["PRIVATE_CONFIG"].is_file():
-            confs.append(self.paths["PRIVATE_CONFIG"])
-        local_config.read(confs)
-
-        csl_fallback = (
-            "https://raw.githubusercontent.com/citation-style-language/"
-            + "styles/6152ccea8b7d7a472910d36524d1bf3557a83bfc/mis-quarterly.csl"
-        )
-
-        word_template_url_fallback = (
-            "https://raw.githubusercontent.com/geritwagner/templates/main/MISQ.docx"
-        )
-        config = dict(
-            DELAY_AUTOMATED_PROCESSING=local_config.getboolean(
-                "general", "DELAY_AUTOMATED_PROCESSING", fallback=True
-            ),
-            BATCH_SIZE=local_config.getint("general", "BATCH_SIZE", fallback=500),
-            SHARE_STAT_REQ=local_config.get(
-                "general", "SHARE_STAT_REQ", fallback="PROCESSED"
-            ),
-            CPUS=local_config.getint("general", "CPUS", fallback=mp.cpu_count() - 1),
-            EMAIL=local_config.get(
-                "general", "EMAIL", fallback=self.__email_fallback()
-            ),
-            GIT_ACTOR=local_config.get(
-                "general", "GIT_ACTOR", fallback=self.__actor_fallback()
-            ),
-            DEBUG_MODE=local_config.getboolean("general", "DEBUG_MODE", fallback=False),
-            DATA_FORMAT=local_config.get(
-                "general", "DATA_FORMAT", fallback='["MANUSCRIPT"]'
-            ),
-            ID_PATTERN=local_config.get(
-                "general", "ID_PATTERN", fallback="THREE_AUTHORS_YEAR"
-            ),
-            CSL=local_config.get("general", "CSL", fallback=csl_fallback),
-            WORD_TEMPLATE_URL=local_config.get(
-                "general", "WORD_TEMPLATE_URL", fallback=word_template_url_fallback
-            ),
-            PDF_PATH_TYPE=local_config.get(
-                "general", "PDF_PATH_TYPE", fallback="SYMLINK"
-            ),
-        )
-        return config
 
     def get_remote_url(self):
         git_repo = self.REVIEW_DATASET.get_repo()
@@ -317,6 +332,10 @@ class ReviewManager:
             return False
 
         def migrate_0_4_0(self) -> bool:
+            import pandas as pd
+            import yaml
+            import json
+            import pkgutil
 
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
@@ -336,11 +355,27 @@ class ReviewManager:
                         del record["excl_criteria"]
                     if "metadata_source" in record:
                         del record["metadata_source"]
-                    if "source_url" in record:
-                        record["colrev_masterdata"] = "CURATED:" + record["source_url"]
-                        del record["source_url"]
-                    else:
-                        record["colrev_masterdata"] = "ORIGINAL"
+
+                    if "colrev_masterdata" in record:
+                        if record["colrev_masterdata"] == "ORIGINAL":
+                            del record["colrev_masterdata"]
+                        else:
+                            record["colrev_masterdata_provenance"] = record[
+                                "colrev_masterdata"
+                            ]
+                            del record["colrev_masterdata"]
+
+                    if "curated_metadata" in str(self.path):
+                        if "colrev_masterdata_provenance" in record:
+                            if "CURATED" == record["colrev_masterdata_provenance"]:
+                                record["colrev_masterdata_provenance"] = ""
+
+                    # if "source_url" in record:
+                    #     record["colrev_masterdata"] = \
+                    #           "CURATED:" + record["source_url"]
+                    #     del record["source_url"]
+                    # else:
+                    #     record["colrev_masterdata"] = "ORIGINAL"
                     # Note : for curated repositories
                     # record["colrev_masterdata"] = "CURATED"
 
@@ -349,6 +384,85 @@ class ReviewManager:
 
             # Note: the order is important in this case.
             self.REVIEW_DATASET.update_colrev_ids()
+
+            if not Path("settings.json").is_file():
+                filedata = pkgutil.get_data(__name__, "template/settings.json")
+                if not filedata:
+                    print("error reading file")
+                    return False
+                settings = json.loads(filedata.decode("utf-8"))
+            else:
+                with open("settings.json") as f:
+                    settings = json.load(f)
+
+            old_sources_path = Path("sources.yaml")
+            if old_sources_path.is_file():
+                if old_sources_path.is_file():
+                    with open(old_sources_path) as f:
+                        sources_df = pd.json_normalize(yaml.safe_load(f))
+                        sources = sources_df.to_dict("records")
+                        print(sources)
+                for source in sources:
+                    if len(source["search_parameters"]) > 0:
+                        if "dblp" == source["search_parameters"][0]["endpoint"]:
+                            source["source_identifier"] = "{{dblp_key}}"
+                        elif "crossref" == source["search_parameters"][0]["endpoint"]:
+                            source[
+                                "source_identifier"
+                            ] = "https://api.crossref.org/works/{{doi}}"
+                        elif (
+                            "pdfs_directory"
+                            == source["search_parameters"][0]["endpoint"]
+                        ):
+                            source["source_identifier"] = "{{file}}"
+                        else:
+                            source["source_identifier"] = source["search_parameters"][
+                                0
+                            ]["endpoint"]
+
+                        source["search_parameters"] = source["search_parameters"][0][
+                            "params"
+                        ]
+                    else:
+                        source["search_parameters"] = ""
+                        source["source_identifier"] = source.get("source_url", "")
+
+                    if (
+                        source["comment"] != source["comment"]
+                        or "NA" == source["comment"]
+                    ):  # NaN
+                        source["comment"] = ""
+
+                    if "source_url" in source:
+                        del source["source_url"]
+                    if "source_name" in source:
+                        del source["source_name"]
+                    if "last_sync" in source:
+                        del source["last_sync"]
+
+                settings["search"]["sources"] = sources
+                with open("settings.json", "w") as outfile:
+                    json.dump(settings, outfile, indent=4)
+                print(settings)
+            if old_sources_path.is_file():
+                old_sources_path.unlink()
+                self.REVIEW_DATASET.remove_file(str(old_sources_path))
+            self.REVIEW_DATASET.add_setting_changes()
+
+            if Path("shared_config.ini").is_file():
+                Path("shared_config.ini").unlink()
+                self.REVIEW_DATASET.remove_file("shared_config.ini")
+            if Path("private_config.ini").is_file():
+                Path("private_config.ini").unlink()
+
+            if "curated_metadata" in str(self.path):
+                self.settings.project.curated_masterdata = True
+                self.settings.project.curated_fields = [
+                    "doi",
+                    "url",
+                    "dblp_key",
+                ]
+                self.save_settings()
 
             return True
 
@@ -376,7 +490,13 @@ class ReviewManager:
 
             updated = migration_script(self)
             if updated:
-                self.logger.info(f"Updated to: {current_version}")
+                self.logger.info(f"Updated to: {last_version}")
+            else:
+                self.logger.info("Nothing to do.")
+                self.logger.info(
+                    "If the update notification occurs again, run\n "
+                    "git commit -n -m --allow-empty 'update colrev'"
+                )
 
             # Note : the version in the commit message will be set to
             # the current_version immediately. Therefore, use the migrator['to'] field.
@@ -676,20 +796,22 @@ class ReviewManager:
         try:
 
             for check_script in check_scripts:
-                if [] == check_script["params"]:
-                    self.logger.debug(f'{check_script["script"].__name__}() called')
-                    check_script["script"]()
-                else:
-                    self.logger.debug(
-                        f'{check_script["script"].__name__}(params) called'
-                    )
-                    if type(check_script["params"]) == list:
-                        check_script["script"](*check_script["params"])
+                try:
+                    if [] == check_script["params"]:
+                        self.logger.debug(f'{check_script["script"].__name__}() called')
+                        check_script["script"]()
                     else:
-                        check_script["script"](check_script["params"])
-                self.logger.debug(f'{check_script["script"].__name__}: passed\n')
-        except PropagatedIDChange:
-            pass
+                        self.logger.debug(
+                            f'{check_script["script"].__name__}(params) called'
+                        )
+                        if type(check_script["params"]) == list:
+                            check_script["script"](*check_script["params"])
+                        else:
+                            check_script["script"](check_script["params"])
+                    self.logger.debug(f'{check_script["script"].__name__}: passed\n')
+                except PropagatedIDChange as e:
+                    print(e)
+                    pass
         except (
             MissingDependencyError,
             GitConflictError,
@@ -820,7 +942,7 @@ class ReviewManager:
             report = report.rstrip(" \\\n") + "\n"
             try:
                 last_commit_sha = self.REVIEW_DATASET.get_last_commit_sha()
-                report = report + f"   On git repo with version {last_commit_sha}\n"
+                report = report + f"   On commit {last_commit_sha}\n"
             except ValueError:
                 pass
 
@@ -1094,7 +1216,7 @@ class ReviewManager:
             self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
 
             hook_skipping = False
-            if not self.config["DEBUG_MODE"]:
+            if not self.DEBUG_MODE:
                 hook_skipping = True
 
             processing_report = ""
@@ -1107,8 +1229,8 @@ class ReviewManager:
                     "[('change', 'journal',",
                     "[('change', 'booktitle',",
                 ]
-                temp = tempfile.NamedTemporaryFile(mode='r+b', delete=False)
-                with open(self.paths["REPORT"], 'r+b') as f:
+                temp = tempfile.NamedTemporaryFile(mode="r+b", delete=False)
+                with open(self.paths["REPORT"], "r+b") as f:
                     shutil.copyfileobj(f, temp)
                 # self.paths["REPORT"].rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
@@ -1165,7 +1287,7 @@ class ReviewManager:
                 script = "apply_corrections"
 
             if manual_author:
-                git_author = git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"])
+                git_author = git.Actor(self.COMMITTER, self.EMAIL)
             else:
                 git_author = git.Actor(f"script:{script}", "")
             # TODO: test and update the following
@@ -1181,7 +1303,7 @@ class ReviewManager:
             self.REVIEW_DATASET.create_commit(
                 cmsg,
                 author=git_author,
-                committer=git.Actor(self.config["GIT_ACTOR"], self.config["EMAIL"]),
+                committer=git.Actor(self.COMMITTER, self.EMAIL),
                 hook_skipping=hook_skipping,
             )
 

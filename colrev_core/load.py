@@ -13,9 +13,7 @@ import requests
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
-from yaml import safe_load
 
-from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -31,54 +29,77 @@ class LoadRecord(Record):
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
+        # Initialize colrev_masterdata_provenance
         if "colrev_masterdata_provenance" in self.data:
             colrev_masterdata_provenance = self.load_masterdata_provenance()
         else:
-            colrev_masterdata_provenance = {}
+            source_identifier_string = self.data["colrev_source_identifier"]
+            marker = re.search(r"\{\{(.*)\}\}", source_identifier_string)
+            if marker:
+                marker_string = marker.group(0)
+                key = marker_string[2:-2]
 
-        # Note : only add provenance data for the fields with problems
-        # Implicitly, the other fields have source=original and no problems.
-        if "colrev_masterdata" not in self.data:
+                try:
+                    marker_replacement = self.data[key]
+                    source_identifier_string = source_identifier_string.replace(
+                        marker_string, marker_replacement
+                    )
+                except KeyError as e:
+                    print(e)
+                    pass
+
+            colrev_masterdata_provenance = {}
+            colrev_data_provenance = {}
+            for key in self.data.keys():
+                if key in Record.identifying_fields:
+                    colrev_masterdata_provenance[key] = {
+                        "source": source_identifier_string,
+                        "note": "",
+                    }
+                elif key not in Record.provenance_keys and key not in [
+                    "colrev_source_identifier",
+                    "ID",
+                    "ENTRYTYPE",
+                    "source_url",
+                ]:
+                    colrev_data_provenance[key] = {
+                        "source": source_identifier_string,
+                        "note": "",
+                    }
+
+            del self.data["colrev_source_identifier"]
+
+        if not self.masterdata_is_curated():
             required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
             for required_field in required_fields:
                 if required_field in self.data:
                     if percent_upper_chars(self.data[required_field]) > 0.8:
-                        colrev_masterdata_provenance[required_field] = {
-                            "source": "ORIGINAL",
-                            "note": "mostly upper case",
-                        }
+                        self.add_masterdata_provenance_hint(
+                            required_field, "mostly upper case"
+                        )
                 else:
                     self.data[required_field] = "UNKNOWN"
-            if "colrev_masterdata" not in self.data:
-                self.data["colrev_masterdata"] = "ORIGINAL"
 
         inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
         for inconsistent_field in inconsistent_fields:
             if inconsistent_field in self.data:
-                # TODO : really set to ORIGINAL?
-                if inconsistent_field in colrev_masterdata_provenance:
-                    add_info = (
-                        f", inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                    )
-                    colrev_masterdata_provenance[inconsistent_field]["note"] += add_info
-                else:
-                    colrev_masterdata_provenance[inconsistent_field] = {
-                        "source": "ORIGINAL",
-                        "note": (
-                            "inconsistent with entrytype " f"({self.data['ENTRYTYPE']})"
-                        ),
-                    }
+                inconsistency_hint = (
+                    f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                )
+                self.add_masterdata_provenance_hint(
+                    inconsistent_field, inconsistency_hint
+                )
+
         incomplete_fields = self.get_incomplete_fields()
         for incomplete_field in incomplete_fields:
-            if incomplete_field in colrev_masterdata_provenance:
-                add_info = ", incomplete"
-                colrev_masterdata_provenance[incomplete_field]["note"] += add_info
-            else:
-                colrev_masterdata_provenance[incomplete_field] = {
-                    "source": "ORIGINAL",
-                    "note": "incomplete",
-                }
+            self.add_masterdata_provenance_hint(incomplete_field, "incomplete")
 
+        defect_fields = self.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
+                self.add_masterdata_provenance_hint(defect_field, "quality_defect")
+
+        self.set_data_provenance(colrev_data_provenance)
         self.set_masterdata_provenance(colrev_masterdata_provenance)
         return
 
@@ -192,11 +213,18 @@ class Loader(Process):
                             self.REVIEW_MANAGER.logger.error(f"{ID} not imported")
                     line = f.readline()
 
-        search_records = self.__unify_field_names(search_records, filepath.name)
+        search_records = self.__apply_custom_load_script(search_records, filepath.name)
+
+        source_identifier = [
+            x.source_identifier
+            for x in self.REVIEW_MANAGER.settings.search.sources
+            if str(filepath.name) == str(x.filename)
+        ][0]
 
         record_list = []
         for record in search_records:
             record.update(colrev_origin=f"{filepath.name}/{record['ID']}")
+            record.update(colrev_source_identifier=source_identifier)
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
@@ -287,26 +315,24 @@ class Loader(Process):
 
         return record
 
-    def apply_source_heuristics(
-        self, new_record: dict, sfp: Path, original: Path
-    ) -> dict:
+    def apply_source_heuristics(self, original: Path) -> str:
         """Apply heuristics to identify source"""
+
         if str(original).endswith("_ref_list.bib"):
-            new_record["source_name"] = "PDF reference section"
+            return "PDF reference section"
         if original.suffix == ".pdf":
-            new_record["source_name"] = "PDF"
+            return "PDF"
         data = ""
         # TODO : deal with misleading file extensions.
         try:
             data = original.read_text()
         except UnicodeDecodeError:
             pass
-        for source in [x for x in load_custom.scripts if "heuristic" in x]:
-            if source["heuristic"](original, data):
-                new_record["source_name"] = source["source_name"]
-                break
+        for custom_load_script in [x for x in load_custom.scripts if "heuristic" in x]:
+            if custom_load_script["heuristic"](original, data):
+                return custom_load_script["source_identifier"]
 
-        return new_record
+        return "NA"
 
     def zotero_service_available(self) -> bool:
         import requests
@@ -385,7 +411,10 @@ class Loader(Process):
         return db.entries
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
         with open(file, encoding="utf8") as f:
             if file.suffix == ".md":
                 references = [line.rstrip() for line in f if "#" not in line[:2]]
@@ -399,7 +428,7 @@ class Loader(Process):
             options["consolidateCitations"] = "1"
             options["citations"] = ref
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processCitation",
+                GROBID_SERVICE.GROBID_URL + "/api/processCitation",
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -501,11 +530,14 @@ class Loader(Process):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def __pdf2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         # https://github.com/kermitt2/grobid/issues/837
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            GrobidService.GROBID_URL + "/api/processHeaderDocument",
             headers={"Accept": "application/x-bibtex"},
             params={"consolidateHeader": "1"},
             files=dict(input=open(file, "rb"), encoding="utf8"),
@@ -531,10 +563,13 @@ class Loader(Process):
         return []
 
     def __pdfRefs2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processReferences",
+            GrobidService.GROBID_URL + "/api/processReferences",
             files=dict(input=open(file, "rb"), encoding="utf8"),
             data={"consolidateHeader": "0", "consolidateCitations": "1"},
             headers={"Accept": "application/x-bibtex"},
@@ -561,31 +596,33 @@ class Loader(Process):
         self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
         return []
 
-    def __unify_field_names(
+    def __apply_custom_load_script(
         self, records: typing.List[dict], sfp: str
     ) -> typing.List[dict]:
 
-        SOURCES = self.REVIEW_MANAGER.paths["SOURCES"]
-        source_name = "NA"
-        with open(SOURCES, encoding="utf8") as f:
-            sources_df = pd.json_normalize(safe_load(f))
-            sources = sources_df.to_dict("records")
-            if sfp in [x["filename"] for x in sources]:
-                source_name = [
-                    x["source_name"] for x in sources if sfp == x["filename"]
-                ].pop()
+        sources = self.REVIEW_MANAGER.settings.search.sources
+        source_identifier = "NA"
+
+        if Path(sfp) in [x.filename for x in sources]:
+            source_identifier = [
+                x.source_identifier for x in sources if Path(sfp) == x.filename
+            ][0]
 
         # Note : field name corrections etc. that should be fixed before the preparation
         # stages should be source-specific (in the load_custom.scripts):
         # Note : if we do not unify (at least author/year), the IDs of imported records
         # will be AnonymousNoYear a,b,c,d,....
-        if source_name != "NA":
-            if source_name in [x["source_name"] for x in load_custom.scripts]:
-                source_details = [
-                    x for x in load_custom.scripts if source_name == x["source_name"]
-                ].pop()
-                if "load_script" in source_details:
-                    records = source_details["load_script"](records)
+        if source_identifier != "NA":
+            if source_identifier in [
+                x["source_identifier"] for x in load_custom.scripts
+            ]:
+                custom_load = [
+                    x
+                    for x in load_custom.scripts
+                    if source_identifier == x["source_identifier"]
+                ][0]
+                if "load_script" in custom_load:
+                    records = custom_load["load_script"](records)
 
         return records
 
@@ -624,6 +661,7 @@ class Loader(Process):
         return None
 
     def __convert_to_bib(self, sfpath: Path) -> Path:
+        from colrev_core.environment import GrobidService
 
         corresponding_bib_file = sfpath.with_suffix(".bib")
 
@@ -642,7 +680,8 @@ class Loader(Process):
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
             self.REVIEW_MANAGER.logger.info("Start grobid")
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
@@ -669,7 +708,9 @@ class Loader(Process):
             records = self.__fix_keys(records)
             records = self.__set_incremental_IDs(records)
 
-            records = self.__unify_field_names(records, corresponding_bib_file.name)
+            records = self.__apply_custom_load_script(
+                records, corresponding_bib_file.name
+            )
             records = self.__drop_empty_fields(records)
 
             if len(records) == 0:
@@ -775,12 +816,6 @@ class Loader(Process):
 
         return
 
-    def __add_sources(self) -> None:
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])
-        )
-        return
-
     def __get_currently_imported_origin_list(self) -> list:
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
         imported_origins = [x[1].split(";") for x in record_header_list]
@@ -809,7 +844,7 @@ class Loader(Process):
             del saved_args["keep_ids"]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.check_sources()
-        self.__add_sources()
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
         for search_file in self.get_search_files():
 
             corresponding_bib_file = self.__convert_to_bib(search_file)
@@ -877,9 +912,7 @@ class Loader(Process):
             if not combine_commits:
                 self.REVIEW_MANAGER.logger.info("Add changes and create commit")
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                str(self.REVIEW_MANAGER.paths["SOURCES"])
-            )
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
 

@@ -20,6 +20,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.add_data_provenance
       ~PrescreenRecord.add_masterdata_provenance
       ~PrescreenRecord.add_masterdata_provenance_hint
+      ~PrescreenRecord.add_provenance_all
       ~PrescreenRecord.complete_provenance
       ~PrescreenRecord.create_colrev_id
       ~PrescreenRecord.fuse_best_field
@@ -31,6 +32,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
       ~PrescreenRecord.get_provenance_field_source
+      ~PrescreenRecord.get_quality_defects
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
@@ -44,6 +46,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.merge
       ~PrescreenRecord.missing_fields
       ~PrescreenRecord.remove_accents
+      ~PrescreenRecord.remove_quality_defect_notes
       ~PrescreenRecord.reset_pdf_provenance_hints
       ~PrescreenRecord.set_data_provenance
       ~PrescreenRecord.set_fields_complete
@@ -64,6 +67,7 @@ colrev\_core.prescreen.PrescreenRecord
 
       ~PrescreenRecord.identifying_fields
       ~PrescreenRecord.pp
+      ~PrescreenRecord.preferred_sources
       ~PrescreenRecord.provenance_keys
       ~PrescreenRecord.record_field_inconsistencies
       ~PrescreenRecord.record_field_requirements

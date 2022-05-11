@@ -7,7 +7,6 @@ from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.customization import convert_to_unicode
 
-from colrev_core import grobid_client
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -21,7 +20,7 @@ class Distribute(Process):
         )
 
     def main(self, path_str: str, target: Path) -> None:
-        from colrev_core.tei import TEI
+        from colrev_core.environment import TEIParser, GrobidService
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path
@@ -43,8 +42,9 @@ class Distribute(Process):
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
-                grobid_client.start_grobid()
-                TEI_INSTANCE = TEI(
+                GROBID_SERVICE = GrobidService()
+                GROBID_SERVICE.start()
+                TEI_INSTANCE = TEIParser(
                     self.REVIEW_MANAGER,
                     path,
                 )
@@ -73,8 +73,7 @@ class Distribute(Process):
                     new_record = {
                         "filename": str(target_bib_file.name),
                         "search_type": "OTHER",
-                        "source_name": "Local import",
-                        "source_url": str(target_bib_file.name),
+                        "source_identifier": "Local import",
                         "search_parameters": "",
                         "comment": "",
                     }

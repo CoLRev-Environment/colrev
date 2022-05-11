@@ -27,12 +27,12 @@ from colrev_core.record import Record
 
 class Search(Process):
 
-    EMAIL = ""
     TIMEOUT = 10
 
     def __init__(
         self,
         REVIEW_MANAGER,
+        force_mode=False,
         notify_state_transition_process=True,
     ):
 
@@ -44,50 +44,45 @@ class Search(Process):
 
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
+        self.force_mode = force_mode
+
         self.PREPARATION = Preparation(
             REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         self.search_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
-                "search_endpoint": "dblp",
-                "source_url": "https://dblp.org/",
+                "source_identifier": "{{dblp_key}}",
                 "script": self.search_dblp,
                 "validate_params": self.validate_dblp_params,
                 "mode": "all",
             },
             {
-                "search_endpoint": "crossref",
-                "source_url": "https://crossref.org/",
+                "source_identifier": "https://api.crossref.org/works/{{doi}}",
                 "script": self.search_crossref,
                 "validate_params": self.validate_crossref_params,
                 "mode": "all",
             },
             {
-                "search_endpoint": "backward_search",
-                "source_url": "",
+                "source_identifier": "backward_search",
                 "script": self.search_backward,
                 "validate_params": self.validate_backwardsearch_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "project",
-                "source_url": "",
+                "source_identifier": "project",
                 "script": self.search_project,
                 "validate_params": self.validate_project_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "index",
-                "source_url": "",
+                "source_identifier": "index",
                 "script": self.search_index,
                 "validate_params": self.validate_index_params,
                 "mode": "individual",
             },
             {
-                "search_endpoint": "pdfs_directory",
-                "source_url": "",
+                "source_identifier": "{{file}}",
                 "script": self.search_pdfs_dir,
                 "validate_params": self.validate_pdfs_dir_params,
                 "mode": "individual",
@@ -239,7 +234,7 @@ class Search(Process):
         venue_abbrev = ""
 
         api_url = "https://dblp.org/search/publ/api?q="
-        headers = {"user-agent": f"{__name__}  (mailto:{self.EMAIL})"}
+        headers = {"user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         query = (
             venue_key.replace("journals/", "journal /").replace("conf/", "Conference /")
             + "+"
@@ -310,7 +305,7 @@ class Search(Process):
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
-            if len(records) > 100:
+            if len(records) > 100 and not self.force_mode:
                 start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
                 print(year)
@@ -332,6 +327,11 @@ class Search(Process):
                         self.REVIEW_MANAGER, notify_state_transition_process=False
                     )
                     for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
+                        if "colrev_data_provenance" in RETRIEVED_RECORD.data:
+                            del RETRIEVED_RECORD.data["colrev_data_provenance"]
+                        if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
+                            del RETRIEVED_RECORD.data["colrev_masterdata_provenance"]
+
                         retrieved = True
 
                         if (
@@ -352,9 +352,9 @@ class Search(Process):
                                 del RETRIEVED_RECORD.data["pages"]
                             available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
 
-                            RETRIEVED_RECORD.data["source_url"] = (
-                                RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
-                            )
+                            # RETRIEVED_RECORD.data["source_url"] = (
+                            #     RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
+                            # )
 
                             records = [
                                 {
@@ -365,6 +365,9 @@ class Search(Process):
                             ]
                             records.append(RETRIEVED_RECORD.data)
                             max_id += 1
+
+                    if not retrieved:
+                        break
 
                     # Note : we may have to set temporary IDs
                     # (and replace them after the following sort operation) ?!
@@ -388,9 +391,6 @@ class Search(Process):
                             bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
                         )
 
-                    if not retrieved:
-                        break
-
         except requests.exceptions.HTTPError:
             pass
         except UnicodeEncodeError:
@@ -405,13 +405,14 @@ class Search(Process):
 
     def search_backward(self, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
         print(params)
         print(feed_file)
         print(
@@ -439,7 +440,7 @@ class Search(Process):
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processReferences",
+                GROBID_SERVICE.GROBID_URL + "/api/processReferences",
                 files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
@@ -559,6 +560,9 @@ class Search(Process):
                 f"SELECT colrev_id FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
+            # TODO : update to opensearch standard
+            # https://github.com/opensearch-project/opensearch-py/issues/98
+            # see extract_references.py (methods repo)
             resp = LOCAL_INDEX.os.sql.query(body={"query": query})
             IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
 
@@ -624,10 +628,10 @@ class Search(Process):
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
-        from colrev_core.tei import TEI
-        from colrev_core.tei import TEI_Exception
+        from colrev_core.environment import TEIParser
+        from colrev_core.environment import TEI_Exception
         from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfinterp import resolve1
         from pdfminer.pdfparser import PDFParser
@@ -802,7 +806,7 @@ class Search(Process):
         if len(broken_filepaths) > 0:
             broken_filepath_str = "\n ".join(broken_filepaths)
             self.REVIEW_MANAGER.logger.error(
-                f'skipping PDFs with ";" in filepath: {broken_filepath_str}'
+                f'skipping PDFs with ";" in filepath: \n{broken_filepath_str}'
             )
             pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
 
@@ -829,7 +833,8 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
         else:
             self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
@@ -892,13 +897,15 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(record) -> dict:
-            from colrev_core.environment import EnvironmentManager
+            from colrev_core.environment import EnvironmentManager, GrobidService
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
-            grobid_client.check_grobid_availability()
 
-            pdf_path = self.REVIEW_MANAGER / Path(record["file"])
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.check_grobid_availability()
+
+            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
 
             # Note: activate the following when new grobid version is released (> 0.7)
             # Note: we have more control and transparency over the consolidation
@@ -907,7 +914,7 @@ class Search(Process):
 
             # # https://github.com/kermitt2/grobid/issues/837
             # r = requests.post(
-            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
             #     headers={"Accept": "application/x-bibtex"},
             #     params=header_data,
             #     files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
@@ -928,7 +935,7 @@ class Search(Process):
             # print(f"Response: {r.text}")
             # return {}
 
-            TEI_INSTANCE = TEI(
+            TEI_INSTANCE = TEIParser(
                 pdf_path=pdf_path,
             )
 
@@ -1016,8 +1023,6 @@ class Search(Process):
                 record = {k: v for k, v in record.items() if v is not None}
                 record = {k: v for k, v in record.items() if v != "NA"}
 
-                record["file"] = str(pdf_path.relative_to(self.REVIEW_MANAGER.path))
-
                 # add details based on path
                 record = update_fields_based_on_pdf_dirs(record)
 
@@ -1060,12 +1065,11 @@ class Search(Process):
 
             for pdf_path in pdf_batch:
                 new_records.append(index_pdf(pdf_path))
-            # if self.REVIEW_MANAGER.config["DEBUG_MODE"]:
-            # else:
-            #     # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
-            #     # p = Pool(ncpus=4)
-            #     # new_records = p.map(index_pdf, pdf_batch)
-            #     new_records = p_map(index_pdf, pdf_batch)
+            # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
+            # p = Pool(ncpus=4)
+            # new_records = p.map(index_pdf, pdf_batch)
+            # alternatively:
+            # new_records = p_map(index_pdf, pdf_batch)
 
             if 0 != len(new_records):
                 for new_r in new_records:
@@ -1108,9 +1112,9 @@ class Search(Process):
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
-    def parse_parameters(self, search_params: dict) -> dict:
+    def parse_parameters(self, search_params: str) -> dict:
 
-        query = search_params["params"]
+        query = search_params
         params = {}
         selection_str = query
         if "WHERE " in query:
@@ -1152,7 +1156,7 @@ class Search(Process):
             for scope_item in scope_part_str.split(" AND "):
                 key, value = scope_item.split("=")
                 if "url" in key:
-                    if "dblp" == search_params["endpoint"]:
+                    if "https://dblp.org/db/" in value:
                         params["scope"]["venue_key"] = (  # type: ignore
                             value.replace("/index.html", "")
                             .replace("https://dblp.org/db/", "")
@@ -1349,18 +1353,24 @@ class Search(Process):
             feed_file_path = Path.cwd() / Path("search") / Path(filename)
             assert not feed_file_path.is_file()
 
+            if "crossref" == source:
+                source = "https://api.crossref.org/works/{{doi}}"
+            elif "dblp" == source:
+                source = "{{dblp_key}}"
+
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
                 "filename": filename,
                 "search_type": "FEED",
-                "source_name": source,
-                "source_url": "",
-                "search_parameters": [{"endpoint": source, "params": selection}],
+                "source_identifier": source,
+                "search_parameters": selection,
                 "comment": "",
             }
             self.REVIEW_MANAGER.pp.pprint(source_details)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.append_sources(source_details)
+            self.REVIEW_MANAGER.sources.append(source_details)
+            self.REVIEW_MANAGER.save_settings()
+
             self.REVIEW_MANAGER.create_commit(
                 f"Add search source {filename}", saved_args=saved_args
             )
@@ -1370,35 +1380,49 @@ class Search(Process):
         return
 
     def update(self, selection_str: str) -> None:
+        from colrev_core.settings import SearchType
 
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        feed_paths = [x for x in sources if "FEED" == x["search_type"]]
-        for feed_item in feed_paths:
 
-            feed_file = Path.cwd() / Path("search") / Path(feed_item["filename"])
-            search_param = feed_item["search_parameters"][0]
-            if search_param["endpoint"] not in [
-                x["search_endpoint"] for x in self.search_scripts
+        feed_paths = [x for x in sources if SearchType.FEED == x.search_type]
+
+        if selection_str is not None:
+            if "all" != selection_str:
+                feed_paths_selected = [
+                    f
+                    for f in feed_paths
+                    if f.search_parameters[0].endpoint in selection_str.split(",")
+                ]
+            if len(feed_paths_selected) != 0:
+                feed_paths = feed_paths_selected
+            else:
+                available_options = ", ".join(
+                    [f.search_parameters[0].endpoint for f in feed_paths]
+                )
+                print(f"Error: {selection_str} not in {available_options}")
+                return
+
+        for feed_item in feed_paths:
+            feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
+
+            if feed_item.source_identifier not in [
+                x["source_identifier"] for x in self.search_scripts
             ]:
                 print(
-                    f'Endpoint not supported: {feed_item["search_endpoint"]} (skipping)'
+                    "Endpoint not supported:"
+                    f' {feed_item["source_identifier"]} (skipping)'
                 )
                 continue
-
-            if selection_str is not None:
-                if "all" != selection_str:
-                    if search_param["endpoint"] not in selection_str:
-                        continue
 
             script = [
                 s
                 for s in self.search_scripts
-                if s["search_endpoint"] == search_param["endpoint"]
+                if s["source_identifier"] == feed_item.source_identifier
             ][0]
-            params = self.parse_parameters(search_param)
+            params = self.parse_parameters(feed_item.search_parameters)
 
-            print(f"Retrieve from {search_param['endpoint']}: {params}")
+            print(f"Retrieve from {feed_item.source_identifier}: {params}")
 
             script["script"](params, feed_file)
 

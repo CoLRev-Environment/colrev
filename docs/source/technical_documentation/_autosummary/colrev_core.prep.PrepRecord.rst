@@ -21,6 +21,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.add_data_provenance
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_hint
+      ~PrepRecord.add_provenance_all
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
@@ -36,6 +37,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_origins
       ~PrepRecord.get_provenance_field_source
+      ~PrepRecord.get_quality_defects
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity
@@ -50,6 +52,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.merge
       ~PrepRecord.missing_fields
       ~PrepRecord.remove_accents
+      ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.reset_pdf_provenance_hints
       ~PrepRecord.set_data_provenance
       ~PrepRecord.set_fields_complete
@@ -70,6 +73,7 @@ colrev\_core.prep.PrepRecord
 
       ~PrepRecord.identifying_fields
       ~PrepRecord.pp
+      ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys
       ~PrepRecord.record_field_inconsistencies
       ~PrepRecord.record_field_requirements

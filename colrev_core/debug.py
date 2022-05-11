@@ -1,4 +1,3 @@
-import configparser
 import logging
 import pprint
 from pathlib import Path  # noqa F401
@@ -8,24 +7,6 @@ from colrev_core.review_manager import ReviewManager
 
 logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-
-
-def set_debug_mode(activate: bool) -> None:
-
-    config_path = Path("private_config.ini")
-    private_config = configparser.ConfigParser()
-    if config_path.is_file():
-        private_config.read(config_path)
-    if "general" not in private_config.sections():
-        private_config.add_section("general")
-    if activate:
-        private_config["general"]["debug_mode"] = "yes"
-    else:
-        private_config["general"]["debug_mode"] = "no"
-    with open(config_path, "w", encoding="utf8") as f:
-        private_config.write(f)
-
-    return
 
 
 def debug_load() -> None:
@@ -124,15 +105,16 @@ def debug_data():
 
 
 def debug_tei_tools(param) -> None:
-    from colrev_core.tei import TEI
-    from colrev_core import grobid_client
+    from colrev_core.environment import TEIParser
+    from colrev_core.environment import GrobidService
 
     logger.debug("Start grobid")
-    grobid_client.start_grobid()
+    GROBID_SERVICE = GrobidService()
+    GROBID_SERVICE.start()
     logger.debug("Started grobid")
 
     filepath = Path(param)
-    TEI_INSTANCE = TEI(pdf_path=filepath)
+    TEI_INSTANCE = TEIParser(pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
     return

@@ -151,7 +151,7 @@ class Sync:
             for element in added:
                 print(" - " + self.format_ref(element))
 
-            print(f"Loaded {len(self.non_unique_for_import)} papers")
+            print(f"Loaded {len(added)} papers")
 
         # Casting to string (in particular the RecordState Enum)
         records = [

@@ -471,7 +471,8 @@ class Dedupe(Process):
             if "MOVED_DUPE" in record:
                 del record["MOVED_DUPE"]
         for removed_duplicate in removed_duplicates:
-            del records[removed_duplicate]
+            if removed_duplicate in records:
+                del records[removed_duplicate]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -483,14 +484,14 @@ class Dedupe(Process):
         in all sources (for curated repositories)"""
 
         source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        source_names = [x["filename"] for x in source_details]
-        print("sources: " + ",".join(source_names))
+        source_filenames = [x.filename for x in source_details]
+        print("sources: " + ",".join(source_filenames))
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = {
             k: v
             for k, v in records.items()
-            if not all(x in v["colrev_origin"] for x in source_names)
+            if not all(x in v["colrev_origin"] for x in source_filenames)
         }
         if len(records) == 0:
             print("No records unmatched")
@@ -498,12 +499,12 @@ class Dedupe(Process):
 
         for record in records.values():
             origins = record["colrev_origin"].split(";")
-            for source_name in source_names:
-                if not any(source_name in origin for origin in origins):
-                    record[source_name] = ""
+            for source_filename in source_filenames:
+                if not any(source_filename in origin for origin in origins):
+                    record[source_filename] = ""
                 else:
-                    record[source_name] = [
-                        origin for origin in origins if source_name in origin
+                    record[source_filename] = [
+                        origin for origin in origins if source_filename in origin
                     ][0]
             record["merge_with"] = ""
 
@@ -630,7 +631,9 @@ class Dedupe(Process):
             self.REVIEW_MANAGER.logger.error("No file with potential errors found.")
         return
 
-    def cluster_tuples(self, deduper, partition_threshold, auto_merge_threshold):
+    def cluster_tuples(
+        self, deduper, partition_threshold: float = None, merge_threshold: float = None
+    ):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
@@ -640,6 +643,14 @@ class Dedupe(Process):
 
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
+
+        if merge_threshold is None:
+            merge_threshold = self.REVIEW_MANAGER.settings.dedupe.merge_threshold
+
+        if partition_threshold is None:
+            partition_threshold = (
+                self.REVIEW_MANAGER.settings.dedupe.partition_threshold
+            )
 
         self.REVIEW_MANAGER.report_logger.info(
             f"set partition_threshold: {partition_threshold}"
@@ -675,12 +686,12 @@ class Dedupe(Process):
         auto_dedupe = []
         ID_list = []
         self.REVIEW_MANAGER.report_logger.info(
-            f"set auto_merge_threshold: {auto_merge_threshold}"
+            f"set merge_threshold: {merge_threshold}"
         )
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:
-                if dedupe_decision["score"] > auto_merge_threshold:
+                if dedupe_decision["score"] > merge_threshold:
                     orig_rec = dedupe_decision["records"].pop()
                     ID_list.append(orig_rec)
                     if 0 == len(dedupe_decision["records"]):
@@ -800,7 +811,7 @@ class Dedupe(Process):
             vals.update(error="")
             cur_cluster_membership = cluster_membership[ID]
             vals.update(cur_cluster_membership)
-            if cur_cluster_membership["confidence_score"] > auto_merge_threshold:
+            if cur_cluster_membership["confidence_score"] > merge_threshold:
                 collected_duplicates.append(vals)
             else:
                 collected_non_duplicates.append(vals)
@@ -1106,7 +1117,8 @@ class Dedupe(Process):
         # self.REVIEW_MANAGER.pp.pprint(references.values())
         references = pd.DataFrame(references.values())
 
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
+        # TODO : simplify this function (e.g., batch size n no longer needed)
+        n = 100
         items_start = data["items_start"]
         it_len = len(data["queue"])
         batch_data = []

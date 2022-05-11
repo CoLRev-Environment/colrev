@@ -12,29 +12,15 @@ from pathlib import Path
 import bibtexparser
 import git
 import pandas as pd
-import yaml
 from bibtexparser.bibdatabase import BibDatabase
 from bibtexparser.bparser import BibTexParser
 from bibtexparser.bwriter import BibTexWriter
 from bibtexparser.customization import convert_to_unicode
-from yaml import safe_load
 
 from colrev_core.record import RecordState
 
 
 class ReviewDataset:
-
-    search_type_opts = [
-        "DB",
-        "TOC",
-        "BACK_CIT",
-        "FORW_CIT",
-        "PDFS",
-        "OTHER",
-        "FEED",
-        "COLREV_REPO",
-    ]
-
     def __init__(self, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
@@ -43,51 +29,8 @@ class ReviewDataset:
 
     def load_sources(self) -> list:
         """Load the source details"""
-        if self.REVIEW_MANAGER.paths["SOURCES"].is_file():
-            with open(self.REVIEW_MANAGER.paths["SOURCES"], encoding="utf8") as f:
-                sources_df = pd.json_normalize(safe_load(f))
-                sources = sources_df.to_dict("records")
-        else:
-            self.REVIEW_MANAGER.logger.debug(
-                "Sources file does not exist: "
-                f"{self.REVIEW_MANAGER.path}/"
-                f'{self.REVIEW_MANAGER.paths["SOURCES"].name}'
-            )
-            sources = []
-        return sources
-
-    def save_sources(self, sources: list) -> None:
-        """Save the source details"""
-
-        sources_df = pd.DataFrame(sources)
-        orderedCols = [
-            "filename",
-            "search_type",
-            "source_name",
-            "source_url",
-            "search_parameters",
-            "comment",
-        ]
-        for x in [x for x in sources_df.columns if x not in orderedCols]:
-            orderedCols.append(x)
-        sources_df = sources_df.reindex(columns=orderedCols)
-
-        with open(self.REVIEW_MANAGER.paths["SOURCES"], "w", encoding="utf8") as f:
-            yaml.dump(
-                json.loads(sources_df.to_json(orient="records", default_handler=str)),
-                f,
-                default_flow_style=False,
-                sort_keys=False,
-            )
-        self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SOURCES_RELATIVE"])])
-        return
-
-    def append_sources(self, new_record: dict):
-        """Append sources"""
-        sources = self.load_sources()
-        sources.append(new_record)
-        self.save_sources(sources)
-        return sources
+        # TODO : this file may no longer be needed...
+        return self.REVIEW_MANAGER.settings.search.sources
 
     def get_record_state_list_from_file_obj(self, file_object) -> list:
         return [
@@ -178,7 +121,7 @@ class ReviewDataset:
             colrev_status.find("{") + 1 : colrev_status.rfind("}")
         ]
 
-        exclusion_criteria, file, colrev_masterdata = "", "", ""
+        exclusion_criteria, file, colrev_masterdata_provenance = "", "", ""
         while items:
             item = items.pop(0)
 
@@ -191,8 +134,10 @@ class ReviewDataset:
             if "file" in item:
                 file = item[item.find("{") + 1 : item.rfind("}")]
 
-            if "colrev_masterdata" in item:
-                colrev_masterdata = item[item.find("{") + 1 : item.rfind("}")]
+            if "colrev_masterdata_provenance" in item:
+                colrev_masterdata_provenance = item[
+                    item.find("{") + 1 : item.rfind("}")
+                ]
 
         return [
             ID,
@@ -200,7 +145,7 @@ class ReviewDataset:
             colrev_status,
             exclusion_criteria,
             file,
-            colrev_masterdata,
+            colrev_masterdata_provenance,
         ]
 
     def retrieve_records_from_history(
@@ -291,7 +236,7 @@ class ReviewDataset:
         from bibtexparser.customization import convert_to_unicode
 
         origin_records: typing.Dict[str, typing.Any] = {}
-        sources = [x["filename"] for x in self.REVIEW_MANAGER.sources]
+        sources = [x.filename for x in self.REVIEW_MANAGER.sources]
         for source in sources:
             source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
             if source_file.is_file():
@@ -455,7 +400,6 @@ class ReviewDataset:
         writer.display_order = [
             "colrev_origin",  # must be in second line
             "colrev_status",  # must be in third line
-            "colrev_masterdata",
             "colrev_masterdata_provenance",
             "colrev_data_provenance",
             "colrev_file_provenance",
@@ -586,6 +530,7 @@ class ReviewDataset:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
+        from colrev_core.settings import IDPpattern
         import re
         import unicodedata
 
@@ -646,15 +591,14 @@ class ReviewDataset:
                 else:
                     author = author.split(" ")[0]
 
-            ID_PATTERN = self.REVIEW_MANAGER.config["ID_PATTERN"]
+            ID_PATTERN = self.REVIEW_MANAGER.settings.project.id_pattern
 
-            assert ID_PATTERN in ["FIRST_AUTHOR_YEAR", "THREE_AUTHORS_YEAR"]
-            if "FIRST_AUTHOR_YEAR" == ID_PATTERN:
+            if IDPpattern.first_author_year == ID_PATTERN:
                 temp_ID = (
                     f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
                 )
 
-            if "THREE_AUTHORS_YEAR" == ID_PATTERN:
+            if IDPpattern.three_authors_year == ID_PATTERN:
                 temp_ID = ""
                 indices = len(authors)
                 if len(authors) > 3:
@@ -1176,9 +1120,7 @@ class ReviewDataset:
         from colrev_core.record import Record, NotEnoughDataToIdentifyException
         from tqdm import tqdm
 
-        self.REVIEW_MANAGER.logger.info(
-            "Create colrev_id list from origins and history"
-        )
+        self.REVIEW_MANAGER.logger.info("Create colrev_id list from origins")
         recs_dict = self.load_records_dict()
         if len(recs_dict) > 0:
             origin_records = self.load_origin_records()
@@ -1189,15 +1131,22 @@ class ReviewDataset:
                 except NotEnoughDataToIdentifyException:
                     pass
                 origins = RECORD.get_origins()
-                RECORD.add_colrev_ids([origin_records[origin] for origin in origins])
-            for history_recs in self.load_from_git_history():
-                for hist_rec in tqdm(history_recs.values()):
-                    for rec in recs_dict.values():
-                        RECORD = Record(rec)
-                        HIST_RECORD = Record(hist_rec)
-                        # TODO : acces hist_rec based on an origin-key record-list?
-                        if RECORD.shares_origins(HIST_RECORD):
-                            RECORD.add_colrev_ids([HIST_RECORD.get_data()])
+                RECORD.add_colrev_ids(
+                    [
+                        origin_records[origin]
+                        for origin in origins
+                        if origin in origin_records
+                    ]
+                )
+            # Note : we may create origins from history for curated repositories
+            # for history_recs in self.load_from_git_history():
+            #     for hist_rec in tqdm(history_recs.values()):
+            #         for rec in recs_dict.values():
+            #             RECORD = Record(rec)
+            #             HIST_RECORD = Record(hist_rec)
+            #             # TODO : acces hist_rec based on an origin-key record-list?
+            #             if RECORD.shares_origins(HIST_RECORD):
+            #                 RECORD.add_colrev_ids([HIST_RECORD.get_data()])
 
             self.save_records_dict(recs_dict)
             self.add_record_changes()
@@ -1248,11 +1197,11 @@ class ReviewDataset:
         )
         original_fp = Path(record["file"])
 
-        if "SYMLINK" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+        if "symlink" == self.REVIEW_MANAGER.settings.pdf_get.pdf_path_type:
             if not new_fp.is_file():
                 new_fp.symlink_to(original_fp)
             record["file"] = str(new_fp)
-        elif "COPY" == self.REVIEW_MANAGER.config["PDF_PATH_TYPE"]:
+        elif "copy" == self.REVIEW_MANAGER.settings.pdf_get.pdf_path_type:
             if not new_fp.is_file():
                 shutil.copyfile(original_fp, new_fp.resolve())
             record["file"] = str(new_fp)
@@ -1278,6 +1227,8 @@ class ReviewDataset:
         return
 
     def check_main_references_origin(self, prior: dict, data: dict) -> None:
+        import itertools
+
         # Check whether each record has an origin
         if not len(data["entries_without_origin"]) == 0:
             raise OriginError(
@@ -1296,7 +1247,7 @@ class ReviewDataset:
             raise OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
-        origins = [x[1] for x in data["origin_list"]]
+        origins = list(itertools.chain(*data["origin_list"]))
         non_unique_origins = []
         for org in origins:
             if origins.count(org) > 1:
@@ -1428,6 +1379,8 @@ class ReviewDataset:
 
         for curated_record in curated_records:
 
+            # TODO : use origin-indexed dict (discarding changes during merges)
+
             # identify curated records for which essential metadata is changed
             prior_crl = [
                 x
@@ -1460,15 +1413,18 @@ class ReviewDataset:
 
                             # Note : this is a simple heuristic:
                             curation_path = Resources.curations_path / Path(
-                                original_curated_record["colrev_masterdata"].split("/")[
-                                    -1
-                                ]
+                                original_curated_record[
+                                    "colrev_masterdata_provenance"
+                                ].split("/")[-1]
                             )
                             if not curation_path.is_dir():
+                                prov_inf = original_curated_record[
+                                    "colrev_masterdata_provenance"
+                                ]
                                 print(
                                     "Source path of indexed record not available "
                                     f'({original_curated_record["ID"]} - '
-                                    f'{original_curated_record["colrev_masterdata"]})'
+                                    f"{prov_inf})"
                                 )
                                 continue
                         except RecordNotInIndexException:
@@ -1613,12 +1569,12 @@ class ReviewDataset:
                         #     }
 
                     # TODO : cover non-masterdata corrections
-                    if "colrev_masterdata" not in original_curated_record:
+                    if "colrev_masterdata_provenance" not in original_curated_record:
                         continue
 
                     dict_to_save = {
                         "source_url": original_curated_record[
-                            "colrev_masterdata"
+                            "colrev_masterdata_provenance"
                         ].replace("CURATED:"),
                         "original_curated_record": original_curated_record,
                         "changes": change_items,
@@ -1792,69 +1748,44 @@ class ReviewDataset:
         return
 
     def check_sources(self) -> None:
-        import errno
+        from colrev_core.settings import SearchType
 
-        SOURCES = self.REVIEW_MANAGER.paths["SOURCES"]
+        sources = self.REVIEW_MANAGER.settings.search.sources
+
         SEARCHDIR = self.REVIEW_MANAGER.paths["SEARCHDIR"]
-        search_type_opts = self.search_type_opts
-
-        if not SOURCES.is_file():
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), SOURCES)
-
-        with open(SOURCES, encoding="utf8") as f:
-            sources_df = pd.json_normalize(safe_load(f))
-            sources = sources_df.to_dict("records")
 
         for search_file in SEARCHDIR.glob("*.bib"):
-            if str(search_file.name) not in [x["filename"] for x in sources]:
+            if search_file.name not in [str(x.filename) for x in sources]:
                 raise SearchDetailsError(
-                    "Search file not in sources.yaml " f"({search_file})"
+                    f"Search file not in settings.json: ({search_file.name})"
                 )
 
-        date_regex = r"^\d{4}-\d{2}-\d{2}$"
+        # date_regex = r"^\d{4}-\d{2}-\d{2}$"
         for search_record in sources:
-            missing_cols = [
-                x
-                for x in [
-                    "filename",
-                    "search_type",
-                    "source_name",
-                    "source_url",
-                    "search_parameters",
-                    "comment",
-                ]
-                if x not in search_record
-            ]
 
-            if any(missing_cols):
-                raise SearchDetailsError(
-                    f"Missing columns in {SOURCES}: {missing_cols}"
-                )
-
-            search_record_filename = SEARCHDIR / Path(search_record["filename"])
+            search_record_filename = SEARCHDIR / search_record.filename
             if not search_record_filename.is_file():
                 logging.warning(
-                    f'Search details without file: {search_record["filename"]}'
+                    f"Search details without file: {search_record.filename}"
                 )
                 # raise SearchDetailsError('File not found: "
                 #                       f"{search_record["filename"]}')
-
-            if search_record["search_type"] not in search_type_opts:
+            if str(search_record.search_type) not in SearchType._member_names_:
                 raise SearchDetailsError(
-                    f'{search_record["search_type"]} not in {search_type_opts}'
+                    f"{search_record.search_type} not in {SearchType._member_names_}"
                 )
-            if "completion_date" in search_record:
-                if not re.search(date_regex, search_record["completion_date"]):
-                    raise SearchDetailsError(
-                        "completion date not matching YYYY-MM-DD format: "
-                        f'{search_record["completion_date"]}'
-                    )
-            if "start_date" in search_record:
-                if not re.search(date_regex, search_record["start_date"]):
-                    raise SearchDetailsError(
-                        "start_date date not matchin YYYY-MM-DD format: "
-                        f'{search_record["start_date"]}'
-                    )
+            # if "completion_date" in search_record:
+            #     if not re.search(date_regex, search_record["completion_date"]):
+            #         raise SearchDetailsError(
+            #             "completion date not matching YYYY-MM-DD format: "
+            #             f'{search_record["completion_date"]}'
+            #         )
+            # if "start_date" in search_record:
+            #     if not re.search(date_regex, search_record["start_date"]):
+            #         raise SearchDetailsError(
+            #             "start_date date not matchin YYYY-MM-DD format: "
+            #             f'{search_record["start_date"]}'
+            #         )
 
         return
 
@@ -1873,6 +1804,14 @@ class ReviewDataset:
 
     def add_changes(self, path: str) -> None:
         self.__git_repo.index.add([str(path)])
+        return
+
+    def remove_file(self, path: str) -> None:
+
+        self.__git_repo.index.remove(
+            [path],
+            working_tree=True,
+        )
         return
 
     def create_commit(
@@ -1900,6 +1839,10 @@ class ReviewDataset:
         self.__git_repo.index.add(
             [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])]
         )
+        return
+
+    def add_setting_changes(self) -> None:
+        self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SETTINGS_RELATIVE"])])
         return
 
     def reset_log_if_no_changes(self) -> None:
@@ -1954,6 +1897,20 @@ class ReviewDataset:
                     nr_commits_ahead,
                 ) = self.get_remote_commit_differences(self.__git_repo)
         if nr_commits_behind > 0:
+            return True
+        return False
+
+    def remote_ahead(self) -> bool:
+        nr_commits_behind = 0
+        CONNECTED_REMOTE = 0 != len(self.__git_repo.remotes)
+        if CONNECTED_REMOTE:
+            origin = self.__git_repo.remotes.origin
+            if origin.exists():
+                (
+                    nr_commits_behind,
+                    nr_commits_ahead,
+                ) = self.get_remote_commit_differences(self.__git_repo)
+        if nr_commits_ahead > 0:
             return True
         return False
 

@@ -71,7 +71,7 @@ Essentially, the ReviewManager operates in three modes:
 
 - Autonomous: ReviewManager executes and supervises the process (e.g., loading new records)
 - Supervised: ReviewManager is notified before a process is started, usually interactive processes requiring frequent user input (e.g., screening)
-- Consulted: ReviewManager is called after files have been modified and checks for consistency (e.g., writing the synthesis)
+- Consulted: ReviewManager is called after files have been modified and checked for consistency (e.g., writing the synthesis)
 
 In addition, the ReviewManager keeps a detailed `report <../guides/changes.html#git-commit-report>`_ of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset.
 
@@ -210,7 +210,7 @@ Guiding principles
 ---------------------
 
 - Open source software (facilitate competition without lock-in, extensibility)
-- Leverage powerful tools and libraries (their ongoing improvements)
+- Leverage powerful tools and libraries (benefit from their ongoing improvements)
 - Integration with other tools/environments
 - Transparency
 - Design for humans (set reasonable defaults that are in line with a systematic approach, make commands and code self-explanatory, human processing time is valuable - prefer supervised execution and correction of algorithms to highly labor-intensive manual editing when algorithm performance is reasonably high, make it easy to identify, trace and correct errors in the project and at source)

@@ -11,11 +11,11 @@ from p_tqdm import p_map
 from pdf2image import convert_from_path
 from pdfminer.high_level import extract_text
 
-from colrev_core import grobid_client
+from colrev_core.environment import GrobidService
+from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
-from colrev_core.tei import TEI
 
 
 class PDF_Retrieval(Process):
@@ -31,8 +31,7 @@ class PDF_Retrieval(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.EMAIL = self.REVIEW_MANAGER.config["EMAIL"]
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
+        self.CPUS = 4
 
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
@@ -44,13 +43,14 @@ class PDF_Retrieval(Process):
         for record in records.values():
             if "file" in record:
                 fpath = Path(record["file"])
+                new_fpath = fpath.absolute()
                 if fpath.is_symlink():
-                    new_fpath = fpath.absolute()
                     linked_file = fpath.resolve()
                     if linked_file.is_file():
                         fpath.unlink()
                         shutil.copyfile(linked_file, new_fpath)
-                if new_fpath.is_file():
+                        self.REVIEW_MANAGER.logger.info(f'Copied PDF ({record["ID"]})')
+                elif new_fpath.is_file():
                     self.REVIEW_MANAGER.logger.warning(
                         f'No need to copy PDF - already exits ({record["ID"]})'
                     )
@@ -62,7 +62,7 @@ class PDF_Retrieval(Process):
         url = "https://api.unpaywall.org/v2/{doi}"
 
         try:
-            r = requests.get(url, params={"email": self.EMAIL})
+            r = requests.get(url, params={"email": self.REVIEW_MANAGER.EMAIL})
 
             if r.status_code == 404:
                 return "NA"
@@ -205,19 +205,22 @@ class PDF_Retrieval(Process):
         import bibtexparser
 
         def relink_pdf_files(records):
+            from colrev_core.settings import SearchType
 
             # Relink files in source file
             sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-            feeds = [x for x in sources if "FEED" == x["search_type"]]
+            feeds = [x for x in sources if SearchType.FEED == x.search_type]
             feed_filename = ""
             feed_filepath = ""
             source_records = []
             for feed in feeds:
-                if "pdfs_directory" == feed["search_parameters"][0]["endpoint"]:
-                    feed_filepath = Path("search/" + feed["filename"])
+                if "{{file}}" == feed.source_identifier:
+                    feed_filepath = Path("search") / feed.filename
                     if feed_filepath.is_file():
-                        feed_filename = feed["filename"]
-                        with open(Path("search/" + feed["filename"]), encoding="utf8") as target_db:
+                        feed_filename = feed.filename
+                        with open(
+                            Path("search") / feed.filename, encoding="utf8"
+                        ) as target_db:
                             bib_db = BibTexParser(
                                 customization=convert_to_unicode,
                                 ignore_nonstandard_types=False,
@@ -330,11 +333,12 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(
             "Starting GROBID service to extract metadata from PDFs"
         )
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
         for file in unlinked_pdfs:
             if file.stem not in records.keys():
 
-                TEI_INSTANCE = TEI(pdf_path=file)
+                TEI_INSTANCE = TEIParser(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:
@@ -425,7 +429,7 @@ class PDF_Retrieval(Process):
         return prep_data
 
     def __batch(self, items: typing.List[typing.Dict]):
-        n = self.REVIEW_MANAGER.config["BATCH_SIZE"]
+        # TODO : no longer batch...
         batch = []
         for item in items:
             batch.append(
@@ -433,9 +437,6 @@ class PDF_Retrieval(Process):
                     "record": item,
                 }
             )
-            if len(batch) == n:
-                yield batch
-                batch = []
         yield batch
 
     def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:

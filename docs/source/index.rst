@@ -7,14 +7,14 @@ Collaborative Literature Reviews
    :align: center
    :alt: Logo
 
-CoLRev is an open-source next-generation environment for collaborative reviews.
-To accomplish major improvements in efficiency, trustworthiness, and richness, CoLRev innovates in key areas:
+CoLRev is an open-source environment for collaborative reviews.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated annotations, CoLRev innovates in key areas:
 
-- leveraging the transparent collaboration model of **git** for the whole literature review process
-- desigining a **fault-tolerant and self-explanatory** workflow
-- implementing a comprehensive **data provenance** model and **robust identification** schemes
+- leveraging the transparent collaboration model of **git** for the entire literature review process
+- desigining a **fault-tolerant, configurable, and self-explanatory** workflow
+- implementing a comprehensive **data provenance** model and a **robust identification** scheme
 - incorporating **state-of-the-art algorithms** to provide end-to-end process support
-- creating an open and extensible ecosystem of **file-based interfaces**
+- creating an extensible ecosystem of **file-based interfaces** following open data standards
 - fostering **typological pluralism** through different forms of data analysis
 - advancing a built-in model for **content curation** and reuse
 
@@ -80,24 +80,16 @@ The corresponding *colrev pull* and *colrev push* operations make it easy to reu
    :align: center
    :alt: Reuse vision
 
-Reuse of community-curated data from different sources is built into each step.
+Reuse of community-curated data from different sources is built into each operation.
 It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
-The more records are curated, the more you can focus on the search, screen and synthesis.
+The more records are curated, the more you can focus on the synthesis.
 
 Citing CoLRev
 -----------------
 
-Please refer to the present GitHub project:
+Please `cite <_static/colrev_citation.bib>`__ the `GitHub project <https://github.com/geritwagner/colrev_core>`__:
 
-.. code-block:: BibTeX
-
-   @misc{colrev,
-   author = {Wagner, G. and Prester, J.},
-   title = {CoLRev - A Framework for Colaborative Literature Reviews},
-   howpublished = {\url{https://github.com/geritwagner/colrev_core}},
-   publisher = {GitHub},
-   year = {2022},
-   }
+Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev_core.
 
 .. toctree::
    :hidden:
@@ -121,7 +113,6 @@ Please refer to the present GitHub project:
 
    technical_documentation/colrev
    technical_documentation/api
-   GitHub repository <https://github.com/geritwagner/colrev_core>
    technical_documentation/extensions
    technical_documentation/roadmap
    technical_documentation/credits

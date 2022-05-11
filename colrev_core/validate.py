@@ -21,7 +21,7 @@ class Validate(Process):
 
         super().__init__(REVIEW_MANAGER, ProcessType.check)
 
-        self.CPUS = self.REVIEW_MANAGER.config["CPUS"]
+        self.CPUS = 4
 
     def load_search_records(self, bib_file: Path) -> list:
 

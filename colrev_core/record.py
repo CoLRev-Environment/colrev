@@ -57,7 +57,6 @@ class Record:
     """Fields considered inconsistent with the respective ENTRYTYPE"""
 
     provenance_keys = [
-        "colrev_masterdata",
         "colrev_masterdata_provenance",
         "colrev_origin",
         "colrev_status",
@@ -105,7 +104,7 @@ class Record:
         return self.data
 
     def masterdata_is_curated(self) -> bool:
-        return "CURATED" in self.data.get("colrev_masterdata", "")
+        return "CURATED" in self.data.get("colrev_masterdata_provenance", "")
 
     def set_status(self, target_state) -> None:
         from colrev_core.record import RecordState
@@ -116,6 +115,11 @@ class Record:
                     colrev_id = self.create_colrev_id()
                     if "colrev_id" not in self.data:
                         self.data["colrev_id"] = colrev_id
+                    elif colrev_id not in self.data["colrev_id"]:
+                        self.data["colrev_id"] = (
+                            self.data["colrev_id"] + ";" + colrev_id
+                        )
+
                     # else should not happen because colrev_ids should only be
                     # created once records are prepared (complete)
                 except NotEnoughDataToIdentifyException:
@@ -326,9 +330,9 @@ class Record:
         # Note : no need to check "not self.masterdata_is_curated()":
         # this should enable updates of curated metadata
         if MERGING_RECORD.masterdata_is_curated() and not self.masterdata_is_curated():
-            self.data["colrev_masterdata"] = MERGING_RECORD.data["colrev_masterdata"]
-            if "colrev_masterdata_provenance" in self.data:
-                del self.data["colrev_masterdata_provenance"]
+            self.data["colrev_masterdata_provenance"] = MERGING_RECORD.data[
+                "colrev_masterdata_provenance"
+            ]
 
             for k in list(self.data.keys()):
                 if k in Record.identifying_fields:
@@ -393,27 +397,29 @@ class Record:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
         def select_best_author(RECORD: Record, MERGING_RECORD: Record) -> str:
-            record_author_provenance = RECORD.load_masterdata_provenance()
-            merging_record_author_provenance = (
-                MERGING_RECORD.load_masterdata_provenance()
-            )
+            record_a_prov = RECORD.load_masterdata_provenance()
+            merging_record_a_prov = MERGING_RECORD.load_masterdata_provenance()
 
-            # Prefer complete version
-            if (
-                "author" in record_author_provenance
-                and "author" not in merging_record_author_provenance
-            ):
-                if "incomplete" in record_author_provenance["author"].get("hint", ""):
+            if "author" in record_a_prov and "author" not in merging_record_a_prov:
+                # Prefer non-defect version
+                if "quality_defect" in record_a_prov["author"].get("hint", ""):
                     return MERGING_RECORD.data["author"]
-            elif (
-                "author" in record_author_provenance
-                and "author" in merging_record_author_provenance
-            ):
-                if "incomplete" in record_author_provenance["author"].get(
+                # Prefer complete version
+                if "incomplete" in record_a_prov["author"].get("hint", ""):
+                    return MERGING_RECORD.data["author"]
+            elif "author" in record_a_prov and "author" in merging_record_a_prov:
+                # Prefer non-defect version
+                if "quality_defect" in record_a_prov["author"].get(
                     "hint", ""
-                ) and "incomplete" not in merging_record_author_provenance[
-                    "author"
-                ].get(
+                ) and "quality_defect" not in merging_record_a_prov["author"].get(
+                    "hint", ""
+                ):
+                    return MERGING_RECORD.data["author"]
+
+                # Prefer complete version
+                if "incomplete" in record_a_prov["author"].get(
+                    "hint", ""
+                ) and "incomplete" not in merging_record_a_prov["author"].get(
                     "hint", ""
                 ):
                     return MERGING_RECORD.data["author"]
@@ -428,9 +434,9 @@ class Record:
                 return MERGING_RECORD.data["author"]
 
             # Prefer sources
-            if "author" in merging_record_author_provenance:
+            if "author" in merging_record_a_prov:
                 if any(
-                    x in merging_record_author_provenance["author"]["source"]
+                    x in merging_record_a_prov["author"]["source"]
                     for x in self.preferred_sources
                 ):
                     return MERGING_RECORD.data["author"]
@@ -860,7 +866,6 @@ class Record:
                 "source_link",
                 "source_url",
                 "colrev_id",
-                "colrev_masterdata",
                 "colrev_status",
                 "ENTRYTYPE",
                 "ID",
@@ -884,17 +889,50 @@ class Record:
                 if self.data[key].endswith("...") or self.data[key].endswith("…"):
                     incomplete_fields.append(key)
 
-                if "author" == key:
-                    if (
-                        self.data[key].endswith("and others")
-                        or self.data[key].endswith("et al.")
-                        # heuristics for missing first names:
-                        or ", and " in self.data[key]
-                        or self.data[key].rstrip().endswith(",")
-                    ):
-                        incomplete_fields.append(key)
+            if "author" == key:
+                if (
+                    self.data[key].endswith("and others")
+                    or self.data[key].endswith("et al.")
+                    # heuristics for missing first names:
+                    or ", and " in self.data[key]
+                    or self.data[key].rstrip().endswith(",")
+                ):
+                    incomplete_fields.append(key)
 
         return incomplete_fields
+
+    def get_quality_defects(self) -> list:
+        defect_fields = []
+        for key in self.data.keys():
+            if "author" == key:
+                # Note : patterns like "I N T R O D U C T I O N"
+                # that may result from grobid imports
+                if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
+                    defect_fields.append(key)
+                if len(self.data[key]) < 5:
+                    defect_fields.append(key)
+
+            if "title" == key:
+                # Note : titles that have no space and special characters
+                # like _ . or digits.
+                if " " not in self.data[key] and (
+                    any(x in self.data[key] for x in ["_", "."])
+                    or any(char.isdigit() for char in self.data[key])
+                ):
+                    defect_fields.append(key)
+
+        return defect_fields
+
+    def remove_quality_defect_notes(self) -> None:
+        md_p_dict = self.load_masterdata_provenance()
+
+        for field in self.data.keys():
+            if field in md_p_dict:
+                note = md_p_dict[field]["note"]
+                if "quality_defect" in note:
+                    md_p_dict[field]["note"] = note.replace("quality_defect", "")
+                    self.set_masterdata_provenance(md_p_dict)
+        return
 
     @classmethod
     def remove_accents(cls, input_str: str) -> str:

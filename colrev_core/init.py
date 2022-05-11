@@ -27,9 +27,13 @@ class Initializer:
         self.url = url
 
         self.__require_empty_directory()
+        print("Setup files")
         self.__setup_files()
+        print("Setup git")
         self.__setup_git()
+        print("Create commit")
         self.__create_commit(saved_args)
+        print("Register repo")
         self.__register_repo()
         if local_index_repo:
             self.__create_local_index()
@@ -59,8 +63,16 @@ class Initializer:
         return
 
     def __setup_files(self) -> None:
-        import configparser
         from colrev_core.environment import EnvironmentManager
+        import pkgutil
+        import json
+
+        # Note: parse instead of copy to avoid format changes
+        filedata = pkgutil.get_data(__name__, "template/settings.json")
+        if filedata:
+            settings = json.loads(filedata.decode("utf-8"))
+            with open("settings.json", "w", encoding="utf8") as file:
+                json.dump(settings, file, indent=4)
 
         Path("search").mkdir()
 
@@ -89,32 +101,15 @@ class Initializer:
         )
 
         global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
-
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
             return
-        committer_name, committer_email = global_git_vars
-        private_config = configparser.ConfigParser()
-        private_config.add_section("general")
-        private_config["general"]["EMAIL"] = committer_email
-        private_config["general"]["GIT_ACTOR"] = committer_name
-        private_config["general"]["CPUS"] = "4"
-        private_config["general"]["DEBUG_MODE"] = "no"
-        with open("private_config.ini", "w", encoding="utf8") as configfile:
-            private_config.write(configfile)
-
-        shared_config = configparser.ConfigParser()
-        shared_config.add_section("general")
-        shared_config["general"]["SHARE_STAT_REQ"] = self.SHARE_STAT_REQ
-        with open("shared_config.ini", "w", encoding="utf8") as configfile:
-            shared_config.write(configfile)
 
         # Note: need to write the .gitignore because file would otherwise be
         # ignored in the template directory.
         f = open(".gitignore", "w", encoding="utf8")
         f.write(
             "*.bib.sav\n"
-            + "private_config.ini\n"
             + "missing_pdf_files.csv\n"
             + "manual_cleansing_statistics.csv\n"
             + "data.csv\n"
@@ -159,7 +154,7 @@ class Initializer:
                         "(Internet connection could not be available)"
                     )
                 else:
-                    print(f"Script did not succeed: {' '.join(script_to_call)}")
+                    print(f"Failed: {' '.join(script_to_call)}")
                 pass
         git_repo.index.add(
             [
@@ -167,7 +162,7 @@ class Initializer:
                 ".pre-commit-config.yaml",
                 ".gitattributes",
                 ".gitignore",
-                "shared_config.ini",
+                "settings.json",
                 ".markdownlint.yaml",
             ]
         )

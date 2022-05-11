@@ -16,6 +16,7 @@ colrev\_core.data.Data
    .. autosummary::
       :nosignatures:
 
+      ~Data.add_data_endpoint
       ~Data.add_missing_records_to_manuscript
       ~Data.authorship_heuristic
       ~Data.check_new_record_source_tag
@@ -29,6 +30,8 @@ colrev\_core.data.Data
       ~Data.get_to_synthesize_in_manuscript
       ~Data.main
       ~Data.profile
+      ~Data.retrieve_default_csl
+      ~Data.retrieve_default_word_template
       ~Data.retrieve_package_file
       ~Data.update_manuscript
       ~Data.update_structured_data
