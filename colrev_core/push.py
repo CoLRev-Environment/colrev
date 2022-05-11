@@ -35,7 +35,7 @@ class Push(Process):
         # group by target-repo to bundle changes in a commit
         change_sets = {}  # type: ignore
         for correction in self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"):
-            with open(correction) as json_file:
+            with open(correction, encoding="utf8") as json_file:
                 output = json.load(json_file)
             output["file"] = correction
             source_url = output["source_url"]

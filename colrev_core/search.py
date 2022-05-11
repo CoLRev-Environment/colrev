@@ -153,7 +153,7 @@ class Search(Process):
                 feed_db = BibDatabase()
                 records = []
             else:
-                with open(feed_file) as bibtex_file:
+                with open(feed_file, encoding="utf8") as bibtex_file:
                     feed_db = BibTexParser(
                         customization=convert_to_unicode,
                         ignore_nonstandard_types=True,
@@ -225,7 +225,7 @@ class Search(Process):
 
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             feed_db.entries = records
-            with open(feed_file, "w") as fi:
+            with open(feed_file, "w", encoding="utf8") as fi:
                 fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
 
         return
@@ -287,7 +287,7 @@ class Search(Process):
             feed_db = BibDatabase()
             records = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -386,7 +386,7 @@ class Search(Process):
                     if len(records) == 0:
                         continue
                     feed_db.entries = records
-                    with open(feed_file, "w") as fi:
+                    with open(feed_file, "w", encoding="utf8") as fi:
                         fi.write(
                             bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
                         )
@@ -441,7 +441,7 @@ class Search(Process):
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
                 GROBID_SERVICE.GROBID_URL + "/api/processReferences",
-                files=dict(input=open(pdf_path, "rb")),
+                files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -469,7 +469,7 @@ class Search(Process):
             records = []
             imported_ids = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -524,7 +524,7 @@ class Search(Process):
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             feed_db.entries = records
-            with open(feed_file, "w") as fi:
+            with open(feed_file, "w", encoding="utf8") as fi:
                 fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
         else:
             print("No records retrieved.")
@@ -539,7 +539,7 @@ class Search(Process):
             records = []
             imported_ids = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -605,7 +605,7 @@ class Search(Process):
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             feed_db.entries = records
-            with open(feed_file, "w") as fi:
+            with open(feed_file, "w", encoding="utf8") as fi:
                 fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
         else:
             print("No records found")
@@ -686,7 +686,7 @@ class Search(Process):
                 return
             writer = self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
 
-            with open(feed_file) as target_db:
+            with open(feed_file, encoding="utf8") as target_db:
                 search_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -712,7 +712,7 @@ class Search(Process):
             search_db.entries = [x for x in search_db.entries if x_pdf_path.is_file()]
             if len(search_db.entries) != 0:
                 bibtex_str = bibtexparser.dumps(search_db, writer)
-                with open(feed_file, "w") as f:
+                with open(feed_file, "w", encoding="utf8") as f:
                     f.write(bibtex_str)
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
@@ -755,7 +755,7 @@ class Search(Process):
         def get_pdf_links(bib_file: Path) -> list:
             pdf_list = []
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "file" == line.lstrip()[:4]:
@@ -768,7 +768,7 @@ class Search(Process):
             feed_db = BibDatabase()
             records = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -917,7 +917,7 @@ class Search(Process):
             #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
             #     headers={"Accept": "application/x-bibtex"},
             #     params=header_data,
-            #     files=dict(input=open(pdf_path, "rb")),
+            #     files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
             # )
 
             # if 200 == r.status_code:
@@ -1034,7 +1034,7 @@ class Search(Process):
         def get_last_ID(bib_file: Path) -> int:
             IDs = []
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "@" in line[:3]:
@@ -1088,7 +1088,7 @@ class Search(Process):
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             feed_db.entries = records
-            with open(feed_file, "w") as fi:
+            with open(feed_file, "w", encoding="utf8") as fi:
                 fi.write(
                     bibtexparser.dumps(
                         feed_db,

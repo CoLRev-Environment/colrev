@@ -141,7 +141,7 @@ class PrepMan(Process):
         bib_db = BibDatabase()
         bib_db.entries = records_list
         bibtex_str = bibtexparser.dumps(bib_db)
-        with open(prep_bib_path, "w") as out:
+        with open(prep_bib_path, "w", encoding="utf8") as out:
             out.write(bibtex_str)
 
         bib_db_df = pd.DataFrame.from_records(records_list)
@@ -183,7 +183,7 @@ class PrepMan(Process):
             from bibtexparser.bparser import BibTexParser
             from bibtexparser.customization import convert_to_unicode
 
-            with open("prep-references.bib") as target_db:
+            with open("prep-references.bib", encoding="utf8") as target_db:
                 bib_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -261,7 +261,7 @@ class PrepMan(Process):
 
         if non_dupe_db_path.is_file():
 
-            with open(non_dupe_db_path) as target_db:
+            with open(non_dupe_db_path, encoding="utf8") as target_db:
                 non_dupe_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -289,7 +289,7 @@ class PrepMan(Process):
         non_dupe_db.entries.append(record)
         bibtex_str = bibtexparser.dumps(non_dupe_db)
 
-        with open(non_dupe_db_path, "w") as out:
+        with open(non_dupe_db_path, "w", encoding="utf8") as out:
             out.write(bibtex_str)
 
         return

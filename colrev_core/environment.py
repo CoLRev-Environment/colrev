@@ -56,7 +56,7 @@ class EnvironmentManager:
         local_registry_path = EnvironmentManager.paths["REGISTRY"]
         local_registry = []
         if local_registry_path.is_file():
-            with open(local_registry_path) as f:
+            with open(local_registry_path, encoding="utf8") as f:
                 local_registry_df = pd.json_normalize(safe_load(f))
                 local_registry = local_registry_df.to_dict("records")
 
@@ -80,7 +80,7 @@ class EnvironmentManager:
         updated_registry_df = updated_registry_df.reindex(columns=orderedCols)
 
         local_registry_path.parents[0].mkdir(parents=True, exist_ok=True)
-        with open(local_registry_path, "w") as f:
+        with open(local_registry_path, "w", encoding="utf8") as f:
             yaml.dump(
                 json.loads(
                     updated_registry_df.to_json(orient="records", default_handler=str)
@@ -161,7 +161,7 @@ class EnvironmentManager:
         from colrev_core.review_manager import MissingDependencyError
 
         try:
-            null = open("/dev/null", "w")
+            null = open("/dev/null", "w", encoding="utf8")
             subprocess.Popen("git", stdout=null, stderr=null)
             null.close()
         except OSError:
@@ -175,7 +175,7 @@ class EnvironmentManager:
         from colrev_core.review_manager import MissingDependencyError
 
         try:
-            null = open("/dev/null", "w")
+            null = open("/dev/null", "w", encoding="utf8")
             subprocess.Popen("docker", stdout=null, stderr=null)
             null.close()
         except OSError:
@@ -1188,7 +1188,7 @@ class LocalIndex:
         # https://bit.ly/3tbypkd
         # for r_file in self.rind_path.rglob("*.bib"):
 
-        #     with open(r_file) as f:
+        #     with open(r_file, encoding="utf8") as f:
         #         while True:
         #             line = f.readline()
         #             if not line:
@@ -1204,7 +1204,7 @@ class LocalIndex:
         #       collections.Counter(colrev_pdf_ids).items() if count > 1
         # ]
 
-        # with open("non-unique-cpids.txt", "w") as o:
+        # with open("non-unique-cpids.txt", "w", encoding="utf8") as o:
         #     o.write("\n".join(colrev_pdf_ids_dupes))
         # print("Export non-unique-cpids.txt")
         return

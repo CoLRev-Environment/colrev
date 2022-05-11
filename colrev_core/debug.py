@@ -30,7 +30,7 @@ def debug_load() -> None:
     #     print(search_file)
     #     sfn = search_file.stem
     #     search_file_origins = [x for x in origin_list if sfn in x]
-    #     with open(search_file) as f:
+    #     with open(search_file, encoding="utf8") as f:
     #         line = f.readline()
     #         while line:
     #             if "@" in line[:3]:

@@ -96,7 +96,7 @@ class Sync:
             feed_db = BibDatabase()
             records = []
         else:
-            with open(references_file) as bibtex_file:
+            with open(references_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -130,7 +130,7 @@ class Sync:
             feed_db = BibDatabase()
             records = []
         else:
-            with open(references_file) as bibtex_file:
+            with open(references_file, encoding="utf8") as bibtex_file:
                 feed_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=True,
@@ -183,7 +183,7 @@ class Sync:
         records.sort(key=lambda x: x["ID"])
 
         feed_db.entries = records
-        with open(references_file, "w") as fi:
+        with open(references_file, "w", encoding="utf8") as fi:
             fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
 
         return

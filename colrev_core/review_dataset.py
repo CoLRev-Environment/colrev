@@ -203,7 +203,7 @@ class ReviewDataset:
         MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
 
         if MAIN_REFERENCES_FILE.is_file():
-            with open(MAIN_REFERENCES_FILE) as target_db:
+            with open(MAIN_REFERENCES_FILE, encoding="utf8") as target_db:
                 bib_db = BibTexParser(
                     customization=convert_to_unicode,
                     ignore_nonstandard_types=False,
@@ -240,7 +240,7 @@ class ReviewDataset:
         for source in sources:
             source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
             if source_file.is_file():
-                with open(source_file) as target_db:
+                with open(source_file, encoding="utf8") as target_db:
                     bib_db = BibTexParser(
                         customization=convert_to_unicode,
                         ignore_nonstandard_types=False,
@@ -347,7 +347,7 @@ class ReviewDataset:
             bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
         )
 
-        with open(MAIN_REFERENCES_FILE, "w") as out:
+        with open(MAIN_REFERENCES_FILE, "w", encoding="utf8") as out:
             out.write(bibtex_str)
 
         # TBD: the caseing may not be necessary
@@ -647,7 +647,7 @@ class ReviewDataset:
         self, file_object=None, HEADER_LENGTH: int = 9
     ) -> typing.Iterator[str]:
         if file_object is None:
-            file_object = open(self.MAIN_REFERENCES_FILE)
+            file_object = open(self.MAIN_REFERENCES_FILE, encoding="utf8")
         data = ""
         first_entry_processed = False
         header_line_count = 0
@@ -674,7 +674,7 @@ class ReviewDataset:
 
     def __read_next_record_str(self, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
-            file_object = open(self.MAIN_REFERENCES_FILE)
+            file_object = open(self.MAIN_REFERENCES_FILE, encoding="utf8")
         data = ""
         first_entry_processed = False
         while True:
@@ -695,7 +695,7 @@ class ReviewDataset:
 
     def read_next_record(self, conditions: list = None) -> typing.Iterator[dict]:
         records = []
-        with open(self.MAIN_REFERENCES_FILE) as f:
+        with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(f):
                 parser = BibTexParser(customization=convert_to_unicode)
                 db = bibtexparser.loads(record_string, parser=parser)
@@ -850,7 +850,7 @@ class ReviewDataset:
 
         if len(record_list) > 0:
             if append_new:
-                with open(self.MAIN_REFERENCES_FILE, "a") as m_refs:
+                with open(self.MAIN_REFERENCES_FILE, "a", encoding="utf8") as m_refs:
                     for replacement in record_list:
                         m_refs.write(replacement["record"])
 
@@ -917,7 +917,7 @@ class ReviewDataset:
             "origin_list": [],
         }
 
-        with open(self.MAIN_REFERENCES_FILE) as f:
+        with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(f):
                 ID, file, status, excl_crit, origin = (
                     "NA",
@@ -1086,7 +1086,7 @@ class ReviewDataset:
     def retrieve_IDs_from_bib(self, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         IDs = []
-        with open(file_path) as f:
+        with open(file_path, encoding="utf8") as f:
             line = f.readline()
             while line:
                 if "@" in line[:5]:
@@ -1165,7 +1165,7 @@ class ReviewDataset:
             str(RecordState.rev_synthesized),
         ]
         missing_files = []
-        with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
+        with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8") as f:
             for record_string in self.__read_next_record_str(f):
                 ID, status = "NA", "NA"
 
@@ -1366,7 +1366,7 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER.logger.debug("Load current bib")
         curated_records = []
-        with open(self.MAIN_REFERENCES_FILE) as f:
+        with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(f):
 
                 # TBD: whether/how to detect dblp. Previously:
@@ -1708,7 +1708,7 @@ class ReviewDataset:
                             f"the MAIN_REFERENCES) found in file: {name}"
                         )
                 else:
-                    with open(os.path.join(root, name)) as f:
+                    with open(os.path.join(root, name), encoding="utf8") as f:
                         line = f.readline()
                         while line:
                             if name.endswith(".bib") and "@" in line[:5]:
