@@ -32,7 +32,6 @@ class Search(Process):
     def __init__(
         self,
         REVIEW_MANAGER,
-        force_mode=False,
         notify_state_transition_process=True,
     ):
 
@@ -43,8 +42,6 @@ class Search(Process):
         )
 
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-
-        self.force_mode = force_mode
 
         self.PREPARATION = Preparation(
             REVIEW_MANAGER, notify_state_transition_process=False
@@ -305,7 +302,7 @@ class Search(Process):
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
-            if len(records) > 100 and not self.force_mode:
+            if len(records) > 100 and not self.REVIEW_MANAGER.force_mode:
                 start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
                 print(year)

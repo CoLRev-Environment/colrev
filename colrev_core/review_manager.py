@@ -54,35 +54,52 @@ class ReviewManager:
         else:
             self.path = Path.cwd()
 
-        self.paths = self.__get_file_paths(self.path)
-
-        self.settings = self.load_settings()
-
         if debug_mode:
             self.DEBUG_MODE = True
         else:
             self.DEBUG_MODE = False
 
-        if self.DEBUG_MODE:
-            self.report_logger = self.__setup_report_logger(logging.DEBUG)
-            """Logger for the commit report"""
-            self.logger = self.__setup_logger(logging.DEBUG)
-            """Logger for processing information"""
-        else:
-            self.report_logger = self.__setup_report_logger(logging.INFO)
-            self.logger = self.__setup_logger(logging.INFO)
+        try:
+            self.paths = self.__get_file_paths(self.path)
 
-        global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
-        if 2 != len(global_git_vars):
-            logging.error("Global git variables (user name and email) not available.")
-            return
-        self.COMMITTER, self.EMAIL = global_git_vars
+            self.settings = self.load_settings()
+        except Exception as e:
+            print(e)
+            if force_mode:
+                pass
 
-        self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-        self.REVIEW_DATASET = ReviewDataset(self)
-        """The review dataset object"""
-        self.sources = self.REVIEW_DATASET.load_sources()
-        """Information on sources (search directory)"""
+        try:
+            if self.DEBUG_MODE:
+                self.report_logger = self.__setup_report_logger(logging.DEBUG)
+                """Logger for the commit report"""
+                self.logger = self.__setup_logger(logging.DEBUG)
+                """Logger for processing information"""
+            else:
+                self.report_logger = self.__setup_report_logger(logging.INFO)
+                self.logger = self.__setup_logger(logging.INFO)
+        except Exception as e:
+            print(e)
+            if force_mode:
+                pass
+
+        try:
+            global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+            if 2 != len(global_git_vars):
+                logging.error(
+                    "Global git variables (user name and email) not available."
+                )
+                return
+            self.COMMITTER, self.EMAIL = global_git_vars
+
+            self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
+            self.REVIEW_DATASET = ReviewDataset(self)
+            """The review dataset object"""
+            self.sources = self.REVIEW_DATASET.load_sources()
+            """Information on sources (search directory)"""
+        except Exception as e:
+            print(e)
+            if force_mode:
+                pass
 
         if self.DEBUG_MODE:
             print("\n\n")
@@ -336,54 +353,6 @@ class ReviewManager:
             import json
             import pkgutil
 
-            records = self.REVIEW_DATASET.load_records_dict()
-            if len(records.values()) > 0:
-                for record in records.values():
-                    if "manual_duplicate" in record:
-                        del record["manual_duplicate"]
-                    if "manual_non_duplicate" in record:
-                        del record["manual_non_duplicate"]
-                    if "origin" in record:
-                        record["colrev_origin"] = record["origin"]
-                        del record["origin"]
-                    if "status" in record:
-                        record["colrev_status"] = record["status"]
-                        del record["status"]
-                    if "excl_criteria" in record:
-                        record["exclusion_criteria"] = record["excl_criteria"]
-                        del record["excl_criteria"]
-                    if "metadata_source" in record:
-                        del record["metadata_source"]
-
-                    if "colrev_masterdata" in record:
-                        if record["colrev_masterdata"] == "ORIGINAL":
-                            del record["colrev_masterdata"]
-                        else:
-                            record["colrev_masterdata_provenance"] = record[
-                                "colrev_masterdata"
-                            ]
-                            del record["colrev_masterdata"]
-
-                    if "curated_metadata" in str(self.path):
-                        if "colrev_masterdata_provenance" in record:
-                            if "CURATED" == record["colrev_masterdata_provenance"]:
-                                record["colrev_masterdata_provenance"] = ""
-
-                    # if "source_url" in record:
-                    #     record["colrev_masterdata"] = \
-                    #           "CURATED:" + record["source_url"]
-                    #     del record["source_url"]
-                    # else:
-                    #     record["colrev_masterdata"] = "ORIGINAL"
-                    # Note : for curated repositories
-                    # record["colrev_masterdata"] = "CURATED"
-
-                self.REVIEW_DATASET.save_records_dict(records)
-                self.REVIEW_DATASET.add_record_changes()
-
-            # Note: the order is important in this case.
-            self.REVIEW_DATASET.update_colrev_ids()
-
             if not Path("settings.json").is_file():
                 filedata = pkgutil.get_data(__name__, "template/settings.json")
                 if not filedata:
@@ -440,13 +409,10 @@ class ReviewManager:
                         del source["last_sync"]
 
                 settings["search"]["sources"] = sources
-                with open("settings.json", "w") as outfile:
-                    json.dump(settings, outfile, indent=4)
-                print(settings)
+
             if old_sources_path.is_file():
                 old_sources_path.unlink()
                 self.REVIEW_DATASET.remove_file(str(old_sources_path))
-            self.REVIEW_DATASET.add_setting_changes()
 
             if Path("shared_config.ini").is_file():
                 Path("shared_config.ini").unlink()
@@ -455,13 +421,69 @@ class ReviewManager:
                 Path("private_config.ini").unlink()
 
             if "curated_metadata" in str(self.path):
-                self.settings.project.curated_masterdata = True
-                self.settings.project.curated_fields = [
+                settings["project"]["curated_masterdata"] = True
+                settings["project"]["curated_fields"] = [
                     "doi",
                     "url",
                     "dblp_key",
                 ]
-                self.save_settings()
+
+            settings["dedupe"]["same_source_merges"] = "prevent"
+
+            with open("settings.json", "w") as outfile:
+                json.dump(settings, outfile, indent=4)
+
+            self.settings = self.load_settings()
+            self.save_settings()
+            self.REVIEW_DATASET.add_setting_changes()
+            self.sources = self.REVIEW_DATASET.load_sources()
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
+                    if "manual_duplicate" in record:
+                        del record["manual_duplicate"]
+                    if "manual_non_duplicate" in record:
+                        del record["manual_non_duplicate"]
+                    if "origin" in record:
+                        record["colrev_origin"] = record["origin"]
+                        del record["origin"]
+                    if "status" in record:
+                        record["colrev_status"] = record["status"]
+                        del record["status"]
+                    if "excl_criteria" in record:
+                        record["exclusion_criteria"] = record["excl_criteria"]
+                        del record["excl_criteria"]
+                    if "metadata_source" in record:
+                        del record["metadata_source"]
+
+                    if "colrev_masterdata" in record:
+                        if record["colrev_masterdata"] == "ORIGINAL":
+                            del record["colrev_masterdata"]
+                        else:
+                            record["colrev_masterdata_provenance"] = record[
+                                "colrev_masterdata"
+                            ]
+                            del record["colrev_masterdata"]
+
+                    if "curated_metadata" in str(self.path):
+                        if "colrev_masterdata_provenance" in record:
+                            if "CURATED" == record["colrev_masterdata_provenance"]:
+                                record["colrev_masterdata_provenance"] = ""
+
+                    # if "source_url" in record:
+                    #     record["colrev_masterdata"] = \
+                    #           "CURATED:" + record["source_url"]
+                    #     del record["source_url"]
+                    # else:
+                    #     record["colrev_masterdata"] = "ORIGINAL"
+                    # Note : for curated repositories
+                    # record["colrev_masterdata"] = "CURATED"
+
+                self.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_DATASET.add_record_changes()
+
+            # Note: the order is important in this case.
+            self.REVIEW_DATASET.update_colrev_ids()
 
             return True
 
