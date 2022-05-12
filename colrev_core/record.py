@@ -1116,6 +1116,8 @@ class Record:
             srep = robust_append(srep, author)
             title_str = re.sub("[^0-9a-zA-Z]+", " ", record["title"])
             srep = robust_append(srep, title_str)
+
+            srep = srep.replace("&amp;", "and")
             srep = srep.replace("&", "and")
 
             # Note : pages not needed.
@@ -1123,7 +1125,7 @@ class Record:
             # srep = robust_append(srep, pages)
         except KeyError as e:
             raise NotEnoughDataToIdentifyException(str(e))
-        return srep
+        return srep.replace(";", "")  # ";" is the separator in colrev_id list
 
 
 class RecordState(Enum):
