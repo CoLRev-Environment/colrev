@@ -64,9 +64,11 @@ class ReviewManager:
 
             self.settings = self.load_settings()
         except Exception as e:
-            print(e)
             if force_mode:
+                print(e)
                 pass
+            else:
+                raise e
 
         try:
             if self.DEBUG_MODE:
@@ -78,9 +80,11 @@ class ReviewManager:
                 self.report_logger = self.__setup_report_logger(logging.INFO)
                 self.logger = self.__setup_logger(logging.INFO)
         except Exception as e:
-            print(e)
             if force_mode:
+                print(e)
                 pass
+            else:
+                raise e
 
         try:
             global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
@@ -97,9 +101,11 @@ class ReviewManager:
             self.sources = self.REVIEW_DATASET.load_sources()
             """Information on sources (search directory)"""
         except Exception as e:
-            print(e)
             if force_mode:
+                print(e)
                 pass
+            else:
+                raise e
 
         if self.DEBUG_MODE:
             print("\n\n")
