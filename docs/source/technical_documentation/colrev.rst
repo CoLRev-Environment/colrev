@@ -107,14 +107,14 @@ Established frameworks for reproducible research using git do not apply to liter
 
 Versioning and collaboration principles
 
-- CoLRev builds on git as the most capable collaborative versioning system currently available.
-- Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
+.. - CoLRev builds on git as the most capable collaborative versioning system currently available.
+.. - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
 - Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
 - A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
 - A commit corresponds to an individual processing step
 - Version-history  (explicitly show where flexibility is needed - data extraction/analysis) - also mention git history (principles), commit messages, collaboration principles (local IDs)
-- Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether robots or researchers edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify).
-- One-branch principle (do not consider branching in the pipeline (yet??))
+- Pre-commit hooks advantage: the versioning system takes care of it (regardless of whether researchers or algorithms edit the content). We should use the hooks to avoid commits of broken states (untraceable changes). The hooks should exercise relatively strict control because not all authors of a review may be familiar with git/all principles of the review_template. For experts, it is always possible to override the hooks (--no-verify).
+- **Currently**: One-branch principle (do not consider branching in the pipeline
 - Commits should correspond to manual vs. automated contributions. They should reflect the degree to which checking is necessary. For instance, it makes sense to split the merging process into separate commits (the automated/identical ones and the manual ones)
 - Git versions should be frequent but also well thought-through and checked/reviewed
 - Committed changes should be as small as possible for collaboration/merging purposes (also for checking/restoring)
@@ -169,7 +169,7 @@ Ideally, constraining the set of possible data formatting and storage options im
 The main goal of data structuring is to give users a transparent overview of (1) the detailed changes that were made, (2) by whom, and (3) why.
 Examples of transparent changes and a commit report are available in the `changes section <../guides/changes.html>`_.
 
-To accomplish these goals, CoLRev tracks a status for each record (see :any:`Shared model for the steps of the review process`).
+To accomplish these goals, CoLRev tracks a status for each record (see the *Shared model for the steps of the review process*).
 
 - The status is used to determine the current state of the review project
 - It is used by the ReviewManager to determine which operations are valid according to the processing order (e.g., records must be prepared before they are considered for duplicate removal, PDFs have to be acquired before the main inclusion screen)
@@ -241,11 +241,39 @@ The colrev_cml_assistant extension provides an environment supporting researcher
 State-of-the-art algorithms
 ----------------------------------------------
 
-incorporating state-of-the-art algorithms to provide end-to-end process support
+.. incorporating state-of-the-art algorithms to provide end-to-end process support
+
+The goal of CoLRev is to build on the latest state-of-the-art algorithms and to incorporate the leading packages for the requisite functionality.
+This is important to achieve optimum performance across the whole process, to benefit from ongoing improvements in each subproject and to avoid duplicating efforts across projects.
+For long-term sustainability and in line with the guiding principles, only open source packages are considered.
+
+Overview of packages and reasons for selection:
+
+- **Git**: the leading collaborative versioning environment with a broad academic userbase
+- **Docker**: one of the leading platforms for container-based microservices and supported by most of the relevant academic microservices (e.g., GROBID, Zotero, Opensearch)
+- **GROBID**: the leading bibliographic reference and citation parser (Tkaczyk et al. 2018)
+- **Zotero** (import translators): one of the most active projects for translating bibliographic reference formats
+- **Tesseract/ocrmypdf**: the leading (non-proprietary) OCR engine
+- **dedupe**: one of the leading python packages for record linkage, offering convenience functions supporting active learning, learnable similarity functions and blocking algorithms
+- **Pandoc** and **CSL**: the leading projects for creating scientific documents from markdown, the standard for git-versioned manuscripts
+- **Opensearch**: the leading open source search engine and search dashboard
+
+Tkaczyk, D., Collins, A., Sheridan, P., & Beel, J. (2018). Machine learning vs. rules and out-of-the-box vs. retrained: An evaluation of open-source bibliographic reference and citation parsers. In Proceedings of the 18th ACM/IEEE on joint conference on digital libraries (pp. 99-108).
+
+..
+   alternative to dedupe (but recordlinkage does not seem to provide the same convenience functions for active labeling...)
+   https://github.com/J535D165/recordlinkage
 
 .. _typological_plurism:
 
 Typological pluralism
 ----------------------------------------------
 
-fostering typological pluralism through different forms of data analysis
+The methodological literature increasingly emphasizes typological pluralism, referring important differences between types of reviews, such as qualitative systematic reviews, theory development reviews, scoping reviews, or meta-analyses.
+As a result, a key question is how literature review technology should differ depending on the type of review.
+The main propositions of CoLRev are:
+
+- The generic literature review process (search, prescreen, screen, synthesize with the corresponding record management steps) applies to all types of reviews.
+- The most substantial differences are found in the synthesis step, which involves different types of data (e.g., structured, unstructured), different forms of synthesis (e.g., narrative, statistical) and subtasks (e.g., quality appraisal, meta-analysis, manuscript development).
+- In the other processes, differences between review types manifest in different parameters.
+- As an implication, tools should be designed to synergize in all operations that precede the synthesis and provide flexibility for different forms of synthesis that are in line with the respective type of review.

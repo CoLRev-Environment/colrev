@@ -21,7 +21,6 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.duplicate_outlets
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_from_index_exact_match
-      ~LocalIndex.get_source_link
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_record
@@ -29,7 +28,6 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.prep_record_for_return
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_from_toc
-      ~LocalIndex.set_source_link
       ~LocalIndex.set_source_path
       ~LocalIndex.start_opensearch_docker
       ~LocalIndex.start_opensearch_docker_dashboards

@@ -29,5 +29,6 @@ colrev\_core.settings.ProjectConfiguration
       ~ProjectConfiguration.review_type
       ~ProjectConfiguration.share_stat_req
       ~ProjectConfiguration.delay_automated_processing
+      ~ProjectConfiguration.curation_url
       ~ProjectConfiguration.curated_masterdata
       ~ProjectConfiguration.curated_fields
