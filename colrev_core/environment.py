@@ -8,6 +8,7 @@ import typing
 from pathlib import Path
 
 import docker
+from dacite.exceptions import MissingValueError
 from git.exc import InvalidGitRepositoryError
 from lxml.etree import SerialisationError
 from opensearchpy import NotFoundError
@@ -913,16 +914,29 @@ class LocalIndex:
             # set a source_path and source_link:
             # source_path for corrections and
             # source_link to reduce prep_record_for_return procedure
-            source_link = source_url  # Default to avoid setting it to the previous one
-            source_link = self.get_source_link(list(records.values())[0])
+
+            curation_url = CHECK_PROCESS.REVIEW_MANAGER.settings.project.curation_url
             if CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_masterdata:
                 [
-                    record.update(colrev_masterdata_provenance=f"CURATED:{source_url}")
+                    record.update(
+                        colrev_masterdata_provenance=f"CURATED:{curation_url}"
+                    )
+                    for record in records.values()
+                ]
+
+            for (
+                curated_field
+            ) in CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_fields:
+
+                [
+                    Record(record).add_data_provenance(
+                        curated_field, f"CURATED:{curation_url}"
+                    )
                     for record in records.values()
                 ]
 
             [record.update(source_path=source_url) for record in records.values()]
-            [record.update(source_link=source_link) for record in records.values()]
+            [record.update(source_link=curation_url) for record in records.values()]
             [
                 record.update(file=source_url / Path(record["file"]))
                 for record in records.values()
@@ -937,6 +951,9 @@ class LocalIndex:
             pass
         except KeyError as e:
             print(f"KeyError: {e}")
+            pass
+        except MissingValueError as e:
+            print(f"MissingValueError (settings.json): {e} ({source_url})")
             pass
         return
 
@@ -1067,31 +1084,6 @@ class LocalIndex:
         return self.prep_record_for_return(
             retrieved_record, include_file, include_colrev_ids
         )
-
-    def get_source_link(self, record: dict) -> str:
-        ret = self.set_source_link(record.copy())
-        if "source_link" in ret:
-            return ret["source_link"]
-        else:
-            return "NO_SOURCE_LINK"
-
-    def set_source_link(self, record: dict) -> dict:
-        if "source_path" in record:
-            local_repo = [
-                r
-                for r in EnvironmentManager.load_local_registry()
-                if r["source_url"] == record["source_path"]
-            ]
-            if len(local_repo) > 0:
-                if local_repo[0].get("source_link") is not None:
-                    record["source_link"] = local_repo[0]["source_link"]
-                else:
-                    record["source_link"] = "NO_SOURCE_URL_IN_REGISTRY"
-            else:
-                record["source_link"] = "REPO_NOT_IN_REGISTRY"
-        else:
-            record["source_link"] = "NO_SOURCE_PATH"
-        return record
 
     def set_source_path(self, record: dict) -> dict:
         if "source_link" in record:

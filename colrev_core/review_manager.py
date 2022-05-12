@@ -416,6 +416,12 @@ class ReviewManager:
 
                 settings["search"]["sources"] = sources
 
+            if "curated_metadata" in str(self.path):
+                repo = git.Repo(str(self.path))
+                settings["project"]["curation_url"] = repo.remote().url.replace(
+                    ".git", ""
+                )
+
             if old_sources_path.is_file():
                 old_sources_path.unlink()
                 self.REVIEW_DATASET.remove_file(str(old_sources_path))

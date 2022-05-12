@@ -23,6 +23,7 @@ class ProjectConfiguration:
     review_type: str
     share_stat_req: str
     delay_automated_processing: bool
+    curation_url: typing.Optional[str]
     curated_masterdata: bool
     curated_fields: typing.List[str]
 

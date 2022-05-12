@@ -4,6 +4,7 @@
     "review_type": "NA",
     "share_stat_req":"processed",
     "delay_automated_processing": true,
+    "curation_url": null,
     "curated_masterdata": false,
     "curated_fields": []
   },
