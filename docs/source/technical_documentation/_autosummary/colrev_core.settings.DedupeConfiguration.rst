@@ -27,3 +27,4 @@ colrev\_core.settings.DedupeConfiguration
 
       ~DedupeConfiguration.merge_threshold
       ~DedupeConfiguration.partition_threshold
+      ~DedupeConfiguration.same_source_merges
