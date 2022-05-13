@@ -147,8 +147,11 @@ class Record:
     def get_source_repo(self) -> str:
         # priority: return source_link first (then check for source_path)
         if "source_link" in self.data:
-            if "http" in self.data["source_link"]:
-                return self.data["source_link"]
+            if self.data["source_link"] is not None:
+                if "http" in self.data["source_link"]:
+                    return self.data["source_link"]
+            else:
+                print("source_link: none")
         if "source_path" in self.data:
             return self.data["source_path"]
         return "NO_SOURCE_INFO"
@@ -822,14 +825,14 @@ class Record:
             for item in self.data["colrev_data_provenance"].split("\n"):
                 key_source = item[: item[:-1].rfind(";")]
                 note = item[item[:-1].rfind(";") + 1 : -1]
-                key, source = key_source.split(":", 1)
-                colrev_data_provenance_dict[key] = {
-                    "source": source,
-                    "note": note,
-                }
-
-                # else:
-                #     print(f"problem with data_provenance_item {item}")
+                if ":" in key_source:
+                    key, source = key_source.split(":", 1)
+                    colrev_data_provenance_dict[key] = {
+                        "source": source,
+                        "note": note,
+                    }
+                else:
+                    print(f"problem with data_provenance_item {item}")
         return colrev_data_provenance_dict
 
     def set_data_provenance(self, md_p_dict: dict):

@@ -495,11 +495,6 @@ class LocalIndex:
                 pass
 
         RECORD = Record(record)
-        source_info = RECORD.data.get(
-            "source_link", RECORD.data.get("source_path", "NA")
-        )
-        if "NA" != source_info:
-            RECORD.complete_provenance(source_info)
 
         if "colrev_status" in RECORD.data:
             del RECORD.data["colrev_status"]
@@ -526,14 +521,8 @@ class LocalIndex:
             saved_record = saved_record_response["_source"]
 
             SAVED_RECORD = Record(saved_record)
-            source_info = Record(record).get_source_repo()
 
             RECORD = Record(record)
-            source_info = RECORD.data.get(
-                "source_link", RECORD.data.get("source_path", "NA")
-            )
-            if "NA" != source_info:
-                RECORD.complete_provenance(source_info)
 
             if "source_link" in RECORD.data:
                 del RECORD.data["source_link"]
@@ -547,6 +536,7 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
+                source_info = Record(record).get_provenance_field_source(k)
                 SAVED_RECORD.update_field(k, v, source_info)
 
             if "file" in record and "fulltext" not in SAVED_RECORD.data:
@@ -796,6 +786,8 @@ class LocalIndex:
             RecordState.md_needs_manual_preparation,
         ]:
             return
+
+        # TODO : remove provenance on project-specific fields
 
         if "exclusion_criteria" in record:
             del record["exclusion_criteria"]
