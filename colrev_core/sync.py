@@ -38,54 +38,69 @@ class Sync:
         import json
 
         paper_md = Path("paper.md")
+        rst_files = list(Path.cwd().rglob("*.rst"))
+
+        IDs_in_bib = self.get_IDs_in_paper()
+        print(f"References in bib: {len(IDs_in_bib)}")
 
         if paper_md.is_file():
-            IDs_in_bib = self.get_IDs_in_paper()
-
-            print("Loading cited papers from paper.md")
+            print("Loading cited references from paper.md")
             content = paper_md.read_text()
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
-            print(f"Papers in bib: {len(IDs_in_bib)}")
-            print(f"Papers in paper: {len(citation_keys)}")
+            print(f"Citations in paper.md: {len(citation_keys)}")
             self.cited_papers = citation_keys
-            for citation_key in citation_keys:
-                if citation_key in IDs_in_bib:
+
+        elif len(rst_files) > 0:
+            print("Loading cited references from *.rst")
+            citation_keys = []
+            for rst_file in rst_files:
+                content = rst_file.read_text()
+                res = re.findall(r":cite:p:`(.*)`", content)
+                cited = [c for cit_group in res for c in cit_group.split(",")]
+                citation_keys.extend(cited)
+
+            citation_keys = list(set(citation_keys))
+            print(f"Citations in *.rst: {len(citation_keys)}")
+            self.cited_papers = citation_keys
+
+        else:
+            print("Not found paper.md or *.rst")
+            return
+
+        for citation_key in citation_keys:
+            if citation_key in IDs_in_bib:
+                continue
+
+            self.LOCAL_INDEX = LocalIndex()
+
+            query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
+            res = self.LOCAL_INDEX.os.search(
+                index=self.LOCAL_INDEX.RECORD_INDEX, body=query
+            )
+
+            nr_hits = len(res["hits"]["hits"])  # type: ignore
+            if 0 == nr_hits:
+                print(f"Not found: {citation_key}")
+            elif 1 == nr_hits:
+                record_to_import = res["hits"]["hits"][0]["_source"]  # type: ignore
+                if record_to_import["ID"] in [r["ID"] for r in self.records_to_import]:
                     continue
-
-                self.LOCAL_INDEX = LocalIndex()
-
-                query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
-                res = self.LOCAL_INDEX.os.search(
-                    index=self.LOCAL_INDEX.RECORD_INDEX, body=query
+                record_to_import = {k: str(v) for k, v in record_to_import.items()}
+                record_to_import = {
+                    k: v for k, v in record_to_import.items() if "None" != v
+                }
+                record_to_import = self.LOCAL_INDEX.prep_record_for_return(
+                    record_to_import, include_file=False
                 )
 
-                nr_hits = len(res["hits"]["hits"])  # type: ignore
-                if 0 == nr_hits:
-                    print(f"Not found: {citation_key}")
-                elif 1 == nr_hits:
-                    record_to_import = res["hits"]["hits"][0]["_source"]  # type: ignore
-                    if record_to_import["ID"] in [
-                        r["ID"] for r in self.records_to_import
-                    ]:
-                        continue
-                    record_to_import = {k: str(v) for k, v in record_to_import.items()}
-                    record_to_import = {
-                        k: v for k, v in record_to_import.items() if "None" != v
-                    }
-                    record_to_import = self.LOCAL_INDEX.prep_record_for_return(
-                        record_to_import, include_file=False
-                    )
-
-                    self.records_to_import.append(record_to_import)
-                else:
-                    # print(f'Multiple hits for {citation_key}')
-                    listed_item: typing.Dict[str, typing.List] = {citation_key: []}
-                    for item in res["hits"]["hits"]:  # type: ignore
-                        listed_item[citation_key].append(item["_source"])
-                    self.non_unique_for_import.append(listed_item)
-        else:
-            print("Not found paper.md")
+                self.records_to_import.append(record_to_import)
+            else:
+                # print(f'Multiple hits for {citation_key}')
+                listed_item: typing.Dict[str, typing.List] = {citation_key: []}
+                for item in res["hits"]["hits"]:  # type: ignore
+                    listed_item[citation_key].append(item["_source"])
+                self.non_unique_for_import.append(listed_item)
 
         return
 
