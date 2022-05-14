@@ -4,6 +4,7 @@ Sphinx==4.5.0
 sphinx_autodoc_typehints==1.18.1
 sphinx_click==4.0.3
 sphinx_rtd_theme==1.0.0
+sphinxcontrib-bibtex==2.4.2
 tox==3.14.0
 twine==1.14.0
 versioneer==0.20

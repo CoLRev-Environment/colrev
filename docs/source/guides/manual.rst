@@ -1,5 +1,5 @@
 
-Manual
+Literature reviews with CoLRev
 ==================================
 
 .. figure:: ../../figures/logo_small.png
@@ -10,12 +10,15 @@ The CoLRev explains how to use the functionality of CoLRev when conducting a lit
 It does not explain the design and architecture of CoLRev, which are covered in the `technical documentation <../technical_documentation/colrev>`_ and the `API reference <../technical_documentation/api>`_.
 Our goal is to provide a manual that is self-contained. Yet, it can help to be familiar with the basics of git - for example by catching up with one of the interactive and free tutorials available online (`tutorial <https://learngitbranching.js.org/>`_).
 
+.. TODO : elaborate on prerequisites?
+
 .. figure:: ../../figures/manual_overview.svg
     :align: center
-    :figwidth: 700px
+    :figwidth: 600px
 
-Installation
+**Installation**
 
+CoLRev is implemented in Python and should be compatible with Windows, MacOS, and Linux.
 After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.com/>`_:
 
 .. code-block::
@@ -23,7 +26,26 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # Install
    pip install colrev
 
-CoLRev is implemented in Python and should be compatible with Windows, MacOS, and Linux.
+Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
+Extensions are available in the `extensions section <../guides/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+
+**Python venv**
+
+It is optional but recommended to operate CoLRev in a virtual environment.
+CoLRev relies on several fixed-version dependencies for reproducibility and venv helps to avoid dependency conflicts with other packages.
+
+.. TODO : at some point, we may start to include links to other resources/tutorials/workshops
+
+.. code-block::
+
+    # To create
+    python -m venv myvenv
+
+    # To activate (Linux)
+    source myvenv/bin/activate
+
+    # To activate (Windows)
+    myenv\Scripts\activate.bat
 
 
 .. toctree::

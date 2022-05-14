@@ -15,6 +15,8 @@ Init
 
 	colrev init [options]
 
+.. TODO : include options for different types of reviews once available
+
 Once the repository is set up, you can share it with your team (see `instructions <best_practices.html#collaborate-in-a-team>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
@@ -209,6 +211,8 @@ Prepare
 - retrieve DOI identifier and metadata from online repositories (e.g., crossref, semantic scholar, DBLP, open library )
 - heuristic metadata improvements
 
+.. state that prep may take longer to avoid frequent API calls (service unavailability)
+
 After completion, it creates new local IDs for records that were processed
 
 Operating assumptions and principles:
@@ -325,6 +329,9 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
 Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, use `colrev config -s PDF_PATH_TYPE=COPY`
 
+.. link to justification of pdf handling (reuse/shared settings)
+.. the use of shared/team PDFs is built in (just clone and index!)
+
 :program:`colrev pdf-get-man` goes through the list of missing PDFs and asks the researcher to retrieve it:
 
 - when the PDF is available, name it as ID.pdf (based on the ID displayed) and move it to the pdfs directory
@@ -410,7 +417,9 @@ Depending on the data format, the :program:`colrev data` command
 
 .. option:: --reading_heuristics
 
-    Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see [WagnerEtAl2020]_).
+    Calculate heuristic (influence of each paper within the selected sample) to prioritize reading efforts (see :cite:p:`WagnerEmplSchryen2020`.).
+
+.. TODO: include examples (figure) for data --profile/--reading_heuristics
 
 .. _Paper:
 

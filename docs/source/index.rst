@@ -105,7 +105,7 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
    :maxdepth: 2
    :caption: Guidelines
 
-   guides/manual
+   Manual <guides/manual>
    guides/cli
    guides/help
 

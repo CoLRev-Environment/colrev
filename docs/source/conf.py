@@ -44,6 +44,7 @@ release = colrev_core_version
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinxcontrib.bibtex",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
@@ -61,6 +62,8 @@ add_module_names = False  # Remove namespaces from class/method signatures
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
+
+bibtex_bibfiles = ["references.bib"]
 
 # -- Options for HTML output -------------------------------------------------
 
