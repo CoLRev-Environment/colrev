@@ -2014,6 +2014,7 @@ class Preparation(Process):
         if query:
             query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
             url = api_url + query.replace(" ", "+") + "&format=json"
+
         headers = {"user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"}
         self.REVIEW_MANAGER.logger.debug(url)
         ret = self.session.request(
@@ -2127,6 +2128,9 @@ class Preparation(Process):
 
         RECORD = item["record"]
 
+        # TODO : if we exclude the RecordState.md_prepared
+        # from all of the following prep-scripts, we are missing out
+        # on potential improvements...
         # if RecordState.md_imported != record["colrev_status"]:
         if RECORD.data["colrev_status"] not in [
             RecordState.md_imported,
@@ -2701,7 +2705,8 @@ class Preparation(Process):
 
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end
-            prep_round.scripts.append("update_metadata_status")
+            if "exclusion" != prep_round.name:
+                prep_round.scripts.append("update_metadata_status")
 
             # Note : can set selected prep scripts/rounds in the settings...
             # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:
