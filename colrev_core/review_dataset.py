@@ -464,8 +464,9 @@ class ReviewDataset:
                             for element in record[field].split(";")
                         ]
                     for ind, val in enumerate(record[field]):
-                        if ";" != val[-1]:
-                            record[field][ind] = val + ";"
+                        if len(val) > 0:
+                            if ";" != val[-1]:
+                                record[field][ind] = val + ";"
 
             for field in ReviewDataset.dict_fields:
                 record[field] = ReviewDataset.save_field_dict(record[field], field)
