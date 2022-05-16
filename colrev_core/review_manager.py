@@ -480,7 +480,11 @@ class ReviewManager:
                     if "curated_metadata" in str(self.path):
                         if "colrev_masterdata_provenance" in record:
                             if "CURATED" == record["colrev_masterdata_provenance"]:
-                                record["colrev_masterdata_provenance"] = ""
+                                record["colrev_masterdata_provenance"] = {}
+                    if "colrev_masterdata_provenance" not in record:
+                        record["colrev_masterdata_provenance"] = {}
+                    if "colrev_data_provenance" not in record:
+                        record["colrev_data_provenance"] = {}
 
                     # if "source_url" in record:
                     #     record["colrev_masterdata"] = \
