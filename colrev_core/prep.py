@@ -14,15 +14,12 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote
 
-import bibtexparser
 import dictdiffer
 import git
 import requests
 import requests_cache
 import zope.interface
 from alphabet_detector import AlphabetDetector
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
 from bs4 import BeautifulSoup
 from lingua.builder import LanguageDetectorBuilder
 from nameparser import HumanName
@@ -787,7 +784,6 @@ class Preparation(Process):
                 yield data
 
         def get_crossref_record(record) -> dict:
-
             # Note : the ID of the crossrefed record may have changed.
             # we need to trace based on the colrev_origin
             crossref_origin = record["colrev_origin"]
@@ -795,9 +791,10 @@ class Preparation(Process):
             crossref_origin = crossref_origin + "/" + record["crossref"]
             for record_string in read_next_record_str():
                 if crossref_origin in record_string:
-                    parser = BibTexParser(customization=convert_to_unicode)
-                    db = bibtexparser.loads(record_string, parser=parser)
-                    record = db.entries[0]
+                    records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        record_string
+                    )
+                    record = records_dict.values()[0]
                     if record["colrev_origin"] == crossref_origin:
                         return record
             return {}
@@ -1161,7 +1158,9 @@ class Preparation(Process):
             RETRIEVED_RECORD = PrepRecord(retrieved_record)
             RECORD.merge(
                 RETRIEVED_RECORD,
-                RETRIEVED_RECORD.data.get("colrev_masterdata_provenance", "CURATED"),
+                RETRIEVED_RECORD.data["colrev_masterdata_provenance"]["CURATED"][
+                    "source"
+                ],
             )
 
             git_repo = git.Repo(str(self.REVIEW_MANAGER.path))
@@ -2362,8 +2361,11 @@ class Preparation(Process):
                 print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
                 continue
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
-            prior_db = bibtexparser.loads(filecontents)
-            for prior_record in prior_db.entries:
+
+            prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
+                load_str=filecontents
+            )
+            for prior_record in prior_records_dict.values():
                 if str(prior_record["colrev_status"]) != str(RecordState.md_imported):
                     continue
                 for record_to_unmerge, record in record_reset_list:
@@ -2442,12 +2444,13 @@ class Preparation(Process):
             for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
         )
         filecontents = next(revlist)  # noqa
-        prior_bib_db = bibtexparser.loads(filecontents)
-
+        prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
+            load_str=filecontents
+        )
         for record in records.values():
             prior_record_l = [
                 x
-                for x in prior_bib_db.entries
+                for x in prior_records_dict.values()
                 if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(prior_record_l) != 1:
@@ -2604,28 +2607,17 @@ class Preparation(Process):
                 debug_file = "NA"
             if "NA" != debug_file:
                 with open(debug_file) as target_db:
-                    bib_db = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
+                    records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        target_db.read()
+                    )
 
-                records = bib_db.entries
-                # Cast status to Enum
-                records = [
-                    {
-                        k: RecordState[v] if ("colrev_status" == k) else v
-                        for k, v in r.items()
-                    }
-                    for r in records
-                ]
-                for record in records:
+                for record in records_dict.values():
                     if RecordState.md_imported != record.get("state", ""):
                         self.REVIEW_MANAGER.logger.info(
                             f"Setting colrev_status to md_imported {record['ID']}"
                         )
                         record["colrev_status"] = RecordState.md_imported
-                debug_ids_list = [r["ID"] for r in records]
+                debug_ids_list = list(records_dict.keys())
                 debug_ids = ",".join(debug_ids_list)
                 self.REVIEW_MANAGER.logger.info("Imported record (retrieved from file)")
 

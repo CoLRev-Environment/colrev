@@ -6,13 +6,9 @@ import string
 import typing
 from pathlib import Path
 
-import bibtexparser
 import docker
 import pandas as pd
 import requests
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
 
 from colrev_core import grobid_client
 from colrev_core import load_custom
@@ -32,7 +28,7 @@ class LoadRecord(Record):
 
         # Initialize colrev_masterdata_provenance
         if "colrev_masterdata_provenance" in self.data:
-            colrev_masterdata_provenance = self.load_masterdata_provenance()
+            colrev_masterdata_provenance = self.data["colrev_masterdata_provenance"]
         else:
             source_identifier_string = self.data["colrev_source_identifier"]
             marker = re.search(r"\{\{(.*)\}\}", source_identifier_string)
@@ -100,8 +96,8 @@ class LoadRecord(Record):
             for defect_field in defect_fields:
                 self.add_masterdata_provenance_hint(defect_field, "quality_defect")
 
-        self.set_data_provenance(colrev_data_provenance)
-        self.set_masterdata_provenance(colrev_masterdata_provenance)
+        self.data["colrev_data_provenance"] = colrev_data_provenance
+        self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
         return
 
 
@@ -174,20 +170,17 @@ class Loader(Process):
             bib_r = re.compile(r"@.*{.*,", re.M)
             if len(re.findall(bib_r, contents)) == 0:
                 self.REVIEW_MANAGER.logger.error(f"Not a bib file? {file.name}")
-                db = None
             if "Early Access Date" in contents:
                 raise BibFileFormatError(
                     f"Replace Early Access Date in bibfile before loading! {file.name}"
                 )
 
         with open(file) as bibtex_file:
-            db = BibTexParser(
-                customization=convert_to_unicode,
-                ignore_nonstandard_types=True,
-                common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
+            search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=bibtex_file.read()
+            )
 
-        return db.entries
+        return search_records_dict.values()
 
     def __load_records(self, filepath: Path) -> list:
 
@@ -380,9 +373,6 @@ class Loader(Process):
     def __zotero_translate(self, file: Path) -> typing.List[dict]:
         import requests
         import json
-        import bibtexparser
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
 
         self.start_zotero_translators()
 
@@ -402,14 +392,15 @@ class Loader(Process):
                 headers=headers,
                 json=zotero_format,
             )
+            rec_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=et.content
+            )
 
-            parser = BibTexParser(customization=convert_to_unicode, common_strings=True)
-            db = bibtexparser.loads(et.content, parser=parser)
         except Exception as e:
             pass
             raise ImportException(f"Zotero import translators failed ({e})")
 
-        return db.entries
+        return rec_dict.values()
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
         grobid_client.check_grobid_availability()
@@ -433,9 +424,11 @@ class Loader(Process):
             ind += 1
             data = data + "\n" + r.text.replace("{-1,", "{" + str(ind) + ",")
 
-        parser = BibTexParser(customization=convert_to_unicode)
-        db = bibtexparser.loads(data, parser=parser)
-        return db.entries
+        search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+            load_str=data
+        )
+
+        return search_records_dict.values()
 
     def __preprocess_records(self, data: list) -> list:
         ID = 1
@@ -539,9 +532,11 @@ class Loader(Process):
         )
 
         if 200 == r.status_code:
-            parser = BibTexParser(customization=convert_to_unicode)
-            db = bibtexparser.loads(r.text, parser=parser)
-            return db.entries
+            search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=r.text
+            )
+            return search_records_dict.values()
+
         if 500 == r.status_code:
             self.REVIEW_MANAGER.report_logger.error(
                 f"Not a readable pdf file: {file.name}"
@@ -567,12 +562,16 @@ class Loader(Process):
             headers={"Accept": "application/x-bibtex"},
         )
         if 200 == r.status_code:
-            parser = BibTexParser(customization=convert_to_unicode)
-            db = bibtexparser.loads(r.text, parser=parser)
+            search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=r.text
+            )
+            search_records = search_records_dict.values()
+
             # Use lpad to maintain the sort order (easier to catch errors)
-            for rec in db.entries:
+            for rec in search_records:
                 rec["ID"] = rec.get("ID", "").rjust(3, "0")
-            return db.entries
+
+            return search_records
         if 500 == r.status_code:
             self.REVIEW_MANAGER.report_logger.error(
                 f"Not a readable pdf file: {file.name}"
@@ -713,10 +712,11 @@ class Loader(Process):
                     self.REVIEW_MANAGER.logger.info(
                         f"Loaded {len(records)} " f"records from {sfpath.name}"
                     )
-                    db = BibDatabase()
-                    db.entries = records
-                    with open(corresponding_bib_file, "w") as fi:
-                        fi.write(bibtexparser.dumps(db))
+                    records_dict = {r["ID"]: r for r in records}
+                    self.REVIEW_MANAGER.REVIEW_DATASEt.save_records_dict_to_file(
+                        records_dict, save_path=corresponding_bib_file
+                    )
+
         else:
             self.REVIEW_MANAGER.report_logger.info(
                 f"Filetype not recognized: {sfpath.name}"
@@ -767,15 +767,13 @@ class Loader(Process):
     def resolve_non_unique_IDs(self, corresponding_bib_file: Path) -> None:
 
         with open(corresponding_bib_file) as bibtex_file:
-            db = BibTexParser(
-                customization=convert_to_unicode,
-                ignore_nonstandard_types=True,
-                common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
+            cr_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=bibtex_file.read()
+            )
 
         IDs_to_update = []
-        current_IDs = [x["ID"] for x in db.entries]
-        for record in db.entries:
+        current_IDs = list(cr_dict.keys())
+        for record in cr_dict.values():
             if len([x for x in current_IDs if x == record["ID"]]) > 1:
                 new_id = self.get_unique_id(record["ID"], current_IDs)
                 IDs_to_update.append([record["ID"], new_id])
@@ -797,8 +795,7 @@ class Loader(Process):
                 self.__inplace_change_second(
                     corresponding_bib_file, f"{old_id},", f"{new_id},"
                 )
-            # with open(corresponding_bib_file, "w") as fi:
-            #     fi.write(bibtexparser.dumps(db))
+
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.create_commit(
                 f"Resolve non-unique IDs in {corresponding_bib_file.name}"
@@ -905,7 +902,6 @@ class Loader(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
-
             if not combine_commits:
 
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

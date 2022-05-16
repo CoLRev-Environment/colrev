@@ -4,6 +4,9 @@ Credits
 
 The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 
+.. |pybtexactivity| image:: https://img.shields.io/github/commit-activity/y/live-clones/pybtex?color=green&style=plastic
+   :height: 12pt
+
 .. |gitactivity| image:: https://img.shields.io/github/commit-activity/y/git/git?color=green&style=plastic
    :height: 12pt
 
@@ -50,6 +53,9 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
    * - Project and functionality
      - License
      - Activity
+   * - `pybtex <https://bitbucket.org/pybtex-devs/pybtex/src>`_ \*: BibTeX parsing
+     - `MIT <https://bitbucket.org/pybtex-devs/pybtex/src/master/COPYING>`__
+     - |pybtexactivity|
    * - `git <https://github.com/git/git>`_ \*: versioning and collaboration
      - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`__
      - |gitactivity|

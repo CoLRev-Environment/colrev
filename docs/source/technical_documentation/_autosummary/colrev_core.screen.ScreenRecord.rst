@@ -18,6 +18,7 @@ colrev\_core.screen.ScreenRecord
 
       ~ScreenRecord.add_colrev_ids
       ~ScreenRecord.add_data_provenance
+      ~ScreenRecord.add_data_provenance_hint
       ~ScreenRecord.add_masterdata_provenance
       ~ScreenRecord.add_masterdata_provenance_hint
       ~ScreenRecord.add_provenance_all
@@ -39,8 +40,6 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.get_source_repo
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
-      ~ScreenRecord.load_data_provenance
-      ~ScreenRecord.load_masterdata_provenance
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
@@ -48,11 +47,9 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_quality_defect_notes
       ~ScreenRecord.reset_pdf_provenance_hints
-      ~ScreenRecord.set_data_provenance
       ~ScreenRecord.set_fields_complete
       ~ScreenRecord.set_masterdata_complete
       ~ScreenRecord.set_masterdata_consistent
-      ~ScreenRecord.set_masterdata_provenance
       ~ScreenRecord.set_status
       ~ScreenRecord.shares_origins
       ~ScreenRecord.update_field

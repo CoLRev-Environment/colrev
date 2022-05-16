@@ -2,11 +2,6 @@
 import shutil
 from pathlib import Path
 
-import bibtexparser
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.customization import convert_to_unicode
-
 from colrev_core import grobid_client
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -63,13 +58,14 @@ class Distribute(Process):
                 self.REVIEW_MANAGER.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
                     with open(target_bib_file) as target_bib:
-                        import_db = BibTexParser(
-                            customization=convert_to_unicode,
-                            ignore_nonstandard_types=False,
-                            common_strings=True,
-                        ).parse_file(target_bib, partial=True)
+                        import_records_dict = (
+                            self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                                load_str=target_bib.read()
+                            )
+                        )
+                        import_records = import_records_dict.values()
                 else:
-                    import_db = BibDatabase()
+                    import_records = []
                     new_record = {
                         "filename": str(target_bib_file.name),
                         "search_type": "OTHER",
@@ -82,9 +78,7 @@ class Distribute(Process):
                     sources.append(new_record)
                     self.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
 
-                writer = self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
-
-                if 0 != len(import_db.entries):
+                if 0 != len(import_records):
                     ID = int(get_last_ID(target_bib_file))
                     ID += 1
                 else:
@@ -92,11 +86,13 @@ class Distribute(Process):
 
                 record["ID"] = f"{ID}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))
-                import_db.entries.append(record)
+                import_records.append(record)
 
-                bibtex_str = bibtexparser.dumps(import_db, writer)
-                with open(target_bib_file, "w") as f:
-                    f.write(bibtex_str)
+                import_records_dict = {r["ID"]: r for r in import_records}
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                    import_records_dict, save_path=target_bib_file
+                )
+
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(target_bib_file))
 
         return

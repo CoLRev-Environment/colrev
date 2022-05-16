@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 from pathlib import Path
 
-import bibtexparser
 import imagehash
 import pandas as pd
 from pdf2image import convert_from_path
@@ -101,7 +100,7 @@ class PDFPrepMan(Process):
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
             RECORD = Record(record)
-            prov_d = RECORD.load_data_provenance()
+            prov_d = RECORD.data["colrev_data_provenance"]
 
             if "file" in prov_d:
                 if prov_d["file"]["note"] != "":
@@ -137,7 +136,6 @@ class PDFPrepMan(Process):
         return
 
     def extract_needs_pdf_prep_man(self) -> None:
-        from bibtexparser.bibdatabase import BibDatabase
 
         prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
             "prep-references.bib"
@@ -159,22 +157,16 @@ class PDFPrepMan(Process):
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records_list = [
-            record
+        records = {
+            record["ID"]: record
             for record in records.values()
             if RecordState.pdf_needs_manual_preparation == record["colrev_status"]
-        ]
+        }
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            records, save_path=prep_bib_path
+        )
 
-        # Casting to string (in particular the RecordState Enum)
-        records_list = [{k: str(v) for k, v in r.items()} for r in records_list]
-
-        bib_db = BibDatabase()
-        bib_db.entries = records_list
-        bibtex_str = bibtexparser.dumps(bib_db)
-        with open(prep_bib_path, "w") as out:
-            out.write(bibtex_str)
-
-        bib_db_df = pd.DataFrame.from_records(records_list)
+        bib_db_df = pd.DataFrame.from_records(records.values())
 
         col_names = [
             "ID",
@@ -204,28 +196,25 @@ class PDFPrepMan(Process):
         if Path("prep-references.csv").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
             bib_db_df = pd.read_csv("prep-references.csv")
-            bib_db_changed = bib_db_df.to_dict("records")
+            records_changed = bib_db_df.to_dict("records")
+
         if Path("prep-references.bib").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
 
-            from bibtexparser.bparser import BibTexParser
-            from bibtexparser.customization import convert_to_unicode
-
             with open("prep-references.bib") as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
-
-                bib_db_changed = bib_db.entries
+                records_changed_dict = (
+                    self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(
+                        load_str=target_db.read()
+                    )
+                )
+                records_changed = records_changed_dict.values()
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         for record in records.values():
             # IDs may change - matching based on origins
             changed_record_l = [
                 x
-                for x in bib_db_changed
+                for x in records_changed
                 if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:

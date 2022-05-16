@@ -19,6 +19,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.abbreviate_container
       ~PrepRecord.add_colrev_ids
       ~PrepRecord.add_data_provenance
+      ~PrepRecord.add_data_provenance_hint
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_hint
       ~PrepRecord.add_provenance_all
@@ -45,8 +46,6 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.get_source_repo
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
-      ~PrepRecord.load_data_provenance
-      ~PrepRecord.load_masterdata_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
@@ -54,11 +53,9 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.reset_pdf_provenance_hints
-      ~PrepRecord.set_data_provenance
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
-      ~PrepRecord.set_masterdata_provenance
       ~PrepRecord.set_status
       ~PrepRecord.shares_origins
       ~PrepRecord.update_field

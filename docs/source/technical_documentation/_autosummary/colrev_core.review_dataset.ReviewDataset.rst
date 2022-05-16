@@ -32,7 +32,6 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.create_commit
       ~ReviewDataset.file_in_history
       ~ReviewDataset.format_main_references
-      ~ReviewDataset.get_bibtex_writer
       ~ReviewDataset.get_commit_message
       ~ReviewDataset.get_last_commit_sha
       ~ReviewDataset.get_missing_files
@@ -46,10 +45,13 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.get_tree_hash
       ~ReviewDataset.has_changes
       ~ReviewDataset.import_file
+      ~ReviewDataset.load_field_dict
       ~ReviewDataset.load_from_git_history
       ~ReviewDataset.load_origin_records
       ~ReviewDataset.load_records_dict
       ~ReviewDataset.load_sources
+      ~ReviewDataset.parse_bibtex_str
+      ~ReviewDataset.parse_records_dict
       ~ReviewDataset.propagated_ID
       ~ReviewDataset.pull_if_repo_clean
       ~ReviewDataset.read_next_record
@@ -63,8 +65,21 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.retrieve_data
       ~ReviewDataset.retrieve_prior
       ~ReviewDataset.retrieve_records_from_history
+      ~ReviewDataset.save_field_dict
       ~ReviewDataset.save_record_list_by_ID
       ~ReviewDataset.save_records_dict
+      ~ReviewDataset.save_records_dict_to_file
       ~ReviewDataset.set_IDs
       ~ReviewDataset.update_colrev_ids
       ~ReviewDataset.update_record_by_ID
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ReviewDataset.dict_fields
+      ~ReviewDataset.list_fields

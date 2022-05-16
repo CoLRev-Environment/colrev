@@ -18,6 +18,7 @@ colrev\_core.record.Record
 
       ~Record.add_colrev_ids
       ~Record.add_data_provenance
+      ~Record.add_data_provenance_hint
       ~Record.add_masterdata_provenance
       ~Record.add_masterdata_provenance_hint
       ~Record.add_provenance_all
@@ -39,8 +40,6 @@ colrev\_core.record.Record
       ~Record.get_source_repo
       ~Record.has_incomplete_fields
       ~Record.has_inconsistent_fields
-      ~Record.load_data_provenance
-      ~Record.load_masterdata_provenance
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated
       ~Record.merge
@@ -48,11 +47,9 @@ colrev\_core.record.Record
       ~Record.remove_accents
       ~Record.remove_quality_defect_notes
       ~Record.reset_pdf_provenance_hints
-      ~Record.set_data_provenance
       ~Record.set_fields_complete
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent
-      ~Record.set_masterdata_provenance
       ~Record.set_status
       ~Record.shares_origins
       ~Record.update_field

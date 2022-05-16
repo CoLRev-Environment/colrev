@@ -9,18 +9,26 @@ import string
 import typing
 from pathlib import Path
 
-import bibtexparser
 import git
 import pandas as pd
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.customization import convert_to_unicode
 
 from colrev_core.record import RecordState
 
 
 class ReviewDataset:
+
+    # Fields that are stored as lists (items separated by newlines)
+    list_fields = [
+        "colrev_file_provenance",
+        "colrev_id",
+        # "colrev_pdf_id",
+        # "exclusion_criteria",
+    ]
+    dict_fields = [
+        "colrev_masterdata_provenance",
+        "colrev_data_provenance",
+    ]
+
     def __init__(self, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
@@ -166,8 +174,8 @@ class ReviewDataset:
 
         retrieved = []
         for commit_id, cmsg, filecontents in list(revlist):
-            prior_db = bibtexparser.loads(filecontents)
-            for prior_record in prior_db.entries:
+            prior_records_dict = self.load_records_dict(load_str=filecontents)
+            for prior_record in prior_records_dict.values():
                 if str(prior_record["colrev_status"]) != str(condition_state):
                     continue
                 for original_record in original_records:
@@ -190,41 +198,155 @@ class ReviewDataset:
 
         return prior_records
 
-    def load_records_dict(self) -> dict:
+    @classmethod
+    def load_field_dict(cls, value: str, field: str) -> dict:
+        return_dict = {}
+        if "colrev_masterdata_provenance" == field:
+            if "CURATED" == value[:7]:
+                if value.count(";") == 0:
+                    value += ";;"  # Note : temporary fix (old format)
+                if value.count(";") == 1:
+                    value += ";"  # Note : temporary fix (old format)
+
+                if ":" in value:
+                    source = value[value.find(":") + 1 : value[:-1].rfind(";")]
+                else:
+                    source = ""
+                return_dict["CURATED"] = {
+                    "source": source,
+                    "note": "",
+                }
+
+            elif "" != value:
+                for item in value.split("; "):
+                    key_source = item[: item[:-1].rfind(";")]
+                    if ":" in key_source:
+                        note = item[item[:-1].rfind(";") + 1 : -1]
+                        key, source = key_source.split(":", 1)
+                        return_dict[key] = {
+                            "source": source,
+                            "note": note,
+                        }
+                    else:
+                        print(f"problem with masterdata_provenance_item {item}")
+
+        elif "colrev_data_provenance" == field:
+            if "" != value:
+                # Note : pybtex replaces \n upon load
+                for item in (value + " ").split("; "):
+                    if "" == item:
+                        continue
+                    item += ";"
+                    key_source = item[: item[:-1].rfind(";")]
+                    note = item[item[:-1].rfind(";") + 1 : -1]
+                    if ":" in key_source:
+                        key, source = key_source.split(":", 1)
+                        return_dict[key] = {
+                            "source": source,
+                            "note": note,
+                        }
+                    else:
+                        print(f"problem with data_provenance_item {item}")
+
+        else:
+            print(f"error loading dict_field: {key}")
+
+        return return_dict
+
+    @classmethod
+    def save_field_dict(cls, input_dict: dict, key: str) -> list:
+        list_to_return = []
+        if "colrev_masterdata_provenance" == key:
+            for k, v in input_dict.items():
+                list_to_return.append(f"{k}:{v['source']};{v['note']};")
+
+        elif "colrev_data_provenance" == key:
+            for k, v in input_dict.items():
+                list_to_return.append(f"{k}:{v['source']};{v['note']};")
+
+        else:
+            print(f"error loading dict_field: {key}")
+
+        return list_to_return
+
+    @classmethod
+    def parse_records_dict(cls, records_dict: dict) -> dict:
+        def format_name(person):
+            def join(name_list):
+                return " ".join([name for name in name_list if name])
+
+            first = person.get_part_as_text("first")
+            middle = person.get_part_as_text("middle")
+            prelast = person.get_part_as_text("prelast")
+            last = person.get_part_as_text("last")
+            lineage = person.get_part_as_text("lineage")
+            s = ""
+            if last:
+                s += join([prelast, last])
+            if lineage:
+                s += ", %s" % lineage
+            if first or middle:
+                s += ", "
+                s += join([first, middle])
+            return s
+
+        # Need to concatenate fields and persons dicts
+        # but pybtex is still the most efficient solution.
+        records_dict = {
+            k: {
+                **{"ID": k},
+                **{"ENTRYTYPE": v.type},
+                **dict(
+                    {
+                        # Cast status to Enum
+                        k: RecordState[v] if ("colrev_status" == k)
+                        # DOIs are case sensitive -> use upper case.
+                        else v.upper()
+                        if ("doi" == k)
+                        else v.split("; ")
+                        if k in ReviewDataset.list_fields
+                        else ReviewDataset.load_field_dict(v, k)
+                        if k in ReviewDataset.dict_fields
+                        else v
+                        for k, v in v.fields.items()
+                    }
+                ),
+                **dict(
+                    {
+                        k: " and ".join(format_name(person) for person in persons)
+                        for k, persons in v.persons.items()
+                    }
+                ),
+            }
+            for k, v in records_dict.items()
+        }
+
+        return records_dict
+
+    def load_records_dict(self, load_str: str = None) -> dict:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
         from colrev_core.review_dataset import ReviewManagerNotNofiedError
+        from pybtex.database.input import bibtex
+
+        # TODO : optional dict-key as a parameter
+
+        import pybtex.errors
+
+        pybtex.errors.set_strict_mode(False)
 
         if self.REVIEW_MANAGER.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
 
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
-
         MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        parser = bibtex.Parser()
 
-        if MAIN_REFERENCES_FILE.is_file():
-            with open(MAIN_REFERENCES_FILE) as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
+        if load_str:
+            bib_data = parser.parse_string(load_str)
+            records_dict = self.parse_records_dict(bib_data.entries)
 
-                records = bib_db.entries
-
-                # Cast status to Enum
-                # DOIs are case sensitive -> use upper case.
-                records_dict = {
-                    r["ID"]: {
-                        k: RecordState[v]
-                        if ("colrev_status" == k)
-                        else v.upper()
-                        if ("doi" == k)
-                        else v
-                        for k, v in r.items()
-                    }
-                    for r in records
-                }
+        elif MAIN_REFERENCES_FILE.is_file():
+            bib_data = parser.parse_file(MAIN_REFERENCES_FILE)
+            records_dict = self.parse_records_dict(bib_data.entries)
 
         else:
             records_dict = {}
@@ -232,8 +354,6 @@ class ReviewDataset:
         return records_dict
 
     def load_origin_records(self) -> dict:
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
 
         origin_records: typing.Dict[str, typing.Any] = {}
         sources = [x.filename for x in self.REVIEW_MANAGER.sources]
@@ -241,19 +361,14 @@ class ReviewDataset:
             source_file = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(source)
             if source_file.is_file():
                 with open(source_file) as target_db:
-                    bib_db = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=False,
-                        common_strings=True,
-                    ).parse_file(target_db, partial=True)
 
-                    records = bib_db.entries
+                    source_record_dict = self.load_records_dict(
+                        load_str=target_db.read()
+                    )
 
-                    # Cast status to Enum
-                    # DOIs are case sensitive -> use upper case.
                     records_dict = {
                         f"{source}/{r['ID']}": {k: v for k, v in r.items()}
-                        for r in records
+                        for r in source_record_dict.values()
                     }
                     origin_records = {**origin_records, **records_dict}
 
@@ -272,8 +387,8 @@ class ReviewDataset:
         )
 
         for commit_id, cmsg, filecontents in list(revlist):
-            prior_db = bibtexparser.loads(filecontents)
-            prior_db.entries
+            prior_records_dict = self.load_records_dict(load_str=filecontents)
+
             records_dict = {
                 r["ID"]: {
                     k: RecordState[v]
@@ -283,21 +398,65 @@ class ReviewDataset:
                     else v
                     for k, v in r.items()
                 }
-                for r in prior_db.entries
+                for r in prior_records_dict.values()
             }
             yield records_dict
 
-    def save_records_dict(self, recs_dict_in):
-        """Save the records dict"""
+    @classmethod
+    def parse_bibtex_str(cls, recs_dict_in) -> str:
         import bibtexparser
         from bibtexparser.bibdatabase import BibDatabase
+        from bibtexparser.bwriter import BibTexWriter
+        from copy import deepcopy
 
-        recs_dict = recs_dict_in.copy()
+        def get_bibtex_writer():
 
-        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+            writer = BibTexWriter()
+
+            writer.contents = ["entries"]
+            # Note: IDs should be at the beginning to facilitate git versioning
+            # order: hard-coded in get_record_status_item()
+            writer.display_order = [
+                "colrev_origin",  # must be in second line
+                "colrev_status",  # must be in third line
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "colrev_file_provenance",
+                "colrev_id",
+                "colrev_pdf_id",
+                "exclusion_criteria",
+                "file",  # Note : do not change this order (parsers rely on it)
+                "prescreen_exclusion",
+                "doi",
+                "grobid-version",
+                "dblp_key",
+                "sem_scholar_id",
+                "wos_accession_number",
+                "author",
+                "booktitle",
+                "journal",
+                "title",
+                "year",
+                "editor",
+                "number",
+                "pages",
+                "series",
+                "volume",
+                "abstract",
+                "book-author",
+                "book-group-author",
+            ]
+
+            writer.order_entries_by = "ID"
+            writer.add_trailing_comma = True
+            writer.align_values = True
+            writer.indent = "  "
+            return writer
+
+        # Note: we need a deepcopy because the parsing modifies dicts
+        recs_dict = deepcopy(recs_dict_in)
 
         # Cast to string (in particular the RecordState Enum)
-        max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
         for record in recs_dict.values():
 
             # TBD : if we do this, we create more git diff changes...
@@ -313,23 +472,19 @@ class ReviewDataset:
                             for element in record[field].split(";")
                         ]
             # separated by \n
-            for field in [
-                "colrev_masterdata_provenance",
-                "colrev_data_provenance",
-                "colrev_file_provenance",
-            ]:
+            for field in ReviewDataset.list_fields:
                 if field in record:
                     if isinstance(record[field], str):
-                        # anticipate/prevent removal of last char:
-                        record[field] += ";"
                         record[field] = [
-                            # Note : [:-1] - removes last ;
-                            # which is added by list_indent
-                            element.lstrip().rstrip()[:-1]
+                            element.lstrip().rstrip()
                             for element in record[field].split("\n")
                         ]
 
-        list_indent = ";\n" + " " * max_len
+            for field in ReviewDataset.dict_fields:
+                record[field] = ReviewDataset.save_field_dict(record[field], field)
+
+        max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
+        list_indent = "\n" + " " * max_len
         records = [
             {
                 k: list_indent.join(v) if isinstance(v, list) else str(v)
@@ -343,11 +498,19 @@ class ReviewDataset:
         bib_db = BibDatabase()
         bib_db.entries = records
 
-        bibtex_str = bibtexparser.dumps(
-            bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
-        )
+        bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
 
-        with open(MAIN_REFERENCES_FILE, "w") as out:
+        return bibtex_str
+
+    @classmethod
+    def save_records_dict_to_file(cls, recs_dict_in, save_path: Path):
+        """Save the records dict to specifified file"""
+        # Note : this classmethod function can be called by CoLRev scripts
+        # operating outside a CoLRev repo (e.g., sync)
+
+        bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in)
+
+        with open(save_path, "w") as out:
             out.write(bibtex_str)
 
         # TBD: the caseing may not be necessary
@@ -363,6 +526,14 @@ class ReviewDataset:
         #     {k: v.upper() if ("doi" == k) else v for k, v in r.items()}
         #      for r in records
         # ]
+
+        return
+
+    def save_records_dict(self, recs_dict_in):
+        """Save the records dict in MAIN_REFERENCES"""
+
+        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        self.save_records_dict_to_file(recs_dict_in, MAIN_REFERENCES_FILE)
 
         return
 
@@ -389,50 +560,6 @@ class ReviewDataset:
         self.REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
 
         return
-
-    def get_bibtex_writer(self) -> BibTexWriter:
-
-        writer = BibTexWriter()
-
-        writer.contents = ["entries"]
-        # Note: IDs should be at the beginning to facilitate git versioning
-        # order: hard-coded in get_record_status_item()
-        writer.display_order = [
-            "colrev_origin",  # must be in second line
-            "colrev_status",  # must be in third line
-            "colrev_masterdata_provenance",
-            "colrev_data_provenance",
-            "colrev_file_provenance",
-            "colrev_id",
-            "colrev_pdf_id",
-            "exclusion_criteria",
-            "file",  # Note : do not change this order (parsers rely on it)
-            "prescreen_exclusion",
-            "doi",
-            "grobid-version",
-            "dblp_key",
-            "sem_scholar_id",
-            "wos_accession_number",
-            "author",
-            "booktitle",
-            "journal",
-            "title",
-            "year",
-            "editor",
-            "number",
-            "pages",
-            "series",
-            "volume",
-            "abstract",
-            "book-author",
-            "book-group-author",
-        ]
-
-        writer.order_entries_by = "ID"
-        writer.add_trailing_comma = True
-        writer.align_values = True
-        writer.indent = "  "
-        return writer
 
     def set_IDs(
         self, records: typing.Dict = {}, selected_IDs: list = None
@@ -479,7 +606,6 @@ class ReviewDataset:
                     ID_list.remove(old_id)
 
         self.save_records_dict(records)
-
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
         records = self.load_records_dict()
@@ -694,20 +820,18 @@ class ReviewDataset:
         yield data
 
     def read_next_record(self, conditions: list = None) -> typing.Iterator[dict]:
+        # Note : matches conditions connected with 'OR'
         records = []
-        with open(self.MAIN_REFERENCES_FILE) as f:
-            for record_string in self.__read_next_record_str(f):
-                parser = BibTexParser(customization=convert_to_unicode)
-                db = bibtexparser.loads(record_string, parser=parser)
-                record = db.entries[0]
-                record["colrev_status"] = RecordState[record["colrev_status"]]
-                if conditions is not None:
-                    for condition in conditions:
-                        for key, value in condition.items():
-                            if str(value) == str(record[key]):
-                                records.append(record)
-                else:
-                    records.append(record)
+        record_dict = self.load_records_dict()
+
+        for ID, record in record_dict.items():
+            if conditions is not None:
+                for condition in conditions:
+                    for key, value in condition.items():
+                        if str(value) == str(record[key]):
+                            records.append(record)
+            else:
+                records.append(record)
         yield from records
 
     def replace_field(self, IDs: list, key: str, val_str: str) -> None:
@@ -753,11 +877,8 @@ class ReviewDataset:
 
     def update_record_by_ID(self, new_record: dict, delete: bool = False) -> None:
 
-        ID = new_record["ID"]
-        new_record["colrev_status"] = str(new_record["colrev_status"])
-        bib_db = BibDatabase()
-        bib_db.entries = [new_record]
-        replacement = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
+        new_record_dict = {new_record["ID"]: new_record}
+        replacement = ReviewDataset.parse_bibtex_str(new_record_dict)
 
         current_ID_str = "NA"
         with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
@@ -768,7 +889,7 @@ class ReviewDataset:
                     current_ID = line[line.find(b"{") + 1 : line.rfind(b",")]
                     current_ID_str = current_ID.decode("utf-8")
 
-                if current_ID_str == ID:
+                if current_ID_str == new_record["ID"]:
                     line = fd.readline()
                     while (
                         b"@" not in line[:3] and line
@@ -798,12 +919,8 @@ class ReviewDataset:
         if record_list == []:
             return
 
-        # Casting to string (in particular the RecordState Enum)
-        record_list = [{k: str(v) for k, v in r.items()} for r in record_list]
-
-        bib_db = BibDatabase()
-        bib_db.entries = record_list
-        parsed = bibtexparser.dumps(bib_db, self.get_bibtex_writer())
+        record_dict = {r["ID"]: r for r in record_list}
+        parsed = ReviewDataset.parse_bibtex_str(record_dict)
 
         record_list = [
             {
@@ -1359,9 +1476,8 @@ class ReviewDataset:
             # TBD: whether/how to detect dblp. Previously:
             # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
             if "{CURATED:" in record_string:
-                parser = BibTexParser(customization=convert_to_unicode)
-                db = bibtexparser.loads(record_string, parser=parser)
-                r = db.entries[0]
+                records_dict = self.load_records_dict(record_string)
+                r = list(records_dict.values())[0]
                 prior["curated_records"].append(r)
 
         self.REVIEW_MANAGER.logger.debug("Load current bib")
@@ -1372,9 +1488,8 @@ class ReviewDataset:
                 # TBD: whether/how to detect dblp. Previously:
                 # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
                 if "{CURATED:" in record_string:
-                    parser = BibTexParser(customization=convert_to_unicode)
-                    db = bibtexparser.loads(record_string, parser=parser)
-                    r = db.entries[0]
+                    records_dict = self.load_records_dict(record_string)
+                    r = list(records_dict.values())[0]
                     curated_records.append(r)
 
         for curated_record in curated_records:
@@ -1435,50 +1550,6 @@ class ReviewDataset:
                             original_curated_record
                         ).create_colrev_id()
 
-                    # deactivated export of DBLP corrections:
-                    # metadata_source has been dropped.
-                    # corrections would have to be generated on a per-field basis
-                    # elif "DBLP" ==
-                    #  corrected_curated_record.get("metadata_source", ""):
-                    #     # Note : don't use PREPARATION.get_md_from_dblp
-                    #     # because it will fuse_best_fields
-                    #     ret = requests.get(
-                    #         corrected_curated_record["dblp_key"] + ".html?view=bibtex"
-                    #     )
-                    #     bibtex_regex = re.compile(r"select-on-click(?s).*</pre")
-                    #     gr = bibtex_regex.search(ret.text)
-                    #     if gr:
-                    #         bibtex_str = gr.group(0)[18:-6]
-                    #         dblp_bib = bibtexparser.loads(bibtex_str)
-                    #         original_curated_record = dblp_bib.entries.pop()
-                    #         original_curated_record = {
-                    #             k: v.replace("\n", " ")
-                    #             for k, v in original_curated_record.items()
-                    #         }
-                    #         original_curated_record[
-                    #             "source_url"
-                    #         ] = "metadata_source=DBLP"
-                    #         original_curated_record["colrev_origin"] = prior_cr[
-                    #             "colrev_origin"
-                    #         ]
-                    #     else:
-                    #         continue
-
-                    #     # Note : we don't want to correct the following fields:
-                    #     if "booktitle" in corrected_curated_record:
-                    #         original_curated_record[
-                    #             "booktitle"
-                    #         ] = corrected_curated_record["booktitle"]
-                    #     if "editor" in original_curated_record:
-                    #         del original_curated_record["editor"]
-                    #     if "publisher" in original_curated_record:
-                    #         del original_curated_record["publisher"]
-                    #     if "bibsource" in original_curated_record:
-                    #         del original_curated_record["bibsource"]
-                    #     if "timestamp" in original_curated_record:
-                    #         del original_curated_record["timestamp"]
-                    #     if "biburl" in original_curated_record:
-                    #         del original_curated_record["biburl"]
                     else:
                         continue  # probably?
 

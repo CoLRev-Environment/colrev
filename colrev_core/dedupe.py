@@ -529,8 +529,6 @@ class Dedupe(Process):
     def fix_errors(self) -> None:
         """Fix errors as highlighted in the Excel files"""
 
-        import bibtexparser
-
         self.REVIEW_MANAGER.report_logger.info("Dedupe: fix errors")
         self.REVIEW_MANAGER.logger.info("Dedupe: fix errors")
         saved_args = locals()
@@ -559,8 +557,10 @@ class Dedupe(Process):
 
                 # Note : there could be more than two IDs in the list
                 filecontents = next(revlist)
-                prior_db = bibtexparser.loads(filecontents)
-                prior_records = prior_db.entries
+
+                prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
+                    load_str=filecontents
+                )
 
                 for ID_list_to_unmerge in IDs_to_unmerge:
                     self.REVIEW_MANAGER.report_logger.info(
@@ -573,13 +573,8 @@ class Dedupe(Process):
                         k: v for k, v in records.items() if k not in ID_list_to_unmerge
                     }
 
-                    if all(
-                        [
-                            ID in [r["ID"] for r in prior_records]
-                            for ID in ID_list_to_unmerge
-                        ]
-                    ):
-                        for r in prior_records:
+                    if all([ID in prior_records_dict for ID in ID_list_to_unmerge]):
+                        for r in prior_records_dict.values():
                             if r["ID"] in ID_list_to_unmerge:
                                 # add manual_dedupe/non_dupe decision to the records
                                 manual_non_duplicates = ID_list_to_unmerge.copy()

@@ -3,12 +3,6 @@ import re
 import typing
 from pathlib import Path
 
-import bibtexparser
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.customization import convert_to_unicode
-
 from colrev_core.environment import LocalIndex
 
 
@@ -105,21 +99,22 @@ class Sync:
         return
 
     def get_IDs_in_paper(self) -> typing.List:
+        from pybtex.database.input import bibtex
+        import pybtex.errors
+        from colrev_core.review_dataset import ReviewDataset
+
+        pybtex.errors.set_strict_mode(False)
 
         references_file = Path("references.bib")
         if not references_file.is_file():
-            feed_db = BibDatabase()
-            records = []
+            records = dict()
         else:
-            with open(references_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
 
-        return [r["ID"] for r in records]
+            parser = bibtex.Parser()
+            bib_data = parser.parse_file(str(references_file))
+            records = ReviewDataset.parse_records_dict(bib_data.entries)
+
+        return list(records.keys())
 
     def get_non_unique(self) -> list:
         return self.non_unique_for_import
@@ -140,18 +135,20 @@ class Sync:
 
     def add_to_bib(self) -> None:
 
+        from pybtex.database.input import bibtex
+        import pybtex.errors
+        from colrev_core.review_dataset import ReviewDataset
+
+        pybtex.errors.set_strict_mode(False)
+
         references_file = Path("references.bib")
         if not references_file.is_file():
-            feed_db = BibDatabase()
             records = []
         else:
-            with open(references_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
+
+            parser = bibtex.Parser()
+            bib_data = parser.parse_file(str(references_file))
+            records = list(ReviewDataset.parse_records_dict(bib_data.entries).values())
 
         available_ids = [r["ID"] for r in records]
         added = []
@@ -168,10 +165,9 @@ class Sync:
 
             print(f"Loaded {len(added)} papers")
 
-        # Casting to string (in particular the RecordState Enum)
         records = [
             {
-                k: str(v)
+                k: v
                 for k, v in record.items()
                 if k
                 in [
@@ -193,45 +189,11 @@ class Sync:
             for record in records
         ]
 
-        records = [r for r in records if r["ID"] in self.cited_papers]
+        records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        records.sort(key=lambda x: x["ID"])
-
-        feed_db.entries = records
-        with open(references_file, "w") as fi:
-            fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+        ReviewDataset.save_records_dict_to_file(records_dict, references_file)
 
         return
-
-    def __get_bibtex_writer(self) -> BibTexWriter:
-
-        writer = BibTexWriter()
-        writer.contents = ["entries", "comments"]
-        writer.display_order = [
-            "doi",
-            "dblp_key",
-            "author",
-            "booktitle",
-            "journal",
-            "title",
-            "year",
-            "editor",
-            "number",
-            "pages",
-            "series",
-            "volume",
-            "abstract",
-            "book-author",
-            "book-group-author",
-        ]
-
-        # Note : use this sort order to ensure that the latest entries will be
-        # appended at the end and in the same order when rerunning the feed:
-        writer.order_entries_by = "ID"
-        writer.add_trailing_comma = True
-        writer.align_values = True
-        writer.indent = "  "
-        return writer
 
 
 if __name__ == "__main__":

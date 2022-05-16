@@ -6,15 +6,10 @@ import typing
 from datetime import datetime
 from pathlib import Path
 
-import bibtexparser
 import imagehash
 import pandas as pd
 import pandasql as ps
 import requests
-from bibtexparser.bibdatabase import BibDatabase
-from bibtexparser.bparser import BibTexParser
-from bibtexparser.bwriter import BibTexWriter
-from bibtexparser.customization import convert_to_unicode
 from crossref.restful import Journals
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
@@ -86,38 +81,9 @@ class Search(Process):
             },
         ]
 
-    def __get_bibtex_writer(self) -> BibTexWriter:
-
-        writer = BibTexWriter()
-        writer.contents = ["entries", "comments"]
-        writer.display_order = [
-            "doi",
-            "dblp_key",
-            "author",
-            "booktitle",
-            "journal",
-            "title",
-            "year",
-            "editor",
-            "number",
-            "pages",
-            "series",
-            "volume",
-            "abstract",
-            "book-author",
-            "book-group-author",
-        ]
-
-        # Note : use this sort order to ensure that the latest entries will be
-        # appended at the end and in the same order when rerunning the feed:
-        writer.order_entries_by = ("year", "volume", "number", "author", "title")
-        writer.add_trailing_comma = True
-        writer.align_values = True
-        writer.indent = "  "
-        return writer
-
     def search_crossref(self, params, feed_file):
         from colrev_core.prep import PrepRecord
+        from colrev_core.review_dataset import ReviewDataset
 
         if "journal_issn" not in params["scope"]:
             print("Error: journal_issn not in params")
@@ -147,16 +113,14 @@ class Search(Process):
             available_ids = []
             max_id = 1
             if not feed_file.is_file():
-                feed_db = BibDatabase()
                 records = []
             else:
                 with open(feed_file) as bibtex_file:
-                    feed_db = BibTexParser(
-                        customization=convert_to_unicode,
-                        ignore_nonstandard_types=True,
-                        common_strings=True,
-                    ).parse_file(bibtex_file, partial=True)
-                    records = feed_db.entries
+                    feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        load_str=bibtex_file.read()
+                    )
+                    records = feed_rd.values()
+
                 available_ids = [x["doi"] for x in records if "doi" in x]
                 max_id = (
                     max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
@@ -207,23 +171,21 @@ class Search(Process):
                 print(e)
                 pass
 
-            # Note : we may have to set temporary IDs
-            # (and replace them after the following sort operation) ?!
-            records = sorted(
-                records,
-                key=lambda e: (
-                    e.get("year", ""),
-                    e.get("volume", ""),
-                    e.get("number", ""),
-                    e.get("author", ""),
-                    e.get("title", ""),
-                ),
-            )
+            # Note : we may have to set temporary IDs to ensure the sort order
+            # records = sorted(
+            #     records,
+            #     key=lambda e: (
+            #         e.get("year", ""),
+            #         e.get("volume", ""),
+            #         e.get("number", ""),
+            #         e.get("author", ""),
+            #         e.get("title", ""),
+            #     ),
+            # )
 
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            feed_db.entries = records
-            with open(feed_file, "w") as fi:
-                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+            records_dict = {r["ID"]: r for r in records}
+            ReviewDataset.save_records_dict_to_file(records_dict, feed_file)
 
         return
 
@@ -267,6 +229,7 @@ class Search(Process):
 
     def search_dblp(self, params, feed_file):
         from colrev_core.prep import Preparation
+        from colrev_core.review_dataset import ReviewDataset
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -281,16 +244,14 @@ class Search(Process):
         available_ids = []
         max_id = 1
         if not feed_file.is_file():
-            feed_db = BibDatabase()
             records = []
         else:
             with open(feed_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
+                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
+                )
+                records = feed_rd.values()
+
             available_ids = [x["dblp_key"] for x in records if "dblp_key" in x]
             max_id = max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
 
@@ -366,27 +327,24 @@ class Search(Process):
                     if not retrieved:
                         break
 
-                    # Note : we may have to set temporary IDs
-                    # (and replace them after the following sort operation) ?!
-                    records = sorted(
-                        records,
-                        key=lambda e: (
-                            e.get("year", ""),
-                            e.get("volume", ""),
-                            e.get("number", ""),
-                            e.get("author", ""),
-                            e.get("title", ""),
-                        ),
-                    )
+                    # Note : we may have to set temporary IDs to ensure the sort order
+                    # records = sorted(
+                    #     records,
+                    #     key=lambda e: (
+                    #         e.get("year", ""),
+                    #         e.get("volume", ""),
+                    #         e.get("number", ""),
+                    #         e.get("author", ""),
+                    #         e.get("title", ""),
+                    #     ),
+                    # )
 
                     feed_file.parents[0].mkdir(parents=True, exist_ok=True)
                     if len(records) == 0:
                         continue
-                    feed_db.entries = records
-                    with open(feed_file, "w") as fi:
-                        fi.write(
-                            bibtexparser.dumps(feed_db, self.__get_bibtex_writer())
-                        )
+
+                    records_dict = {r["ID"]: r for r in records}
+                    ReviewDataset.save_records_dict_to_file(records_dict, feed_file)
 
         except requests.exceptions.HTTPError:
             pass
@@ -461,17 +419,15 @@ class Search(Process):
         from tqdm import tqdm
 
         if not feed_file.is_file():
-            feed_db = BibDatabase()
             records = []
             imported_ids = []
         else:
             with open(feed_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
+                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
+                )
+                records = feed_rd.values()
+
             imported_ids = [x["ID"] for x in records]
 
         PROJECT_REVIEW_MANAGER = ReviewManager(params["scope"]["url"])
@@ -519,9 +475,11 @@ class Search(Process):
         ]
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            feed_db.entries = records
-            with open(feed_file, "w") as fi:
-                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+            records_dict = {r["ID"]: r for r in records}
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records_dict, save_path=feed_file
+            )
+
         else:
             print("No records retrieved.")
         return
@@ -531,17 +489,16 @@ class Search(Process):
         assert "selection_clause" in params
 
         if not feed_file.is_file():
-            feed_db = BibDatabase()
             records = []
             imported_ids = []
         else:
             with open(feed_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
+
+                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
+                )
+                records = feed_rd.values()
+
             imported_ids = [x["ID"] for x in records]
 
         from colrev_core.environment import LocalIndex
@@ -600,9 +557,12 @@ class Search(Process):
 
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            feed_db.entries = records
-            with open(feed_file, "w") as fi:
-                fi.write(bibtexparser.dumps(feed_db, self.__get_bibtex_writer()))
+
+            records_dict = {r["ID"]: r for r in records}
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records_dict, save_path=feed_file
+            )
+
         else:
             print("No records found")
 
@@ -680,21 +640,19 @@ class Search(Process):
 
             if not feed_file.is_file():
                 return
-            writer = self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
 
             with open(feed_file) as target_db:
-                search_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
+
+                search_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=target_db.read()
+                )
 
             records = {}
             if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
             to_remove: typing.List[str] = []
-            for x in search_db.entries:
+            for x in search_rd.values():
                 x_pdf_path = self.REVIEW_MANAGER.path / Path(x["file"])
                 if not x_pdf_path.is_file():
                     if records:
@@ -702,14 +660,14 @@ class Search(Process):
                         if updated:
                             continue
                     to_remove = to_remove + [
-                        f"{feed_file.name}/{x['ID']}" for x in search_db.entries
+                        f"{feed_file.name}/{id}" for id in search_rd.keys()
                     ]
 
-            search_db.entries = [x for x in search_db.entries if x_pdf_path.is_file()]
-            if len(search_db.entries) != 0:
-                bibtex_str = bibtexparser.dumps(search_db, writer)
-                with open(feed_file, "w") as f:
-                    f.write(bibtex_str)
+            search_rd = {x["ID"]: x for x in search_rd.values() if x_pdf_path.is_file()}
+            if len(search_rd.values()) != 0:
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                    search_rd, save_path=feed_file
+                )
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 str(feed_file.parent / feed_file.name)
@@ -720,7 +678,7 @@ class Search(Process):
                 # but that should not be a major issue in indexing repositories
 
                 to_remove = []
-                source_ids = [x["ID"] for x in search_db.entries]
+                source_ids = list(search_rd.keys())
                 for record in records.values():
                     if str(feed_file.name) in record["colrev_origin"]:
                         if (
@@ -761,16 +719,13 @@ class Search(Process):
             return pdf_list
 
         if not feed_file.is_file():
-            feed_db = BibDatabase()
             records = []
         else:
             with open(feed_file) as bibtex_file:
-                feed_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=True,
-                    common_strings=True,
-                ).parse_file(bibtex_file, partial=True)
-                records = feed_db.entries
+                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
+                )
+                records = feed_rd.values()
 
         path = Path(params["scope"]["path"])
 
@@ -914,9 +869,8 @@ class Search(Process):
             # )
 
             # if 200 == r.status_code:
-            #     parser = BibTexParser(customization=convert_to_unicode)
-            #     db = bibtexparser.loads(r.text, parser=parser)
-            #     record = db.entries[0]
+            #     rec_d = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(r.text)
+            #     record = rec_d.values()[0]
             #     return record
             # if 500 == r.status_code:
             #     self.REVIEW_MANAGER.logger.error(f"Not a readable
@@ -1080,14 +1034,12 @@ class Search(Process):
 
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            feed_db.entries = records
-            with open(feed_file, "w") as fi:
-                fi.write(
-                    bibtexparser.dumps(
-                        feed_db,
-                        self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer(),
-                    )
-                )
+
+            records_dict = {r["ID"]: r for r in records}
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records_dict, save_path=feed_file
+            )
+
         else:
             print("No records found")
 

@@ -1,9 +1,7 @@
 #! /usr/bin/env python
-import logging
 import pprint
 import time
 
-import bibtexparser
 import dictdiffer
 
 from colrev_core.process import Process
@@ -14,8 +12,6 @@ class Trace(Process):
     def __init__(self, REVIEW_MANAGER):
 
         super().__init__(REVIEW_MANAGER, ProcessType.check)
-
-        logging.getLogger("bibtexparser").setLevel(logging.CRITICAL)
 
     def __lpad_multiline(self, s: str, lpad: int) -> str:
         lines = s.splitlines()
@@ -50,10 +46,14 @@ class Trace(Process):
                 filecontents = (
                     commit.tree / str(MAIN_REFERENCES_RELATIVE)
                 ).data_stream.read()
-                individual_bib_db = bibtexparser.loads(filecontents)
-                record = [
-                    record for record in individual_bib_db.entries if record["ID"] == ID
-                ][0]
+
+                records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=filecontents.decode("utf-8")
+                )
+
+                if ID not in records_dict:
+                    continue
+                record = records_dict[ID]
 
                 if len(record) == 0:
                     print(f"record {ID} not in commit.")

@@ -18,6 +18,7 @@ colrev\_core.load.LoadRecord
 
       ~LoadRecord.add_colrev_ids
       ~LoadRecord.add_data_provenance
+      ~LoadRecord.add_data_provenance_hint
       ~LoadRecord.add_masterdata_provenance
       ~LoadRecord.add_masterdata_provenance_hint
       ~LoadRecord.add_provenance_all
@@ -40,8 +41,6 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.has_incomplete_fields
       ~LoadRecord.has_inconsistent_fields
       ~LoadRecord.import_provenance
-      ~LoadRecord.load_data_provenance
-      ~LoadRecord.load_masterdata_provenance
       ~LoadRecord.masterdata_is_complete
       ~LoadRecord.masterdata_is_curated
       ~LoadRecord.merge
@@ -49,11 +48,9 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.remove_accents
       ~LoadRecord.remove_quality_defect_notes
       ~LoadRecord.reset_pdf_provenance_hints
-      ~LoadRecord.set_data_provenance
       ~LoadRecord.set_fields_complete
       ~LoadRecord.set_masterdata_complete
       ~LoadRecord.set_masterdata_consistent
-      ~LoadRecord.set_masterdata_provenance
       ~LoadRecord.set_status
       ~LoadRecord.shares_origins
       ~LoadRecord.update_field

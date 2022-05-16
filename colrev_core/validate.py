@@ -5,11 +5,9 @@ import typing
 from itertools import chain
 from pathlib import Path
 
-import bibtexparser
 import dictdiffer
 import git
 from bashplotlib.histogram import plot_hist
-from bibtexparser.customization import convert_to_unicode
 from p_tqdm import p_map
 
 from colrev_core.process import Process
@@ -26,14 +24,13 @@ class Validate(Process):
     def load_search_records(self, bib_file: Path) -> list:
 
         with open(bib_file) as bibtex_file:
-            individual_bib_db = bibtexparser.bparser.BibTexParser(
-                customization=convert_to_unicode,
-                common_strings=True,
-            ).parse_file(bibtex_file, partial=True)
-            for record in individual_bib_db.entries:
+            individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.bibtex_file(
+                load_str=bibtex_file.read()
+            )
+            for record in individual_bib_rd.values():
                 record["colrev_origin"] = bib_file.stem + "/" + record["ID"]
 
-        return individual_bib_db.entries
+        return individual_bib_rd.values()
 
     def get_search_records(self) -> list:
 
@@ -191,24 +188,29 @@ class Validate(Process):
             found = False
             for commit, filecontents in list(revlist):
                 if found:  # load the MAIN_REFERENCES_RELATIVE in the following commit
-                    prior_bib_db = bibtexparser.loads(filecontents)
+                    prior_records_dict = (
+                        self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                            load_str=filecontents
+                        )
+                    )
                     break
                 if commit == target_commit:
-                    bib_db = bibtexparser.loads(filecontents)
-                    records = bib_db.entries
+                    records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        load_str=filecontents
+                    )
                     found = True
 
             # determine which records have been changed (prepared or merged)
             # in the target_commit
-            for record in records:
+            for record in records_dict.values():
                 prior_record = [
-                    x for x in prior_bib_db.entries if x["ID"] == record["ID"]
+                    rec for id, rec in prior_records_dict.items() if id == record["ID"]
                 ][0]
                 # Note: the following is an exact comparison of all fields
                 if record != prior_record:
                     record.update(changed_in_target_commit="True")
 
-            return records
+            return records_dict.values()
 
     def validate_properties(self, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)

@@ -707,9 +707,30 @@ class LocalIndex:
         self, record: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
         from colrev_core.record import RecordState
+        from colrev_core.review_dataset import ReviewDataset
+        from pybtex.database.input import bibtex
 
-        # Casting to string (in particular the RecordState Enum)
-        record = {k: str(v) for k, v in record.items()}
+        # Note : we need to parse it through parse_records_dict (pybtex / parse_string)
+        # To make sure all fields are formatted /parsed consistently
+        parser = bibtex.Parser()
+        load_str = (
+            "@"
+            + record["ENTRYTYPE"]
+            + "{"
+            + record["ID"]
+            + "\n"
+            + ",\n".join(
+                [
+                    f"{k} = {{{v}}}"
+                    for k, v in record.items()
+                    if k not in ["ID", "ENTRYTYPE"]
+                ]
+            )
+            + "}"
+        )
+        bib_data = parser.parse_string(load_str)
+        records_dict = ReviewDataset.parse_records_dict(bib_data.entries)
+        record = list(records_dict.values())[0]
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex

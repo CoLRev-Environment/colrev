@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 from pathlib import Path
 
-import bibtexparser
 import pandas as pd
 
 from colrev_core import prep
@@ -53,7 +52,7 @@ class PrepMan(Process):
 
             if "colrev_masterdata_provenance" in record:
                 RECORD = Record(record)
-                prov_d = RECORD.load_masterdata_provenance()
+                prov_d = RECORD.data["colrev_masterdata_provenance"]
                 hints = []
                 for k, v in prov_d.items():
                     if v["note"] != "":
@@ -107,7 +106,6 @@ class PrepMan(Process):
         return
 
     def extract_needs_prep_man(self) -> None:
-        from bibtexparser.bibdatabase import BibDatabase
 
         prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
             "prep-references.bib"
@@ -129,22 +127,17 @@ class PrepMan(Process):
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records_list = [
-            record
-            for record in records.values()
+        records = {
+            id: record
+            for id, record in records.items()
             if RecordState.md_needs_manual_preparation == record["colrev_status"]
-        ]
+        }
 
-        # Casting to string (in particular the RecordState Enum)
-        records_list = [{k: str(v) for k, v in r.items()} for r in records_list]
+        self.REVIEW_MANAGER.REVIEW_DATASEt.save_records_dict_to_file(
+            records, save_path=prep_bib_path
+        )
 
-        bib_db = BibDatabase()
-        bib_db.entries = records_list
-        bibtex_str = bibtexparser.dumps(bib_db)
-        with open(prep_bib_path, "w") as out:
-            out.write(bibtex_str)
-
-        bib_db_df = pd.DataFrame.from_records(records_list)
+        bib_db_df = pd.DataFrame.from_records(records.values())
 
         col_names = [
             "ID",
@@ -176,21 +169,16 @@ class PrepMan(Process):
         if Path("prep-references.csv").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
             bib_db_df = pd.read_csv("prep-references.csv")
-            bib_db_changed = bib_db_df.to_dict("records")
+            records_changed = bib_db_df.to_dict("records")
         if Path("prep-references.bib").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
 
-            from bibtexparser.bparser import BibTexParser
-            from bibtexparser.customization import convert_to_unicode
-
             with open("prep-references.bib") as target_db:
-                bib_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
+                records_changed_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
+                    load_str=target_db.read()
+                )
 
-                bib_db_changed = bib_db.entries
+                records_changed = records_changed_dict.values()
 
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
@@ -201,8 +189,11 @@ class PrepMan(Process):
 
         filecontents_current_commit = next(revlist)  # noqa
         filecontents = next(revlist)
-        prior_bib_db = bibtexparser.loads(filecontents)
-        prior_records = prior_bib_db.entries
+
+        prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
+            load_str=filecontents
+        )
+        prior_records = prior_records_dict.values()
 
         records_to_reset = []
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -210,7 +201,7 @@ class PrepMan(Process):
             # IDs may change - matching based on origins
             changed_record_l = [
                 x
-                for x in bib_db_changed
+                for x in records_changed
                 if x["colrev_origin"] == record["colrev_origin"]
             ]
             if len(changed_record_l) == 1:
@@ -248,9 +239,6 @@ class PrepMan(Process):
     def append_to_non_dupe_db(
         self, record_to_unmerge_original: dict, record_original: dict
     ):
-        from bibtexparser.bibdatabase import BibDatabase
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
 
         record_to_unmerge = record_to_unmerge_original.copy()
         record = record_original.copy()
@@ -262,15 +250,16 @@ class PrepMan(Process):
         if non_dupe_db_path.is_file():
 
             with open(non_dupe_db_path) as target_db:
-                non_dupe_db = BibTexParser(
-                    customization=convert_to_unicode,
-                    ignore_nonstandard_types=False,
-                    common_strings=True,
-                ).parse_file(target_db, partial=True)
 
-            max_id = max([int(x["ID"]) for x in non_dupe_db.entries] + [1]) + 1
+                non_dupe_recs_dict = (
+                    self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        target_db.read()
+                    )
+                )
+
+            max_id = max([int(ID) for ID in non_dupe_recs_dict.keys()] + [1]) + 1
         else:
-            non_dupe_db = BibDatabase()
+            non_dupe_recs_dict = dict()
             max_id = 1
 
         record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
@@ -285,12 +274,12 @@ class PrepMan(Process):
         del record_to_unmerge["colrev_status"]
         del record["colrev_status"]
 
-        non_dupe_db.entries.append(record_to_unmerge)
-        non_dupe_db.entries.append(record)
-        bibtex_str = bibtexparser.dumps(non_dupe_db)
+        non_dupe_recs_dict[record_to_unmerge["ID"]] = record_to_unmerge
+        non_dupe_recs_dict[record["ID"]] = record
 
-        with open(non_dupe_db_path, "w") as out:
-            out.write(bibtex_str)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
+            non_dupe_recs_dict, save_path=non_dupe_db_path
+        )
 
         return
 

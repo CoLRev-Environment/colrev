@@ -18,6 +18,7 @@ colrev\_core.prescreen.PrescreenRecord
 
       ~PrescreenRecord.add_colrev_ids
       ~PrescreenRecord.add_data_provenance
+      ~PrescreenRecord.add_data_provenance_hint
       ~PrescreenRecord.add_masterdata_provenance
       ~PrescreenRecord.add_masterdata_provenance_hint
       ~PrescreenRecord.add_provenance_all
@@ -39,8 +40,6 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.get_source_repo
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
-      ~PrescreenRecord.load_data_provenance
-      ~PrescreenRecord.load_masterdata_provenance
       ~PrescreenRecord.masterdata_is_complete
       ~PrescreenRecord.masterdata_is_curated
       ~PrescreenRecord.merge
@@ -48,11 +47,9 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.remove_accents
       ~PrescreenRecord.remove_quality_defect_notes
       ~PrescreenRecord.reset_pdf_provenance_hints
-      ~PrescreenRecord.set_data_provenance
       ~PrescreenRecord.set_fields_complete
       ~PrescreenRecord.set_masterdata_complete
       ~PrescreenRecord.set_masterdata_consistent
-      ~PrescreenRecord.set_masterdata_provenance
       ~PrescreenRecord.set_status
       ~PrescreenRecord.shares_origins
       ~PrescreenRecord.update_field

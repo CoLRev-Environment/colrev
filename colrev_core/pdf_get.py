@@ -200,10 +200,6 @@ class PDF_Retrieval(Process):
         return cpid1
 
     def relink_files(self) -> None:
-        from bibtexparser.bparser import BibTexParser
-        from bibtexparser.customization import convert_to_unicode
-        import bibtexparser
-
         def relink_pdf_files(records):
             from colrev_core.settings import SearchType
 
@@ -219,13 +215,12 @@ class PDF_Retrieval(Process):
                     if feed_filepath.is_file():
                         feed_filename = feed.filename
                         with open(Path("search") / feed.filename) as target_db:
-                            bib_db = BibTexParser(
-                                customization=convert_to_unicode,
-                                ignore_nonstandard_types=False,
-                                common_strings=True,
-                            ).parse_file(target_db, partial=True)
-
-                        source_records = bib_db.entries
+                            source_records_dict = (
+                                self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(
+                                    load_str=target_db.read()
+                                )
+                            )
+                        source_records = source_records_dict.values()
 
             self.REVIEW_MANAGER.logger.info("Calculate colrev_pdf_ids")
             pdf_candidates = {
@@ -281,13 +276,10 @@ class PDF_Retrieval(Process):
                         break
 
             if len(source_records) > 0:
-                bib_db.entries = source_records
-                bibtex_str = bibtexparser.dumps(
-                    bib_db, self.REVIEW_MANAGER.REVIEW_DATASET.get_bibtex_writer()
+                source_records_dict = {r["ID"]: r for r in source_records}
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                    source_records_dict, save_path=feed_filepath
                 )
-
-                with open(feed_filepath, "w") as out:
-                    out.write(bibtex_str)
 
             if feed_filepath != "":
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_filepath))
