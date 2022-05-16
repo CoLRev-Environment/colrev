@@ -130,6 +130,9 @@ class ScreenCriterion:
     name: str
     explanation: str
 
+    def __str__(self):
+        return f"{self.name}"
+
 
 @dataclass
 class ScreeningProcessConfig:

@@ -94,6 +94,109 @@ class Screen(Process):
 
         return
 
+    def add_criterion(self, criterion_to_add) -> None:
+        """Add a screening criterion to the records and settings"""
+        from colrev_core.settings import ScreenCriterion
+
+        assert criterion_to_add.count(",") == 1
+        criterion_name, criterion_explanation = criterion_to_add.split(",")
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        if criterion_name not in [
+            c.name for c in self.REVIEW_MANAGER.settings.screen.criteria
+        ]:
+            ADD_CRITERION = ScreenCriterion(
+                name=criterion_name, explanation=criterion_explanation
+            )
+            self.REVIEW_MANAGER.settings.screen.criteria.append(ADD_CRITERION)
+            self.REVIEW_MANAGER.save_settings()
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
+        else:
+            print(f"Error: criterion {criterion_name} already in settings")
+            return
+
+        for ID, record in records.items():
+
+            if record["colrev_status"] in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                record["exclusion_criteria"] += f";{criterion_name}=TODO"
+                # Note : we set the status to pdf_prepared because the screening
+                # decisions have to be updated (resulting in inclusion or exclusion)
+                record["colrev_status"] = RecordState.pdf_prepared
+            if record["colrev_status"] == RecordState.rev_excluded:
+                record["exclusion_criteria"] += f";{criterion_name}=TODO"
+                # Note : no change in colrev_status
+                # because at least one of the other criteria led to exclusion decision
+
+        # TODO : screening: if exclusion_criteria field is already available
+        # only go through the criteria with "TODO"
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.REVIEW_MANAGER.create_commit(f"Add screening criterion: {criterion_name}")
+
+        return
+
+    def delete_criterion(self, criterion_to_delete) -> None:
+        """Delete a screening criterion from the records and settings"""
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        if criterion_to_delete in [
+            c.name for c in self.REVIEW_MANAGER.settings.screen.criteria
+        ]:
+            for i, c in enumerate(self.REVIEW_MANAGER.settings.screen.criteria):
+                if c.name == criterion_to_delete:
+                    del self.REVIEW_MANAGER.settings.screen.criteria[i]
+            self.REVIEW_MANAGER.save_settings()
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
+        else:
+            print(f"Error: criterion {criterion_to_delete} not in settings")
+            return
+
+        for ID, record in records.items():
+
+            if record["colrev_status"] in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                record["exclusion_criteria"] = (
+                    record["exclusion_criteria"]
+                    .replace(f"{criterion_to_delete}=TODO", "")
+                    .replace(f"{criterion_to_delete}=yes", "")
+                    .replace(f"{criterion_to_delete}=no", "")
+                    .replace(";;", ";")
+                    .lstrip(";")
+                    .rstrip(";")
+                )
+                # Note : colrev_status does not change
+                # because the other exclusion criteria do not change
+
+            if record["colrev_status"] in [RecordState.rev_excluded]:
+                record["exclusion_criteria"] = (
+                    record["exclusion_criteria"]
+                    .replace(f"{criterion_to_delete}=TODO", "")
+                    .replace(f"{criterion_to_delete}=yes", "")
+                    .replace(f"{criterion_to_delete}=no", "")
+                    .replace(";;", ";")
+                    .lstrip(";")
+                    .rstrip(";")
+                )
+                # TODO : double-check if we go for inclusion criteria
+                if (
+                    "=yes" not in record["exclusion_criteria"]
+                    and "=TODO" not in record["exclusion_criteria"]
+                ):
+                    record["colrev_status"] = RecordState.rev_included
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.REVIEW_MANAGER.create_commit(
+            f"Removed screening criterion: {criterion_to_delete}"
+        )
+
+        return
+
 
 if __name__ == "__main__":
     pass
