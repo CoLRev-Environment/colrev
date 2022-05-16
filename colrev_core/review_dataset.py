@@ -1666,6 +1666,14 @@ class ReviewDataset:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
                 criteria = self.__get_exclusion_criteria(exclusion_criteria)
+                settings_criteria = [
+                    str(c) for c in self.REVIEW_MANAGER.settings.screen.criteria
+                ]
+                if not set(criteria) == set(settings_criteria):
+                    raise FieldError(
+                        "Mismatch in screening criteria: records:"
+                        f" {criteria} vs. settings: {settings_criteria}"
+                    )
                 pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
                 pattern_inclusion = "=no;".join(criteria) + "=no"
             else:
