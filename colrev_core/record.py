@@ -334,7 +334,7 @@ class Record:
             ]
 
             for k in list(self.data.keys()):
-                if k in Record.identifying_fields:
+                if k in Record.identifying_fields and k != "pages":
                     del self.data[k]
 
         # TODO : TBD: merge colrev_ids?

@@ -190,13 +190,13 @@ class Validate(Process):
                 if found:  # load the MAIN_REFERENCES_RELATIVE in the following commit
                     prior_records_dict = (
                         self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                            load_str=filecontents
+                            load_str=filecontents.decode("utf-8")
                         )
                     )
                     break
                 if commit == target_commit:
                     records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        load_str=filecontents
+                        load_str=filecontents.decode("utf-8")
                     )
                     found = True
 

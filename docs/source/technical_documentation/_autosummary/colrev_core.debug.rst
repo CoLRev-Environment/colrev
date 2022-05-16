@@ -21,9 +21,6 @@ colrev\_core.debug
       debug_pdf_get
       debug_pdf_prep
       debug_tei_tools
-      format_name
       get_non_unique_colrev_pdf_ids
       local_index
       main
-      write_field
-      write_persons

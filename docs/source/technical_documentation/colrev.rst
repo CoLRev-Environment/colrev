@@ -389,7 +389,8 @@ Overview of packages and reasons for selection:
 - **Git**: the leading collaborative versioning environment with a broad academic userbase
 - **Docker**: one of the leading platforms for container-based microservices and supported by most of the relevant academic microservices (e.g., GROBID, Zotero, Opensearch)
 - **GROBID**: the leading bibliographic reference and citation parser :cite:p:`Tkaczyk2018`.
-- **Zotero** (import translators): one of the most active projects for translating bibliographic reference formats
+- **Zotero import translators**: one of the most active projects for translating bibliographic reference formats
+- **pybtex**: the most actively developed pythonic BibTeX parser with high load performance
 - **Tesseract/ocrmypdf**: the leading (non-proprietary) OCR engine (machine-readability of PDF content)
 - **dedupe**: one of the leading python packages for record linkage, offering convenience functions supporting active learning, learnable similarity functions and blocking algorithms
 - **Pandoc** and **CSL**: the leading projects for creating scientific documents from markdown, the standard for git-versioned manuscripts
@@ -398,6 +399,9 @@ Overview of packages and reasons for selection:
 ..
    alternative to dedupe (but recordlinkage does not seem to provide the same convenience functions for active labeling...)
    https://github.com/J535D165/recordlinkage
+
+   pybtex: outperforms bibtexparser by a factor of 10 in loading bibtex files
+   https://stackoverflow.com/questions/54558717/is-there-an-efficient-way-to-load-a-large-bibtex-37000-bibtex-entries-file-in
 
 
 .. _area_cognition:

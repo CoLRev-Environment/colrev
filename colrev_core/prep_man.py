@@ -191,7 +191,7 @@ class PrepMan(Process):
         filecontents = next(revlist)
 
         prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
-            load_str=filecontents
+            load_str=filecontents.decode("utf-8")
         )
         prior_records = prior_records_dict.values()
 

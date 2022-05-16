@@ -559,7 +559,7 @@ class Dedupe(Process):
                 filecontents = next(revlist)
 
                 prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
-                    load_str=filecontents
+                    load_str=filecontents.decode("utf-8")
                 )
 
                 for ID_list_to_unmerge in IDs_to_unmerge:

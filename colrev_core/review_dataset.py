@@ -174,7 +174,9 @@ class ReviewDataset:
 
         retrieved = []
         for commit_id, cmsg, filecontents in list(revlist):
-            prior_records_dict = self.load_records_dict(load_str=filecontents)
+            prior_records_dict = self.load_records_dict(
+                load_str=filecontents.decode("utf-8")
+            )
             for prior_record in prior_records_dict.values():
                 if str(prior_record["colrev_status"]) != str(condition_state):
                     continue
@@ -184,9 +186,6 @@ class ReviewDataset:
                         o in prior_record["colrev_origin"]
                         for o in original_record["colrev_origin"].split(";")
                     ):
-                        prior_record["colrev_status"] = RecordState[
-                            prior_record["colrev_status"]
-                        ]
                         prior_records.append(prior_record)
                         # only take the latest version (i.e., drop the record)
                         # Note: only append the first one if origins were in
@@ -218,7 +217,12 @@ class ReviewDataset:
                 }
 
             elif "" != value:
-                for item in value.split("; "):
+                # TODO : discuss: "; " as an indicator for the next list
+                # item is not ideal (could easily be part of a field value....)
+                for item in (value + " ").split("; "):
+                    if "" == item:
+                        continue
+                    item += ";"  # removed by split
                     key_source = item[: item[:-1].rfind(";")]
                     if ":" in key_source:
                         note = item[item[:-1].rfind(";") + 1 : -1]
@@ -236,7 +240,7 @@ class ReviewDataset:
                 for item in (value + " ").split("; "):
                     if "" == item:
                         continue
-                    item += ";"
+                    item += ";"  # removed by split
                     key_source = item[: item[:-1].rfind(";")]
                     note = item[item[:-1].rfind(";") + 1 : -1]
                     if ":" in key_source:
@@ -404,19 +408,27 @@ class ReviewDataset:
 
     @classmethod
     def parse_bibtex_str(cls, recs_dict_in) -> str:
-        import bibtexparser
-        from bibtexparser.bibdatabase import BibDatabase
-        from bibtexparser.bwriter import BibTexWriter
         from copy import deepcopy
 
-        def get_bibtex_writer():
+        # Note: we need a deepcopy because the parsing modifies dicts
+        recs_dict = deepcopy(recs_dict_in)
 
-            writer = BibTexWriter()
+        def format_field(type, value) -> str:
+            padd = " " * max(0, 28 - len(type))
+            return f",\n   {type} {padd} = {{{value}}}"
 
-            writer.contents = ["entries"]
-            # Note: IDs should be at the beginning to facilitate git versioning
-            # order: hard-coded in get_record_status_item()
-            writer.display_order = [
+        bibtex_str = ""
+
+        first = True
+        for ID, record in recs_dict.items():
+            if not first:
+                bibtex_str += "\n"
+            first = False
+
+            bibtex_str += "@%s" % record["ENTRYTYPE"]
+            bibtex_str += "{%s" % ID
+
+            field_order = [
                 "colrev_origin",  # must be in second line
                 "colrev_status",  # must be in third line
                 "colrev_masterdata_provenance",
@@ -437,68 +449,45 @@ class ReviewDataset:
                 "journal",
                 "title",
                 "year",
-                "editor",
+                "volume",
                 "number",
                 "pages",
-                "series",
-                "volume",
-                "abstract",
-                "book-author",
-                "book-group-author",
+                "editor",
             ]
 
-            writer.order_entries_by = "ID"
-            writer.add_trailing_comma = True
-            writer.align_values = True
-            writer.indent = "  "
-            return writer
-
-        # Note: we need a deepcopy because the parsing modifies dicts
-        recs_dict = deepcopy(recs_dict_in)
-
-        # Cast to string (in particular the RecordState Enum)
-        for record in recs_dict.values():
-
-            # TBD : if we do this, we create more git diff changes...
-            # if "" == record.get("colrev_masterdata_provenance", "NA"):
-            #     del record["colrev_masterdata_provenance"]
-
-            # separated by ;
-            for field in ["colrev_id"]:
-                if field in record:
-                    if isinstance(record[field], str):
-                        record[field] = [
-                            element.lstrip().rstrip().replace("\n", "")
-                            for element in record[field].split(";")
-                        ]
             # separated by \n
             for field in ReviewDataset.list_fields:
                 if field in record:
                     if isinstance(record[field], str):
                         record[field] = [
                             element.lstrip().rstrip()
-                            for element in record[field].split("\n")
+                            for element in record[field].split(";")
                         ]
+                    for ind, val in enumerate(record[field]):
+                        if ";" != val[-1]:
+                            record[field][ind] = val + ";"
 
             for field in ReviewDataset.dict_fields:
                 record[field] = ReviewDataset.save_field_dict(record[field], field)
 
-        max_len = max(len(k) for r in recs_dict.values() for k in r.keys()) + 6
-        list_indent = "\n" + " " * max_len
-        records = [
-            {
-                k: list_indent.join(v) if isinstance(v, list) else str(v)
-                for k, v in r.items()
-            }
-            for r in recs_dict.values()
-        ]
+            for ordered_field in field_order:
+                if ordered_field in record:
+                    if (
+                        ordered_field in ReviewDataset.list_fields
+                        or ordered_field in ReviewDataset.dict_fields
+                    ):
+                        value = ("\n" + " " * 36).join(record[ordered_field])
+                        bibtex_str += format_field(ordered_field, value)
+                    else:
+                        bibtex_str += format_field(ordered_field, record[ordered_field])
 
-        records.sort(key=lambda x: x["ID"])
+            for key, value in record.items():
+                if key in field_order + ["ID", "ENTRYTYPE"]:
+                    continue
 
-        bib_db = BibDatabase()
-        bib_db.entries = records
+                bibtex_str += format_field(key, value)
 
-        bibtex_str = bibtexparser.dumps(bib_db, get_bibtex_writer())
+            bibtex_str += ",\n}\n"
 
         return bibtex_str
 
@@ -608,6 +597,7 @@ class ReviewDataset:
         self.save_records_dict(records)
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
+
         records = self.load_records_dict()
         self.save_records_dict(records)
         self.add_record_changes()

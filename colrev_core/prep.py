@@ -2363,7 +2363,7 @@ class Preparation(Process):
             print(f"Check {str(commit_id)} - {str(cmsg_l1)}")
 
             prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
-                load_str=filecontents
+                load_str=filecontents.decode("utf-8")
             )
             for prior_record in prior_records_dict.values():
                 if str(prior_record["colrev_status"]) != str(RecordState.md_imported):
@@ -2445,7 +2445,7 @@ class Preparation(Process):
         )
         filecontents = next(revlist)  # noqa
         prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
-            load_str=filecontents
+            load_str=filecontents.decode("utf-8")
         )
         for record in records.values():
             prior_record_l = [
