@@ -188,19 +188,15 @@ class Record:
 
     def add_colrev_ids(self, records: typing.List[dict]) -> None:
         if "colrev_id" in self.data:
-            if isinstance(self.data["colrev_id"], list):
-                self.data["colrev_id"] = ";".join(self.data["colrev_id"])
+            if isinstance(self.data["colrev_id"], str):
+                self.data["colrev_id"] = self.data["colrev_id"].split(";")
         for r in records:
             try:
                 colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
                 if "colrev_id" not in self.data:
                     self.data["colrev_id"] = colrev_id
                 elif colrev_id not in self.data["colrev_id"]:
-                    cids = self.data["colrev_id"].split(";")
-                    if colrev_id not in cids:
-                        self.data["colrev_id"] = (
-                            self.data["colrev_id"] + ";" + colrev_id
-                        )
+                    self.data["colrev_id"].append(colrev_id)
             except NotEnoughDataToIdentifyException:
                 pass
         return
