@@ -1243,9 +1243,16 @@ class ReviewManager:
         return
 
     def create_commit(
-        self, msg: str, manual_author: bool = False, saved_args: dict = None
+        self,
+        msg: str,
+        manual_author: bool = False,
+        saved_args: dict = None,
+        realtime_override: bool = False,
     ) -> bool:
         """Create a commit (including a commit report)"""
+
+        if "realtime" == self.settings.project.review_type and not realtime_override:
+            return False
 
         if self.REVIEW_DATASET.has_changes():
 

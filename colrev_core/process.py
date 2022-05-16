@@ -67,7 +67,10 @@ class Process:
     def check_precondition(self) -> None:
         """Check the process precondition"""
 
-        if self.force_mode:
+        if (
+            self.force_mode
+            or "realtime" == self.REVIEW_MANAGER.settings.project.review_type
+        ):
             return
 
         def check_process_model_precondition() -> None:

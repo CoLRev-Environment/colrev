@@ -10,7 +10,7 @@ class Initializer:
         self,
         project_name: str,
         SHARE_STAT_REQ: str,
-        curated_metadata: bool = False,
+        type: bool = False,
         url: str = "NA",
         local_index_repo: bool = False,
     ) -> None:
@@ -23,7 +23,7 @@ class Initializer:
             self.project_name = str(Path.cwd().name)
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
-        self.curated_metadata = curated_metadata
+        self.review_type = type
         self.url = url
 
         self.__require_empty_directory()
@@ -68,7 +68,9 @@ class Initializer:
         import json
 
         # Note: parse instead of copy to avoid format changes
-        filedata = pkgutil.get_data(__name__, "template/settings.json")
+        filedata = pkgutil.get_data(
+            __name__, "template/review_type/default/settings.json"
+        )
         if filedata:
             settings = json.loads(filedata.decode("utf-8"))
             with open("settings.json", "w", encoding="utf8") as file:
@@ -89,12 +91,20 @@ class Initializer:
         for rp, p in files_to_retrieve:
             self.__retrieve_package_file(rp, p)
 
-        if self.curated_metadata:
+        if "curated_masterdata" == self.review_type:
             # replace readme
             self.__retrieve_package_file(
-                Path("template/readme_curated_repo.md"), Path("readme.md")
+                Path("template/review_type/curated_masterdata/readme.md"),
+                Path("readme.md"),
             )
             self.__inplace_change(Path("readme.md"), "{{url}}", self.url)
+
+        elif "realtime" == self.review_type:
+            # replace settings
+            self.__retrieve_package_file(
+                Path("template/review_type/realtime/settings.json"),
+                Path("settings.json"),
+            )
 
         self.__inplace_change(
             Path("readme.md"), "{{project_title}}", self.project_name.rstrip(" ")

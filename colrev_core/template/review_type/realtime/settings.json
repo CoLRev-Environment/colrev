@@ -1,0 +1,63 @@
+{
+  "project": {
+    "id_pattern": "THREE_AUTHORS_YEAR",
+    "review_type": "realtime",
+    "share_stat_req":"processed",
+    "delay_automated_processing": true,
+    "curation_url": null,
+    "curated_masterdata": false,
+    "curated_fields": []
+  },
+  "search": {"sources": []},
+  "load": {},
+  "prep": {
+    "fields_to_keep": [],
+    "prep_rounds": [
+        {
+            "name": "high_confidence",
+            "similarity": 0.95,
+            "scripts": [
+                "remove_urls_with_500_errors",
+                "remove_broken_IDs",
+                "global_ids_consistency_check",
+                "prep_curated",
+                "format",
+                "resolve_crossrefs",
+                "get_doi_from_urls",
+                "get_masterdata_from_doi",
+                "get_masterdata_from_crossref",
+                "get_masterdata_from_dblp",
+                "get_masterdata_from_open_library",
+                "get_year_from_vol_iss_jour_crossref",
+                "get_record_from_local_index",
+                "remove_nicknames",
+                "format_minor",
+                "drop_fields"
+            ]
+        }
+    ]
+  },
+"dedupe": {
+    "merge_threshold": 0.8,
+    "partition_threshold": 0.5,
+    "same_source_merges": "prevent"
+},
+  "prescreen": {"plugin": null,
+                "mode": null},
+  "pdf_get": {"pdf_path_type": "symlink"},
+  "pdf_prep": {},
+  "screen": {"process": {"overlapp": null,
+              "mode": null,
+              "parallel_independent": null},
+            "criteria": []
+        },
+    "data": {
+        "data_format": [
+            {
+                "endpoint": "MANUSCRIPT",
+                "word_template": "APA-7.docx",
+                "csl_style": "apa.csl"
+            }
+        ]
+    }
+}
