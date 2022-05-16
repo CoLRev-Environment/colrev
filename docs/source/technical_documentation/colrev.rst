@@ -496,8 +496,10 @@ Of course, reuse is the most powerful when curated content (such as reviews, top
 
 .. _standard:
 
-5. Current state of the proposed CoLRev standard
-------------------------------------------------------
+5. Current status
+-----------------------------
+
+Current status of the proposed CoLRev standard:
 
 - The CoLRev standard is currently in draft status and subject to frequent and substantial revisions.
 - Comments on this document are welcome. Please participate through Github pull requests.
