@@ -38,9 +38,12 @@ class Screen(Process):
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
             )
-            record.update(
-                exclusion_criteria=";".join([e + "=no" for e in exclusion_criteria])
-            )
+            if len(exclusion_criteria) == 0:
+                record.update(exclusion_criteria="NA")
+            else:
+                record.update(
+                    exclusion_criteria=";".join([e + "=no" for e in exclusion_criteria])
+                )
             record.update(colrev_status=RecordState.rev_included)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)

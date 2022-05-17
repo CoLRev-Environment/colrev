@@ -1407,7 +1407,10 @@ class ReviewDataset:
         return
 
     def __get_exclusion_criteria(self, ec_string: str) -> list:
-        return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
+        excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
+        if [""] == excl_criteria:
+            excl_criteria = []
+        return excl_criteria
 
     def check_corrections_of_curated_records(self) -> None:
         from colrev_core.environment import LocalIndex, Resources
