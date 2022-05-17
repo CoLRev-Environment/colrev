@@ -98,7 +98,7 @@ class Search(Process):
         # )
         if "selection_clause" in params:
             query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-            print(query)
+            self.REVIEW_MANAGER.logger.info(query)
 
         for journal_issn in params["scope"]["journal_issn"].split("|"):
 
@@ -113,17 +113,20 @@ class Search(Process):
             available_ids = []
             max_id = 1
             if not feed_file.is_file():
-                records = []
+                records = {}
             else:
                 with open(feed_file) as bibtex_file:
-                    feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         load_str=bibtex_file.read()
                     )
-                    records = feed_rd.values()
 
-                available_ids = [x["doi"] for x in records if "doi" in x]
+                available_ids = [x["doi"] for x in records.values() if "doi" in x]
                 max_id = (
-                    max([int(x["ID"]) for x in records if x["ID"].isdigit()] + [1]) + 1
+                    max(
+                        [int(x["ID"]) for x in records.values() if x["ID"].isdigit()]
+                        + [1]
+                    )
+                    + 1
                 )
 
             try:
@@ -154,7 +157,9 @@ class Search(Process):
                             ):
                                 continue
 
-                            print(record["doi"])
+                            self.REVIEW_MANAGER.logger.info(
+                                "Retrieved " + record["doi"]
+                            )
                             record["ID"] = str(max_id).rjust(6, "0")
                             if "ENTRYTYPE" not in record:
                                 record["ENTRYTYPE"] = "misc"
@@ -165,7 +170,7 @@ class Search(Process):
                                 PrepRecord(record)
                             ).get_data()
                             available_ids.append(record["doi"])
-                            records.append(record)
+                            records[record["ID"]] = record
                             max_id += 1
             except requests.exceptions.JSONDecodeError as e:
                 print(e)
@@ -184,8 +189,7 @@ class Search(Process):
             # )
 
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            records_dict = {r["ID"]: r for r in records}
-            ReviewDataset.save_records_dict_to_file(records_dict, feed_file)
+            ReviewDataset.save_records_dict_to_file(records, feed_file)
 
         return
 
@@ -200,7 +204,7 @@ class Search(Process):
             + str(2020)
         )
         url = api_url + query.replace(" ", "+") + f"&format=json&h={500}&f={0}"
-        print(url)
+        # print(url)
         ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
         ret.raise_for_status()
         if ret.status_code == 500:
@@ -239,7 +243,7 @@ class Search(Process):
         if "journal_abbreviated" not in params["scope"]:
             print("Error: journal_abbreviated not in params")
             return
-        print(f"Retrieve DBLP: {params}")
+        self.REVIEW_MANAGER.logger.info(f"Retrieve DBLP: {params}")
 
         available_ids = []
         max_id = 1
@@ -266,7 +270,7 @@ class Search(Process):
             if len(records) > 100 and not self.REVIEW_MANAGER.force_mode:
                 start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
-                print(year)
+                self.REVIEW_MANAGER.logger.info(f"Retrieving year {year}")
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
                 # query = params['scope']["venue_key"] + "+" + str(year)
                 f = 0
@@ -278,7 +282,7 @@ class Search(Process):
                         + f"&format=json&h={batch_size}&f={f}"
                     )
                     f += batch_size
-                    print(url)
+                    self.REVIEW_MANAGER.logger.debug(url)
 
                     retrieved = False
                     PREPARATION = Preparation(
@@ -1367,7 +1371,9 @@ class Search(Process):
             ][0]
             params = self.parse_parameters(feed_item.search_parameters)
 
-            print(f"Retrieve from {feed_item.source_identifier}: {params}")
+            self.REVIEW_MANAGER.logger.info(
+                f"Retrieve from {feed_item.source_identifier}: {params}"
+            )
 
             script["script"](params, feed_file)
 

@@ -8,6 +8,7 @@ Publication
 
 TODO: how to publish  (include a license, link at colrev/make it discoverable, do not include paywalled PDFs - not even in the history )
 
+call colrev prep --polish (e.g., to update references that were in print when retrieved but have been published in the meantime)
 
 Curation
 ------------------

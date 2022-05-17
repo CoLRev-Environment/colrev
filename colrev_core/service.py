@@ -184,15 +184,15 @@ class Service:
                     # self.previous_command = "none"
                     continue
 
-                item = self.q.get()
-                item["cmd"] = item["cmd"].replace("_", "-")
-
-                self.previous_command = item["cmd"]
-
                 print()
                 self.logger.info(
                     "Queue: " + ", ".join([q_item["cmd"] for q_item in self.q.queue])
                 )
+
+                item = self.q.get()
+                item["cmd"] = item["cmd"].replace("_", "-")
+
+                self.previous_command = item["cmd"]
 
                 print()
                 if "colrev search" == item["cmd"]:
@@ -201,7 +201,7 @@ class Service:
                     SEARCH = Search(self.REVIEW_MANAGER)
                     SEARCH.update(None)
 
-                if "colrev load" == item["cmd"]:
+                elif "colrev load" == item["cmd"]:
                     from colrev_core.load import Loader
                     from colrev.cli import check_update_sources
 

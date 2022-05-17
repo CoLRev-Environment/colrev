@@ -149,6 +149,12 @@ class ReviewDataset:
         except IndexError as e:
             print(e)
             print(r_header)
+            ID = "None"
+            colrev_origin = "None"
+            colrev_status = "None"
+            exclusion_criteria = "None"
+            file = "None"
+            colrev_masterdata_provenance = "None"
 
         return [
             ID,
@@ -472,10 +478,13 @@ class ReviewDataset:
                                 record[field][ind] = val + ";"
 
             for field in ReviewDataset.dict_fields:
-                record[field] = ReviewDataset.save_field_dict(record[field], field)
+                if field in record:
+                    record[field] = ReviewDataset.save_field_dict(record[field], field)
 
             for ordered_field in field_order:
                 if ordered_field in record:
+                    if "" == record[ordered_field]:
+                        continue
                     if (
                         ordered_field in ReviewDataset.list_fields
                         or ordered_field in ReviewDataset.dict_fields
@@ -1880,6 +1889,12 @@ class ReviewDataset:
         return self.__git_repo.is_dirty()
 
     def add_changes(self, path: str) -> None:
+        import time
+
+        while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
+            time.sleep(0.5)
+            print("Waiting for previous git operation to complete")
+
         self.__git_repo.index.add([str(path)])
         return
 
@@ -1913,12 +1928,23 @@ class ReviewDataset:
         return cmsg
 
     def add_record_changes(self) -> None:
+        import time
+
+        while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
+            time.sleep(0.5)
+            print("Waiting for previous git operation to complete")
         self.__git_repo.index.add(
             [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])]
         )
         return
 
     def add_setting_changes(self) -> None:
+        import time
+
+        while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
+            time.sleep(0.5)
+            print("Waiting for previous git operation to complete")
+
         self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SETTINGS_RELATIVE"])])
         return
 

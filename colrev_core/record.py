@@ -748,6 +748,8 @@ class Record:
         return default
 
     def add_masterdata_provenance_hint(self, field, hint):
+        if "colrev_masterdata_provenance" not in self.data:
+            self.data["colrev_masterdata_provenance"] = {}
         if field in self.data["colrev_masterdata_provenance"]:
             if hint not in self.data["colrev_masterdata_provenance"][field]["note"]:
                 self.data["colrev_masterdata_provenance"][field]["note"] += f",{hint}"
@@ -759,6 +761,8 @@ class Record:
         return
 
     def add_data_provenance_hint(self, field, hint):
+        if "colrev_data_provenance" not in self.data:
+            self.data["colrev_data_provenance"] = {}
         if field in self.data["colrev_data_provenance"]:
             if hint not in self.data["colrev_data_provenance"][field]["note"]:
                 self.data["colrev_data_provenance"][field]["note"] += f",{hint}"

@@ -596,21 +596,23 @@ class Status(Process):
                     # "high_level_cmd": "colrev metadata",
                 }
                 if active_processing_function in priority_processing_functions:
-                    keylist = [list(x.keys()) for x in review_instructions]
-                    keys = [item for sublist in keylist for item in sublist]
-                    if "priority" not in keys:
-                        instruction["priority"] = "yes"
+                    # keylist = [list(x.keys()) for x in review_instructions]
+                    # keys = [item for sublist in keylist for item in sublist]
+                    # if "priority" not in keys:
+                    instruction["priority"] = "yes"
                 else:
                     if "True" == delay_automated_processing:
                         continue
-                review_instructions.append(instruction)
+                if instruction["cmd"] not in [ri["cmd"] for ri in review_instructions]:
+                    review_instructions.append(instruction)
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
             }
-            review_instructions.append(instruction)
+            if instruction["cmd"] not in [ri["cmd"] for ri in review_instructions]:
+                review_instructions.append(instruction)
 
         if stat["completeness_condition"]:
             instruction = {
