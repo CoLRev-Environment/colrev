@@ -1273,28 +1273,29 @@ class ReviewDataset:
             str(RecordState.rev_synthesized),
         ]
         missing_files = []
-        with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
-            for record_string in self.__read_next_record_str(f):
-                ID, status = "NA", "NA"
+        if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
+                for record_string in self.__read_next_record_str(f):
+                    ID, status = "NA", "NA"
 
-                for line in record_string.split("\n"):
-                    if "@Comment" in line:
-                        ID = "Comment"
-                        break
-                    if "@" in line[:3]:
-                        ID = line[line.find("{") + 1 : line.rfind(",")]
-                    if "colrev_status" == line.lstrip()[:13]:
-                        status = line[line.find("{") + 1 : line.rfind("}")]
-                if "Comment" == ID:
-                    continue
-                if "NA" == ID:
-                    print(f"Skipping record without ID: {record_string}")
-                    continue
+                    for line in record_string.split("\n"):
+                        if "@Comment" in line:
+                            ID = "Comment"
+                            break
+                        if "@" in line[:3]:
+                            ID = line[line.find("{") + 1 : line.rfind(",")]
+                        if "colrev_status" == line.lstrip()[:13]:
+                            status = line[line.find("{") + 1 : line.rfind("}")]
+                    if "Comment" == ID:
+                        continue
+                    if "NA" == ID:
+                        print(f"Skipping record without ID: {record_string}")
+                        continue
 
-                if (" file  " not in record_string) and (
-                    status in file_required_status
-                ):
-                    missing_files.append(ID)
+                    if (" file  " not in record_string) and (
+                        status in file_required_status
+                    ):
+                        missing_files.append(ID)
         return missing_files
 
     def import_file(self, record: dict) -> dict:
