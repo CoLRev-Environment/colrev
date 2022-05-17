@@ -493,7 +493,7 @@ class Data(Process):
 
         return
 
-    def main(self) -> None:
+    def main(self) -> dict:
 
         saved_args = locals()
 
@@ -533,12 +533,8 @@ class Data(Process):
 
             self.update_synthesized_status()
 
-            if "y" == input("Create commit (y/n)?"):
-                self.REVIEW_MANAGER.create_commit(
-                    "Data and synthesis", manual_author=True, saved_args=saved_args
-                )
-
-        return
+            return {"ask_to_commit": True}
+        return {"ask_to_commit": False}
 
     def check_new_record_source_tag(self) -> None:
         PAPER = self.REVIEW_MANAGER.paths["PAPER"]

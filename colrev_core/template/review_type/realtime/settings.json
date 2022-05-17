@@ -3,7 +3,7 @@
     "id_pattern": "THREE_AUTHORS_YEAR",
     "review_type": "realtime",
     "share_stat_req":"processed",
-    "delay_automated_processing": true,
+    "delay_automated_processing": false,
     "curation_url": null,
     "curated_masterdata": false,
     "curated_fields": []

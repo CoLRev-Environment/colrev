@@ -2138,7 +2138,7 @@ class Preparation(Process):
         ]:
             return RECORD
 
-        self.REVIEW_MANAGER.logger.info(RECORD.data["ID"])
+        self.REVIEW_MANAGER.logger.info("Prepare " + RECORD.data["ID"])
 
         #  preparation_record will change and eventually replace record (if successful)
         preparation_record = RECORD.data.copy()
