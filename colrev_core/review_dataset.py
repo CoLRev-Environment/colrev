@@ -40,12 +40,6 @@ class ReviewDataset:
         # TODO : this file may no longer be needed...
         return self.REVIEW_MANAGER.settings.search.sources
 
-    def get_record_state_list_from_file_obj(self, file_object) -> list:
-        return [
-            self.__get_record_status_item(record_header_str)
-            for record_header_str in self.__read_next_record_header_str(file_object)
-        ]
-
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 
@@ -61,15 +55,20 @@ class ReviewDataset:
 
         def append_origin_state_pair(r_header: str):
             rhlines = r_header.split("\n")
-            rhl0, rhl1, rhl2 = (
-                line[line.find("{") + 1 : line.rfind("}")] for line in rhlines[0:3]
-            )
-            origins = rhl1
-            if "colrev_status" not in rhlines[2]:
-                raise StatusFieldValueError(origins, "colrev_status", "NA")
-            colrev_status = rhl2
-            for origin in origins.split(";"):
-                ret_dict[origin] = colrev_status
+            try:
+                rhl0, rhl1, rhl2 = (
+                    line[line.find("{") + 1 : line.rfind("}")] for line in rhlines[0:3]
+                )
+                origins = rhl1
+                if "colrev_status" not in rhlines[2]:
+                    raise StatusFieldValueError(origins, "colrev_status", "NA")
+                colrev_status = rhl2
+                for origin in origins.split(";"):
+                    ret_dict[origin] = colrev_status
+            except ValueError as e:
+                print(e)
+                print(r_header)
+                pass
             return
 
         if not self.MAIN_REFERENCES_FILE.is_file():
@@ -113,39 +112,43 @@ class ReviewDataset:
     def __get_record_header_item(self, r_header: str) -> list:
         items = r_header.split("\n")[0:8]
 
-        ID = items.pop(0)
+        try:
+            ID = items.pop(0)
 
-        colrev_origin = items.pop(0)
-        if "colrev_origin" not in colrev_origin:
-            raise RecordFormatError(f"{ID} has status=NA")
-        colrev_origin = colrev_origin[
-            colrev_origin.find("{") + 1 : colrev_origin.rfind("}")
-        ]
+            colrev_origin = items.pop(0)
+            if "colrev_origin" not in colrev_origin:
+                raise RecordFormatError(f"{ID} has status=NA")
+            colrev_origin = colrev_origin[
+                colrev_origin.find("{") + 1 : colrev_origin.rfind("}")
+            ]
 
-        colrev_status = items.pop(0)
-        if "colrev_status" not in colrev_status:
-            raise StatusFieldValueError(ID, "colrev_status", "NA")
-        colrev_status = colrev_status[
-            colrev_status.find("{") + 1 : colrev_status.rfind("}")
-        ]
+            colrev_status = items.pop(0)
+            if "colrev_status" not in colrev_status:
+                raise StatusFieldValueError(ID, "colrev_status", "NA")
+            colrev_status = colrev_status[
+                colrev_status.find("{") + 1 : colrev_status.rfind("}")
+            ]
 
-        exclusion_criteria, file, colrev_masterdata_provenance = "", "", ""
-        while items:
-            item = items.pop(0)
+            exclusion_criteria, file, colrev_masterdata_provenance = "", "", ""
+            while items:
+                item = items.pop(0)
 
-            # exclusion_criteria can only be in line 4 (but it is optional)
-            if "exclusion_criteria" in item:
-                exclusion_criteria = item[item.find("{") + 1 : item.rfind("}")]
-                continue
+                # exclusion_criteria can only be in line 4 (but it is optional)
+                if "exclusion_criteria" in item:
+                    exclusion_criteria = item[item.find("{") + 1 : item.rfind("}")]
+                    continue
 
-            # file is optional and could be in lines 4-7
-            if "file" in item:
-                file = item[item.find("{") + 1 : item.rfind("}")]
+                # file is optional and could be in lines 4-7
+                if "file" in item:
+                    file = item[item.find("{") + 1 : item.rfind("}")]
 
-            if "colrev_masterdata_provenance" in item:
-                colrev_masterdata_provenance = item[
-                    item.find("{") + 1 : item.rfind("}")
-                ]
+                if "colrev_masterdata_provenance" in item:
+                    colrev_masterdata_provenance = item[
+                        item.find("{") + 1 : item.rfind("}")
+                    ]
+        except IndexError as e:
+            print(e)
+            print(r_header)
 
         return [
             ID,
