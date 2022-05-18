@@ -238,7 +238,7 @@ class ReviewDataset:
                         # DOIs are case sensitive -> use upper case.
                         else v.upper()
                         if ("doi" == k)
-                        else v.split("; ")
+                        else [el for el in (v + " ").split("; ") if "" != el]
                         if k in ReviewDataset.list_fields
                         else ReviewDataset.load_field_dict(v, k)
                         if k in ReviewDataset.dict_fields
@@ -1208,10 +1208,11 @@ class ReviewDataset:
                 RECORD.add_colrev_ids(
                     [
                         origin_records[origin]
-                        for origin in origins
+                        for origin in set(origins)
                         if origin in origin_records
                     ]
                 )
+
             # Note : we may create origins from history for curated repositories
             # for history_recs in self.load_from_git_history():
             #     for hist_rec in tqdm(history_recs.values()):

@@ -189,6 +189,7 @@ class Record:
     def add_colrev_ids(self, records: typing.List[dict]) -> None:
         if "colrev_id" in self.data:
             if isinstance(self.data["colrev_id"], str):
+                print(f'Problem: colrev_id is str not list: {self.data["colrev_id"]}')
                 self.data["colrev_id"] = self.data["colrev_id"].split(";")
         for r in records:
             try:
