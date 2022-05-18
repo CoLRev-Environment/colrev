@@ -44,38 +44,24 @@ class ReviewDataset:
         """Get the record_state_list"""
 
         if not self.MAIN_REFERENCES_FILE.is_file():
-            return []
-        return [
-            self.__get_record_status_item(record_header_str)
-            for record_header_str in self.__read_next_record_header_str()
-        ]
+            record_state_list = []
+        else:
+            record_state_list = self.__read_record_header_items()
+        return record_state_list
 
     def get_origin_state_dict(self, file_object=None) -> dict:
         ret_dict = {}
 
-        def append_origin_state_pair(r_header: str):
-            rhlines = r_header.split("\n")
-            try:
-                rhl0, rhl1, rhl2 = (
-                    line[line.find("{") + 1 : line.rfind("}")] for line in rhlines[0:3]
-                )
-                origins = rhl1
-                if "colrev_status" not in rhlines[2]:
-                    raise StatusFieldValueError(origins, "colrev_status", "NA")
-                colrev_status = rhl2
-                for origin in origins.split(";"):
-                    ret_dict[origin] = colrev_status
-            except ValueError as e:
-                print(e)
-                print(r_header)
-                pass
+        def append_origin_state_pair(r_header: dict):
+            for origin in r_header["colrev_origin"].split(";"):
+                ret_dict[origin] = r_header["colrev_status"]
             return
 
         if not self.MAIN_REFERENCES_FILE.is_file():
             return {}
         [
-            append_origin_state_pair(record_header_str)
-            for record_header_str in self.__read_next_record_header_str(file_object)
+            append_origin_state_pair(record_header_item)
+            for record_header_item in self.__read_record_header_items(file_object)
         ]
         return ret_dict
 
@@ -85,8 +71,8 @@ class ReviewDataset:
         if not self.MAIN_REFERENCES_FILE.is_file():
             return []
         return [
-            self.__get_record_header_item(record_header_str)
-            for record_header_str in self.__read_next_record_header_str()
+            record_header_item
+            for record_header_item in self.__read_record_header_items()
         ]
 
     def get_states_set(self, record_state_list: list = None) -> set:
@@ -96,74 +82,10 @@ class ReviewDataset:
             return set()
         if record_state_list is None:
             record_state_list = self.get_record_state_list()
-        return {el[1] for el in record_state_list}
+        return {el["colrev_status"] for el in record_state_list}
 
-    def __get_record_status_item(self, r_header: str) -> list:
-        rhlines = r_header.split("\n")
-        rhl0, rhl1, rhl2 = (
-            line[line.find("{") + 1 : line.rfind(",")] for line in rhlines[0:3]
-        )
-        ID = rhl0
-        if "colrev_status" not in rhlines[2]:
-            raise StatusFieldValueError(ID, "colrev_status", "NA")
-        colrev_status = rhl2[:-1]  # to replace the trailing }
-        return [ID, colrev_status]
-
-    def __get_record_header_item(self, r_header: str) -> list:
-        items = r_header.split("\n")[0:8]
-
-        try:
-            ID = items.pop(0)
-
-            colrev_origin = items.pop(0)
-            if "colrev_origin" not in colrev_origin:
-                raise RecordFormatError(f"{ID} has status=NA")
-            colrev_origin = colrev_origin[
-                colrev_origin.find("{") + 1 : colrev_origin.rfind("}")
-            ]
-
-            colrev_status = items.pop(0)
-            if "colrev_status" not in colrev_status:
-                raise StatusFieldValueError(ID, "colrev_status", "NA")
-            colrev_status = colrev_status[
-                colrev_status.find("{") + 1 : colrev_status.rfind("}")
-            ]
-
-            exclusion_criteria, file, colrev_masterdata_provenance = "", "", ""
-            while items:
-                item = items.pop(0)
-
-                # exclusion_criteria can only be in line 4 (but it is optional)
-                if "exclusion_criteria" in item:
-                    exclusion_criteria = item[item.find("{") + 1 : item.rfind("}")]
-                    continue
-
-                # file is optional and could be in lines 4-7
-                if "file" in item:
-                    file = item[item.find("{") + 1 : item.rfind("}")]
-
-                if "colrev_masterdata_provenance" in item:
-                    colrev_masterdata_provenance = item[
-                        item.find("{") + 1 : item.rfind("}")
-                    ]
-        except IndexError as e:
-            print(e)
-            print(r_header)
-            ID = "None"
-            colrev_origin = "None"
-            colrev_status = "None"
-            exclusion_criteria = "None"
-            file = "None"
-            colrev_masterdata_provenance = "None"
-
-        return [
-            ID,
-            colrev_origin,
-            colrev_status,
-            exclusion_criteria,
-            file,
-            colrev_masterdata_provenance,
-        ]
+    def __get_record_status_item(self, r_header: dict) -> list:
+        return [r_header["ID"], r_header["colrev_status"]]
 
     def retrieve_records_from_history(
         self, original_records: typing.List[typing.Dict], condition_state: RecordState
@@ -772,34 +694,66 @@ class ReviewDataset:
 
         return temp_ID
 
-    def __read_next_record_header_str(
-        self, file_object=None, HEADER_LENGTH: int = 9
-    ) -> typing.Iterator[str]:
+    def __read_record_header_items(self, file_object=None) -> list:
+
+        # Note : more than 10x faster than load_records_dict()
+
         if file_object is None:
             file_object = open(self.MAIN_REFERENCES_FILE)
-        data = ""
-        first_entry_processed = False
-        header_line_count = 0
+
+        def parse_k_v(current_key_value_pair_str):
+            if " = " in current_key_value_pair_str:
+                k, v = current_key_value_pair_str.split(" = ", 1)
+            else:
+                k = "ID"
+                v = current_key_value_pair_str.split("{")[1]
+
+            k = k.lstrip().rstrip()
+            v = v.lstrip().rstrip().lstrip("{").rstrip("},")
+            return k, v
+
+        # Fields required
+        default = {
+            "ID": "NA",
+            "colrev_origin": "NA",
+            "colrev_status": "NA",
+            "exclusion_criteria": "NA",
+            "file": "NA",
+            "colrev_masterdata_provenance": "NA",
+        }
+        HEADER_ITEMS = len(default)
+
+        record_header_items = []
+        record_header_item = default
+        current_header_item_count = 0
+        current_key_value_pair_str = ""
         while True:
             line = file_object.readline()
             if not line:
                 break
             if line[:1] == "%" or line == "\n":
                 continue
-            if line[:1] != "@":
-                if header_line_count < HEADER_LENGTH:
-                    header_line_count = header_line_count + 1
-                    data += line
-            else:
-                if "@comment" not in line:
-                    if first_entry_processed:
-                        yield data
-                        header_line_count = 0
-                    else:
-                        first_entry_processed = True
-                data = line
-        if "@comment" not in data:
-            yield data
+
+            if current_header_item_count > HEADER_ITEMS or "}" == line:
+                record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                current_header_item_count = 0
+                continue
+            if "@" in line[:2] and not "NA" == record_header_item["ID"]:
+                record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                current_header_item_count = 0
+
+            current_key_value_pair_str += line
+            if "}," in line or "@" in line[:2]:
+                k, v = parse_k_v(current_key_value_pair_str)
+                current_key_value_pair_str = ""
+                if k in record_header_item:
+                    current_header_item_count += 1
+                    record_header_item[k] = v
+
+        record_header_items.append(record_header_item)
+        return record_header_items
 
     def __read_next_record_str(self, file_object=None) -> typing.Iterator[str]:
         if file_object is None:

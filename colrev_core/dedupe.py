@@ -1150,16 +1150,16 @@ class Dedupe(Process):
         # records as "no-duplicate" by definition
         # (e.g., for non-duplicated sources marked in the sources)
 
-        get_record_state_list = (
-            self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
-        )
+        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         IDs_to_dedupe = [
-            x[0] for x in get_record_state_list if x[1] == str(RecordState.md_prepared)
+            x["ID"]
+            for x in record_state_list
+            if x["colrev_status"] == str(RecordState.md_prepared)
         ]
         processed_IDs = [
-            x[0]
-            for x in get_record_state_list
-            if x[1]
+            x["ID"]
+            for x in record_state_list
+            if x["colrev_status"]
             not in [
                 str(RecordState.md_imported),
                 str(RecordState.md_prepared),

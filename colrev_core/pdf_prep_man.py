@@ -28,10 +28,10 @@ class PDFPrepMan(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.pdf_needs_manual_preparation) == x[1]
+                if str(RecordState.pdf_needs_manual_preparation) == x["colrev_status"]
             ]
         )
-        PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
+        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.pdf_needs_manual_preparation}]

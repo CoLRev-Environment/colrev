@@ -55,11 +55,18 @@ class Status(Process):
         from colrev_core.process import ProcessModel
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-        status_list = [x[2] for x in record_header_list]
-        exclusion_criteria = [x[3] for x in record_header_list if x[3] != ""]
-        md_duplicates_removed = sum((x[1].count(";")) for x in record_header_list)
 
-        origin_list = [x[1] for x in record_header_list]
+        status_list = [x["colrev_status"] for x in record_header_list]
+        exclusion_criteria = [
+            x["exclusion_criteria"]
+            for x in record_header_list
+            if x["exclusion_criteria"] != ""
+        ]
+        md_duplicates_removed = sum(
+            (x["colrev_origin"].count(";")) for x in record_header_list
+        )
+
+        origin_list = [x["colrev_origin"] for x in record_header_list]
         record_links = 0
         for origin in origin_list:
             nr_record_links = origin.count(";")
@@ -181,7 +188,9 @@ class Status(Process):
             "colrev_status"
         ]["currently"]["rev_prescreen_included"]
 
-        colrev_masterdata_items = [x[5] for x in record_header_list]
+        colrev_masterdata_items = [
+            x["colrev_masterdata_provenance"] for x in record_header_list
+        ]
         stat["colrev_status"]["CURATED_records"] = len(
             [x for x in colrev_masterdata_items if "CURATED" in x]
         )

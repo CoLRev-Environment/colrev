@@ -178,9 +178,13 @@ class Prescreen(Process):
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len(
-            [x for x in record_state_list if str(RecordState.md_processed) == x[1]]
+            [
+                x
+                for x in record_state_list
+                if str(RecordState.md_processed) == x["colrev_status"]
+            ]
         )
-        PAD = min((max(len(x[0]) for x in record_state_list) + 2), 40)
+        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.md_processed}]
         )

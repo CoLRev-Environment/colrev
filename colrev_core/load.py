@@ -805,7 +805,7 @@ class Loader(Process):
 
     def __get_currently_imported_origin_list(self) -> list:
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-        imported_origins = [x[1].split(";") for x in record_header_list]
+        imported_origins = [x["colrev_origin"].split(";") for x in record_header_list]
         imported_origins = list(itertools.chain(*imported_origins))
         return imported_origins
 

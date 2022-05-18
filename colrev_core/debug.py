@@ -22,7 +22,7 @@ def debug_load() -> None:
     LOADER = Loader(REVIEW_MANAGER)
 
     # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-    # origin_list = [x[1] for x in rec_header_lis]
+    # origin_list = [x['colrev_origin'] for x in rec_header_lis]
 
     # search_files = LOADER.get_search_files(restrict=["bib"])
 

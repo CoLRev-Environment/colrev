@@ -290,13 +290,13 @@ class PrepMan(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.md_needs_manual_preparation) == x[1]
+                if str(RecordState.md_needs_manual_preparation) == x["colrev_status"]
             ]
         )
 
-        all_ids = [x[0] for x in record_state_list]
+        all_ids = [x["ID"] for x in record_state_list]
 
-        PAD = min((max(len(x[0]) for x in record_state_list) + 2), 35)
+        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.md_needs_manual_preparation}]

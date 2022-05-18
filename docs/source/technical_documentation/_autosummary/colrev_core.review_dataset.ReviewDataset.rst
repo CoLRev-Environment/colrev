@@ -38,7 +38,6 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.get_origin_state_dict
       ~ReviewDataset.get_record_header_list
       ~ReviewDataset.get_record_state_list
-      ~ReviewDataset.get_record_state_list_from_file_obj
       ~ReviewDataset.get_remote_commit_differences
       ~ReviewDataset.get_repo
       ~ReviewDataset.get_states_set

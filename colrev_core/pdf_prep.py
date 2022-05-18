@@ -889,7 +889,11 @@ class PDF_Preparation(Process):
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len(
-            [x for x in record_state_list if str(RecordState.pdf_imported) == x[1]]
+            [
+                x
+                for x in record_state_list
+                if str(RecordState.pdf_imported) == x["colrev_status"]
+            ]
         )
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(

@@ -2546,10 +2546,18 @@ class Preparation(Process):
         def load_prep_data():
             from colrev_core.record import RecordState
 
-            rsl = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
-            nr_tasks = len([x for x in rsl if str(RecordState.md_imported) == x[1]])
+            record_state_list = (
+                self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+            )
+            nr_tasks = len(
+                [
+                    x
+                    for x in record_state_list
+                    if str(RecordState.md_imported) == x["colrev_status"]
+                ]
+            )
 
-            PAD = min((max(len(x[0]) for x in rsl) + 2), 35)
+            PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
 
             items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
                 conditions=[
@@ -2559,7 +2567,11 @@ class Preparation(Process):
                 ],
             )
 
-            prior_ids = [x[0] for x in rsl if str(RecordState.md_imported) == x[1]]
+            prior_ids = [
+                x["ID"]
+                for x in record_state_list
+                if str(RecordState.md_imported) == x["colrev_status"]
+            ]
 
             prep_data = {
                 "nr_tasks": nr_tasks,
