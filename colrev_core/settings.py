@@ -159,14 +159,21 @@ class DataField:
 
 @dataclass
 class DataStructuredFormat:
-    fields: typing.Optional[typing.List[DataField]] = None
+    endpoint: str
+    structured_data_endpoint_version: str
+    fields: typing.List[DataField]
 
 
 @dataclass
 class DataPaperFormat:
     endpoint: str
+    paper_endpoint_version: str
     word_template: typing.Optional[str] = None
     csl_style: typing.Optional[str] = None
+
+
+# Note: data_format endpoints should have unique keys (e.g., paper_endpoint_version)
+# to enable strict union matching by dacite.
 
 
 @dataclass

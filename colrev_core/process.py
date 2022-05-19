@@ -202,7 +202,10 @@ class Process:
 
         elif ProcessType.data == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]]
+                ignore_pattern=[
+                    self.REVIEW_MANAGER.paths["PAPER_RELATIVE"],
+                    self.REVIEW_MANAGER.paths["DATA_RELATIVE"],
+                ]
             )
             check_process_model_precondition()
 

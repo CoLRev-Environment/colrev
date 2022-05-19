@@ -25,4 +25,6 @@ colrev\_core.settings.DataStructuredFormat
 
    .. autosummary::
 
+      ~DataStructuredFormat.endpoint
+      ~DataStructuredFormat.structured_data_endpoint_version
       ~DataStructuredFormat.fields

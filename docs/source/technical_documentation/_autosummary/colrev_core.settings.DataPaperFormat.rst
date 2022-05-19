@@ -28,3 +28,4 @@ colrev\_core.settings.DataPaperFormat
       ~DataPaperFormat.csl_style
       ~DataPaperFormat.word_template
       ~DataPaperFormat.endpoint
+      ~DataPaperFormat.paper_endpoint_version

@@ -416,6 +416,14 @@ class ReviewManager:
 
                 settings["search"]["sources"] = sources
 
+            for x in settings["data"]["data_format"]:
+                if "MANUSCRIPT" == x["endpoint"]:
+                    if "paper_endpoint_version" not in x:
+                        x["paper_endpoint_version"] = "0.1"
+                if "STRUCTURED" == x["endpoint"]:
+                    if "structured_data_endpoint_version" not in x:
+                        x["structured_data_endpoint_version"] = "0.1"
+
             if "curated_metadata" in str(self.path):
                 repo = git.Repo(str(self.path))
                 settings["project"]["curation_url"] = repo.remote().url.replace(
@@ -802,17 +810,17 @@ class ReviewManager:
             if not PAPER.is_file():
                 self.logger.debug("Checks for PAPER not activated\n")
             else:
-                from colrev_core.data import Data
+                from colrev_core.data import Data, ManuscriptEndpoint
 
                 DATA = Data(self, notify_state_transition_process=False)
                 manuscript_checks = [
                     {
-                        "script": DATA.check_new_record_source_tag,
+                        "script": ManuscriptEndpoint.check_new_record_source_tag,
                         "params": [],
                     },
                     {
-                        "script": DATA.update_synthesized_status,
-                        "params": [],
+                        "script": DATA.main,
+                        "params": [True],
                     },
                     {
                         "script": self.update_status_yaml,

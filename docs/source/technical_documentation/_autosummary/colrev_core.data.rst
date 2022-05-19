@@ -21,6 +21,8 @@ colrev\_core.data
       :nosignatures:
 
       Data
+      ManuscriptEndpoint
+      StructuredDataEndpoint
 
 
 
