@@ -7,7 +7,6 @@ from pathlib import Path
 
 import dictdiffer
 import git
-from bashplotlib.histogram import plot_hist
 from p_tqdm import p_map
 
 from colrev_core.process import Process
@@ -67,16 +66,6 @@ class Validate(Process):
                     change_diff.append([record["ID"], cur_record_link, similarity])
 
         change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
-
-        if 0 == len(change_diff):
-            self.REVIEW_MANAGER.logger.info("No substantial differences found.")
-        else:
-            plot_hist(
-                [sim for [e1, e2, sim] in change_diff],
-                bincount=100,
-                xlab=True,
-                showSummary=True,
-            )
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)

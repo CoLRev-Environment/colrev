@@ -13,7 +13,6 @@ with open("CHANGELOG.md") as changelog_file:
 requirements = [
     "alphabet_detector==0.0.7",
     "ansiwrap==0.8.4",
-    "bashplotlib==0.6.5",
     "beautifulsoup4==4.10.0",
     "Click==8.0.4",
     "click_completion==0.5.2",
