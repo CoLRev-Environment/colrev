@@ -201,7 +201,7 @@ class PDFPrepMan(Process):
         if Path("prep-references.bib").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
 
-            with open("prep-references.bib") as target_db:
+            with open("prep-references.bib", encoding="utf8") as target_db:
                 records_changed_dict = (
                     self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(
                         load_str=target_db.read()

@@ -10,7 +10,6 @@ import docker
 import pandas as pd
 import requests
 
-from colrev_core import grobid_client
 from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -165,7 +164,7 @@ class Loader(Process):
         return sorted(files)
 
     def __getbib(self, file: Path) -> typing.List[dict]:
-        with open(file) as bibtex_file:
+        with open(file, encoding="utf8") as bibtex_file:
             contents = bibtex_file.read()
             bib_r = re.compile(r"@.*{.*,", re.M)
             if len(re.findall(bib_r, contents)) == 0:
@@ -175,7 +174,7 @@ class Loader(Process):
                     f"Replace Early Access Date in bibfile before loading! {file.name}"
                 )
 
-        with open(file) as bibtex_file:
+        with open(file, encoding="utf8") as bibtex_file:
             search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                 load_str=bibtex_file.read()
             )
@@ -198,7 +197,7 @@ class Loader(Process):
             self.REVIEW_MANAGER.logger.error(
                 "broken bib file (not imported all records)"
             )
-            with open(filepath) as f:
+            with open(filepath, encoding="utf8") as f:
                 line = f.readline()
                 while line:
                     if "@" in line[:3]:
@@ -403,8 +402,11 @@ class Loader(Process):
         return rec_dict.values()
 
     def __txt2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
-        with open(file) as f:
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
+        with open(file, encoding="utf8") as f:
             if file.suffix == ".md":
                 references = [line.rstrip() for line in f if "#" not in line[:2]]
             else:
@@ -417,7 +419,7 @@ class Loader(Process):
             options["consolidateCitations"] = "1"
             options["citations"] = ref
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processCitation",
+                GROBID_SERVICE.GROBID_URL + "/api/processCitation",
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -521,14 +523,17 @@ class Loader(Process):
     # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
     # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
     def __pdf2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         # https://github.com/kermitt2/grobid/issues/837
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            GrobidService.GROBID_URL + "/api/processHeaderDocument",
             headers={"Accept": "application/x-bibtex"},
             params={"consolidateHeader": "1"},
-            files=dict(input=open(file, "rb")),
+            files=dict(input=open(file, "rb"), encoding="utf8"),
         )
 
         if 200 == r.status_code:
@@ -553,11 +558,14 @@ class Loader(Process):
         return []
 
     def __pdfRefs2bib(self, file: Path) -> typing.List[dict]:
-        grobid_client.check_grobid_availability()
+        from colrev_core.environment import GrobidService
+
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.check_grobid_availability()
 
         r = requests.post(
-            grobid_client.get_grobid_url() + "/api/processReferences",
-            files=dict(input=open(file, "rb")),
+            GrobidService.GROBID_URL + "/api/processReferences",
+            files=dict(input=open(file, "rb"), encoding="utf8"),
             data={"consolidateHeader": "0", "consolidateCitations": "1"},
             headers={"Accept": "application/x-bibtex"},
         )
@@ -652,6 +660,7 @@ class Loader(Process):
         return None
 
     def __convert_to_bib(self, sfpath: Path) -> Path:
+        from colrev_core.environment import GrobidService
 
         corresponding_bib_file = sfpath.with_suffix(".bib")
 
@@ -670,7 +679,8 @@ class Loader(Process):
 
         if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
             self.REVIEW_MANAGER.logger.info("Start grobid")
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
 
         if filetype in self.conversion_scripts.keys():
             self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
@@ -745,7 +755,7 @@ class Loader(Process):
         self, filename: Path, old_string: str, new_string: str
     ) -> None:
         new_file_lines = []
-        with open(filename) as f:
+        with open(filename, encoding="utf8") as f:
             first_read = False
             replaced = False
             for line in f.readlines():
@@ -759,14 +769,14 @@ class Loader(Process):
             # s = f.read()
             # if old_string not in s:
             #     return
-        with open(filename, "w") as f:
+        with open(filename, "w", encoding="utf8") as f:
             for s in new_file_lines:
                 f.write(s)
         return
 
     def resolve_non_unique_IDs(self, corresponding_bib_file: Path) -> None:
 
-        with open(corresponding_bib_file) as bibtex_file:
+        with open(corresponding_bib_file, encoding="utf8") as bibtex_file:
             cr_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                 load_str=bibtex_file.read()
             )
@@ -795,7 +805,6 @@ class Loader(Process):
                 self.__inplace_change_second(
                     corresponding_bib_file, f"{old_id},", f"{new_id},"
                 )
-
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
             self.REVIEW_MANAGER.create_commit(
                 f"Resolve non-unique IDs in {corresponding_bib_file.name}"
@@ -812,7 +821,7 @@ class Loader(Process):
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
         number_in_bib = 0
-        with open(file_path) as f:
+        with open(file_path, encoding="utf8") as f:
             line = f.readline()
             while line:
                 # Note: the '﻿' occured in some bibtex files

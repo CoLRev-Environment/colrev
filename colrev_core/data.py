@@ -13,12 +13,12 @@ import requests
 import zope.interface
 from urllib3.exceptions import ProtocolError
 
-from colrev_core import grobid_client
+from colrev_core.environment import GrobidService
+from colrev_core.environment import TEI_TimeoutException
+from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
-from colrev_core.tei import TEI
-from colrev_core.tei import TEI_TimeoutException
 
 
 class DataEndpoint(zope.interface.Interface):
@@ -731,9 +731,10 @@ class Data(Process):
         from lxml.etree import XMLSyntaxError
 
         # from p_tqdm import p_map
-        from colrev_core.tei import TEI_Exception
+        from colrev_core.environment import TEI_Exception
 
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
 
         def create_tei(record: dict) -> None:
             if "file" not in record:
@@ -752,7 +753,7 @@ class Data(Process):
                     return
 
                 try:
-                    TEI(pdf_path=pdf_path, tei_path=tei_path)
+                    TEIParser(pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
@@ -785,7 +786,7 @@ class Data(Process):
 
                 tei_path = Path(record["tei_file"])
                 try:
-                    TEI_INSTANCE = TEI(self.REVIEW_MANAGER, tei_path=tei_path)
+                    TEI_INSTANCE = TEIParser(self.REVIEW_MANAGER, tei_path=tei_path)
                     TEI_INSTANCE.mark_references(records.values())
                 except XMLSyntaxError:
                     pass

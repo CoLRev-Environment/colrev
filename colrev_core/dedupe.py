@@ -348,7 +348,7 @@ class Dedupe(Process):
 
             merge_info = main_record["ID"] + "," + dupe_record["ID"]
             same_source_merge_file = Path("same_source_merges.txt")
-            with same_source_merge_file.open("a") as f:
+            with same_source_merge_file.open("a", encoding="utf8") as f:
                 f.write(merge_info + "\n")
             self.REVIEW_MANAGER.logger.warning(
                 f"Prevented same-source merge: ({merge_info})"

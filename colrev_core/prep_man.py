@@ -173,7 +173,7 @@ class PrepMan(Process):
         if Path("prep-references.bib").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
 
-            with open("prep-references.bib") as target_db:
+            with open("prep-references.bib", encoding="utf8") as target_db:
                 records_changed_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
                     load_str=target_db.read()
                 )
@@ -249,7 +249,7 @@ class PrepMan(Process):
 
         if non_dupe_db_path.is_file():
 
-            with open(non_dupe_db_path) as target_db:
+            with open(non_dupe_db_path, encoding="utf8") as target_db:
 
                 non_dupe_recs_dict = (
                     self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(

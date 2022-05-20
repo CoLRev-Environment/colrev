@@ -764,7 +764,9 @@ class Preparation(Process):
 
     def resolve_crossrefs(self, RECORD: PrepRecord) -> PrepRecord:
         def read_next_record_str() -> typing.Iterator[str]:
-            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
+            with open(
+                self.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8"
+            ) as f:
                 data = ""
                 first_entry_processed = False
                 while True:
@@ -2255,7 +2257,7 @@ class Preparation(Process):
                 # break
 
             # diff = (datetime.now() - startTime).total_seconds()
-            # with open("stats.csv", "a") as f:
+            # with open("stats.csv", "a", encoding="utf8") as f:
             #     f.write(f'{prep_script["script"].__name__};{record["ID"]};{diff};\n')
 
         # TODO : deal with "crossmark" in preparation_record
@@ -2618,7 +2620,7 @@ class Preparation(Process):
             if debug_file is None:
                 debug_file = "NA"
             if "NA" != debug_file:
-                with open(debug_file) as target_db:
+                with open(debug_file, encoding="utf8") as target_db:
                     records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         target_db.read()
                     )

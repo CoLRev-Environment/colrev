@@ -22,7 +22,7 @@ class Validate(Process):
 
     def load_search_records(self, bib_file: Path) -> list:
 
-        with open(bib_file) as bibtex_file:
+        with open(bib_file, encoding="utf8") as bibtex_file:
             individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.bibtex_file(
                 load_str=bibtex_file.read()
             )

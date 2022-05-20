@@ -2,7 +2,6 @@
 import shutil
 from pathlib import Path
 
-from colrev_core import grobid_client
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -16,7 +15,7 @@ class Distribute(Process):
         )
 
     def main(self, path_str: str, target: Path) -> None:
-        from colrev_core.tei import TEI
+        from colrev_core.environment import TEIParser, GrobidService
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path
@@ -27,7 +26,7 @@ class Distribute(Process):
         def get_last_ID(bib_file: Path) -> str:
             current_ID = "1"
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "@" in line[:3]:
@@ -38,8 +37,9 @@ class Distribute(Process):
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
-                grobid_client.start_grobid()
-                TEI_INSTANCE = TEI(
+                GROBID_SERVICE = GrobidService()
+                GROBID_SERVICE.start()
+                TEI_INSTANCE = TEIParser(
                     self.REVIEW_MANAGER,
                     path,
                 )
@@ -57,7 +57,7 @@ class Distribute(Process):
                 target_bib_file = target / "search/local_import.bib"
                 self.REVIEW_MANAGER.logger.info(f"target_bib_file: {target_bib_file}")
                 if target_bib_file.is_file():
-                    with open(target_bib_file) as target_bib:
+                    with open(target_bib_file, encoding="utf8") as target_bib:
                         import_records_dict = (
                             self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                                 load_str=target_bib.read()

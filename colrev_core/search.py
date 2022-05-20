@@ -115,7 +115,7 @@ class Search(Process):
             if not feed_file.is_file():
                 records = {}
             else:
-                with open(feed_file) as bibtex_file:
+                with open(feed_file, encoding="utf8") as bibtex_file:
                     records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         load_str=bibtex_file.read()
                     )
@@ -250,7 +250,7 @@ class Search(Process):
         if not feed_file.is_file():
             records = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
@@ -364,13 +364,14 @@ class Search(Process):
 
     def search_backward(self, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
-        grobid_client.start_grobid()
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
         print(params)
         print(feed_file)
         print(
@@ -398,8 +399,8 @@ class Search(Process):
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
-                grobid_client.get_grobid_url() + "/api/processReferences",
-                files=dict(input=open(pdf_path, "rb")),
+                GROBID_SERVICE.GROBID_URL + "/api/processReferences",
+                files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
             )
@@ -426,7 +427,7 @@ class Search(Process):
             records = []
             imported_ids = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
@@ -496,7 +497,7 @@ class Search(Process):
             records = []
             imported_ids = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
 
                 feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
@@ -588,10 +589,10 @@ class Search(Process):
     def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
-        from colrev_core import grobid_client
+        from colrev_core.environment import GrobidService
 
-        from colrev_core.tei import TEI
-        from colrev_core.tei import TEI_Exception
+        from colrev_core.environment import TEIParser
+        from colrev_core.environment import TEI_Exception
         from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfinterp import resolve1
         from pdfminer.pdfparser import PDFParser
@@ -645,7 +646,7 @@ class Search(Process):
             if not feed_file.is_file():
                 return
 
-            with open(feed_file) as target_db:
+            with open(feed_file, encoding="utf8") as target_db:
 
                 search_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=target_db.read()
@@ -713,7 +714,7 @@ class Search(Process):
         def get_pdf_links(bib_file: Path) -> list:
             pdf_list = []
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "file" == line.lstrip()[:4]:
@@ -725,7 +726,7 @@ class Search(Process):
         if not feed_file.is_file():
             records = []
         else:
-            with open(feed_file) as bibtex_file:
+            with open(feed_file, encoding="utf8") as bibtex_file:
                 feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
@@ -788,7 +789,8 @@ class Search(Process):
         self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
         else:
             self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
@@ -851,11 +853,13 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(record) -> dict:
-            from colrev_core.environment import EnvironmentManager
+            from colrev_core.environment import EnvironmentManager, GrobidService
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
-            grobid_client.check_grobid_availability()
+
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.check_grobid_availability()
 
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
 
@@ -866,10 +870,10 @@ class Search(Process):
 
             # # https://github.com/kermitt2/grobid/issues/837
             # r = requests.post(
-            #     grobid_client.get_grobid_url() + "/api/processHeaderDocument",
+            #     GROBID_SERVICE.GROBID_URL() + "/api/processHeaderDocument",
             #     headers={"Accept": "application/x-bibtex"},
             #     params=header_data,
-            #     files=dict(input=open(pdf_path, "rb")),
+            #     files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
             # )
 
             # if 200 == r.status_code:
@@ -886,7 +890,7 @@ class Search(Process):
             # print(f"Response: {r.text}")
             # return {}
 
-            TEI_INSTANCE = TEI(
+            TEI_INSTANCE = TEIParser(
                 pdf_path=pdf_path,
             )
 
@@ -985,7 +989,7 @@ class Search(Process):
         def get_last_ID(bib_file: Path) -> int:
             IDs = []
             if bib_file.is_file():
-                with open(bib_file) as f:
+                with open(bib_file, encoding="utf8") as f:
                     line = f.readline()
                     while line:
                         if "@" in line[:3]:
