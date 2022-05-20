@@ -816,7 +816,7 @@ class ReviewManager:
                 manuscript_checks = [
                     {
                         "script": ManuscriptEndpoint.check_new_record_source_tag,
-                        "params": [],
+                        "params": [self],
                     },
                     {
                         "script": DATA.main,
