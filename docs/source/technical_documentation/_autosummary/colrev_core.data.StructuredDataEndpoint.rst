@@ -16,5 +16,6 @@ colrev\_core.data.StructuredDataEndpoint
    .. autosummary::
       :nosignatures:
 
+      ~StructuredDataEndpoint.get_default_setup
       ~StructuredDataEndpoint.update_data
       ~StructuredDataEndpoint.update_record_status_matrix

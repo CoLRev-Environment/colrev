@@ -22,6 +22,9 @@ from colrev_core.tei import TEI_TimeoutException
 
 
 class DataEndpoint(zope.interface.Interface):
+    def get_default_setup(self):
+        pass
+
     def update_data(
         self, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
     ):
@@ -310,6 +313,21 @@ class ManuscriptEndpoint:
 @zope.interface.implementer(DataEndpoint)
 class StructuredDataEndpoint:
     @classmethod
+    def get_default_setup(cls):
+        structured_endpoint_details = {
+            "endpoint": "STRUCTURED",
+            "structured_data_endpoint_version": "0.1",
+            "fields": [
+                {
+                    "name": "field name",
+                    "explanation": "explanation",
+                    "data_type": "data type",
+                }
+            ],
+        }
+        return structured_endpoint_details
+
+    @classmethod
     def update_data(
         cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
     ):
@@ -424,6 +442,250 @@ class StructuredDataEndpoint:
         return
 
 
+@zope.interface.implementer(DataEndpoint)
+class EndnoteEndpoint:
+    @classmethod
+    def get_default_setup(cls):
+        endnote_endpoint_details = {
+            "endpoint": "ENDNOTE",
+            "endnote_data_endpoint_version": "0.1",
+            "config": {
+                "path": "data/endnote",
+            },
+        }
+        return endnote_endpoint_details
+
+    @classmethod
+    def update_data(
+        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+    ):
+
+        from colrev_core import load as cc_load
+        from colrev_core.review_dataset import ReviewDataset
+
+        def zotero_conversion(LOADER, data):
+            import requests
+            import json
+
+            LOADER.start_zotero_translators()
+
+            headers = {"Content-type": "text/plain"}
+            r = requests.post(
+                "http://127.0.0.1:1969/import",
+                headers=headers,
+                files={"file": str.encode(data)},
+            )
+            headers = {"Content-type": "application/json"}
+            if "No suitable translators found" == r.content.decode("utf-8"):
+                raise cc_load.ImportException(
+                    "Zotero translators: No suitable import translators found"
+                )
+
+            try:
+                zotero_format = json.loads(r.content)
+                et = requests.post(
+                    "http://127.0.0.1:1969/export?format=refer",
+                    headers=headers,
+                    json=zotero_format,
+                )
+
+            except Exception as e:
+                pass
+                raise cc_load.ImportException(f"Zotero import translators failed ({e})")
+
+            return et.content
+
+        LOADER = cc_load.Loader(REVIEW_MANAGER, notify_state_transition_process=False)
+
+        endpoint_path = Path("data/endnote")
+        endpoint_path.mkdir(exist_ok=True, parents=True)
+
+        if not any(Path(endpoint_path).iterdir()):
+            REVIEW_MANAGER.logger.info("Export all")
+            export_filepath = endpoint_path / Path("export_part1.enl")
+
+            selected_records = {
+                ID: r
+                for ID, r in records.items()
+                if r["colrev_status"]
+                in [RecordState.rev_included, RecordState.rev_synthesized]
+            }
+
+            data = ReviewDataset.parse_bibtex_str(selected_records)
+
+            enl_data = zotero_conversion(LOADER, data)
+
+            with open(export_filepath, "w") as w:
+                w.write(enl_data.decode("utf-8"))
+
+        else:
+
+            enl_files = endpoint_path.glob("*.enl")
+            file_numbers = []
+            exported_IDs = []
+            for enl_file in enl_files:
+                file_numbers.append(int(re.findall(r"\d+", str(enl_file.name))[0]))
+                with open(enl_file) as ef:
+                    for line in ef:
+                        if "%F" == line[:2]:
+                            ID = line[3:].lstrip().rstrip()
+                            exported_IDs.append(ID)
+
+            REVIEW_MANAGER.logger.info(
+                "IDs that have already been exported (in the other export files):"
+                f" {exported_IDs}"
+            )
+
+            selected_records = {
+                ID: r
+                for ID, r in records.items()
+                if r["colrev_status"]
+                in [RecordState.rev_included, RecordState.rev_synthesized]
+            }
+
+            if len(selected_records) > 0:
+
+                data = ReviewDataset.parse_bibtex_str(selected_records)
+
+                enl_data = zotero_conversion(LOADER, data)
+
+                next_file_number = str(max(file_numbers) + 1)
+                export_filepath = endpoint_path / Path(
+                    f"export_part{next_file_number}.enl"
+                )
+                print(export_filepath)
+                with open(export_filepath, "w") as w:
+                    w.write(enl_data.decode("utf-8"))
+            else:
+                REVIEW_MANAGER.logger.info("No additional records to export")
+
+        return
+
+    @classmethod
+    def update_record_status_matrix(
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+    ):
+        # Note : automatically set all to True / synthesized
+        for syn_ID in list(synthesized_record_status_matrix.keys()):
+            synthesized_record_status_matrix[syn_ID]["ENDNOTE"] = True
+
+        return
+
+
+@zope.interface.implementer(DataEndpoint)
+class PRISMAEndpoint:
+    @classmethod
+    def get_default_setup(cls):
+        prisma_endpoint_details = {
+            "endpoint": "PRISMA",
+            "prisma_data_endpoint_version": "0.1",
+        }
+        return prisma_endpoint_details
+
+    @classmethod
+    def update_data(
+        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+    ):
+
+        from colrev_core.status import Status
+        import os
+
+        def retrieve_package_file(template_file: Path, target: Path) -> None:
+            filedata = pkgutil.get_data(__name__, str(template_file))
+            if filedata:
+                with open(target, "w") as file:
+                    file.write(filedata.decode("utf-8"))
+            return
+
+        PRISMA_resource_path = Path("template/") / Path("PRISMA.csv")
+        PRISMA_path = Path("data/PRISMA.csv")
+        PRISMA_path.parent.mkdir(exist_ok=True, parents=True)
+
+        if PRISMA_path.is_file():
+            os.remove(PRISMA_path)
+        retrieve_package_file(PRISMA_resource_path, PRISMA_path)
+
+        STATUS = Status(REVIEW_MANAGER)
+        stat = STATUS.get_status_freq()
+        # print(stat)
+
+        prisma_data = pd.read_csv(PRISMA_path)
+        prisma_data["ind"] = prisma_data["data"]
+        prisma_data.set_index("ind", inplace=True)
+        prisma_data.loc["database_results", "n"] = stat["colrev_status"]["overall"][
+            "md_retrieved"
+        ]
+        prisma_data.loc["duplicates", "n"] = stat["colrev_status"]["currently"][
+            "md_duplicates_removed"
+        ]
+        prisma_data.loc["records_screened", "n"] = stat["colrev_status"]["overall"][
+            "rev_prescreen"
+        ]
+        prisma_data.loc["records_excluded", "n"] = stat["colrev_status"]["overall"][
+            "rev_excluded"
+        ]
+        prisma_data.loc["dbr_assessed", "n"] = stat["colrev_status"]["overall"][
+            "rev_screen"
+        ]
+        prisma_data.loc["new_studies", "n"] = stat["colrev_status"]["overall"][
+            "rev_included"
+        ]
+        prisma_data.loc["dbr_notretrieved_reports", "n"] = stat["colrev_status"][
+            "overall"
+        ]["pdf_not_available"]
+        prisma_data.loc["dbr_sought_reports", "n"] = stat["colrev_status"]["overall"][
+            "rev_prescreen_included"
+        ]
+
+        exclusion_stats = []
+        for c, v in stat["colrev_status"]["currently"]["exclusion"].items():
+            exclusion_stats.append(f"Reason {c}, {v}")
+        prisma_data.loc["dbr_excluded", "n"] = "; ".join(exclusion_stats)
+
+        prisma_data.to_csv(PRISMA_path, index=False)
+        print(f"Exported {PRISMA_path}")
+        print(
+            "Diagrams can be created online "
+            "at https://estech.shinyapps.io/prisma_flowdiagram/"
+        )
+
+        if not stat["completeness_condition"]:
+            print("Warning: review not (yet) complete")
+
+        return
+
+    @classmethod
+    def update_record_status_matrix(
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+    ):
+
+        # Note : automatically set all to True / synthesized
+        for syn_ID in list(synthesized_record_status_matrix.keys()):
+            synthesized_record_status_matrix[syn_ID]["PRISMA"] = True
+
+        return
+
+
+# @zope.interface.implementer(DataEndpoint)
+# class NAMEEndpoint:
+
+#     TODO : add to settings.json
+
+#     @classmethod
+#     def update_data(
+#         cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+#     ):
+
+#         return
+
+#     @classmethod
+#     def update_record_status_matrix(
+#         cls, REVIEW_MANAGER, synthesized_record_status_matrix
+#     ):
+
+#         return
+
+
 class Data(Process):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
@@ -444,6 +706,12 @@ class Data(Process):
             },
             "STRUCTURED": {
                 "endpoint": StructuredDataEndpoint,
+            },
+            "ENDNOTE": {
+                "endpoint": EndnoteEndpoint,
+            },
+            "PRISMA": {
+                "endpoint": PRISMAEndpoint,
             },
         }
 

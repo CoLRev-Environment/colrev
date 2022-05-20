@@ -172,13 +172,28 @@ class DataPaperFormat:
     csl_style: typing.Optional[str] = None
 
 
+@dataclass
+class PRISMAFormat:
+    endpoint: str
+    prisma_data_endpoint_version: str
+
+
+@dataclass
+class EndnoteFormat:
+    endpoint: str
+    endnote_data_endpoint_version: str
+    config: dict
+
+
 # Note: data_format endpoints should have unique keys (e.g., paper_endpoint_version)
 # to enable strict union matching by dacite.
 
 
 @dataclass
 class DataConfiguration:
-    data_format: typing.List[typing.Union[DataPaperFormat, DataStructuredFormat]]
+    data_format: typing.List[
+        typing.Union[DataPaperFormat, DataStructuredFormat, PRISMAFormat, EndnoteFormat]
+    ]
 
 
 @dataclass

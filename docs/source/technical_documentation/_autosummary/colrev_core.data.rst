@@ -21,7 +21,9 @@ colrev\_core.data
       :nosignatures:
 
       Data
+      EndnoteEndpoint
       ManuscriptEndpoint
+      PRISMAEndpoint
       StructuredDataEndpoint
 
 

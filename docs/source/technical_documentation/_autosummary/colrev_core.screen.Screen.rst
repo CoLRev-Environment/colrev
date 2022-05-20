@@ -16,7 +16,9 @@ colrev\_core.screen.Screen
    .. autosummary::
       :nosignatures:
 
+      ~Screen.add_criterion
       ~Screen.check_precondition
+      ~Screen.delete_criterion
       ~Screen.get_data
       ~Screen.get_exclusion_criteria
       ~Screen.include_all_in_screen
