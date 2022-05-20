@@ -1633,6 +1633,8 @@ class ReviewDataset:
         # is implicitly ensured through status
         # (screen2-included/excluded implies prescreen included!)
 
+        field_errors = []
+
         if data["exclusion_criteria_list"]:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
@@ -1641,7 +1643,7 @@ class ReviewDataset:
                     str(c) for c in self.REVIEW_MANAGER.settings.screen.criteria
                 ]
                 if not set(criteria) == set(settings_criteria):
-                    raise FieldError(
+                    field_errors.append(
                         "Mismatch in screening criteria: records:"
                         f" {criteria} vs. settings: {settings_criteria}"
                     )
@@ -1656,7 +1658,7 @@ class ReviewDataset:
                 if not re.match(pattern, excl_crit):
                     # Note: this should also catch cases of missing
                     # exclusion criteria
-                    raise FieldError(
+                    field_errors.append(
                         "Exclusion criteria field not matching "
                         f"pattern: {excl_crit} ({ID}; criteria: {criteria})"
                     )
@@ -1666,11 +1668,11 @@ class ReviewDataset:
                         if "NA" == excl_crit:
                             continue
                         else:
-                            raise FieldError(f"excl_crit field not NA: {excl_crit}")
+                            field_errors.append(f"excl_crit field not NA: {excl_crit}")
 
                     if "=yes" not in excl_crit:
                         logging.error(f"criteria: {criteria}")
-                        raise FieldError(
+                        field_errors.append(
                             "Excluded record with no exclusion_criterion violated: "
                             f"{ID}, {status}, {excl_crit}"
                         )
@@ -1678,12 +1680,23 @@ class ReviewDataset:
                 # Note: we don't have to consider the cases of
                 # status=retrieved/prescreen_included/prescreen_excluded
                 # because they would not have exclusion_criteria.
-                else:
+                elif status in [
+                    str(RecordState.rev_included),
+                    str(RecordState.rev_synthesized),
+                ]:
                     if not re.match(pattern_inclusion, excl_crit):
-                        raise FieldError(
+                        field_errors.append(
                             "Included record with exclusion_criterion satisfied: "
                             f"{ID}, {status}, {excl_crit}"
                         )
+                else:
+                    if not re.match(pattern_inclusion, excl_crit):
+                        field_errors.append(
+                            "Record with exclusion_criterion but before "
+                            f"inclusion stage: {ID}, {status}"
+                        )
+        if len(field_errors) > 0:
+            raise FieldError("\n".join(field_errors))
         return
 
     # def check_screen_data(screen, data):
