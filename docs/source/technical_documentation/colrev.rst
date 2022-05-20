@@ -37,14 +37,18 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 - :any:`curation_layers`
 - :any:`curation_per_default`
 
-:any:`standard`
-
 ..  Note : this page should mirror the areas of innovation (first page)
 
 .. _preliminaries:
 
 0. Preleminaries
 ------------------------------
+
+Current status of the proposed CoLRev standard:
+
+- The CoLRev standard is currently in **draft status** and subject to frequent and substantial revisions.
+- Comments on this document are welcome. Please participate through Github pull requests.
+- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_.
 
 Definitions:
 
@@ -493,17 +497,6 @@ Per default, every CoLRev repository that is registered locally makes its data a
 This means that all general operations (e.g., preparing metadata or linking PDFs) are completed automatically once indexed.
 Of course, reuse is the most powerful when curated content (such as reviews, topic or journal-related repositories) is shared within teams or publicly.
 
-
-.. _standard:
-
-5. Current status
------------------------------
-
-Current status of the proposed CoLRev standard:
-
-- The CoLRev standard is currently in draft status and subject to frequent and substantial revisions.
-- Comments on this document are welcome. Please participate through Github pull requests.
-- The document is available under the `Creative Commons Attribution-NonCommercial-NoDerivs 3.0 License <https://creativecommons.org/licenses/by-nc-nd/3.0/us/>`_.
 
 **References**
 
