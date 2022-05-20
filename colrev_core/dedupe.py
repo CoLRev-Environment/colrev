@@ -448,7 +448,7 @@ class Dedupe(Process):
 
         removed_duplicates = []
         for ID1, ID2 in dupe_list:
-            if ID1 not in records or ID2 not in records:
+            if ID1 in removed_duplicates or ID2 in removed_duplicates:
                 continue
 
             rec_ID1 = records[ID1]
