@@ -53,6 +53,7 @@
    colrev_core.review_manager
    colrev_core.screen
    colrev_core.search
+   colrev_core.service
    colrev_core.settings
    colrev_core.status
    colrev_core.sync
