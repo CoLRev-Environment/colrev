@@ -9,7 +9,7 @@ from colrev_core.review_manager import ReviewManager
 
 class Push(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER, ProcessType.explore)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
@@ -271,9 +271,9 @@ class Push(Process):
             cids = RECORD.get_data()["colrev_id"]
             record["colrev_id"] = cids
 
-            REVIEW_DATASET.save_records_dict(records)
+            REVIEW_DATASET.save_records_dict(records=records)
             REVIEW_DATASET.add_record_changes()
-            CHECK_PROCESS.REVIEW_MANAGER.create_commit(f"Update {record['ID']}")
+            CHECK_PROCESS.REVIEW_MANAGER.create_commit(msg=f"Update {record['ID']}")
 
             git_repo.remotes.origin.push(
                 refspec=f"{record_branch_name}:{record_branch_name}"

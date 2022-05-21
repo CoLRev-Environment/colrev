@@ -356,7 +356,7 @@ class Record:
                 continue
 
             source = MERGING_RECORD.get_provenance_field_source(
-                key, default=default_source
+                field=key, default=default_source
             )
 
             # Part 1: identifying fields

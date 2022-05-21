@@ -113,8 +113,8 @@ class Loader(Process):
     ):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.load,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.load,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -329,7 +329,7 @@ class Loader(Process):
         except UnicodeDecodeError:
             pass
         for custom_load_script in [x for x in load_custom.scripts if "heuristic" in x]:
-            if custom_load_script["heuristic"](original, data):
+            if custom_load_script["heuristic"](filename=original, data=data):
                 return custom_load_script["source_identifier"]
 
         return "NA"
@@ -797,9 +797,11 @@ class Loader(Process):
                 current_IDs.append(new_id)
 
         if len(IDs_to_update) > 0:
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                path=str(corresponding_bib_file)
+            )
             self.REVIEW_MANAGER.create_commit(
-                f"Save original search file: {corresponding_bib_file.name}"
+                msg=f"Save original search file: {corresponding_bib_file.name}"
             )
 
             for old_id, new_id in IDs_to_update:
@@ -814,7 +816,9 @@ class Loader(Process):
                     old_string=f"{old_id},",
                     new_string=f"{new_id},",
                 )
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                path=str(corresponding_bib_file)
+            )
             self.REVIEW_MANAGER.create_commit(
                 f"Resolve non-unique IDs in {corresponding_bib_file.name}"
             )
@@ -902,15 +906,16 @@ class Loader(Process):
                 records[sr["ID"]] = sr
 
             self.REVIEW_MANAGER.logger.info("Save records to references.bib")
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
             # TBD: does the following create errors!?
-            # REVIEW_MANAGER.save_record_list_by_ID(search_records, append_new=True)
+            # REVIEW_MANAGER.save_record_list_by_ID(record_list=search_records,
+            #                                        append_new=True)
 
             if not keep_ids:
                 self.REVIEW_MANAGER.logger.info("Set IDs")
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
-                    records,
+                    records=records,
                     selected_IDs=[r["ID"] for r in search_records_list],
                 )
 
@@ -918,13 +923,15 @@ class Loader(Process):
                 self.REVIEW_MANAGER.logger.info("Add changes and create commit")
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(corresponding_bib_file))
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(search_file))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                path=str(corresponding_bib_file)
+            )
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(search_file))
             if not combine_commits:
 
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
                 self.REVIEW_MANAGER.create_commit(
-                    f"Load {saved_args['file']}", saved_args=saved_args
+                    msg=f"Load {saved_args['file']}", saved_args=saved_args
                 )
 
             imported_origins = self.__get_currently_imported_origin_list()
@@ -961,7 +968,9 @@ class Loader(Process):
 
         if combine_commits and self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            self.REVIEW_MANAGER.create_commit("Load (multiple)", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(
+                msg="Load (multiple)", saved_args=saved_args
+            )
         return
 
 

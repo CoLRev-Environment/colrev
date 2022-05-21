@@ -146,7 +146,7 @@ class Prescreen(Process):
                         "exclusion_criteria", ""
                     )
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         return
 
@@ -166,10 +166,10 @@ class Prescreen(Process):
             )
             record.update(colrev_status=RecordState.rev_prescreen_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            "Pre-screen (include_all)", manual_author=False, saved_args=saved_args
+            msg="Pre-screen (include_all)", manual_author=False, saved_args=saved_args
         )
 
         return
@@ -201,14 +201,18 @@ class Prescreen(Process):
                 f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_included)
+                IDs=[record["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_included),
             )
         else:
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
             )
             self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                [record["ID"]], "colrev_status", str(RecordState.rev_prescreen_excluded)
+                IDs=[record["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_excluded),
             )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

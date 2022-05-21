@@ -49,9 +49,9 @@ class Process:
 
         self.notify_state_transition_process = notify_state_transition_process
         if notify_state_transition_process:
-            self.REVIEW_MANAGER.notify(self)
+            self.REVIEW_MANAGER.notify(process=self)
         else:
-            self.REVIEW_MANAGER.notify(self, state_transition=False)
+            self.REVIEW_MANAGER.notify(process=self, state_transition=False)
 
         if debug:
             self.REVIEW_MANAGER.DEBUG_MODE = True
@@ -228,8 +228,8 @@ class FormatProcess(Process):
 class CheckProcess(Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.check,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.check,
             notify_state_transition_process=False,
         )
 

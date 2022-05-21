@@ -431,12 +431,12 @@ class ReviewDataset:
         return bibtex_str
 
     @classmethod
-    def save_records_dict_to_file(cls, *, recs_dict_in, save_path: Path):
+    def save_records_dict_to_file(cls, *, records, save_path: Path):
         """Save the records dict to specifified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in=recs_dict_in)
+        bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in=records)
 
         with open(save_path, "w") as out:
             out.write(bibtex_str)
@@ -457,13 +457,11 @@ class ReviewDataset:
 
         return
 
-    def save_records_dict(self, *, recs_dict_in):
+    def save_records_dict(self, *, records) -> None:
         """Save the records dict in MAIN_REFERENCES"""
 
         MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-        self.save_records_dict_to_file(
-            recs_dict_in=recs_dict_in, save_path=MAIN_REFERENCES_FILE
-        )
+        self.save_records_dict_to_file(records=records, save_path=MAIN_REFERENCES_FILE)
 
         return
 
@@ -484,10 +482,10 @@ class ReviewDataset:
             records = {
                 ID: record for ID, record in records.items() if ID not in id.split(",")
             }
-            self.save_records_dict(recs_dict_in=records)
+            self.save_records_dict(records=records)
             self.add_record_changes()
 
-        self.REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
+        self.REVIEW_MANAGER.create_commit(msg="Reprocess", saved_args=saved_args)
 
         return
 
@@ -538,12 +536,12 @@ class ReviewDataset:
                 if old_id in ID_list:
                     ID_list.remove(old_id)
 
-        self.save_records_dict(recs_dict_in=records)
+        self.save_records_dict(records=records)
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
 
         records = self.load_records_dict()
-        self.save_records_dict(recs_dict_in=records)
+        self.save_records_dict(records=records)
         self.add_record_changes()
 
         return records
@@ -985,7 +983,7 @@ class ReviewDataset:
 
             record = RECORD.get_data()
 
-        self.save_records_dict(recs_dict_in=records)
+        self.save_records_dict(records=records)
         CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]
@@ -1239,7 +1237,7 @@ class ReviewDataset:
             #             if RECORD.shares_origins(HIST_RECORD):
             #                 RECORD.add_colrev_ids([HIST_RECORD.get_data()])
 
-            self.save_records_dict(recs_dict_in=recs_dict)
+            self.save_records_dict(records=recs_dict)
             self.add_record_changes()
         return
 

@@ -97,7 +97,7 @@ class PDFRetrievalMan(Process):
                 f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
             )
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
+        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return

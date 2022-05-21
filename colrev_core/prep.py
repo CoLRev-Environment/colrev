@@ -59,7 +59,7 @@ class PrepRecord(Record):
         authors = self.data["author"]
         authors = str(authors).lower()
         authors_string = ""
-        authors = Record.remove_accents(authors)
+        authors = Record.remove_accents(input_str=authors)
 
         # abbreviate first names
         # "Webster, Jane" -> "Webster, J"
@@ -467,7 +467,7 @@ class Preparation(Process):
     # prep_scripts (in the order in which they should run)
     #
 
-    def exclude_non_latin_alphabets(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def exclude_non_latin_alphabets(self, RECORD: PrepRecord) -> PrepRecord:
         def mostly_latin_alphabet(str_to_check) -> bool:
             assert len(str_to_check) != 0
             nr_non_latin = 0
@@ -490,7 +490,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def exclude_languages(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def exclude_languages(self, RECORD: PrepRecord) -> PrepRecord:
 
         if not self.FIRST_ROUND:
             return RECORD
@@ -532,7 +532,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def remove_urls_with_500_errors(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def remove_urls_with_500_errors(self, RECORD: PrepRecord) -> PrepRecord:
 
         if not self.FIRST_ROUND:
             return RECORD
@@ -564,7 +564,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def remove_broken_IDs(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def remove_broken_IDs(self, RECORD: PrepRecord) -> PrepRecord:
 
         if not self.FIRST_ROUND:
             return RECORD
@@ -585,7 +585,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def global_ids_consistency_check(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def global_ids_consistency_check(self, RECORD: PrepRecord) -> PrepRecord:
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
@@ -643,13 +643,13 @@ class Preparation(Process):
 
         return RECORD
 
-    def prep_curated(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def prep_curated(self, RECORD: PrepRecord) -> PrepRecord:
         if RECORD.masterdata_is_curated():
             if RecordState.md_imported == RECORD.data["colrev_status"]:
                 RECORD.data["colrev_status"] = RecordState.md_prepared
         return RECORD
 
-    def format(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def format(self, RECORD: PrepRecord) -> PrepRecord:
 
         fields_to_process = [
             "author",
@@ -773,7 +773,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def resolve_crossrefs(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def resolve_crossrefs(self, RECORD: PrepRecord) -> PrepRecord:
         def read_next_record_str() -> typing.Iterator[str]:
             with open(
                 self.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8"
@@ -805,7 +805,7 @@ class Preparation(Process):
             for record_string in read_next_record_str():
                 if crossref_origin in record_string:
                     records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        record_string
+                        load_str=record_string
                     )
                     record = records_dict.values()[0]
                     if record["colrev_origin"] == crossref_origin:
@@ -820,7 +820,7 @@ class Preparation(Process):
                         RECORD.data[k] = v
         return RECORD
 
-    def get_doi_from_sem_scholar(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_doi_from_sem_scholar(self, RECORD: PrepRecord) -> PrepRecord:
 
         try:
             search_api_url = (
@@ -873,7 +873,7 @@ class Preparation(Process):
             pass
         return RECORD
 
-    def get_doi_from_urls(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_doi_from_urls(self, RECORD: PrepRecord) -> PrepRecord:
 
         url = RECORD.data.get("url", RECORD.data.get("fulltext", "NA"))
         if "NA" != url:
@@ -919,14 +919,14 @@ class Preparation(Process):
                 pass
         return RECORD
 
-    def get_masterdata_from_doi(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_masterdata_from_doi(self, RECORD: PrepRecord) -> PrepRecord:
         if "doi" not in RECORD.data:
             return RECORD
         self.retrieve_doi_metadata(RECORD=RECORD)
         self.get_link_from_doi(RECORD=RECORD)
         return RECORD
 
-    def get_masterdata_from_crossref(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_masterdata_from_crossref(self, RECORD: PrepRecord) -> PrepRecord:
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
 
@@ -979,7 +979,7 @@ class Preparation(Process):
                 sys.exit()
         return RECORD
 
-    def get_masterdata_from_dblp(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_masterdata_from_dblp(self, RECORD: PrepRecord) -> PrepRecord:
         if "dblp_key" in RECORD.data:
             return RECORD
 
@@ -1022,7 +1022,7 @@ class Preparation(Process):
             pass
         return RECORD
 
-    def get_masterdata_from_open_library(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_masterdata_from_open_library(self, RECORD: PrepRecord) -> PrepRecord:
 
         if RECORD.data.get("ENTRYTYPE", "NA") != "book":
             return RECORD
@@ -1100,7 +1100,7 @@ class Preparation(Process):
             pass
         return RECORD
 
-    def get_year_from_vol_iss_jour_crossref(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_year_from_vol_iss_jour_crossref(self, RECORD: PrepRecord) -> PrepRecord:
         # The year depends on journal x volume x issue
         if (
             "journal" in RECORD.data
@@ -1158,7 +1158,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def get_record_from_local_index(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_record_from_local_index(self, RECORD: PrepRecord) -> PrepRecord:
         # TODO: how to distinguish masterdata and complementary CURATED sources?
 
         # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
@@ -1210,14 +1210,14 @@ class Preparation(Process):
 
         return RECORD
 
-    def remove_nicknames(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def remove_nicknames(self, RECORD: PrepRecord) -> PrepRecord:
         if "author" in RECORD.data:
             # Replace nicknames in parentheses
             RECORD.data["author"] = re.sub(r"\([^)]*\)", "", RECORD.data["author"])
             RECORD.data["author"] = RECORD.data["author"].replace("  ", " ")
         return RECORD
 
-    def format_minor(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def format_minor(self, RECORD: PrepRecord) -> PrepRecord:
 
         fields_to_process = [
             "author",
@@ -1260,7 +1260,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def drop_fields(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def drop_fields(self, RECORD: PrepRecord) -> PrepRecord:
         for key in list(RECORD.data.keys()):
             if key not in self.fields_to_keep:
                 RECORD.data.pop(key)
@@ -1288,7 +1288,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def remove_redundant_fields(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def remove_redundant_fields(self, RECORD: PrepRecord) -> PrepRecord:
         if "article" == RECORD.data["ENTRYTYPE"]:
             if "journal" in RECORD.data and "booktitle" in RECORD.data:
                 if (
@@ -1311,7 +1311,7 @@ class Preparation(Process):
                     del RECORD.data["journal"]
         return RECORD
 
-    def correct_recordtype(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def correct_recordtype(self, RECORD: PrepRecord) -> PrepRecord:
 
         if RECORD.has_inconsistent_fields() and not RECORD.masterdata_is_curated():
             pass
@@ -1377,7 +1377,7 @@ class Preparation(Process):
 
         return RECORD
 
-    def update_metadata_status(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def update_metadata_status(self, RECORD: PrepRecord) -> PrepRecord:
 
         RECORD.check_potential_retracts()
         if "crossmark" in RECORD.data:
@@ -1414,7 +1414,7 @@ class Preparation(Process):
     # END prep scripts section
     #
 
-    def get_link_from_doi(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def get_link_from_doi(self, RECORD: PrepRecord) -> PrepRecord:
 
         doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
 
@@ -1466,7 +1466,7 @@ class Preparation(Process):
             pass
         return RECORD
 
-    def retrieve_md_from_url(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def retrieve_md_from_url(self, RECORD: PrepRecord) -> PrepRecord:
         from colrev_core.load import Loader
 
         LOADER = Loader(
@@ -2075,7 +2075,7 @@ class Preparation(Process):
         [R.add_provenance_all(source=R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
         return RETRIEVED_RECORDS
 
-    def retrieve_doi_metadata(self, *, RECORD: PrepRecord) -> PrepRecord:
+    def retrieve_doi_metadata(self, RECORD: PrepRecord) -> PrepRecord:
         if "doi" not in RECORD.data:
             return RECORD
 
@@ -2173,7 +2173,8 @@ class Preparation(Process):
 
         return RECORD
 
-    def prepare(self, *, item: dict) -> dict:
+    # Note : no named arguments for multiprocessing
+    def prepare(self, item: dict) -> dict:
 
         RECORD = item["record"]
 
@@ -2478,11 +2479,11 @@ class Preparation(Process):
         self.reset(record_list=records_to_reset)
 
         saved_args = {"reset_records": ",".join(reset_ids)}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         # self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            "Reset metadata for manual preparation", saved_args=saved_args
+            msg="Reset metadata for manual preparation", saved_args=saved_args
         )
         return
 
@@ -2512,7 +2513,7 @@ class Preparation(Process):
             prior_record = prior_record_l[0]
             record["ID"] = prior_record["ID"]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         return
 
@@ -2522,7 +2523,7 @@ class Preparation(Process):
         # Note: entrypoint for CLI
 
         self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-        self.REVIEW_MANAGER.create_commit("Set IDs")
+        self.REVIEW_MANAGER.create_commit(msg="Set IDs")
 
         return
 
@@ -2535,9 +2536,9 @@ class Preparation(Process):
         for record in records.values():
             if "doi" in record and record.get("journal", "") == "MIS Quarterly":
                 record = self.get_masterdata_from_doi(RECORD=record)
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Update metadata based on DOIs")
+        self.REVIEW_MANAGER.create_commit(msg="Update metadata based on DOIs")
         return
 
     def print_doi_metadata(self, *, doi: str) -> None:
@@ -2562,7 +2563,7 @@ class Preparation(Process):
             with open("custom_prep_script.py", "w") as file:
                 file.write(filedata.decode("utf-8"))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes("custom_prep_script.py")
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_prep_script.py")
 
         prep_round = self.REVIEW_MANAGER.settings.prep.prep_rounds[-1]
         prep_round.scripts.append("custom_prep_script")
@@ -2803,7 +2804,7 @@ class Preparation(Process):
                 preparation_batch_items = preparation_batch
                 preparation_batch = []
                 for item in preparation_batch_items:
-                    r = self.prepare(item=item)
+                    r = self.prepare(item)
                     preparation_batch.append(r)
             else:
                 # Note : p_map shows the progress (tqdm) but it is inefficient
@@ -2824,7 +2825,7 @@ class Preparation(Process):
             if not self.REVIEW_MANAGER.DEBUG_MODE:
                 preparation_batch = [x.get_data() for x in preparation_batch]
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                    preparation_batch
+                    record_list=preparation_batch
                 )
 
                 self.__log_details(preparation_batch=preparation_batch)
@@ -2832,22 +2833,22 @@ class Preparation(Process):
                 # Multiprocessing mixes logs of different records.
                 # For better readability:
                 preparation_batch_IDs = [x["ID"] for x in preparation_batch]
-                self.REVIEW_MANAGER.reorder_log(preparation_batch_IDs)
+                self.REVIEW_MANAGER.reorder_log(IDs=preparation_batch_IDs)
 
                 # Note: for formatting...
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(
-                    f"Prepare records ({prep_round.name})", saved_args=saved_args
+                    msg=f"Prepare records ({prep_round.name})", saved_args=saved_args
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
 
         if not keep_ids and not self.REVIEW_MANAGER.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-            self.REVIEW_MANAGER.create_commit("Set IDs", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(msg="Set IDs", saved_args=saved_args)
 
         return
 

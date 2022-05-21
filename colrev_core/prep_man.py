@@ -134,7 +134,7 @@ class PrepMan(Process):
         }
 
         self.REVIEW_MANAGER.REVIEW_DATASEt.save_records_dict_to_file(
-            records, save_path=prep_bib_path
+            records=records, save_path=prep_bib_path
         )
 
         bib_db_df = pd.DataFrame.from_records(records.values())
@@ -231,7 +231,7 @@ class PrepMan(Process):
         if len(records_to_reset) > 0:
             PREPARATION.reset(record_list=records_to_reset)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
         return
@@ -278,7 +278,7 @@ class PrepMan(Process):
         non_dupe_recs_dict[record["ID"]] = record
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
-            non_dupe_recs_dict, save_path=non_dupe_db_path
+            records=non_dupe_recs_dict, save_path=non_dupe_db_path
         )
 
         return
@@ -325,7 +325,7 @@ class PrepMan(Process):
         record = RECORD.get_data()
         record = PREPARATION.drop_fields(RECORD=record)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
+        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return

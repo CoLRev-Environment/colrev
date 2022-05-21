@@ -32,8 +32,8 @@ class Search(Process):
     ):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.check,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.check,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -190,7 +190,9 @@ class Search(Process):
             # )
 
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
-            ReviewDataset.save_records_dict_to_file(records, feed_file)
+            ReviewDataset.save_records_dict_to_file(
+                records=records, save_path=feed_file
+            )
 
         return
 
@@ -413,9 +415,9 @@ class Search(Process):
             with open(bib_filename, "wb") as f:
                 f.write(bib_content)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(bib_filename))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(bib_filename))
 
-        self.REVIEW_MANAGER.create_commit("Backward search")
+        self.REVIEW_MANAGER.create_commit(msg="Backward search")
 
         return
 
@@ -483,7 +485,7 @@ class Search(Process):
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             records_dict = {r["ID"]: r for r in records}
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                records_dict, save_path=feed_file
+                records=records_dict, save_path=feed_file
             )
 
         else:
@@ -566,7 +568,7 @@ class Search(Process):
 
             records_dict = {r["ID"]: r for r in records}
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                records_dict, save_path=feed_file
+                records=records_dict, save_path=feed_file
             )
 
         else:
@@ -676,7 +678,7 @@ class Search(Process):
                 )
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-                str(feed_file.parent / feed_file.name)
+                path=str(feed_file.parent / feed_file.name)
             )
 
             if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
@@ -707,7 +709,7 @@ class Search(Process):
                     for k, v in records.items()
                     if v["colrev_origin"] not in to_remove
                 }
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             return
@@ -878,7 +880,8 @@ class Search(Process):
             # )
 
             # if 200 == r.status_code:
-            #     rec_d = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(r.text)
+            #     rec_d = self.REVIEW_MANAGER.REVIEW_DATASET.
+            #               load_records_dict(load_str=r.text)
             #     record = rec_d.values()[0]
             #     return record
             # if 500 == r.status_code:
@@ -1048,7 +1051,7 @@ class Search(Process):
 
             records_dict = {r["ID"]: r for r in records}
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                records_dict, save_path=feed_file
+                records=records_dict, save_path=feed_file
             )
 
         else:
@@ -1328,7 +1331,7 @@ class Search(Process):
             self.REVIEW_MANAGER.save_settings()
 
             self.REVIEW_MANAGER.create_commit(
-                f"Add search source {filename}", saved_args=saved_args
+                msg=f"Add search source {filename}", saved_args=saved_args
             )
 
         self.update(selection_str="all")
@@ -1385,8 +1388,8 @@ class Search(Process):
             script["script"](params, feed_file)
 
             if feed_file.is_file():
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_file))
-                self.REVIEW_MANAGER.create_commit("Run search")
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
+                self.REVIEW_MANAGER.create_commit(msg="Run search")
 
         return
 

@@ -98,7 +98,7 @@ class PDF_Retrieval(Process):
         except:  # noqa E722
             return False
 
-    def __get_pdf_from_unpaywall(self, *, record: dict) -> dict:
+    def __get_pdf_from_unpaywall(self, record: dict) -> dict:
 
         if "doi" not in record:
             return record
@@ -136,7 +136,7 @@ class PDF_Retrieval(Process):
                     )
         return record
 
-    def link_pdf(self, *, record: dict) -> dict:
+    def link_pdf(self, record: dict) -> dict:
 
         PDF_DIRECTORY_RELATIVE = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
         pdf_filepath = PDF_DIRECTORY_RELATIVE / Path(f"{record['ID']}.pdf")
@@ -145,7 +145,7 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def __get_pdf_from_local_index(self, *, record: dict) -> dict:
+    def __get_pdf_from_local_index(self, record: dict) -> dict:
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         LOCAL_INDEX = LocalIndex()
@@ -162,7 +162,8 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def retrieve_pdf(self, *, item: dict) -> dict:
+    # Note : no named arguments (multiprocessing)
+    def retrieve_pdf(self, item: dict) -> dict:
         record = item["record"]
 
         if str(RecordState.rev_prescreen_included) != str(record["colrev_status"]):
@@ -285,7 +286,7 @@ class PDF_Retrieval(Process):
                 )
 
             if feed_filepath != "":
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(feed_filepath))
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_filepath))
             return records
 
         self.REVIEW_MANAGER.logger.info(
@@ -294,10 +295,10 @@ class PDF_Retrieval(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records = relink_pdf_files(records)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Relink PDFs")
+        self.REVIEW_MANAGER.create_commit(msg="Relink PDFs")
 
         return
 
@@ -395,7 +396,7 @@ class PDF_Retrieval(Process):
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -451,7 +452,7 @@ class PDF_Retrieval(Process):
                             "Warning: record with file field but no existing PDF "
                             f'({record["ID"]}: {record["file"]}'
                         )
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
@@ -486,17 +487,19 @@ class PDF_Retrieval(Process):
 
             retrieval_batch = p_map(self.retrieve_pdf, retrieval_batch)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(retrieval_batch)
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+                record_list=retrieval_batch
+            )
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            self.REVIEW_MANAGER.reorder_log([x["ID"] for x in retrieval_batch])
+            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in retrieval_batch])
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
             self.rename_pdfs()
 
-            self.REVIEW_MANAGER.create_commit("Get PDFs", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(msg="Get PDFs", saved_args=saved_args)
 
         if i == 1:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")

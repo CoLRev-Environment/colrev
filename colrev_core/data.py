@@ -49,6 +49,40 @@ class ManuscriptEndpoint:
     the corresponding record will be marked as rev_synthesized."""
 
     @classmethod
+    def get_default_setup(cls):
+
+        manuscript_endpoint_details = {
+            "endpoint": "MANUSCRIPT",
+            "paper_endpoint_version": "0.1",
+            "word_template": cls.retrieve_default_word_template(),
+            "csl_style": cls.retrieve_default_csl(),
+        }
+
+        return manuscript_endpoint_details
+
+    @classmethod
+    def retrieve_default_word_template(cls) -> str:
+        template_name = "APA-7.docx"
+
+        filedata = pkgutil.get_data(__name__, str(Path("template/APA-7.docx")))
+        if filedata:
+            with open(Path(template_name), "wb") as file:
+                file.write(filedata)
+
+        return template_name
+
+    @classmethod
+    def retrieve_default_csl(cls) -> str:
+        csl_link = (
+            "https://raw.githubusercontent.com/"
+            + "citation-style-language/styles/master/apa.csl"
+        )
+        r = requests.get(csl_link, allow_redirects=True)
+        open(Path(csl_link).name, "wb").write(r.content)
+        csl = Path(csl_link).name
+        return csl
+
+    @classmethod
     def check_new_record_source_tag(cls, REVIEW_MANAGER) -> None:
         PAPER = REVIEW_MANAGER.paths["PAPER"]
         with open(PAPER) as f:
@@ -238,7 +272,7 @@ class ManuscriptEndpoint:
             )
 
         REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            REVIEW_MANAGER.paths["PAPER_RELATIVE"]
+            path=REVIEW_MANAGER.paths["PAPER_RELATIVE"]
         )
 
         return records
@@ -390,7 +424,9 @@ class StructuredDataEndpoint:
             REVIEW_MANAGER, synthesized_record_status_matrix
         )
 
-        REVIEW_MANAGER.REVIEW_DATASET.add_changes(REVIEW_MANAGER.paths["DATA_RELATIVE"])
+        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            path=REVIEW_MANAGER.paths["DATA_RELATIVE"]
+        )
         return
 
     @classmethod
@@ -697,8 +733,8 @@ class Data(Process):
     def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.data,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.data,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -776,10 +812,10 @@ class Data(Process):
             create_tei(record)
         # p_map(create_tei, records, num_cpus=6)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            self.REVIEW_MANAGER.create_commit("Create TEIs")
+            self.REVIEW_MANAGER.create_commit(msg="Create TEIs")
 
         # Enhance TEIs (link local IDs)
         for record in records.values():
@@ -811,7 +847,7 @@ class Data(Process):
                 # if tei_path.is_file():
                 #     git_repo.index.add([str(tei_path)])
 
-        self.REVIEW_MANAGER.create_commit("Enhance TEIs")
+        self.REVIEW_MANAGER.create_commit(msg="Enhance TEIs")
 
         return records
 
@@ -854,27 +890,6 @@ class Data(Process):
         enlit_list = sorted(enlit_list, key=lambda d: d["score"], reverse=True)
 
         return enlit_list
-
-    def retrieve_default_word_template(self) -> str:
-        template_name = "APA-7.docx"
-
-        filedata = pkgutil.get_data(__name__, str(Path("template/APA-7.docx")))
-        if filedata:
-            with open(Path(template_name), "wb") as file:
-                file.write(filedata)
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(template_name)
-        return template_name
-
-    def retrieve_default_csl(self) -> str:
-        csl_link = (
-            "https://raw.githubusercontent.com/"
-            + "citation-style-language/styles/master/apa.csl"
-        )
-        r = requests.get(csl_link, allow_redirects=True)
-        open(Path(csl_link).name, "wb").write(r.content)
-        csl = Path(csl_link).name
-        return csl
 
     def profile(self) -> None:
 
@@ -1058,7 +1073,7 @@ class Data(Process):
                     print(f"Error: endpoint not available: {DATA_FORMAT}")
                 # if "TEI" == DATA_FORMAT.endpoint:
                 #     records = self.update_tei(records, included)
-                #     self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+                #     self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 #     self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             for ID, individual_status_dict in synthesized_record_status_matrix.items():
@@ -1077,7 +1092,9 @@ class Data(Process):
 
             self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
 
-            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+            CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
+                records=records
+            )
             CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             return {"ask_to_commit": True}

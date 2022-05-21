@@ -5,7 +5,7 @@ from colrev_core.process import ProcessType
 
 class Pull(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER, ProcessType.explore)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
@@ -46,6 +46,7 @@ class Pull(Process):
 
         self.REVIEW_MANAGER.logger.info("Pull records from index")
 
+        # Note : do not use named argument (used in multiprocessing)
         def pull_record(record):
             previous_status = record["colrev_status"]
             # TODO : remove the following
@@ -90,9 +91,9 @@ class Pull(Process):
 
         # TODO : test the following line
         records = {r["ID"]: r for r in records_list}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Update records")
+        self.REVIEW_MANAGER.create_commit(msg="Update records")
 
         return
 

@@ -346,7 +346,7 @@ class ReviewManager:
                         record["colrev_pdf_id"] = "cpid1:" + record["pdf_hash"]
                         del record["pdf_hash"]
 
-                self.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_DATASET.add_record_changes()
 
             inplace_change(
@@ -508,7 +508,7 @@ class ReviewManager:
                     # Note : for curated repositories
                     # record["colrev_masterdata"] = "CURATED"
 
-                self.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_DATASET.add_record_changes()
 
             # Note: the order is important in this case.

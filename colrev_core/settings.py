@@ -165,7 +165,7 @@ class DataStructuredFormat:
 
 
 @dataclass
-class DataPaperFormat:
+class ManuscriptFormat:
     endpoint: str
     paper_endpoint_version: str
     word_template: typing.Optional[str] = None
@@ -192,7 +192,9 @@ class EndnoteFormat:
 @dataclass
 class DataConfiguration:
     data_format: typing.List[
-        typing.Union[DataPaperFormat, DataStructuredFormat, PRISMAFormat, EndnoteFormat]
+        typing.Union[
+            ManuscriptFormat, DataStructuredFormat, PRISMAFormat, EndnoteFormat
+        ]
     ]
 
 

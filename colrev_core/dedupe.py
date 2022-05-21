@@ -17,8 +17,8 @@ class Dedupe(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.dedupe,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.dedupe,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -212,7 +212,7 @@ class Dedupe(Process):
 
         for r in records_queue:
             try:
-                RECORD = Record(r)
+                RECORD = Record(data=r)
                 r["colrev_id"] = RECORD.get_colrev_id()
             except NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
@@ -422,7 +422,7 @@ class Dedupe(Process):
                 if record["colrev_status"] == RecordState.md_prepared:
                     record["colrev_status"] = RecordState.md_processed
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -493,7 +493,7 @@ class Dedupe(Process):
             if removed_duplicate in records:
                 del records[removed_duplicate]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -596,7 +596,7 @@ class Dedupe(Process):
                             "please fix manually"
                         )
 
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         non_dupe_file_xlsx = Path("non_duplicates_to_validate.xlsx")
@@ -637,7 +637,7 @@ class Dedupe(Process):
             or non_dupe_file_txt.is_file()
         ):
             self.REVIEW_MANAGER.create_commit(
-                "Validate and correct duplicates",
+                msg="Validate and correct duplicates",
                 manual_author=True,
                 saved_args=saved_args,
             )
@@ -773,7 +773,7 @@ class Dedupe(Process):
 
         self.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
 
-        self.REVIEW_MANAGER.reorder_log(ID_list, criterion="descending_thresholds")
+        self.REVIEW_MANAGER.reorder_log(IDs=ID_list, criterion="descending_thresholds")
 
         # Export excels for validation
         def highlight_cells(x):
@@ -1131,7 +1131,7 @@ class Dedupe(Process):
         ]
 
         records_queue = pd.DataFrame.from_dict(records_queue)
-        references = self.__prep_references(records_queue)
+        references = self.__prep_references(references=records_queue)
         # self.REVIEW_MANAGER.pp.pprint(references.values())
         references = pd.DataFrame(references.values())
 
@@ -1231,7 +1231,7 @@ class Dedupe(Process):
             self.dedupe_references = references
 
             self.REVIEW_MANAGER.create_commit(
-                "Process duplicates", saved_args=saved_args
+                msg="Process duplicates", saved_args=saved_args
             )
 
         if 1 == i:

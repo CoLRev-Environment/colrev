@@ -16,7 +16,7 @@ from colrev_core.process import ProcessType
 class Validate(Process):
     def __init__(self, *, REVIEW_MANAGER):
 
-        super().__init__(REVIEW_MANAGER, ProcessType.check)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.check)
 
         self.CPUS = 4
 

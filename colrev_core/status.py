@@ -16,7 +16,7 @@ from colrev_core.review_manager import ReviewManager
 
 class Status(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER, ProcessType.explore)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
@@ -364,6 +364,7 @@ class Status(Process):
 
     @classmethod
     def append_registered_repo_instructions(cls, registered_path):
+        # Note: do not use named arguments (multiprocessing)
         try:
             REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
         except (NoSuchPathError, InvalidGitRepositoryError):

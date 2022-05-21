@@ -9,7 +9,7 @@ from colrev_core.process import ProcessType
 class Distribute(Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER,
+            REVIEW_MANAGER=REVIEW_MANAGER,
             type=ProcessType.explore,
             notify_state_transition_process=False,
         )
@@ -93,7 +93,9 @@ class Distribute(Process):
                     import_records_dict, save_path=target_bib_file
                 )
 
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(target_bib_file))
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                    path=str(target_bib_file)
+                )
 
         return
 

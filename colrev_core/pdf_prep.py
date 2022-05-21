@@ -771,7 +771,8 @@ class PDF_Preparation(Process):
 
         return record
 
-    def prepare_pdf(self, *, item: dict) -> dict:
+    # Note : no named arguments (multiprocessing)
+    def prepare_pdf(self, item: dict) -> dict:
         record = item["record"]
 
         if RecordState.pdf_imported != record["colrev_status"] or "file" not in record:
@@ -944,7 +945,7 @@ class PDF_Preparation(Process):
             RECORD.reset_pdf_provenance_hints()
             record = RECORD.get_data()
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         return
 
     def get_colrev_pdf_id(self, *, path: Path) -> str:
@@ -967,9 +968,9 @@ class PDF_Preparation(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records_list = p_map(self.__update_colrev_pdf_ids, records.values())
         records = {r["ID"]: r for r in records_list}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit("Update colrev_pdf_ids")
+        self.REVIEW_MANAGER.create_commit(msg="Update colrev_pdf_ids")
         return
 
     def main(
@@ -996,23 +997,25 @@ class PDF_Preparation(Process):
             for item in pdf_prep_batch:
                 record = item["record"]
                 print(record["ID"])
-                record = self.prepare_pdf(item=item)
-                self.REVIEW_MANAGER.save_record_list_by_ID([record])
+                record = self.prepare_pdf(item)
+                self.REVIEW_MANAGER.save_record_list_by_ID(record_list=[record])
         else:
             pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(pdf_prep_batch)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+            record_list=pdf_prep_batch
+        )
 
         # Multiprocessing mixes logs of different records.
         # For better readability:
-        self.REVIEW_MANAGER.reorder_log([x["ID"] for x in pdf_prep_batch])
+        self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_batch])
 
         # Note: for formatting...
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        self.REVIEW_MANAGER.create_commit("Prepare PDFs", saved_args=saved_args)
+        self.REVIEW_MANAGER.create_commit(msg="Prepare PDFs", saved_args=saved_args)
 
         return
 

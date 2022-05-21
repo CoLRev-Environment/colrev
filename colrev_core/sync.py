@@ -194,7 +194,7 @@ class Sync:
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
         ReviewDataset.save_records_dict_to_file(
-            recs_dict_in=records_dict, save_path=references_file
+            records=records_dict, save_path=references_file
         )
 
         return

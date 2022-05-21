@@ -60,12 +60,12 @@ class PDFPrepMan(Process):
         RECORD.reset_pdf_provenance_hints()
         record = RECORD.get_data()
 
-        pdf_path = Path(self.REVIEW_MANAGER.path + record["file"])
+        pdf_path = Path(self.REVIEW_MANAGER.path / Path(record["file"]))
         record.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
+        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+            path=str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
         )
 
         return
@@ -163,7 +163,7 @@ class PDFPrepMan(Process):
             if RecordState.pdf_needs_manual_preparation == record["colrev_status"]
         }
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-            records, save_path=prep_bib_path
+            records=records, save_path=prep_bib_path
         )
 
         bib_db_df = pd.DataFrame.from_records(records.values())
@@ -230,7 +230,7 @@ class PDFPrepMan(Process):
                     if v == "":
                         del record[k]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.check_repo()
         return

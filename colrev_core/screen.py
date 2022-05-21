@@ -46,10 +46,10 @@ class Screen(Process):
                 )
             record.update(colrev_status=RecordState.rev_included)
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            "Screen (include_all)", manual_author=False, saved_args=saved_args
+            msg="Screen (include_all)", manual_author=False, saved_args=saved_args
         )
 
         return
@@ -90,12 +90,12 @@ class Screen(Process):
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Included in screen"
             )
-            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
+            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         else:
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen"
             )
-            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
+            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
@@ -139,9 +139,11 @@ class Screen(Process):
 
         # TODO : screening: if exclusion_criteria field is already available
         # only go through the criteria with "TODO"
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(f"Add screening criterion: {criterion_name}")
+        self.REVIEW_MANAGER.create_commit(
+            msg=f"Add screening criterion: {criterion_name}"
+        )
 
         return
 
@@ -196,10 +198,10 @@ class Screen(Process):
                 ):
                     record["colrev_status"] = RecordState.rev_included
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            f"Removed screening criterion: {criterion_to_delete}"
+            msg=f"Removed screening criterion: {criterion_to_delete}"
         )
 
         return
