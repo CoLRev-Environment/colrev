@@ -4,10 +4,10 @@ from colrev_core.process import ProcessType
 
 
 class Pull(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
-    def main(self, records_only: bool = False, project_only: bool = False) -> None:
+    def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
         if project_only:
             self.pull_project()
@@ -76,7 +76,7 @@ class Pull(Process):
         self.REVIEW_MANAGER.logger.info("Load records")
 
         PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 

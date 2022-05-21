@@ -64,7 +64,7 @@ class EnvironmentManager:
         return local_registry
 
     @classmethod
-    def save_local_registry(cls, updated_registry: list) -> None:
+    def save_local_registry(cls, *, updated_registry: list) -> None:
         import pandas as pd
         import json
         import yaml
@@ -93,7 +93,7 @@ class EnvironmentManager:
         return
 
     @classmethod
-    def register_repo(cls, path_to_register: Path) -> None:
+    def register_repo(cls, *, path_to_register: Path) -> None:
         import git
 
         local_registry = cls.load_local_registry()
@@ -115,7 +115,7 @@ class EnvironmentManager:
             if remote.url:
                 new_record["source_link"] = remote.url
         local_registry.append(new_record)
-        cls.save_local_registry(local_registry)
+        cls.save_local_registry(updated_registry=local_registry)
         print(f"Registered path ({path_to_register})")
         return
 
@@ -235,7 +235,7 @@ class EnvironmentManager:
         for repo in local_repos:
             try:
                 cp_REVIEW_MANAGER = ReviewManager(path_str=repo["source_url"])
-                CHECK_PROCESS = CheckProcess(cp_REVIEW_MANAGER)
+                CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=cp_REVIEW_MANAGER)
                 repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
                 repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
@@ -456,12 +456,12 @@ class LocalIndex:
         self.os.info()
         return
 
-    def __get_record_hash(self, record: dict) -> str:
+    def __get_record_hash(self, *, record: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = Record(record).create_colrev_id()
+        string_to_hash = Record(data=record).create_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
-    def __increment_hash(self, hash: str) -> str:
+    def __increment_hash(self, *, hash: str) -> str:
 
         plaintext = binascii.unhexlify(hash)
         # also, we'll want to know our length later on
@@ -478,14 +478,14 @@ class LocalIndex:
 
         return new_hex.decode("utf-8")
 
-    def __get_tei_index_file(self, hash: str) -> Path:
+    def __get_tei_index_file(self, *, hash: str) -> Path:
         return self.teiind_path / Path(f"{hash[:2]}/{hash[2:]}.tei.xml")
 
-    def __store_record(self, hash: str, record: dict) -> None:
+    def __store_record(self, *, hash: str, record: dict) -> None:
 
         if "file" in record:
             try:
-                tei_path = self.__get_tei_index_file(hash)
+                tei_path = self.__get_tei_index_file(hash=hash)
                 tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                 if Path(record["file"]).is_file():
                     TEI_INSTANCE = TEIParser(
@@ -496,7 +496,7 @@ class LocalIndex:
             except (TEI_Exception, AttributeError, SerialisationError):
                 pass
 
-        RECORD = Record(record)
+        RECORD = Record(data=record)
 
         if "colrev_status" in RECORD.data:
             del RECORD.data["colrev_status"]
@@ -509,22 +509,22 @@ class LocalIndex:
 
         return
 
-    def __retrieve_toc_index(self, toc_key: str) -> list:
+    def __retrieve_toc_index(self, *, toc_key: str) -> list:
 
         toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
         toc_item = toc_item_response["_source"]
 
         return toc_item
 
-    def __amend_record(self, hash: str, record: dict) -> None:
+    def __amend_record(self, *, hash: str, record: dict) -> None:
 
         try:
             saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
             saved_record = saved_record_response["_source"]
 
-            SAVED_RECORD = Record(saved_record)
+            SAVED_RECORD = Record(data=saved_record)
 
-            RECORD = Record(record)
+            RECORD = Record(data=record)
 
             if "source_link" in RECORD.data:
                 del RECORD.data["source_link"]
@@ -538,12 +538,12 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
-                source_info = Record(record).get_provenance_field_source(k)
-                SAVED_RECORD.update_field(k, v, source_info)
+                source_info = Record(data=record).get_provenance_field_source(field=k)
+                SAVED_RECORD.update_field(field=k, value=v, source=source_info)
 
             if "file" in record and "fulltext" not in SAVED_RECORD.data:
                 try:
-                    tei_path = self.__get_tei_index_file(hash)
+                    tei_path = self.__get_tei_index_file(hash=hash)
                     tei_path.parents[0].mkdir(exist_ok=True, parents=True)
                     if Path(record["file"]).is_file():
                         TEI_INSTANCE = TEIParser(
@@ -561,7 +561,7 @@ class LocalIndex:
             pass
         return
 
-    def __get_toc_key(self, record: dict) -> str:
+    def __get_toc_key(self, *, record: dict) -> str:
         toc_key = "NA"
         if "article" == record["ENTRYTYPE"]:
             toc_key = f"{record.get('journal', '').lower()}"
@@ -578,18 +578,18 @@ class LocalIndex:
 
         return toc_key
 
-    def get_fields_to_remove(self, record: dict) -> list:
+    def get_fields_to_remove(self, *, record: dict) -> list:
         """Compares the record to available toc items and
         returns fields to remove (if any)"""
 
         fields_to_remove = []
         if "volume" in record.keys() and "number" in record.keys():
 
-            toc_key_full = self.__get_toc_key(record)
+            toc_key_full = self.__get_toc_key(record=record)
 
             wo_nr = record.copy()
             del wo_nr["number"]
-            toc_key_wo_nr = self.__get_toc_key(wo_nr)
+            toc_key_wo_nr = self.__get_toc_key(record=wo_nr)
             if not self.os.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_nr):
@@ -597,7 +597,7 @@ class LocalIndex:
 
             wo_vol = record.copy()
             del wo_vol["volume"]
-            toc_key_wo_vol = self.__get_toc_key(wo_vol)
+            toc_key_wo_vol = self.__get_toc_key(record=wo_vol)
             if not self.os.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol):
@@ -606,7 +606,7 @@ class LocalIndex:
             wo_vol_nr = record.copy()
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
-            toc_key_wo_vol_nr = self.__get_toc_key(wo_vol_nr)
+            toc_key_wo_vol_nr = self.__get_toc_key(record=wo_vol_nr)
             if not self.os.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol_nr):
@@ -615,20 +615,20 @@ class LocalIndex:
 
         return fields_to_remove
 
-    def __toc_index(self, record) -> None:
-        if not Record(record).masterdata_is_curated():
+    def __toc_index(self, *, record) -> None:
+        if not Record(data=record).masterdata_is_curated():
             return
 
         if record.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
             # Note : records are md_prepared, i.e., complete
 
-            toc_key = self.__get_toc_key(record)
+            toc_key = self.__get_toc_key(record=record)
             if "NA" == toc_key:
                 return
 
             # print(toc_key)
             try:
-                record_colrev_id = Record(record).create_colrev_id()
+                record_colrev_id = Record(data=record).create_colrev_id()
 
                 if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
                     toc_item = {
@@ -655,7 +655,7 @@ class LocalIndex:
 
         return
 
-    def __retrieve_based_on_colrev_id(self, cids_to_retrieve: list) -> dict:
+    def __retrieve_based_on_colrev_id(self, *, cids_to_retrieve: list) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
         for cid_to_retrieve in cids_to_retrieve:
@@ -664,11 +664,11 @@ class LocalIndex:
                 try:
                     res = self.os.get(index=self.RECORD_INDEX, id=hash)
                     retrieved_record = res["_source"]
-                    if cid_to_retrieve in Record(retrieved_record).get_colrev_id():
+                    if cid_to_retrieve in Record(data=retrieved_record).get_colrev_id():
                         return retrieved_record
                     else:
                         # Collision
-                        hash = self.__increment_hash(hash)
+                        hash = self.__increment_hash(hash=hash)
                 except NotFoundError:
                     pass
                     break
@@ -691,22 +691,24 @@ class LocalIndex:
 
         raise RecordNotInIndexException
 
-    def __retrieve_from_record_index(self, record: dict) -> dict:
+    def __retrieve_from_record_index(self, *, record: dict) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        RECORD = Record(record)
+        RECORD = Record(data=record)
         if "colrev_id" in RECORD.data:
             cid_to_retrieve = RECORD.get_colrev_id()
         else:
             cid_to_retrieve = [RECORD.create_colrev_id()]
 
-        retrieved_record = self.__retrieve_based_on_colrev_id(cid_to_retrieve)
+        retrieved_record = self.__retrieve_based_on_colrev_id(
+            cids_to_retrieve=cid_to_retrieve
+        )
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
             raise RecordNotInIndexException
         return retrieved_record
 
     def prep_record_for_return(
-        self, record: dict, include_file: bool = False, include_colrev_ids=False
+        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
         from colrev_core.record import RecordState
         from colrev_core.review_dataset import ReviewDataset
@@ -731,7 +733,7 @@ class LocalIndex:
             + "}"
         )
         bib_data = parser.parse_string(load_str)
-        records_dict = ReviewDataset.parse_records_dict(bib_data.entries)
+        records_dict = ReviewDataset.parse_records_dict(records_dict=bib_data.entries)
         record = list(records_dict.values())[0]
 
         # Note: record['file'] should be an absolute path by definition
@@ -794,7 +796,7 @@ class LocalIndex:
 
         return False
 
-    def index_record(self, record: dict) -> None:
+    def index_record(self, *, record: dict) -> None:
         # Note : may raise NotEnoughDataToIdentifyException
 
         copy_for_toc_index = record.copy()
@@ -855,20 +857,21 @@ class LocalIndex:
 
         try:
 
-            cid_to_index = Record(record).create_colrev_id()
-            hash = self.__get_record_hash(record)
+            cid_to_index = Record(data=record).create_colrev_id()
+            hash = self.__get_record_hash(record=record)
 
             try:
                 # check if the record is already indexed (based on d)
-                retrieved_record = self.retrieve(record, include_colrev_ids=True)
-                retrieved_record_cid = Record(retrieved_record).get_colrev_id()
+                retrieved_record = self.retrieve(record=record, include_colrev_ids=True)
+                retrieved_record_cid = Record(data=retrieved_record).get_colrev_id()
 
                 # if colrev_ids not identical (but overlapping): amend
                 if not set(retrieved_record_cid).isdisjoint(list(cid_to_index)):
                     # Note: we need the colrev_id of the retrieved_record
                     # (may be different from record)
                     self.__amend_record(
-                        self.__get_record_hash(retrieved_record), record
+                        hash=self.__get_record_hash(record=retrieved_record),
+                        record=record,
                     )
                     return
             except RecordNotInIndexException:
@@ -876,21 +879,21 @@ class LocalIndex:
 
             while True:
                 if not self.os.exists(index=self.RECORD_INDEX, id=hash):
-                    self.__store_record(hash, record)
+                    self.__store_record(hash=hash, record=record)
                     break
                 else:
                     saved_record_response = self.os.get(
                         index=self.RECORD_INDEX, id=hash
                     )
                     saved_record = saved_record_response["_source"]
-                    saved_record_cid = Record(saved_record).create_colrev_id(
+                    saved_record_cid = Record(data=saved_record).create_colrev_id(
                         assume_complete=True
                     )
                     if saved_record_cid == cid_to_index:
                         # ok - no collision, update the record
                         # Note : do not update (the record from the first repository
                         # should take precedence - reset the index to update)
-                        self.__amend_record(hash, record)
+                        self.__amend_record(hash=hash, record=record)
                         break
                     else:
                         # to handle the collision:
@@ -898,7 +901,7 @@ class LocalIndex:
                         print(cid_to_index)
                         print(saved_record_cid)
                         print(saved_record)
-                        hash = self.__increment_hash(hash)
+                        hash = self.__increment_hash(hash=hash)
 
         except NotEnoughDataToIdentifyException:
             pass
@@ -907,10 +910,10 @@ class LocalIndex:
         # Note : only use curated journal metadata for TOC indices
         # otherwise, TOCs will be incomplete and affect retrieval
         if "colrev/curated_metadata" in copy_for_toc_index["source_path"]:
-            self.__toc_index(copy_for_toc_index)
+            self.__toc_index(record=copy_for_toc_index)
         return
 
-    def index_colrev_project(self, source_url):
+    def index_colrev_project(self, *, source_url):
         from colrev_core.review_manager import ReviewManager
 
         try:
@@ -996,7 +999,7 @@ class LocalIndex:
             x["source_url"] for x in EnvironmentManager.load_local_registry()
         ]
         for source_url in source_urls:
-            self.index_colrev_project(source_url)
+            self.index_colrev_project(source_url=source_url)
 
         # for annotator in self.annotators_path.glob("*/annotate.py"):
         #     print(f"Load {annotator}")
@@ -1010,14 +1013,14 @@ class LocalIndex:
         return
 
     def retrieve_from_toc(
-        self, record: dict, similarity_threshold: float, include_file=False
+        self, *, record: dict, similarity_threshold: float, include_file=False
     ) -> dict:
-        toc_key = self.__get_toc_key(record)
+        toc_key = self.__get_toc_key(record=record)
 
         # 1. get TOC
         toc_items = []
         if self.os.exists(index=self.TOC_INDEX, id=toc_key):
-            res = self.__retrieve_toc_index(toc_key)
+            res = self.__retrieve_toc_index(toc_key=toc_key)
             toc_items = res["colrev_ids"]  # type: ignore
 
         # 2. get most similar record
@@ -1025,7 +1028,7 @@ class LocalIndex:
             try:
                 # TODO : we need to search tocs even if records are not complete:
                 # and a NotEnoughDataToIdentifyException is thrown
-                record_colrev_id = Record(record).create_colrev_id()
+                record_colrev_id = Record(data=record).create_colrev_id()
                 sim_list = []
                 for toc_records_colrev_id in toc_items:
                     # Note : using a simpler similarity measure
@@ -1040,14 +1043,16 @@ class LocalIndex:
                     ).hexdigest()
                     res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
                     record = res["_source"]  # type: ignore
-                    return self.prep_record_for_return(record, include_file)
+                    return self.prep_record_for_return(
+                        record=record, include_file=include_file
+                    )
             except NotEnoughDataToIdentifyException:
                 pass
 
         raise RecordNotInIndexException()
         return record
 
-    def get_from_index_exact_match(self, index_name, key, value) -> dict:
+    def get_from_index_exact_match(self, *, index_name, key, value) -> dict:
         resp = self.os.search(
             index=index_name, body={"query": {"match_phrase": {key: value}}}
         )
@@ -1055,7 +1060,7 @@ class LocalIndex:
         return res
 
     def retrieve(
-        self, record: dict, include_file: bool = False, include_colrev_ids=False
+        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
     ) -> dict:
         """
         Convenience function to retrieve the indexed record metadata
@@ -1067,7 +1072,7 @@ class LocalIndex:
         # 1. Try the record index
 
         try:
-            retrieved_record = self.__retrieve_from_record_index(record)
+            retrieved_record = self.__retrieve_from_record_index(record=record)
         except (
             NotFoundError,
             RecordNotInIndexException,
@@ -1077,7 +1082,9 @@ class LocalIndex:
 
         if retrieved_record:
             return self.prep_record_for_return(
-                retrieved_record, include_file, include_colrev_ids
+                record=retrieved_record,
+                include_file=include_file,
+                include_colrev_ids=include_colrev_ids,
             )
 
         # 2. Try using global-ids
@@ -1087,7 +1094,7 @@ class LocalIndex:
                     continue
                 try:
                     retrieved_record = self.get_from_index_exact_match(
-                        self.RECORD_INDEX, k, v
+                        index_name=self.RECORD_INDEX, key=k, value=v
                     )
                     break
                 except (IndexError, NotFoundError):
@@ -1097,10 +1104,12 @@ class LocalIndex:
             raise RecordNotInIndexException(record.get("ID", "no-key"))
 
         return self.prep_record_for_return(
-            retrieved_record, include_file, include_colrev_ids
+            record=retrieved_record,
+            include_file=include_file,
+            include_colrev_ids=include_colrev_ids,
         )
 
-    def set_source_path(self, record: dict) -> dict:
+    def set_source_path(self, *, record: dict) -> dict:
         if "source_link" in record:
             for local_repo in EnvironmentManager.load_local_registry():
                 if local_repo["source_link"] == record["source_link"]:
@@ -1108,21 +1117,25 @@ class LocalIndex:
 
         return record
 
-    def is_duplicate(self, record1_colrev_id: list, record2_colrev_id: list) -> str:
+    def is_duplicate(self, *, record1_colrev_id: list, record2_colrev_id: list) -> str:
         """Convenience function to check whether two records are a duplicate"""
 
         if not set(record1_colrev_id).isdisjoint(list(record2_colrev_id)):
             return "yes"
 
-        # Note : the __retrieve_based_on_colrev_id(record)
+        # Note : the __retrieve_based_on_colrev_id(cids_to_retrieve=record)
         # also checks the colrev_id lists, i.e.,
         # duplicate (yes) if the IDs and source_links are identical,
         # record1 and record2 have been mapped to the same record
         # no duplicate (no) if record1 ID != record2 ID
         # (both in index and same source_link)
         try:
-            r1_index = self.__retrieve_based_on_colrev_id(record1_colrev_id)
-            r2_index = self.__retrieve_based_on_colrev_id(record2_colrev_id)
+            r1_index = self.__retrieve_based_on_colrev_id(
+                cids_to_retrieve=record1_colrev_id
+            )
+            r2_index = self.__retrieve_based_on_colrev_id(
+                cids_to_retrieve=record2_colrev_id
+            )
             # Same repo (colrev_masterdata_provenance = CURATED: ...) and in LocalIndex
             # implies status > md_processed
             # ie., no duplicates if IDs differ
@@ -1149,8 +1162,8 @@ class LocalIndex:
                 and "local_curated_metadata" in r2_index["source_path"]
             ):
 
-                if not set(Record(r1_index).get_colrev_id()).isdisjoint(
-                    list(Record(r2_index).get_colrev_id())
+                if not set(Record(data=r1_index).get_colrev_id()).isdisjoint(
+                    list(Record(data=r2_index).get_colrev_id())
                 ):
                     return "yes"
                 else:
@@ -1167,7 +1180,7 @@ class LocalIndex:
 
         return "unknown"
 
-    def analyze(self, threshold: float = 0.95) -> None:
+    def analyze(self, *, threshold: float = 0.95) -> None:
 
         # TODO : update analyze() functionality based on es index
         # import pandas as pd
@@ -1223,7 +1236,7 @@ class Resources:
     def __init__(self):
         pass
 
-    def install_curated_resource(self, curated_resource: str) -> bool:
+    def install_curated_resource(self, *, curated_resource: str) -> bool:
         import git
         import shutil
 
@@ -1241,7 +1254,7 @@ class Resources:
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
         if (repo_dir / Path("references.bib")).is_file():
-            EnvironmentManager.register_repo(repo_dir)
+            EnvironmentManager.register_repo(path_to_register=repo_dir)
         elif (repo_dir / Path("annotate.py")).is_file():
             shutil.move(str(repo_dir), str(annotator_dir))
         elif (repo_dir / Path("readme.md")).is_file():
@@ -1249,7 +1262,9 @@ class Resources:
             for line in [x for x in text.splitlines() if "colrev env --install" in x]:
                 if line == curated_resource:
                     continue
-                self.install_curated_resource(line.replace("colrev env --install ", ""))
+                self.install_curated_resource(
+                    curated_resource=line.replace("colrev env --install ", "")
+                )
         else:
             print(
                 f"Error: repo does not contain a references.bib/linked repos {repo_dir}"
@@ -1515,7 +1530,7 @@ class TEIParser:
                             year = re.sub(r".*([1-2][0-9]{3}).*", r"\1", year)
         return year
 
-    def get_author_name_from_node(self, author_node) -> str:
+    def get_author_name_from_node(self, *, author_node) -> str:
         authorname = ""
 
         author_pers_node = author_node.find(self.ns["tei"] + "persName")
@@ -1586,7 +1601,9 @@ class TEIParser:
                         self.ns["tei"] + "author"
                     ):
 
-                        authorname = self.get_author_name_from_node(author_node)
+                        authorname = self.get_author_name_from_node(
+                            author_node=author_node
+                        )
                         if authorname in ["Paper, Short"]:
                             continue
                         if ", " != authorname and "" != authorname:
@@ -1645,16 +1662,16 @@ class TEIParser:
 
     # (individual) bibliography-reference elements  ----------------------------
 
-    def __get_reference_bibliography_id(self, reference) -> str:
+    def __get_reference_bibliography_id(self, *, reference) -> str:
         if "ID" in reference.attrib:
             return reference.attrib["ID"]
         else:
             return ""
 
-    def __get_reference_bibliography_tei_id(self, reference) -> str:
+    def __get_reference_bibliography_tei_id(self, *, reference) -> str:
         return reference.attrib[self.ns["w3"] + "id"]
 
-    def __get_reference_author_string(self, reference) -> str:
+    def __get_reference_author_string(self, *, reference) -> str:
         author_list = []
         if reference.find(self.ns["tei"] + "analytic") is not None:
             authors_node = reference.find(self.ns["tei"] + "analytic")
@@ -1663,7 +1680,7 @@ class TEIParser:
 
         for author_node in authors_node.iterfind(self.ns["tei"] + "author"):
 
-            authorname = self.get_author_name_from_node(author_node)
+            authorname = self.get_author_name_from_node(author_node=author_node)
 
             if ", " != authorname and "" != authorname:
                 author_list.append(authorname)
@@ -1691,7 +1708,7 @@ class TEIParser:
             author_string = "NA"
         return author_string
 
-    def __get_reference_title_string(self, reference) -> str:
+    def __get_reference_title_string(self, *, reference) -> str:
         title_string = ""
         if reference.find(self.ns["tei"] + "analytic") is not None:
             title = reference.find(self.ns["tei"] + "analytic").find(
@@ -1707,7 +1724,7 @@ class TEIParser:
             title_string = title.text
         return title_string
 
-    def __get_reference_year_string(self, reference) -> str:
+    def __get_reference_year_string(self, *, reference) -> str:
         year_string = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             year = (
@@ -1732,7 +1749,7 @@ class TEIParser:
             year_string = "NA"
         return year_string
 
-    def __get_reference_page_string(self, reference) -> str:
+    def __get_reference_page_string(self, *, reference) -> str:
         page_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -1760,7 +1777,7 @@ class TEIParser:
 
         return page_string
 
-    def __get_reference_number_string(self, reference) -> str:
+    def __get_reference_number_string(self, *, reference) -> str:
         number_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -1784,7 +1801,7 @@ class TEIParser:
 
         return number_string
 
-    def __get_reference_volume_string(self, reference) -> str:
+    def __get_reference_volume_string(self, *, reference) -> str:
         volume_string = ""
 
         if reference.find(self.ns["tei"] + "monogr") is not None:
@@ -1808,7 +1825,7 @@ class TEIParser:
 
         return volume_string
 
-    def __get_reference_journal_string(self, reference) -> str:
+    def __get_reference_journal_string(self, *, reference) -> str:
         journal_title = ""
         if reference.find(self.ns["tei"] + "monogr") is not None:
             journal_title = (
@@ -1820,7 +1837,7 @@ class TEIParser:
             journal_title = ""
         return journal_title
 
-    def __get_entrytype(self, reference) -> str:
+    def __get_entrytype(self, *, reference) -> str:
         ENTRYTYPE = "misc"
         if reference.find(self.ns["tei"] + "monogr") is not None:
             monogr_node = reference.find(self.ns["tei"] + "monogr")
@@ -1905,7 +1922,7 @@ class TEIParser:
                 section_citations[section_name.lower()] = citations
         return section_citations
 
-    def mark_references(self, records):
+    def mark_references(self, *, records):
         from colrev_core.record import Record
 
         tei_records = self.get_bibliography(self.root)

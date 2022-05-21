@@ -15,7 +15,7 @@ from colrev_core.review_manager import ReviewManager
 
 
 class Status(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
@@ -47,7 +47,7 @@ class Status(Process):
         stat = self.get_status_freq()
         return stat["completeness_condition"]
 
-    def get_exclusion_criteria(self, ec_string: str) -> list:
+    def get_exclusion_criteria(self, *, ec_string: str) -> list:
         return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
 
     def get_status_freq(self) -> dict:
@@ -76,7 +76,7 @@ class Status(Process):
 
         exclusion_statistics = {}
         if exclusion_criteria:
-            criteria = self.get_exclusion_criteria(exclusion_criteria[0])
+            criteria = self.get_exclusion_criteria(ec_string=exclusion_criteria[0])
             exclusion_statistics = {crit: 0 for crit in criteria}
             for exclusion_case in exclusion_criteria:
                 for crit in criteria:
@@ -214,7 +214,7 @@ class Status(Process):
         )
         return stat
 
-    def get_priority_transition(self, current_origin_states_dict: dict) -> list:
+    def get_priority_transition(self, *, current_origin_states_dict: dict) -> list:
         from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
@@ -248,7 +248,9 @@ class Status(Process):
         # print(f'priority_transitions: {priority_transitions}')
         return list(set(priority_transitions))
 
-    def get_active_processing_functions(self, current_origin_states_dict: dict) -> list:
+    def get_active_processing_functions(
+        self, *, current_origin_states_dict: dict
+    ) -> list:
         from colrev_core.process import ProcessModel
 
         active_processing_functions = []
@@ -258,7 +260,7 @@ class Status(Process):
             active_processing_functions.extend(t)
         return active_processing_functions
 
-    def get_remote_commit_differences(self, git_repo: git.Repo) -> list:
+    def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
         from git.exc import GitCommandError
 
         nr_commits_behind, nr_commits_ahead = -1, -1
@@ -287,7 +289,7 @@ class Status(Process):
 
         return [nr_commits_behind, nr_commits_ahead]
 
-    def get_environment_instructions(self, stat: dict) -> list:
+    def get_environment_instructions(self, *, stat: dict) -> list:
         from colrev_core.environment import EnvironmentManager
 
         environment_instructions = []
@@ -399,7 +401,7 @@ class Status(Process):
 
         return {}
 
-    def get_review_instructions(self, stat) -> list:
+    def get_review_instructions(self, *, stat) -> list:
 
         review_instructions = []
 
@@ -563,13 +565,13 @@ class Status(Process):
             f"current_origin_states_dict: {current_origin_states_dict}"
         )
         active_processing_functions = self.get_active_processing_functions(
-            current_origin_states_dict
+            current_origin_states_dict=current_origin_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"active_processing_functions: {active_processing_functions}"
         )
         priority_processing_functions = self.get_priority_transition(
-            current_origin_states_dict
+            current_origin_states_dict=current_origin_states_dict
         )
         self.REVIEW_MANAGER.logger.debug(
             f"priority_processing_function: {priority_processing_functions}"
@@ -643,7 +645,7 @@ class Status(Process):
 
         return review_instructions
 
-    def get_collaboration_instructions(self, stat) -> dict:
+    def get_collaboration_instructions(self, *, stat) -> dict:
 
         SHARE_STAT_REQ = self.REVIEW_MANAGER.settings.project.share_stat_req
         found_a_conflict = False
@@ -666,7 +668,7 @@ class Status(Process):
                 (
                     nr_commits_behind,
                     nr_commits_ahead,
-                ) = self.get_remote_commit_differences(git_repo)
+                ) = self.get_remote_commit_differences(git_repo=git_repo)
         if CONNECTED_REMOTE:
             collaboration_instructions["title"] = "Versioning and collaboration"
             collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
@@ -811,11 +813,13 @@ class Status(Process):
 
         return collaboration_instructions
 
-    def get_instructions(self, stat: dict) -> dict:
+    def get_instructions(self, *, stat: dict) -> dict:
         instructions = {
-            "review_instructions": self.get_review_instructions(stat),
-            "environment_instructions": self.get_environment_instructions(stat),
-            "collaboration_instructions": self.get_collaboration_instructions(stat),
+            "review_instructions": self.get_review_instructions(stat=stat),
+            "environment_instructions": self.get_environment_instructions(stat=stat),
+            "collaboration_instructions": self.get_collaboration_instructions(
+                stat=stat
+            ),
         }
 
         self.REVIEW_MANAGER.logger.debug(
@@ -825,6 +829,7 @@ class Status(Process):
 
     def stat_print(
         self,
+        *,
         separate_category: bool,
         field1: str,
         val1: str,
@@ -863,7 +868,7 @@ class Status(Process):
         print(stat)
         return
 
-    def print_review_status(self, status_info: dict) -> None:
+    def print_review_status(self, *, status_info: dict) -> None:
 
         # Principle: first column shows total records/PDFs in each stage
         # the second column shows
@@ -892,188 +897,232 @@ class Status(Process):
                 perc_curated = stat["CURATED_records"] / (denominator)
             if stat["overall"]["md_prepared"] > 0:
                 self.stat_print(
-                    False,
-                    "Records retrieved",
-                    stat["overall"]["md_retrieved"],
-                    "*",
-                    f"curated ({round(perc_curated*100, 2)}%)",
-                    str(stat["CURATED_records"]),
+                    separate_category=False,
+                    field1="Records retrieved",
+                    val1=stat["overall"]["md_retrieved"],
+                    connector="*",
+                    field2=f"curated ({round(perc_curated*100, 2)}%)",
+                    val2=str(stat["CURATED_records"]),
                 )
             else:
                 self.stat_print(
-                    False, "Records retrieved", stat["overall"]["md_retrieved"]
+                    separate_category=False,
+                    field1="Records retrieved",
+                    val1=stat["overall"]["md_retrieved"],
                 )
             print(" ______________________________________________________________")
             print(" | Metadata preparation                                         ")
             if stat["currently"]["md_retrieved"] > 0:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "not yet imported",
-                    stat["currently"]["md_retrieved"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="not yet imported",
+                    val2=stat["currently"]["md_retrieved"],
                 )
-            self.stat_print(True, "Records imported", stat["overall"]["md_imported"])
+            self.stat_print(
+                separate_category=True,
+                field1="Records imported",
+                val1=stat["overall"]["md_imported"],
+            )
             if stat["currently"]["md_imported"] > 0:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "need preparation",
-                    stat["currently"]["md_imported"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="need preparation",
+                    val2=stat["currently"]["md_imported"],
                 )
             if stat["currently"]["md_needs_manual_preparation"] > 0:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "to prepare (manually)",
-                    stat["currently"]["md_needs_manual_preparation"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to prepare (manually)",
+                    val2=stat["currently"]["md_needs_manual_preparation"],
                 )
             self.stat_print(
-                True,
-                "Records prepared",
-                stat["overall"]["md_prepared"],
+                separate_category=True,
+                field1="Records prepared",
+                val1=stat["overall"]["md_prepared"],
             )
             if stat["currently"]["md_prepared"] > 0:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "to deduplicate",
-                    stat["currently"]["md_prepared"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to deduplicate",
+                    val2=stat["currently"]["md_prepared"],
                 )
             self.stat_print(
-                True,
-                "Records processed",
-                stat["overall"]["md_processed"],
-                "->",
-                "duplicates removed",
-                stat["currently"]["md_duplicates_removed"],
+                separate_category=True,
+                field1="Records processed",
+                val1=stat["overall"]["md_processed"],
+                connector="->",
+                field2="duplicates removed",
+                val2=stat["currently"]["md_duplicates_removed"],
             )
             print(" |_____________________________________________________________")
             print("")
             print(" Prescreen")
             if stat["overall"]["rev_prescreen"] == 0:
-                self.stat_print(False, "Not initiated", "")
+                self.stat_print(
+                    separate_category=False, field1="Not initiated", val1=""
+                )
             else:
                 self.stat_print(
-                    False, "Prescreen size", stat["overall"]["rev_prescreen"]
+                    separate_category=False,
+                    field1="Prescreen size",
+                    val1=stat["overall"]["rev_prescreen"],
                 )
                 if 0 != stat["currently"]["md_processed"]:
                     self.stat_print(
-                        False,
-                        "",
-                        "",
-                        "*",
-                        "to prescreen",
-                        stat["currently"]["md_processed"],
+                        separate_category=False,
+                        field1="",
+                        val1="",
+                        connector="*",
+                        field2="to prescreen",
+                        val2=stat["currently"]["md_processed"],
                     )
                 self.stat_print(
-                    False,
-                    "Included",
-                    stat["overall"]["rev_prescreen_included"],
-                    "->",
-                    "records excluded",
-                    stat["currently"]["rev_prescreen_excluded"],
+                    separate_category=False,
+                    field1="Included",
+                    val1=stat["overall"]["rev_prescreen_included"],
+                    connector="->",
+                    field2="records excluded",
+                    val2=stat["currently"]["rev_prescreen_excluded"],
                 )
 
             print(" ______________________________________________________________")
             print(" | PDF preparation                                             ")
             if 0 != stat["currently"]["rev_prescreen_included"]:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "to retrieve",
-                    stat["currently"]["rev_prescreen_included"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to retrieve",
+                    val2=stat["currently"]["rev_prescreen_included"],
                 )
             if 0 != stat["currently"]["pdf_needs_manual_retrieval"]:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "to retrieve manually",
-                    stat["currently"]["pdf_needs_manual_retrieval"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to retrieve manually",
+                    val2=stat["currently"]["pdf_needs_manual_retrieval"],
                 )
             if stat["currently"]["pdf_not_available"] > 0:
                 self.stat_print(
-                    True,
-                    "PDFs imported",
-                    stat["overall"]["pdf_imported"],
-                    "*",
-                    "not available",
-                    stat["currently"]["pdf_not_available"],
+                    separate_category=True,
+                    field1="PDFs imported",
+                    val1=stat["overall"]["pdf_imported"],
+                    connector="*",
+                    field2="not available",
+                    val2=stat["currently"]["pdf_not_available"],
                 )
             else:
-                self.stat_print(True, "PDFs imported", stat["overall"]["pdf_imported"])
+                self.stat_print(
+                    separate_category=True,
+                    field1="PDFs imported",
+                    val1=stat["overall"]["pdf_imported"],
+                )
             if stat["currently"]["pdf_needs_manual_preparation"] > 0:
                 self.stat_print(
-                    True,
-                    "",
-                    "",
-                    "*",
-                    "to prepare (manually)",
-                    stat["currently"]["pdf_needs_manual_preparation"],
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to prepare (manually)",
+                    val2=stat["currently"]["pdf_needs_manual_preparation"],
                 )
             if 0 != stat["currently"]["pdf_imported"]:
                 self.stat_print(
-                    True, "", "", "*", "to prepare", stat["currently"]["pdf_imported"]
+                    separate_category=True,
+                    field1="",
+                    val1="",
+                    connector="*",
+                    field2="to prepare",
+                    val2=stat["currently"]["pdf_imported"],
                 )
-            self.stat_print(True, "PDFs prepared", stat["overall"]["pdf_prepared"])
+            self.stat_print(
+                separate_category=True,
+                field1="PDFs prepared",
+                val1=stat["overall"]["pdf_prepared"],
+            )
 
             print(" |_____________________________________________________________")
             print("")
             print(" Screen")
             if stat["overall"]["rev_screen"] == 0:
-                self.stat_print(False, "Not initiated", "")
+                self.stat_print(
+                    separate_category=False, field1="Not initiated", val1=""
+                )
             else:
-                self.stat_print(False, "Screen size", stat["overall"]["rev_screen"])
+                self.stat_print(
+                    separate_category=False,
+                    field1="Screen size",
+                    val1=stat["overall"]["rev_screen"],
+                )
                 if 0 != stat["currently"]["pdf_prepared"]:
                     self.stat_print(
-                        False,
-                        "",
-                        "",
-                        "*",
-                        "to screen",
-                        stat["currently"]["pdf_prepared"],
+                        separate_category=False,
+                        field1="",
+                        val1="",
+                        connector="*",
+                        field2="to screen",
+                        val2=stat["currently"]["pdf_prepared"],
                     )
                 self.stat_print(
-                    False,
-                    "Included",
-                    stat["overall"]["rev_included"],
-                    "->",
-                    "records excluded",
-                    stat["currently"]["rev_excluded"],
+                    separate_category=False,
+                    field1="Included",
+                    val1=stat["overall"]["rev_included"],
+                    connector="->",
+                    field2="records excluded",
+                    val2=stat["currently"]["rev_excluded"],
                 )
                 if "exclusion" in stat["currently"]:
                     for crit, nr in stat["currently"]["exclusion"].items():
-                        self.stat_print(False, "", "", "-", f": {crit}", nr)
+                        self.stat_print(
+                            separate_category=False,
+                            field1="",
+                            val1="",
+                            connector="-",
+                            field2=f": {crit}",
+                            val2=nr,
+                        )
 
             print("")
             print(" Data and synthesis")
             if stat["overall"]["rev_included"] == 0:
-                self.stat_print(False, "Not initiated", "")
+                self.stat_print(
+                    separate_category=False, field1="Not initiated", val1=""
+                )
             else:
-                self.stat_print(False, "Total", stat["overall"]["rev_included"])
+                self.stat_print(
+                    separate_category=False,
+                    field1="Total",
+                    val1=stat["overall"]["rev_included"],
+                )
                 if 0 != stat["currently"]["rev_included"]:
                     self.stat_print(
-                        False,
-                        "Synthesized",
-                        stat["overall"]["rev_synthesized"],
-                        "*",
-                        "to synthesize",
-                        stat["currently"]["rev_included"],
+                        separate_category=False,
+                        field1="Synthesized",
+                        val1=stat["overall"]["rev_synthesized"],
+                        connector="*",
+                        field2="to synthesize",
+                        val2=stat["currently"]["rev_included"],
                     )
                 else:
                     self.stat_print(
-                        False, "Synthesized", stat["overall"]["rev_synthesized"]
+                        separate_category=False,
+                        field1="Synthesized",
+                        val1=stat["overall"]["rev_synthesized"],
                     )
 
             print("_______________________________________________________________")

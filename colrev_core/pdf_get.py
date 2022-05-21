@@ -21,13 +21,14 @@ from colrev_core.record import RecordState
 class PDF_Retrieval(Process):
     def __init__(
         self,
+        *,
         REVIEW_MANAGER,
         notify_state_transition_process: bool = True,
     ):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.pdf_get,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.pdf_get,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -57,7 +58,7 @@ class PDF_Retrieval(Process):
 
         return
 
-    def __unpaywall(self, doi: str, retry: int = 0, pdfonly: bool = True) -> str:
+    def __unpaywall(self, *, doi: str, retry: int = 0, pdfonly: bool = True) -> str:
 
         url = "https://api.unpaywall.org/v2/{doi}"
 
@@ -69,7 +70,7 @@ class PDF_Retrieval(Process):
 
             if r.status_code == 500:
                 if retry < 3:
-                    return self.__unpaywall(doi, retry + 1)
+                    return self.__unpaywall(doi=doi, retry=retry + 1)
                 else:
                     return "NA"
 
@@ -90,14 +91,14 @@ class PDF_Retrieval(Process):
         else:
             return best_loc["url_for_pdf"]
 
-    def __is_pdf(self, path_to_file: str) -> bool:
+    def __is_pdf(self, *, path_to_file: str) -> bool:
         try:
             extract_text(path_to_file)
             return True
         except:  # noqa E722
             return False
 
-    def __get_pdf_from_unpaywall(self, record: dict) -> dict:
+    def __get_pdf_from_unpaywall(self, *, record: dict) -> dict:
 
         if "doi" not in record:
             return record
@@ -105,7 +106,7 @@ class PDF_Retrieval(Process):
         pdf_filepath = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
             f"{record['ID']}.pdf"
         )
-        url = self.__unpaywall(record["doi"])
+        url = self.__unpaywall(doi=record["doi"])
         if "NA" != url:
             if "Invalid/unknown DOI" not in url:
                 res = requests.get(
@@ -118,7 +119,7 @@ class PDF_Retrieval(Process):
                 if 200 == res.status_code:
                     with open(pdf_filepath, "wb") as f:
                         f.write(res.content)
-                    if self.__is_pdf(pdf_filepath):
+                    if self.__is_pdf(path_to_file=pdf_filepath):
                         self.REVIEW_MANAGER.report_logger.info(
                             "Retrieved pdf (unpaywall):" f" {pdf_filepath.name}"
                         )
@@ -135,7 +136,7 @@ class PDF_Retrieval(Process):
                     )
         return record
 
-    def link_pdf(self, record: dict) -> dict:
+    def link_pdf(self, *, record: dict) -> dict:
 
         PDF_DIRECTORY_RELATIVE = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
         pdf_filepath = PDF_DIRECTORY_RELATIVE / Path(f"{record['ID']}.pdf")
@@ -144,12 +145,12 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def __get_pdf_from_local_index(self, record: dict) -> dict:
+    def __get_pdf_from_local_index(self, *, record: dict) -> dict:
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         LOCAL_INDEX = LocalIndex()
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(record, include_file=True)
+            retrieved_record = LOCAL_INDEX.retrieve(record=record, include_file=True)
             # print(Record(retrieved_record))
         except RecordNotInIndexException:
             pass
@@ -161,7 +162,7 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def retrieve_pdf(self, item: dict) -> dict:
+    def retrieve_pdf(self, *, item: dict) -> dict:
         record = item["record"]
 
         if str(RecordState.rev_prescreen_included) != str(record["colrev_status"]):
@@ -190,7 +191,7 @@ class PDF_Retrieval(Process):
 
         return record
 
-    def get_colrev_pdf_id(self, path: Path) -> str:
+    def get_colrev_pdf_id(self, *, path: Path) -> str:
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
@@ -302,6 +303,7 @@ class PDF_Retrieval(Process):
 
     def check_existing_unlinked_pdfs(
         self,
+        *,
         records: typing.Dict,
     ) -> typing.Dict:
         from glob import glob
@@ -340,7 +342,8 @@ class PDF_Retrieval(Process):
                 max_sim_record = None
                 for record in records.values():
                     sim = Record.get_record_similarity(
-                        Record(pdf_record), Record(record.copy())
+                        RECORD_A=Record(data=pdf_record),
+                        RECORD_B=Record(data=record.copy()),
                     )
                     if sim > max_similarity:
                         max_similarity = sim
@@ -420,7 +423,7 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
 
-    def __batch(self, items: typing.List[typing.Dict]):
+    def __batch(self, *, items: typing.List[typing.Dict]):
         # TODO : no longer batch...
         batch = []
         for item in items:
@@ -431,7 +434,7 @@ class PDF_Retrieval(Process):
             )
         yield batch
 
-    def __set_status_if_file_linked(self, records: typing.Dict) -> typing.Dict:
+    def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
 
         for record in records.values():
             if record["colrev_status"] == RecordState.rev_prescreen_included:
@@ -463,8 +466,8 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info("Get PDFs")
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        records = self.__set_status_if_file_linked(records)
-        records = self.check_existing_unlinked_pdfs(records)
+        records = self.__set_status_if_file_linked(records=records)
+        records = self.check_existing_unlinked_pdfs(records=records)
 
         pdf_get_data = self.__get_data()
         self.REVIEW_MANAGER.logger.debug(
@@ -476,7 +479,7 @@ class PDF_Retrieval(Process):
         )
 
         i = 1
-        for retrieval_batch in self.__batch(pdf_get_data["items"]):
+        for retrieval_batch in self.__batch(items=pdf_get_data["items"]):
 
             print(f"Batch {i}")
             i += 1

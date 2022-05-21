@@ -10,10 +10,10 @@ from colrev_core.record import RecordState
 
 
 class PrepMan(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.prep_man,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -51,7 +51,7 @@ class PrepMan(Process):
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
             if "colrev_masterdata_provenance" in record:
-                RECORD = Record(record)
+                RECORD = Record(data=record)
                 prov_d = RECORD.data["colrev_masterdata_provenance"]
                 hints = []
                 for k, v in prov_d.items():
@@ -164,7 +164,7 @@ class PrepMan(Process):
 
     def apply_prep_man(self) -> None:
 
-        PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
+        PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
         if Path("prep-references.csv").is_file():
             self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
@@ -229,7 +229,7 @@ class PrepMan(Process):
                         records_to_reset.append(record)
 
         if len(records_to_reset) > 0:
-            PREPARATION.reset(records_to_reset)
+            PREPARATION.reset(record_list=records_to_reset)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records)
         self.REVIEW_MANAGER.format_references()
@@ -237,7 +237,7 @@ class PrepMan(Process):
         return
 
     def append_to_non_dupe_db(
-        self, record_to_unmerge_original: dict, record_original: dict
+        self, *, record_to_unmerge_original: dict, record_original: dict
     ):
 
         record_to_unmerge = record_to_unmerge_original.copy()
@@ -313,17 +313,17 @@ class PrepMan(Process):
         )
         return md_prep_man_data
 
-    def set_data(self, record, PAD: int = 40) -> None:
+    def set_data(self, *, record, PAD: int = 40) -> None:
         from colrev_core.record import Record
 
-        PREPARATION = prep.Preparation(self.REVIEW_MANAGER)
+        PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
         record.update(colrev_status=RecordState.md_prepared)
-        RECORD = Record(record)
+        RECORD = Record(data=record)
         RECORD.set_masterdata_complete()
         RECORD.set_masterdata_consistent()
         RECORD.set_fields_complete()
         record = RECORD.get_data()
-        record = PREPARATION.drop_fields(record)
+        record = PREPARATION.drop_fields(RECORD=record)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

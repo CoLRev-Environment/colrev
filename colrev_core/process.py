@@ -35,6 +35,7 @@ class ProcessType(Enum):
 class Process:
     def __init__(
         self,
+        *,
         REVIEW_MANAGER,
         type: ProcessType,
         notify_state_transition_process=True,
@@ -77,7 +78,7 @@ class Process:
             PROCESS_MODEL = ProcessModel(
                 process=self.type, REVIEW_MANAGER=self.REVIEW_MANAGER
             )
-            PROCESS_MODEL.check_process_precondition(self)
+            PROCESS_MODEL.check_process_precondition(process=self)
             return
 
         def require_clean_repo_general(
@@ -218,14 +219,14 @@ class Process:
 
 
 class FormatProcess(Process):
-    def __init__(self, REVIEW_MANAGER, notify: bool = True):
-        super().__init__(REVIEW_MANAGER, ProcessType.format)
+    def __init__(self, *, REVIEW_MANAGER, notify: bool = True):
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.format)
         if notify:
             self.REVIEW_MANAGER.notify(self)
 
 
 class CheckProcess(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER,
             ProcessType.check,
@@ -350,7 +351,7 @@ class ProcessModel:
     ]
 
     def __init__(
-        self, state: str = None, process: ProcessType = None, REVIEW_MANAGER=None
+        self, *, state: str = None, process: ProcessType = None, REVIEW_MANAGER=None
     ):
 
         import logging
@@ -384,7 +385,7 @@ class ProcessModel:
             {x["trigger"] for x in self.transitions if x["source"] == self.state}
         )
 
-    def get_preceding_states(self, state) -> set:
+    def get_preceding_states(self, *, state) -> set:
         preceding_states: typing.Set[RecordState] = set()
         added = True
         while added:
@@ -399,13 +400,15 @@ class ProcessModel:
                 added = False
         return preceding_states
 
-    def check_process_precondition(self, process: Process) -> None:
+    def check_process_precondition(self, *, process: Process) -> None:
 
         if "True" == self.REVIEW_MANAGER.settings.project.delay_automated_processing:
             cur_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_states_set()
             self.REVIEW_MANAGER.logger.debug(f"cur_state_list: {cur_state_list}")
             self.REVIEW_MANAGER.logger.debug(f"precondition: {self.state}")
-            required_absent = {str(x) for x in self.get_preceding_states(self.state)}
+            required_absent = {
+                str(x) for x in self.get_preceding_states(state=self.state)
+            }
             self.REVIEW_MANAGER.logger.debug(f"required_absent: {required_absent}")
             intersection = cur_state_list.intersection(required_absent)
             if (

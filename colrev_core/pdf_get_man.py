@@ -11,23 +11,23 @@ from colrev_core.record import RecordState
 
 
 class PDFRetrievalMan(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.pdf_get_man,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.pdf_get_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def get_pdf_get_man(self, records: typing.Dict) -> list:
+    def get_pdf_get_man(self, *, records: typing.Dict) -> list:
         missing_records = []
         for record in records.values():
             if record["colrev_status"] == RecordState.pdf_needs_manual_retrieval:
                 missing_records.append(record)
         return missing_records
 
-    def export_retrieval_table(self, records: typing.Dict) -> None:
-        missing_records = self.get_pdf_get_man(records)
+    def export_retrieval_table(self, *, records: typing.Dict) -> None:
+        missing_records = self.get_pdf_get_man(records=records)
         missing_pdf_files_csv = Path("missing_pdf_files.csv")
 
         if len(missing_records) > 0:
@@ -76,7 +76,7 @@ class PDFRetrievalMan(Process):
         )
         return pdf_get_man_data
 
-    def set_data(self, record, filepath: Path, PAD: int = 40) -> None:
+    def set_data(self, *, record, filepath: Path, PAD: int = 40) -> None:
 
         if filepath is None:
             record.update(colrev_status=RecordState.pdf_not_available)

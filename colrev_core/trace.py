@@ -9,15 +9,15 @@ from colrev_core.process import ProcessType
 
 
 class Trace(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
 
         super().__init__(REVIEW_MANAGER, ProcessType.check)
 
-    def __lpad_multiline(self, s: str, lpad: int) -> str:
+    def __lpad_multiline(self, *, s: str, lpad: int) -> str:
         lines = s.splitlines()
         return "\n".join(["".join([" " * lpad]) + line for line in lines])
 
-    def main(self, ID: str) -> None:
+    def main(self, *, ID: str) -> None:
 
         self.REVIEW_MANAGER.logger.info(f"Trace record by ID: {ID}")
 
@@ -61,7 +61,7 @@ class Trace(Process):
                     diffs = list(dictdiffer.diff(prev_record, record))
                     if len(diffs) > 0:
                         for diff in diffs:
-                            print(self.__lpad_multiline(pp.pformat(diff), 5))
+                            print(self.__lpad_multiline(s=pp.pformat(diff), lpad=5))
                     prev_record = record
 
             if DATA in commit.tree:

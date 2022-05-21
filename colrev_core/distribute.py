@@ -7,14 +7,14 @@ from colrev_core.process import ProcessType
 
 
 class Distribute(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER,
             type=ProcessType.explore,
             notify_state_transition_process=False,
         )
 
-    def main(self, path_str: str, target: Path) -> None:
+    def main(self, *, path_str: str, target: Path) -> None:
         from colrev_core.environment import TEIParser, GrobidService
 
         # if no options are given, take the current path/repo

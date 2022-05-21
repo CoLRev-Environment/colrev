@@ -22,11 +22,11 @@ class colors:
 
 
 class Event(LoggingEventHandler):
-    def __init__(self, SERVICE):
+    def __init__(self, *, SERVICE):
         self.SERVICE = SERVICE
         self.logger = logging.getLogger()
 
-    def on_modified(self, event):
+    def on_modified(self, *, event):
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):
@@ -61,7 +61,7 @@ class Event(LoggingEventHandler):
 
 
 class Service:
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
 
         assert "realtime" == REVIEW_MANAGER.settings.project.review_type
 
@@ -131,7 +131,7 @@ class Service:
 
     # function to add commands to queue?
 
-    def __setup_logger(self, level=logging.INFO) -> logging.Logger:
+    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
         logger = logging.getLogger("colrev_service")
 
         logger.setLevel(level)

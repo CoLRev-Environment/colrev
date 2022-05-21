@@ -29,7 +29,7 @@ class ReviewDataset:
         "colrev_data_provenance",
     ]
 
-    def __init__(self, REVIEW_MANAGER) -> None:
+    def __init__(self, *, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.MAIN_REFERENCES_FILE = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
@@ -49,7 +49,7 @@ class ReviewDataset:
             record_state_list = self.__read_record_header_items()
         return record_state_list
 
-    def get_origin_state_dict(self, file_object=None) -> dict:
+    def get_origin_state_dict(self, *, file_object=None) -> dict:
         ret_dict = {}
 
         def append_origin_state_pair(r_header: dict):
@@ -61,7 +61,9 @@ class ReviewDataset:
             return {}
         [
             append_origin_state_pair(record_header_item)
-            for record_header_item in self.__read_record_header_items(file_object)
+            for record_header_item in self.__read_record_header_items(
+                file_object=file_object
+            )
         ]
         return ret_dict
 
@@ -75,7 +77,7 @@ class ReviewDataset:
             for record_header_item in self.__read_record_header_items()
         ]
 
-    def get_states_set(self, record_state_list: list = None) -> set:
+    def get_states_set(self, *, record_state_list: list = None) -> set:
         """Get the record_states_set"""
 
         if not self.MAIN_REFERENCES_FILE.is_file():
@@ -84,11 +86,11 @@ class ReviewDataset:
             record_state_list = self.get_record_state_list()
         return {el["colrev_status"] for el in record_state_list}
 
-    def __get_record_status_item(self, r_header: dict) -> list:
-        return [r_header["ID"], r_header["colrev_status"]]
-
     def retrieve_records_from_history(
-        self, original_records: typing.List[typing.Dict], condition_state: RecordState
+        self,
+        *,
+        original_records: typing.List[typing.Dict],
+        condition_state: RecordState,
     ) -> typing.List:
 
         prior_records = []
@@ -129,7 +131,7 @@ class ReviewDataset:
         return prior_records
 
     @classmethod
-    def load_field_dict(cls, value: str, field: str) -> dict:
+    def load_field_dict(cls, *, value: str, field: str) -> dict:
         return_dict = {}
         if "colrev_masterdata_provenance" == field:
             if "CURATED" == value[:7]:
@@ -189,7 +191,7 @@ class ReviewDataset:
         return return_dict
 
     @classmethod
-    def save_field_dict(cls, input_dict: dict, key: str) -> list:
+    def save_field_dict(cls, *, input_dict: dict, key: str) -> list:
         list_to_return = []
         if "colrev_masterdata_provenance" == key:
             for k, v in input_dict.items():
@@ -205,7 +207,7 @@ class ReviewDataset:
         return list_to_return
 
     @classmethod
-    def parse_records_dict(cls, records_dict: dict) -> dict:
+    def parse_records_dict(cls, *, records_dict: dict) -> dict:
         def format_name(person):
             def join(name_list):
                 return " ".join([name for name in name_list if name])
@@ -240,7 +242,7 @@ class ReviewDataset:
                         if ("doi" == k)
                         else [el for el in (v + " ").split("; ") if "" != el]
                         if k in ReviewDataset.list_fields
-                        else ReviewDataset.load_field_dict(v, k)
+                        else ReviewDataset.load_field_dict(value=v, field=k)
                         if k in ReviewDataset.dict_fields
                         else v
                         for k, v in v.fields.items()
@@ -258,7 +260,7 @@ class ReviewDataset:
 
         return records_dict
 
-    def load_records_dict(self, load_str: str = None) -> dict:
+    def load_records_dict(self, *, load_str: str = None) -> dict:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
         from colrev_core.review_dataset import ReviewManagerNotNofiedError
         from pybtex.database.input import bibtex
@@ -277,11 +279,11 @@ class ReviewDataset:
 
         if load_str:
             bib_data = parser.parse_string(load_str)
-            records_dict = self.parse_records_dict(bib_data.entries)
+            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
         elif MAIN_REFERENCES_FILE.is_file():
             bib_data = parser.parse_file(MAIN_REFERENCES_FILE)
-            records_dict = self.parse_records_dict(bib_data.entries)
+            records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
         else:
             records_dict = {}
@@ -338,7 +340,7 @@ class ReviewDataset:
             yield records_dict
 
     @classmethod
-    def parse_bibtex_str(cls, recs_dict_in) -> str:
+    def parse_bibtex_str(cls, *, recs_dict_in) -> str:
         from copy import deepcopy
 
         # Note: we need a deepcopy because the parsing modifies dicts
@@ -401,7 +403,9 @@ class ReviewDataset:
 
             for field in ReviewDataset.dict_fields:
                 if field in record:
-                    record[field] = ReviewDataset.save_field_dict(record[field], field)
+                    record[field] = ReviewDataset.save_field_dict(
+                        input_dict=record[field], key=field
+                    )
 
             for ordered_field in field_order:
                 if ordered_field in record:
@@ -427,12 +431,12 @@ class ReviewDataset:
         return bibtex_str
 
     @classmethod
-    def save_records_dict_to_file(cls, recs_dict_in, save_path: Path):
+    def save_records_dict_to_file(cls, *, recs_dict_in, save_path: Path):
         """Save the records dict to specifified file"""
         # Note : this classmethod function can be called by CoLRev scripts
         # operating outside a CoLRev repo (e.g., sync)
 
-        bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in)
+        bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in=recs_dict_in)
 
         with open(save_path, "w") as out:
             out.write(bibtex_str)
@@ -453,15 +457,17 @@ class ReviewDataset:
 
         return
 
-    def save_records_dict(self, recs_dict_in):
+    def save_records_dict(self, *, recs_dict_in):
         """Save the records dict in MAIN_REFERENCES"""
 
         MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-        self.save_records_dict_to_file(recs_dict_in, MAIN_REFERENCES_FILE)
+        self.save_records_dict_to_file(
+            recs_dict_in=recs_dict_in, save_path=MAIN_REFERENCES_FILE
+        )
 
         return
 
-    def reprocess_id(self, id: str) -> None:
+    def reprocess_id(self, *, id: str) -> None:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
 
         saved_args = locals()
@@ -478,7 +484,7 @@ class ReviewDataset:
             records = {
                 ID: record for ID, record in records.items() if ID not in id.split(",")
             }
-            self.save_records_dict(records)
+            self.save_records_dict(recs_dict_in=records)
             self.add_record_changes()
 
         self.REVIEW_MANAGER.create_commit("Reprocess", saved_args=saved_args)
@@ -486,7 +492,7 @@ class ReviewDataset:
         return
 
     def set_IDs(
-        self, records: typing.Dict = {}, selected_IDs: list = None
+        self, *, records: typing.Dict = {}, selected_IDs: list = None
     ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
@@ -496,7 +502,7 @@ class ReviewDataset:
 
         self.LOCAL_INDEX = LocalIndex()
         self.PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         if len(records) == 0:
@@ -505,7 +511,7 @@ class ReviewDataset:
         ID_list = list(records.keys())
 
         for record_ID, record in records.items():
-            RECORD = Record(record)
+            RECORD = Record(data=record)
             if RECORD.masterdata_is_curated():
                 continue
             self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
@@ -520,7 +526,10 @@ class ReviewDataset:
 
             old_id = record_ID
             new_id = self.__generate_ID_blacklist(
-                record, ID_list, record_in_bib_db=True, raise_error=False
+                record=record,
+                ID_blacklist=ID_list,
+                record_in_bib_db=True,
+                raise_error=False,
             )
             record.update(ID=new_id)
             ID_list.append(new_id)
@@ -529,17 +538,17 @@ class ReviewDataset:
                 if old_id in ID_list:
                     ID_list.remove(old_id)
 
-        self.save_records_dict(records)
+        self.save_records_dict(recs_dict_in=records)
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
 
         records = self.load_records_dict()
-        self.save_records_dict(records)
+        self.save_records_dict(recs_dict_in=records)
         self.add_record_changes()
 
         return records
 
-    def propagated_ID(self, ID: str) -> bool:
+    def propagated_ID(self, *, ID: str) -> bool:
         """Check whether an ID has been propagated"""
 
         propagated = False
@@ -556,6 +565,7 @@ class ReviewDataset:
 
     def __generate_ID(
         self,
+        *,
         record: dict,
         records: typing.List[dict] = [],
         record_in_bib_db: bool = False,
@@ -568,12 +578,16 @@ class ReviewDataset:
         else:
             ID_blacklist = []
         ID = self.__generate_ID_blacklist(
-            record, ID_blacklist, record_in_bib_db, raise_error
+            record=record,
+            ID_blacklist=ID_blacklist,
+            record_in_bib_db=record_in_bib_db,
+            raise_error=raise_error,
         )
         return ID
 
     def __generate_ID_blacklist(
         self,
+        *,
         record: dict,
         ID_blacklist: list = None,
         record_in_bib_db: bool = False,
@@ -616,21 +630,21 @@ class ReviewDataset:
         # screen or data will not be replaced
         # (this would break the chain of evidence)
         if raise_error:
-            if self.propagated_ID(record["ID"]):
+            if self.propagated_ID(ID=record["ID"]):
                 raise CitationKeyPropagationError(
                     "WARNING: do not change IDs that have been "
                     + f'propagated to {self.REVIEW_MANAGER.paths["DATA"]} '
                     + f'({record["ID"]})'
                 )
         try:
-            retrieved_record = self.LOCAL_INDEX.retrieve(record)
+            retrieved_record = self.LOCAL_INDEX.retrieve(record=record)
             temp_ID = retrieved_record["ID"]
         except RecordNotInIndexException:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
                 authors = self.PREPARATION.format_author_field(
-                    record.get("author", record.get("editor", "Anonymous"))
+                    input_string=record.get("author", record.get("editor", "Anonymous"))
                 ).split(" and ")
             else:
                 authors = ["Anonymous"]
@@ -694,7 +708,7 @@ class ReviewDataset:
 
         return temp_ID
 
-    def __read_record_header_items(self, file_object=None) -> list:
+    def __read_record_header_items(self, *, file_object=None) -> list:
 
         # Note : more than 10x faster than load_records_dict()
 
@@ -755,7 +769,7 @@ class ReviewDataset:
         record_header_items.append(record_header_item)
         return record_header_items
 
-    def __read_next_record_str(self, file_object=None) -> typing.Iterator[str]:
+    def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
             file_object = open(self.MAIN_REFERENCES_FILE, encoding="utf8")
         data = ""
@@ -776,7 +790,7 @@ class ReviewDataset:
                 data = line
         yield data
 
-    def read_next_record(self, conditions: list = None) -> typing.Iterator[dict]:
+    def read_next_record(self, *, conditions: list = None) -> typing.Iterator[dict]:
         # Note : matches conditions connected with 'OR'
         records = []
         record_dict = self.load_records_dict()
@@ -791,7 +805,7 @@ class ReviewDataset:
                 records.append(record)
         yield from records
 
-    def replace_field(self, IDs: list, key: str, val_str: str) -> None:
+    def replace_field(self, *, IDs: list, key: str, val_str: str) -> None:
 
         val = val_str.encode("utf-8")
         current_ID_str = "NA"
@@ -832,10 +846,10 @@ class ReviewDataset:
                 line = fd.readline()
         return
 
-    def update_record_by_ID(self, new_record: dict, delete: bool = False) -> None:
+    def update_record_by_ID(self, *, new_record: dict, delete: bool = False) -> None:
 
         new_record_dict = {new_record["ID"]: new_record}
-        replacement = ReviewDataset.parse_bibtex_str(new_record_dict)
+        replacement = ReviewDataset.parse_bibtex_str(recs_dict_in=new_record_dict)
 
         current_ID_str = "NA"
         with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
@@ -870,14 +884,14 @@ class ReviewDataset:
         return
 
     def save_record_list_by_ID(
-        self, record_list: list, append_new: bool = False
+        self, *, record_list: list, append_new: bool = False
     ) -> None:
 
         if record_list == []:
             return
 
         record_dict = {r["ID"]: r for r in record_list}
-        parsed = ReviewDataset.parse_bibtex_str(record_dict)
+        parsed = ReviewDataset.parse_bibtex_str(recs_dict_in=record_dict)
 
         record_list = [
             {
@@ -942,10 +956,10 @@ class ReviewDataset:
         from colrev_core.process import FormatProcess
 
         PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
-        FormatProcess(self.REVIEW_MANAGER)  # to notify
+        FormatProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)  # to notify
 
         records = self.load_records_dict()
         for record in records.values():
@@ -953,29 +967,31 @@ class ReviewDataset:
                 print(f'Error: no status field in record ({record["ID"]})')
                 continue
 
-            RECORD = PrepRecord(record)
+            RECORD = PrepRecord(data=record)
 
             if record["colrev_status"] in [
                 RecordState.md_needs_manual_preparation,
                 RecordState.md_imported,
             ]:
-                RECORD = PREPARATION.update_masterdata_provenance(RECORD, RECORD)
+                RECORD = PREPARATION.update_masterdata_provenance(
+                    RECORD=RECORD, UNPREPARED_RECORD=RECORD
+                )
 
             if record["colrev_status"] == RecordState.md_needs_manual_preparation:
-                RECORD = PREPARATION.update_metadata_status(RECORD)
+                RECORD = PREPARATION.update_metadata_status(RECORD=RECORD)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
                 RECORD.reset_pdf_provenance_hints()
 
             record = RECORD.get_data()
 
-        self.save_records_dict(records)
+        self.save_records_dict(recs_dict_in=records)
         CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]
         return CHANGED
 
-    def retrieve_data(self, prior: dict) -> dict:
+    def retrieve_data(self, *, prior: dict) -> dict:
         from colrev_core.process import ProcessModel
 
         data: dict = {
@@ -992,7 +1008,7 @@ class ReviewDataset:
         }
 
         with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
-            for record_string in self.__read_next_record_str(f):
+            for record_string in self.__read_next_record_str(file_object=f):
                 ID, file, status, excl_crit, origin = (
                     "NA",
                     "NA",
@@ -1117,7 +1133,7 @@ class ReviewDataset:
         prior: dict = {"colrev_status": [], "persisted_IDs": []}
         filecontents = list(revlist)[0][1]
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
-        for record_string in self.__read_next_record_str(prior_db_str):
+        for record_string in self.__read_next_record_str(file_object=prior_db_str):
 
             ID, status, origin = "NA", "NA", "NA"
             for line in record_string.split("\n"):
@@ -1157,7 +1173,7 @@ class ReviewDataset:
     #             data = line
     #     yield data
 
-    def retrieve_IDs_from_bib(self, file_path: Path) -> list:
+    def retrieve_IDs_from_bib(self, *, file_path: Path) -> list:
         assert file_path.suffix == ".bib"
         IDs = []
         with open(file_path, encoding="utf8") as f:
@@ -1170,11 +1186,11 @@ class ReviewDataset:
         return IDs
 
     def retrieve_by_colrev_id(
-        self, indexed_record_dict: dict, records: typing.List[typing.Dict]
+        self, *, indexed_record_dict: dict, records: typing.List[typing.Dict]
     ) -> dict:
         from colrev_core.record import Record
 
-        INDEXED_RECORD = Record(indexed_record_dict)
+        INDEXED_RECORD = Record(data=indexed_record_dict)
 
         if "colrev_id" in INDEXED_RECORD.data:
             cid_to_retrieve = INDEXED_RECORD.get_colrev_id()
@@ -1184,7 +1200,7 @@ class ReviewDataset:
         record_l = [
             x
             for x in records
-            if any(cid in Record(x).get_colrev_id() for cid in cid_to_retrieve)
+            if any(cid in Record(data=x).get_colrev_id() for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
             raise RecordNotInRepoException
@@ -1199,14 +1215,14 @@ class ReviewDataset:
         if len(recs_dict) > 0:
             origin_records = self.load_origin_records()
             for rec in tqdm(recs_dict.values()):
-                RECORD = Record(rec)
+                RECORD = Record(data=rec)
                 try:
                     RECORD.create_colrev_id()
                 except NotEnoughDataToIdentifyException:
                     pass
                 origins = RECORD.get_origins()
                 RECORD.add_colrev_ids(
-                    [
+                    records=[
                         origin_records[origin]
                         for origin in set(origins)
                         if origin in origin_records
@@ -1223,7 +1239,7 @@ class ReviewDataset:
             #             if RECORD.shares_origins(HIST_RECORD):
             #                 RECORD.add_colrev_ids([HIST_RECORD.get_data()])
 
-            self.save_records_dict(recs_dict)
+            self.save_records_dict(recs_dict_in=recs_dict)
             self.add_record_changes()
         return
 
@@ -1242,7 +1258,7 @@ class ReviewDataset:
         missing_files = []
         if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
-                for record_string in self.__read_next_record_str(f):
+                for record_string in self.__read_next_record_str(file_object=f):
                     ID, status = "NA", "NA"
 
                     for line in record_string.split("\n"):
@@ -1265,7 +1281,7 @@ class ReviewDataset:
                         missing_files.append(ID)
         return missing_files
 
-    def import_file(self, record: dict) -> dict:
+    def import_file(self, *, record: dict) -> dict:
         self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"].mkdir(exist_ok=True)
         new_fp = (
             self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
@@ -1287,7 +1303,7 @@ class ReviewDataset:
 
     # CHECKS --------------------------------------------------------------
 
-    def check_main_references_duplicates(self, data: dict) -> None:
+    def check_main_references_duplicates(self, *, data: dict) -> None:
 
         if not len(data["IDs"]) == len(set(data["IDs"])):
             duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
@@ -1302,7 +1318,7 @@ class ReviewDataset:
                 )
         return
 
-    def check_main_references_origin(self, prior: dict, data: dict) -> None:
+    def check_main_references_origin(self, *, prior: dict, data: dict) -> None:
         import itertools
 
         # Check whether each record has an origin
@@ -1315,7 +1331,7 @@ class ReviewDataset:
         search_dir = self.REVIEW_MANAGER.paths["SEARCHDIR"]
         all_record_links = []
         for bib_file in search_dir.glob("*.bib"):
-            search_IDs = self.retrieve_IDs_from_bib(bib_file)
+            search_IDs = self.retrieve_IDs_from_bib(file_path=bib_file)
             for x in search_IDs:
                 all_record_links.append(bib_file.name + "/" + x)
         delta = set(data["record_links_in_bib"]) - set(all_record_links)
@@ -1357,7 +1373,7 @@ class ReviewDataset:
         #                 STATUS = FAIL
         return
 
-    def check_main_references_status_fields(self, data: dict) -> None:
+    def check_main_references_status_fields(self, *, data: dict) -> None:
         # Check status fields
         status_schema = [str(x) for x in RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
@@ -1365,7 +1381,7 @@ class ReviewDataset:
             raise FieldError(f"status field(s) {stat_diff} not in {status_schema}")
         return
 
-    def check_status_transitions(self, data: dict) -> None:
+    def check_status_transitions(self, *, data: dict) -> None:
         if len(set(data["start_states"])) > 1:
             raise StatusTransitionError(
                 "multiple transitions from different "
@@ -1373,7 +1389,7 @@ class ReviewDataset:
             )
         return
 
-    def __get_exclusion_criteria(self, ec_string: str) -> list:
+    def __get_exclusion_criteria(self, *, ec_string: str) -> list:
         excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
         if [""] == excl_criteria:
             excl_criteria = []
@@ -1395,7 +1411,7 @@ class ReviewDataset:
         self.LOCAL_INDEX = LocalIndex()
 
         self.PREPARATION = Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         essential_md_keys = [
@@ -1433,24 +1449,24 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER.logger.debug("Load prior bib")
         prior_db_str = io.StringIO(filecontents.decode("utf-8"))
-        for record_string in self.__read_next_record_str(prior_db_str):
+        for record_string in self.__read_next_record_str(file_object=prior_db_str):
 
             # TBD: whether/how to detect dblp. Previously:
             # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
             if "{CURATED:" in record_string:
-                records_dict = self.load_records_dict(record_string)
+                records_dict = self.load_records_dict(load_str=record_string)
                 r = list(records_dict.values())[0]
                 prior["curated_records"].append(r)
 
         self.REVIEW_MANAGER.logger.debug("Load current bib")
         curated_records = []
         with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
-            for record_string in self.__read_next_record_str(f):
+            for record_string in self.__read_next_record_str(file_object=f):
 
                 # TBD: whether/how to detect dblp. Previously:
                 # if any(x in record_string for x in ["{CURATED:", "{DBLP}"]):
                 if "{CURATED:" in record_string:
-                    records_dict = self.load_records_dict(record_string)
+                    records_dict = self.load_records_dict(load_str=record_string)
                     r = list(records_dict.values())[0]
                     curated_records.append(r)
 
@@ -1481,11 +1497,11 @@ class ReviewDataset:
                     # after the previous condition, we know that the curated record
                     # has been corrected
                     corrected_curated_record = curated_record.copy()
-                    if Record(corrected_curated_record).masterdata_is_curated():
+                    if Record(data=corrected_curated_record).masterdata_is_curated():
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = self.LOCAL_INDEX.retrieve(
-                                prior_cr
+                                record=prior_cr
                             )
 
                             # Note : this is a simple heuristic:
@@ -1509,7 +1525,7 @@ class ReviewDataset:
                             original_curated_record = prior_cr.copy()
 
                         original_curated_record["colrev_id"] = Record(
-                            original_curated_record
+                            data=original_curated_record
                         ).create_colrev_id()
 
                     else:
@@ -1626,7 +1642,7 @@ class ReviewDataset:
         # raise KeyError
         return
 
-    def check_main_references_screen(self, data: dict) -> None:
+    def check_main_references_screen(self, *, data: dict) -> None:
 
         # Check screen
         # Note: consistency of inclusion_2=yes -> inclusion_1=yes
@@ -1638,7 +1654,7 @@ class ReviewDataset:
         if data["exclusion_criteria_list"]:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
-                criteria = self.__get_exclusion_criteria(exclusion_criteria)
+                criteria = self.__get_exclusion_criteria(ec_string=exclusion_criteria)
                 settings_criteria = [
                     str(c) for c in self.REVIEW_MANAGER.settings.screen.criteria
                 ]
@@ -1727,7 +1743,7 @@ class ReviewDataset:
     #               str(set(missing_IDs)))
     #     return
 
-    def check_propagated_IDs(self, prior_id: str, new_id: str) -> list:
+    def check_propagated_IDs(self, *, prior_id: str, new_id: str) -> list:
 
         ignore_patterns = [
             ".git",
@@ -1754,7 +1770,7 @@ class ReviewDataset:
                 logging.debug(f"Checking {name}")
                 if name.endswith(".bib"):
                     retrieved_IDs = self.retrieve_IDs_from_bib(
-                        Path(os.path.join(root, name))
+                        file_path=Path(os.path.join(root, name))
                     )
                     if prior_id in retrieved_IDs:
                         notifications.append(
@@ -1783,7 +1799,7 @@ class ReviewDataset:
                     )
         return notifications
 
-    def check_persisted_ID_changes(self, prior: dict, data: dict) -> None:
+    def check_persisted_ID_changes(self, *, prior: dict, data: dict) -> None:
         if "persisted_IDs" not in prior:
             return
         for prior_origin, prior_id in prior["persisted_IDs"]:
@@ -1793,7 +1809,9 @@ class ReviewDataset:
             for new_origin, new_id in data["persisted_IDs"]:
                 if new_origin == prior_origin:
                     if new_id != prior_id:
-                        notifications = self.check_propagated_IDs(prior_id, new_id)
+                        notifications = self.check_propagated_IDs(
+                            prior_id=prior_id, new_id=new_id
+                        )
                         notifications.append(
                             "ID of processed record changed from "
                             f"{prior_id} to {new_id}"
@@ -1856,7 +1874,7 @@ class ReviewDataset:
         # Extension : allow for optional path (check changes for that file)
         return self.__git_repo.is_dirty()
 
-    def add_changes(self, path: str) -> None:
+    def add_changes(self, *, path: str) -> None:
         import time
 
         while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
@@ -1866,7 +1884,7 @@ class ReviewDataset:
         self.__git_repo.index.add([str(path)])
         return
 
-    def remove_file(self, path: str) -> None:
+    def remove_file(self, *, path: str) -> None:
 
         self.__git_repo.index.remove(
             [path],
@@ -1875,7 +1893,7 @@ class ReviewDataset:
         return
 
     def create_commit(
-        self, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
+        self, *, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
     ) -> None:
         self.__git_repo.index.commit(
             msg,
@@ -1885,10 +1903,10 @@ class ReviewDataset:
         )
         return
 
-    def file_in_history(self, filepath: Path) -> bool:
+    def file_in_history(self, *, filepath: Path) -> bool:
         return str(filepath) in [x.path for x in self.__git_repo.head.commit.tree]
 
-    def get_commit_message(self, commit_nr: int) -> str:
+    def get_commit_message(self, *, commit_nr: int) -> str:
         master = self.__git_repo.head.reference
         assert commit_nr == 0  # extension : implement other cases
         if commit_nr == 0:
@@ -1928,7 +1946,7 @@ class ReviewDataset:
         hash = self.__git_repo.git.execute(["git", "write-tree"])
         return str(hash)
 
-    def get_remote_commit_differences(self, git_repo: git.Repo) -> list:
+    def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
         from git.exc import GitCommandError
 
         nr_commits_behind, nr_commits_ahead = -1, -1
@@ -1966,7 +1984,7 @@ class ReviewDataset:
                 (
                     nr_commits_behind,
                     nr_commits_ahead,
-                ) = self.get_remote_commit_differences(self.__git_repo)
+                ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
         if nr_commits_behind > 0:
             return True
         return False
@@ -1980,7 +1998,7 @@ class ReviewDataset:
                 (
                     nr_commits_behind,
                     nr_commits_ahead,
-                ) = self.get_remote_commit_differences(self.__git_repo)
+                ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
         if nr_commits_ahead > 0:
             return True
         return False

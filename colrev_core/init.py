@@ -8,6 +8,7 @@ import git
 class Initializer:
     def __init__(
         self,
+        *,
         project_name: str,
         SHARE_STAT_REQ: str,
         type: bool = False,
@@ -32,7 +33,7 @@ class Initializer:
         print("Setup git")
         self.__setup_git()
         print("Create commit")
-        self.__create_commit(saved_args)
+        self.__create_commit(saved_args=saved_args)
         print("Register repo")
         self.__register_repo()
         if local_index_repo:
@@ -41,10 +42,10 @@ class Initializer:
     def __register_repo(self) -> None:
         from colrev_core.environment import EnvironmentManager
 
-        EnvironmentManager.register_repo(Path.cwd())
+        EnvironmentManager.register_repo(path_to_register=Path.cwd())
         return
 
-    def __create_commit(self, saved_args: dict) -> None:
+    def __create_commit(self, *, saved_args: dict) -> None:
         from colrev_core.review_manager import ReviewManager
 
         self.REVIEW_MANAGER = ReviewManager()
@@ -58,7 +59,7 @@ class Initializer:
         )
         del saved_args["local_index_repo"]
         self.REVIEW_MANAGER.create_commit(
-            "Initial commit", manual_author=True, saved_args=saved_args
+            msg="Initial commit", manual_author=True, saved_args=saved_args
         )
         return
 
@@ -89,25 +90,29 @@ class Initializer:
             ],
         ]
         for rp, p in files_to_retrieve:
-            self.__retrieve_package_file(rp, p)
+            self.__retrieve_package_file(template_file=rp, target=p)
 
         if "curated_masterdata" == self.review_type:
             # replace readme
             self.__retrieve_package_file(
-                Path("template/review_type/curated_masterdata/readme.md"),
-                Path("readme.md"),
+                template_file=Path("template/review_type/curated_masterdata/readme.md"),
+                target=Path("readme.md"),
             )
-            self.__inplace_change(Path("readme.md"), "{{url}}", self.url)
+            self.__inplace_change(
+                filename=Path("readme.md"), old_string="{{url}}", new_string=self.url
+            )
 
         elif "realtime" == self.review_type:
             # replace settings
             self.__retrieve_package_file(
-                Path("template/review_type/realtime/settings.json"),
-                Path("settings.json"),
+                template_file=Path("template/review_type/realtime/settings.json"),
+                target=Path("settings.json"),
             )
 
         self.__inplace_change(
-            Path("readme.md"), "{{project_title}}", self.project_name.rstrip(" ")
+            filename=Path("readme.md"),
+            old_string="{{project_title}}",
+            new_string=self.project_name.rstrip(" "),
         )
 
         global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
@@ -193,7 +198,7 @@ class Initializer:
             raise NonEmptyDirectoryError()
 
     def __inplace_change(
-        self, filename: Path, old_string: str, new_string: str
+        self, *, filename: Path, old_string: str, new_string: str
     ) -> None:
         with open(filename, encoding="utf8") as f:
             s = f.read()
@@ -205,7 +210,7 @@ class Initializer:
             f.write(s)
         return
 
-    def __retrieve_package_file(self, template_file: Path, target: Path) -> None:
+    def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
         import pkgutil
 
         filedata = pkgutil.get_data(__name__, str(template_file))
@@ -225,7 +230,11 @@ class Initializer:
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_index_path)
-            Initializer("local_index", "PROCESSED", True)
+            Initializer(
+                project_name="local_index",
+                SHARE_STAT_REQ="PROCESSED",
+                local_index_repo=True,
+            )
             print("Created local_index repository")
 
         os.chdir(curdir)

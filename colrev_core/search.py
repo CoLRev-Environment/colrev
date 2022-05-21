@@ -26,6 +26,7 @@ class Search(Process):
 
     def __init__(
         self,
+        *,
         REVIEW_MANAGER,
         notify_state_transition_process=True,
     ):
@@ -81,7 +82,7 @@ class Search(Process):
             },
         ]
 
-    def search_crossref(self, params, feed_file):
+    def search_crossref(self, *, params, feed_file):
         from colrev_core.prep import PrepRecord
         from colrev_core.review_dataset import ReviewDataset
 
@@ -193,7 +194,7 @@ class Search(Process):
 
         return
 
-    def get_venue_abbreviated(self, venue_key: str) -> str:
+    def get_venue_abbreviated(self, *, venue_key: str) -> str:
         venue_abbrev = ""
 
         api_url = "https://dblp.org/search/publ/api?q="
@@ -231,7 +232,7 @@ class Search(Process):
 
         return venue_abbrev
 
-    def search_dblp(self, params, feed_file):
+    def search_dblp(self, *, params, feed_file):
         from colrev_core.prep import Preparation
         from colrev_core.review_dataset import ReviewDataset
 
@@ -362,7 +363,7 @@ class Search(Process):
 
         return
 
-    def search_backward(self, params: dict, feed_file: Path) -> None:
+    def search_backward(self, *, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
         from colrev_core.environment import GrobidService
 
@@ -418,7 +419,7 @@ class Search(Process):
 
         return
 
-    def search_project(self, params: dict, feed_file: Path) -> None:
+    def search_project(self, *, params: dict, feed_file: Path) -> None:
         from colrev_core.review_manager import ReviewManager
         from colrev_core.load import Loader
         from tqdm import tqdm
@@ -435,9 +436,9 @@ class Search(Process):
 
             imported_ids = [x["ID"] for x in records]
 
-        PROJECT_REVIEW_MANAGER = ReviewManager(params["scope"]["url"])
+        PROJECT_REVIEW_MANAGER = ReviewManager(path_str=params["scope"]["url"])
         Loader(
-            PROJECT_REVIEW_MANAGER,
+            REVIEW_MANAGER=PROJECT_REVIEW_MANAGER,
             notify_state_transition_process=False,
         )
         self.REVIEW_MANAGER.logger.info(
@@ -489,7 +490,7 @@ class Search(Process):
             print("No records retrieved.")
         return
 
-    def search_index(self, params: dict, feed_file: Path) -> None:
+    def search_index(self, *, params: dict, feed_file: Path) -> None:
 
         assert "selection_clause" in params
 
@@ -535,7 +536,7 @@ class Search(Process):
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
                 record_to_import = LOCAL_INDEX.prep_record_for_return(
-                    record_to_import, include_file=False
+                    record=record_to_import, include_file=False
                 )
 
                 records_to_import.append(record_to_import)
@@ -573,11 +574,11 @@ class Search(Process):
 
         return
 
-    def get_pdf_cpid_path(self, path) -> typing.List[str]:
-        cpid = self.get_colrev_pdf_id(path)
+    def get_pdf_cpid_path(self, *, path) -> typing.List[str]:
+        cpid = self.get_colrev_pdf_id(path=path)
         return [str(path), str(cpid)]
 
-    def get_colrev_pdf_id(self, path: Path) -> str:
+    def get_colrev_pdf_id(self, *, path: Path) -> str:
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
@@ -586,7 +587,7 @@ class Search(Process):
         )
         return cpid1
 
-    def search_pdfs_dir(self, params: dict, feed_file: Path) -> None:
+    def search_pdfs_dir(self, *, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
         from colrev_core.environment import GrobidService
@@ -603,7 +604,7 @@ class Search(Process):
         skip_duplicates = True
 
         self.PDF_PREPARATION = PDF_Preparation(
-            self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         def update_if_pdf_renamed(
@@ -626,7 +627,7 @@ class Search(Process):
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
-                        cpid_potential_pdf = self.get_colrev_pdf_id(potential_pdf)
+                        cpid_potential_pdf = self.get_colrev_pdf_id(path=potential_pdf)
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
@@ -711,7 +712,7 @@ class Search(Process):
 
             return
 
-        def get_pdf_links(bib_file: Path) -> list:
+        def get_pdf_links(*, bib_file: Path) -> list:
             pdf_list = []
             if bib_file.is_file():
                 with open(bib_file, encoding="utf8") as f:
@@ -736,7 +737,7 @@ class Search(Process):
 
         remove_records_if_pdf_no_longer_exists()
 
-        indexed_pdf_paths = get_pdf_links(feed_file)
+        indexed_pdf_paths = get_pdf_links(bib_file=feed_file)
         #  + get_pdf_links(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"])
 
         indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
@@ -852,7 +853,7 @@ class Search(Process):
         # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-        def get_record_from_pdf_grobid(record) -> dict:
+        def get_record_from_pdf_grobid(*, record) -> dict:
             from colrev_core.environment import EnvironmentManager, GrobidService
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
@@ -934,7 +935,7 @@ class Search(Process):
             ]
             return record
 
-        def index_pdf(pdf_path: Path) -> dict:
+        def index_pdf(*, pdf_path: Path) -> dict:
 
             self.REVIEW_MANAGER.report_logger.info(pdf_path)
             self.REVIEW_MANAGER.logger.info(pdf_path)
@@ -944,14 +945,16 @@ class Search(Process):
                 "ENTRYTYPE": "misc",
             }
             try:
-                record = get_record_from_pdf_grobid(record)
+                record = get_record_from_pdf_grobid(record=record)
 
                 file = open(pdf_path, "rb")
                 parser = PDFParser(file)
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = self.PDF_PREPARATION.get_text_from_pdf(record, PAD=40)
+                    record = self.PDF_PREPARATION.get_text_from_pdf(
+                        record=record, PAD=40
+                    )
                     if "text_from_pdf" in record:
                         text: str = record["text_from_pdf"]
                         if "bookreview" in text.replace(" ", "").lower():
@@ -986,7 +989,7 @@ class Search(Process):
 
             return record
 
-        def get_last_ID(bib_file: Path) -> int:
+        def get_last_ID(*, bib_file: Path) -> int:
             IDs = []
             if bib_file.is_file():
                 with open(bib_file, encoding="utf8") as f:
@@ -1005,7 +1008,7 @@ class Search(Process):
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
 
-        ID = int(get_last_ID(feed_file))
+        ID = int(get_last_ID(bib_file=feed_file))
         for pdf_batch in pdf_batches:
 
             print("\n")
@@ -1019,7 +1022,7 @@ class Search(Process):
             new_records = []
 
             for pdf_path in pdf_batch:
-                new_records.append(index_pdf(pdf_path))
+                new_records.append(index_pdf(pdf_path=pdf_path))
             # new_record_db.entries = p_map(self.index_pdf, pdf_batch)
             # p = Pool(ncpus=4)
             # new_records = p.map(index_pdf, pdf_batch)
@@ -1033,7 +1036,7 @@ class Search(Process):
                     new_r["ID"] = f"{ID}".rjust(10, "0")
 
                     if "colrev_status" in new_r:
-                        if Record(new_r).masterdata_is_curated():
+                        if Record(data=new_r).masterdata_is_curated():
                             del new_r["colrev_status"]
                         else:
                             new_r["colrev_status"] = str(new_r["colrev_status"])
@@ -1053,7 +1056,7 @@ class Search(Process):
 
         return
 
-    def parse_sources(self, query: str) -> list:
+    def parse_sources(self, *, query: str) -> list:
         if "WHERE " in query:
             sources = query[query.find("FROM ") + 5 : query.find(" WHERE")].split(",")
         elif "SCOPE " in query:
@@ -1065,7 +1068,7 @@ class Search(Process):
         sources = [s.lstrip().rstrip() for s in sources]
         return sources
 
-    def parse_parameters(self, search_params: str) -> dict:
+    def parse_parameters(self, *, search_params: str) -> dict:
 
         query = search_params
         params = {}
@@ -1128,7 +1131,7 @@ class Search(Process):
 
         return params
 
-    def validate_dblp_params(self, query: str) -> None:
+    def validate_dblp_params(self, *, query: str) -> None:
 
         if " SCOPE " not in query:
             raise InvalidQueryException("DBLP queries require a SCOPE section")
@@ -1145,7 +1148,7 @@ class Search(Process):
 
         return
 
-    def validate_crossref_params(self, query: str) -> None:
+    def validate_crossref_params(self, *, query: str) -> None:
         if " SCOPE " not in query:
             raise InvalidQueryException("CROSSREF queries require a SCOPE section")
 
@@ -1157,10 +1160,10 @@ class Search(Process):
 
         return
 
-    def validate_backwardsearch_params(self, query: str) -> None:
+    def validate_backwardsearch_params(self, *, query: str) -> None:
         return
 
-    def validate_project_params(self, query: str) -> None:
+    def validate_project_params(self, *, query: str) -> None:
         if " SCOPE " not in query:
             raise InvalidQueryException("PROJECT queries require a SCOPE section")
 
@@ -1172,10 +1175,10 @@ class Search(Process):
 
         return
 
-    def validate_index_params(self, query: str) -> None:
+    def validate_index_params(self, *, query: str) -> None:
         return
 
-    def validate_pdfs_dir_params(self, query: str) -> None:
+    def validate_pdfs_dir_params(self, *, query: str) -> None:
         if " SCOPE " not in query:
             raise InvalidQueryException("PDFS_DIR queries require a SCOPE section")
 
@@ -1189,12 +1192,12 @@ class Search(Process):
 
         return
 
-    def validate_query(self, query: str) -> None:
+    def validate_query(self, *, query: str) -> None:
 
         if " FROM " not in query:
             raise InvalidQueryException('Query missing "FROM" clause')
 
-        sources = self.parse_sources(query)
+        sources = self.parse_sources(query=query)
 
         available_source_types = [x["search_endpoint"] for x in self.search_scripts]
         if not all(source in available_source_types for source in sources):
@@ -1231,7 +1234,7 @@ class Search(Process):
 
         return
 
-    def add_source(self, query: str) -> None:
+    def add_source(self, *, query: str) -> None:
 
         # TODO : parse query (input format changed to sql-like string)
         # TODO : the search query/syntax translation has to be checked carefully
@@ -1259,10 +1262,10 @@ class Search(Process):
             query = query[: query.find(" AS ")]
         query = f"SELECT * {query}"
 
-        self.validate_query(query)
+        self.validate_query(query=query)
 
         # TODO : check whether url exists (dblp, project, ...)
-        sources = self.parse_sources(query)
+        sources = self.parse_sources(query=query)
         if "WHERE " in query:
             selection = query[query.find("WHERE ") :]
         elif "SCOPE " in query:
@@ -1332,7 +1335,7 @@ class Search(Process):
 
         return
 
-    def update(self, selection_str: str) -> None:
+    def update(self, *, selection_str: str) -> None:
         from colrev_core.settings import SearchType
 
         # TODO : when the search_file has been filled only query the last years
@@ -1373,7 +1376,7 @@ class Search(Process):
                 for s in self.search_scripts
                 if s["source_identifier"] == feed_item.source_identifier
             ][0]
-            params = self.parse_parameters(feed_item.search_parameters)
+            params = self.parse_parameters(search_params=feed_item.search_parameters)
 
             self.REVIEW_MANAGER.logger.info(
                 f"Retrieve from {feed_item.source_identifier}: {params}"

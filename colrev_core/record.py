@@ -70,7 +70,7 @@ class Record:
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
-    def __init__(self, data: dict):
+    def __init__(self, *, data: dict):
         self.data = data
         """Dictionary containing the record data"""
         # Note : avoid parsing upon Record instantiation as much as possible
@@ -106,7 +106,7 @@ class Record:
     def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
 
-    def set_status(self, target_state) -> None:
+    def set_status(self, *, target_state) -> None:
         from colrev_core.record import RecordState
 
         if RecordState.md_prepared == target_state:
@@ -141,7 +141,7 @@ class Record:
 
         return origins
 
-    def shares_origins(self, other_record) -> bool:
+    def shares_origins(self, *, other_record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
 
     def get_source_repo(self) -> str:
@@ -156,7 +156,7 @@ class Record:
             return self.data["source_path"]
         return "NO_SOURCE_INFO"
 
-    def get_field(self, field_key: str, default=None):
+    def get_field(self, *, field_key: str, default=None):
         if default is not None:
             try:
                 ret = self.data[field_key]
@@ -178,15 +178,17 @@ class Record:
                 colrev_id = self.data["colrev_id"]
         return colrev_id
 
-    def update_field(self, field: str, value, source: str, comment: str = "") -> None:
+    def update_field(
+        self, *, field: str, value, source: str, comment: str = ""
+    ) -> None:
         self.data[field] = value
         if field in self.identifying_fields:
-            self.add_masterdata_provenance(field, source, comment)
+            self.add_masterdata_provenance(field=field, source=source, hint=comment)
         else:
-            self.add_data_provenance(field, source, comment)
+            self.add_data_provenance(field=field, source=source, hint=comment)
         return
 
-    def add_colrev_ids(self, records: typing.List[dict]) -> None:
+    def add_colrev_ids(self, *, records: typing.List[dict]) -> None:
         if "colrev_id" in self.data:
             if isinstance(self.data["colrev_id"], str):
                 print(f'Problem: colrev_id is str not list: {self.data["colrev_id"]}')
@@ -293,7 +295,7 @@ class Record:
             return True
         return False
 
-    def merge(self, MERGING_RECORD, default_source: str) -> None:
+    def merge(self, *, MERGING_RECORD, default_source: str) -> None:
         """General-purpose record merging
         for preparation, curated/non-curated records and records with origins
 
@@ -373,7 +375,9 @@ class Record:
 
                 # Fuse best fields if none is curated
                 else:
-                    self.fuse_best_field(MERGING_RECORD, key, val, source)
+                    self.fuse_best_field(
+                        MERGING_RECORD=MERGING_RECORD, key=key, val=val, source=source
+                    )
 
             # Part 2: other fields
             else:
@@ -381,11 +385,11 @@ class Record:
                 if key in self.data:
                     pass
                 else:
-                    self.update_field(key, str(val), source)
+                    self.update_field(field=key, value=str(val), source=source)
 
         return
 
-    def fuse_best_field(self, MERGING_RECORD, key, val, source) -> None:
+    def fuse_best_field(self, *, MERGING_RECORD, key, val, source) -> None:
         # Note : the assumption is that we need masterdata_provenance hints
         # only for authors
 
@@ -446,7 +450,7 @@ class Record:
             # )
             return RECORD.data["author"]
 
-        def select_best_pages(default: str, candidate: str) -> str:
+        def select_best_pages(*, default: str, candidate: str) -> str:
             best_pages = default
             if "--" in candidate and "--" not in default:
                 best_pages = candidate
@@ -457,7 +461,7 @@ class Record:
 
             return best_pages
 
-        def select_best_title(default: str, candidate: str) -> str:
+        def select_best_title(*, default: str, candidate: str) -> str:
             best_title = default
 
             default_upper = percent_upper_chars(default)
@@ -476,7 +480,7 @@ class Record:
 
             return best_title
 
-        def select_best_journal(default: str, candidate: str) -> str:
+        def select_best_journal(*, default: str, candidate: str) -> str:
 
             best_journal = default
 
@@ -503,50 +507,54 @@ class Record:
             if "author" in self.data:
                 best_author = select_best_author(self, MERGING_RECORD)
                 if self.data["author"] != best_author:
-                    self.update_field("author", best_author, source)
+                    self.update_field(field="author", value=best_author, source=source)
             else:
-                self.update_field("author", str(val), source)
+                self.update_field(field="author", value=str(val), source=source)
 
         elif "pages" == key:
             if "pages" in self.data:
                 best_pages = select_best_pages(
-                    self.data["pages"], MERGING_RECORD.data["pages"]
+                    default=self.data["pages"], candidate=MERGING_RECORD.data["pages"]
                 )
                 if self.data["pages"] != best_pages:
-                    self.update_field("pages", best_pages, source)
+                    self.update_field(field="pages", value=best_pages, source=source)
 
             else:
-                self.update_field("pages", str(val), source)
+                self.update_field(field="pages", value=str(val), source=source)
 
         elif "title" == key:
             if "title" in self.data:
                 best_title = select_best_title(
-                    self.data["title"], MERGING_RECORD.data["title"]
+                    default=self.data["title"], candidate=MERGING_RECORD.data["title"]
                 )
-                self.update_field("title", best_title, source)
+                self.update_field(field="title", value=best_title, source=source)
 
             else:
-                self.update_field("title", str(val), source)
+                self.update_field(field="title", value=str(val), source=source)
 
         elif "journal" == key:
             if "journal" in self.data:
                 best_journal = select_best_journal(
-                    self.data["journal"], MERGING_RECORD.data["journal"]
+                    default=self.data["journal"],
+                    candidate=MERGING_RECORD.data["journal"],
                 )
-                self.update_field("journal", best_journal, source)
+                self.update_field(field="journal", value=best_journal, source=source)
             else:
-                self.update_field("journal", str(val), source)
+                self.update_field(field="journal", value=str(val), source=source)
 
         elif "booktitle" == key:
             if "booktitle" in self.data:
                 best_booktitle = select_best_journal(
-                    self.data["booktitle"], MERGING_RECORD.data["booktitle"]
+                    default=self.data["booktitle"],
+                    candidate=MERGING_RECORD.data["booktitle"],
                 )
                 # TBD: custom select_best_booktitle?
-                self.update_field("booktitle", best_booktitle, source)
+                self.update_field(
+                    field="booktitle", value=best_booktitle, source=source
+                )
 
             else:
-                self.update_field("booktitle", str(val), source)
+                self.update_field(field="booktitle", value=str(val), source=source)
 
         elif "file" == key:
             if "file" in self.data:
@@ -556,11 +564,11 @@ class Record:
             else:
                 self.data["file"] = MERGING_RECORD.data["file"]
         else:
-            self.update_field(key, str(val), source)
+            self.update_field(field=key, value=str(val), source=source)
         return
 
     @classmethod
-    def get_record_similarity(cls, RECORD_A, RECORD_B) -> float:
+    def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
         record_a = RECORD_A.data.copy()
         record_b = RECORD_B.data.copy()
 
@@ -614,15 +622,15 @@ class Record:
         df_a = pd.DataFrame.from_dict([record_a])
         df_b = pd.DataFrame.from_dict([record_b])
 
-        return Record.get_similarity(df_a.iloc[0], df_b.iloc[0])
+        return Record.get_similarity(df_a=df_a.iloc[0], df_b=df_b.iloc[0])
 
     @classmethod
-    def get_similarity(cls, df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
-        details = Record.get_similarity_detailed(df_a, df_b)
+    def get_similarity(cls, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
+        details = Record.get_similarity_detailed(df_a=df_a, df_b=df_b)
         return details["score"]
 
     @classmethod
-    def get_similarity_detailed(cls, df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
+    def get_similarity_detailed(cls, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
 
         author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
@@ -731,7 +739,7 @@ class Record:
         similarity_score = round(weighted_average, 4)
         return {"score": similarity_score, "details": details}
 
-    def get_provenance_field_source(self, field, default="ORIGINAL") -> str:
+    def get_provenance_field_source(self, *, field, default="ORIGINAL") -> str:
 
         if field in self.identifying_fields:
             if "colrev_masterdata_provenance" in self.data:
@@ -748,7 +756,7 @@ class Record:
 
         return default
 
-    def add_masterdata_provenance_hint(self, field, hint):
+    def add_masterdata_provenance_hint(self, *, field, hint):
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         if field in self.data["colrev_masterdata_provenance"]:
@@ -761,7 +769,7 @@ class Record:
             }
         return
 
-    def add_data_provenance_hint(self, field, hint):
+    def add_data_provenance_hint(self, *, field, hint):
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
         if field in self.data["colrev_data_provenance"]:
@@ -775,7 +783,7 @@ class Record:
             }
         return
 
-    def add_masterdata_provenance(self, field, source, hint: str = ""):
+    def add_masterdata_provenance(self, *, field, source, hint: str = ""):
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
 
         if field in md_p_dict:
@@ -788,7 +796,7 @@ class Record:
             md_p_dict[field] = {"source": source, "note": f"{hint}"}
         return
 
-    def add_provenance_all(self, source):
+    def add_provenance_all(self, *, source):
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
         d_p_dict = self.data.get("colrev_data_provenance", {})
         for field in self.data.keys():
@@ -798,7 +806,7 @@ class Record:
                 d_p_dict[field] = {"source": source, "note": ""}
         return
 
-    def add_data_provenance(self, field, source, hint: str = ""):
+    def add_data_provenance(self, *, field, source, hint: str = ""):
         md_p_dict = self.data.get("colrev_data_provenance", {})
         if field in md_p_dict:
             if "" != hint:
@@ -810,7 +818,7 @@ class Record:
             md_p_dict[field] = {"source": source, "note": f"{hint}"}
         return
 
-    def complete_provenance(self, source_info) -> bool:
+    def complete_provenance(self, *, source_info) -> bool:
         """Complete provenance information for LocalIndex"""
 
         for key in list(self.data.keys()):
@@ -829,9 +837,11 @@ class Record:
 
             if key in self.identifying_fields:
                 if not self.masterdata_is_curated:
-                    self.add_masterdata_provenance(key, source_info, "")
+                    self.add_masterdata_provenance(
+                        field=key, source=source_info, hint=""
+                    )
             else:
-                self.add_data_provenance(key, source_info, "")
+                self.add_data_provenance(field=key, source=source_info, hint="")
 
         return True
 
@@ -888,7 +898,7 @@ class Record:
         return
 
     @classmethod
-    def remove_accents(cls, input_str: str) -> str:
+    def remove_accents(cls, *, input_str: str) -> str:
         def rmdiacritics(char):
             """
             Return the base character of char, by "removing" any
@@ -931,7 +941,7 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, alsoKnownAsRecord: dict = {}, assume_complete=False
+        self, *, alsoKnownAsRecord: dict = {}, assume_complete=False
     ) -> str:
         """Returns the colrev_id of the Record.
         If a alsoKnownAsRecord is provided, it returns the colrev_id of the
@@ -941,7 +951,7 @@ class Record:
         def format_author_field(input_string: str) -> str:
             input_string = input_string.replace("\n", " ").replace("'", "")
             names = (
-                Record.remove_accents(input_string)
+                Record.remove_accents(input_str=input_string)
                 .replace("; ", " and ")
                 .split(" and ")
             )
@@ -969,7 +979,7 @@ class Record:
 
             return "-".join(author_list)
 
-        def get_container_title(record: dict) -> str:
+        def get_container_title(*, record: dict) -> str:
             # Note: custom get_container_title for the colrev_id
 
             # school as the container title for theses
@@ -994,7 +1004,7 @@ class Record:
 
             return container_title
 
-        def robust_append(input_string: str, to_append: str) -> str:
+        def robust_append(*, input_string: str, to_append: str) -> str:
             input_string = str(input_string)
             to_append = str(to_append).replace("\n", " ")
             to_append = to_append.rstrip().lstrip().replace("–", " ")
@@ -1050,25 +1060,33 @@ class Record:
             # (this may look like an anomaly and be hard to identify)
             srep = "colrev_id1:"
             if "article" == record["ENTRYTYPE"].lower():
-                srep = robust_append(srep, "a")
+                srep = robust_append(input_string=srep, to_append="a")
             elif "inproceedings" == record["ENTRYTYPE"].lower():
-                srep = robust_append(srep, "p")
+                srep = robust_append(input_string=srep, to_append="p")
             else:
-                srep = robust_append(srep, record["ENTRYTYPE"].lower())
-            srep = robust_append(srep, get_container_title(record))
+                srep = robust_append(
+                    input_string=srep, to_append=record["ENTRYTYPE"].lower()
+                )
+            srep = robust_append(
+                input_string=srep, to_append=get_container_title(record=record)
+            )
             if "article" == record["ENTRYTYPE"]:
                 # Note: volume/number may not be required.
                 # TODO : how do we make sure that colrev_ids are not generated when
                 # volume/number are required?
-                srep = robust_append(srep, record.get("volume", "-"))
-                srep = robust_append(srep, record.get("number", "-"))
-            srep = robust_append(srep, record["year"])
+                srep = robust_append(
+                    input_string=srep, to_append=record.get("volume", "-")
+                )
+                srep = robust_append(
+                    input_string=srep, to_append=record.get("number", "-")
+                )
+            srep = robust_append(input_string=srep, to_append=record["year"])
             author = format_author_field(record["author"])
             if "" == author.replace("-", ""):
                 raise NotEnoughDataToIdentifyException("author field format error")
-            srep = robust_append(srep, author)
+            srep = robust_append(input_string=srep, to_append=author)
             title_str = re.sub("[^0-9a-zA-Z]+", " ", record["title"])
-            srep = robust_append(srep, title_str)
+            srep = robust_append(input_string=srep, to_append=title_str)
 
             srep = srep.replace("&amp;", "and")
             srep = srep.replace("&", "and")

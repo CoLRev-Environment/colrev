@@ -7,7 +7,7 @@ from colrev_core.process import ProcessType
 
 
 class Paper(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
     def main(self) -> None:

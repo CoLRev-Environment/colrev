@@ -13,11 +13,11 @@ from colrev_core.record import RecordState
 
 
 class PDFPrepMan(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.pdf_prep_man,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.pdf_prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -42,7 +42,7 @@ class PDFPrepMan(Process):
         )
         return pdf_prep_man_data
 
-    def get_colrev_pdf_id(self, path: Path) -> str:
+    def get_colrev_pdf_id(self, *, path: Path) -> str:
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
                 convert_from_path(path, first_page=1, last_page=1)[0],
@@ -51,17 +51,17 @@ class PDFPrepMan(Process):
         )
         return cpid1
 
-    def set_data(self, record: dict) -> None:
+    def set_data(self, *, record: dict) -> None:
         from colrev_core.record import Record
 
         record.update(colrev_status=RecordState.pdf_prepared)
 
-        RECORD = Record(record)
+        RECORD = Record(data=record)
         RECORD.reset_pdf_provenance_hints()
         record = RECORD.get_data()
 
         pdf_path = Path(self.REVIEW_MANAGER.path + record["file"])
-        record.update(colrev_pdf_id=self.get_colrev_pdf_id(pdf_path))
+        record.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
@@ -99,7 +99,7 @@ class PDFPrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            RECORD = Record(record)
+            RECORD = Record(data=record)
             prov_d = RECORD.data["colrev_data_provenance"]
 
             if "file" in prov_d:
@@ -235,7 +235,7 @@ class PDFPrepMan(Process):
         self.REVIEW_MANAGER.check_repo()
         return
 
-    def extract_coverpage(self, filepath: Path) -> None:
+    def extract_coverpage(self, *, filepath: Path) -> None:
         from colrev_core.environment import LocalIndex
 
         cp_path = LocalIndex.local_environment_path / Path(".coverpages")

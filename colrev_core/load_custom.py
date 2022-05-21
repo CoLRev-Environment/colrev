@@ -5,7 +5,9 @@ from pathlib import Path
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
-def apply_field_mapping(records: typing.List[dict], mapping: dict) -> typing.List[dict]:
+def apply_field_mapping(
+    *, records: typing.List[dict], mapping: dict
+) -> typing.List[dict]:
 
     mapping = {k.lower(): v.lower() for k, v in mapping.items()}
     for record in records:
@@ -19,7 +21,7 @@ def apply_field_mapping(records: typing.List[dict], mapping: dict) -> typing.Lis
     return records
 
 
-def drop_fields(records: typing.List[dict], drop: list) -> typing.List[dict]:
+def drop_fields(*, records: typing.List[dict], drop: list) -> typing.List[dict]:
     records = [{k: v for k, v in r.items() if k not in drop} for r in records]
     return records
 
@@ -27,15 +29,15 @@ def drop_fields(records: typing.List[dict], drop: list) -> typing.List[dict]:
 # AIS eLibrary ------------------------------------------------
 
 
-def ais_heuristic(filename: Path, data: str) -> bool:
+def ais_heuristic(*, filename: Path, data: str) -> bool:
     if "https://aisel.aisnet.org/" in data:
         return True
     return False
 
 
-def load_ais_source(records: typing.List[dict]) -> typing.List[dict]:
+def load_ais_source(*, records: typing.List[dict]) -> typing.List[dict]:
     ais_mapping: typing.Dict = {}
-    records = apply_field_mapping(records, ais_mapping)
+    records = apply_field_mapping(records=records, mapping=ais_mapping)
 
     for record in records:
 
@@ -72,7 +74,7 @@ def load_ais_source(records: typing.List[dict]) -> typing.List[dict]:
 # GoogleScholar ------------------------------------------------
 
 
-def gs_heuristic(filename: Path, data: str) -> bool:
+def gs_heuristic(*, filename: Path, data: str) -> bool:
     if "related = {https://scholar.google.com/scholar?q=relat" in data:
         return True
     return False
@@ -86,7 +88,7 @@ def load_gs_source(records: typing.List[dict]) -> typing.List[dict]:
 # Web of Science ------------------------------------------------
 
 
-def wos_heuristic(filename: Path, data: str) -> bool:
+def wos_heuristic(*, filename: Path, data: str) -> bool:
     if "UT_(Unique_WOS_ID) = {WOS:" in data:
         return True
     if "@article{ WOS:" in data:
@@ -94,7 +96,7 @@ def wos_heuristic(filename: Path, data: str) -> bool:
     return False
 
 
-def load_wos_source(records: typing.List[dict]) -> typing.List[dict]:
+def load_wos_source(*, records: typing.List[dict]) -> typing.List[dict]:
 
     mapping = {
         "unique-id": "wos_accession_number",
@@ -103,10 +105,10 @@ def load_wos_source(records: typing.List[dict]) -> typing.List[dict]:
         "Publication_Year": "year",
         "Author_Full_Names": "author",
     }
-    records = apply_field_mapping(records, mapping)
+    records = apply_field_mapping(records=records, mapping=mapping)
 
     drop = ["Authors"]
-    records = drop_fields(records, drop)
+    records = drop_fields(records=records, drop=drop)
 
     for record in records:
         if "Publication_Type" in record:
@@ -132,7 +134,7 @@ def load_wos_source(records: typing.List[dict]) -> typing.List[dict]:
 # DBLP ------------------------------------------------
 
 
-def dblp_heuristic(filename: Path, data: str) -> bool:
+def dblp_heuristic(*, filename: Path, data: str) -> bool:
     if "bibsource = {dblp computer scienc" in data:
         return True
     return False
@@ -141,13 +143,13 @@ def dblp_heuristic(filename: Path, data: str) -> bool:
 # Scopus ------------------------------------------------
 
 
-def scopus_heuristic(filename: Path, data: str) -> bool:
+def scopus_heuristic(*, filename: Path, data: str) -> bool:
     if "source={Scopus}," in data:
         return True
     return False
 
 
-def load_scopus_source(records: typing.List[dict]) -> typing.List[dict]:
+def load_scopus_source(*, records: typing.List[dict]) -> typing.List[dict]:
 
     # mapping = {}
     # records = apply_field_mapping(records, mapping)
@@ -174,7 +176,7 @@ def load_scopus_source(records: typing.List[dict]) -> typing.List[dict]:
             record["author"] = record["author"].replace("; ", " and ")
 
     drop = ["source"]
-    records = drop_fields(records, drop)
+    records = drop_fields(records=records, drop=drop)
 
     return records
 

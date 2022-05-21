@@ -85,7 +85,7 @@ class Sync:
                     k: v for k, v in record_to_import.items() if "None" != v
                 }
                 record_to_import = self.LOCAL_INDEX.prep_record_for_return(
-                    record_to_import, include_file=False
+                    record=record_to_import, include_file=False
                 )
 
                 self.records_to_import.append(record_to_import)
@@ -112,7 +112,7 @@ class Sync:
 
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
-            records = ReviewDataset.parse_records_dict(bib_data.entries)
+            records = ReviewDataset.parse_records_dict(records_dict=bib_data.entries)
 
         return list(records.keys())
 
@@ -124,7 +124,7 @@ class Sync:
             self.records_to_import.append(record)
         return
 
-    def format_ref(self, v) -> str:
+    def format_ref(self, *, v) -> str:
         formatted_ref = (
             f"{v.get('author', '')} ({v.get('year', '')}) "
             + f"{v.get('title', '')}. "
@@ -148,7 +148,9 @@ class Sync:
 
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
-            records = list(ReviewDataset.parse_records_dict(bib_data.entries).values())
+            records = list(
+                ReviewDataset.parse_records_dict(records_dict=bib_data.entries).values()
+            )
 
         available_ids = [r["ID"] for r in records]
         added = []
@@ -161,7 +163,7 @@ class Sync:
         if len(added) > 0:
             print("Loaded:")
             for element in added:
-                print(" - " + self.format_ref(element))
+                print(" - " + self.format_ref(v=element))
 
             print(f"Loaded {len(added)} papers")
 
@@ -191,7 +193,9 @@ class Sync:
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        ReviewDataset.save_records_dict_to_file(records_dict, references_file)
+        ReviewDataset.save_records_dict_to_file(
+            recs_dict_in=records_dict, save_path=references_file
+        )
 
         return
 

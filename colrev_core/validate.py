@@ -14,13 +14,13 @@ from colrev_core.process import ProcessType
 
 
 class Validate(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
 
         super().__init__(REVIEW_MANAGER, ProcessType.check)
 
         self.CPUS = 4
 
-    def load_search_records(self, bib_file: Path) -> list:
+    def load_search_records(self, *, bib_file: Path) -> list:
 
         with open(bib_file, encoding="utf8") as bibtex_file:
             individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.bibtex_file(
@@ -41,7 +41,7 @@ class Validate(Process):
         return records
 
     def validate_preparation_changes(
-        self, records: typing.List[dict], search_records: list
+        self, *, records: typing.List[dict], search_records: list
     ) -> None:
         from colrev_core.record import Record
 
@@ -61,7 +61,7 @@ class Validate(Process):
                 ]
                 for prior_record in prior_records:
                     similarity = Record.get_record_similarity(
-                        Record(record), Record(prior_record)
+                        RECORD_A=Record(data=record), RECORD_B=Record(data=prior_record)
                     )
                     change_diff.append([record["ID"], cur_record_link, similarity])
 
@@ -80,9 +80,9 @@ class Validate(Process):
                 "Difference: " + str(round(difference, 4)) + "\n\n"
             )
             record_1 = [x for x in search_records if record_link == x["colrev_origin"]]
-            print(Record(record_1[0]))
+            print(Record(data=record_1[0]))
             record_2 = [x for x in records if eid == x["ID"]]
-            print(Record(record_2[0]))
+            print(Record(data=record_2[0]))
 
             print("\n\n")
             for diff in list(dictdiffer.diff(record_1, record_2)):
@@ -96,7 +96,7 @@ class Validate(Process):
         return
 
     def validate_merging_changes(
-        self, records: typing.List[dict], search_records: list
+        self, *, records: typing.List[dict], search_records: list
     ) -> None:
         from colrev_core.record import Record
 
@@ -119,7 +119,8 @@ class Validate(Process):
                     record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
 
                     similarity = Record.get_record_similarity(
-                        Record(record_1[0]), Record(record_2[0])
+                        RECORD_A=Record(data=record_1[0]),
+                        RECORD_B=Record(data=record_2[0]),
                     )
                     change_diff.append([el_1, el_2, similarity])
 
@@ -142,16 +143,16 @@ class Validate(Process):
                 "Differences between merged records:" + f" {round(difference, 4)}\n\n"
             )
             record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
-            print(Record(record_1[0]))
+            print(Record(data=record_1[0]))
             record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
-            print(Record(record_2[0]))
+            print(Record(data=record_2[0]))
 
             if "n" == input("continue (y/n)?"):
                 break
 
         return
 
-    def load_records(self, target_commit: str = None) -> typing.List[dict]:
+    def load_records(self, *, target_commit: str = None) -> typing.List[dict]:
 
         if target_commit is None:
             self.REVIEW_MANAGER.logger.info("Loading data...")
@@ -201,7 +202,7 @@ class Validate(Process):
 
             return records_dict.values()
 
-    def validate_properties(self, target_commit: str = None) -> None:
+    def validate_properties(self, *, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)
 
         from colrev_core.status import Status
@@ -244,7 +245,7 @@ class Validate(Process):
                 "Consistency (based on hooks)".ljust(32, " ") + "NO"
             )
 
-        STATUS = Status(self.REVIEW_MANAGER)
+        STATUS = Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
         completeness_condition = STATUS.get_completeness_condition()
         if completeness_condition:
             self.REVIEW_MANAGER.logger.info(
@@ -260,25 +261,29 @@ class Validate(Process):
         return
 
     def main(
-        self, scope: str, properties: bool = False, target_commit: str = None
+        self, *, scope: str, properties: bool = False, target_commit: str = None
     ) -> None:
 
         if properties:
-            self.validate_properties(target_commit)
+            self.validate_properties(target_commit=target_commit)
             return
 
         # extension: filter for changes of contributor (git author)
-        records = self.load_records(target_commit)
+        records = self.load_records(target_commit=target_commit)
 
         # Note: search records are considered immutable
         # we therefore load the latest files
         search_records = self.get_search_records()
 
         if "prepare" == scope or "all" == scope:
-            self.validate_preparation_changes(records, search_records)
+            self.validate_preparation_changes(
+                records=records, search_records=search_records
+            )
 
         if "merge" == scope or "all" == scope:
-            self.validate_merging_changes(records, search_records)
+            self.validate_merging_changes(
+                records=records, search_records=search_records
+            )
 
         return
 

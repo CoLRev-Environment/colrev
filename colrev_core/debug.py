@@ -19,7 +19,7 @@ def debug_load() -> None:
     from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
-    LOADER = Loader(REVIEW_MANAGER)
+    LOADER = Loader(REVIEW_MANAGER=REVIEW_MANAGER)
 
     # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
     # origin_list = [x['colrev_origin'] for x in rec_header_lis]

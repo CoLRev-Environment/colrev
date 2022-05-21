@@ -14,7 +14,7 @@ from colrev_core.record import RecordState
 
 
 class Dedupe(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process=True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
             REVIEW_MANAGER,
@@ -33,7 +33,7 @@ class Dedupe(Process):
     #   manually and we cannot set the 'colrev_status' to md_processed
     # - If the results list contains a 'score value'
 
-    def __prep_references(self, references: pd.DataFrame) -> dict:
+    def __prep_references(self, *, references: pd.DataFrame) -> dict:
 
         if "colrev_status" in references:
             references["colrev_status"] = references["colrev_status"].astype(str)
@@ -151,12 +151,14 @@ class Dedupe(Process):
             # Note: we need the ID to identify/remove duplicates in the MAIN_REFERENCES.
             # It is ignored in the field-definitions by the deduper!
             # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
-            clean_row = [(k, self.__preProcess(k, v)) for (k, v) in row.items()]
+            clean_row = [
+                (k, self.__preProcess(k=k, column=v)) for (k, v) in row.items()
+            ]
             data_d[row["ID"]] = dict(clean_row)
 
         return data_d
 
-    def __preProcess(self, k, column):
+    def __preProcess(self, *, k, column):
         """
         Do a little bit of data cleaning with the help of Unidecode and Regex.
         Things like casing, extra spaces, quotes and new lines can be ignored.
@@ -217,11 +219,11 @@ class Dedupe(Process):
                 pass
 
         references = pd.DataFrame.from_dict(records_queue)
-        references = self.__prep_references(references)
+        references = self.__prep_references(references=references)
 
         return references
 
-    def setup_active_learning_dedupe(self, retrain: bool, min_n: int = 50):
+    def setup_active_learning_dedupe(self, *, retrain: bool, min_n: int = 50):
         """Prepare data for active learning setup"""
         import dedupe
         from pathlib import Path
@@ -311,7 +313,7 @@ class Dedupe(Process):
 
         return ret_dict
 
-    def apply_merges(self, results: list, remaining_non_dupe: bool = False):
+    def apply_merges(self, *, results: list, remaining_non_dupe: bool = False):
         """Apply automated deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -371,7 +373,7 @@ class Dedupe(Process):
             rec_ID2 = records[dupe["ID2"]]
 
             # Heuristic: Merge into curated record
-            if Record(rec_ID2).masterdata_is_curated():
+            if Record(data=rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -396,8 +398,10 @@ class Dedupe(Process):
                     )
                     continue  # with next pair
 
-            MAIN_RECORD = Record(main_record)
-            MAIN_RECORD.merge(Record(dupe_record), default_source="merged")
+            MAIN_RECORD = Record(data=main_record)
+            MAIN_RECORD.merge(
+                MERGING_RECORD=Record(data=dupe_record), default_source="merged"
+            )
             main_record = MAIN_RECORD.get_data()
 
             if "score" in dupe:
@@ -423,7 +427,7 @@ class Dedupe(Process):
 
         return
 
-    def apply_manual_deduplication_decisions(self, results: list):
+    def apply_manual_deduplication_decisions(self, *, results: list):
         """Apply manual deduplication decisions
 
         Level: IDs (not colrev_origins), requiring IDs to be immutable after md_prepared
@@ -455,7 +459,7 @@ class Dedupe(Process):
             rec_ID2 = records[ID2]
 
             # Heuristic: Merge into curated record
-            if Record(rec_ID2).masterdata_is_curated():
+            if Record(data=rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -471,8 +475,10 @@ class Dedupe(Process):
                 main_record = records[main_record["MOVED_DUPE"]]
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
-            MAIN_RECORD = Record(main_record)
-            MAIN_RECORD.merge(Record(dupe_record), default_source="merged")
+            MAIN_RECORD = Record(data=main_record)
+            MAIN_RECORD.merge(
+                MERGING_RECORD=Record(data=dupe_record), default_source="merged"
+            )
             main_record = MAIN_RECORD.get_data()
 
             self.REVIEW_MANAGER.report_logger.info(
@@ -623,7 +629,7 @@ class Dedupe(Process):
                             "decision": "duplicate",
                         }
                     )
-                self.apply_manual_deduplication_decisions(auto_dedupe)
+                self.apply_manual_deduplication_decisions(results=auto_dedupe)
 
         if (
             dupe_file.is_file()
@@ -640,7 +646,11 @@ class Dedupe(Process):
         return
 
     def cluster_tuples(
-        self, deduper, partition_threshold: float = None, merge_threshold: float = None
+        self,
+        *,
+        deduper,
+        partition_threshold: float = None,
+        merge_threshold: float = None,
     ):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
@@ -761,7 +771,7 @@ class Dedupe(Process):
                                     }
                                 )
 
-        self.apply_merges(auto_dedupe, remaining_non_dupe=True)
+        self.apply_merges(results=auto_dedupe, remaining_non_dupe=True)
 
         self.REVIEW_MANAGER.reorder_log(ID_list, criterion="descending_thresholds")
 
@@ -993,7 +1003,7 @@ class Dedupe(Process):
 
     # -------------  SIMPLE MERGING PROCEDURES FOR SMALL SAMPLES  ------------------
 
-    def __calculate_similarities_record(self, references: pd.DataFrame) -> list:
+    def __calculate_similarities_record(self, *, references: pd.DataFrame) -> list:
         from colrev_core.record import Record
 
         # Note: per definition, similarities are needed relative to the last row.
@@ -1003,7 +1013,7 @@ class Dedupe(Process):
         details_col = references.columns.get_loc("details")
         for base_record_i in range(0, references.shape[0]):
             sim_details = Record.get_similarity_detailed(
-                references.iloc[base_record_i], references.iloc[-1]
+                df_a=references.iloc[base_record_i], df_b=references.iloc[-1]
             )
             self.REVIEW_MANAGER.report_logger.debug(
                 f"Similarity score: {sim_details['score']}"
@@ -1019,7 +1029,7 @@ class Dedupe(Process):
         details_col = references.columns.get_loc("details")
         return references.iloc[:, [ck_col, sim_col, details_col]]
 
-    def __append_merges(self, batch_item: dict) -> dict:
+    def __append_merges(self, *, batch_item: dict) -> dict:
 
         self.REVIEW_MANAGER.logger.debug(f'append_merges {batch_item["record"]}')
 
@@ -1037,7 +1047,7 @@ class Dedupe(Process):
             }
 
         # df to get_similarities for each other record
-        references = self.__calculate_similarities_record(references)
+        references = self.__calculate_similarities_record(references=references)
         # drop the first row (similarities are calculated relative to the last row)
         references = references.iloc[:-1, :]
         # if batch_item['record'] == 'AdamsNelsonTodd1992':
@@ -1107,7 +1117,7 @@ class Dedupe(Process):
                 "decision": "duplicate",
             }
 
-    def __batch(self, data):
+    def __batch(self, *, data):
         # the queue (order) matters for the incremental merging (make sure that each
         # additional record is compared to/merged with all prior records in
         # the queue)
@@ -1193,17 +1203,17 @@ class Dedupe(Process):
         dedupe_data = self.__get_data()
 
         i = 1
-        for dedupe_batch in self.__batch(dedupe_data):
+        for dedupe_batch in self.__batch(data=dedupe_data):
 
             # print(f"Batch {i}")
             i += 1
             dedupe_batch_results = []
             for item in dedupe_batch:
-                dedupe_batch_results.append(self.__append_merges(item))
+                dedupe_batch_results.append(self.__append_merges(batch_item=item))
 
             # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
 
-            self.apply_merges(dedupe_batch_results)
+            self.apply_merges(results=dedupe_batch_results)
 
             self.potential_duplicates = [
                 r
@@ -1214,7 +1224,7 @@ class Dedupe(Process):
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
             records_queue = pd.DataFrame.from_dict(records.values())
-            references = self.__prep_references(records_queue)
+            references = self.__prep_references(references=records_queue)
             # self.REVIEW_MANAGER.pp.pprint(references.values())
             references = pd.DataFrame(references.values())
 

@@ -42,7 +42,11 @@ class ReviewManager:
     will provide access to the ReviewDataset"""
 
     def __init__(
-        self, path_str: str = None, force_mode: bool = False, debug_mode: bool = False
+        self,
+        *,
+        path_str: str = None,
+        force_mode: bool = False,
+        debug_mode: bool = False,
     ) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
@@ -61,7 +65,7 @@ class ReviewManager:
             self.DEBUG_MODE = False
 
         try:
-            self.paths = self.__get_file_paths(self.path)
+            self.paths = self.__get_file_paths(repository_dir_str=self.path)
 
             self.settings = self.load_settings()
         except Exception as e:
@@ -73,13 +77,13 @@ class ReviewManager:
 
         try:
             if self.DEBUG_MODE:
-                self.report_logger = self.__setup_report_logger(logging.DEBUG)
+                self.report_logger = self.__setup_report_logger(level=logging.DEBUG)
                 """Logger for the commit report"""
-                self.logger = self.__setup_logger(logging.DEBUG)
+                self.logger = self.__setup_logger(level=logging.DEBUG)
                 """Logger for processing information"""
             else:
-                self.report_logger = self.__setup_report_logger(logging.INFO)
-                self.logger = self.__setup_logger(logging.INFO)
+                self.report_logger = self.__setup_report_logger(level=logging.INFO)
+                self.logger = self.__setup_logger(level=logging.INFO)
         except Exception as e:
             if force_mode:
                 print(e)
@@ -97,7 +101,7 @@ class ReviewManager:
             self.COMMITTER, self.EMAIL = global_git_vars
 
             self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-            self.REVIEW_DATASET = ReviewDataset(self)
+            self.REVIEW_DATASET = ReviewDataset(REVIEW_MANAGER=self)
             """The review dataset object"""
             self.sources = self.REVIEW_DATASET.load_sources()
             """Information on sources (search directory)"""
@@ -173,11 +177,11 @@ class ReviewManager:
         exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
         with open("settings.json", "w") as outfile:
             json.dump(exported_dict, outfile, indent=4)
-        self.REVIEW_DATASET.add_changes("settings.json")
+        self.REVIEW_DATASET.add_changes(path="settings.json")
 
         return
 
-    def __get_file_paths(self, repository_dir_str: Path) -> dict:
+    def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
         main_refs = "references.bib"
         data = "data.csv"
@@ -233,7 +237,7 @@ class ReviewManager:
         email = EnvironmentManager.get_name_mail_from_global_git_config()[1]
         return email
 
-    def __setup_logger(self, level=logging.INFO) -> logging.Logger:
+    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
         # for logger debugging:
         # from logging_tree import printout
         # printout()
@@ -258,7 +262,7 @@ class ReviewManager:
 
         return logger
 
-    def __setup_report_logger(self, level=logging.INFO) -> logging.Logger:
+    def __setup_report_logger(self, *, level=logging.INFO) -> logging.Logger:
         report_logger = logging.getLogger(
             f"colrev_core_report{str(self.path).replace('/', '_')}"
         )
@@ -291,7 +295,7 @@ class ReviewManager:
         current_colrev_core_version = version("colrev_core")
         last_colrev_core_version = current_colrev_core_version
 
-        last_commit_message = self.REVIEW_DATASET.get_commit_message(0)
+        last_commit_message = self.REVIEW_DATASET.get_commit_message(commit_nr=0)
         cmsg_lines = last_commit_message.split("\n")
         for cmsg_line in cmsg_lines[0:100]:
             if "colrev_core" in cmsg_line and "version" in cmsg_line:
@@ -319,7 +323,7 @@ class ReviewManager:
         next_minor = str(int(current_version[current_version.rfind(".") + 1 :]) + 1)
         upcoming_version = cur_major + "." + next_minor
 
-        CheckProcess(self)  # to notify
+        CheckProcess(REVIEW_MANAGER=self)  # to notify
 
         def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
             with open(filename, encoding="utf8") as f:
@@ -348,7 +352,7 @@ class ReviewManager:
             inplace_change(
                 self.paths["SOURCES"], "search_type: LOCAL_PAPER_INDEX", "PDFS"
             )
-            self.REVIEW_DATASET.add_changes(str(self.paths["SOURCES_RELATIVE"]))
+            self.REVIEW_DATASET.add_changes(path=str(self.paths["SOURCES_RELATIVE"]))
 
             if self.REVIEW_DATASET.has_changes():
                 return True
@@ -552,7 +556,7 @@ class ReviewManager:
                 break
 
         if self.REVIEW_DATASET.has_changes():
-            self.create_commit(f"Upgrade to CoLRev {upcoming_version}")
+            self.create_commit(msg=f"Upgrade to CoLRev {upcoming_version}")
         else:
             self.logger.info("Nothing to do.")
             self.logger.info(
@@ -566,7 +570,7 @@ class ReviewManager:
         from git.exc import GitCommandError
 
         # 1. git repository?
-        if not self.__is_git_repo(self.paths["REPO_DIR"]):
+        if not self.__is_git_repo(path=self.paths["REPO_DIR"]):
             raise RepoSetupError("no git repository. Use colrev_core init")
 
         # 2. colrev_core project?
@@ -581,11 +585,11 @@ class ReviewManager:
         installed_hooks = self.__get_installed_hooks()
 
         # 3. Pre-commit hooks installed?
-        self.__require_hooks_installed(installed_hooks)
+        self.__require_hooks_installed(installed_hooks=installed_hooks)
 
         # 4. Pre-commit hooks up-to-date?
         try:
-            if not self.__hooks_up_to_date(installed_hooks):
+            if not self.__hooks_up_to_date(installed_hooks=installed_hooks):
                 raise RepoSetupError(
                     "Pre-commit hooks not up-to-date. Use\n"
                     + "colrev config --update_hooks"
@@ -623,7 +627,7 @@ class ReviewManager:
                     raise GitConflictError(path)
         return
 
-    def __is_git_repo(self, path: Path) -> bool:
+    def __is_git_repo(self, *, path: Path) -> bool:
         from git.exc import InvalidGitRepositoryError
 
         try:
@@ -653,7 +657,7 @@ class ReviewManager:
                 installed_hooks["hooks"] = [hook["id"] for hook in repository["hooks"]]
         return installed_hooks
 
-    def __lsremote(self, url: str) -> dict:
+    def __lsremote(self, *, url: str) -> dict:
         remote_refs = {}
         g = git.cmd.Git()
         for ref in g.ls_remote(url).split("\n"):
@@ -661,14 +665,14 @@ class ReviewManager:
             remote_refs[hash_ref_list[1]] = hash_ref_list[0]
         return remote_refs
 
-    def __hooks_up_to_date(self, installed_hooks: dict) -> bool:
-        refs = self.__lsremote(installed_hooks["remote_pv_hooks_repo"])
+    def __hooks_up_to_date(self, *, installed_hooks: dict) -> bool:
+        refs = self.__lsremote(url=installed_hooks["remote_pv_hooks_repo"])
         remote_sha = refs["HEAD"]
         if remote_sha == installed_hooks["local_hooks_version"]:
             return True
         return False
 
-    def __require_hooks_installed(self, installed_hooks: dict) -> bool:
+    def __require_hooks_installed(self, *, installed_hooks: dict) -> bool:
         required_hooks = ["check", "format", "report", "sharing"]
         hooks_activated = set(installed_hooks["hooks"]) == set(required_hooks)
         if not hooks_activated:
@@ -752,7 +756,7 @@ class ReviewManager:
             # reading the MAIN_REFERENCES multiple times (for each check)
 
             if self.REVIEW_DATASET.file_in_history(
-                self.paths["MAIN_REFERENCES_RELATIVE"]
+                filepath=self.paths["MAIN_REFERENCES_RELATIVE"]
             ):
                 prior = self.REVIEW_DATASET.retrieve_prior()
                 self.logger.debug("prior")
@@ -760,7 +764,7 @@ class ReviewManager:
             else:  # if MAIN_REFERENCES not yet in git history
                 prior = {}
 
-            data = self.REVIEW_DATASET.retrieve_data(prior)
+            data = self.REVIEW_DATASET.retrieve_data(prior=prior)
             self.logger.debug("data")
             self.logger.debug(self.pp.pformat(data))
 
@@ -874,7 +878,7 @@ class ReviewManager:
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
         return {"status": PASS, "msg": "Everything ok."}
 
-    def report(self, msg_file: Path) -> dict:
+    def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available
         Entrypoint for pre-commit hooks)
         """
@@ -890,7 +894,7 @@ class ReviewManager:
             f.write(contents)
             # Don't append if it's already there
             if update:
-                report = self.__get_commit_report("MANUAL", saved_args=None)
+                report = self.__get_commit_report(script_name="MANUAL", saved_args=None)
                 f.write(report)
 
         self.REVIEW_DATASET.check_corrections_of_curated_records()
@@ -904,9 +908,9 @@ class ReviewManager:
 
         from colrev_core.status import Status
 
-        STATUS = Status(self)
+        STATUS = Status(REVIEW_MANAGER=self)
         stat = STATUS.get_status_freq()
-        collaboration_instructions = STATUS.get_collaboration_instructions(stat)
+        collaboration_instructions = STATUS.get_collaboration_instructions(stat=stat)
         status_code = all(
             ["SUCCESS" == x["level"] for x in collaboration_instructions["items"]]
         )
@@ -940,7 +944,7 @@ class ReviewManager:
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
-    def notify(self, process: Process, state_transition=True) -> None:
+    def notify(self, *, process: Process, state_transition=True) -> None:
         """Notify the REVIEW_MANAGER about the next process"""
 
         if state_transition:
@@ -949,7 +953,7 @@ class ReviewManager:
         self.REVIEW_DATASET.reset_log_if_no_changes()
 
     def __get_commit_report(
-        self, script_name: str = None, saved_args: dict = None
+        self, *, script_name: str = None, saved_args: dict = None
     ) -> str:
         from colrev_core.status import Status
 
@@ -995,11 +999,11 @@ class ReviewManager:
         # url = g.execut['git', 'config', '--get remote.origin.url']
 
         # append status
-        STATUS = Status(self)
+        STATUS = Status(REVIEW_MANAGER=self)
         f = io.StringIO()
         with redirect_stdout(f):
             stat = STATUS.get_status_freq()
-            STATUS.print_review_status(stat)
+            STATUS.print_review_status(status_info=stat)
 
         # Remove colors for commit message
         status_page = (
@@ -1107,13 +1111,13 @@ class ReviewManager:
     def update_status_yaml(self) -> None:
         from colrev_core.status import Status
 
-        STATUS = Status(self)
+        STATUS = Status(REVIEW_MANAGER=self)
 
         status_freq = STATUS.get_status_freq()
         with open(self.paths["STATUS"], "w", encoding="utf8") as f:
             yaml.dump(status_freq, f, allow_unicode=True)
 
-        self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
+        self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
 
         return
 
@@ -1145,7 +1149,7 @@ class ReviewManager:
 
         return
 
-    def reorder_log(self, IDs: list, criterion=None) -> None:
+    def reorder_log(self, *, IDs: list, criterion=None) -> None:
         """Reorder the report.log according to an ID list (after multiprocessing)"""
 
         # https://docs.python.org/3/howto/logging-cookbook.html
@@ -1253,6 +1257,7 @@ class ReviewManager:
 
     def create_commit(
         self,
+        *,
         msg: str,
         manual_author: bool = False,
         saved_args: dict = None,
@@ -1266,7 +1271,7 @@ class ReviewManager:
         if self.REVIEW_DATASET.has_changes():
 
             self.update_status_yaml()
-            self.REVIEW_DATASET.add_changes(self.paths["STATUS_RELATIVE"])
+            self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
 
             hook_skipping = False
             if not self.DEBUG_MODE:
@@ -1350,11 +1355,13 @@ class ReviewManager:
                 cmsg = (
                     msg
                     + self.__get_version_flag()
-                    + self.__get_commit_report(f"{script}", saved_args)
+                    + self.__get_commit_report(
+                        script_name=f"{script}", saved_args=saved_args
+                    )
                     + processing_report
                 )
             self.REVIEW_DATASET.create_commit(
-                cmsg,
+                msg=cmsg,
                 author=git_author,
                 committer=git.Actor(self.COMMITTER, self.EMAIL),
                 hook_skipping=hook_skipping,

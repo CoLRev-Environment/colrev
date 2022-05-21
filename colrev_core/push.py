@@ -8,10 +8,10 @@ from colrev_core.review_manager import ReviewManager
 
 
 class Push(Process):
-    def __init__(self, REVIEW_MANAGER):
+    def __init__(self, *, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER, ProcessType.explore)
 
-    def main(self, records_only: bool = False, project_only: bool = False) -> None:
+    def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
         if project_only:
             self.push_project()
@@ -92,9 +92,13 @@ class Push(Process):
 
             if "y" == response:
                 if "metadata_source=" in source_url:
-                    self.__share_correction(source_url, change_itemset)
+                    self.__share_correction(
+                        source_url=source_url, change_list=change_itemset
+                    )
                 else:
-                    self.__apply_correction(source_url, change_itemset)
+                    self.__apply_correction(
+                        source_url=source_url, change_list=change_itemset
+                    )
 
                 print(
                     "\nThank you for supporting other researchers "
@@ -103,7 +107,7 @@ class Push(Process):
 
         return
 
-    def __share_correction(self, source_url, change_list) -> None:
+    def __share_correction(self, *, source_url, change_list) -> None:
 
         prepared_change_list = []
         for change in change_list:
@@ -141,7 +145,7 @@ class Push(Process):
 
         return
 
-    def __apply_correction(self, source_url, change_list) -> None:
+    def __apply_correction(self, *, source_url, change_list) -> None:
         from colrev_core.process import CheckProcess
         from colrev_core.review_dataset import RecordNotInRepoException
         from colrev_core.record import Record
@@ -150,7 +154,7 @@ class Push(Process):
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
         check_REVIEW_MANAGER = ReviewManager(path_str=source_url)
-        CHECK_PROCESS = CheckProcess(check_REVIEW_MANAGER)
+        CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=check_REVIEW_MANAGER)
         REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
         git_repo = REVIEW_DATASET.get_repo()
 
@@ -262,8 +266,8 @@ class Push(Process):
                     record[key] = value
                 # TODO : deal with remove/merge
 
-            RECORD = Record(record)
-            RECORD.add_colrev_ids([record])
+            RECORD = Record(data=record)
+            RECORD.add_colrev_ids(records=[record])
             cids = RECORD.get_data()["colrev_id"]
             record["colrev_id"] = cids
 

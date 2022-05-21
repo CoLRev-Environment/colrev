@@ -495,7 +495,9 @@ class EndnoteEndpoint:
 
             return et.content
 
-        LOADER = cc_load.Loader(REVIEW_MANAGER, notify_state_transition_process=False)
+        LOADER = cc_load.Loader(
+            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
+        )
 
         endpoint_path = Path("data/endnote")
         endpoint_path.mkdir(exist_ok=True, parents=True)
@@ -511,7 +513,7 @@ class EndnoteEndpoint:
                 in [RecordState.rev_included, RecordState.rev_synthesized]
             }
 
-            data = ReviewDataset.parse_bibtex_str(selected_records)
+            data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
 
             enl_data = zotero_conversion(LOADER, data)
 
@@ -545,7 +547,7 @@ class EndnoteEndpoint:
 
             if len(selected_records) > 0:
 
-                data = ReviewDataset.parse_bibtex_str(selected_records)
+                data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
 
                 enl_data = zotero_conversion(LOADER, data)
 
@@ -605,7 +607,7 @@ class PRISMAEndpoint:
             os.remove(PRISMA_path)
         retrieve_package_file(PRISMA_resource_path, PRISMA_path)
 
-        STATUS = Status(REVIEW_MANAGER)
+        STATUS = Status(REVIEW_MANAGER=REVIEW_MANAGER)
         stat = STATUS.get_status_freq()
         # print(stat)
 
@@ -787,7 +789,7 @@ class Data(Process):
                 tei_path = Path(record["tei_file"])
                 try:
                     TEI_INSTANCE = TEIParser(self.REVIEW_MANAGER, tei_path=tei_path)
-                    TEI_INSTANCE.mark_references(records.values())
+                    TEI_INSTANCE.mark_references(records=records.values())
                 except XMLSyntaxError:
                     pass
                     continue
@@ -1015,7 +1017,7 @@ class Data(Process):
 
             from colrev_core.process import CheckProcess
 
-            CHECK_PROCESS = CheckProcess(self.REVIEW_MANAGER)
+            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)
             # TBD: do we assume that records are not changed by the processes?
             records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 

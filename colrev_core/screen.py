@@ -9,14 +9,14 @@ class ScreenRecord(PrescreenRecord):
 
     # Note : currently still identical with PrescreenRecord
     def __init__(self, data: dict):
-        super().__init__(data)
+        super().__init__(data=data)
 
 
 class Screen(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.screen,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.screen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -59,7 +59,7 @@ class Screen(Process):
 
         return [c.name for c in self.REVIEW_MANAGER.settings.screen.criteria]
 
-    def set_exclusion_criteria(self, exclusion_criteria) -> None:
+    def set_exclusion_criteria(self, *, exclusion_criteria) -> None:
         self.REVIEW_MANAGER.settings.screen.criteria = exclusion_criteria
         self.REVIEW_MANAGER.save_settings()
         return
@@ -83,7 +83,7 @@ class Screen(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
         return screen_data
 
-    def set_data(self, record: dict, PAD: int = 40) -> None:
+    def set_data(self, *, record: dict, PAD: int = 40) -> None:
         """Set data (screening decision for a record)"""
 
         if RecordState.rev_included == record["colrev_status"]:
@@ -101,7 +101,7 @@ class Screen(Process):
 
         return
 
-    def add_criterion(self, criterion_to_add) -> None:
+    def add_criterion(self, *, criterion_to_add) -> None:
         """Add a screening criterion to the records and settings"""
         from colrev_core.settings import ScreenCriterion
 
@@ -145,7 +145,7 @@ class Screen(Process):
 
         return
 
-    def delete_criterion(self, criterion_to_delete) -> None:
+    def delete_criterion(self, *, criterion_to_delete) -> None:
         """Delete a screening criterion from the records and settings"""
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 

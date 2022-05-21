@@ -12,8 +12,8 @@ from colrev_core.record import RecordState
 
 
 class PrescreenRecord(Record):
-    def __init__(self, data: dict):
-        super().__init__(data)
+    def __init__(self, *, data: dict):
+        super().__init__(data=data)
 
     def __str__(self) -> str:
 
@@ -40,14 +40,14 @@ class PrescreenRecord(Record):
 
 
 class Prescreen(Process):
-    def __init__(self, REVIEW_MANAGER, notify_state_transition_process: bool = True):
+    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
-            REVIEW_MANAGER,
-            ProcessType.prescreen,
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.prescreen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
-    def export_table(self, export_table_format: str) -> None:
+    def export_table(self, *, export_table_format: str) -> None:
         self.REVIEW_MANAGER.logger.info("Loading records for export")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -114,7 +114,7 @@ class Prescreen(Process):
 
         return
 
-    def import_table(self, import_table_path: str) -> None:
+    def import_table(self, *, import_table_path: str) -> None:
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         if not Path(import_table_path).is_file():
@@ -192,7 +192,9 @@ class Prescreen(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
         return prescreen_data
 
-    def set_data(self, record: dict, prescreen_inclusion: bool, PAD: int = 40) -> None:
+    def set_data(
+        self, *, record: dict, prescreen_inclusion: bool, PAD: int = 40
+    ) -> None:
 
         if prescreen_inclusion:
             self.REVIEW_MANAGER.report_logger.info(
@@ -213,7 +215,7 @@ class Prescreen(Process):
 
         return
 
-    def create_prescreen_split(self, create_split: int) -> list:
+    def create_prescreen_split(self, *, create_split: int) -> list:
         import math
 
         prescreen_splits = []
