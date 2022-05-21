@@ -2,6 +2,7 @@ include CONTRIBUTING.rst
 include CHANGELOG.md
 include LICENSE
 include README.md
+include colrev_core/py.typed
 
 recursive-include tests *
 recursive-exclude * __pycache__
