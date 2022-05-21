@@ -352,6 +352,7 @@ class Record:
                 "colrev_id",
                 "colrev_status",
                 "colrev_origin",
+                "MOVED_DUPE",
             ]:
                 continue
 
