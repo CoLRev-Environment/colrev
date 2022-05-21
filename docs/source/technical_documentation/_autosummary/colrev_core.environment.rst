@@ -21,8 +21,10 @@ colrev\_core.environment
       :nosignatures:
 
       EnvironmentManager
+      GrobidService
       LocalIndex
       Resources
+      TEIParser
 
 
 
@@ -35,3 +37,5 @@ colrev\_core.environment
 
       CuratedOutletNotUnique
       RecordNotInIndexException
+      TEI_Exception
+      TEI_TimeoutException

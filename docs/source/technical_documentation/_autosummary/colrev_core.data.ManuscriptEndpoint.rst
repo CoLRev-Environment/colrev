@@ -17,6 +17,9 @@ colrev\_core.data.ManuscriptEndpoint
       :nosignatures:
 
       ~ManuscriptEndpoint.check_new_record_source_tag
+      ~ManuscriptEndpoint.get_default_setup
+      ~ManuscriptEndpoint.retrieve_default_csl
+      ~ManuscriptEndpoint.retrieve_default_word_template
       ~ManuscriptEndpoint.update_data
       ~ManuscriptEndpoint.update_manuscript
       ~ManuscriptEndpoint.update_record_status_matrix

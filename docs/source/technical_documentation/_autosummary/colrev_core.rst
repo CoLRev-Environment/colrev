@@ -33,7 +33,6 @@
    colrev_core.dedupe
    colrev_core.distribute
    colrev_core.environment
-   colrev_core.grobid_client
    colrev_core.init
    colrev_core.load
    colrev_core.load_custom
@@ -57,6 +56,5 @@
    colrev_core.settings
    colrev_core.status
    colrev_core.sync
-   colrev_core.tei
    colrev_core.trace
    colrev_core.validate

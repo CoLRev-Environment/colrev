@@ -23,12 +23,12 @@ colrev\_core.settings
       Configuration
       DataConfiguration
       DataField
-      DataPaperFormat
       DataStructuredFormat
       DedupeConfiguration
       EndnoteFormat
       IDPpattern
       LoadConfiguration
+      ManuscriptFormat
       PDFGetConfiguration
       PDFPrepConfiguration
       PRISMAFormat

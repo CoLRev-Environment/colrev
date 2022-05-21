@@ -22,6 +22,4 @@ colrev\_core.data.Data
       ~Data.main
       ~Data.profile
       ~Data.reading_heuristics
-      ~Data.retrieve_default_csl
-      ~Data.retrieve_default_word_template
       ~Data.update_tei
