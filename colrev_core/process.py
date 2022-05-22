@@ -222,7 +222,7 @@ class FormatProcess(Process):
     def __init__(self, *, REVIEW_MANAGER, notify: bool = True):
         super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.format)
         if notify:
-            self.REVIEW_MANAGER.notify(self)
+            self.REVIEW_MANAGER.notify(process=self)
 
 
 class CheckProcess(Process):

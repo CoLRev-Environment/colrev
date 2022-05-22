@@ -771,28 +771,28 @@ class ReviewManager:
             main_refs_checks = [
                 {
                     "script": self.REVIEW_DATASET.check_persisted_ID_changes,
-                    "params": [prior, data],
+                    "params": {"prior": prior, "data": data},
                 },
                 {"script": self.REVIEW_DATASET.check_sources, "params": []},
                 {
                     "script": self.REVIEW_DATASET.check_main_references_duplicates,
-                    "params": data,
+                    "params": {"data": data},
                 },
                 {
                     "script": self.REVIEW_DATASET.check_main_references_origin,
-                    "params": [prior, data],
+                    "params": {"prior": prior, "data": data},
                 },
                 {
                     "script": self.REVIEW_DATASET.check_main_references_status_fields,
-                    "params": data,
+                    "params": {"data": data},
                 },
                 {
                     "script": self.REVIEW_DATASET.check_status_transitions,
-                    "params": data,
+                    "params": {"data": data},
                 },
                 {
                     "script": self.REVIEW_DATASET.check_main_references_screen,
-                    "params": data,
+                    "params": {"data": data},
                 },
             ]
 
@@ -857,7 +857,7 @@ class ReviewManager:
                         if type(check_script["params"]) == list:
                             check_script["script"](*check_script["params"])
                         else:
-                            check_script["script"](check_script["params"])
+                            check_script["script"](**check_script["params"])
                     self.logger.debug(f'{check_script["script"].__name__}: passed\n')
                 except PropagatedIDChange as e:
                     print(e)
