@@ -51,20 +51,13 @@ class ReviewDataset:
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:
         ret_dict = {}
-
-        def append_origin_state_pair(r_header: dict):
-            for origin in r_header["colrev_origin"].split(";"):
-                ret_dict[origin] = r_header["colrev_status"]
-            return
-
-        if not self.MAIN_REFERENCES_FILE.is_file():
-            return {}
-        [
-            append_origin_state_pair(record_header_item)
+        if self.MAIN_REFERENCES_FILE.is_file():
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
-            )
-        ]
+            ):
+                for origin in record_header_item["colrev_origin"].split(";"):
+                    ret_dict[origin] = record_header_item["colrev_status"]
+
         return ret_dict
 
     def get_record_header_list(self) -> list:
@@ -1257,28 +1250,12 @@ class ReviewDataset:
         ]
         missing_files = []
         if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-            with open(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]) as f:
-                for record_string in self.__read_next_record_str(file_object=f):
-                    ID, status = "NA", "NA"
-
-                    for line in record_string.split("\n"):
-                        if "@Comment" in line:
-                            ID = "Comment"
-                            break
-                        if "@" in line[:3]:
-                            ID = line[line.find("{") + 1 : line.rfind(",")]
-                        if "colrev_status" == line.lstrip()[:13]:
-                            status = line[line.find("{") + 1 : line.rfind("}")]
-                    if "Comment" == ID:
-                        continue
-                    if "NA" == ID:
-                        print(f"Skipping record without ID: {record_string}")
-                        continue
-
-                    if (" file  " not in record_string) and (
-                        status in file_required_status
-                    ):
-                        missing_files.append(ID)
+            for record_header_item in self.__read_record_header_items():
+                if (
+                    record_header_item["colrev_status"] in file_required_status
+                    and "NA" == record_header_item["file"]
+                ):
+                    missing_files.append(record_header_item["ID"])
         return missing_files
 
     def import_file(self, *, record: dict) -> dict:
@@ -1884,7 +1861,7 @@ class ReviewDataset:
         self.__git_repo.index.add([str(path)])
         return
 
-    def remove_file(self, *, path: str) -> None:
+    def remove_file_from_git(self, *, path: str) -> None:
 
         self.__git_repo.index.remove(
             [path],

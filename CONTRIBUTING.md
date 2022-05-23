@@ -96,6 +96,8 @@ Before you submit a pull request, check that it meets these guidelines:
 
 ## Tips
 
+Named parameters are preferred over positional parameters to avoid ambiguity and facilitate code refactoring.
+
 To run a subset of tests:
 
 $ pytest tests.test_colrev_core

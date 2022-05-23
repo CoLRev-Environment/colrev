@@ -437,11 +437,11 @@ class ReviewManager:
 
             if old_sources_path.is_file():
                 old_sources_path.unlink()
-                self.REVIEW_DATASET.remove_file(str(old_sources_path))
+                self.REVIEW_DATASET.remove_file_from_git(path=str(old_sources_path))
 
             if Path("shared_config.ini").is_file():
                 Path("shared_config.ini").unlink()
-                self.REVIEW_DATASET.remove_file("shared_config.ini")
+                self.REVIEW_DATASET.remove_file_from_git(path="shared_config.ini")
             if Path("private_config.ini").is_file():
                 Path("private_config.ini").unlink()
 
