@@ -322,15 +322,11 @@ class PDF_Retrieval(Process):
         if len(unlinked_pdfs) == 0:
             return records
 
-        self.REVIEW_MANAGER.report_logger.info(
-            "Starting GROBID service to extract metadata from PDFs"
-        )
-        self.REVIEW_MANAGER.logger.info(
-            "Starting GROBID service to extract metadata from PDFs"
-        )
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
+        self.REVIEW_MANAGER.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
+            self.REVIEW_MANAGER.logger.info(f"Checking unlinked PDF: {file}")
             if file.stem not in records.keys():
 
                 TEI_INSTANCE = TEIParser(pdf_path=file)

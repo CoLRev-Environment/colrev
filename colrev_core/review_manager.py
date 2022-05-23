@@ -511,6 +511,13 @@ class ReviewManager:
                 self.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_DATASET.add_record_changes()
 
+            inplace_change(
+                Path(".pre-commit-config.yaml"),
+                "files: 'references.bib|paper.md'",
+                "files: 'references.bib|paper.md|settings.json'",
+            )
+            self.REVIEW_DATASET.add_changes(path=".pre-commit-config.yaml")
+
             # Note: the order is important in this case.
             self.REVIEW_DATASET.update_colrev_ids()
 
@@ -934,6 +941,9 @@ class ReviewManager:
         try:
             changed = self.REVIEW_DATASET.format_main_references()
             self.update_status_yaml()
+
+            self.settings = self.load_settings()
+            self.save_settings()
 
         except (UnstagedGitChangesError, review_dataset.StatusFieldValueError) as e:
             pass

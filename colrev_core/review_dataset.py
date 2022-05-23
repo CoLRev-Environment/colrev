@@ -415,7 +415,9 @@ class ReviewDataset:
                         ordered_field in ReviewDataset.list_fields
                         or ordered_field in ReviewDataset.dict_fields
                     ):
-                        value = ("\n" + " " * 36).join(record[ordered_field])
+                        value = ("\n" + " " * 36).join(
+                            [f.rstrip() for f in record[ordered_field]]
+                        )
                         bibtex_str += format_field(ordered_field, value)
                     else:
                         bibtex_str += format_field(ordered_field, record[ordered_field])

@@ -76,15 +76,18 @@ class LoadRecord(Record):
                 else:
                     self.data[required_field] = "UNKNOWN"
 
-        inconsistent_fields = self.record_field_inconsistencies[self.data["ENTRYTYPE"]]
-        for inconsistent_field in inconsistent_fields:
-            if inconsistent_field in self.data:
-                inconsistency_hint = (
-                    f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                )
-                self.add_masterdata_provenance_hint(
-                    field=inconsistent_field, hint=inconsistency_hint
-                )
+        if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
+            inconsistent_fields = self.record_field_inconsistencies[
+                self.data["ENTRYTYPE"]
+            ]
+            for inconsistent_field in inconsistent_fields:
+                if inconsistent_field in self.data:
+                    inconsistency_hint = (
+                        f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    self.add_masterdata_provenance_hint(
+                        field=inconsistent_field, hint=inconsistency_hint
+                    )
 
         incomplete_fields = self.get_incomplete_fields()
         for incomplete_field in incomplete_fields:

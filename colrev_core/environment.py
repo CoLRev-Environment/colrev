@@ -1279,7 +1279,7 @@ class GrobidService:
     def __init__(self):
         pass
 
-    def check_grobid_availability(self) -> None:
+    def check_grobid_availability(self, *, wait=True) -> bool:
         i = 0
         while True:
             i += 1
@@ -1287,19 +1287,23 @@ class GrobidService:
             try:
                 r = requests.get(self.GROBID_URL + "/api/isalive")
                 if r.text == "true":
-                    i = -1
+                    return True
             except requests.exceptions.ConnectionError:
                 pass
+            if not wait:
+                return False
             if i == -1:
                 break
             if i > 20:
                 raise requests.exceptions.ConnectionError()
-        return
+        return True
 
     def start(self) -> None:
 
         try:
-            self.check_grobid_availability()
+            res = self.check_grobid_availability(wait=False)
+            if res:
+                return
         except requests.exceptions.ConnectionError:
             pass
 

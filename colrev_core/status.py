@@ -366,7 +366,7 @@ class Status(Process):
     def append_registered_repo_instructions(cls, registered_path):
         # Note: do not use named arguments (multiprocessing)
         try:
-            REPO_REVIEW_MANAGER = ReviewManager(str(registered_path))
+            REPO_REVIEW_MANAGER = ReviewManager(path_str=str(registered_path))
         except (NoSuchPathError, InvalidGitRepositoryError):
             pass
             instruction = {

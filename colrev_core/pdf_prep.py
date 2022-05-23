@@ -114,7 +114,7 @@ class PDF_Preparation(Process):
         record["pages_in_file"] = pages_in_file
         return record
 
-    def get_text_from_pdf(self, *, record: dict, PAD: int = 30) -> dict:
+    def get_text_from_pdf(self, record: dict, PAD: int = 30) -> dict:
         from pdfminer.pdfparser import PDFSyntaxError
 
         record["text_from_pdf"] = ""
@@ -204,12 +204,12 @@ class PDF_Preparation(Process):
         )
         record = RECORD.get_data()
         record["file"] = str(ocred_filename.relative_to(self.REVIEW_MANAGER.path))
-        record = self.get_text_from_pdf(record=record, PAD=PAD)
+        record = self.get_text_from_pdf(record, PAD)
 
         return record
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def pdf_check_ocr(self, *, record: dict, PAD: int) -> dict:
+    def pdf_check_ocr(self, record: dict, PAD: int) -> dict:
 
         if RecordState.pdf_imported != record["colrev_status"]:
             return record
@@ -276,7 +276,7 @@ class PDF_Preparation(Process):
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
 
         if "text_from_pdf" not in record:
-            record = self.get_text_from_pdf(record=record)
+            record = self.get_text_from_pdf(record)
 
         text = record["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
@@ -347,7 +347,7 @@ class PDF_Preparation(Process):
         return validation_info
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def validate_pdf_metadata(self, *, record: dict, PAD: int) -> dict:
+    def validate_pdf_metadata(self, record: dict, PAD: int) -> dict:
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         if RecordState.pdf_imported != record["colrev_status"]:
@@ -439,7 +439,7 @@ class PDF_Preparation(Process):
         return nr_pages_metadata
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def validate_completeness(self, *, record: dict, PAD: int) -> dict:
+    def validate_completeness(self, record: dict, PAD: int) -> dict:
 
         if RecordState.pdf_imported != record["colrev_status"]:
             return record
@@ -667,7 +667,7 @@ class PDF_Preparation(Process):
         return
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def remove_coverpage(self, *, record: dict, PAD: int) -> dict:
+    def remove_coverpage(self, record: dict, PAD: int) -> dict:
         coverpages = self.__get_coverpages(pdf=record["file"])
         if [] == coverpages:
             return record
@@ -743,9 +743,9 @@ class PDF_Preparation(Process):
 
         return list(set(last_pages))
 
-    def remove_last_page(self, *, record, PAD):
+    def remove_last_page(self, record, PAD):
 
-        last_pages = self.__get_last_pages(record["file"])
+        last_pages = self.__get_last_pages(pdf=record["file"])
         if [] == last_pages:
             return record
         if last_pages:
@@ -804,6 +804,10 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.report_logger.info(f'prepare({record["ID"]})')
         for prep_script in prep_scripts:
             try:
+                self.REVIEW_MANAGER.logger.debug(
+                    f"{prep_script['script'].__name__}(...) called"
+                )
+
                 # Note : the record should not be changed
                 # if the prep_script throws an exception
                 prepped_record = prep_script["script"](*prep_script["params"])
@@ -998,17 +1002,19 @@ class PDF_Preparation(Process):
                 record = item["record"]
                 print(record["ID"])
                 record = self.prepare_pdf(item)
-                self.REVIEW_MANAGER.save_record_list_by_ID(record_list=[record])
+                self.REVIEW_MANAGER.pp.pprint(record)
+                self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+                    record_list=[record]
+                )
         else:
             pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+                record_list=pdf_prep_batch
+            )
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-            record_list=pdf_prep_batch
-        )
-
-        # Multiprocessing mixes logs of different records.
-        # For better readability:
-        self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_batch])
+            # Multiprocessing mixes logs of different records.
+            # For better readability:
+            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_batch])
 
         # Note: for formatting...
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
