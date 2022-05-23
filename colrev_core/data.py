@@ -148,7 +148,7 @@ class ManuscriptEndpoint:
             return
 
         def add_missing_records_to_manuscript(
-            REVIEW_MANAGER, PAPER: Path, missing_records: list
+            *, REVIEW_MANAGER, PAPER: Path, missing_records: list
         ):
             temp = tempfile.NamedTemporaryFile()
             PAPER.rename(temp.name)
@@ -259,9 +259,12 @@ class ManuscriptEndpoint:
             REVIEW_MANAGER.logger.info(f"All records included in {PAPER.name}")
         else:
             add_missing_records_to_manuscript(
-                REVIEW_MANAGER,
-                PAPER,
-                ["\n- @" + missing_record + "\n" for missing_record in missing_records],
+                REVIEW_MANAGER=REVIEW_MANAGER,
+                PAPER=PAPER,
+                missing_records=[
+                    "\n- @" + missing_record + "\n"
+                    for missing_record in missing_records
+                ],
             )
             nr_records_added = len(missing_records)
             REVIEW_MANAGER.report_logger.info(
@@ -299,7 +302,7 @@ class ManuscriptEndpoint:
             if PAPER.is_file():
                 with open(PAPER) as f:
                     for line in f:
-                        if ManuscriptEndpoint.NEW_RECORD_SOURCE_TAG in line:
+                        if cls.NEW_RECORD_SOURCE_TAG in line:
                             while line != "":
                                 line = f.readline()
                                 if re.search(r"- @.*", line):
@@ -704,10 +707,254 @@ class PRISMAEndpoint:
         return
 
 
+@zope.interface.implementer(DataEndpoint)
+class ZettlrEndpoint:
+
+    NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
+
+    @classmethod
+    def get_default_setup(cls):
+        zettlr_endpoint_details = {
+            "endpoint": "ZETTLR",
+            "zettlr_endpoint_version": "0.1",
+            "config": {},
+        }
+        return zettlr_endpoint_details
+
+    @classmethod
+    def update_data(
+        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+    ):
+        from colrev_core.data import Data
+        import configparser
+        import datetime
+
+        REVIEW_MANAGER.logger.info("Export to zettlr endpoint")
+
+        endpoint_path = REVIEW_MANAGER.path / Path("data/zettlr")
+
+        # TODO : check if a main-zettlr file exists.
+
+        def get_zettlr_missing(endpoint_path, included):
+            in_zettelkasten = []
+
+            for md_file in endpoint_path.glob("*.md"):
+                with open(md_file) as f:
+                    line = f.readline()
+                    while line:
+                        if "title:" in line:
+                            id = line[line.find('"') + 1 : line.rfind('"')]
+                            in_zettelkasten.append(id)
+                        line = f.readline()
+
+            return [x for x in included if x not in in_zettelkasten]
+
+        def retrieve_package_file(template_file: Path, target: Path) -> None:
+            filedata = pkgutil.get_data(__name__, str(template_file))
+            if filedata:
+                with open(target, "w") as file:
+                    file.write(filedata.decode("utf-8"))
+            return
+
+        def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
+            with open(filename) as f:
+                s = f.read()
+                if old_string not in s:
+                    REVIEW_MANAGER.logger.info(
+                        f'"{old_string}" not found in {filename}.'
+                    )
+                    return
+            with open(filename, "w") as f:
+                s = s.replace(old_string, new_string)
+                f.write(s)
+            return
+
+        def add_missing_records_to_manuscript(
+            *, REVIEW_MANAGER, PAPER: Path, missing_records: list
+        ):
+            temp = tempfile.NamedTemporaryFile()
+            PAPER.rename(temp.name)
+            with open(temp.name) as reader, open(PAPER, "w") as writer:
+                appended, completed = False, False
+                line = reader.readline()
+                while line != "":
+                    if cls.NEW_RECORD_SOURCE_TAG in line:
+                        if "_Records to synthesize" not in line:
+                            line = "_Records to synthesize_:" + line + "\n"
+                            writer.write(line)
+                        else:
+                            writer.write(line)
+                            writer.write("\n")
+
+                        for missing_record in missing_records:
+                            writer.write(missing_record)
+                            REVIEW_MANAGER.report_logger.info(
+                                # f" {missing_record}".ljust(self.__PAD, " ")
+                                f" {missing_record}"
+                                + f" added to {PAPER.name}"
+                            )
+
+                            REVIEW_MANAGER.logger.info(
+                                # f" {missing_record}".ljust(self.__PAD, " ")
+                                f" {missing_record}"
+                                + f" added to {PAPER.name}"
+                            )
+
+                        # skip empty lines between to connect lists
+                        line = reader.readline()
+                        if "\n" != line:
+                            writer.write(line)
+
+                        appended = True
+
+                    elif appended and not completed:
+                        if "- @" == line[:3]:
+                            writer.write(line)
+                        else:
+                            if "\n" != line:
+                                writer.write("\n")
+                            writer.write(line)
+                            completed = True
+                    else:
+                        writer.write(line)
+                    line = reader.readline()
+
+                if not appended:
+                    msg = (
+                        f"Marker {cls.NEW_RECORD_SOURCE_TAG} not found in "
+                        + f"{PAPER.name}. Adding records at the end of "
+                        + "the document."
+                    )
+                    REVIEW_MANAGER.report_logger.warning(msg)
+                    REVIEW_MANAGER.logger.warning(msg)
+
+                    if line != "\n":
+                        writer.write("\n")
+                    marker = f"{cls.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
+                    writer.write(marker)
+                    for missing_record in missing_records:
+                        writer.write(missing_record)
+                        REVIEW_MANAGER.report_logger.info(
+                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                            f" {missing_record} added"
+                        )
+                        REVIEW_MANAGER.logger.info(
+                            # f" {missing_record}".ljust(self.__PAD, " ") + " added"
+                            f" {missing_record} added"
+                        )
+
+            return
+
+        zettlr_config_path = endpoint_path / Path(".zettlr_config.ini")
+        currentDT = datetime.datetime.now()
+        if zettlr_config_path.is_file():
+            zettlr_config = configparser.ConfigParser()
+            zettlr_config.read(zettlr_config_path)
+            ZETTLR_path = endpoint_path / Path(zettlr_config.get("general", "main"))
+
+        else:
+
+            unique_timestamp = currentDT + datetime.timedelta(seconds=3)
+            ZETTLR_resource_path = Path("template/zettlr/") / Path("zettlr.md")
+            fname = Path(unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md")
+            ZETTLR_path = endpoint_path / fname
+
+            zettlr_config = configparser.ConfigParser()
+            zettlr_config.add_section("general")
+            zettlr_config["general"]["main"] = str(fname)
+            with open(zettlr_config_path, "w") as configfile:
+                zettlr_config.write(configfile)
+            REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(zettlr_config_path))
+
+            retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
+            title = "PROJECT_NAME"
+            readme_file = REVIEW_MANAGER.paths["README"]
+            if readme_file.is_file():
+                with open(readme_file) as f:
+                    title = f.readline()
+                    title = title.replace("# ", "").replace("\n", "")
+
+            inplace_change(ZETTLR_path, "{{project_title}}", title)
+            # author = authorship_heuristic(REVIEW_MANAGER)
+            REVIEW_MANAGER.create_commit(msg="Add zettlr endpoint")
+
+        records_dict = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        included = Data.get_record_ids_for_synthesis(records_dict)
+
+        missing_records = get_zettlr_missing(endpoint_path, included)
+
+        if len(missing_records) == 0:
+            print("All records included. Nothing to export.")
+        else:
+            print(missing_records)
+
+            missing_records = sorted(missing_records)
+            missing_record_fields = []
+            for i, missing_record in enumerate(missing_records):
+                unique_timestamp = currentDT - datetime.timedelta(seconds=i)
+                missing_record_fields.append(
+                    [unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md", missing_record]
+                )
+
+            add_missing_records_to_manuscript(
+                REVIEW_MANAGER=REVIEW_MANAGER,
+                PAPER=ZETTLR_path,
+                missing_records=[
+                    "\n- [[" + i + "]] @" + r + "\n" for i, r in missing_record_fields
+                ],
+            )
+
+            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
+
+            ZETTLR_resource_path = Path("template/zettlr/") / Path("zettlr_bib_item.md")
+
+            for missing_record_field in missing_record_fields:
+                id, r = missing_record_field
+                print(id + r)
+                ZETTLR_path = endpoint_path / Path(id)
+
+                retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
+                inplace_change(ZETTLR_path, "{{project_name}}", r)
+                with ZETTLR_path.open("a") as f:
+                    f.write(f"\n\n@{r}\n")
+
+                REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
+
+            REVIEW_MANAGER.create_commit(msg="Setup zettlr")
+
+            print("TODO: recommend zettlr/snippest, adding tags")
+
+        return
+
+    @classmethod
+    def update_record_status_matrix(
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+    ):
+        # TODO : not yet implemented!
+        # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.
+
+        # Note : automatically set all to True / synthesized
+        for syn_ID in list(synthesized_record_status_matrix.keys()):
+            synthesized_record_status_matrix[syn_ID]["ZETTLR"] = True
+
+        return
+
+
 # @zope.interface.implementer(DataEndpoint)
 # class NAMEEndpoint:
 
 #     TODO : add to settings.json
+#     TODO : add to Data - self.data_endpoints:
+
+#    @classmethod
+#    def get_default_setup(cls):
+#        XXX_endpoint_details = {
+#            "endpoint": "XXX",
+#            "XXX_version": "0.1",
+#            "config": {},
+#        }
+#        return XXX_endpoint_details
 
 #     @classmethod
 #     def update_data(
@@ -750,6 +997,9 @@ class Data(Process):
             },
             "PRISMA": {
                 "endpoint": PRISMAEndpoint,
+            },
+            "ZETTLR": {
+                "endpoint": ZettlrEndpoint,
             },
         }
 

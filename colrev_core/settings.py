@@ -179,6 +179,13 @@ class PRISMAFormat:
 
 
 @dataclass
+class ZettlrFormat:
+    endpoint: str
+    zettlr_endpoint_version: str
+    config: dict
+
+
+@dataclass
 class EndnoteFormat:
     endpoint: str
     endnote_data_endpoint_version: str
@@ -193,7 +200,11 @@ class EndnoteFormat:
 class DataConfiguration:
     data_format: typing.List[
         typing.Union[
-            ManuscriptFormat, DataStructuredFormat, PRISMAFormat, EndnoteFormat
+            ManuscriptFormat,
+            DataStructuredFormat,
+            PRISMAFormat,
+            ZettlrFormat,
+            EndnoteFormat,
         ]
     ]
 

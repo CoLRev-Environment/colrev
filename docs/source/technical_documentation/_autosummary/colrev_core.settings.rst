@@ -42,3 +42,4 @@ colrev\_core.settings
       SearchConfiguration
       SearchSource
       SearchType
+      ZettlrFormat

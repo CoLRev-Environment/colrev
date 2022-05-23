@@ -25,6 +25,7 @@ colrev\_core.data
       ManuscriptEndpoint
       PRISMAEndpoint
       StructuredDataEndpoint
+      ZettlrEndpoint
 
 
 
