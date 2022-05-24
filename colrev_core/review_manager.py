@@ -336,6 +336,15 @@ class ReviewManager:
                 f.write(s)
             return
 
+        def retrieve_package_file(*, template_file: Path, target: Path) -> None:
+            import pkgutil
+
+            filedata = pkgutil.get_data(__name__, str(template_file))
+            if filedata:
+                with open(target, "w", encoding="utf8") as file:
+                    file.write(filedata.decode("utf-8"))
+            return
+
         def migrate_0_3_0(self) -> bool:
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
@@ -511,13 +520,12 @@ class ReviewManager:
                 self.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_DATASET.add_record_changes()
 
-            inplace_change(
-                Path(".pre-commit-config.yaml"),
-                "files: 'references.bib|paper.md'",
-                "files: 'references.bib|paper.md|settings.json'",
+            retrieve_package_file(
+                template_file=Path("template/.pre-commit-config.yaml"),
+                target=Path(".pre-commit-config.yaml"),
             )
-            self.REVIEW_DATASET.add_changes(path=".pre-commit-config.yaml")
 
+            self.REVIEW_DATASET.add_changes(path=".pre-commit-config.yaml")
             # Note: the order is important in this case.
             self.REVIEW_DATASET.update_colrev_ids()
 

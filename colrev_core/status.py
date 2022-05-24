@@ -482,7 +482,7 @@ class Status(Process):
 
             committed_origin_states_dict = (
                 self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict(
-                    io.StringIO(filecontents.decode("utf-8"))
+                    file_object=io.StringIO(filecontents.decode("utf-8"))
                 )
             )
 
@@ -617,7 +617,9 @@ class Status(Process):
                 else:
                     if "True" == delay_automated_processing:
                         continue
-                if instruction["cmd"] not in [ri["cmd"] for ri in review_instructions]:
+                if instruction["cmd"] not in [
+                    ri["cmd"] for ri in review_instructions if "cmd" in ri
+                ]:
                     review_instructions.append(instruction)
 
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
@@ -625,7 +627,9 @@ class Status(Process):
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",
             }
-            if instruction["cmd"] not in [ri["cmd"] for ri in review_instructions]:
+            if instruction["cmd"] not in [
+                ri["cmd"] for ri in review_instructions if "cmd" in ri
+            ]:
                 review_instructions.append(instruction)
 
         if stat["completeness_condition"]:

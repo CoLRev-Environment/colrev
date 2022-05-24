@@ -184,6 +184,19 @@ class PrepRecord(Record):
                 self.data["note"] = "withdrawn (according to DBLP)"
         return
 
+    def prescreen_exclude(self, *, reason) -> None:
+        self.data["colrev_status"] = RecordState.rev_prescreen_excluded
+        self.data["prescreen_exclusion"] = reason
+
+        to_drop = []
+        for k, v in self.data.items():
+            if "UNKNOWN" == v:
+                to_drop.append(k)
+        for k in to_drop:
+            del self.data[k]
+
+        return
+
 
 class PrepScript(zope.interface.Interface):
     def prepare(self, x):
@@ -311,6 +324,9 @@ class Preparation(Process):
             },
             "exclude_languages": {
                 "script": self.exclude_languages,
+            },
+            "exclude_collections": {
+                "script": self.exclude_collections,
             },
             "remove_urls_with_500_errors": {
                 "script": self.remove_urls_with_500_errors,
@@ -485,15 +501,11 @@ class Preparation(Process):
             ]
         )
         if mostly_latin_alphabet(str_to_check):
-            RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
-            RECORD.data["prescreen_exclusion"] = "script:non_latin_alphabet"
+            RECORD.prescreen_exclude(reason="non_latin_alphabet")
 
         return RECORD
 
     def exclude_languages(self, RECORD: PrepRecord) -> PrepRecord:
-
-        if not self.FIRST_ROUND:
-            return RECORD
 
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
@@ -502,10 +514,13 @@ class Preparation(Process):
                 RECORD.data["language"].replace("English", "en").replace("ENG", "en")
             )
             if RECORD.data["language"] not in self.languages_to_include:
-                RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
-                RECORD.data[
-                    "prescreen_exclusion"
-                ] = f"language of title not in [{','.join(self.languages_to_include)}]"
+                RECORD.prescreen_exclude(
+                    reason=(
+                        "language of title not in "
+                        f"[{','.join(self.languages_to_include)}]"
+                    )
+                )
+
             return RECORD
 
         # To avoid misclassifications for short titles
@@ -525,17 +540,20 @@ class Preparation(Process):
                 if conf > 0.95:
                     return RECORD
 
-        RECORD.data["colrev_status"] = RecordState.rev_prescreen_excluded
-        RECORD.data[
-            "prescreen_exclusion"
-        ] = f"language of title not in [{','.join(self.languages_to_include)}]"
+        RECORD.prescreen_exclude(
+            reason=f"language of title not in [{','.join(self.languages_to_include)}]"
+        )
+
+        return RECORD
+
+    def exclude_collections(self, RECORD: PrepRecord) -> PrepRecord:
+
+        if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
+            RECORD.prescreen_exclude(reason="collection/proceedings")
 
         return RECORD
 
     def remove_urls_with_500_errors(self, RECORD: PrepRecord) -> PrepRecord:
-
-        if not self.FIRST_ROUND:
-            return RECORD
 
         try:
             if "url" in RECORD.data:
@@ -566,9 +584,6 @@ class Preparation(Process):
 
     def remove_broken_IDs(self, RECORD: PrepRecord) -> PrepRecord:
 
-        if not self.FIRST_ROUND:
-            return RECORD
-
         if "doi" in RECORD.data:
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
             d = re.match(r"^10.\d{4,9}\/", RECORD.data["doi"])
@@ -588,9 +603,6 @@ class Preparation(Process):
     def global_ids_consistency_check(self, RECORD: PrepRecord) -> PrepRecord:
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
-
-        if not self.FIRST_ROUND:
-            return RECORD
 
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
         if "doi" in RECORD.data:
@@ -2105,7 +2117,8 @@ class Preparation(Process):
             RETRIEVED_RECORD.add_provenance_all(source=url)
             RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
             RECORD.set_masterdata_complete()
-            RECORD.set_status(target_state=RecordState.md_prepared)
+            if "colrev_status" in RECORD.data:
+                RECORD.set_status(target_state=RecordState.md_prepared)
 
         except json.decoder.JSONDecodeError:
             pass

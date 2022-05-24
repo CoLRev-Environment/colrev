@@ -522,7 +522,7 @@ class LocalIndex:
             saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
             saved_record = saved_record_response["_source"]
 
-            SAVED_RECORD = Record(data=saved_record)
+            SAVED_RECORD = Record(data=self.parse_record(record=saved_record))
 
             RECORD = Record(data=record)
 
@@ -555,7 +555,9 @@ class LocalIndex:
                     pass
 
             self.os.update(
-                index=self.RECORD_INDEX, id=hash, body={"doc": SAVED_RECORD.get_data()}
+                index=self.RECORD_INDEX,
+                id=hash,
+                body={"doc": SAVED_RECORD.get_data(stringify=True)},
             )
         except NotFoundError:
             pass
@@ -707,10 +709,7 @@ class LocalIndex:
             raise RecordNotInIndexException
         return retrieved_record
 
-    def prep_record_for_return(
-        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
-    ) -> dict:
-        from colrev_core.record import RecordState
+    def parse_record(self, *, record: dict) -> dict:
         from colrev_core.review_dataset import ReviewDataset
         from pybtex.database.input import bibtex
 
@@ -735,6 +734,15 @@ class LocalIndex:
         bib_data = parser.parse_string(load_str)
         records_dict = ReviewDataset.parse_records_dict(records_dict=bib_data.entries)
         record = list(records_dict.values())[0]
+
+        return record
+
+    def prep_record_for_return(
+        self, *, record: dict, include_file: bool = False, include_colrev_ids=False
+    ) -> dict:
+        from colrev_core.record import RecordState
+
+        record = self.parse_record(record=record)
 
         # Note: record['file'] should be an absolute path by definition
         # when stored in the LocalIndex
@@ -924,7 +932,7 @@ class LocalIndex:
             print(f"Index records from {source_url}")
             os.chdir(source_url)
             REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
-            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER)
+            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
             if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 return
             records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -937,7 +945,7 @@ class LocalIndex:
             if CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_masterdata:
                 [
                     record.update(
-                        colrev_masterdata_provenance=f"CURATED:{curation_url}"
+                        colrev_masterdata_provenance=f"CURATED:{curation_url};;"
                     )
                     for record in records.values()
                 ]
@@ -947,8 +955,8 @@ class LocalIndex:
             ) in CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_fields:
 
                 [
-                    Record(record).add_data_provenance(
-                        curated_field, f"CURATED:{curation_url}"
+                    Record(data=record).add_data_provenance(
+                        field=curated_field, source=f"CURATED:{curation_url};;"
                     )
                     for record in records.values()
                 ]
@@ -962,7 +970,7 @@ class LocalIndex:
             ]
 
             for record in tqdm(records.values()):
-                self.index_record(record)
+                self.index_record(record=record)
 
         except InvalidGitRepositoryError:
             print(f"InvalidGitRepositoryError: {source_url}")

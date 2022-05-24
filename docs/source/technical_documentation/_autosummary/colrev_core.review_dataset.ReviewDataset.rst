@@ -64,7 +64,6 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.retrieve_data
       ~ReviewDataset.retrieve_prior
       ~ReviewDataset.retrieve_records_from_history
-      ~ReviewDataset.save_field_dict
       ~ReviewDataset.save_record_list_by_ID
       ~ReviewDataset.save_records_dict
       ~ReviewDataset.save_records_dict_to_file

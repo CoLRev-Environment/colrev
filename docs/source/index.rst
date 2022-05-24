@@ -92,7 +92,7 @@ The more records are curated, the more you can focus on the synthesis.
 Citing CoLRev
 -----------------
 
-Please `cite <_static/colrev_citation.bib>`__ the `GitHub project <https://github.com/geritwagner/colrev_core>`__:
+Please `cite <_static/colrev_citation.bib>`__ the project as follows:
 
 Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev_core.
 
@@ -117,6 +117,13 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 
    technical_documentation/colrev
    technical_documentation/api
+   Code repository <https://github.com/geritwagner/colrev_core>
+
+.. toctree::
+   :hidden:
+   :caption: Resources
+   :maxdepth: 1
+
    technical_documentation/roadmap
    technical_documentation/credits
    technical_documentation/about

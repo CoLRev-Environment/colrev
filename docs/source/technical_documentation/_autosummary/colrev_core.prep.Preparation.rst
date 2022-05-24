@@ -21,6 +21,7 @@ colrev\_core.prep.Preparation
       ~Preparation.correct_recordtype
       ~Preparation.crossref_json_to_record
       ~Preparation.drop_fields
+      ~Preparation.exclude_collections
       ~Preparation.exclude_languages
       ~Preparation.exclude_non_latin_alphabets
       ~Preparation.format

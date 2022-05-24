@@ -277,6 +277,13 @@ class Loader(Process):
         if RecordState.md_retrieved != record["colrev_status"]:
             return record
 
+        # Consistently set keys to lower case
+        lower_keys = [k.lower() for k in list(record.keys())]
+        for key, n_key in zip(list(record.keys()), lower_keys):
+            if key in ["ID", "ENTRYTYPE"]:
+                continue
+            record[n_key] = record.pop(key)
+
         # For better readability of the git diff:
         fields_to_process = [
             "author",
@@ -631,7 +638,7 @@ class Loader(Process):
                     if source_identifier == x["source_identifier"]
                 ][0]
                 if "load_script" in custom_load:
-                    records = custom_load["load_script"](records)
+                    records = custom_load["load_script"](records=records)
 
         return records
 

@@ -156,13 +156,20 @@ def load_scopus_source(*, records: typing.List[dict]) -> typing.List[dict]:
 
     for record in records:
         if "document_type" in record:
-            if record["document_type"] in ["Conference Paper", "Conference Review"]:
+            if record["document_type"] == "Conference Paper":
                 record["ENTRYTYPE"] = "inproceedings"
                 if "journal" in record:
                     record["booktitle"] = record["journal"]
                     del record["journal"]
-            if "Article" == record["document_type"]:
+            elif record["document_type"] == "Conference Review":
+                record["ENTRYTYPE"] = "proceedings"
+                if "journal" in record:
+                    record["booktitle"] = record["journal"]
+                    del record["journal"]
+
+            elif record["document_type"] == "Article":
                 record["ENTRYTYPE"] = "article"
+
             del record["document_type"]
 
         if "Start_Page" in record and "End_Page" in record:
@@ -193,12 +200,13 @@ scripts: typing.List[typing.Dict[str, typing.Any]] = [
         "load_script": load_gs_source,
     },
     {
-        "source_identifier": "http://apps.webofknowledge.com/",
+        "source_identifier": "https://www.webofscience.com/wos/woscc/full-record/"
+        + "{{wos_accession_number}}",
         "heuristic": wos_heuristic,
         "load_script": load_wos_source,
     },
     {
-        "source_identifier": "http://www.scopus.com/",
+        "source_identifier": "{{url}}",
         "heuristic": scopus_heuristic,
         "load_script": load_scopus_source,
     },

@@ -18,7 +18,8 @@
             "similarity": 1.0,
             "scripts": [
                 "exclude_non_latin_alphabets",
-                "exclude_languages"
+                "exclude_languages",
+                "exclude_collections"
             ]
         },
         {

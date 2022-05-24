@@ -2,7 +2,7 @@ default_language_version:
     python: python3
 repos:
 -   repo: https://github.com/geritwagner/colrev-hooks
-    rev: 3ff38d77ebe7332bf08d287c749c67925868655d
+    rev: 3bb16ccb207ef5a13cb261c037e7b20fede4c4c0
     hooks:
     -   id: format
         name: "ReviewManager: format"
@@ -25,6 +25,6 @@ repos:
         language: script
         stages: [push]
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v4.2.0
     hooks:
     -   id: check-yaml

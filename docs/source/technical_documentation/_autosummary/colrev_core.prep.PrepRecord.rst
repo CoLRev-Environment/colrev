@@ -50,6 +50,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.missing_fields
+      ~PrepRecord.prescreen_exclude
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.reset_pdf_provenance_hints

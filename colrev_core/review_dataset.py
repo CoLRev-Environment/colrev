@@ -19,7 +19,6 @@ class ReviewDataset:
 
     # Fields that are stored as lists (items separated by newlines)
     list_fields = [
-        "colrev_file_provenance",
         "colrev_id",
         # "colrev_pdf_id",
         # "exclusion_criteria",
@@ -184,22 +183,6 @@ class ReviewDataset:
         return return_dict
 
     @classmethod
-    def save_field_dict(cls, *, input_dict: dict, key: str) -> list:
-        list_to_return = []
-        if "colrev_masterdata_provenance" == key:
-            for k, v in input_dict.items():
-                list_to_return.append(f"{k}:{v['source']};{v['note']};")
-
-        elif "colrev_data_provenance" == key:
-            for k, v in input_dict.items():
-                list_to_return.append(f"{k}:{v['source']};{v['note']};")
-
-        else:
-            print(f"error loading dict_field: {key}")
-
-        return list_to_return
-
-    @classmethod
     def parse_records_dict(cls, *, records_dict: dict) -> dict:
         def format_name(person):
             def join(name_list):
@@ -233,7 +216,7 @@ class ReviewDataset:
                         # DOIs are case sensitive -> use upper case.
                         else v.upper()
                         if ("doi" == k)
-                        else [el for el in (v + " ").split("; ") if "" != el]
+                        else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
                         if k in ReviewDataset.list_fields
                         else ReviewDataset.load_field_dict(value=v, field=k)
                         if k in ReviewDataset.dict_fields
@@ -335,6 +318,7 @@ class ReviewDataset:
     @classmethod
     def parse_bibtex_str(cls, *, recs_dict_in) -> str:
         from copy import deepcopy
+        from colrev_core.record import Record
 
         # Note: we need a deepcopy because the parsing modifies dicts
         recs_dict = deepcopy(recs_dict_in)
@@ -359,7 +343,6 @@ class ReviewDataset:
                 "colrev_status",  # must be in third line
                 "colrev_masterdata_provenance",
                 "colrev_data_provenance",
-                "colrev_file_provenance",
                 "colrev_id",
                 "colrev_pdf_id",
                 "exclusion_criteria",
@@ -381,39 +364,14 @@ class ReviewDataset:
                 "editor",
             ]
 
-            # separated by \n
-            for field in ReviewDataset.list_fields:
-                if field in record:
-                    if isinstance(record[field], str):
-                        record[field] = [
-                            element.lstrip().rstrip()
-                            for element in record[field].split(";")
-                        ]
-                    for ind, val in enumerate(record[field]):
-                        if len(val) > 0:
-                            if ";" != val[-1]:
-                                record[field][ind] = val + ";"
-
-            for field in ReviewDataset.dict_fields:
-                if field in record:
-                    record[field] = ReviewDataset.save_field_dict(
-                        input_dict=record[field], key=field
-                    )
+            RECORD = Record(data=record)
+            record = RECORD.get_data(stringify=True)
 
             for ordered_field in field_order:
                 if ordered_field in record:
                     if "" == record[ordered_field]:
                         continue
-                    if (
-                        ordered_field in ReviewDataset.list_fields
-                        or ordered_field in ReviewDataset.dict_fields
-                    ):
-                        value = ("\n" + " " * 36).join(
-                            [f.rstrip() for f in record[ordered_field]]
-                        )
-                        bibtex_str += format_field(ordered_field, value)
-                    else:
-                        bibtex_str += format_field(ordered_field, record[ordered_field])
+                    bibtex_str += format_field(ordered_field, record[ordered_field])
 
             for key, value in record.items():
                 if key in field_order + ["ID", "ENTRYTYPE"]:
@@ -1213,6 +1171,7 @@ class ReviewDataset:
                     RECORD.create_colrev_id()
                 except NotEnoughDataToIdentifyException:
                     pass
+                    continue
                 origins = RECORD.get_origins()
                 RECORD.add_colrev_ids(
                     records=[

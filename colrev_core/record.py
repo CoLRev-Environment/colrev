@@ -100,7 +100,50 @@ class Record:
 
         return ret_str
 
-    def get_data(self) -> dict:
+    def get_data(self, *, stringify=False) -> dict:
+        from colrev_core.review_dataset import ReviewDataset
+
+        def save_field_dict(*, input_dict: dict, key: str) -> list:
+            list_to_return = []
+            if "colrev_masterdata_provenance" == key:
+                for k, v in input_dict.items():
+                    list_to_return.append(f"{k}:{v['source']};{v['note']};")
+
+            elif "colrev_data_provenance" == key:
+                for k, v in input_dict.items():
+                    list_to_return.append(f"{k}:{v['source']};{v['note']};")
+
+            else:
+                print(f"error in to_string of dict_field: {key}")
+
+            return list_to_return
+
+        def list_to_str(*, val: list) -> str:
+            return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+        if stringify:
+
+            # separated by \n
+            for field in ReviewDataset.list_fields:
+                if field in self.data:
+                    if isinstance(self.data[field], str):
+                        self.data[field] = [
+                            element.lstrip().rstrip()
+                            for element in self.data[field].split(";")
+                        ]
+                    for ind, val in enumerate(self.data[field]):
+                        if len(val) > 0:
+                            if ";" != val[-1]:
+                                self.data[field][ind] = val + ";"
+                    self.data[field] = list_to_str(val=self.data[field])
+
+            for field in ReviewDataset.dict_fields:
+                if field in self.data:
+                    self.data[field] = save_field_dict(
+                        input_dict=self.data[field], key=field
+                    )
+                    self.data[field] = list_to_str(val=self.data[field])
+
         return self.data
 
     def masterdata_is_curated(self) -> bool:
@@ -427,14 +470,18 @@ class Record:
                 ):
                     return MERGING_RECORD.data["author"]
 
-            default_mostly_upper = percent_upper_chars(RECORD.data["author"]) > 0.8
-            candidate_mostly_upper = (
-                percent_upper_chars(MERGING_RECORD.data["author"]) > 0.8
-            )
+            if (
+                len(RECORD.data["author"]) > 0
+                and len(MERGING_RECORD.data["author"]) > 0
+            ):
+                default_mostly_upper = percent_upper_chars(RECORD.data["author"]) > 0.8
+                candidate_mostly_upper = (
+                    percent_upper_chars(MERGING_RECORD.data["author"]) > 0.8
+                )
 
-            # Prefer title case (not all-caps)
-            if default_mostly_upper and not candidate_mostly_upper:
-                return MERGING_RECORD.data["author"]
+                # Prefer title case (not all-caps)
+                if default_mostly_upper and not candidate_mostly_upper:
+                    return MERGING_RECORD.data["author"]
 
             # Prefer sources
             if "author" in merging_record_a_prov:
@@ -1097,7 +1144,10 @@ class Record:
             # srep = robust_append(srep, pages)
         except KeyError as e:
             raise NotEnoughDataToIdentifyException(str(e))
-        return srep.replace(";", "")  # ";" is the separator in colrev_id list
+
+        srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
+
+        return srep
 
 
 class RecordState(Enum):

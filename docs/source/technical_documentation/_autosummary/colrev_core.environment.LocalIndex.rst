@@ -25,6 +25,7 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_record
       ~LocalIndex.is_duplicate
+      ~LocalIndex.parse_record
       ~LocalIndex.prep_record_for_return
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_from_toc
