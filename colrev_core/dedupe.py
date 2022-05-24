@@ -14,6 +14,11 @@ from colrev_core.record import RecordState
 
 
 class Dedupe(Process):
+
+    SIMPLE_SIMILARITY_BASED_DEDUPE = "simple_similarity_based_dedupe"
+    ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"
+    ACTIVE_LEARNING_NON_MEMORY_DEDUPE = "active_learning_non_memory_dedupe"
+
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process=True):
 
         super().__init__(
@@ -22,7 +27,42 @@ class Dedupe(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
+        self.training_file = self.REVIEW_MANAGER.path / Path(
+            ".references_dedupe_training.json"
+        )
+        self.settings_file = self.REVIEW_MANAGER.path / Path(
+            ".references_learned_settings"
+        )
+
+        self.get_dedupe_algorithm_conf()
         pd.options.mode.chained_assignment = None  # default='warn'
+
+    def get_dedupe_algorithm_conf(
+        self,
+        *,
+        min_n_active_learning: int = 50,
+        max_n_active_learning_memory: int = 2000,
+    ):
+
+        record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
+        self.sample_size = len(record_state_list)
+
+        self.nr_add_records = len(
+            [
+                r
+                for r in record_state_list
+                if r["colrev_status"] == RecordState.md_prepared
+            ]
+        )
+
+        if self.sample_size < min_n_active_learning:
+            selected_algorithm = self.SIMPLE_SIMILARITY_BASED_DEDUPE
+        elif self.sample_size < max_n_active_learning_memory:
+            selected_algorithm = self.ACTIVE_LEARNING_DEDUPE
+        else:
+            selected_algorithm = self.ACTIVE_LEARNING_NON_MEMORY_DEDUPE
+        self.selected_algorithm = selected_algorithm
+        return
 
     # Active-learning deduplication
 
@@ -223,93 +263,126 @@ class Dedupe(Process):
 
         return references
 
-    def setup_active_learning_dedupe(self, *, retrain: bool, min_n: int = 50):
+    def setup_active_learning_dedupe(self, *, retrain: bool):
         """Prepare data for active learning setup"""
         import dedupe
-        from pathlib import Path
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)
         logging.getLogger("dedupe.api").setLevel(logging.WARNING)
         # logging.getLogger("rlr.crossvalidation:optimum").setLevel(logging.WARNING)
 
-        training_file = Path(".references_dedupe_training.json")
-        settings_file = Path(".references_learned_settings")
         if retrain:
-            training_file.unlink(missing_ok=True)
-            settings_file.unlink(missing_ok=True)
+            # Note : removing the training_file would be to start from scratch...
+            # self.training_file.unlink(missing_ok=True)
+            self.settings_file.unlink(missing_ok=True)
 
         self.REVIEW_MANAGER.logger.info("Importing data ...")
-
-        ret_dict: typing.Dict[str, typing.Any] = {}
 
         # Possible extension: in the readData, we may want to append the colrev_status
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
         data_d = self.__readData()
 
+        ret_dict: typing.Dict[str, typing.Any] = {}
         ret_dict["n_new"] = len(
             [d for d, v in data_d.items() if "md_prepared" == v["colrev_status"]]
         )
 
-        if len(data_d) < min_n:
-            ret_dict["status"] = "not_enough_data"
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(data_d))
 
+        # def title_corpus():
+        #     for record in data_d.values():
+        #         yield record["title"]
+
+        # def container_corpus():
+        #     for record in data_d.values():
+        #         yield record["container_title"]
+
+        # def author_corpus():
+        #     for record in data_d.values():
+        #         yield record["author"]
+
+        # Training
+
+        # TODO : creating a corpus from all fields may create memory issues...
+
+        # Define the fields dedupe will pay attention to
+        fields = [
+            {
+                "field": "author",
+                "type": "String",
+                # "corpus": author_corpus(),k
+                "has missing": True,
+                "crf": True,
+            },
+            {
+                "field": "title",
+                "type": "String",
+                #  "corpus": title_corpus()
+                "crf": True,
+            },
+            {
+                "field": "container_title",
+                "variable name": "container_title",
+                "type": "ShortString",
+                # "corpus": container_corpus(),
+                "crf": True,
+            },
+            {"field": "year", "variable name": "year", "type": "DateTime"},
+            {
+                "field": "volume",
+                "variable name": "volume",
+                "type": "ShortString",
+                "has missing": True,
+            },
+            {
+                "field": "number",
+                "variable name": "number",
+                "type": "ShortString",
+                "has missing": True,
+            },
+            {
+                "field": "pages",
+                "type": "ShortString",
+                "has missing": True,
+                "crf": True,
+            },
+            {
+                "type": "Interaction",
+                "interaction variables": [
+                    "container_title",
+                    "year",
+                    "volume",
+                    "number",
+                ],
+            },
+        ]
+        # Interactions:
+        # https://docs.dedupe.io/en/latest/Variable-definition.html
+
+        # Create a new deduper object and pass our data model to it.
+        deduper = dedupe.Dedupe(fields)
+
+        # If we have training data saved from a previous run of dedupe,
+        # look for it and load it in.
+        # __Note:__ if you want to train from scratch, delete the training_file
+        if self.training_file.is_file():
+            self.REVIEW_MANAGER.logger.info(
+                f"Reading pre-labeled training data from {self.training_file.name} "
+                "and preparing data"
+            )
+            with open(self.training_file, "rb") as f:
+                deduper.prepare_training(data_d, f)
         else:
+            deduper.prepare_training(data_d)
 
-            self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(data_d))
+        # TODO  input('del data_d - check memory')
+        del data_d
 
-            def title_corpus():
-                for record in data_d.values():
-                    yield record["title"]
+        self.REVIEW_MANAGER.logger.info("Reading and preparation completed.")
 
-            def container_corpus():
-                for record in data_d.values():
-                    yield record["container_title"]
-
-            def author_corpus():
-                for record in data_d.values():
-                    yield record["author"]
-
-            # Training
-
-            # Define the fields dedupe will pay attention to
-            fields = [
-                {
-                    "field": "author",
-                    "type": "Text",
-                    "corpus": author_corpus(),
-                    "has missing": True,
-                },
-                {"field": "title", "type": "Text", "corpus": title_corpus()},
-                {
-                    "field": "container_title",
-                    "type": "Text",
-                    "corpus": container_corpus(),
-                },
-                {"field": "year", "type": "DateTime"},
-                {"field": "volume", "type": "Text", "has missing": True},
-                {"field": "number", "type": "Text", "has missing": True},
-                {"field": "pages", "type": "String", "has missing": True},
-            ]
-
-            # Create a new deduper object and pass our data model to it.
-            deduper = dedupe.Dedupe(fields)
-
-            # If we have training data saved from a previous run of dedupe,
-            # look for it and load it in.
-            # __Note:__ if you want to train from scratch, delete the training_file
-            if training_file.is_file():
-                self.REVIEW_MANAGER.logger.info(
-                    f"Reading pre-labeled training data from {training_file.name}"
-                )
-                with open(training_file, "rb") as f:
-                    deduper.prepare_training(data_d, f)
-            else:
-                deduper.prepare_training(data_d)
-
-            ret_dict["status"] = "ok"
-            ret_dict["deduper"] = deduper
+        ret_dict["deduper"] = deduper
 
         return ret_dict
 
@@ -654,6 +727,8 @@ class Dedupe(Process):
     ):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
+        import statistics
+
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
         data_d = self.__readData()
@@ -724,10 +799,14 @@ class Dedupe(Process):
                     for dupe_rec in dedupe_decision["records"]:
 
                         orig_propagated = (
-                            self.REVIEW_MANAGER.REVIEW_DATASET.propagated_ID(orig_rec)
+                            self.REVIEW_MANAGER.REVIEW_DATASET.propagated_ID(
+                                ID=orig_rec
+                            )
                         )
                         dupe_propagated = (
-                            self.REVIEW_MANAGER.REVIEW_DATASET.propagated_ID(dupe_rec)
+                            self.REVIEW_MANAGER.REVIEW_DATASET.propagated_ID(
+                                ID=dupe_rec
+                            )
                         )
 
                         if not orig_propagated and not dupe_propagated:
@@ -833,6 +912,30 @@ class Dedupe(Process):
                 collected_duplicates.append(vals)
             else:
                 collected_non_duplicates.append(vals)
+
+        # Set confidence scores to average of group
+        for cluster_nr in {d["cluster_id"] for d in collected_duplicates}:
+            avg_confidence = statistics.mean(
+                [
+                    d["confidence_score"]
+                    for d in collected_duplicates
+                    if d["cluster_id"] == cluster_nr
+                ]
+            )
+            for collected_duplicate in collected_duplicates:
+                if collected_duplicate["cluster_id"] == cluster_nr:
+                    collected_duplicate["confidence_score"] = avg_confidence
+        for cluster_nr in {d["cluster_id"] for d in collected_non_duplicates}:
+            avg_confidence = statistics.mean(
+                [
+                    d["confidence_score"]
+                    for d in collected_non_duplicates
+                    if d["cluster_id"] == cluster_nr
+                ]
+            )
+            for collected_non_duplicate in collected_non_duplicates:
+                if collected_non_duplicate["cluster_id"] == cluster_nr:
+                    collected_non_duplicate["confidence_score"] = avg_confidence
 
         duplicates_df = pd.DataFrame.from_records(collected_duplicates)
         duplicates_df.fillna("", inplace=True)

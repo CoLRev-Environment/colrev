@@ -55,7 +55,7 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.pull_if_repo_clean
       ~ReviewDataset.read_next_record
       ~ReviewDataset.remote_ahead
-      ~ReviewDataset.remove_file
+      ~ReviewDataset.remove_file_from_git
       ~ReviewDataset.replace_field
       ~ReviewDataset.reprocess_id
       ~ReviewDataset.reset_log_if_no_changes

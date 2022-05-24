@@ -21,7 +21,20 @@ colrev\_core.dedupe.Dedupe
       ~Dedupe.check_precondition
       ~Dedupe.cluster_tuples
       ~Dedupe.fix_errors
+      ~Dedupe.get_dedupe_algorithm_conf
       ~Dedupe.get_info
       ~Dedupe.setup_active_learning_dedupe
       ~Dedupe.simple_dedupe
       ~Dedupe.source_comparison
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Dedupe.ACTIVE_LEARNING_DEDUPE
+      ~Dedupe.ACTIVE_LEARNING_NON_MEMORY_DEDUPE
+      ~Dedupe.SIMPLE_SIMILARITY_BASED_DEDUPE
