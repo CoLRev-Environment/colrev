@@ -1165,10 +1165,9 @@ class LocalIndex:
             #  and their IDs are not identical
             # For the same journal, only deduplicated records are indexed
             # We make sure that journals are only indexed once
-            if (
-                "local_curated_metadata" in r1_index["source_path"]
-                and "local_curated_metadata" in r2_index["source_path"]
-            ):
+            if "local_curated_metadata" in r1_index.get(
+                "source_path", ""
+            ) and "local_curated_metadata" in r2_index.get("source_path", ""):
 
                 if not set(Record(data=r1_index).get_colrev_id()).isdisjoint(
                     list(Record(data=r2_index).get_colrev_id())

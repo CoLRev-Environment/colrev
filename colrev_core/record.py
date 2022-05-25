@@ -100,6 +100,23 @@ class Record:
 
         return ret_str
 
+    def format_bib_style(self) -> str:
+        bib_formatted = (
+            self.data.get("author", "")
+            + " ("
+            + self.data.get("year", "")
+            + ") "
+            + self.data.get("title", "")
+            + ". "
+            + self.data.get("journal", "")
+            + self.data.get("booktitle", "")
+            + ", ("
+            + self.data.get("volume", "")
+            + ") "
+            + self.data.get("number", "")
+        )
+        return bib_formatted
+
     def get_data(self, *, stringify=False) -> dict:
         from colrev_core.review_dataset import ReviewDataset
 

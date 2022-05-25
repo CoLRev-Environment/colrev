@@ -253,7 +253,7 @@ class Dedupe(Process):
         for r in records_queue:
             try:
                 RECORD = Record(data=r)
-                r["colrev_id"] = RECORD.get_colrev_id()
+                r["colrev_id"] = RECORD.create_colrev_id()
             except NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
                 pass
@@ -457,7 +457,10 @@ class Dedupe(Process):
                 if "apply" != self.REVIEW_MANAGER.settings.dedupe.same_source_merges:
                     print(
                         "Warning: applying same source merge: "
-                        f"{main_record} - {dupe_record}"
+                        f"{main_record.get('colrev_origin', '')}/"
+                        f"{dupe_record.get('colrev_origin', '')}\n"
+                        f"  {Record(data=main_record).format_bib_style()}\n"
+                        f"  {Record(data=dupe_record).format_bib_style()}"
                     )
                 elif (
                     "prevent" == self.REVIEW_MANAGER.settings.dedupe.same_source_merges
