@@ -505,7 +505,9 @@ class LocalIndex:
         if "source_path" in RECORD.data:
             del RECORD.data["source_path"]
 
-        self.os.index(index=self.RECORD_INDEX, id=hash, body=RECORD.get_data())
+        self.os.index(
+            index=self.RECORD_INDEX, id=hash, body=RECORD.get_data(stringify=True)
+        )
 
         return
 

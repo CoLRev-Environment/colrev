@@ -156,10 +156,12 @@ class Record:
 
             for field in ReviewDataset.dict_fields:
                 if field in self.data:
-                    self.data[field] = save_field_dict(
-                        input_dict=self.data[field], key=field
-                    )
-                    self.data[field] = list_to_str(val=self.data[field])
+                    if isinstance(self.data[field], dict):
+                        self.data[field] = save_field_dict(
+                            input_dict=self.data[field], key=field
+                        )
+                    if isinstance(self.data[field], list):
+                        self.data[field] = list_to_str(val=self.data[field])
 
         return self.data
 
