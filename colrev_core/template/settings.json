@@ -19,7 +19,8 @@
             "scripts": [
                 "exclude_non_latin_alphabets",
                 "exclude_languages",
-                "exclude_collections"
+                "exclude_collections",
+                "exclude_predatory_journals"
             ]
         },
         {

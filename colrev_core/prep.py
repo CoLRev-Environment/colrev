@@ -304,6 +304,7 @@ class Preparation(Process):
 
         self.fields_to_keep += self.REVIEW_MANAGER.settings.prep.fields_to_keep
 
+        self.predatory_journals = self.load_predatory_journals()
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
         # It performs particularly well for short strings (single words/word pairs)
@@ -327,6 +328,9 @@ class Preparation(Process):
             },
             "exclude_collections": {
                 "script": self.exclude_collections,
+            },
+            "exclude_predatory_journals": {
+                "script": self.exclude_predatory_journals,
             },
             "remove_urls_with_500_errors": {
                 "script": self.remove_urls_with_500_errors,
@@ -479,6 +483,19 @@ class Preparation(Process):
                 raise ServiceNotAvailableException("OPENLIBRARY")
         return
 
+    def load_predatory_journals(self) -> dict:
+
+        import pkgutil
+
+        predatory_journals = {}
+
+        filedata = pkgutil.get_data(__name__, "template/predatory_journals_beall.csv")
+        if filedata:
+            for pj in filedata.decode("utf-8").splitlines():
+                predatory_journals[pj.lower()] = pj.lower()
+
+        return predatory_journals
+
     #
     # prep_scripts (in the order in which they should run)
     #
@@ -550,6 +567,13 @@ class Preparation(Process):
 
         if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
             RECORD.prescreen_exclude(reason="collection/proceedings")
+
+        return RECORD
+
+    def exclude_predatory_journals(self, RECORD: PrepRecord) -> PrepRecord:
+
+        if RECORD.data.get("journal", "NA").lower() in self.predatory_journals:
+            RECORD.prescreen_exclude(reason="predatory_journal")
 
         return RECORD
 
