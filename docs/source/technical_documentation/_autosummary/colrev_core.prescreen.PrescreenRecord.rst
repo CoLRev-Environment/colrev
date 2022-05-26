@@ -24,6 +24,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.add_provenance_all
       ~PrescreenRecord.complete_provenance
       ~PrescreenRecord.create_colrev_id
+      ~PrescreenRecord.format_bib_style
       ~PrescreenRecord.fuse_best_field
       ~PrescreenRecord.get_colrev_id
       ~PrescreenRecord.get_container_title

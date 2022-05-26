@@ -24,6 +24,7 @@ colrev\_core.prep.Preparation
       ~Preparation.exclude_collections
       ~Preparation.exclude_languages
       ~Preparation.exclude_non_latin_alphabets
+      ~Preparation.exclude_predatory_journals
       ~Preparation.format
       ~Preparation.format_author_field
       ~Preparation.format_minor
@@ -37,6 +38,7 @@ colrev\_core.prep.Preparation
       ~Preparation.get_record_from_local_index
       ~Preparation.get_year_from_vol_iss_jour_crossref
       ~Preparation.global_ids_consistency_check
+      ~Preparation.load_predatory_journals
       ~Preparation.main
       ~Preparation.prep_curated
       ~Preparation.prepare

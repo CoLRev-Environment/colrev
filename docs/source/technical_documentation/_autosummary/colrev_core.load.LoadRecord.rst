@@ -24,6 +24,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.add_provenance_all
       ~LoadRecord.complete_provenance
       ~LoadRecord.create_colrev_id
+      ~LoadRecord.format_bib_style
       ~LoadRecord.fuse_best_field
       ~LoadRecord.get_colrev_id
       ~LoadRecord.get_container_title

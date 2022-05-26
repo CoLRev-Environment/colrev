@@ -1149,13 +1149,11 @@ class LocalIndex:
             # Same repo (colrev_masterdata_provenance = CURATED: ...) and in LocalIndex
             # implies status > md_processed
             # ie., no duplicates if IDs differ
-            if (
-                "CURATED:" in r1_index["colrev_masterdata_provenance"]
-                and "CURATED:" in r2_index["colrev_masterdata_provenance"]
-            ):
-                if (
-                    r1_index["colrev_masterdata_provenance"]
-                    == r2_index["colrev_masterdata_provenance"]
+            if "CURATED:" in r1_index.get(
+                "colrev_masterdata_provenance", ""
+            ) and "CURATED:" in r2_index.get("colrev_masterdata_provenance", ""):
+                if r1_index.get("colrev_masterdata_provenance", "") == r2_index.get(
+                    "colrev_masterdata_provenance", ""
                 ):
                     if r1_index["ID"] == r2_index["ID"]:
                         return "yes"

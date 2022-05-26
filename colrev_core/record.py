@@ -148,6 +148,8 @@ class Record:
                             element.lstrip().rstrip()
                             for element in self.data[field].split(";")
                         ]
+                    if "colrev_id" == field:
+                        self.data[field] = sorted(list(set(self.data[field])))
                     for ind, val in enumerate(self.data[field]):
                         if len(val) > 0:
                             if ";" != val[-1]:

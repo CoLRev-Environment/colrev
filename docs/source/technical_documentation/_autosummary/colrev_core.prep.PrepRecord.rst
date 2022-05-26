@@ -28,6 +28,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.container_is_abbreviated
       ~PrepRecord.create_colrev_id
       ~PrepRecord.format_authors_string
+      ~PrepRecord.format_bib_style
       ~PrepRecord.fuse_best_field
       ~PrepRecord.get_abbrev_container_min_len
       ~PrepRecord.get_colrev_id

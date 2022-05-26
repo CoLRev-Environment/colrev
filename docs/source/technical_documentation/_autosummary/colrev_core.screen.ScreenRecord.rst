@@ -24,6 +24,7 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.add_provenance_all
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.create_colrev_id
+      ~ScreenRecord.format_bib_style
       ~ScreenRecord.fuse_best_field
       ~ScreenRecord.get_colrev_id
       ~ScreenRecord.get_container_title

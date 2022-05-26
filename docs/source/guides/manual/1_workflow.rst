@@ -9,7 +9,7 @@
    :alt: Workflow cycle
 
 
-Status
+CoLRev Status
 -------------------------------
 
 The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
@@ -21,7 +21,46 @@ It consists of the following (as shown in the screenshot below):
 
 `colrev status` should provide all necessary instructions for your project.
 
-.. code::
+.. sidebar::
+
+   **Status section**
+
+   - Reports the state of the records in the process
+
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+   |
+
+   **Instructions section**
+
+   - Recommends commands for the next processing steps
+
+   |
+   |
+   |
+
+   **Checks section**
+
+   - Checks consistency of file formats and structure
+
+
+.. code-block:: bash
 
    ________________________ Status _______________________________
 
@@ -47,11 +86,8 @@ It consists of the following (as shown in the screenshot below):
    Screen
       - Screen size            578
       - Included                49  ->   529 records excluded
-                                    -     11 : BC1_digital_technology
-                                    -     73 : BC2_value_network
-                                    -     36 : BC3_centralized_governance
-                                    -    148 : BC4_contract
-                                    -    264 : BC5_knowledge_work
+                                    -    265 : empiricalBC4_contract
+                                    -    264 : theory
 
    Data and synthesis
       - Total                   49
@@ -71,20 +107,28 @@ It consists of the following (as shown in the screenshot below):
    Versioning and collaboration
 
      Sharing requirement: processed
-     Local changes not yet on the server
-     Once you have committed your changes, upload them to the shared repository.
-     git push
+     Up-to-date
+     No versioning/collaboration tasks required at the moment.
 
 
    Checks
 
-     ReviewManager.check_repo()  ...  SUCCESS
+     ReviewManager.check_repo()  ...  Everything ok.
+     ReviewManager.format()      ...  Everything ok.
+
+
+CoLRev Operation
+-------------------------------
 
 
 
+.. figure:: ../../../figures/state-machine.svg
+   :width: 700
+   :alt: Overview of states
 
-Analyze changes
--------------------------
+
+Git: analyze changes
+-------------------------------
 
 After each step, check and validate the changes using a git `client of your choice <https://git-scm.com/downloads/guis>`_:
 
