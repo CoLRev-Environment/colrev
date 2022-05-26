@@ -41,7 +41,7 @@ class Dedupe(Process):
         self,
         *,
         min_n_active_learning: int = 50,
-        max_n_active_learning_memory: int = 2000,
+        max_n_active_learning_memory: int = 3000,
     ):
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
@@ -263,9 +263,10 @@ class Dedupe(Process):
 
         return references
 
-    def setup_active_learning_dedupe(self, *, retrain: bool):
+    def setup_active_learning_dedupe(self, *, retrain: bool, in_memory: bool):
         """Prepare data for active learning setup"""
         import dedupe
+        import random
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
         logging.getLogger("dedupe.training").setLevel(logging.WARNING)
@@ -283,6 +284,23 @@ class Dedupe(Process):
         # to use Gazetteer (dedupe_io) if applicable (no duplicates in pos-md_processed)
 
         data_d = self.__readData()
+
+        # to address memory issues, we select a sample from data_d
+        # and feed it to prepare_training:
+        # https://github.com/dedupeio/dedupe/issues/920
+
+        if not in_memory:
+            # Note: we have to make sure that when we sample for training,
+            # the not-in-memory mode is used for duplicate clustering
+            # otherwise, non-sampled duplicates will not be identified
+            max_training_sample_size = 3000
+            self.REVIEW_MANAGER.logger.info(
+                f"Selecting a random sample of {max_training_sample_size}"
+                " to avoid memory problems"
+            )
+            # TODO : consider similar proportions of post-md_processed/md_prepared?
+            keys = random.sample(list(data_d.keys()), max_training_sample_size)
+            data_d = {key: data_d[key] for key in keys}
 
         ret_dict: typing.Dict[str, typing.Any] = {}
         ret_dict["n_new"] = len(
@@ -724,13 +742,18 @@ class Dedupe(Process):
     def cluster_tuples(
         self,
         *,
-        deduper,
         partition_threshold: float = None,
         merge_threshold: float = None,
+        in_memory: bool = True,
     ):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
         import statistics
+        import dedupe
+        import sqlite3
+
+        with open(self.settings_file, "rb") as sf:
+            deduper = dedupe.StaticDedupe(sf, num_cores=4)
 
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
@@ -748,15 +771,78 @@ class Dedupe(Process):
                 self.REVIEW_MANAGER.settings.dedupe.partition_threshold
             )
 
-        self.REVIEW_MANAGER.report_logger.info(
-            f"set partition_threshold: {partition_threshold}"
-        )
+        if in_memory:
+            self.REVIEW_MANAGER.report_logger.info(
+                f"set partition_threshold: {partition_threshold}"
+            )
 
-        clustered_dupes = deduper.partition(data_d, partition_threshold)
+            clustered_dupes = deduper.partition(data_d, partition_threshold)
+
+        else:
+
+            for field in deduper.fingerprinter.index_fields:
+                field_data = (r[field] for r in data_d.values() if field in r)
+                deduper.fingerprinter.index(field_data, field)
+
+            full_data = ((r["ID"], r) for r in data_d.values())
+            b_data = deduper.fingerprinter(full_data)
+
+            # use sqlite: light-weight, file-based
+            # https://docs.python.org/3/library/sqlite3.html
+            # https://dedupeio.github.io/dedupe-examples/docs/pgsql_big_dedupe_example.html
+
+            dedupe_db = Path("dedupe.db")
+            dedupe_db.unlink(missing_ok=True)
+            con = sqlite3.connect(str(dedupe_db))
+
+            cur = con.cursor()
+
+            cur.execute("""DROP TABLE IF EXISTS blocking_map""")
+            cur.execute("""CREATE TABLE blocking_map (block_key text, ID INTEGER)""")
+            cur.executemany("""INSERT into blocking_map values (?, ?)""", b_data)
+
+            records_data = {r["ID"]: r for r in data_d.values()}
+
+            def record_pairs(result_set):
+
+                for i, row in enumerate(result_set):
+                    ID_a, ID_b = row
+                    record_a = (ID_a, records_data[ID_a])
+                    record_b = (ID_b, records_data[ID_b])
+
+                    yield record_a, record_b
+
+            cur.execute(
+                """select DISTINCT l.ID as east, r.ID as west
+                        from blocking_map as l
+                        INNER JOIN blocking_map as r
+                        using (block_key)
+                        where east != west"""
+            )
+
+            clustered_dupes = list(
+                deduper.cluster(
+                    deduper.score(record_pairs(cur.fetchall())), threshold=0.5
+                )
+            )
+
+            # import csv
+            # clusterin_results_csv = Path("clusterin_results.csv")
+            # clusterin_results_csv.unlink(missing_ok=True)
+            # with open(clusterin_results_csv, "w") as out:
+            #     csv_out = csv.writer(out)
+            #     csv_out.writerow(["ID1", "ID2", "conf"])
+            #     for row in list(cluster_ids(clustered_dupes)):
+            #         if row[0] != row[1]:  # only focus on non-identical IDs
+            #             csv_out.writerow(row)
+
+            con.commit()
+            con.close()
+            dedupe_db.unlink(missing_ok=True)
+
         self.REVIEW_MANAGER.report_logger.info(
             f"Number of duplicate sets {len(clustered_dupes)}"
         )
-
         # Results
         cluster_membership = {}
         dedupe_decision_list = []
@@ -765,7 +851,7 @@ class Dedupe(Process):
                 {
                     "cluster_id": cluster_id,
                     "records": list(records),
-                    "score": list(scores).pop(),
+                    "score": statistics.mean(list(scores)),
                 }
             )
             for record_id, score in zip(records, scores):
@@ -909,12 +995,13 @@ class Dedupe(Process):
         collected_non_duplicates = []
         for ID, vals in data_d.items():
             vals.update(error="")
-            cur_cluster_membership = cluster_membership[ID]
-            vals.update(cur_cluster_membership)
-            if cur_cluster_membership["confidence_score"] > merge_threshold:
-                collected_duplicates.append(vals)
-            else:
-                collected_non_duplicates.append(vals)
+            if ID in cluster_membership:
+                cur_cluster_membership = cluster_membership[ID]
+                vals.update(cur_cluster_membership)
+                if cur_cluster_membership["confidence_score"] > merge_threshold:
+                    collected_duplicates.append(vals)
+                else:
+                    collected_non_duplicates.append(vals)
 
         # Set confidence scores to average of group
         for cluster_nr in {d["cluster_id"] for d in collected_duplicates}:
