@@ -1,6 +1,5 @@
 #! /usr/bin/env python
 import hashlib
-import json
 import re
 import typing
 from datetime import datetime
@@ -40,7 +39,7 @@ class Search(Process):
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         self.PREPARATION = Preparation(
-            REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         self.search_scripts: typing.List[typing.Dict[str, typing.Any]] = [
@@ -134,7 +133,7 @@ class Search(Process):
                 for item in w1:
                     if "DOI" in item:
                         if item["DOI"].upper() not in available_ids:
-                            record = self.PREPARATION.crossref_json_to_record(item)
+                            record = self.PREPARATION.crossref_json_to_record(item=item)
 
                             # TODO : collect list of records
                             # for more efficient selection
@@ -168,7 +167,7 @@ class Search(Process):
                                 "https://api.crossref.org/works/" + item["DOI"]
                             )
                             record = self.PREPARATION.get_link_from_doi(
-                                PrepRecord(record)
+                                PrepRecord(data=record)
                             ).get_data()
                             available_ids.append(record["doi"])
                             records[record["ID"]] = record
@@ -195,44 +194,6 @@ class Search(Process):
             )
 
         return
-
-    def get_venue_abbreviated(self, *, venue_key: str) -> str:
-        venue_abbrev = ""
-
-        api_url = "https://dblp.org/search/publ/api?q="
-        headers = {"user-agent": f"{__name__}  (mailto:{self.REVIEW_MANAGER.EMAIL})"}
-        query = (
-            venue_key.replace("journals/", "journal /").replace("conf/", "Conference /")
-            + "+"
-            + str(2020)
-        )
-        url = api_url + query.replace(" ", "+") + f"&format=json&h={500}&f={0}"
-        # print(url)
-        ret = requests.get(url, headers=headers, timeout=self.TIMEOUT)
-        ret.raise_for_status()
-        if ret.status_code == 500:
-            return ""
-
-        data = json.loads(ret.text)
-        if "hits" not in data["result"]:
-            print("no hits")
-            return ""
-
-        if "hit" not in data["result"]["hits"]:
-            print("no hit")
-            return ""
-        hits = data["result"]["hits"]["hit"]
-
-        for hit in hits:
-            item = hit["info"]
-
-            retrieved_record = self.PREPARATION.dblp_json_to_record(item)
-            if f"{venue_key}/" in retrieved_record["dblp_key"]:
-                venue_abbrev = retrieved_record.get(
-                    "journal", retrieved_record.get("booktitle", "")
-                )
-
-        return venue_abbrev
 
     def search_dblp(self, *, params, feed_file):
         from colrev_core.prep import Preparation
@@ -289,7 +250,8 @@ class Search(Process):
 
                     retrieved = False
                     PREPARATION = Preparation(
-                        self.REVIEW_MANAGER, notify_state_transition_process=False
+                        REVIEW_MANAGER=self.REVIEW_MANAGER,
+                        notify_state_transition_process=False,
                     )
                     for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
                         if "colrev_data_provenance" in RETRIEVED_RECORD.data:
@@ -351,7 +313,9 @@ class Search(Process):
                         continue
 
                     records_dict = {r["ID"]: r for r in records}
-                    ReviewDataset.save_records_dict_to_file(records_dict, feed_file)
+                    ReviewDataset.save_records_dict_to_file(
+                        records=records_dict, save_path=feed_file
+                    )
 
         except requests.exceptions.HTTPError:
             pass
@@ -674,7 +638,7 @@ class Search(Process):
             search_rd = {x["ID"]: x for x in search_rd.values() if x_pdf_path.is_file()}
             if len(search_rd.values()) != 0:
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                    search_rd, save_path=feed_file
+                    records=search_rd, save_path=feed_file
                 )
 
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
@@ -1385,7 +1349,7 @@ class Search(Process):
                 f"Retrieve from {feed_item.source_identifier}: {params}"
             )
 
-            script["script"](params, feed_file)
+            script["script"](params=params, feed_file=feed_file)
 
             if feed_file.is_file():
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
