@@ -94,8 +94,11 @@ def debug_pdf_get():
 def debug_data():
 
     from colrev_core.data import Data
+    from colrev_core.review_manager import ReviewManager
 
-    DATA = Data()
+    REVIEW_MANAGER = ReviewManager()
+
+    DATA = Data(REVIEW_MANAGER=REVIEW_MANAGER)
     records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
     included = DATA.get_record_ids_for_synthesis(records)
 
@@ -289,7 +292,7 @@ def corrections():
 
     from colrev_core.process import CheckProcess
 
-    CheckProcess(REVIEW_MANAGER)
+    CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
     REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
 
     return
