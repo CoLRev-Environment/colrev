@@ -758,7 +758,9 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.logger.info("Clustering duplicates...")
 
         data_d = self.__readData()
-        self.REVIEW_MANAGER.logger.info(f"Number of records: {len(data_d.items())}")
+        self.REVIEW_MANAGER.logger.info(
+            f"Number of records (before): {len(data_d.items())}"
+        )
 
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
@@ -1027,59 +1029,31 @@ class Dedupe(Process):
                 if collected_non_duplicate["cluster_id"] == cluster_nr:
                     collected_non_duplicate["confidence_score"] = avg_confidence
 
-        duplicates_df = pd.DataFrame.from_records(collected_duplicates)
-        duplicates_df.fillna("", inplace=True)
-        duplicates_df["distinct_str"] = (
-            duplicates_df["author"]
-            + duplicates_df["title"]
-            + duplicates_df["year"]
-            + duplicates_df["container_title"]
-            + duplicates_df["volume"]
-            + duplicates_df["number"]
-            + duplicates_df["pages"]
-        )
-        # Only export bibliographically distict cases
-        duplicates_df = duplicates_df.groupby("distinct_str").filter(
-            lambda x: len(x) == 1
-        )
-        duplicates_df.drop(columns=["distinct_str"], inplace=True)
+        if len(collected_duplicates) == 0:
+            print("No duplicates found")
+        else:
+            duplicates_df = pd.DataFrame.from_records(collected_duplicates)
+            duplicates_df.fillna("", inplace=True)
+            duplicates_df["distinct_str"] = (
+                duplicates_df["author"]
+                + duplicates_df["title"]
+                + duplicates_df["year"]
+                + duplicates_df["container_title"]
+                + duplicates_df["volume"]
+                + duplicates_df["number"]
+                + duplicates_df["pages"]
+            )
+            # Only export bibliographically distict cases
+            duplicates_df = duplicates_df.groupby("distinct_str").filter(
+                lambda x: len(x) == 1
+            )
+            duplicates_df.drop(columns=["distinct_str"], inplace=True)
 
-        duplicates_df = duplicates_df[
-            [
-                "error",
-                "confidence_score",
-                "cluster_id",
-                "ID",
-                "author",
-                "title",
-                "year",
-                "container_title",
-                "volume",
-                "number",
-                "pages",
-            ]
-        ]
-
-        duplicates_df = duplicates_df.groupby("cluster_id").filter(lambda x: len(x) > 1)
-        duplicates_df = duplicates_df.sort_values(
-            ["confidence_score", "cluster_id"], ascending=(True, False)
-        )
-        duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(4)
-        # to adjust column widths in ExcelWriter:
-        # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-        duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
-        duplicates_df.to_excel("duplicates_to_validate.xlsx", index=False)
-
-        if len(collected_non_duplicates) > 0:
-            non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
-            # To develop in jupyter:
-            # non_duplicates_df.to_csv(output_file, index=False)
-            # non_duplicates_df = pd.read_csv("duplicates_for_validation.csv")
-            non_duplicates_df = non_duplicates_df[
+            duplicates_df = duplicates_df[
                 [
                     "error",
-                    "cluster_id",
                     "confidence_score",
+                    "cluster_id",
                     "ID",
                     "author",
                     "title",
@@ -1090,21 +1064,58 @@ class Dedupe(Process):
                     "pages",
                 ]
             ]
-            non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
+
+            duplicates_df = duplicates_df.groupby("cluster_id").filter(
                 lambda x: len(x) > 1
             )
-            non_duplicates_df = non_duplicates_df.sort_values(
+            duplicates_df = duplicates_df.sort_values(
                 ["confidence_score", "cluster_id"], ascending=(True, False)
             )
-            non_duplicates_df["confidence_score"] = non_duplicates_df[
-                "confidence_score"
-            ].round(4)
+            duplicates_df["confidence_score"] = duplicates_df["confidence_score"].round(
+                4
+            )
             # to adjust column widths in ExcelWriter:
             # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
-            non_duplicates_df = non_duplicates_df.style.apply(
-                highlight_cells, axis=None
-            )
-            non_duplicates_df.to_excel("non_duplicates_to_validate.xlsx", index=False)
+            duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
+            duplicates_df.to_excel("duplicates_to_validate.xlsx", index=False)
+
+            if len(collected_non_duplicates) > 0:
+                non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
+                # To develop in jupyter:
+                # non_duplicates_df.to_csv(output_file, index=False)
+                # non_duplicates_df = pd.read_csv("duplicates_for_validation.csv")
+                non_duplicates_df = non_duplicates_df[
+                    [
+                        "error",
+                        "cluster_id",
+                        "confidence_score",
+                        "ID",
+                        "author",
+                        "title",
+                        "year",
+                        "container_title",
+                        "volume",
+                        "number",
+                        "pages",
+                    ]
+                ]
+                non_duplicates_df = non_duplicates_df.groupby("cluster_id").filter(
+                    lambda x: len(x) > 1
+                )
+                non_duplicates_df = non_duplicates_df.sort_values(
+                    ["confidence_score", "cluster_id"], ascending=(True, False)
+                )
+                non_duplicates_df["confidence_score"] = non_duplicates_df[
+                    "confidence_score"
+                ].round(4)
+                # to adjust column widths in ExcelWriter:
+                # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
+                non_duplicates_df = non_duplicates_df.style.apply(
+                    highlight_cells, axis=None
+                )
+                non_duplicates_df.to_excel(
+                    "non_duplicates_to_validate.xlsx", index=False
+                )
 
         return
 
