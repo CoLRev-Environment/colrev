@@ -628,9 +628,12 @@ class Preparation(Process):
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
+        from copy import deepcopy
+
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
+
         if "doi" in RECORD.data:
-            R_COPY = PrepRecord(data=RECORD.get_data())
+            R_COPY = PrepRecord(data=deepcopy(RECORD.get_data()))
             CROSSREF_MD = self.get_masterdata_from_crossref(RECORD=R_COPY)
             for k, v in CROSSREF_MD.data.items():
                 if k not in fields_to_check:
@@ -654,7 +657,7 @@ class Preparation(Process):
                         )
 
         if "url" in RECORD.data:
-            R_COPY = PrepRecord(data=RECORD.get_data())
+            R_COPY = PrepRecord(data=deepcopy(RECORD.get_data()))
             URL_MD = self.retrieve_md_from_url(RECORD=R_COPY)
             for k, v in URL_MD.data.items():
                 if k not in fields_to_check:
@@ -674,7 +677,8 @@ class Preparation(Process):
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_hint(
-                            field=k, hint=f"disagreement with website metadata ({v})"
+                            field=k,
+                            hint=f"disagreement with website metadata ({v})",
                         )
 
         return RECORD
@@ -1517,7 +1521,11 @@ class Preparation(Process):
                 "http://127.0.0.1:1969/web",
                 headers=headers,
                 data=RECORD.data["url"],
+                timeout=self.TIMEOUT,
             )
+
+            if et.status_code != 200:
+                return RECORD
 
             items = json.loads(et.content.decode())
             if len(items) == 0:
@@ -2678,6 +2686,8 @@ class Preparation(Process):
                 prepare_data = load_prep_data_for_debug(
                     debug_ids=debug_ids, debug_file=debug_file
                 )
+                if prepare_data["nr_tasks"] == 0:
+                    print("ID not found in history.")
             else:
                 prepare_data = load_prep_data()
 
@@ -2699,6 +2709,7 @@ class Preparation(Process):
                     {
                         "record": PrepRecord(data=item),
                         "prep_round_scripts": prep_round.scripts,
+                        "prep_round": prep_round.name,
                     }
                 )
             return batch
@@ -2713,7 +2724,7 @@ class Preparation(Process):
             if "NA" != debug_file:
                 with open(debug_file, encoding="utf8") as target_db:
                     records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        target_db.read()
+                        load_str=target_db.read()
                     )
 
                 for record in records_dict.values():
@@ -2738,21 +2749,25 @@ class Preparation(Process):
                 # self.REVIEW_MANAGER.logger.info("Current record")
                 # self.REVIEW_MANAGER.pp.pprint(original_records)
                 records = REVIEW_DATASET.retrieve_records_from_history(
-                    original_records, RecordState.md_imported
+                    original_records=original_records,
+                    condition_state=RecordState.md_imported,
                 )
                 self.REVIEW_MANAGER.logger.info(
                     "Imported record (retrieved from history)"
                 )
 
-            print(PrepRecord(data=records[0]))
-            input("Press Enter to continue")
-            print("\n\n")
-            prep_data = {
-                "nr_tasks": len(debug_ids_list),
-                "PAD": len(debug_ids),
-                "items": records,
-                "prior_ids": [debug_ids_list],
-            }
+            if len(records) == 0:
+                prep_data = {"nr_tasks": 0, "PAD": 0, "items": [], "prior_ids": []}
+            else:
+                print(PrepRecord(data=records[0]))
+                input("Press Enter to continue")
+                print("\n\n")
+                prep_data = {
+                    "nr_tasks": len(debug_ids_list),
+                    "PAD": len(debug_ids),
+                    "items": records,
+                    "prior_ids": [debug_ids_list],
+                }
             return prep_data
 
         def setup_prep_round(*, i, prep_round):
@@ -2833,6 +2848,8 @@ class Preparation(Process):
             setup_prep_round(i=i, prep_round=prep_round)
 
             preparation_batch = get_preparation_batch(prep_round=prep_round)
+            if len(preparation_batch) == 0:
+                return
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 # Note: preparation_batch is not turned into a list of records.
@@ -2871,9 +2888,9 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.reorder_log(IDs=preparation_batch_IDs)
 
                 # Note: for formatting...
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                # records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+                # self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+                # self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(
                     msg=f"Prepare records ({prep_round.name})", saved_args=saved_args
