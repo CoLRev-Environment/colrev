@@ -1503,12 +1503,10 @@ class Preparation(Process):
         return RECORD
 
     def retrieve_md_from_url(self, RECORD: PrepRecord) -> PrepRecord:
-        from colrev_core.load import Loader
+        from colrev_core.environment import ZoteroTranslationService
 
-        LOADER = Loader(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
-        LOADER.start_zotero_translators()
+        ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
+        ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
         # TODO : change to the similar merge()/fuse_best_field structure?
 

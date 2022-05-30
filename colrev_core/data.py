@@ -502,11 +502,14 @@ class EndnoteEndpoint:
         from colrev_core import load as cc_load
         from colrev_core.review_dataset import ReviewDataset
 
-        def zotero_conversion(LOADER, data):
+        def zotero_conversion(data):
             import requests
             import json
 
-            LOADER.start_zotero_translators()
+            from colrev_core.environment import ZoteroTranslationService
+
+            ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
+            ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
             headers = {"Content-type": "text/plain"}
             r = requests.post(
@@ -534,10 +537,6 @@ class EndnoteEndpoint:
 
             return et.content
 
-        LOADER = cc_load.Loader(
-            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
-        )
-
         endpoint_path = Path("data/endnote")
         endpoint_path.mkdir(exist_ok=True, parents=True)
 
@@ -554,7 +553,7 @@ class EndnoteEndpoint:
 
             data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
 
-            enl_data = zotero_conversion(LOADER, data)
+            enl_data = zotero_conversion(data)
 
             with open(export_filepath, "w") as w:
                 w.write(enl_data.decode("utf-8"))
@@ -588,7 +587,7 @@ class EndnoteEndpoint:
 
                 data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
 
-                enl_data = zotero_conversion(LOADER, data)
+                enl_data = zotero_conversion(data)
 
                 next_file_number = str(max(file_numbers) + 1)
                 export_filepath = endpoint_path / Path(
