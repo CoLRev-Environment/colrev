@@ -493,8 +493,8 @@ class ReviewDataset:
         # Note : temporary fix
         # (to prevent failing format checks caused by special characters)
 
-        records = self.load_records_dict()
-        self.save_records_dict(records=records)
+        # records = self.load_records_dict()
+        # self.save_records_dict(records=records)
         self.add_record_changes()
 
         return records
