@@ -1646,7 +1646,7 @@ class ReviewDataset:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
                             "Record with exclusion_criterion but before "
-                            f"inclusion stage: {ID}, {status}"
+                            f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:
             raise FieldError("\n".join(field_errors))

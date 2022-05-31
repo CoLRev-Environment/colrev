@@ -581,17 +581,17 @@ class Status(Process):
             self.REVIEW_MANAGER.settings.project.delay_automated_processing
         )
         msgs = {
-            "load": "Import search results",
-            "prep": "Prepare records",
-            "prep_man": "Prepare records (manually)",
-            "dedupe": "Deduplicate records",
-            "prescreen": "Prescreen records",
-            "pdf_get": "Retrieve pdfs",
-            "pdf_get_man": "Retrieve pdfs (manually)",
-            "pdf_prep": "Prepare pdfs",
-            "pdf_prep_man": "Prepare pdfs (manually)",
-            "screen": "Screen records",
-            "data": "Extract data/synthesize records",
+            "load": "Next step: Import search results",
+            "prep": "Next step: Prepare records",
+            "prep_man": "Next step: Prepare records (manually)",
+            "dedupe": "Next step: Deduplicate records",
+            "prescreen": "Next step: Prescreen records",
+            "pdf_get": "Next step: Retrieve PDFs",
+            "pdf_get_man": "Next step: Retrieve PDFs (manually)",
+            "pdf_prep": "Next step: Prepare PDFs",
+            "pdf_prep_man": "Next step: Prepare PDFs (manually)",
+            "screen": "Next step: Screen records",
+            "data": "Next step: Extract data/synthesize records",
         }
         if stat["colrev_status"]["currently"]["md_retrieved"] > 0:
             instruction = {
@@ -812,7 +812,7 @@ class Status(Process):
             item = {
                 "title": "Up-to-date",
                 "level": "SUCCESS",
-                "msg": "No versioning/collaboration tasks required at the moment.",
+                "msg": "No action required.",
             }
             collaboration_instructions["items"].append(item)
 
@@ -832,305 +832,167 @@ class Status(Process):
         )
         return instructions
 
-    def stat_print(
-        self,
-        *,
-        separate_category: bool,
-        field1: str,
-        val1: str,
-        connector: str = None,
-        field2: str = None,
-        val2: str = None,
-    ) -> None:
-        if field2 is None:
-            field2 = ""
-        if val2 is None:
-            val2 = ""
-        if field1 != "":
-            if separate_category:
-                stat = " |  - " + field1
-            else:
-                stat = "   - " + field1
-        else:
-            if separate_category:
-                stat = " | "
-            else:
-                stat = " "
-        rjust_padd = 31 - len(stat)
-        stat = stat + str(val1).rjust(rjust_padd, " ")
-        if connector is not None:
-            stat = stat + "  " + connector + "  "
-        if val2 != "":
-            rjust_padd = 41 - len(stat)
-            stat = stat + str(val2).rjust(rjust_padd, " ") + " "
-        if field2 != "":
-            stat = stat + str(field2)
-        # TBD: if we close it, the closing | does not align...
-        # if separate_category:
-        #     ljust_pad = (95 - len(stat))
-        #     stat = stat.ljust(ljust_pad, "-") + "|"
-
-        print(stat)
-        return
-
     def print_review_status(self, *, status_info: dict) -> None:
+        class colors:
+            RED = "\033[91m"
+            GREEN = "\033[92m"
+            ORANGE = "\033[93m"
+            BLUE = "\033[94m"
+            END = "\033[0m"
 
-        # Principle: first column shows total records/PDFs in each stage
-        # the second column shows
-        # (blank cell)  * the number of records requiring manual action
-        #               -> the number of records excluded/merged
-
-        print("\n")
-        print("________________________ Status _______________________________")
+        print("")
+        print("Status")
         print("")
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-            print(" Search")
-            print("  - No records added yet")
-        else:
+            print(" - Search        0 records")
+            return
 
-            stat = status_info["colrev_status"]
+        # NOTE: the first figure should always
+        # refer to the nr of records that completed this step
 
-            print(" Search")
-            perc_curated = 0
-            denominator = (
-                stat["overall"]["md_prepared"]
-                + stat["currently"]["md_needs_manual_preparation"]
-                - stat["currently"]["md_duplicates_removed"]
-            )
-            if denominator > 0:
+        stat = status_info["colrev_status"]
 
-                perc_curated = stat["CURATED_records"] / (denominator)
-            if stat["overall"]["md_prepared"] > 0:
-                self.stat_print(
-                    separate_category=False,
-                    field1="Records retrieved",
-                    val1=stat["overall"]["md_retrieved"],
-                    connector="*",
-                    field2=f"curated ({round(perc_curated*100, 2)}%)",
-                    val2=str(stat["CURATED_records"]),
-                )
-            else:
-                self.stat_print(
-                    separate_category=False,
-                    field1="Records retrieved",
-                    val1=stat["overall"]["md_retrieved"],
-                )
-            print(" ______________________________________________________________")
-            print(" | Metadata preparation                                         ")
-            if stat["currently"]["md_retrieved"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="not yet imported",
-                    val2=stat["currently"]["md_retrieved"],
-                )
-            self.stat_print(
-                separate_category=True,
-                field1="Records imported",
-                val1=stat["overall"]["md_imported"],
-            )
-            if stat["currently"]["md_imported"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="need preparation",
-                    val2=stat["currently"]["md_imported"],
-                )
-            if stat["currently"]["md_needs_manual_preparation"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to prepare (manually)",
-                    val2=stat["currently"]["md_needs_manual_preparation"],
-                )
-            self.stat_print(
-                separate_category=True,
-                field1="Records prepared",
-                val1=stat["overall"]["md_prepared"],
-            )
-            if stat["currently"]["md_prepared"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to deduplicate",
-                    val2=stat["currently"]["md_prepared"],
-                )
-            self.stat_print(
-                separate_category=True,
-                field1="Records processed",
-                val1=stat["overall"]["md_processed"],
-                connector="->",
-                field2="duplicates removed",
-                val2=stat["currently"]["md_duplicates_removed"],
-            )
-            print(" |_____________________________________________________________")
-            print("")
-            print(" Prescreen")
-            if stat["overall"]["rev_prescreen"] == 0:
-                self.stat_print(
-                    separate_category=False, field1="Not initiated", val1=""
-                )
-            else:
-                self.stat_print(
-                    separate_category=False,
-                    field1="Prescreen size",
-                    val1=stat["overall"]["rev_prescreen"],
-                )
-                if 0 != stat["currently"]["md_processed"]:
-                    self.stat_print(
-                        separate_category=False,
-                        field1="",
-                        val1="",
-                        connector="*",
-                        field2="to prescreen",
-                        val2=stat["currently"]["md_processed"],
-                    )
-                self.stat_print(
-                    separate_category=False,
-                    field1="Included",
-                    val1=stat["overall"]["rev_prescreen_included"],
-                    connector="->",
-                    field2="records excluded",
-                    val2=stat["currently"]["rev_prescreen_excluded"],
-                )
+        perc_curated = 0
+        denominator = (
+            stat["overall"]["md_prepared"]
+            + stat["currently"]["md_needs_manual_preparation"]
+            - stat["currently"]["md_duplicates_removed"]
+        )
+        if denominator > 0:
 
-            print(" ______________________________________________________________")
-            print(" | PDF preparation                                             ")
-            if 0 != stat["currently"]["rev_prescreen_included"]:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to retrieve",
-                    val2=stat["currently"]["rev_prescreen_included"],
-                )
-            if 0 != stat["currently"]["pdf_needs_manual_retrieval"]:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to retrieve manually",
-                    val2=stat["currently"]["pdf_needs_manual_retrieval"],
-                )
-            if stat["currently"]["pdf_not_available"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="PDFs imported",
-                    val1=stat["overall"]["pdf_imported"],
-                    connector="*",
-                    field2="not available",
-                    val2=stat["currently"]["pdf_not_available"],
-                )
-            else:
-                self.stat_print(
-                    separate_category=True,
-                    field1="PDFs imported",
-                    val1=stat["overall"]["pdf_imported"],
-                )
-            if stat["currently"]["pdf_needs_manual_preparation"] > 0:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to prepare (manually)",
-                    val2=stat["currently"]["pdf_needs_manual_preparation"],
-                )
-            if 0 != stat["currently"]["pdf_imported"]:
-                self.stat_print(
-                    separate_category=True,
-                    field1="",
-                    val1="",
-                    connector="*",
-                    field2="to prepare",
-                    val2=stat["currently"]["pdf_imported"],
-                )
-            self.stat_print(
-                separate_category=True,
-                field1="PDFs prepared",
-                val1=stat["overall"]["pdf_prepared"],
+            perc_curated = stat["CURATED_records"] / (denominator)
+
+        rjust_padd = 7
+        search_info = (
+            "  Search        "
+            + f'{str(stat["overall"]["md_retrieved"]).rjust(rjust_padd, " ")} retrieved'
+        )
+        search_add_info = []
+        if stat["overall"]["md_prepared"] > 0:
+            search_add_info.append(f"{round(perc_curated*100, 2)}% curated")
+        if stat["currently"]["md_retrieved"] > 0:
+            search_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["md_retrieved"]}'
+                f" to load{colors.END}"
+            )
+        if len(search_add_info) > 0:
+            search_info += f'    ({", ".join(search_add_info)})'
+        print(search_info)
+
+        metadata_info = (
+            "  Metadata      "
+            + f'{str(stat["overall"]["md_processed"]).rjust(rjust_padd, " ")} processed'
+        )
+        metadata_add_info = []
+        if stat["currently"]["md_duplicates_removed"] > 0:
+            metadata_add_info.append(
+                f'{stat["currently"]["md_duplicates_removed"]} duplicates removed'
             )
 
-            print(" |_____________________________________________________________")
-            print("")
-            print(" Screen")
-            if stat["overall"]["rev_screen"] == 0:
-                self.stat_print(
-                    separate_category=False, field1="Not initiated", val1=""
-                )
-            else:
-                self.stat_print(
-                    separate_category=False,
-                    field1="Screen size",
-                    val1=stat["overall"]["rev_screen"],
-                )
-                if 0 != stat["currently"]["pdf_prepared"]:
-                    self.stat_print(
-                        separate_category=False,
-                        field1="",
-                        val1="",
-                        connector="*",
-                        field2="to screen",
-                        val2=stat["currently"]["pdf_prepared"],
-                    )
-                self.stat_print(
-                    separate_category=False,
-                    field1="Included",
-                    val1=stat["overall"]["rev_included"],
-                    connector="->",
-                    field2="records excluded",
-                    val2=stat["currently"]["rev_excluded"],
-                )
-                if "exclusion" in stat["currently"]:
-                    for crit, nr in stat["currently"]["exclusion"].items():
-                        self.stat_print(
-                            separate_category=False,
-                            field1="",
-                            val1="",
-                            connector="-",
-                            field2=f": {crit}",
-                            val2=nr,
-                        )
+        if stat["currently"]["md_imported"] > 0:
+            metadata_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["md_imported"]}'
+                f" to prepare{colors.END}"
+            )
 
-            print("")
-            print(" Data and synthesis")
-            if stat["overall"]["rev_included"] == 0:
-                self.stat_print(
-                    separate_category=False, field1="Not initiated", val1=""
-                )
-            else:
-                self.stat_print(
-                    separate_category=False,
-                    field1="Total",
-                    val1=stat["overall"]["rev_included"],
-                )
-                if 0 != stat["currently"]["rev_included"]:
-                    self.stat_print(
-                        separate_category=False,
-                        field1="Synthesized",
-                        val1=stat["overall"]["rev_synthesized"],
-                        connector="*",
-                        field2="to synthesize",
-                        val2=stat["currently"]["rev_included"],
-                    )
-                else:
-                    self.stat_print(
-                        separate_category=False,
-                        field1="Synthesized",
-                        val1=stat["overall"]["rev_synthesized"],
-                    )
+        if stat["currently"]["md_needs_manual_preparation"] > 0:
+            metadata_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["md_needs_manual_preparation"]} '
+                "to prepare manually{colors.END}"
+            )
 
-            print("_______________________________________________________________")
+        if stat["currently"]["md_prepared"] > 0:
+            metadata_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["md_prepared"]}'
+                f" to deduplicate{colors.END}"
+            )
+
+        if len(metadata_add_info) > 0:
+            metadata_info += f"    ({', '.join(metadata_add_info)})"
+        print(metadata_info)
+
+        prescreen_info = (
+            "  Prescreen     "
+            + f'{str(stat["overall"]["rev_prescreen_included"]).rjust(rjust_padd, " ")}'
+            " included"
+        )
+        prescreen_add_info = []
+        if stat["currently"]["rev_prescreen_excluded"] > 0:
+            prescreen_add_info.append(
+                f'{stat["currently"]["rev_prescreen_excluded"]} excluded'
+            )
+        if stat["currently"]["md_processed"] > 0:
+            prescreen_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["md_processed"]}'
+                f" to prescreen{colors.END}"
+            )
+        if len(prescreen_add_info) > 0:
+            prescreen_info += f"     ({', '.join(prescreen_add_info)})"
+        print(prescreen_info)
+
+        pdfs_info = (
+            "  PDFs          "
+            + f'{str(stat["overall"]["pdf_prepared"]).rjust(rjust_padd, " ")} prepared'
+        )
+        pdf_add_info = []
+        if stat["currently"]["rev_prescreen_included"] > 0:
+            pdf_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["rev_prescreen_included"]}'
+                f" to retrieve{colors.END}"
+            )
+        if stat["currently"]["pdf_needs_manual_retrieval"] > 0:
+            pdf_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["pdf_needs_manual_retrieval"]}'
+                f" to retrieve manually{colors.END}"
+            )
+        if stat["currently"]["pdf_not_available"] > 0:
+            pdf_add_info.append(
+                f'{stat["currently"]["pdf_not_available"]} not available'
+            )
+        if stat["currently"]["pdf_imported"] > 0:
+            pdf_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["pdf_imported"]}'
+                f" to prepare{colors.END}"
+            )
+        if stat["currently"]["pdf_needs_manual_preparation"] > 0:
+            pdf_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["pdf_needs_manual_preparation"]}'
+                f" to prepare manually{colors.END}"
+            )
+        if len(pdf_add_info) > 0:
+            pdfs_info += f"     ({', '.join(pdf_add_info)})"
+        print(pdfs_info)
+
+        screen_info = (
+            "  Screen        "
+            + f'{str(stat["overall"]["rev_included"]).rjust(rjust_padd, " ")} included'
+        )
+        screen_add_info = []
+        if stat["currently"]["pdf_prepared"] > 0:
+            screen_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["pdf_prepared"]}'
+                f" to screen{colors.END}"
+            )
+        if stat["currently"]["rev_excluded"] > 0:
+            screen_add_info.append(f'{stat["currently"]["rev_excluded"]} excluded')
+        if len(screen_add_info) > 0:
+            screen_info += f"     ({', '.join(screen_add_info)})"
+        print(screen_info)
+
+        data_info = (
+            "  Data          "
+            + f'{str(stat["overall"]["rev_synthesized"]).rjust(rjust_padd, " ")} '
+            "synthesized"
+        )
+        data_add_info = []
+        if stat["currently"]["rev_included"] > 0:
+            data_add_info.append(
+                f'{colors.ORANGE}{stat["currently"]["rev_included"]}'
+                f" to synthesize{colors.END}"
+            )
+        if len(data_add_info) > 0:
+            data_info += f'  ({", ".join(data_add_info)})'
+        print(data_info)
 
         return
 
