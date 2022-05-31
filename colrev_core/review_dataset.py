@@ -821,6 +821,7 @@ class ReviewDataset:
                     fd.seek(seekpos)
                     if not delete:
                         fd.write(replacement.encode("utf-8"))
+                        fd.write(b"\n")
                     seekpos = fd.tell()
                     fd.flush()
                     os.fsync(fd)
