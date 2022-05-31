@@ -1288,6 +1288,9 @@ class ZoteroTranslationService:
         from colrev_core.environment import EnvironmentManager
         import time
 
+        if self.zotero_service_available():
+            return
+
         zotero_image = EnvironmentManager.docker_images["zotero/translation-server"]
 
         client = docker.from_env()
