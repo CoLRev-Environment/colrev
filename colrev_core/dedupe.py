@@ -408,14 +408,37 @@ class Dedupe(Process):
         from colrev_core.record import Record
 
         # Heuristic
-        # 1. Merge into md_processed (or later)
-        if rec_ID1["colrev_status"] != RecordState.md_prepared:
-            main_record = rec_ID1
-            dupe_record = rec_ID2
-        elif rec_ID2["colrev_status"] != RecordState.md_prepared:
+
+        # 1. if both records are prepared (or the same status),
+        # merge into the record with the lower colrev_id
+        if rec_ID1["colrev_status"] == rec_ID2["colrev_status"]:
+            if rec_ID1["ID"][-1].isdigit() and not rec_ID2["ID"][-1].isdigit():
+                main_record = rec_ID1
+                dupe_record = rec_ID2
+            # TODO : elif: check which of the appended letters is first in the alphabet
+            else:
+                main_record = rec_ID2
+                dupe_record = rec_ID1
+
+        # 2. If a record is md_prepared, use it as the dupe record
+        elif rec_ID1["colrev_status"] == RecordState.md_prepared:
             main_record = rec_ID2
             dupe_record = rec_ID1
-        # 2. Merge into curated record (otherwise)
+        elif rec_ID2["colrev_status"] == RecordState.md_prepared:
+            main_record = rec_ID1
+            dupe_record = rec_ID2
+
+        # 3. If a record is md_processed, use it as the dupe record
+        # -> during the fix_errors procedure, records are in md_processed
+        # and beyond.
+        elif rec_ID1["colrev_status"] == RecordState.md_processed:
+            main_record = rec_ID2
+            dupe_record = rec_ID1
+        elif rec_ID2["colrev_status"] == RecordState.md_processed:
+            main_record = rec_ID1
+            dupe_record = rec_ID2
+
+        # 4. Merge into curated record (otherwise)
         else:
             if Record(data=rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
