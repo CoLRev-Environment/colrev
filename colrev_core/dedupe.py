@@ -499,13 +499,18 @@ class Dedupe(Process):
             if non_dupe in records:
                 records[non_dupe].update(colrev_status=RecordState.md_processed)
 
+        removed_duplicates = []
         for dupe in [x for x in results if "duplicate" == x["decision"]]:
-
-            if dupe["ID1"] not in records or dupe["ID2"] not in records:
-                continue
 
             rec_ID1 = records[dupe["ID1"]]
             rec_ID2 = records[dupe["ID2"]]
+
+            # Simple way of implementing the closure
+            # cases where the main_record has already been merged into another record
+            while "MOVED_DUPE" in rec_ID1:
+                rec_ID1 = records[rec_ID1["MOVED_DUPE"]]
+            while "MOVED_DUPE" in rec_ID2:
+                rec_ID2 = records[rec_ID2["MOVED_DUPE"]]
 
             main_record, dupe_record = self.select_primary_merge_record(
                 rec_ID1, rec_ID2
@@ -532,6 +537,7 @@ class Dedupe(Process):
                     )
                     continue  # with next pair
 
+            dupe_record["MOVED_DUPE"] = main_record["ID"]
             MAIN_RECORD = Record(data=main_record)
             MAIN_RECORD.merge(
                 MERGING_RECORD=Record(data=dupe_record), default_source="merged"
@@ -542,12 +548,19 @@ class Dedupe(Process):
                 conf_details = f"(confidence: {str(round(dupe['score'], 3))})"
             else:
                 conf_details = ""
-            self.REVIEW_MANAGER.report_logger.info(
+            self.REVIEW_MANAGER.logger.debug(
                 f"Removed duplicate{conf_details}: "
                 + f'{main_record["ID"]} <- {dupe_record["ID"]}'
             )
 
-            del records[dupe_record["ID"]]
+            removed_duplicates.append(dupe_record["ID"])
+
+        for record in records.values():
+            if "MOVED_DUPE" in record:
+                del record["MOVED_DUPE"]
+        for removed_duplicate in removed_duplicates:
+            if removed_duplicate in records:
+                del records[removed_duplicate]
 
         if remaining_non_dupe:
             # Set remaining records to md_processed (not duplicate) because all records
@@ -586,23 +599,32 @@ class Dedupe(Process):
 
         removed_duplicates = []
         for ID1, ID2 in dupe_list:
-            if ID1 in removed_duplicates or ID2 in removed_duplicates:
-                continue
 
             rec_ID1 = records[ID1]
             rec_ID2 = records[ID2]
+
+            self.REVIEW_MANAGER.logger.debug(
+                f'applying {rec_ID1["ID"]}-{rec_ID2["ID"]}'
+            )
+
+            # Simple way of implementing the closure
+            # cases where the main_record has already been merged into another record
+            while "MOVED_DUPE" in rec_ID1:
+                rec_ID1 = records[rec_ID1["MOVED_DUPE"]]
+            while "MOVED_DUPE" in rec_ID2:
+                rec_ID2 = records[rec_ID2["MOVED_DUPE"]]
+
+            if rec_ID1["ID"] == rec_ID2["ID"]:
+                continue
 
             main_record, dupe_record = self.select_primary_merge_record(
                 rec_ID1, rec_ID2
             )
 
+            # TODO : prevent same-source merges (like in the automated part?!)
             dupe_rec_id = dupe_record["ID"]
             main_rec_id = main_record["ID"]
-
-            # Simple way of implementing the closure
-            # cases where the main_record has already been merged into another record
-            if "MOVED_DUPE" in main_record:
-                main_record = records[main_record["MOVED_DUPE"]]
+            self.REVIEW_MANAGER.logger.debug(main_rec_id + " < " + dupe_rec_id)
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
             MAIN_RECORD = Record(data=main_record)
@@ -611,7 +633,7 @@ class Dedupe(Process):
             )
             main_record = MAIN_RECORD.get_data()
 
-            self.REVIEW_MANAGER.report_logger.info(
+            self.REVIEW_MANAGER.logger.debug(
                 f"Removed duplicate: {dupe_rec_id} (duplicate of {main_rec_id})"
             )
             removed_duplicates.append(dupe_rec_id)
