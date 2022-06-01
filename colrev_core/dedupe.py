@@ -404,6 +404,27 @@ class Dedupe(Process):
 
         return ret_dict
 
+    def select_primary_merge_record(self, rec_ID1, rec_ID2) -> list:
+        from colrev_core.record import Record
+
+        # Heuristic
+        # 1. Merge into md_processed (or later)
+        if rec_ID1["colrev_status"] != RecordState.md_prepared:
+            main_record = rec_ID1
+            dupe_record = rec_ID2
+        elif rec_ID2["colrev_status"] != RecordState.md_prepared:
+            main_record = rec_ID2
+            dupe_record = rec_ID1
+        # 2. Merge into curated record (otherwise)
+        else:
+            if Record(data=rec_ID2).masterdata_is_curated():
+                main_record = rec_ID2
+                dupe_record = rec_ID1
+            else:
+                main_record = rec_ID1
+                dupe_record = rec_ID2
+        return [main_record, dupe_record]
+
     def apply_merges(self, *, results: list, remaining_non_dupe: bool = False):
         """Apply automated deduplication decisions
 
@@ -463,13 +484,9 @@ class Dedupe(Process):
             rec_ID1 = records[dupe["ID1"]]
             rec_ID2 = records[dupe["ID2"]]
 
-            # Heuristic: Merge into curated record
-            if Record(data=rec_ID2).masterdata_is_curated():
-                main_record = rec_ID2
-                dupe_record = rec_ID1
-            else:
-                main_record = rec_ID1
-                dupe_record = rec_ID2
+            main_record, dupe_record = self.select_primary_merge_record(
+                rec_ID1, rec_ID2
+            )
 
             if same_source_merge(main_record, dupe_record):
                 if "apply" != self.REVIEW_MANAGER.settings.dedupe.same_source_merges:
@@ -552,13 +569,9 @@ class Dedupe(Process):
             rec_ID1 = records[ID1]
             rec_ID2 = records[ID2]
 
-            # Heuristic: Merge into curated record
-            if Record(data=rec_ID2).masterdata_is_curated():
-                main_record = rec_ID2
-                dupe_record = rec_ID1
-            else:
-                main_record = rec_ID1
-                dupe_record = rec_ID2
+            main_record, dupe_record = self.select_primary_merge_record(
+                rec_ID1, rec_ID2
+            )
 
             dupe_rec_id = dupe_record["ID"]
             main_rec_id = main_record["ID"]
