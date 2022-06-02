@@ -540,7 +540,7 @@ class Search(Process):
 
         return
 
-    def get_pdf_cpid_path(self, *, path) -> typing.List[str]:
+    def get_pdf_cpid_path(self, path) -> typing.List[str]:
         cpid = self.get_colrev_pdf_id(path=path)
         return [str(path), str(cpid)]
 
@@ -820,13 +820,10 @@ class Search(Process):
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(*, record) -> dict:
-            from colrev_core.environment import EnvironmentManager, GrobidService
+            from colrev_core.environment import EnvironmentManager
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
-
-            GROBID_SERVICE = GrobidService()
-            GROBID_SERVICE.check_grobid_availability()
 
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
 
@@ -1308,25 +1305,23 @@ class Search(Process):
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        feed_paths = [x for x in sources if SearchType.FEED == x.search_type]
+        feed_sources = [x for x in sources if SearchType.FEED == x.search_type]
 
         if selection_str is not None:
             if "all" != selection_str:
-                feed_paths_selected = [
+                feed_sources_selected = [
                     f
-                    for f in feed_paths
-                    if f.search_parameters[0].endpoint in selection_str.split(",")
+                    for f in feed_sources
+                    if str(f.filename) in selection_str.split(",")
                 ]
-            if len(feed_paths_selected) != 0:
-                feed_paths = feed_paths_selected
+            if len(feed_sources_selected) != 0:
+                feed_sources = feed_sources_selected
             else:
-                available_options = ", ".join(
-                    [f.search_parameters[0].endpoint for f in feed_paths]
-                )
+                available_options = ", ".join([str(f.filename) for f in feed_sources])
                 print(f"Error: {selection_str} not in {available_options}")
                 return
 
-        for feed_item in feed_paths:
+        for feed_item in feed_sources:
             feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
 
             if feed_item.source_identifier not in [

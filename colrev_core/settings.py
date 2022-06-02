@@ -53,6 +53,16 @@ class SearchSource:
     search_parameters: str
     comment: typing.Optional[str]
 
+    def __str__(self):
+        return (
+            "SearchSource\n"
+            + f" filename:            {self.filename}\n"
+            + f" type:                {self.search_type}\n"
+            + f" source identifier:   {self.source_identifier}\n"
+            + f" search parameters:   {self.search_parameters}\n"
+            + f" comment:             {self.comment}"
+        )
+
 
 @dataclass
 class SearchConfiguration:

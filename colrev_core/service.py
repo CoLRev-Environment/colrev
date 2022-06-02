@@ -116,11 +116,12 @@ class Service:
         pass
 
     def start_services(self):
-        from colrev_core import grobid_client
         from colrev_core.environment import LocalIndex
+        from colrev_core.environment import GrobidService
 
         async def _start_grobid():
-            grobid_client.start_grobid()
+            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE.start()
 
         async def _start_index():
             LocalIndex()

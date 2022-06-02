@@ -1448,21 +1448,21 @@ class ReviewDataset:
 
                             # Note : this is a simple heuristic:
                             curation_path = Resources.curations_path / Path(
-                                original_curated_record[
-                                    "colrev_masterdata_provenance"
+                                original_curated_record["colrev_masterdata_provenance"][
+                                    "source"
                                 ].split("/")[-1]
                             )
                             if not curation_path.is_dir():
                                 prov_inf = original_curated_record[
                                     "colrev_masterdata_provenance"
-                                ]
+                                ]["source"]
                                 print(
                                     "Source path of indexed record not available "
                                     f'({original_curated_record["ID"]} - '
                                     f"{prov_inf})"
                                 )
                                 continue
-                        except RecordNotInIndexException:
+                        except (RecordNotInIndexException, KeyError):
                             pass
                             original_curated_record = prior_cr.copy()
 
@@ -1566,7 +1566,7 @@ class ReviewDataset:
                     dict_to_save = {
                         "source_url": original_curated_record[
                             "colrev_masterdata_provenance"
-                        ].replace("CURATED:"),
+                        ],
                         "original_curated_record": original_curated_record,
                         "changes": change_items,
                     }
