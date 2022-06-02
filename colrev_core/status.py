@@ -410,21 +410,6 @@ class Status(Process):
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
 
-        non_staged = [
-            item.a_path
-            for item in git_repo.index.diff(None)
-            if ".bib" == item.a_path[-4:]
-        ]
-
-        if len(non_staged) > 0:
-            instruction = {
-                "msg": "Add non-staged changes.",
-                "cmd": f"git add {', '.join(non_staged)}",
-            }
-            if str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]) in non_staged:
-                instruction["priority"] = "yes"
-            review_instructions.append(instruction)
-
         missing_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_missing_files()
 
         # Check pdf files
@@ -521,15 +506,19 @@ class Status(Process):
                     len(process_type) == 0
                     and transitioned_record["source"] != transitioned_record["dest"]
                 ):
-                    review_instructions.append(
-                        {
-                            "msg": "Resolve invalid transition of "
-                            # + f"{transitioned_record['ID']} from "
-                            + f"{transitioned_record['source']} to "
-                            + f" {transitioned_record['dest']}",
-                            "priority": "yes",
-                        }
+                    # + f"{transitioned_record['ID']} from "
+                    msg = (
+                        "Resolve invalid transition of "
+                        + f"{transitioned_record['source']} to "
+                        + f"{transitioned_record['dest']}"
                     )
+                    if msg not in [ri["msg"] for ri in review_instructions]:
+                        review_instructions.append(
+                            {
+                                "msg": msg,
+                                "priority": "yes",
+                            }
+                        )
                     continue
 
                 if len(process_type) > 0:
@@ -703,7 +692,7 @@ class Status(Process):
         ]
         if len(non_staged) > 0:
             item = {
-                "title": f"Non-staged files: {','.join(non_staged)}",
+                "title": f"Non-staged changes: {','.join(non_staged)}",
                 "level": "WARNING",
             }
             collaboration_instructions["items"].append(item)

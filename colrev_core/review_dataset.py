@@ -957,6 +957,7 @@ class ReviewDataset:
             "record_links_in_bib": [],
             "persisted_IDs": [],
             "origin_list": [],
+            "invalid_state_transitions": [],
         }
 
         with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
@@ -1055,9 +1056,8 @@ class ReviewDataset:
                         if status not in [str(x) for x in RecordState]:
                             raise StatusFieldValueError(ID, "colrev_status", status)
 
-                        raise StatusTransitionError(
-                            f"invalid state transition ({ID}):"
-                            + f" {prior_status[0]} to {status}"
+                        data["invalid_state_transitions"].append(
+                            f"{ID}: {prior_status[0]} to {status}"
                         )
                     if 0 == len(proc_transition_list):
                         status_transition[ID] = "load"
@@ -1310,7 +1310,7 @@ class ReviewDataset:
         #                 STATUS = FAIL
         return
 
-    def check_main_references_status_fields(self, *, data: dict) -> None:
+    def check_status_fields(self, *, data: dict) -> None:
         # Check status fields
         status_schema = [str(x) for x in RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
@@ -1323,6 +1323,11 @@ class ReviewDataset:
             raise StatusTransitionError(
                 "multiple transitions from different "
                 f'start states ({set(data["start_states"])})'
+            )
+        if len(set(data["invalid_state_transitions"])) > 1:
+            raise StatusTransitionError(
+                "invalid state transitions: \n    "
+                + "\n    ".join(data["invalid_state_transitions"])
             )
         return
 
@@ -1649,7 +1654,7 @@ class ReviewDataset:
                             f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:
-            raise FieldError("\n".join(field_errors))
+            raise FieldError("\n    " + "\n    ".join(field_errors))
         return
 
     # def check_screen_data(screen, data):
@@ -1696,10 +1701,12 @@ class ReviewDataset:
                 if any((x in name) or (x in root) for x in ignore_patterns):
                     continue
                 if prior_id in name:
-                    notifications.append(
+                    msg = (
                         f"Old ID ({prior_id}, changed to {new_id} in the "
-                        f"MAIN_REFERENCES) found in filepath: {name}"
+                        + f"MAIN_REFERENCES) found in filepath: {name}"
                     )
+                    if msg not in notifications:
+                        notifications.append(msg)
 
                 if not any(name.endswith(x) for x in text_formats):
                     logging.debug(f"Skipping {name}")
@@ -1710,10 +1717,12 @@ class ReviewDataset:
                         file_path=Path(os.path.join(root, name))
                     )
                     if prior_id in retrieved_IDs:
-                        notifications.append(
+                        msg = (
                             f"Old ID ({prior_id}, changed to {new_id} in "
-                            f"the MAIN_REFERENCES) found in file: {name}"
+                            + f"the MAIN_REFERENCES) found in file: {name}"
                         )
+                        if msg not in notifications:
+                            notifications.append(msg)
                 else:
                     with open(os.path.join(root, name), encoding="utf8") as f:
                         line = f.readline()
@@ -1721,10 +1730,12 @@ class ReviewDataset:
                             if name.endswith(".bib") and "@" in line[:5]:
                                 line = f.readline()
                             if prior_id in line:
-                                notifications.append(
+                                msg = (
                                     f"Old ID ({prior_id}, to {new_id} in "
-                                    f"the MAIN_REFERENCES) found in file: {name}"
+                                    + f"the MAIN_REFERENCES) found in file: {name}"
                                 )
+                                if msg not in notifications:
+                                    notifications.append(msg)
                             line = f.readline()
             for name in dirs:
                 if any((x in name) or (x in root) for x in ignore_patterns):
@@ -1998,7 +2009,7 @@ class FieldError(Exception):
 
 class PropagatedIDChange(Exception):
     def __init__(self, notifications):
-        self.message = "\n".join(notifications)
+        self.message = "\n    ".join(notifications)
         super().__init__(self.message)
 
 

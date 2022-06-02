@@ -763,6 +763,7 @@ class ReviewManager:
 
         not self.paths["SEARCHDIR"].mkdir(exist_ok=True)
 
+        failure_items = []
         if not self.paths["MAIN_REFERENCES"].is_file():
             self.logger.debug("Checks for MAIN_REFERENCES not activated")
         else:
@@ -798,7 +799,7 @@ class ReviewManager:
                     "params": {"prior": prior, "data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_references_status_fields,
+                    "script": self.REVIEW_DATASET.check_status_fields,
                     "params": {"data": data},
                 },
                 {
@@ -858,40 +859,39 @@ class ReviewManager:
             # check_screen_data(screen, data)
             # DATA = REVIEW_MANAGER.paths['DATA']
 
-        try:
-
-            for check_script in check_scripts:
-                try:
-                    if [] == check_script["params"]:
-                        self.logger.debug(f'{check_script["script"].__name__}() called')
-                        check_script["script"]()
+        for check_script in check_scripts:
+            try:
+                if [] == check_script["params"]:
+                    self.logger.debug(f'{check_script["script"].__name__}() called')
+                    check_script["script"]()
+                else:
+                    self.logger.debug(
+                        f'{check_script["script"].__name__}(params) called'
+                    )
+                    if type(check_script["params"]) == list:
+                        check_script["script"](*check_script["params"])
                     else:
-                        self.logger.debug(
-                            f'{check_script["script"].__name__}(params) called'
-                        )
-                        if type(check_script["params"]) == list:
-                            check_script["script"](*check_script["params"])
-                        else:
-                            check_script["script"](**check_script["params"])
-                    self.logger.debug(f'{check_script["script"].__name__}: passed\n')
-                except PropagatedIDChange as e:
-                    print(e)
-                    pass
-        except (
-            MissingDependencyError,
-            GitConflictError,
-            # PropagatedIDChange,
-            DuplicatesError,
-            OriginError,
-            FieldError,
-            review_dataset.StatusTransitionError,
-            ManuscriptRecordSourceTagError,
-            UnstagedGitChangesError,
-            review_dataset.StatusFieldValueError,
-        ) as e:
-            pass
-            return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
-        return {"status": PASS, "msg": "Everything ok."}
+                        check_script["script"](**check_script["params"])
+                self.logger.debug(f'{check_script["script"].__name__}: passed\n')
+            except (
+                MissingDependencyError,
+                GitConflictError,
+                PropagatedIDChange,
+                DuplicatesError,
+                OriginError,
+                FieldError,
+                review_dataset.StatusTransitionError,
+                ManuscriptRecordSourceTagError,
+                UnstagedGitChangesError,
+                review_dataset.StatusFieldValueError,
+            ) as e:
+                pass
+                failure_items.append(f"{type(e).__name__}: {e}")
+
+        if len(failure_items) > 0:
+            return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}
+        else:
+            return {"status": PASS, "msg": "Everything ok."}
 
     def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available
