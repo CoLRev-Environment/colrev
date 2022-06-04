@@ -2016,8 +2016,8 @@ class PropagatedIDChange(Exception):
 class ReviewManagerNotNofiedError(Exception):
     def __init__(self):
         self.message = (
-            "inform the review manager about the next process in advance"
-            + " to avoid conflicts (run review_manager.notify(processing_function))"
+            "create a process and inform the review manager in advance"
+            + " to avoid conflicts."
         )
         super().__init__(self.message)
 

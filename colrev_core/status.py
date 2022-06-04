@@ -985,6 +985,62 @@ class Status(Process):
 
         return
 
+    def get_analytics(self) -> dict:
+        import yaml
+
+        analytics_dict = {}
+
+        git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
+
+        revlist = list(
+            (
+                commit.hexsha,
+                commit.author.name,
+                commit.committed_date,
+                (commit.tree / "status.yaml").data_stream.read(),
+            )
+            for commit in git_repo.iter_commits(paths="status.yaml")
+        )
+        for ind, (commit_id, commit_author, committed_date, filecontents) in enumerate(
+            revlist
+        ):
+            try:
+                var_t = io.StringIO(filecontents.decode("utf-8"))
+
+                # TODO : we should simply include the whole status.yaml
+                # (to create a general-purpose status analyzer)
+                # -> flatten nested structures (e.g., overall/currently)
+                # -> integrate with get_status (current data) -
+                # and get_prior? (levels: aggregated_statistics vs. record-level?)
+
+                data_loaded = yaml.safe_load(var_t)
+                analytics_dict[len(revlist) - ind] = {
+                    "commit_id": commit_id,
+                    "commit_author": commit_author,
+                    "committed_date": committed_date,
+                    "search": data_loaded["colrev_status"]["overall"]["md_retrieved"],
+                    "included": data_loaded["colrev_status"]["overall"]["rev_included"],
+                }
+            except (IndexError, KeyError):
+                pass
+
+        import csv
+
+        keys = list(analytics_dict.values())[0].keys()
+
+        with open("analytics.csv", "w", newline="") as output_file:
+            dict_writer = csv.DictWriter(output_file, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(reversed(analytics_dict.values()))
+
+        # TODO : the inclusion rate would be interesting
+        # if it declines, we can justify terminating the search
+        # TBD: do we need to determine "iterations" for that?
+        # Should those iterations be based on "all-screened" or "all-synthesized"?
+        # Illustrate with a simulation!?
+
+        return analytics_dict
+
 
 if __name__ == "__main__":
     pass

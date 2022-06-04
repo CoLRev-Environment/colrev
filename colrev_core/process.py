@@ -86,7 +86,7 @@ class Process:
         ) -> bool:
 
             if git_repo is None:
-                git_repo = git.Repo()
+                git_repo = git.Repo(self.REVIEW_MANAGER.path)
 
             # Note : not considering untracked files.
 

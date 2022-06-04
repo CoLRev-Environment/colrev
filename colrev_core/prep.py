@@ -1227,11 +1227,16 @@ class Preparation(Process):
 
         if retrieved:
             RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+
+            default_source = "UNDETERMINED"
+            if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
+                default_source = RETRIEVED_RECORD.data["colrev_masterdata_provenance"][
+                    "CURATED"
+                ]["source"]
+
             RECORD.merge(
                 MERGING_RECORD=RETRIEVED_RECORD,
-                default_source=RETRIEVED_RECORD.data["colrev_masterdata_provenance"][
-                    "CURATED"
-                ]["source"],
+                default_source=default_source,
             )
 
             git_repo = git.Repo(str(self.REVIEW_MANAGER.path))

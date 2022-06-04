@@ -981,8 +981,10 @@ class ReviewManager:
             if "MANUAL" == script_name:
                 report = report + "Commit created manually or by external script\n\n"
             elif " " in script_name:
-                script_name = script_name.replace("colrev_core", "colrev").replace(
-                    "colrev cli", "colrev"
+                script_name = (
+                    script_name.replace("colrev_core", "colrev")
+                    .replace("colrev cli", "colrev")
+                    .replace("prescreen_cli", "prescreen")
                 )
                 script_name = (
                     script_name.split(" ")[0]
