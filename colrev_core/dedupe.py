@@ -37,6 +37,14 @@ class Dedupe(Process):
         self.settings_file = self.REVIEW_MANAGER.path / Path(
             ".references_learned_settings"
         )
+        self.non_dupe_file_xlsx = self.REVIEW_MANAGER.path / Path(
+            "non_duplicates_to_validate.xlsx"
+        )
+        self.non_dupe_file_txt = self.REVIEW_MANAGER.path / Path("dupes.txt")
+        self.dupe_file = self.REVIEW_MANAGER.path / Path("duplicates_to_validate.xlsx")
+        self.source_comparison_xlsx = self.REVIEW_MANAGER.path / Path(
+            "source_comparison.xlsx"
+        )
 
         self.get_dedupe_algorithm_conf()
         pd.options.mode.chained_assignment = None  # default='warn'
@@ -712,8 +720,8 @@ class Dedupe(Process):
             record["merge_with"] = ""
 
         records_df = pd.DataFrame.from_records(list(records.values()))
-        records_df.to_excel("source_comparison.xlsx", index=False)
-        print("Exported source_comparison.xlsx")
+        records_df.to_excel(self.source_comparison_xlsx, index=False)
+        print(f"Exported {self.source_comparison_xlsx}")
         return
 
     def fix_errors(self) -> None:
@@ -723,10 +731,9 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.logger.info("Dedupe: fix errors")
         saved_args = locals()
 
-        dupe_file = Path("duplicates_to_validate.xlsx")
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
-        if dupe_file.is_file():
-            dupes = pd.read_excel(dupe_file)
+        if self.dupe_file.is_file():
+            dupes = pd.read_excel(self.dupe_file)
             dupes.fillna("", inplace=True)
             c_to_correct = dupes.loc[dupes["error"] != "", "cluster_id"].to_list()
             dupes = dupes[dupes["cluster_id"].isin(c_to_correct)]
@@ -783,12 +790,10 @@ class Dedupe(Process):
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        non_dupe_file_xlsx = Path("non_duplicates_to_validate.xlsx")
-        non_dupe_file_txt = Path("dupes.txt")
-        if non_dupe_file_xlsx.is_file() or non_dupe_file_txt.is_file():
+        if self.non_dupe_file_xlsx.is_file() or self.non_dupe_file_txt.is_file():
             IDs_to_merge = []
-            if non_dupe_file_xlsx.is_file():
-                non_dupes = pd.read_excel(non_dupe_file_xlsx)
+            if self.non_dupe_file_xlsx.is_file():
+                non_dupes = pd.read_excel(self.non_dupe_file_xlsx)
                 non_dupes.fillna("", inplace=True)
                 c_to_correct = non_dupes.loc[
                     non_dupes["error"] != "", "cluster_id"
@@ -797,8 +802,8 @@ class Dedupe(Process):
                 IDs_to_merge = (
                     non_dupes.groupby(["cluster_id"])["ID"].apply(list).tolist()
                 )
-            if non_dupe_file_txt.is_file():
-                content = non_dupe_file_txt.read_text()
+            if self.non_dupe_file_txt.is_file():
+                content = self.non_dupe_file_txt.read_text()
                 IDs_to_merge = [x.split(",") for x in content.splitlines()]
                 for ID1, ID2 in IDs_to_merge:
                     print(f"{ID1} - {ID2}")
@@ -816,9 +821,9 @@ class Dedupe(Process):
                 self.apply_manual_deduplication_decisions(results=auto_dedupe)
 
         if (
-            dupe_file.is_file()
-            or non_dupe_file_xlsx.is_file()
-            or non_dupe_file_txt.is_file()
+            self.dupe_file.is_file()
+            or self.non_dupe_file_xlsx.is_file()
+            or self.non_dupe_file_txt.is_file()
         ):
             self.REVIEW_MANAGER.create_commit(
                 msg="Validate and correct duplicates",
@@ -1202,7 +1207,7 @@ class Dedupe(Process):
             # to adjust column widths in ExcelWriter:
             # http://pandas-docs.github.io/pandas-docs-travis/user_guide/style.html
             duplicates_df = duplicates_df.style.apply(highlight_cells, axis=None)
-            duplicates_df.to_excel("duplicates_to_validate.xlsx", index=False)
+            duplicates_df.to_excel(self.dupe_file, index=False)
 
             if len(collected_non_duplicates) > 0:
                 non_duplicates_df = pd.DataFrame.from_records(collected_non_duplicates)
@@ -1238,9 +1243,7 @@ class Dedupe(Process):
                 non_duplicates_df = non_duplicates_df.style.apply(
                     highlight_cells, axis=None
                 )
-                non_duplicates_df.to_excel(
-                    "non_duplicates_to_validate.xlsx", index=False
-                )
+                non_duplicates_df.to_excel(self.non_dupe_file_xlsx, index=False)
 
         class colors:
             RED = "\033[91m"
