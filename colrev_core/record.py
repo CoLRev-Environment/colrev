@@ -1024,11 +1024,7 @@ class Record:
 
         def format_author_field(input_string: str) -> str:
             input_string = input_string.replace("\n", " ").replace("'", "")
-            names = (
-                Record.remove_accents(input_str=input_string)
-                .replace("; ", " and ")
-                .split(" and ")
-            )
+            names = input_string.replace("; ", " and ").split(" and ")
             author_list = []
             for name in names:
 
@@ -1051,7 +1047,7 @@ class Record:
                     if len(str(parsed_name)) > 1:
                         author_list.append(str(parsed_name))
 
-            return "-".join(author_list)
+            return " ".join(author_list)
 
         def get_container_title(*, record: dict) -> str:
             # Note: custom get_container_title for the colrev_id
@@ -1082,7 +1078,10 @@ class Record:
             input_string = str(input_string)
             to_append = str(to_append).replace("\n", " ")
             to_append = to_append.rstrip().lstrip().replace("–", " ")
-            to_append = re.sub(r"[\.\:“”’]", "", to_append)
+            to_append = to_append.replace("&amp;", "and")
+            to_append = to_append.replace(" & ", " and ")
+            to_append = Record.remove_accents(input_str=to_append)
+            to_append = re.sub("[^0-9a-zA-Z ]+", "", to_append)
             to_append = re.sub(r"\s+", "-", to_append)
             to_append = to_append.lower()
             input_string = input_string + "|" + to_append
@@ -1159,11 +1158,7 @@ class Record:
             if "" == author.replace("-", ""):
                 raise NotEnoughDataToIdentifyException("author field format error")
             srep = robust_append(input_string=srep, to_append=author)
-            title_str = re.sub("[^0-9a-zA-Z]+", " ", record["title"])
-            srep = robust_append(input_string=srep, to_append=title_str)
-
-            srep = srep.replace("&amp;", "and")
-            srep = srep.replace("&", "and")
+            srep = robust_append(input_string=srep, to_append=record["title"])
 
             # Note : pages not needed.
             # pages = record.get("pages", "")
