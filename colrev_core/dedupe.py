@@ -535,7 +535,8 @@ class Dedupe(Process):
                 records[non_dupe].update(colrev_status=RecordState.md_processed)
 
         removed_duplicates = []
-        for dupe in [x for x in results if "duplicate" == x["decision"]]:
+        duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
+        for i, dupe in enumerate(duplicates_to_process):
 
             rec_ID1 = records[dupe["ID1"]]
             rec_ID2 = records[dupe["ID2"]]
@@ -546,6 +547,8 @@ class Dedupe(Process):
                 rec_ID1 = records[rec_ID1["MOVED_DUPE"]]
             while "MOVED_DUPE" in rec_ID2:
                 rec_ID2 = records[rec_ID2["MOVED_DUPE"]]
+            if rec_ID1["ID"] == rec_ID2["ID"]:
+                continue
 
             main_record, dupe_record = self.select_primary_merge_record(
                 rec_ID1, rec_ID2
