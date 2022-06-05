@@ -701,111 +701,116 @@ class Record:
     @classmethod
     def get_similarity_detailed(cls, *, df_a: pd.DataFrame, df_b: pd.DataFrame) -> dict:
 
-        author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
+        try:
+            author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
 
-        title_similarity = (
-            fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
-        )
+            title_similarity = (
+                fuzz.ratio(df_a["title"].lower(), df_b["title"].lower()) / 100
+            )
 
-        # partial ratio (catching 2010-10 or 2001-2002)
-        year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
+            # partial ratio (catching 2010-10 or 2001-2002)
+            year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
 
-        outlet_similarity = (
-            fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
-        )
+            outlet_similarity = (
+                fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
+            )
 
-        if str(df_a["journal"]) != "nan":
-            # Note: for journals papers, we expect more details
-            if df_a["volume"] == df_b["volume"]:
-                volume_similarity = 1
+            if str(df_a["journal"]) != "nan":
+                # Note: for journals papers, we expect more details
+                if df_a["volume"] == df_b["volume"]:
+                    volume_similarity = 1
+                else:
+                    volume_similarity = 0
+                if df_a["number"] == df_b["number"]:
+                    number_similarity = 1
+                else:
+                    number_similarity = 0
+
+                # page similarity is not considered at the moment.
+                #
+                # sometimes, only the first page is provided.
+                # if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
+                #     pages_similarity = 1
+                # else:
+                #     if df_a["pages"] == df_b["pages"]:
+                #         pages_similarity = 1
+                #     else:
+                #         if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
+                #             pages_similarity = 1
+                #         else:
+                #            pages_similarity = 0
+
+                # Put more weithe on other fields if the title is very common
+                # ie., non-distinctive
+                # The list is based on a large export of distinct papers, tabulated
+                # according to titles and sorted by frequency
+                if [df_a["title"], df_b["title"]] in [
+                    ["editorial", "editorial"],
+                    ["editorial introduction", "editorial introduction"],
+                    ["editorial notes", "editorial notes"],
+                    ["editor's comments", "editor's comments"],
+                    ["book reviews", "book reviews"],
+                    ["editorial note", "editorial note"],
+                    ["reviewer ackowledgment", "reviewer ackowledgment"],
+                ]:
+                    weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
+                else:
+                    weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
+
+                sim_names = [
+                    "authors",
+                    "title",
+                    "year",
+                    "outlet",
+                    "volume",
+                    "number",
+                ]
+                similarities = [
+                    author_similarity,
+                    title_similarity,
+                    year_similarity,
+                    outlet_similarity,
+                    volume_similarity,
+                    number_similarity,
+                ]
+
             else:
-                volume_similarity = 0
-            if df_a["number"] == df_b["number"]:
-                number_similarity = 1
-            else:
-                number_similarity = 0
 
-            # page similarity is not considered at the moment.
-            #
-            # sometimes, only the first page is provided.
-            # if str(df_a["pages"]) == "nan" or str(df_b["pages"]) == "nan":
-            #     pages_similarity = 1
-            # else:
-            #     if df_a["pages"] == df_b["pages"]:
-            #         pages_similarity = 1
-            #     else:
-            #         if df_a["pages"].split("-")[0] == df_b["pages"].split("-")[0]:
-            #             pages_similarity = 1
-            #         else:
-            #            pages_similarity = 0
+                weights = [0.15, 0.75, 0.05, 0.05]
+                sim_names = [
+                    "author",
+                    "title",
+                    "year",
+                    "outlet",
+                ]
+                similarities = [
+                    author_similarity,
+                    title_similarity,
+                    year_similarity,
+                    outlet_similarity,
+                ]
 
-            # Put more weithe on other fields if the title is very common
-            # ie., non-distinctive
-            # The list is based on a large export of distinct papers, tabulated
-            # according to titles and sorted by frequency
-            if [df_a["title"], df_b["title"]] in [
-                ["editorial", "editorial"],
-                ["editorial introduction", "editorial introduction"],
-                ["editorial notes", "editorial notes"],
-                ["editor's comments", "editor's comments"],
-                ["book reviews", "book reviews"],
-                ["editorial note", "editorial note"],
-                ["reviewer ackowledgment", "reviewer ackowledgment"],
-            ]:
-                weights = [0.175, 0, 0.175, 0.175, 0.275, 0.2]
-            else:
-                weights = [0.2, 0.25, 0.13, 0.2, 0.12, 0.1]
+            weighted_average = sum(
+                similarities[g] * weights[g] for g in range(len(similarities))
+            )
 
-            sim_names = [
-                "authors",
-                "title",
-                "year",
-                "outlet",
-                "volume",
-                "number",
-            ]
-            similarities = [
-                author_similarity,
-                title_similarity,
-                year_similarity,
-                outlet_similarity,
-                volume_similarity,
-                number_similarity,
-            ]
-
-        else:
-
-            weights = [0.15, 0.75, 0.05, 0.05]
-            sim_names = [
-                "author",
-                "title",
-                "year",
-                "outlet",
-            ]
-            similarities = [
-                author_similarity,
-                title_similarity,
-                year_similarity,
-                outlet_similarity,
-            ]
-
-        weighted_average = sum(
-            similarities[g] * weights[g] for g in range(len(similarities))
-        )
-
-        details = (
-            "["
-            + ",".join([sim_names[g] for g in range(len(similarities))])
-            + "]"
-            + "*weights_vecor^T = "
-            + "["
-            + ",".join([str(similarities[g]) for g in range(len(similarities))])
-            + "]*"
-            + "["
-            + ",".join([str(weights[g]) for g in range(len(similarities))])
-            + "]^T"
-        )
-        similarity_score = round(weighted_average, 4)
+            details = (
+                "["
+                + ",".join([sim_names[g] for g in range(len(similarities))])
+                + "]"
+                + "*weights_vecor^T = "
+                + "["
+                + ",".join([str(similarities[g]) for g in range(len(similarities))])
+                + "]*"
+                + "["
+                + ",".join([str(weights[g]) for g in range(len(similarities))])
+                + "]^T"
+            )
+            similarity_score = round(weighted_average, 4)
+        except AttributeError:
+            similarity_score = 0
+            details = ""
+            pass
         return {"score": similarity_score, "details": details}
 
     def get_provenance_field_source(self, *, field, default="ORIGINAL") -> str:

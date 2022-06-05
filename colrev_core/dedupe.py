@@ -2,7 +2,6 @@
 # import json
 import logging
 import re
-import typing
 from pathlib import Path
 
 import git
@@ -19,7 +18,12 @@ class Dedupe(Process):
     ACTIVE_LEARNING_DEDUPE = "active_learning_dedupe"
     ACTIVE_LEARNING_NON_MEMORY_DEDUPE = "active_learning_non_memory_dedupe"
 
-    def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process=True):
+    def __init__(
+        self,
+        *,
+        REVIEW_MANAGER,
+        notify_state_transition_process=True,
+    ):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
@@ -36,6 +40,13 @@ class Dedupe(Process):
 
         self.get_dedupe_algorithm_conf()
         pd.options.mode.chained_assignment = None  # default='warn'
+
+        self.REVIEW_MANAGER.report_logger.info("Dedupe")
+        self.REVIEW_MANAGER.logger.info("Dedupe")
+
+        self.REVIEW_MANAGER.logger.info(
+            f"Selected algorithm: {self.selected_algorithm}"
+        )
 
     def get_dedupe_algorithm_conf(
         self,
@@ -167,6 +178,7 @@ class Dedupe(Process):
                     "number",
                     "pages",
                     "colrev_id",
+                    "colrev_origin",
                     "colrev_status",
                 ]
             ),
@@ -203,7 +215,7 @@ class Dedupe(Process):
         Do a little bit of data cleaning with the help of Unidecode and Regex.
         Things like casing, extra spaces, quotes and new lines can be ignored.
         """
-        if k in ["ID", "ENTRYTYPE", "colrev_status"]:
+        if k in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
             return column
 
         column = str(column)
@@ -293,7 +305,7 @@ class Dedupe(Process):
             # Note: we have to make sure that when we sample for training,
             # the not-in-memory mode is used for duplicate clustering
             # otherwise, non-sampled duplicates will not be identified
-            max_training_sample_size = 3000
+            max_training_sample_size = min(3000, len(list(data_d.keys())))
             self.REVIEW_MANAGER.logger.info(
                 f"Selecting a random sample of {max_training_sample_size}"
                 " to avoid memory problems"
@@ -302,8 +314,7 @@ class Dedupe(Process):
             keys = random.sample(list(data_d.keys()), max_training_sample_size)
             data_d = {key: data_d[key] for key in keys}
 
-        ret_dict: typing.Dict[str, typing.Any] = {}
-        ret_dict["n_new"] = len(
+        self.n_new = len(
             [d for d, v in data_d.items() if "md_prepared" == v["colrev_status"]]
         )
 
@@ -400,9 +411,9 @@ class Dedupe(Process):
 
         self.REVIEW_MANAGER.logger.info("Reading and preparation completed.")
 
-        ret_dict["deduper"] = deduper
+        self.deduper = deduper
 
-        return ret_dict
+        return
 
     def select_primary_merge_record(self, rec_ID1, rec_ID2) -> list:
         from colrev_core.record import Record
@@ -467,6 +478,13 @@ class Dedupe(Process):
         # Completeness of comparisons should be ensured by the
         # dedupe clustering routine
 
+        class colors:
+            RED = "\033[91m"
+            GREEN = "\033[92m"
+            ORANGE = "\033[93m"
+            BLUE = "\033[94m"
+            END = "\033[0m"
+
         def same_source_merge(main_record: dict, dupe_record: dict) -> bool:
 
             main_rec_sources = [
@@ -493,6 +511,15 @@ class Dedupe(Process):
 
             return
 
+        def cross_level_merge(main_record, dupe_record) -> bool:
+            cross_level_merge_attempt = False
+            if main_record["ENTRYTYPE"] in ["proceedings"] or dupe_record[
+                "ENTRYTYPE"
+            ] in ["proceedings"]:
+                cross_level_merge_attempt = True
+            # TODO: book vs. inbook?
+            return cross_level_merge_attempt
+
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
@@ -516,10 +543,15 @@ class Dedupe(Process):
                 rec_ID1, rec_ID2
             )
 
+            if cross_level_merge(main_record, dupe_record):
+                continue
+
             if same_source_merge(main_record, dupe_record):
                 if "apply" != self.REVIEW_MANAGER.settings.dedupe.same_source_merges:
                     print(
-                        "Warning: applying same source merge: "
+                        f"\n{colors.ORANGE}"
+                        "Warning: applying same source merge "
+                        f"{colors.END} "
                         f"{main_record.get('colrev_origin', '')}/"
                         f"{dupe_record.get('colrev_origin', '')}\n"
                         f"  {Record(data=main_record).format_bib_style()}\n"
@@ -797,12 +829,43 @@ class Dedupe(Process):
             self.REVIEW_MANAGER.logger.error("No file with potential errors found.")
         return
 
+    def apply_active_learning(self, results, saved_args):
+
+        self.apply_manual_deduplication_decisions(results=results)
+
+        # Using the examples we just labeled, train the deduper and learn
+        # blocking predicates
+        self.deduper.train(recall=0.9, index_predicates=True)
+        # print(deduper.data_model._field_comparators)
+        # print(deduper.predicates)
+
+        # When finished, save our training to disk
+        with open(self.training_file, "w") as tf:
+            self.deduper.write_training(tf)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=self.training_file)
+
+        # Save our weights and predicates to disk.  If the settings file
+        # exists, we will skip all the training and learning next time we run
+        # this file.
+        with open(self.settings_file, "wb") as sf:
+            self.deduper.write_settings(sf)
+
+        self.REVIEW_MANAGER.create_commit(
+            msg="Labeling of duplicates (active learning)",
+            manual_author=True,
+            saved_args=saved_args,
+        )
+        # deduper.cleanup_training()
+
+        return
+
     def cluster_tuples(
         self,
         *,
         partition_threshold: float = None,
         merge_threshold: float = None,
         in_memory: bool = True,
+        saved_args: dict,
     ):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
@@ -830,6 +893,9 @@ class Dedupe(Process):
             partition_threshold = (
                 self.REVIEW_MANAGER.settings.dedupe.partition_threshold
             )
+
+        saved_args.update(merge_threshold=str(merge_threshold))
+        saved_args.update(partition_threshold=str(partition_threshold))
 
         if in_memory:
             self.REVIEW_MANAGER.report_logger.info(
@@ -930,6 +996,7 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.report_logger.info(
             f"set merge_threshold: {merge_threshold}"
         )
+        self.REVIEW_MANAGER.logger.info(f"set merge_threshold: {merge_threshold}")
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:
@@ -1174,6 +1241,40 @@ class Dedupe(Process):
                 non_duplicates_df.to_excel(
                     "non_duplicates_to_validate.xlsx", index=False
                 )
+
+        class colors:
+            RED = "\033[91m"
+            GREEN = "\033[92m"
+            ORANGE = "\033[93m"
+            BLUE = "\033[94m"
+            END = "\033[0m"
+
+        self.REVIEW_MANAGER.create_commit(
+            msg="Deduplication (based on active-learning clusters)",
+            saved_args=saved_args,
+        )
+
+        self.REVIEW_MANAGER.logger.info(
+            "Successfully completed the deduplication. Please check the "
+            "duplicates_to_validate.xlsx and non_duplicates_to_validate.xlsx for "
+            'potential errors.\nTo fix them, mark them in the "error" column and '
+            "run\n  colrev dedupe --fix_errors\n\n"
+        )
+
+        if Path("same_source_merges.txt").is_file():
+            self.REVIEW_MANAGER.logger.info(
+                "Detected and prevented same-source merges. Please check potential"
+                "duplicates in same_source_merges.txt"
+            )
+
+        info = self.get_info()
+        if len(info["same_source_merges"]) > 0:
+            self.REVIEW_MANAGER.logger.info(
+                f"\n{colors.ORANGE}Same source merges to check:{colors.END}"
+                "\n- ".join(info["same_source_merges"]) + "\n"
+            )
+        else:
+            self.REVIEW_MANAGER.logger.info("\nNo same-origin merges detected.")
 
         return
 
