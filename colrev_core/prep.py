@@ -34,6 +34,7 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
 from colrev_core.record import RecordState
+from colrev_core.review_manager import MissingDependencyError
 
 # from datetime import datetime
 
@@ -2813,9 +2814,18 @@ class Preparation(Process):
             self._module_prep_scripts = {}
             for plugin_script in list_module_scripts:
                 if not Path(plugin_script + ".py").is_file():
-                    self._module_prep_scripts[plugin_script] = importlib.import_module(
-                        plugin_script
-                    ).CustomPrepare()
+                    try:
+                        self._module_prep_scripts[
+                            plugin_script
+                        ] = importlib.import_module(plugin_script).CustomPrepare()
+                    except ModuleNotFoundError:
+                        pass
+                        raise MissingDependencyError(
+                            "Dependency prep_script "
+                            + f'{plugin_script.replace(".prep", "")} not found. '
+                            "Please install it\n  pip install "
+                            f'{plugin_script.replace(".prep", "")}'
+                        )
 
                 # from inspect import getmembers, isfunction
                 # print(getmembers(plugin, isfunction))

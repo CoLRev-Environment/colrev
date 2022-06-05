@@ -1398,7 +1398,7 @@ class ReviewManager:
 
 class MissingDependencyError(Exception):
     def __init__(self, dep):
-        self.message = f"please install {dep}"
+        self.message = f"{dep}"
         super().__init__(self.message)
 
 
