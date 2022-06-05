@@ -1078,11 +1078,13 @@ class Record:
             input_string = str(input_string)
             to_append = str(to_append).replace("\n", " ")
             to_append = to_append.rstrip().lstrip().replace("–", " ")
+            to_append = to_append.replace("emph{", "")
             to_append = to_append.replace("&amp;", "and")
             to_append = to_append.replace(" & ", " and ")
             to_append = Record.remove_accents(input_str=to_append)
-            to_append = re.sub("[^0-9a-zA-Z ]+", "", to_append)
+            to_append = re.sub("[^0-9a-zA-Z -]+", "", to_append)
             to_append = re.sub(r"\s+", "-", to_append)
+            to_append = re.sub(r"-+", "-", to_append)
             to_append = to_append.lower()
             input_string = input_string + "|" + to_append
             return input_string

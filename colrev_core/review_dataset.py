@@ -1169,7 +1169,8 @@ class ReviewDataset:
             for rec in tqdm(recs_dict.values()):
                 RECORD = Record(data=rec)
                 try:
-                    RECORD.create_colrev_id()
+                    colrev_id = RECORD.create_colrev_id()
+                    RECORD.data["colrev_id"] = [colrev_id]
                 except NotEnoughDataToIdentifyException:
                     pass
                     continue
