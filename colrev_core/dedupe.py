@@ -1486,44 +1486,26 @@ class Dedupe(Process):
                 "decision": "duplicate",
             }
 
-    def __batch(self, *, data):
-        # the queue (order) matters for the incremental merging (make sure that each
-        # additional record is compared to/merged with all prior records in
-        # the queue)
+    def simple_dedupe(
+        self,
+        *,
+        # TODO : add similarity function as a parameter?
+        # Note : MERGING_NON_DUP_THRESHOLD can be set to the same value
+        # as MERGING_DUP_THRESHOLD
+        MERGING_NON_DUP_THRESHOLD: float = 0.7,
+        MERGING_DUP_THRESHOLD: float = 0.95,
+    ) -> None:
+        """Pairwise identification of duplicates based on static similarity measure
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        This procedure should only be used in small samples on which active learning
+        models cannot be trained.
+        """
 
-        # Note: Because we only introduce individual (non-merged records),
-        # there should be no semicolons in colrev_origin!
-        records_queue = [
-            record for ID, record in records.items() if ID in data["queue"]
-        ]
+        saved_args = locals()
 
-        records_queue = pd.DataFrame.from_dict(records_queue)
-        references = self.__prep_references(references=records_queue)
-        # self.REVIEW_MANAGER.pp.pprint(references.values())
-        references = pd.DataFrame(references.values())
-
-        # TODO : simplify this function (e.g., batch size n no longer needed)
-        n = 100
-        items_start = data["items_start"]
-        it_len = len(data["queue"])
-        batch_data = []
-        for ndx in range(items_start // n, it_len, n):
-            for i in range(ndx, min(ndx + n, it_len)):
-                batch_data.append(
-                    {
-                        "record": data["queue"][i],
-                        "queue": references.iloc[: i + 1],
-                        "MERGING_NON_DUP_THRESHOLD": 0.7,
-                        "MERGING_DUP_THRESHOLD": 0.95,
-                    }
-                )
-
-        for ndx in range(0, it_len, n):
-            yield batch_data[ndx : min(ndx + n, it_len)]
-
-    def __get_data(self):
+        self.REVIEW_MANAGER.logger.info(
+            "Pairwise identification of duplicates based on static similarity measure"
+        )
 
         # Note: this would also be a place to set
         # records as "no-duplicate" by definition
@@ -1554,57 +1536,63 @@ class Dedupe(Process):
         }
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(dedupe_data))
 
-        return dedupe_data
+        # the queue (order) matters for the incremental merging (make sure that each
+        # additional record is compared to/merged with all prior records in
+        # the queue)
 
-    def simple_dedupe(self) -> None:
-        """Pairwise identification of duplicates based on static similarity measure
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        This procedure should only be used in small samples on which active learning
-        models cannot be trained.
-        """
+        # Note: Because we only introduce individual (non-merged records),
+        # there should be no semicolons in colrev_origin!
+        records_queue = [
+            record
+            for ID, record in records.items()
+            if ID in dedupe_data["queue"]  # type: ignore
+        ]
 
-        saved_args = locals()
+        records_queue = pd.DataFrame.from_dict(records_queue)
+        references = self.__prep_references(references=records_queue)
+        # self.REVIEW_MANAGER.pp.pprint(references.values())
+        references_df = pd.DataFrame(references.values())
 
-        self.REVIEW_MANAGER.logger.info(
-            "Pairwise identification of duplicates based on static similarity measure"
-        )
-
-        dedupe_data = self.__get_data()
-
-        i = 1
-        for dedupe_batch in self.__batch(data=dedupe_data):
-
-            # print(f"Batch {i}")
-            i += 1
-            dedupe_batch_results = []
-            for item in dedupe_batch:
-                dedupe_batch_results.append(self.__append_merges(batch_item=item))
-
-            # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
-
-            self.apply_merges(results=dedupe_batch_results)
-
-            self.potential_duplicates = [
-                r
-                for r in dedupe_batch_results
-                if "potential_duplicate" == r["decision"]
-            ]
-
-            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-
-            records_queue = pd.DataFrame.from_dict(records.values())
-            references = self.__prep_references(references=records_queue)
-            # self.REVIEW_MANAGER.pp.pprint(references.values())
-            references = pd.DataFrame(references.values())
-
-            self.dedupe_references = references
-
-            self.REVIEW_MANAGER.create_commit(
-                msg="Process duplicates", saved_args=saved_args
+        items_start = dedupe_data["items_start"]
+        batch_data = []
+        for i in range(items_start, len(dedupe_data["queue"])):  # type: ignore
+            batch_data.append(
+                {
+                    "record": dedupe_data["queue"][i],  # type: ignore
+                    "queue": references_df.iloc[: i + 1],
+                    "MERGING_NON_DUP_THRESHOLD": MERGING_NON_DUP_THRESHOLD,
+                    "MERGING_DUP_THRESHOLD": MERGING_DUP_THRESHOLD,
+                }
             )
 
-        if 1 == i:
-            self.REVIEW_MANAGER.logger.info("No records to check for duplicates")
+        dedupe_batch_results = []
+        for item in batch_data:
+            dedupe_batch_results.append(self.__append_merges(batch_item=item))
+
+        # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
+
+        self.apply_merges(results=dedupe_batch_results)
+
+        print("completed application of merges")
+
+        self.potential_duplicates = [
+            r for r in dedupe_batch_results if "potential_duplicate" == r["decision"]
+        ]
+
+        # records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        # records_queue = pd.DataFrame.from_dict(records.values())
+        # references = self.__prep_references(references=records_queue)
+        # # self.REVIEW_MANAGER.pp.pprint(references.values())
+        # references = pd.DataFrame(references.values())
+
+        # self.dedupe_references = references
+
+        self.REVIEW_MANAGER.create_commit(
+            msg="Process duplicates", saved_args=saved_args
+        )
 
         return
 
