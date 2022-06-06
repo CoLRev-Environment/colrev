@@ -887,7 +887,7 @@ class Status(Process):
         if stat["currently"]["md_needs_manual_preparation"] > 0:
             metadata_add_info.append(
                 f'{colors.ORANGE}{stat["currently"]["md_needs_manual_preparation"]} '
-                "to prepare manually{colors.END}"
+                f"to prepare manually{colors.END}"
             )
 
         if stat["currently"]["md_prepared"] > 0:
