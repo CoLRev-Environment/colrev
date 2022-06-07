@@ -547,6 +547,7 @@ class ReviewDataset:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
         from colrev_core.settings import IDPpattern
+        from colrev_core.prep import PrepRecord
         import re
         import unicodedata
 
@@ -594,8 +595,9 @@ class ReviewDataset:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
-                authors = self.PREPARATION.format_author_field(
-                    input_string=record.get("author", record.get("editor", "Anonymous"))
+                authors_string = record.get("author", record.get("editor", "Anonymous"))
+                authors = PrepRecord.format_author_field(
+                    input_string=authors_string
                 ).split(" and ")
             else:
                 authors = ["Anonymous"]

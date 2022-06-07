@@ -54,39 +54,79 @@ class PrepRecord(Record):
     def __init__(self, *, data: dict):
         super().__init__(data=data)
 
-    def format_authors_string(self):
-        if "author" not in self.data:
-            return
-        authors = self.data["author"]
-        authors = str(authors).lower()
-        authors_string = ""
-        authors = Record.remove_accents(input_str=authors)
+    @classmethod
+    def format_author_field(cls, *, input_string: str) -> str:
+        def mostly_upper_case(input_string: str) -> bool:
+            if not re.match(r"[a-zA-Z]+", input_string):
+                return False
+            input_string = input_string.replace(".", "").replace(",", "")
+            words = input_string.split()
+            return sum(word.isupper() for word in words) / len(words) > 0.8
 
-        # abbreviate first names
-        # "Webster, Jane" -> "Webster, J"
-        # also remove all special characters and do not include separators (and)
-        for author in authors.split(" and "):
-            if "," in author:
-                last_names = [
-                    word[0] for word in author.split(",")[1].split(" ") if len(word) > 0
-                ]
-                authors_string = (
-                    authors_string
-                    + author.split(",")[0]
-                    + " "
-                    + " ".join(last_names)
-                    + " "
-                )
+        input_string = input_string.replace("\n", " ")
+        # DBLP appends identifiers to non-unique authors
+        input_string = str(re.sub(r"[0-9]{4}", "", input_string))
+
+        names = input_string.split(" and ")
+        author_string = ""
+        for name in names:
+            # Note: https://github.com/derek73/python-nameparser
+            # is very effective (maybe not perfect)
+
+            parsed_name = HumanName(name)
+            if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
+                parsed_name.capitalize(force=True)
+
+            parsed_name.string_format = "{last} {suffix}, {first} {middle}"
+            # '{last} {suffix}, {first} ({nickname}) {middle}'
+            author_name_string = str(parsed_name).replace(" , ", ", ")
+            # Note: there are errors for the following author:
+            # JR Cromwell and HK Gardner
+            # The JR is probably recognized as Junior.
+            # Check whether this is fixed in the Grobid name parser
+
+            if author_string == "":
+                author_string = author_name_string
             else:
-                authors_string = authors_string + author + " "
-        authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
-        self.data["author"] = authors_string
-        return
+                author_string = author_string + " and " + author_name_string
+
+        return author_string
 
     @classmethod
     def get_retrieval_similarity(
-        self, *, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
+        cls, *, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
     ) -> float:
+        def format_authors_string_for_comparison(REC_IN):
+            if "author" not in REC_IN.data:
+                return
+            authors = REC_IN.data["author"]
+            authors = str(authors).lower()
+            authors_string = ""
+            authors = Record.remove_accents(input_str=authors)
+
+            # abbreviate first names
+            # "Webster, Jane" -> "Webster, J"
+            # also remove all special characters and do not include separators (and)
+            for author in authors.split(" and "):
+                if "," in author:
+                    last_names = [
+                        word[0]
+                        for word in author.split(",")[1].split(" ")
+                        if len(word) > 0
+                    ]
+                    authors_string = (
+                        authors_string
+                        + author.split(",")[0]
+                        + " "
+                        + " ".join(last_names)
+                        + " "
+                    )
+                else:
+                    authors_string = authors_string + author + " "
+            authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
+            REC_IN.data["author"] = authors_string
+            return
+
         RECORD = PrepRecord(data=RECORD_ORIGINAL.data.copy())
         RETRIEVED_RECORD = PrepRecord(data=RETRIEVED_RECORD_ORIGINAL.data.copy())
         if RECORD.container_is_abbreviated():
@@ -104,10 +144,10 @@ class PrepRecord(Record):
             RETRIEVED_RECORD.data["title"] = RETRIEVED_RECORD.data["title"][:90]
 
         if "author" in RECORD.data:
-            RECORD.format_authors_string()
+            format_authors_string_for_comparison(RECORD)
             RECORD.data["author"] = RECORD.data["author"][:45]
         if "author" in RETRIEVED_RECORD.data:
-            RETRIEVED_RECORD.format_authors_string()
+            format_authors_string_for_comparison(RETRIEVED_RECORD)
             RETRIEVED_RECORD.data["author"] = RETRIEVED_RECORD.data["author"][:45]
         if not ("volume" in RECORD.data and "volume" in RETRIEVED_RECORD.data):
             RECORD.data["volume"] = "nan"
@@ -727,7 +767,9 @@ class Preparation(Process):
                 ", " not in RECORD.data["author"]
             ):
                 RECORD.data.update(
-                    author=self.format_author_field(input_string=RECORD.data["author"])
+                    author=PrepRecord.format_author_field(
+                        input_string=RECORD.data["author"]
+                    )
                 )
 
         if "title" in RECORD.data:
@@ -1624,43 +1666,6 @@ class Preparation(Process):
 
         return input_string
 
-    def format_author_field(self, *, input_string: str) -> str:
-        def mostly_upper_case(input_string: str) -> bool:
-            if not re.match(r"[a-zA-Z]+", input_string):
-                return False
-            input_string = input_string.replace(".", "").replace(",", "")
-            words = input_string.split()
-            return sum(word.isupper() for word in words) / len(words) > 0.8
-
-        input_string = input_string.replace("\n", " ")
-        # DBLP appends identifiers to non-unique authors
-        input_string = str(re.sub(r"[0-9]{4}", "", input_string))
-
-        names = input_string.split(" and ")
-        author_string = ""
-        for name in names:
-            # Note: https://github.com/derek73/python-nameparser
-            # is very effective (maybe not perfect)
-
-            parsed_name = HumanName(name)
-            if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
-                parsed_name.capitalize(force=True)
-
-            parsed_name.string_format = "{last} {suffix}, {first} {middle}"
-            # '{last} {suffix}, {first} ({nickname}) {middle}'
-            author_name_string = str(parsed_name).replace(" , ", ", ")
-            # Note: there are errors for the following author:
-            # JR Cromwell and HK Gardner
-            # The JR is probably recognized as Junior.
-            # Check whether this is fixed in the Grobid name parser
-
-            if author_string == "":
-                author_string = author_name_string
-            else:
-                author_string = author_string + " and " + author_name_string
-
-        return author_string
-
     def __unify_pages_field(self, *, input_string: str) -> str:
         if not isinstance(input_string, str):
             return input_string
@@ -1733,7 +1738,7 @@ class Preparation(Process):
             if "family" in author
         ]
         authors_string = " and ".join(authors)
-        # authors_string = format_author_field(authors_string)
+        # authors_string = PrepRecord.format_author_field(authors_string)
         record.update(author=authors_string)
 
         try:
@@ -1933,7 +1938,7 @@ class Preparation(Process):
             authors_string = " and ".join(
                 [author["name"] for author in item["authors"] if "name" in author]
             )
-            authors_string = self.format_author_field(input_string=authors_string)
+            authors_string = PrepRecord.format_author_field(input_string=authors_string)
             retrieved_record.update(author=authors_string)
         if "abstract" in item:
             retrieved_record.update(abstract=item["abstract"])
@@ -1971,7 +1976,7 @@ class Preparation(Process):
         if "author_name" in item:
             authors_string = " and ".join(
                 [
-                    self.format_author_field(input_string=author)
+                    PrepRecord.format_author_field(input_string=author)
                     for author in item["author_name"]
                 ]
             )
@@ -2078,7 +2083,9 @@ class Preparation(Process):
                         ]
                         authors = [x["text"] for x in authors_nodes if "text" in x]
                         author_string = " and ".join(authors)
-                    author_string = self.format_author_field(input_string=author_string)
+                    author_string = PrepRecord.format_author_field(
+                        input_string=author_string
+                    )
                     retrieved_record["author"] = author_string
 
             if "key" in item:

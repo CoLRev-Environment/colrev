@@ -679,7 +679,7 @@ class Loader(Process):
             self.REVIEW_MANAGER.logger.debug(
                 f"Called {self.conversion_scripts[filetype].__name__}({sfpath})"
             )
-            records = self.conversion_scripts[filetype](sfpath)
+            records = self.conversion_scripts[filetype](file=sfpath)
 
             records = self.__fix_keys(records=records)
             records = self.__set_incremental_IDs(records=records)
@@ -700,8 +700,8 @@ class Loader(Process):
                         f"Loaded {len(records)} " f"records from {sfpath.name}"
                     )
                     records_dict = {r["ID"]: r for r in records}
-                    self.REVIEW_MANAGER.REVIEW_DATASEt.save_records_dict_to_file(
-                        records_dict, save_path=corresponding_bib_file
+                    self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                        records=records_dict, save_path=corresponding_bib_file
                     )
 
         else:

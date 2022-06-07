@@ -557,6 +557,7 @@ class EndnoteEndpoint:
 
             with open(export_filepath, "w") as w:
                 w.write(enl_data.decode("utf-8"))
+            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
 
         else:
 
@@ -596,6 +597,8 @@ class EndnoteEndpoint:
                 print(export_filepath)
                 with open(export_filepath, "w") as w:
                     w.write(enl_data.decode("utf-8"))
+                REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
+
             else:
                 REVIEW_MANAGER.logger.info("No additional records to export")
 
@@ -863,7 +866,7 @@ class ZettlrEndpoint:
             zettlr_config["general"]["main"] = str(fname)
             with open(zettlr_config_path, "w") as configfile:
                 zettlr_config.write(configfile)
-            REVIEW_MANAGER.REVIEW_DATASET.add_changes(str(zettlr_config_path))
+            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(zettlr_config_path))
 
             retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
             title = "PROJECT_NAME"

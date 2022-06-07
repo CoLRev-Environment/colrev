@@ -1581,14 +1581,14 @@ class Dedupe(Process):
             r for r in dedupe_batch_results if "potential_duplicate" == r["decision"]
         ]
 
-        # records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        # records_queue = pd.DataFrame.from_dict(records.values())
-        # references = self.__prep_references(references=records_queue)
-        # # self.REVIEW_MANAGER.pp.pprint(references.values())
-        # references = pd.DataFrame(references.values())
+        records_queue = pd.DataFrame.from_dict(records.values())
+        references = self.__prep_references(references=records_queue)
+        # self.REVIEW_MANAGER.pp.pprint(references.values())
+        references = pd.DataFrame(references.values())
 
-        # self.dedupe_references = references
+        self.dedupe_references = references
 
         self.REVIEW_MANAGER.create_commit(
             msg="Process duplicates", saved_args=saved_args
