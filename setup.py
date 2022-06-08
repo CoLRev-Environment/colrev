@@ -19,6 +19,7 @@ requirements = [
     "crossrefapi==1.5.0",
     "cx_Freeze==6.10",
     "daff==1.3.46",
+    "dedupe==2.0.15",
     "dictdiffer==0.8.1",
     "docker==5.0.3",
     "GitPython==3.1.24",
