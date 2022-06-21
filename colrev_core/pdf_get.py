@@ -370,7 +370,26 @@ class PDF_Retrieval(Process):
     def rename_pdfs(self) -> None:
         self.REVIEW_MANAGER.logger.info("Rename PDFs")
 
+        def __inplace_change(
+            *, filename: Path, old_string: str, new_string: str
+        ) -> None:
+            with open(filename, encoding="utf8") as f:
+                s = f.read()
+                if old_string not in s:
+                    self.REVIEW_MANAGER.logger.info(
+                        f'"{old_string}" not found in {filename}.'
+                    )
+                    return
+            with open(filename, "w", encoding="utf8") as f:
+                s = s.replace(old_string, new_string)
+                f.write(s)
+            return
+
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        # We may use other pdfs_search_files from the sources:
+        # REVIEW_MANAGER.settings.search.sources
+        pdfs_search_file = Path("search/pdfs.bib")
 
         for record in records.values():
             if "file" not in record:
@@ -384,14 +403,28 @@ class PDF_Retrieval(Process):
                 continue
 
             if file.is_file():
+                if pdfs_search_file.is_file():
+                    __inplace_change(
+                        filename=pdfs_search_file,
+                        old_string=str(file),
+                        new_string=str(new_filename),
+                    )
                 file.rename(new_filename)
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
             if file.is_symlink():
+                if pdfs_search_file.is_file():
+                    __inplace_change(
+                        filename=pdfs_search_file,
+                        old_string=str(file),
+                        new_string=str(new_filename),
+                    )
                 os.rename(str(file), str(new_filename))
                 record["file"] = str(new_filename)
                 self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
+        if pdfs_search_file.is_file():
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(pdfs_search_file))
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 

@@ -38,8 +38,8 @@ class ProjectConfiguration:
 class SearchType(Enum):
     DB = "DB"
     TOC = "TOC"
-    BACK_CIT = "BACK_CIT"
-    FORW_CIT = "FORW_CIT"
+    BACKWARD_SEARCH = "BACKWARD_SEARCH"
+    FORWARD_SEARCH = "FORWARD_SEARCH"
     PDFS = "PDFS"
     OTHER = "OTHER"
     FEED = "FEED"

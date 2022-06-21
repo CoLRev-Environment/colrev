@@ -622,7 +622,10 @@ class Status(Process):
             ]:
                 review_instructions.append(instruction)
 
-        if stat["completeness_condition"]:
+        if (
+            stat["completeness_condition"]
+            and stat["colrev_status"]["currently"]["md_retrieved"] > 0
+        ):
 
             search_dir = str(self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]) + "/"
             untracked_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_untracked_files()

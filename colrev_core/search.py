@@ -44,36 +44,42 @@ class Search(Process):
 
         self.search_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {
+                "source_name": "DBLP",
                 "source_identifier": "{{dblp_key}}",
                 "script": self.search_dblp,
                 "validate_params": self.validate_dblp_params,
                 "mode": "all",
             },
             {
+                "source_name": "CROSSREF",
                 "source_identifier": "https://api.crossref.org/works/{{doi}}",
                 "script": self.search_crossref,
                 "validate_params": self.validate_crossref_params,
                 "mode": "all",
             },
             {
-                "source_identifier": "backward_search",
+                "source_name": "BACKWARD_SEARCH",
+                "source_identifier": "{{file}} (references)",
                 "script": self.search_backward,
                 "validate_params": self.validate_backwardsearch_params,
                 "mode": "individual",
             },
             {
+                "source_name": "COLREV_PROJECT",
                 "source_identifier": "project",
                 "script": self.search_project,
                 "validate_params": self.validate_project_params,
                 "mode": "individual",
             },
             {
+                "source_name": "INDEX",
                 "source_identifier": "index",
                 "script": self.search_index,
                 "validate_params": self.validate_index_params,
                 "mode": "individual",
             },
             {
+                "source_name": "PDFS",
                 "source_identifier": "{{file}}",
                 "script": self.search_pdfs_dir,
                 "validate_params": self.validate_pdfs_dir_params,
@@ -333,35 +339,43 @@ class Search(Process):
         from colrev_core.record import RecordState
         from colrev_core.environment import GrobidService
 
+        if params["scope"]["colrev_status"] != "rev_included|rev_synthesized":
+            print("scopes other than rev_included|rev_synthesized not yet implemented")
+            return
+
         if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
-        print(params)
-        print(feed_file)
-        print(
-            "TODO : one or multiple source entries? "
-            "(general search query vs individual source descriptions...) \n "
-            "Or maybe use a pattern to link? e.g., files=backward_search*.bib "
-            "(this would allow us to avoid redundant queries...)"
-        )
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        # default: rev_included/rev_synthesized and no selection clauses
+        if feed_file.is_file():
+            with open(feed_file, encoding="utf8") as bibtex_file:
+                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
+                )
+                feed_file_records = list(feed_rd.values())
+        else:
+            feed_file_records = []
+
         for record in records.values():
+
+            # rev_included/rev_synthesized
             if record["colrev_status"] not in [
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
                 continue
-            print(record["ID"])
+            self.REVIEW_MANAGER.logger.info(
+                f'Running backward search for {record["ID"]} ({record["file"]})'
+            )
 
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
             if not Path(pdf_path).is_file():
-                print(f'File not found for {record["ID"]}')
+                self.REVIEW_MANAGER.logger.error(f'File not found for {record["ID"]}')
                 continue
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
@@ -372,16 +386,27 @@ class Search(Process):
                 headers={"Accept": "application/x-bibtex"},
             )
 
-            bib_filename = self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"] / Path(
-                f"backward_search_{record['ID']}.bib"
+            new_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=r.text
             )
-            bib_content = r.text.encode("utf-8")
-            with open(bib_filename, "wb") as f:
-                f.write(bib_content)
+            new_records = list(new_records_dict.values())
+            for new_record in new_records:
+                # IDs have to be distinct
+                new_record["ID"] = record["ID"] + "_backward_search_" + new_record["ID"]
+                new_record["cited_by"] = record["ID"]
+                if new_record["ID"] not in [r["ID"] for r in feed_file_records]:
+                    feed_file_records.append(new_record)
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(bib_filename))
+        feed_file_records_dict = {r["ID"]: r for r in feed_file_records}
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            records=feed_file_records_dict, save_path=feed_file
+        )
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
 
-        self.REVIEW_MANAGER.create_commit(msg="Backward search")
+        if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            self.REVIEW_MANAGER.create_commit(msg="Backward search")
+        else:
+            print("No new records added.")
 
         return
 
@@ -697,7 +722,7 @@ class Search(Process):
                 feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
-                records = feed_rd.values()
+                records = list(feed_rd.values())
 
         path = Path(params["scope"]["path"])
 
@@ -1163,7 +1188,7 @@ class Search(Process):
 
         sources = self.parse_sources(query=query)
 
-        available_source_types = [x["search_endpoint"] for x in self.search_scripts]
+        available_source_types = [x["source_name"] for x in self.search_scripts]
         if not all(source in available_source_types for source in sources):
             violation = [
                 source for source in sources if source not in available_source_types
@@ -1175,7 +1200,7 @@ class Search(Process):
 
         if len(sources) > 1:
             individual_sources = [
-                s["search_endpoint"]
+                s["source_name"]
                 for s in self.search_scripts
                 if "individual" == s["mode"]
             ]
@@ -1189,10 +1214,8 @@ class Search(Process):
                 )
 
         for source in sources:
-            script = [s for s in self.search_scripts if s["search_endpoint"] == source][
-                0
-            ]
-            script["validate_params"](query)
+            script = [s for s in self.search_scripts if s["source_name"] == source][0]
+            script["validate_params"](query=query)
 
         # TODO : parse params (which may also raise errors)
 
@@ -1264,25 +1287,38 @@ class Search(Process):
             if as_filename != "":
                 filename = as_filename
             else:
-                filename = f"{source}_query.bib"
+                filename = f"{source}.bib"
                 i = 0
-                while filename in [x["filename"] for x in source_details]:
+                while filename in [x.filename for x in source_details]:
                     i += 1
                     filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
 
             feed_file_path = Path.cwd() / Path("search") / Path(filename)
             assert not feed_file_path.is_file()
 
-            if "crossref" == source:
-                source = "https://api.crossref.org/works/{{doi}}"
-            elif "dblp" == source:
-                source = "{{dblp_key}}"
+            # The following must be in line with settings.py/SearchSource
+            search_type = "FEED"
+            if "CROSSREF" == source:
+                source_identifier = "https://api.crossref.org/works/{{doi}}"
+                search_type = "FEED"
+            elif "DBLP" == source:
+                source_identifier = "{{dblp_key}}"
+                search_type = "FEED"
+            elif "PDFS" == source:
+                source_identifier = "{{file}}"
+                search_type = "COLREV_REPO"
+            elif "BACKWARD_SEARCH" == source:
+                source_identifier = "{{file}} (references)"
+                search_type = "FEED"
+            else:
+                source_identifier = "TODO"
 
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
                 "filename": filename,
-                "search_type": "FEED",
-                "source_identifier": source,
+                "source_name": source,
+                "search_type": search_type,
+                "source_identifier": source_identifier,
                 "search_parameters": selection,
                 "comment": "",
             }
@@ -1302,12 +1338,16 @@ class Search(Process):
     def update(self, *, selection_str: str) -> None:
         from colrev_core.settings import SearchType
 
+        # Reload the settings because the search sources may have been updated
+        self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
+
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         feed_sources = [x for x in sources if SearchType.FEED == x.search_type]
 
         if selection_str is not None:
+            feed_sources_selected = feed_sources
             if "all" != selection_str:
                 feed_sources_selected = [
                     f
@@ -1329,7 +1369,7 @@ class Search(Process):
             ]:
                 print(
                     "Endpoint not supported:"
-                    f' {feed_item["source_identifier"]} (skipping)'
+                    f" {feed_item.source_identifier} (skipping)"
                 )
                 continue
 
@@ -1339,7 +1379,7 @@ class Search(Process):
                 if s["source_identifier"] == feed_item.source_identifier
             ][0]
             params = self.parse_parameters(search_params=feed_item.search_parameters)
-
+            print()
             self.REVIEW_MANAGER.logger.info(
                 f"Retrieve from {feed_item.source_name}: {params}"
             )
@@ -1358,7 +1398,7 @@ class Search(Process):
             self.REVIEW_MANAGER.pp.pprint(source)
 
         print("\n\n\nOptions:")
-        options = ", ".join([s["search_endpoint"] for s in self.search_scripts])
+        options = ", ".join([s["source_name"] for s in self.search_scripts])
         print(f"- endpoints (FEED): {options}")
         return
 

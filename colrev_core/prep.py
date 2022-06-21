@@ -1380,12 +1380,13 @@ class Preparation(Process):
     def drop_fields(self, RECORD: PrepRecord) -> PrepRecord:
         for key in list(RECORD.data.keys()):
             if key not in self.fields_to_keep:
-                RECORD.data.pop(key)
+                RECORD.remove_field(field=key)
                 self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
-        for key in list(RECORD.data.keys()):
-            if key in self.fields_to_keep:
-                continue
-            if RECORD.data[key] in ["", "NA"]:
+
+            # for key in list(RECORD.data.keys()):
+            #     if key in self.fields_to_keep:
+            #         continue
+            elif RECORD.data[key] in ["", "NA"]:
                 RECORD.remove_field(field=key)
 
         if RECORD.data.get("publisher", "") in ["researchgate.net"]:
