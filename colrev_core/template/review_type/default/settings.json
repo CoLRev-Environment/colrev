@@ -8,11 +8,27 @@
     "curated_masterdata": false,
     "curated_fields": []
   },
-  "search": {"sources": []},
+  "search": {"sources": [
+    {
+        "filename": "pdfs.bib",
+        "search_type": "FEED",
+        "source_name": "PDFs",
+        "source_identifier": "{{file}}",
+        "search_parameters": "SCOPE path='pdfs'",
+        "comment": ""
+    }
+  ]},
   "load": {},
   "prep": {
     "fields_to_keep": [],
     "prep_rounds": [
+        {
+            "name": "load_fixes",
+            "similarity": 1.0,
+            "scripts": [
+                "load_fixes"
+            ]
+        },
         {
             "name": "exclusion",
             "similarity": 1.0,

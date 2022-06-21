@@ -27,7 +27,11 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 .. code-block::
 
    # Install
-   pip install colrev
+   git clone https://github.com/geritwagner/colrev_core
+   cd colrev_core
+   pip install .
+   # once CoLRev is available on PyPI:
+   # pip install colrev
 
    # ... and start with the main command
    colrev status
@@ -44,11 +48,11 @@ Conducting a literature review should be as simple as running the following oper
 
 .. code-block:: bash
 
-      # Initialize the project
-      colrev init
+      # Initialize the project (remove the "--example" flag to create an empty project)
+      colrev init --example
 
+      # Run new search or store search results in the ./search directory
       colrev search --add "FROM crossref WHERE digital"
-      # Or store search results in the search directory
 
       # Load the search results
       colrev load

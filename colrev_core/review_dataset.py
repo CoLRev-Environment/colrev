@@ -1601,7 +1601,7 @@ class ReviewDataset:
             if exclusion_criteria != "NA":
                 criteria = self.__get_exclusion_criteria(ec_string=exclusion_criteria)
                 settings_criteria = [
-                    str(c) for c in self.REVIEW_MANAGER.settings.screen.criteria
+                    str(c.name) for c in self.REVIEW_MANAGER.settings.screen.criteria
                 ]
                 if not set(criteria) == set(settings_criteria):
                     field_errors.append(
@@ -1834,6 +1834,9 @@ class ReviewDataset:
 
         self.__git_repo.index.add([str(path)])
         return
+
+    def get_untracked_files(self) -> list:
+        return self.__git_repo.untracked_files
 
     def remove_file_from_git(self, *, path: str) -> None:
 

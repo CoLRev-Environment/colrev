@@ -203,10 +203,11 @@ class Status(Process):
         # note: 10 steps
         stat["atomic_steps"] = (
             10 * st_o[str(RecordState.md_imported)]
-            - stat["colrev_status"]["currently"]["md_duplicates_removed"] * 8
-            - stat["colrev_status"]["currently"]["rev_prescreen_excluded"] * 7
-            - stat["colrev_status"]["currently"]["pdf_not_available"] * 6
+            - 8 * stat["colrev_status"]["currently"]["md_duplicates_removed"]
+            - 7 * stat["colrev_status"]["currently"]["rev_prescreen_excluded"]
+            - 6 * stat["colrev_status"]["currently"]["pdf_not_available"]
             - stat["colrev_status"]["currently"]["rev_excluded"]
+            - stat["colrev_status"]["currently"]["rev_synthesized"]
         )
         stat["completed_atomic_steps"] = completed_atomic_steps
         self.REVIEW_MANAGER.logger.debug(
@@ -622,13 +623,25 @@ class Status(Process):
                 review_instructions.append(instruction)
 
         if stat["completeness_condition"]:
-            instruction = {
-                "info": "Iterationed completed.",
-                "msg": "To start the next iteration of the review, "
-                + "add records to search/ directory",
-                "cmd_after": "colrev load",
-            }
-            review_instructions.append(instruction)
+
+            search_dir = str(self.REVIEW_MANAGER.paths["SEARCHDIR_RELATIVE"]) + "/"
+            untracked_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_untracked_files()
+            if not any(
+                search_dir in untracked_file for untracked_file in untracked_files
+            ):
+                instruction = {
+                    "info": "Iterationed completed.",
+                    "msg": "To start the next iteration of the review, "
+                    + "add new search results to ./search directory",
+                }
+                review_instructions.append(instruction)
+            else:
+                instruction = {
+                    "info": "Search results available for next iteration.",
+                    "msg": "Next step: Import search results.",
+                    "cmd": "colrev load",
+                }
+                review_instructions.append(instruction)
 
         if "MANUSCRIPT" in self.REVIEW_MANAGER.settings.data.data_format:
             instruction = {
@@ -832,9 +845,6 @@ class Status(Process):
         print("")
         print("Status")
         print("")
-        if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-            print(" - Search        0 records")
-            return
 
         # NOTE: the first figure should always
         # refer to the nr of records that completed this step

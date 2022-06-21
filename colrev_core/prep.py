@@ -10,6 +10,7 @@ import sys
 import time
 import typing
 import urllib
+from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote
@@ -27,6 +28,7 @@ from opensearchpy import NotFoundError
 from pathos.multiprocessing import ProcessPool
 from thefuzz import fuzz
 
+from colrev_core import search_sources
 from colrev_core.environment import EnvironmentManager
 from colrev_core.environment import LocalIndex
 from colrev_core.environment import RecordNotInIndexException
@@ -127,8 +129,10 @@ class PrepRecord(Record):
             REC_IN.data["author"] = authors_string
             return
 
-        RECORD = PrepRecord(data=RECORD_ORIGINAL.data.copy())
-        RETRIEVED_RECORD = PrepRecord(data=RETRIEVED_RECORD_ORIGINAL.data.copy())
+        RECORD = PrepRecord(data=deepcopy(RECORD_ORIGINAL.get_data()))
+        RETRIEVED_RECORD = PrepRecord(
+            data=deepcopy(RETRIEVED_RECORD_ORIGINAL.get_data())
+        )
         if RECORD.container_is_abbreviated():
             min_len = RECORD.get_abbrev_container_min_len()
             RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
@@ -234,7 +238,7 @@ class PrepRecord(Record):
             if "UNKNOWN" == v:
                 to_drop.append(k)
         for k in to_drop:
-            del self.data[k]
+            self.remove_field(field=k)
 
         return
 
@@ -361,6 +365,9 @@ class Preparation(Process):
 
         # Note: for these scripts, only the similarity changes.
         self.prep_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+            "load_fixes": {
+                "script": self.load_fixes,
+            },
             "exclude_non_latin_alphabets": {
                 "script": self.exclude_non_latin_alphabets,
             },
@@ -479,6 +486,7 @@ class Preparation(Process):
 
         try:
             test_rec = {
+                "ENTRYTYPE": "article",
                 "doi": "10.17705/1cais.04607",
                 "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
                 "and Paré, Guy",
@@ -540,6 +548,29 @@ class Preparation(Process):
     #
     # prep_scripts (in the order in which they should run)
     #
+
+    def load_fixes(self, RECORD: PrepRecord) -> PrepRecord:
+
+        # TODO : may need to rerun import_provenance
+
+        origin_source = RECORD.data["colrev_origin"].split("/")[0]
+        origin_source_name = [
+            s.source_name
+            for s in self.REVIEW_MANAGER.settings.search.sources
+            if s.filename == Path(origin_source)
+        ][0]
+
+        if origin_source_name in [
+            s["source_name"] for s in search_sources.scripts if "prep_script" in s
+        ]:
+            custom_prep_script = [
+                s["prep_script"]
+                for s in search_sources.scripts
+                if s["source_name"] == origin_source_name
+            ][0]
+            RECORD = custom_prep_script(RECORD=RECORD)
+
+        return RECORD
 
     def exclude_non_latin_alphabets(self, RECORD: PrepRecord) -> PrepRecord:
         def mostly_latin_alphabet(str_to_check) -> bool:
@@ -629,7 +660,7 @@ class Preparation(Process):
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    del RECORD.data["url"]
+                    RECORD.remove_field(field="url")
         except requests.exceptions.RequestException:
             pass
         try:
@@ -641,7 +672,7 @@ class Preparation(Process):
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    del RECORD.data["fulltext"]
+                    RECORD.remove_field(field="fulltext")
         except requests.exceptions.RequestException:
             pass
 
@@ -653,7 +684,7 @@ class Preparation(Process):
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
             d = re.match(r"^10.\d{4,9}\/", RECORD.data["doi"])
             if not d:
-                del RECORD.data["doi"]
+                RECORD.remove_field(field="doi")
         if "isbn" in RECORD.data:
             isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
@@ -661,15 +692,13 @@ class Preparation(Process):
                 "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
             )
             if '"error": "notfound"' in ret.text:
-                del RECORD.data["isbn"]
+                RECORD.remove_field(field="isbn")
 
         return RECORD
 
     def global_ids_consistency_check(self, RECORD: PrepRecord) -> PrepRecord:
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
-
-        from copy import deepcopy
 
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
@@ -818,7 +847,7 @@ class Preparation(Process):
 
         if "pages" in RECORD.data:
             if "N.PAG" == RECORD.data.get("pages", ""):
-                del RECORD.data["pages"]
+                RECORD.remove_field(field="pages")
             else:
                 RECORD.data.update(
                     pages=self.__unify_pages_field(input_string=RECORD.data["pages"])
@@ -846,13 +875,13 @@ class Preparation(Process):
 
         if "number" not in RECORD.data and "issue" in RECORD.data:
             RECORD.data.update(number=RECORD.data["issue"])
-            del RECORD.data["issue"]
+            RECORD.remove_field(field="issue")
         if "volume" in RECORD.data:
             RECORD.data.update(volume=RECORD.data["volume"].replace("Volume ", ""))
 
         if "url" in RECORD.data and "fulltext" in RECORD.data:
             if RECORD.data["url"] == RECORD.data["fulltext"]:
-                del RECORD.data["fulltext"]
+                RECORD.remove_field(field="fulltext")
 
         return RECORD
 
@@ -919,10 +948,10 @@ class Preparation(Process):
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
-            red_record_copy = RECORD.data.copy()
+            red_record_copy = deepcopy(RECORD.get_data())
             for key in ["volume", "number", "number", "pages"]:
                 if key in red_record_copy:
-                    del red_record_copy[key]
+                    RECORD.remove_field(field=key)
             RED_REC_COPY = PrepRecord(data=red_record_copy)
 
             similarity = PrepRecord.get_retrieval_similarity(
@@ -1122,7 +1151,7 @@ class Preparation(Process):
                 ret.raise_for_status()
                 self.REVIEW_MANAGER.logger.debug(url)
                 if '"error": "notfound"' in ret.text:
-                    del RECORD.data["isbn"]
+                    RECORD.remove_field(field="isbn")
 
                 item = json.loads(ret.text)
 
@@ -1172,7 +1201,7 @@ class Preparation(Process):
             RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
 
             # if "title" in RECORD.data and "booktitle" in RECORD.data:
-            #     del RECORD.data["booktitle"]
+            #     RECORD.remove_field(field="booktitle")
 
         except requests.exceptions.RequestException:
             pass
@@ -1195,7 +1224,7 @@ class Preparation(Process):
             return RECORD
 
         try:
-            modified_record = RECORD.data.copy()
+            modified_record = deepcopy(RECORD.get_data())
             modified_record = {
                 k: v
                 for k, v in modified_record.items()
@@ -1342,9 +1371,9 @@ class Preparation(Process):
                 RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
         if RECORD.data.get("volume", "") == "ahead-of-print":
-            del RECORD.data["volume"]
+            RECORD.remove_field(field="volume")
         if RECORD.data.get("number", "") == "ahead-of-print":
-            del RECORD.data["number"]
+            RECORD.remove_field(field="number")
 
         return RECORD
 
@@ -1357,10 +1386,10 @@ class Preparation(Process):
             if key in self.fields_to_keep:
                 continue
             if RECORD.data[key] in ["", "NA"]:
-                del RECORD.data[key]
+                RECORD.remove_field(field=key)
 
         if RECORD.data.get("publisher", "") in ["researchgate.net"]:
-            del RECORD.data["publisher"]
+            RECORD.remove_field(field="publisher")
 
         if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
             # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
@@ -1372,7 +1401,7 @@ class Preparation(Process):
             )
             for field_to_remove in fields_to_remove:
                 if field_to_remove in RECORD.data:
-                    del RECORD.data[field_to_remove]
+                    RECORD.remove_field(field=field_to_remove)
 
         return RECORD
 
@@ -1386,7 +1415,7 @@ class Preparation(Process):
                     / 100
                     > 0.9
                 ):
-                    del RECORD.data["booktitle"]
+                    RECORD.remove_field(field="booktitle")
         if "inproceedings" == RECORD.data["ENTRYTYPE"]:
             if "journal" in RECORD.data and "booktitle" in RECORD.data:
                 if (
@@ -1396,7 +1425,7 @@ class Preparation(Process):
                     / 100
                     > 0.9
                 ):
-                    del RECORD.data["journal"]
+                    RECORD.remove_field(field="journal")
         return RECORD
 
     def correct_recordtype(self, RECORD: PrepRecord) -> PrepRecord:
@@ -1450,18 +1479,18 @@ class Preparation(Process):
             if "booktitle" in RECORD.data:
                 if "journal" not in RECORD.data:
                     RECORD.data.update(journal=RECORD.data["booktitle"])
-                    del RECORD.data["booktitle"]
+                    RECORD.remove_field(field="booktitle")
             if "series" in RECORD.data:
                 if "journal" not in RECORD.data:
                     RECORD.data.update(journal=RECORD.data["series"])
-                    del RECORD.data["series"]
+                    RECORD.remove_field(field="series")
 
         if "article" == RECORD.data["ENTRYTYPE"]:
             if "journal" not in RECORD.data:
                 if "series" in RECORD.data:
                     journal_string = RECORD.data["series"]
                     RECORD.data.update(journal=journal_string)
-                    del RECORD.data["series"]
+                    RECORD.remove_field(field="series")
 
         return RECORD
 
@@ -1808,7 +1837,7 @@ class Preparation(Process):
 
         # Note : only returning a multiple-item list for jour_vol_iss_list
 
-        RECORD = PrepRecord(data=RECORD_INPUT.data.copy())
+        RECORD = PrepRecord(data=deepcopy(RECORD_INPUT.get_data()))
 
         if not jour_vol_iss_list:
             params = {"rows": "15"}
@@ -1964,7 +1993,7 @@ class Preparation(Process):
             if value in ["", "None"] or value is None:
                 keys_to_drop.append(key)
         for key in keys_to_drop:
-            del retrieved_record[key]
+            RECORD_IN.remove_field(field=key)
 
         REC = PrepRecord(data=retrieved_record)
         REC.add_provenance_all(source=record_retrieval_url)
@@ -2248,10 +2277,10 @@ class Preparation(Process):
         self.REVIEW_MANAGER.logger.info("Prepare " + RECORD.data["ID"])
 
         #  preparation_record will change and eventually replace record (if successful)
-        preparation_record = RECORD.data.copy()
+        preparation_record = deepcopy(RECORD.get_data())
 
         # UNPREPARED_RECORD will not change (for diffs)
-        UNPREPARED_RECORD = PrepRecord(data=RECORD.data.copy())
+        UNPREPARED_RECORD = PrepRecord(data=deepcopy(RECORD.get_data()))
 
         # Note: we require (almost) perfect matches for the scripts.
         # Cases with higher dissimilarity will be handled in the prep_man.py
@@ -2259,7 +2288,8 @@ class Preparation(Process):
         # Note : we need to rerun all preparation scripts because records are not stored
         # if not prepared successfully.
 
-        SF_REC = PrepRecord(data=RECORD.data.copy())
+        # TODO : extract the following in a function
+        SF_REC = PrepRecord(data=deepcopy(RECORD.get_data()))
         short_form = self.drop_fields(RECORD=SF_REC)
 
         preparation_details = []
@@ -2352,11 +2382,15 @@ class Preparation(Process):
                     print("\n")
                     time.sleep(0.7)
 
-            if preparation_record["colrev_status"] in [
-                RecordState.rev_prescreen_excluded,
-                RecordState.md_prepared,
-            ] or "disagreement with " in preparation_record.get(
-                "colrev_masterdata_provenance", ""
+            if (
+                preparation_record["colrev_status"]
+                in [
+                    RecordState.rev_prescreen_excluded,
+                    RecordState.md_prepared,
+                ]
+                or "disagreement with "
+                in preparation_record.get("colrev_masterdata_provenance", "")
+                or item["prep_round"] in ["load_fixes"]
             ):
                 RECORD.data = preparation_record.copy()
                 # break
@@ -2839,7 +2873,7 @@ class Preparation(Process):
 
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end
-            if "exclusion" != prep_round.name:
+            if prep_round.name not in ["load_fixes", "exclusion"]:
                 prep_round.scripts.append("update_metadata_status")
 
             # Note : can set selected prep scripts/rounds in the settings...

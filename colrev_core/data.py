@@ -1255,10 +1255,11 @@ class Data(Process):
 
         return
 
-    def main(self, quick_update=False) -> dict:
+    def main(self, pre_commit_hook=False) -> dict:
 
-        if quick_update:
-            return {"ask_to_commit": False}
+        if pre_commit_hook:
+            self.verbose = False
+            # TODO : use self.verbose in the update scripts of data endpoints
 
         saved_args = locals()
 
@@ -1271,16 +1272,15 @@ class Data(Process):
 
         included = self.get_record_ids_for_synthesis(records)
         if 0 == len(included):
-            self.REVIEW_MANAGER.report_logger.info(
-                "No records included yet (use colrev_core screen)"
-            )
-            self.REVIEW_MANAGER.logger.info(
-                "No records included yet (use colrev_core screen)"
-            )
+            if self.verbose:
+                self.REVIEW_MANAGER.report_logger.info(
+                    "No records included yet (use colrev_core screen)"
+                )
+                self.REVIEW_MANAGER.logger.info(
+                    "No records included yet (use colrev_core screen)"
+                )
 
         else:
-
-            # Note : quick_update is for pre-commit hooks. It should not take too long
 
             from colrev_core.process import CheckProcess
 
@@ -1301,7 +1301,8 @@ class Data(Process):
                 ID: default_row.copy() for ID in included
             }
 
-            self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
+            if self.verbose:
+                self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
 
             # TODO : include paper.md / data.csv as arguments of the data endpoint
             # not the review_manager? (but: the other scripts/checks may rely
@@ -1320,9 +1321,11 @@ class Data(Process):
                         self.REVIEW_MANAGER, synthesized_record_status_matrix
                     )
 
-                    print(f"updated {endpoint}")
+                    if self.verbose:
+                        print(f"updated {endpoint}")
                 else:
-                    print(f"Error: endpoint not available: {DATA_FORMAT}")
+                    if self.verbose:
+                        print(f"Error: endpoint not available: {DATA_FORMAT}")
                 # if "TEI" == DATA_FORMAT.endpoint:
                 #     records = self.update_tei(records, included)
                 #     self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
@@ -1331,18 +1334,20 @@ class Data(Process):
             for ID, individual_status_dict in synthesized_record_status_matrix.items():
                 if all(x for x in individual_status_dict.values()):
                     records[ID].update(colrev_status=RecordState.rev_synthesized)
-                    self.REVIEW_MANAGER.report_logger.info(
-                        f" {ID}".ljust(self.__PAD, " ")
-                        + "set colrev_status to synthesized"
-                    )
-                    self.REVIEW_MANAGER.logger.info(
-                        f" {ID}".ljust(self.__PAD, " ")
-                        + "set colrev_status to synthesized"
-                    )
+                    if self.verbose:
+                        self.REVIEW_MANAGER.report_logger.info(
+                            f" {ID}".ljust(self.__PAD, " ")
+                            + "set colrev_status to synthesized"
+                        )
+                        self.REVIEW_MANAGER.logger.info(
+                            f" {ID}".ljust(self.__PAD, " ")
+                            + "set colrev_status to synthesized"
+                        )
                 else:
                     records[ID].update(colrev_status=RecordState.rev_included)
 
-            self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
+            if self.verbose:
+                self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
 
             CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
                 records=records

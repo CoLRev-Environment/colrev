@@ -2,6 +2,14 @@
 1. Workflow
 ==================================
 
+This chapter will teach you how to use the CoLRev workflow.
+Conducting a literature review is very challenging, requiring authors to keep track of individual papers, steps, and collaborative changes.
+In CoLRev, you should only have to know the colrev status command and ...
+
+Mention agreement on a shared data structure and steps of the literature review
+
+.. The main purpose of the three-step workflow is to make your work easier.
+
 
 .. figure:: ../../../figures/workflow.svg
    :width: 400

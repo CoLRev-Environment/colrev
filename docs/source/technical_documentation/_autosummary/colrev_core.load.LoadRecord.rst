@@ -22,6 +22,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.add_masterdata_provenance
       ~LoadRecord.add_masterdata_provenance_hint
       ~LoadRecord.add_provenance_all
+      ~LoadRecord.change_ENTRYTYPE
       ~LoadRecord.complete_provenance
       ~LoadRecord.create_colrev_id
       ~LoadRecord.format_bib_style
@@ -47,7 +48,9 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.merge
       ~LoadRecord.missing_fields
       ~LoadRecord.remove_accents
+      ~LoadRecord.remove_field
       ~LoadRecord.remove_quality_defect_notes
+      ~LoadRecord.rename_field
       ~LoadRecord.reset_pdf_provenance_hints
       ~LoadRecord.set_fields_complete
       ~LoadRecord.set_masterdata_complete

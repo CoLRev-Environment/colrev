@@ -22,6 +22,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.add_masterdata_provenance
       ~PrescreenRecord.add_masterdata_provenance_hint
       ~PrescreenRecord.add_provenance_all
+      ~PrescreenRecord.change_ENTRYTYPE
       ~PrescreenRecord.complete_provenance
       ~PrescreenRecord.create_colrev_id
       ~PrescreenRecord.format_bib_style
@@ -46,7 +47,9 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.merge
       ~PrescreenRecord.missing_fields
       ~PrescreenRecord.remove_accents
+      ~PrescreenRecord.remove_field
       ~PrescreenRecord.remove_quality_defect_notes
+      ~PrescreenRecord.rename_field
       ~PrescreenRecord.reset_pdf_provenance_hints
       ~PrescreenRecord.set_fields_complete
       ~PrescreenRecord.set_masterdata_complete

@@ -27,6 +27,7 @@ colrev\_core.settings.SearchSource
 
       ~SearchSource.filename
       ~SearchSource.search_type
+      ~SearchSource.source_name
       ~SearchSource.source_identifier
       ~SearchSource.search_parameters
       ~SearchSource.comment

@@ -8,7 +8,16 @@
     "curated_masterdata": false,
     "curated_fields": []
   },
-  "search": {"sources": []},
+  "search": {"sources": [
+    {
+        "filename": "pdfs.bib",
+        "search_type": "FEED",
+        "source_name": "PDFs",
+        "source_identifier": "{{file}}",
+        "search_parameters": "SCOPE path='pdfs'",
+        "comment": ""
+    }
+  ]},
   "load": {},
   "prep": {
     "fields_to_keep": [],
@@ -17,6 +26,7 @@
             "name": "high_confidence",
             "similarity": 0.95,
             "scripts": [
+                "load_fixes",
                 "remove_urls_with_500_errors",
                 "remove_broken_IDs",
                 "global_ids_consistency_check",

@@ -3,6 +3,7 @@ import pprint
 import re
 import typing
 import unicodedata
+from copy import deepcopy
 from enum import auto
 from enum import Enum
 
@@ -245,11 +246,41 @@ class Record:
     def update_field(
         self, *, field: str, value, source: str, comment: str = ""
     ) -> None:
+        if field in self.data:
+            if self.data[field] == value:
+                return
         self.data[field] = value
         if field in self.identifying_fields:
             self.add_masterdata_provenance(field=field, source=source, hint=comment)
         else:
             self.add_data_provenance(field=field, source=source, hint=comment)
+        return
+
+    def rename_field(self, *, field: str, new_field: str) -> None:
+        value = self.data[field]
+        self.data[new_field] = value
+
+        if field in self.identifying_fields:
+            value_provenance = self.data["colrev_masterdata_provenance"][field]
+            self.data["colrev_masterdata_provenance"][new_field] = value_provenance
+        else:
+            value_provenance = self.data["colrev_data_provenance"][field]
+            self.data["colrev_data_provenance"][new_field] = value_provenance
+
+        self.remove_field(field=field)
+
+        return
+
+    def remove_field(self, *, field: str) -> None:
+        if field in self.data:
+            del self.data[field]
+            if field in self.identifying_fields:
+                if field in self.data["colrev_masterdata_provenance"]:
+                    del self.data["colrev_masterdata_provenance"][field]
+            else:
+                if field in self.data["colrev_data_provenance"]:
+                    del self.data["colrev_data_provenance"][field]
+
         return
 
     def add_colrev_ids(self, *, records: typing.List[dict]) -> None:
@@ -638,8 +669,8 @@ class Record:
 
     @classmethod
     def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
-        record_a = RECORD_A.data.copy()
-        record_b = RECORD_B.data.copy()
+        record_a = deepcopy(RECORD_A.get_data())
+        record_b = deepcopy(RECORD_B.get_data())
 
         if "title" not in record_a:
             record_a["title"] = ""
@@ -1076,7 +1107,7 @@ class Record:
 
         def robust_append(*, input_string: str, to_append: str) -> str:
             input_string = str(input_string)
-            to_append = str(to_append).replace("\n", " ")
+            to_append = str(to_append).replace("\n", " ").replace("/", " ")
             to_append = to_append.rstrip().lstrip().replace("–", " ")
             to_append = to_append.replace("emph{", "")
             to_append = to_append.replace("&amp;", "and")
@@ -1086,6 +1117,8 @@ class Record:
             to_append = re.sub(r"\s+", "-", to_append)
             to_append = re.sub(r"-+", "-", to_append)
             to_append = to_append.lower()
+            if len(to_append) > 1:
+                to_append = to_append.rstrip("-")
             input_string = input_string + "|" + to_append
             return input_string
 

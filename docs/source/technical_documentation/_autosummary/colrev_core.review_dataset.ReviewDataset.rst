@@ -24,10 +24,10 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.check_main_references_duplicates
       ~ReviewDataset.check_main_references_origin
       ~ReviewDataset.check_main_references_screen
-      ~ReviewDataset.check_main_references_status_fields
       ~ReviewDataset.check_persisted_ID_changes
       ~ReviewDataset.check_propagated_IDs
       ~ReviewDataset.check_sources
+      ~ReviewDataset.check_status_fields
       ~ReviewDataset.check_status_transitions
       ~ReviewDataset.create_commit
       ~ReviewDataset.file_in_history

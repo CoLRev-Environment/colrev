@@ -10,7 +10,6 @@ import docker
 import pandas as pd
 import requests
 
-from colrev_core import load_custom
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
@@ -66,15 +65,17 @@ class LoadRecord(Record):
             del self.data["colrev_source_identifier"]
 
         if not self.masterdata_is_curated():
-            required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
-            for required_field in required_fields:
-                if required_field in self.data:
-                    if percent_upper_chars(self.data[required_field]) > 0.8:
-                        self.add_masterdata_provenance_hint(
-                            field=required_field, hint="mostly upper case"
-                        )
-                else:
-                    self.data[required_field] = "UNKNOWN"
+            if self.data["ENTRYTYPE"] in self.record_field_requirements:
+                required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+                for required_field in required_fields:
+                    if required_field in self.data:
+                        if percent_upper_chars(self.data[required_field]) > 0.8:
+                            self.add_masterdata_provenance_hint(
+                                field=required_field, hint="mostly upper case"
+                            )
+                    else:
+                        self.data[required_field] = "UNKNOWN"
+            # TODO : how to handle cases where we do not have field_requirements?
 
         if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
             inconsistent_fields = self.record_field_inconsistencies[
@@ -123,8 +124,10 @@ class Loader(Process):
 
         self.conversion_scripts = {
             "ris": self.__zotero_translate,
-            "enl": self.__zotero_translate,
-            "end": self.__zotero_translate,
+            # Zotero does not support enl:
+            # https://www.zotero.org/support/kb/endnote_import
+            # "enl": self.__zotero_translate,
+            # "end": self.__zotero_translate,
             "rdf": self.__zotero_translate,
             "json": self.__zotero_translate,
             "mods": self.__zotero_translate,
@@ -145,8 +148,8 @@ class Loader(Process):
         supported_extensions = [
             "bib",
             "ris",
-            "enl",
-            "end",
+            # "enl",
+            # "end",
             "txt",
             "csv",
             "md",
@@ -213,10 +216,6 @@ class Loader(Process):
                         if ID not in [x["ID"] for x in search_records]:
                             self.REVIEW_MANAGER.logger.error(f"{ID} not imported")
                     line = f.readline()
-
-        search_records = self.__apply_custom_load_script(
-            records=search_records, sfp=filepath.name
-        )
 
         source_identifier = [
             x.source_identifier
@@ -324,25 +323,6 @@ class Loader(Process):
         record.update(colrev_status=RecordState.md_imported)
 
         return record
-
-    def apply_source_heuristics(self, *, original: Path) -> str:
-        """Apply heuristics to identify source"""
-
-        if str(original).endswith("_ref_list.bib"):
-            return "PDF reference section"
-        if original.suffix == ".pdf":
-            return "PDF"
-        data = ""
-        # TODO : deal with misleading file extensions.
-        try:
-            data = original.read_text()
-        except UnicodeDecodeError:
-            pass
-        for custom_load_script in [x for x in load_custom.scripts if "heuristic" in x]:
-            if custom_load_script["heuristic"](filename=original, data=data):
-                return custom_load_script["source_identifier"]
-
-        return "NA"
 
     def __zotero_translate(self, *, file: Path) -> typing.List[dict]:
         import requests
@@ -572,36 +552,6 @@ class Loader(Process):
         self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
         return []
 
-    def __apply_custom_load_script(
-        self, *, records: typing.List[dict], sfp: str
-    ) -> typing.List[dict]:
-
-        sources = self.REVIEW_MANAGER.settings.search.sources
-        source_identifier = "NA"
-
-        if Path(sfp) in [x.filename for x in sources]:
-            source_identifier = [
-                x.source_identifier for x in sources if Path(sfp) == x.filename
-            ][0]
-
-        # Note : field name corrections etc. that should be fixed before the preparation
-        # stages should be source-specific (in the load_custom.scripts):
-        # Note : if we do not unify (at least author/year), the IDs of imported records
-        # will be AnonymousNoYear a,b,c,d,....
-        if source_identifier != "NA":
-            if source_identifier in [
-                x["source_identifier"] for x in load_custom.scripts
-            ]:
-                custom_load = [
-                    x
-                    for x in load_custom.scripts
-                    if source_identifier == x["source_identifier"]
-                ][0]
-                if "load_script" in custom_load:
-                    records = custom_load["load_script"](records=records)
-
-        return records
-
     def __drop_empty_fields(self, *, records: typing.List[dict]) -> typing.List[dict]:
         records = [{k: v for k, v in r.items() if v is not None} for r in records]
         records = [{k: v for k, v in r.items() if v != "nan"} for r in records]
@@ -654,7 +604,7 @@ class Loader(Process):
             if str(sfpath).endswith("_ref_list.pdf"):
                 filetype = "pdf_refs"
 
-        if ".pdf" == sfpath.suffix or ".txt" == sfpath.suffix or ".md" == sfpath.suffix:
+        if sfpath.suffix in [".pdf", ".md"]:
             self.REVIEW_MANAGER.logger.info("Start grobid")
             GROBID_SERVICE = GrobidService()
             GROBID_SERVICE.start()
@@ -684,9 +634,6 @@ class Loader(Process):
             records = self.__fix_keys(records=records)
             records = self.__set_incremental_IDs(records=records)
 
-            records = self.__apply_custom_load_script(
-                records=records, sfp=corresponding_bib_file.name
-            )
             records = self.__drop_empty_fields(records=records)
 
             if len(records) == 0:

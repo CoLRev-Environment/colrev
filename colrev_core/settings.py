@@ -27,6 +27,10 @@ class ProjectConfiguration:
     curated_masterdata: bool
     curated_fields: typing.List[str]
 
+    def __str__(self):
+        # TODO : add more
+        return f"Review ({self.review_type})"
+
 
 # Search
 
@@ -49,24 +53,27 @@ class SearchType(Enum):
 class SearchSource:
     filename: Path
     search_type: SearchType
+    source_name: str
     source_identifier: str
     search_parameters: str
     comment: typing.Optional[str]
 
     def __str__(self):
         return (
-            "SearchSource\n"
-            + f" filename:            {self.filename}\n"
-            + f" type:                {self.search_type}\n"
-            + f" source identifier:   {self.source_identifier}\n"
-            + f" search parameters:   {self.search_parameters}\n"
-            + f" comment:             {self.comment}"
+            f"{self.source_name} (type: {self.search_type}, "
+            + f"filename: {self.filename})\n"
+            + f"   source identifier:   {self.source_identifier}\n"
+            + f"   search parameters:   {self.search_parameters}\n"
+            + f"   comment:             {self.comment}"
         )
 
 
 @dataclass
 class SearchConfiguration:
     sources: typing.List[SearchSource]
+
+    def __str__(self):
+        return " - " + "\n - ".join([str(s) for s in self.sources])
 
 
 # Load
@@ -75,6 +82,9 @@ class SearchConfiguration:
 @dataclass
 class LoadConfiguration:
     pass
+
+    def __str__(self):
+        return " - TODO"
 
 
 # Prep
@@ -90,11 +100,24 @@ class PrepRound:
     similarity: float
     scripts: typing.List[str]
 
+    def __str__(self):
+        short_list = [script for script in self.scripts][:3]
+        if len(self.scripts) > 3:
+            short_list.append("...")
+        return f"{self.name} (" + ",".join(short_list) + ")"
+
 
 @dataclass
 class PrepConfiguration:
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
+
+    def __str__(self):
+        return (
+            " - prep_rounds: \n   - "
+            + "\n   - ".join([str(prep_round) for prep_round in self.prep_rounds])
+            + f"\n - fields_to_keep: {self.fields_to_keep}"
+        )
 
 
 # Dedupe
@@ -106,6 +129,13 @@ class DedupeConfiguration:
     partition_threshold: float
     same_source_merges: str  # TODO : "prevent" or "apply"
 
+    def __str__(self):
+        return (
+            f" - merge_threshold: {self.merge_threshold}\n"
+            + f" - partition_threshold: {self.partition_threshold}\n"
+            + f" - same_source_merges: {self.same_source_merges}"
+        )
+
 
 # Prescreen
 
@@ -115,6 +145,9 @@ class PrescreenConfiguration:
     plugin: typing.Optional[str]
     mode: typing.Optional[str]
 
+    def __str__(self):
+        return f" - mode: {self.mode}"
+
 
 # PDF get
 
@@ -123,6 +156,9 @@ class PrescreenConfiguration:
 class PDFGetConfiguration:
     pdf_path_type: str  # TODO : "symlink" or "copy"
 
+    def __str__(self):
+        return f" - pdf_path_type: {self.pdf_path_type}"
+
 
 # PDF prep
 
@@ -130,6 +166,9 @@ class PDFGetConfiguration:
 @dataclass
 class PDFPrepConfiguration:
     pass
+
+    def __str__(self):
+        return " - TODO"
 
 
 # Screen
@@ -141,7 +180,7 @@ class ScreenCriterion:
     explanation: str
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} ({self.explanation})"
 
 
 @dataclass
@@ -155,6 +194,9 @@ class ScreeningProcessConfig:
 class ScreenConfiguration:
     process: ScreeningProcessConfig
     criteria: typing.List[ScreenCriterion]
+
+    def __str__(self):
+        return " - " + "\n - ".join([str(c) for c in self.criteria])
 
 
 # Data
@@ -173,6 +215,9 @@ class DataStructuredFormat:
     structured_data_endpoint_version: str
     fields: typing.List[DataField]
 
+    def __str__(self):
+        return "DataStructuredFormat"
+
 
 @dataclass
 class ManuscriptFormat:
@@ -181,11 +226,17 @@ class ManuscriptFormat:
     word_template: typing.Optional[str] = None
     csl_style: typing.Optional[str] = None
 
+    def __str__(self):
+        return "ManuscriptFormat"
+
 
 @dataclass
 class PRISMAFormat:
     endpoint: str
     prisma_data_endpoint_version: str
+
+    def __str__(self):
+        return "PRISMAFormat"
 
 
 @dataclass
@@ -194,12 +245,18 @@ class ZettlrFormat:
     zettlr_endpoint_version: str
     config: dict
 
+    def __str__(self):
+        return "ZettlrFormat"
+
 
 @dataclass
 class EndnoteFormat:
     endpoint: str
     endnote_data_endpoint_version: str
     config: dict
+
+    def __str__(self):
+        return "EndnoteFormat"
 
 
 # Note: data_format endpoints should have unique keys (e.g., paper_endpoint_version)
@@ -218,6 +275,9 @@ class DataConfiguration:
         ]
     ]
 
+    def __str__(self):
+        return " - " + "\n- ".join([str(c) for c in self.data_format])
+
 
 @dataclass
 class Configuration:
@@ -232,6 +292,29 @@ class Configuration:
     pdf_prep: PDFPrepConfiguration
     screen: ScreenConfiguration
     data: DataConfiguration
+
+    def __str__(self):
+        return (
+            str(self.project)
+            + "\nSearch\n"
+            + str(self.search)
+            + "\nLoad\n"
+            + str(self.load)
+            + "\nPreparation\n"
+            + str(self.prep)
+            + "\nDedupe\n"
+            + str(self.dedupe)
+            + "\nPrescreen\n"
+            + str(self.prescreen)
+            + "\nPDF get\n"
+            + str(self.pdf_get)
+            + "\nPDF prep\n"
+            + str(self.pdf_prep)
+            + "\nScreen\n"
+            + str(self.screen)
+            + "\nData\n"
+            + str(self.data)
+        )
 
 
 if __name__ == "__main__":

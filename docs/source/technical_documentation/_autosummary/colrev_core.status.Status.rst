@@ -19,6 +19,7 @@ colrev\_core.status.Status
       ~Status.append_registered_repo_instructions
       ~Status.check_precondition
       ~Status.get_active_processing_functions
+      ~Status.get_analytics
       ~Status.get_collaboration_instructions
       ~Status.get_completeness_condition
       ~Status.get_environment_instructions
@@ -30,4 +31,3 @@ colrev\_core.status.Status
       ~Status.get_review_instructions
       ~Status.get_status_freq
       ~Status.print_review_status
-      ~Status.stat_print

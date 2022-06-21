@@ -1341,7 +1341,7 @@ class Search(Process):
             params = self.parse_parameters(search_params=feed_item.search_parameters)
 
             self.REVIEW_MANAGER.logger.info(
-                f"Retrieve from {feed_item.source_identifier}: {params}"
+                f"Retrieve from {feed_item.source_name}: {params}"
             )
 
             script["script"](params=params, feed_file=feed_file)

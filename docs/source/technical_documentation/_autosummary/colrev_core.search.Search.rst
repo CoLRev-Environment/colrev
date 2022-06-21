@@ -20,7 +20,6 @@ colrev\_core.search.Search
       ~Search.check_precondition
       ~Search.get_colrev_pdf_id
       ~Search.get_pdf_cpid_path
-      ~Search.get_venue_abbreviated
       ~Search.parse_parameters
       ~Search.parse_sources
       ~Search.search_backward

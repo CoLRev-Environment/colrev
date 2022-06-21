@@ -16,6 +16,7 @@ colrev\_core.dedupe.Dedupe
    .. autosummary::
       :nosignatures:
 
+      ~Dedupe.apply_active_learning
       ~Dedupe.apply_manual_deduplication_decisions
       ~Dedupe.apply_merges
       ~Dedupe.check_precondition
@@ -23,6 +24,7 @@ colrev\_core.dedupe.Dedupe
       ~Dedupe.fix_errors
       ~Dedupe.get_dedupe_algorithm_conf
       ~Dedupe.get_info
+      ~Dedupe.select_primary_merge_record
       ~Dedupe.setup_active_learning_dedupe
       ~Dedupe.simple_dedupe
       ~Dedupe.source_comparison

@@ -22,6 +22,7 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.add_masterdata_provenance
       ~ScreenRecord.add_masterdata_provenance_hint
       ~ScreenRecord.add_provenance_all
+      ~ScreenRecord.change_ENTRYTYPE
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.create_colrev_id
       ~ScreenRecord.format_bib_style
@@ -46,7 +47,9 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
       ~ScreenRecord.remove_accents
+      ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes
+      ~ScreenRecord.rename_field
       ~ScreenRecord.reset_pdf_provenance_hints
       ~ScreenRecord.set_fields_complete
       ~ScreenRecord.set_masterdata_complete

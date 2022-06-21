@@ -25,6 +25,7 @@ colrev\_core.environment
       LocalIndex
       Resources
       TEIParser
+      ZoteroTranslationService
 
 
 

@@ -23,11 +23,12 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.add_masterdata_provenance
       ~PrepRecord.add_masterdata_provenance_hint
       ~PrepRecord.add_provenance_all
+      ~PrepRecord.change_ENTRYTYPE
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
       ~PrepRecord.create_colrev_id
-      ~PrepRecord.format_authors_string
+      ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
       ~PrepRecord.fuse_best_field
       ~PrepRecord.get_abbrev_container_min_len
@@ -53,7 +54,9 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.missing_fields
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.remove_accents
+      ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
+      ~PrepRecord.rename_field
       ~PrepRecord.reset_pdf_provenance_hints
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete

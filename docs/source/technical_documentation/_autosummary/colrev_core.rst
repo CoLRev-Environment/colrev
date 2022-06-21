@@ -35,7 +35,6 @@
    colrev_core.environment
    colrev_core.init
    colrev_core.load
-   colrev_core.load_custom
    colrev_core.paper
    colrev_core.pdf_get
    colrev_core.pdf_get_man
@@ -52,6 +51,7 @@
    colrev_core.review_manager
    colrev_core.screen
    colrev_core.search
+   colrev_core.search_sources
    colrev_core.service
    colrev_core.settings
    colrev_core.status

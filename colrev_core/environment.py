@@ -329,13 +329,21 @@ class LocalIndex:
 
     # Note: we need the local_curated_metadata field for is_duplicate()
 
-    def __init__(self):
+    def __init__(self, *, startup_without_waiting: bool = False):
+        from opensearchpy.exceptions import ConnectionError
 
         self.os = OpenSearch("http://localhost:9200")
 
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
-        self.start_opensearch_docker()
-        self.check_opensearch_docker_available()
+        try:
+            self.check_opensearch_docker_available()
+        except ConnectionError:
+            pass
+            self.start_opensearch_docker(
+                startup_without_waiting=startup_without_waiting
+            )
+        if not startup_without_waiting:
+            self.check_opensearch_docker_available()
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
 
@@ -376,7 +384,7 @@ class LocalIndex:
 
         return
 
-    def start_opensearch_docker(self) -> None:
+    def start_opensearch_docker(self, *, startup_without_waiting: bool = False) -> None:
         import requests
 
         os_image = EnvironmentManager.docker_images["opensearchproject/opensearch"]
@@ -385,7 +393,8 @@ class LocalIndex:
             "opensearch" in container.name for container in client.containers.list()
         ):
             try:
-                print("Start LocalIndex")
+                if not startup_without_waiting:
+                    print("Start LocalIndex")
 
                 if not client.networks.list(names=["opensearch-net"]):
                     client.networks.create("opensearch-net")
@@ -431,7 +440,7 @@ class LocalIndex:
             available = True
             pass
 
-        if not available:
+        if not available and not startup_without_waiting:
             print("Waiting until LocalIndex is available")
             for i in tqdm(range(0, 20)):
                 try:
