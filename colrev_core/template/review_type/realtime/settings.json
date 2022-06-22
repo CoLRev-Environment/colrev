@@ -12,7 +12,7 @@
     {
         "filename": "pdfs.bib",
         "search_type": "FEED",
-        "source_name": "PDFs",
+        "source_name": "PDFS",
         "source_identifier": "{{file}}",
         "search_parameters": "SCOPE path='pdfs'",
         "comment": ""

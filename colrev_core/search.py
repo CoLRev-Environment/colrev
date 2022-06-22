@@ -1,6 +1,8 @@
 #! /usr/bin/env python
 import hashlib
+import importlib
 import re
+import sys
 import typing
 from datetime import datetime
 from pathlib import Path
@@ -9,85 +11,39 @@ import imagehash
 import pandas as pd
 import pandasql as ps
 import requests
+import zope.interface
 from crossref.restful import Journals
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
+from zope.interface.verify import verifyObject
 
 from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
+from colrev_core.review_manager import MissingDependencyError
 
 
-class Search(Process):
+class SearchEndpoint(zope.interface.Interface):
 
-    TIMEOUT = 10
+    source_identifier = zope.interface.Attribute("""Source identifier""")
+    mode = zope.interface.Attribute("""Mode""")
 
-    def __init__(
-        self,
-        *,
-        REVIEW_MANAGER,
-        notify_state_transition_process=True,
-    ):
+    def run_search(REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
+        pass
 
-        super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.check,
-            notify_state_transition_process=notify_state_transition_process,
-        )
+    def validate_params(query: str) -> None:
+        pass
 
-        self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        self.PREPARATION = Preparation(
-            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
-        )
+@zope.interface.implementer(SearchEndpoint)
+class CrossrefSearchEndpoint:
 
-        self.search_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {
-                "source_name": "DBLP",
-                "source_identifier": "{{dblp_key}}",
-                "script": self.search_dblp,
-                "validate_params": self.validate_dblp_params,
-                "mode": "all",
-            },
-            {
-                "source_name": "CROSSREF",
-                "source_identifier": "https://api.crossref.org/works/{{doi}}",
-                "script": self.search_crossref,
-                "validate_params": self.validate_crossref_params,
-                "mode": "all",
-            },
-            {
-                "source_name": "BACKWARD_SEARCH",
-                "source_identifier": "{{file}} (references)",
-                "script": self.search_backward,
-                "validate_params": self.validate_backwardsearch_params,
-                "mode": "individual",
-            },
-            {
-                "source_name": "COLREV_PROJECT",
-                "source_identifier": "project",
-                "script": self.search_project,
-                "validate_params": self.validate_project_params,
-                "mode": "individual",
-            },
-            {
-                "source_name": "INDEX",
-                "source_identifier": "index",
-                "script": self.search_index,
-                "validate_params": self.validate_index_params,
-                "mode": "individual",
-            },
-            {
-                "source_name": "PDFS",
-                "source_identifier": "{{file}}",
-                "script": self.search_pdfs_dir,
-                "validate_params": self.validate_pdfs_dir_params,
-                "mode": "individual",
-            },
-        ]
+    source_identifier = "https://api.crossref.org/works/{{doi}}"
+    mode = "all"
 
-    def search_crossref(self, *, params, feed_file):
+    @classmethod
+    def run_search(cls, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import PrepRecord
         from colrev_core.review_dataset import ReviewDataset
 
@@ -95,6 +51,9 @@ class Search(Process):
             print("Error: journal_issn not in params")
             return
 
+        PREPARATION = Preparation(
+            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
+        )
         # works = Works()
         # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
         # use FACETS!
@@ -104,7 +63,7 @@ class Search(Process):
         # )
         if "selection_clause" in params:
             query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-            self.REVIEW_MANAGER.logger.info(query)
+            REVIEW_MANAGER.logger.info(query)
 
         for journal_issn in params["scope"]["journal_issn"].split("|"):
 
@@ -122,7 +81,7 @@ class Search(Process):
                 records = {}
             else:
                 with open(feed_file, encoding="utf8") as bibtex_file:
-                    records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         load_str=bibtex_file.read()
                     )
 
@@ -139,7 +98,7 @@ class Search(Process):
                 for item in w1:
                     if "DOI" in item:
                         if item["DOI"].upper() not in available_ids:
-                            record = self.PREPARATION.crossref_json_to_record(item=item)
+                            record = PREPARATION.crossref_json_to_record(item=item)
 
                             # TODO : collect list of records
                             # for more efficient selection
@@ -163,16 +122,14 @@ class Search(Process):
                             ):
                                 continue
 
-                            self.REVIEW_MANAGER.logger.info(
-                                "Retrieved " + record["doi"]
-                            )
+                            REVIEW_MANAGER.logger.info("Retrieved " + record["doi"])
                             record["ID"] = str(max_id).rjust(6, "0")
                             if "ENTRYTYPE" not in record:
                                 record["ENTRYTYPE"] = "misc"
                             record["source_url"] = (
                                 "https://api.crossref.org/works/" + item["DOI"]
                             )
-                            record = self.PREPARATION.get_link_from_doi(
+                            record = PREPARATION.get_link_from_doi(
                                 PrepRecord(data=record)
                             ).get_data()
                             available_ids.append(record["doi"])
@@ -198,10 +155,29 @@ class Search(Process):
             ReviewDataset.save_records_dict_to_file(
                 records=records, save_path=feed_file
             )
-
         return
 
-    def search_dblp(self, *, params, feed_file):
+    @classmethod
+    def validate_params(cls, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("CROSSREF queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "journal_issn" not in scope:
+            raise InvalidQueryException(
+                "CROSSREF queries require a journal_issn field in the SCOPE section"
+            )
+        pass
+
+
+@zope.interface.implementer(SearchEndpoint)
+class DBLPSearchEndpoint:
+
+    source_identifier = "{{dblp_key}}"
+    mode = "all"
+
+    @classmethod
+    def run_search(cls, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import Preparation
         from colrev_core.review_dataset import ReviewDataset
 
@@ -213,7 +189,7 @@ class Search(Process):
         if "journal_abbreviated" not in params["scope"]:
             print("Error: journal_abbreviated not in params")
             return
-        self.REVIEW_MANAGER.logger.info(f"Retrieve DBLP: {params}")
+        REVIEW_MANAGER.logger.info(f"Retrieve DBLP: {params}")
 
         available_ids = []
         max_id = 1
@@ -221,7 +197,7 @@ class Search(Process):
             records = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
@@ -237,10 +213,10 @@ class Search(Process):
             # https://dblp.org/rec/journals/jais/KordzadehW17.html?view=bibtex
 
             start = 1980
-            if len(records) > 100 and not self.REVIEW_MANAGER.force_mode:
+            if len(records) > 100 and not REVIEW_MANAGER.force_mode:
                 start = datetime.now().year - 2
             for year in range(start, datetime.now().year):
-                self.REVIEW_MANAGER.logger.info(f"Retrieving year {year}")
+                REVIEW_MANAGER.logger.info(f"Retrieving year {year}")
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
                 # query = params['scope']["venue_key"] + "+" + str(year)
                 f = 0
@@ -252,11 +228,11 @@ class Search(Process):
                         + f"&format=json&h={batch_size}&f={f}"
                     )
                     f += batch_size
-                    self.REVIEW_MANAGER.logger.debug(url)
+                    REVIEW_MANAGER.logger.debug(url)
 
                     retrieved = False
                     PREPARATION = Preparation(
-                        REVIEW_MANAGER=self.REVIEW_MANAGER,
+                        REVIEW_MANAGER=REVIEW_MANAGER,
                         notify_state_transition_process=False,
                     )
                     for RETRIEVED_RECORD in PREPARATION.retrieve_dblp_records(url=url):
@@ -335,7 +311,30 @@ class Search(Process):
 
         return
 
-    def search_backward(self, *, params: dict, feed_file: Path) -> None:
+    @classmethod
+    def validate_params(cls, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("DBLP queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "venue_key" not in scope:
+            raise InvalidQueryException(
+                "DBLP queries require a venue_key in the SCOPE section"
+            )
+        if "journal_abbreviated" not in scope:
+            raise InvalidQueryException(
+                "DBLP queries require a journal_abbreviated field in the SCOPE section"
+            )
+        pass
+
+
+@zope.interface.implementer(SearchEndpoint)
+class BackwardSearchEndpoint:
+
+    source_identifier = "{{file}} (references)"
+    mode = "individual"
+
+    def run_search(self, *, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
         from colrev_core.environment import GrobidService
 
@@ -343,18 +342,18 @@ class Search(Process):
             print("scopes other than rev_included|rev_synthesized not yet implemented")
             return
 
-        if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+        if not REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
 
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
 
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         if feed_file.is_file():
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 feed_file_records = list(feed_rd.values())
@@ -369,13 +368,13 @@ class Search(Process):
                 RecordState.rev_synthesized,
             ]:
                 continue
-            self.REVIEW_MANAGER.logger.info(
+            REVIEW_MANAGER.logger.info(
                 f'Running backward search for {record["ID"]} ({record["file"]})'
             )
 
-            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            pdf_path = REVIEW_MANAGER.path / Path(record["file"])
             if not Path(pdf_path).is_file():
-                self.REVIEW_MANAGER.logger.error(f'File not found for {record["ID"]}')
+                REVIEW_MANAGER.logger.error(f'File not found for {record["ID"]}')
                 continue
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
@@ -386,7 +385,7 @@ class Search(Process):
                 headers={"Accept": "application/x-bibtex"},
             )
 
-            new_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+            new_records_dict = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                 load_str=r.text
             )
             new_records = list(new_records_dict.values())
@@ -398,19 +397,30 @@ class Search(Process):
                     feed_file_records.append(new_record)
 
         feed_file_records_dict = {r["ID"]: r for r in feed_file_records}
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+        REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
             records=feed_file_records_dict, save_path=feed_file
         )
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
+        REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
 
-        if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            self.REVIEW_MANAGER.create_commit(msg="Backward search")
+        if REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            REVIEW_MANAGER.create_commit(msg="Backward search")
         else:
             print("No new records added.")
-
         return
 
-    def search_project(self, *, params: dict, feed_file: Path) -> None:
+    def validate_params(cls, query: str) -> None:
+        print("not yet imlemented")
+        pass
+
+
+@zope.interface.implementer(SearchEndpoint)
+class ColrevProjectSearchEndpoint:
+
+    # TODO : add a colrev_projet_origin field and use it as the identifier?
+    source_identifier = "project"
+    mode = "individual"
+
+    def run_search(self, *, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         from colrev_core.review_manager import ReviewManager
         from colrev_core.load import Loader
         from tqdm import tqdm
@@ -420,7 +430,7 @@ class Search(Process):
             imported_ids = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
@@ -432,9 +442,7 @@ class Search(Process):
             REVIEW_MANAGER=PROJECT_REVIEW_MANAGER,
             notify_state_transition_process=False,
         )
-        self.REVIEW_MANAGER.logger.info(
-            f'Loading records from {params["scope"]["url"]}'
-        )
+        REVIEW_MANAGER.logger.info(f'Loading records from {params["scope"]["url"]}')
         records_to_import = PROJECT_REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         records_to_import = {
             ID: rec for ID, rec in records_to_import.items() if ID not in imported_ids
@@ -443,7 +451,7 @@ class Search(Process):
             {k: str(v) for k, v in r.items()} for r in records_to_import.values()
         ]
 
-        self.REVIEW_MANAGER.logger.info("Importing selected records")
+        REVIEW_MANAGER.logger.info("Importing selected records")
         for record_to_import in tqdm(records_to_import_list):
             if "selection_clause" in params:
                 res = []
@@ -456,7 +464,7 @@ class Search(Process):
 
                 if len(res) == 0:
                     continue
-            self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
+            REVIEW_MANAGER.REVIEW_DATASET.import_file(record_to_import)
 
             records = records + [record_to_import]
 
@@ -473,7 +481,7 @@ class Search(Process):
         if len(records) > 0:
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
             records_dict = {r["ID"]: r for r in records}
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records_dict, save_path=feed_file
             )
 
@@ -481,8 +489,25 @@ class Search(Process):
             print("No records retrieved.")
         return
 
-    def search_index(self, *, params: dict, feed_file: Path) -> None:
+    def validate_params(cls, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("PROJECT queries require a SCOPE section")
 
+        scope = query[query.find(" SCOPE ") :]
+        if "url" not in scope:
+            raise InvalidQueryException(
+                "PROJECT queries require a url field in the SCOPE section"
+            )
+        return
+
+
+@zope.interface.implementer(SearchEndpoint)
+class IndexSearchEndpoint:
+
+    source_identifier = "index"
+    mode = "individual"
+
+    def run_search(self, *, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         assert "selection_clause" in params
 
         if not feed_file.is_file():
@@ -491,7 +516,7 @@ class Search(Process):
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
 
-                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = feed_rd.values()
@@ -556,29 +581,26 @@ class Search(Process):
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
 
             records_dict = {r["ID"]: r for r in records}
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records_dict, save_path=feed_file
             )
 
         else:
             print("No records found")
-
         return
 
-    def get_pdf_cpid_path(self, path) -> typing.List[str]:
-        cpid = self.get_colrev_pdf_id(path=path)
-        return [str(path), str(cpid)]
+    def validate_params(cls, query: str) -> None:
+        print("not yet imlemented")
+        pass
 
-    def get_colrev_pdf_id(self, *, path: Path) -> str:
-        cpid1 = "cpid1:" + str(
-            imagehash.average_hash(
-                convert_from_path(path, first_page=1, last_page=1)[0],
-                hash_size=32,
-            )
-        )
-        return cpid1
 
-    def search_pdfs_dir(self, *, params: dict, feed_file: Path) -> None:
+@zope.interface.implementer(SearchEndpoint)
+class PDFSearchEndpoint:
+
+    source_identifier = "{{file}}"
+    mode = "all"
+
+    def run_search(self, *, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
         from collections import Counter
         from p_tqdm import p_map
         from colrev_core.environment import GrobidService
@@ -595,7 +617,7 @@ class Search(Process):
         skip_duplicates = True
 
         self.PDF_PREPARATION = PDF_Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+            REVIEW_MANAGER=REVIEW_MANAGER, notify_state_transition_process=False
         )
 
         def update_if_pdf_renamed(
@@ -613,44 +635,44 @@ class Search(Process):
                 c_rec = c_rec_l.pop()
                 if "colrev_pdf_id" in c_rec:
                     cpid = c_rec["colrev_pdf_id"]
-                    pdf_fp = self.REVIEW_MANAGER.path / Path(x["file"])
+                    pdf_fp = REVIEW_MANAGER.path / Path(x["file"])
                     pdf_path = pdf_fp.parents[0]
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
-                        cpid_potential_pdf = self.get_colrev_pdf_id(path=potential_pdf)
+                        cpid_potential_pdf = get_colrev_pdf_id(path=potential_pdf)
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
                             x["file"] = str(
-                                potential_pdf.relative_to(self.REVIEW_MANAGER.path)
+                                potential_pdf.relative_to(REVIEW_MANAGER.path)
                             )
                             c_rec["file"] = str(
-                                potential_pdf.relative_to(self.REVIEW_MANAGER.path)
+                                potential_pdf.relative_to(REVIEW_MANAGER.path)
                             )
                             return UPDATED
             return NOT_UPDATED
 
         def remove_records_if_pdf_no_longer_exists() -> None:
 
-            self.REVIEW_MANAGER.logger.debug("Checking for PDFs that no longer exist")
+            REVIEW_MANAGER.logger.debug("Checking for PDFs that no longer exist")
 
             if not feed_file.is_file():
                 return
 
             with open(feed_file, encoding="utf8") as target_db:
 
-                search_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                search_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=target_db.read()
                 )
 
             records = {}
-            if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
-                records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+            if REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+                records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
             to_remove: typing.List[str] = []
             for x in search_rd.values():
-                x_pdf_path = self.REVIEW_MANAGER.path / Path(x["file"])
+                x_pdf_path = REVIEW_MANAGER.path / Path(x["file"])
                 if not x_pdf_path.is_file():
                     if records:
                         updated = update_if_pdf_renamed(x, records, feed_file)
@@ -662,15 +684,15 @@ class Search(Process):
 
             search_rd = {x["ID"]: x for x in search_rd.values() if x_pdf_path.is_file()}
             if len(search_rd.values()) != 0:
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                     records=search_rd, save_path=feed_file
                 )
 
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 path=str(feed_file.parent / feed_file.name)
             )
 
-            if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+            if REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
                 # Note : origins may contain multiple links
                 # but that should not be a major issue in indexing repositories
 
@@ -686,10 +708,10 @@ class Search(Process):
                             to_remove.append(record["colrev_origin"])
 
                 for r in to_remove:
-                    self.REVIEW_MANAGER.logger.debug(
+                    REVIEW_MANAGER.logger.debug(
                         f"remove from index (PDF path no longer exists): {r}"
                     )
-                    self.REVIEW_MANAGER.report_logger.info(
+                    REVIEW_MANAGER.report_logger.info(
                         f"remove from index (PDF path no longer exists): {r}"
                     )
 
@@ -698,8 +720,8 @@ class Search(Process):
                     for k, v in records.items()
                     if v["colrev_origin"] not in to_remove
                 }
-                self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+                REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+                REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             return
 
@@ -715,11 +737,24 @@ class Search(Process):
                         line = f.readline()
             return pdf_list
 
+        def get_colrev_pdf_id(*, path: Path) -> str:
+            cpid1 = "cpid1:" + str(
+                imagehash.average_hash(
+                    convert_from_path(path, first_page=1, last_page=1)[0],
+                    hash_size=32,
+                )
+            )
+            return cpid1
+
+        def get_pdf_cpid_path(path) -> typing.List[str]:
+            cpid = get_colrev_pdf_id(path=path)
+            return [str(path), str(cpid)]
+
         if not feed_file.is_file():
             records = []
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
                 records = list(feed_rd.values())
@@ -729,10 +764,10 @@ class Search(Process):
         remove_records_if_pdf_no_longer_exists()
 
         indexed_pdf_paths = get_pdf_links(bib_file=feed_file)
-        #  + get_pdf_links(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"])
+        #  + get_pdf_links(REVIEW_MANAGER.paths["MAIN_REFERENCES"])
 
         indexed_pdf_path_str = "\n  ".join([str(x) for x in indexed_pdf_paths])
-        self.REVIEW_MANAGER.logger.debug(f"indexed_pdf_paths: {indexed_pdf_path_str}")
+        REVIEW_MANAGER.logger.debug(f"indexed_pdf_paths: {indexed_pdf_path_str}")
 
         overall_pdfs = path.glob("**/*.pdf")
 
@@ -740,7 +775,7 @@ class Search(Process):
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
         if skip_duplicates:
-            pdfs_path_cpid = p_map(self.get_pdf_cpid_path, pdfs_to_index)
+            pdfs_path_cpid = p_map(get_pdf_cpid_path, pdfs_to_index)
             pdfs_cpid = [x[1] for x in pdfs_path_cpid]
             duplicate_cpids = [
                 item for item, count in Counter(pdfs_cpid).items() if count > 1
@@ -753,7 +788,7 @@ class Search(Process):
         broken_filepaths = [str(x) for x in pdfs_to_index if ";" in str(x)]
         if len(broken_filepaths) > 0:
             broken_filepath_str = "\n ".join(broken_filepaths)
-            self.REVIEW_MANAGER.logger.error(
+            REVIEW_MANAGER.logger.error(
                 f'skipping PDFs with ";" in filepath: \n{broken_filepath_str}'
             )
             pdfs_to_index = [x for x in pdfs_to_index if str(x) not in broken_filepaths]
@@ -768,7 +803,7 @@ class Search(Process):
         ]
         if len(filepaths_to_skip) > 0:
             fp_to_skip_str = "\n ".join(filepaths_to_skip)
-            self.REVIEW_MANAGER.logger.info(
+            REVIEW_MANAGER.logger.info(
                 f"Skipping PDFs with _ocr.pdf/_wo_cp.pdf: {fp_to_skip_str}"
             )
             pdfs_to_index = [
@@ -778,13 +813,13 @@ class Search(Process):
         # pdfs_to_index = list(set(overall_pdfs) - set(indexed_pdf_paths))
         # pdfs_to_index = ['/home/path/file.pdf']
         pdfs_to_index_str = "\n  ".join([str(x) for x in pdfs_to_index])
-        self.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
+        REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
             GROBID_SERVICE = GrobidService()
             GROBID_SERVICE.start()
         else:
-            self.REVIEW_MANAGER.logger.info("No additional PDFs to index")
+            REVIEW_MANAGER.logger.info("No additional PDFs to index")
             return
 
         def update_fields_based_on_pdf_dirs(record: dict) -> dict:
@@ -850,7 +885,7 @@ class Search(Process):
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
 
-            pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
+            pdf_path = REVIEW_MANAGER.path / Path(record["file"])
 
             # Note: activate the following when new grobid version is released (> 0.7)
             # Note: we have more control and transparency over the consolidation
@@ -866,12 +901,12 @@ class Search(Process):
             # )
 
             # if 200 == r.status_code:
-            #     rec_d = self.REVIEW_MANAGER.REVIEW_DATASET.
+            #     rec_d = REVIEW_MANAGER.REVIEW_DATASET.
             #               load_records_dict(load_str=r.text)
             #     record = rec_d.values()[0]
             #     return record
             # if 500 == r.status_code:
-            #     self.REVIEW_MANAGER.logger.error(f"Not a readable
+            #     REVIEW_MANAGER.logger.error(f"Not a readable
             #           pdf file: {pdf_path.name}")
             #     print(f"Grobid: {r.text}")
             #     return {}
@@ -926,8 +961,8 @@ class Search(Process):
 
         def index_pdf(*, pdf_path: Path) -> dict:
 
-            self.REVIEW_MANAGER.report_logger.info(pdf_path)
-            self.REVIEW_MANAGER.logger.info(pdf_path)
+            REVIEW_MANAGER.report_logger.info(pdf_path)
+            REVIEW_MANAGER.logger.info(pdf_path)
 
             record: typing.Dict[str, typing.Any] = {
                 "file": str(pdf_path),
@@ -1003,7 +1038,7 @@ class Search(Process):
             print("\n")
             lenrec = len(indexed_pdf_paths)
             if len(list(overall_pdfs)) > 0:
-                self.REVIEW_MANAGER.logger.info(
+                REVIEW_MANAGER.logger.info(
                     f"Number of indexed records: {lenrec} of {len(list(overall_pdfs))} "
                     f"({round(lenrec/len(list(overall_pdfs))*100, 2)}%)"
                 )
@@ -1036,14 +1071,100 @@ class Search(Process):
             feed_file.parents[0].mkdir(parents=True, exist_ok=True)
 
             records_dict = {r["ID"]: r for r in records}
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+            REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records_dict, save_path=feed_file
             )
 
         else:
             print("No records found")
-
         return
+
+    def validate_params(cls, query: str) -> None:
+        if " SCOPE " not in query:
+            raise InvalidQueryException("PDFS_DIR queries require a SCOPE section")
+
+        scope = query[query.find(" SCOPE ") :]
+        if "path" not in scope:
+            raise InvalidQueryException(
+                "PDFS_DIR queries require a path field in the SCOPE section"
+            )
+
+        # Note: WITH .. is optional.
+        return
+
+
+class Search(Process):
+    def __init__(
+        self,
+        *,
+        REVIEW_MANAGER,
+        notify_state_transition_process=True,
+    ):
+
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            type=ProcessType.check,
+            notify_state_transition_process=notify_state_transition_process,
+        )
+
+        self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+
+        self.search_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+            "CROSSREF": {
+                "endpoint": CrossrefSearchEndpoint,
+            },
+            "DBLP": {
+                "endpoint": DBLPSearchEndpoint,
+            },
+            "BACKWARD_SEARCH": {
+                "endpoint": BackwardSearchEndpoint,
+            },
+            "COLREV_PROJECT": {
+                "endpoint": ColrevProjectSearchEndpoint,
+            },
+            "INDEX": {
+                "endpoint": IndexSearchEndpoint,
+            },
+            "PDFS": {
+                "endpoint": PDFSearchEndpoint,
+            },
+        }
+
+        list_custom_scripts = [
+            s.source_name
+            for s in REVIEW_MANAGER.settings.search.sources
+            if s.source_name not in self.search_scripts
+            and Path(s.source_name + ".py").is_file()
+        ]
+        sys.path.append(".")  # to import custom scripts from the project dir
+        for plugin_script in list_custom_scripts:
+            custom_search_script = importlib.import_module(
+                plugin_script, "."
+            ).CustomSearch
+            verifyObject(SearchEndpoint, custom_search_script())
+            self.search_scripts[plugin_script] = {"endpoint": custom_search_script}
+
+        # TODO : test the module search_scripts
+        list_module_scripts = [
+            s.source_name
+            for s in REVIEW_MANAGER.settings.search.sources
+            if s.source_name not in self.search_scripts
+            and not Path(s.source_name + ".py").is_file()
+        ]
+        for plugin_script in list_module_scripts:
+            try:
+                custom_search_script = importlib.import_module(
+                    plugin_script
+                ).CustomSearch
+                verifyObject(SearchEndpoint, custom_search_script())
+                self.search_scripts[plugin_script] = {"endpoint": custom_search_script}
+            except ModuleNotFoundError:
+                pass
+                raise MissingDependencyError(
+                    "Dependency search_script " + f"{plugin_script} not found. "
+                    "Please install it\n  pip install "
+                    f"{plugin_script}"
+                )
 
     def parse_sources(self, *, query: str) -> list:
         if "WHERE " in query:
@@ -1120,67 +1241,6 @@ class Search(Process):
 
         return params
 
-    def validate_dblp_params(self, *, query: str) -> None:
-
-        if " SCOPE " not in query:
-            raise InvalidQueryException("DBLP queries require a SCOPE section")
-
-        scope = query[query.find(" SCOPE ") :]
-        if "venue_key" not in scope:
-            raise InvalidQueryException(
-                "DBLP queries require a venue_key in the SCOPE section"
-            )
-        if "journal_abbreviated" not in scope:
-            raise InvalidQueryException(
-                "DBLP queries require a journal_abbreviated field in the SCOPE section"
-            )
-
-        return
-
-    def validate_crossref_params(self, *, query: str) -> None:
-        if " SCOPE " not in query:
-            raise InvalidQueryException("CROSSREF queries require a SCOPE section")
-
-        scope = query[query.find(" SCOPE ") :]
-        if "journal_issn" not in scope:
-            raise InvalidQueryException(
-                "CROSSREF queries require a journal_issn field in the SCOPE section"
-            )
-
-        return
-
-    def validate_backwardsearch_params(self, *, query: str) -> None:
-        return
-
-    def validate_project_params(self, *, query: str) -> None:
-        if " SCOPE " not in query:
-            raise InvalidQueryException("PROJECT queries require a SCOPE section")
-
-        scope = query[query.find(" SCOPE ") :]
-        if "url" not in scope:
-            raise InvalidQueryException(
-                "PROJECT queries require a url field in the SCOPE section"
-            )
-
-        return
-
-    def validate_index_params(self, *, query: str) -> None:
-        return
-
-    def validate_pdfs_dir_params(self, *, query: str) -> None:
-        if " SCOPE " not in query:
-            raise InvalidQueryException("PDFS_DIR queries require a SCOPE section")
-
-        scope = query[query.find(" SCOPE ") :]
-        if "path" not in scope:
-            raise InvalidQueryException(
-                "PDFS_DIR queries require a path field in the SCOPE section"
-            )
-
-        # Note: WITH .. is optional.
-
-        return
-
     def validate_query(self, *, query: str) -> None:
 
         if " FROM " not in query:
@@ -1188,21 +1248,20 @@ class Search(Process):
 
         sources = self.parse_sources(query=query)
 
-        available_source_types = [x["source_name"] for x in self.search_scripts]
-        if not all(source in available_source_types for source in sources):
+        if not all(source in self.search_scripts for source in sources):
             violation = [
-                source for source in sources if source not in available_source_types
+                source for source in sources if source not in self.search_scripts
             ]
             raise InvalidQueryException(
                 f"source {violation} not in available sources "
-                f"({available_source_types})"
+                f"({self.search_scripts.keys()})"
             )
 
         if len(sources) > 1:
             individual_sources = [
-                s["source_name"]
-                for s in self.search_scripts
-                if "individual" == s["mode"]
+                k
+                for k, v in self.search_scripts.items()
+                if "individual" == v["endpoint"].mode
             ]
             if any(source in individual_sources for source in sources):
                 violations = [
@@ -1214,8 +1273,8 @@ class Search(Process):
                 )
 
         for source in sources:
-            script = [s for s in self.search_scripts if s["source_name"] == source][0]
-            script["validate_params"](query=query)
+            SCRIPT = self.search_scripts[source]["endpoint"]()
+            SCRIPT.validate_params(query=query)
 
         # TODO : parse params (which may also raise errors)
 
@@ -1364,31 +1423,57 @@ class Search(Process):
         for feed_item in feed_sources:
             feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
 
-            if feed_item.source_identifier not in [
-                x["source_identifier"] for x in self.search_scripts
-            ]:
+            if feed_item.source_name not in self.search_scripts:
                 print(
                     "Endpoint not supported:"
                     f" {feed_item.source_identifier} (skipping)"
                 )
                 continue
 
-            script = [
-                s
-                for s in self.search_scripts
-                if s["source_identifier"] == feed_item.source_identifier
-            ][0]
+            script = self.search_scripts[feed_item.source_name]
+
             params = self.parse_parameters(search_params=feed_item.search_parameters)
             print()
             self.REVIEW_MANAGER.logger.info(
                 f"Retrieve from {feed_item.source_name}: {params}"
             )
 
-            script["script"](params=params, feed_file=feed_file)
+            SEARCH_SCRIPT = script["endpoint"]()
+            SEARCH_SCRIPT.run_search(
+                REVIEW_MANAGER=self.REVIEW_MANAGER, params=params, feed_file=feed_file
+            )
 
             if feed_file.is_file():
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
                 self.REVIEW_MANAGER.create_commit(msg="Run search")
+
+        if len(feed_sources) == 0:
+            raise NoSearchFeedRegistered()
+
+        return
+
+    def setup_custom_script(self) -> None:
+        import pkgutil
+        from colrev_core.settings import SearchSource, SearchType
+
+        filedata = pkgutil.get_data(__name__, "template/custom_search_script.py")
+        if filedata:
+            with open("custom_search_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_search_script.py")
+
+        NEW_SOURCE = SearchSource(
+            filename=Path("custom_search.bib"),
+            search_type=SearchType.FEED,
+            source_name="custom_search_script",
+            source_identifier="TODO",
+            search_parameters="TODO",
+            comment="",
+        )
+
+        self.REVIEW_MANAGER.settings.search.sources.append(NEW_SOURCE)
+        self.REVIEW_MANAGER.save_settings()
 
         return
 
@@ -1397,8 +1482,8 @@ class Search(Process):
         for source in sources:
             self.REVIEW_MANAGER.pp.pprint(source)
 
-        print("\n\n\nOptions:")
-        options = ", ".join([s["source_name"] for s in self.search_scripts])
+        print("\nOptions:")
+        options = ", ".join(list(self.search_scripts.keys()))
         print(f"- endpoints (FEED): {options}")
         return
 
@@ -1407,6 +1492,13 @@ class InvalidQueryException(Exception):
     def __init__(self, msg: str):
         self.message = msg
         super().__init__(self.message)
+
+
+class NoSearchFeedRegistered(Exception):
+    """No search feed endpoints registered in settings.json"""
+
+    def __init__(self):
+        super().__init__("No search feed endpoints registered in settings.json")
 
 
 if __name__ == "__main__":

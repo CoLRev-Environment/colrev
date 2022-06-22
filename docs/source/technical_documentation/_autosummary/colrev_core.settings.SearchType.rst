@@ -21,8 +21,8 @@ colrev\_core.settings.SearchType
 
       ~SearchType.DB
       ~SearchType.TOC
-      ~SearchType.BACK_CIT
-      ~SearchType.FORW_CIT
+      ~SearchType.BACKWARD_SEARCH
+      ~SearchType.FORWARD_SEARCH
       ~SearchType.PDFS
       ~SearchType.OTHER
       ~SearchType.FEED

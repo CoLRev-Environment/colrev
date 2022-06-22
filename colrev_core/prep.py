@@ -2860,6 +2860,9 @@ class Preparation(Process):
                         self._module_prep_scripts[
                             plugin_script
                         ] = importlib.import_module(plugin_script).CustomPrepare()
+                        verifyObject(
+                            PrepScript, self._custom_prep_scripts[plugin_script]
+                        )
                     except ModuleNotFoundError:
                         pass
                         raise MissingDependencyError(

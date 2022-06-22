@@ -42,6 +42,7 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.get_repo
       ~ReviewDataset.get_states_set
       ~ReviewDataset.get_tree_hash
+      ~ReviewDataset.get_untracked_files
       ~ReviewDataset.has_changes
       ~ReviewDataset.import_file
       ~ReviewDataset.load_field_dict

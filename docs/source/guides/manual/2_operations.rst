@@ -151,7 +151,7 @@ Search
 
     Examples:
 
-    colrev search -a "FROM CROSSREF, dblp WHERE Digital AND Platform SCOPE journal_issn='1506-2941'"
+    colrev search -a "FROM CROSSREF WHERE Digital AND Platform SCOPE journal_issn='1506-2941'"
 
     colrev search -a "FROM DBLP SCOPE venue_key='journals/dss' AND journal_abbreviation='Decis. Support Syst.'"
 

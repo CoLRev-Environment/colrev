@@ -20,6 +20,12 @@ colrev\_core.search
       :template: custom-class-template.rst
       :nosignatures:
 
+      BackwardSearchEndpoint
+      ColrevProjectSearchEndpoint
+      CrossrefSearchEndpoint
+      DBLPSearchEndpoint
+      IndexSearchEndpoint
+      PDFSearchEndpoint
       Search
 
 
