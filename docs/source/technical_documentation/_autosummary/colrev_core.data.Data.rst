@@ -22,4 +22,5 @@ colrev\_core.data.Data
       ~Data.main
       ~Data.profile
       ~Data.reading_heuristics
+      ~Data.setup_custom_script
       ~Data.update_tei

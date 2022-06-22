@@ -20,6 +20,7 @@ colrev\_core.search.Search
       ~Search.check_precondition
       ~Search.parse_parameters
       ~Search.parse_sources
+      ~Search.setup_custom_script
       ~Search.update
       ~Search.validate_query
       ~Search.view_sources

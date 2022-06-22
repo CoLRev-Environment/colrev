@@ -21,6 +21,7 @@ colrev\_core.settings
       :nosignatures:
 
       Configuration
+      CustomDataFormat
       DataConfiguration
       DataField
       DataStructuredFormat

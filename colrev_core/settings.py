@@ -259,6 +259,16 @@ class EndnoteFormat:
         return "EndnoteFormat"
 
 
+@dataclass
+class CustomDataFormat:
+    endpoint: str
+    custom_data_format_version: str
+    config: dict
+
+    def __str__(self):
+        return "customFormat"
+
+
 # Note: data_format endpoints should have unique keys (e.g., paper_endpoint_version)
 # to enable strict union matching by dacite.
 
@@ -272,6 +282,7 @@ class DataConfiguration:
             PRISMAFormat,
             ZettlrFormat,
             EndnoteFormat,
+            CustomDataFormat,
         ]
     ]
 

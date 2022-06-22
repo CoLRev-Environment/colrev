@@ -38,3 +38,4 @@ colrev\_core.search
       :toctree:
 
       InvalidQueryException
+      NoSearchFeedRegistered

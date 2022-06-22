@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 import csv
+import importlib
 import itertools
 import pkgutil
 import re
+import sys
 import tempfile
 import typing
 from collections import Counter
@@ -12,6 +14,7 @@ import pandas as pd
 import requests
 import zope.interface
 from urllib3.exceptions import ProtocolError
+from zope.interface.verify import verifyObject
 
 from colrev_core.environment import GrobidService
 from colrev_core.environment import TEI_TimeoutException
@@ -22,17 +25,17 @@ from colrev_core.record import RecordState
 
 
 class DataEndpoint(zope.interface.Interface):
-    def get_default_setup(self):
-        pass
+    def get_default_setup(self) -> dict:
+        return {}
 
     def update_data(
-        self, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+        REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+    ) -> None:
         pass
 
     def update_record_status_matrix(
-        self, REVIEW_MANAGER, synthesized_record_status_matrix
-    ):
+        REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+    ) -> None:
         pass
 
 
@@ -293,7 +296,7 @@ class ManuscriptEndpoint:
 
     @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
     ):
         def get_to_synthesize_in_manuscript(
             PAPER: Path, records_for_synthesis: list
@@ -341,7 +344,7 @@ class ManuscriptEndpoint:
         )
         for syn_ID in synthesized_in_manuscript:
             if syn_ID in synthesized_record_status_matrix:
-                synthesized_record_status_matrix[syn_ID]["MANUSCRIPT"] = True
+                synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
             else:
                 print(f"Error: {syn_ID} not int {synthesized_in_manuscript}")
         return
@@ -434,7 +437,7 @@ class StructuredDataEndpoint:
 
     @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
     ):
         def get_data_extracted(DATA: Path, records_for_data_extraction: list) -> list:
             data_extracted = []
@@ -475,7 +478,7 @@ class StructuredDataEndpoint:
 
         for syn_ID in structured_data_extracted:
             if syn_ID in synthesized_record_status_matrix:
-                synthesized_record_status_matrix[syn_ID]["STRUCTURED"] = True
+                synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
             else:
                 print(f"Error: {syn_ID} not int " f"{synthesized_record_status_matrix}")
         return
@@ -606,11 +609,11 @@ class EndnoteEndpoint:
 
     @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
     ):
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
-            synthesized_record_status_matrix[syn_ID]["ENDNOTE"] = True
+            synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
 
         return
 
@@ -699,12 +702,12 @@ class PRISMAEndpoint:
 
     @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
     ):
 
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
-            synthesized_record_status_matrix[syn_ID]["PRISMA"] = True
+            synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
 
         return
 
@@ -931,14 +934,14 @@ class ZettlrEndpoint:
 
     @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix
+        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
     ):
         # TODO : not yet implemented!
         # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.
 
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
-            synthesized_record_status_matrix[syn_ID]["ZETTLR"] = True
+            synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
 
         return
 
@@ -967,7 +970,7 @@ class ZettlrEndpoint:
 
 #     @classmethod
 #     def update_record_status_matrix(
-#         cls, REVIEW_MANAGER, synthesized_record_status_matrix
+#         cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
 #     ):
 
 #         return
@@ -1004,6 +1007,39 @@ class Data(Process):
                 "endpoint": ZettlrEndpoint,
             },
         }
+
+        list_custom_scripts = [
+            s.endpoint
+            for s in REVIEW_MANAGER.settings.data.data_format
+            if s.endpoint not in self.data_endpoints
+            and Path(s.endpoint + ".py").is_file()
+        ]
+        sys.path.append(".")  # to import custom scripts from the project dir
+        for plugin_script in list_custom_scripts:
+            custom_data_script = importlib.import_module(plugin_script, ".").CustomData
+            verifyObject(DataEndpoint, custom_data_script())
+            self.data_endpoints[plugin_script] = {"endpoint": custom_data_script}
+
+        # TODO : test the module data_scripts
+        list_module_scripts = [
+            s.endpoint
+            for s in REVIEW_MANAGER.settings.data.data_format
+            if s.endpoint not in self.data_endpoints
+            and not Path(s.endpoint + ".py").is_file()
+        ]
+        for plugin_script in list_module_scripts:
+            try:
+                custom_data_script = importlib.import_module(plugin_script).CustomData
+                verifyObject(DataEndpoint, custom_data_script())
+                self.data_endpoints[plugin_script] = {"endpoint": custom_data_script}
+            except ModuleNotFoundError:
+                pass
+                # raise MissingDependencyError
+                print(
+                    "Dependency data_script " + f"{plugin_script} not found. "
+                    "Please install it\n  pip install "
+                    f"{plugin_script}"
+                )
 
     @classmethod
     def get_record_ids_for_synthesis(cls, records: typing.Dict) -> list:
@@ -1260,6 +1296,8 @@ class Data(Process):
         if pre_commit_hook:
             self.verbose = False
             # TODO : use self.verbose in the update scripts of data endpoints
+        else:
+            self.verbose = True
 
         saved_args = locals()
 
@@ -1310,22 +1348,26 @@ class Data(Process):
 
             for DATA_FORMAT in self.REVIEW_MANAGER.settings.data.data_format:
 
-                if DATA_FORMAT.endpoint in list(self.data_endpoints.keys()):
-                    endpoint = self.data_endpoints[DATA_FORMAT.endpoint]
-
-                    ENDPOINT = endpoint["endpoint"]()
-                    ENDPOINT.update_data(
-                        self.REVIEW_MANAGER, records, synthesized_record_status_matrix
-                    )
-                    ENDPOINT.update_record_status_matrix(
-                        self.REVIEW_MANAGER, synthesized_record_status_matrix
-                    )
-
-                    if self.verbose:
-                        print(f"updated {endpoint}")
-                else:
+                if DATA_FORMAT.endpoint not in list(self.data_endpoints.keys()):
                     if self.verbose:
                         print(f"Error: endpoint not available: {DATA_FORMAT}")
+                    continue
+
+                endpoint = self.data_endpoints[DATA_FORMAT.endpoint]
+
+                ENDPOINT = endpoint["endpoint"]()
+                ENDPOINT.update_data(
+                    self.REVIEW_MANAGER, records, synthesized_record_status_matrix
+                )
+                ENDPOINT.update_record_status_matrix(
+                    self.REVIEW_MANAGER,
+                    synthesized_record_status_matrix,
+                    DATA_FORMAT.endpoint,
+                )
+
+                if self.verbose:
+                    print(f"updated {endpoint}")
+
                 # if "TEI" == DATA_FORMAT.endpoint:
                 #     records = self.update_tei(records, included)
                 #     self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
@@ -1356,6 +1398,26 @@ class Data(Process):
 
             return {"ask_to_commit": True}
         return {"ask_to_commit": False}
+
+    def setup_custom_script(self) -> None:
+        import pkgutil
+        from colrev_core.settings import CustomDataFormat
+
+        filedata = pkgutil.get_data(__name__, "template/custom_data_script.py")
+        if filedata:
+            with open("custom_data_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
+
+        NEW_DATA_ENDPOINT = CustomDataFormat(
+            endpoint="custom_data_script", custom_data_format_version="0.1", config={}
+        )
+
+        self.REVIEW_MANAGER.settings.data.data_format.append(NEW_DATA_ENDPOINT)
+        self.REVIEW_MANAGER.save_settings()
+
+        return
 
 
 class NoDataEndpointsRegistered(Exception):
