@@ -121,6 +121,7 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 
    technical_documentation/colrev
    technical_documentation/api
+   technical_documentation/identification
    Code repository <https://github.com/geritwagner/colrev_core>
 
 .. toctree::
