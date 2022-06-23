@@ -1,7 +1,9 @@
 #! /usr/bin/env python
 # import json
+import itertools
 import logging
 import re
+import typing
 from pathlib import Path
 
 import git
@@ -22,6 +24,7 @@ class Dedupe(Process):
         self,
         *,
         REVIEW_MANAGER,
+        preselect_algorithm=True,
         notify_state_transition_process=True,
     ):
 
@@ -46,15 +49,15 @@ class Dedupe(Process):
             "source_comparison.xlsx"
         )
 
-        self.get_dedupe_algorithm_conf()
         pd.options.mode.chained_assignment = None  # default='warn'
-
         self.REVIEW_MANAGER.report_logger.info("Dedupe")
         self.REVIEW_MANAGER.logger.info("Dedupe")
 
-        self.REVIEW_MANAGER.logger.info(
-            f"Selected algorithm: {self.selected_algorithm}"
-        )
+        if preselect_algorithm:
+            self.get_dedupe_algorithm_conf()
+            self.REVIEW_MANAGER.logger.info(
+                f"Selected algorithm: {self.selected_algorithm}"
+            )
 
     def get_dedupe_algorithm_conf(
         self,
@@ -65,14 +68,15 @@ class Dedupe(Process):
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         self.sample_size = len(record_state_list)
-
         self.nr_add_records = len(
             [
                 r
                 for r in record_state_list
-                if r["colrev_status"] == RecordState.md_prepared
+                if r["colrev_status"] == str(RecordState.md_prepared)
             ]
         )
+        if self.nr_add_records == 0:
+            raise DedupeError("No records to deduplicate (md_prepared)")
 
         if self.sample_size < min_n_active_learning:
             selected_algorithm = self.SIMPLE_SIMILARITY_BASED_DEDUPE
@@ -863,7 +867,7 @@ class Dedupe(Process):
             manual_author=True,
             saved_args=saved_args,
         )
-        # deduper.cleanup_training()
+        self.deduper.cleanup_training()
 
         return
 
@@ -879,7 +883,9 @@ class Dedupe(Process):
 
         import statistics
         import dedupe
+
         import sqlite3
+        from itertools import chain
 
         with open(self.settings_file, "rb") as sf:
             deduper = dedupe.StaticDedupe(sf, num_cores=4)
@@ -914,51 +920,142 @@ class Dedupe(Process):
 
         else:
 
-            for field in deduper.fingerprinter.index_fields:
-                field_data = (r[field] for r in data_d.values() if field in r)
-                deduper.fingerprinter.index(field_data, field)
+            # TODO : allow users to change the blocking_approach variable.
+            self.blocking_approach = "custom_blocking_title_first_three_words"
 
-            full_data = ((r["ID"], r) for r in data_d.values())
-            b_data = deduper.fingerprinter(full_data)
+            if "dedupe_io_fingerprinter" == self.blocking_approach:
 
-            # use sqlite: light-weight, file-based
-            # https://docs.python.org/3/library/sqlite3.html
-            # https://dedupeio.github.io/dedupe-examples/docs/pgsql_big_dedupe_example.html
+                field_b_datas = []
+                for field in deduper.fingerprinter.index_fields:
+                    field_data = (r[field] for r in data_d.values() if field in r)
+                    deduper.fingerprinter.index(field_data, field)
 
-            dedupe_db = Path("dedupe.db")
-            dedupe_db.unlink(missing_ok=True)
-            con = sqlite3.connect(str(dedupe_db))
+                    full_data = ((r["ID"], r) for r in data_d.values())
+                    field_b_data = deduper.fingerprinter(full_data)
+                    field_b_datas.append(field_b_data)
 
-            cur = con.cursor()
+                b_data = chain.from_iterable(field_b_datas)
 
-            cur.execute("""DROP TABLE IF EXISTS blocking_map""")
-            cur.execute("""CREATE TABLE blocking_map (block_key text, ID INTEGER)""")
-            cur.executemany("""INSERT into blocking_map values (?, ?)""", b_data)
+                # use sqlite: light-weight, file-based
+                dedupe_db = self.REVIEW_MANAGER.path / Path("dedupe.db")
+                dedupe_db.unlink(missing_ok=True)
+                con = sqlite3.connect(str(dedupe_db))
 
-            records_data = {r["ID"]: r for r in data_d.values()}
+                cur = con.cursor()
+
+                cur.execute("""DROP TABLE IF EXISTS blocking_map""")
+                cur.execute(
+                    """CREATE TABLE blocking_map (block_key text, ID INTEGER)"""
+                )
+                cur.executemany("""INSERT into blocking_map values (?, ?)""", b_data)
+
+                cur.execute(
+                    """select DISTINCT l.ID as east, r.ID as west
+                            from blocking_map as l
+                            INNER JOIN blocking_map as r
+                            using (block_key)
+                            where east != west"""
+                )
+                ID_combinations = cur.fetchall()
+
+            else:
+                records_data = {r["ID"]: r for r in data_d.values()}
+
+                if "all_combinations" == self.blocking_approach:
+                    ID_combinations = list(
+                        itertools.combinations(list(data_d.keys()), 2)
+                    )
+
+                elif "gatteer_md_prepared_into_md_processed" == self.blocking_approach:
+                    IDs_to_merge = [
+                        ID
+                        for ID, row in data_d.items()
+                        if "md_prepared" == row["colrev_status"]
+                    ]
+                    IDs_main_set = [
+                        ID
+                        for ID, row in data_d.items()
+                        if "md_prepared" != row["colrev_status"]
+                    ]
+                    ID_combinations = list(
+                        itertools.product(IDs_to_merge, IDs_main_set + IDs_to_merge)
+                    )
+
+                elif (
+                    "custom_blocking_title_first_three_words" == self.blocking_approach
+                ):
+
+                    unique_title_predicates: typing.Dict[str, typing.List] = {
+                        " ".join(d.get("title", "").split()[:3]): []
+                        for d in data_d.values()
+                        if d.get("title", "") is not None
+                    }
+
+                    predicates_dict: typing.Dict[str, typing.List] = {}
+                    for record_id, record in data_d.items():
+                        if record is None:
+                            continue
+
+                        if record.get("title", "") is None:
+                            continue
+
+                        if "title" not in record:
+                            continue
+
+                        for item in unique_title_predicates:
+
+                            if item in record.get("title", ""):
+                                if item not in predicates_dict:
+                                    predicates_dict[item] = []
+
+                                if item in predicates_dict:
+                                    predicates_dict[item].append(record_id)
+
+                    ID_combinations = []
+                    for candidate_set in predicates_dict.values():
+                        for candidate_pair in list(
+                            itertools.combinations(candidate_set, 2)
+                        ):
+                            ID_combinations.append(candidate_pair)
+
+                    ID_combinations = list(set(ID_combinations))
+                else:
+                    print(f"Error: {self.blocking_approach} not implemented")
+                    return
 
             def record_pairs(result_set):
 
                 for i, row in enumerate(result_set):
+                    # if i > 120000:
+                    #     break
                     ID_a, ID_b = row
                     record_a = (ID_a, records_data[ID_a])
                     record_b = (ID_b, records_data[ID_b])
 
                     yield record_a, record_b
 
-            cur.execute(
-                """select DISTINCT l.ID as east, r.ID as west
-                        from blocking_map as l
-                        INNER JOIN blocking_map as r
-                        using (block_key)
-                        where east != west"""
+                    if i % 10000 == 0:
+                        self.REVIEW_MANAGER.report_logger.info(
+                            "Scoring duplicates: "
+                            f"{round((i / len(ID_combinations))*100, 1)} %"
+                        )
+
+            self.REVIEW_MANAGER.report_logger.info("Scoring & clustering")
+            clustered_dupes = deduper.cluster(
+                deduper.score(record_pairs(ID_combinations)),
+                threshold=partition_threshold,
             )
 
-            clustered_dupes = list(
-                deduper.cluster(
-                    deduper.score(record_pairs(cur.fetchall())), threshold=0.5
-                )
-            )
+            if "dedupe_io_fingerprinter" == self.blocking_approach:
+                con.commit()
+                con.close()
+                dedupe_db.unlink(missing_ok=True)
+
+            # def cluster_ids(clustered_dupes):
+            #     for cluster, scores in clustered_dupes:
+            #         cluster_id = cluster[0]
+            #         for donor_id, score in zip(cluster, scores):
+            #             yield donor_id, cluster_id, score
 
             # import csv
             # clusterin_results_csv = Path("clusterin_results.csv")
@@ -970,21 +1067,37 @@ class Dedupe(Process):
             #         if row[0] != row[1]:  # only focus on non-identical IDs
             #             csv_out.writerow(row)
 
-            con.commit()
-            con.close()
-            dedupe_db.unlink(missing_ok=True)
+            # import csv
+            # with open("testing.csv", "w") as file1:
+            #     writes = csv.writer(file1, delimiter=" ", quoting=csv.QUOTE_ALL)
+            #     writes.writerows(clustered_dupes)
+            # writes.writerows(cluster_ids(clustered_dupes))
 
-        self.REVIEW_MANAGER.report_logger.info(
-            f"Number of duplicate sets {len(clustered_dupes)}"
-        )
-        # Results
+        # while True:
+        #     input(next(clustered_dupes))
+
         cluster_membership = {}
         dedupe_decision_list = []
-        for cluster_id, (records, scores) in enumerate(clustered_dupes):
+        cluster_id = 0
+        for (records, scores) in clustered_dupes:
+            cluster_id += 1
             dedupe_decision_list.append(
                 {
                     "cluster_id": cluster_id,
                     "records": list(records),
+                    # TODO : calculate cluster score:
+                    # https://docs.dedupe.io/en/latest/API-documentation.html#dedupe.Dedupe.cluster
+                    "score": statistics.mean(list(scores)),
+                }
+            )
+            # This shows that the clustering function introduces the problem
+            # (inadequate similarity score!)
+            print(
+                {
+                    "cluster_id": cluster_id,
+                    "records": list(records),
+                    # TODO : calculate cluster score:
+                    # https://docs.dedupe.io/en/latest/API-documentation.html#dedupe.Dedupe.cluster
                     "score": statistics.mean(list(scores)),
                 }
             )
@@ -1595,6 +1708,12 @@ class Dedupe(Process):
         )
 
         return
+
+
+class DedupeError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 
 if __name__ == "__main__":
