@@ -13,6 +13,7 @@ class Initializer:
         SHARE_STAT_REQ: str,
         type: bool = False,
         url: str = "NA",
+        example: bool = False,
         local_index_repo: bool = False,
     ) -> None:
 
@@ -23,6 +24,7 @@ class Initializer:
         else:
             self.project_name = str(Path.cwd().name)
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+        assert not (example and local_index_repo)
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
         self.review_type = type
         self.url = url
@@ -33,9 +35,12 @@ class Initializer:
         print("Setup git")
         self.__setup_git()
         print("Create commit")
+        if example:
+            self.__create_example_repo()
         self.__create_commit(saved_args=saved_args)
-        print("Register repo")
-        self.__register_repo()
+        if not example:
+            print("Register repo")
+            self.__register_repo()
         if local_index_repo:
             self.__create_local_index()
 
@@ -78,6 +83,7 @@ class Initializer:
                 json.dump(settings, file, indent=4)
 
         Path("search").mkdir()
+        Path("pdfs").mkdir()
 
         files_to_retrieve = [
             [Path("template/readme.md"), Path("readme.md")],
@@ -162,6 +168,7 @@ class Initializer:
         ]
         for script_to_call in scripts_to_call:
             try:
+                print(" ".join(script_to_call) + "...")
                 check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "" == " ".join(script_to_call):
@@ -217,6 +224,14 @@ class Initializer:
         if filedata:
             with open(target, "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
+        return
+
+    def __create_example_repo(self) -> None:
+        """The example repository is intended to provide an initial illustration
+        of CoLRev. It focuses on a quick overview of the process and does
+        not cover advanced features or special cases."""
+        # TODO
+
         return
 
     def __create_local_index(self) -> None:
