@@ -461,7 +461,8 @@ class ReviewDataset:
 
         ID_list = list(records.keys())
 
-        for record_ID, record in records.items():
+        for record_ID in list(records.keys()):
+            record = records[record_ID]
             RECORD = Record(data=record)
             if RECORD.masterdata_is_curated():
                 continue
@@ -482,7 +483,12 @@ class ReviewDataset:
                 record_in_bib_db=True,
                 raise_error=False,
             )
+
+            # We need to insert the a new element into records
+            # to make sure that the IDs are actually saved
             record.update(ID=new_id)
+            records[new_id] = record
+            del records[old_id]
             ID_list.append(new_id)
             if old_id != new_id:
                 self.REVIEW_MANAGER.report_logger.info(f"set_ID({old_id}) to {new_id}")

@@ -164,6 +164,8 @@ class SearchSources:
 
     @classmethod
     def wos_heuristic(cls, *, filename: Path, data: str) -> bool:
+        if "Unique-ID = {WOS:" in data:
+            return True
         if "UT_(Unique_WOS_ID) = {WOS:" in data:
             return True
         if "@article{ WOS:" in data:
@@ -303,7 +305,7 @@ scripts: list[dict[str, typing.Any]] = [
     {
         "source_name": "web_of_science",
         "source_identifier": "https://www.webofscience.com/wos/woscc/full-record/"
-        + "{{wos_accession_number}}",
+        + "{{unique-id}}",
         "heuristic": SearchSources.wos_heuristic,
         "prep_script": SearchSources.prep_wos_source,
     },
