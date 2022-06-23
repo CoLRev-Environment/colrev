@@ -322,7 +322,7 @@ scripts: list[dict[str, typing.Any]] = [
     },
     {
         "source_name": "PDF backward search",
-        "source_identifier": "{{file}} (references)",
+        "source_identifier": "{{cited_by_file}} (references)",
         "heuristic": SearchSources.pdf_backward_search_heuristic,
     },
 ]

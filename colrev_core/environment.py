@@ -38,7 +38,7 @@ class EnvironmentManager:
     os_db = "opensearchproject/opensearch-dashboards:1.3.0"
 
     docker_images = {
-        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
+        "lfoppiano/grobid": "lfoppiano/grobid:0.7.1",
         "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
         "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
         "zotero/translation-server": "zotero/translation-server:2.0.4",

@@ -7,23 +7,6 @@ from colrev_core.environment import LocalIndex
 
 
 class Sync:
-
-    colrev_path = Path.home().joinpath("colrev")
-    registry = "registry.yaml"
-
-    paths = {"REGISTRY": colrev_path.joinpath(registry)}
-
-    os_db = "opensearchproject/opensearch-dashboards:1.3.0"
-
-    docker_images = {
-        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
-        "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
-        "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
-        "zotero/translation-server": "zotero/translation-server:2.0.4",
-        "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
-        "opensearchproject/opensearch-dashboards": os_db,
-    }
-
     def __init__(self):
         self.records_to_import = []
         self.non_unique_for_import = []
