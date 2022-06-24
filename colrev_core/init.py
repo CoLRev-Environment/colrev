@@ -230,7 +230,15 @@ class Initializer:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
         not cover advanced features or special cases."""
-        # TODO
+
+        print("Include 30_example_records.bib")
+        self.__retrieve_package_file(
+            template_file=Path("template/example/30_example_records.bib"),
+            target=Path("search/30_example_records.bib"),
+        )
+
+        git_repo = git.Repo.init()
+        git_repo.index.add(["search/30_example_records.bib"])
 
         return
 
