@@ -1,13 +1,10 @@
 #! /usr/bin/env python
 import itertools
-import os
 import typing
 from itertools import chain
 from pathlib import Path
 
-import dictdiffer
 import git
-from p_tqdm import p_map
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -23,7 +20,7 @@ class Validate(Process):
     def load_search_records(self, *, bib_file: Path) -> list:
 
         with open(bib_file, encoding="utf8") as bibtex_file:
-            individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.bibtex_file(
+            individual_bib_rd = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                 load_str=bibtex_file.read()
             )
             for record in individual_bib_rd.values():
@@ -35,75 +32,85 @@ class Validate(Process):
 
         search_dir = self.REVIEW_MANAGER.paths["SEARCHDIR"]
 
-        records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
+        records = []
+        # records = p_map(self.load_search_records, list(search_dir.glob("*.bib")))
+        for search_file in search_dir.glob("*.bib"):
+            records.append(self.load_search_records(bib_file=search_file))
+
         records = list(chain(*records))
 
         return records
 
+    def __load_prior_records_dict(self, *, target_commit):
+        import git
+
+        repo = git.Repo()
+
+        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+            )
+            for commit in repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+        )
+
+        found_target_commit = False
+        for commit_id, filecontents in list(revlist):
+            if commit_id == target_commit:
+                found_target_commit = True
+                continue
+            if not found_target_commit:
+                continue
+            prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=filecontents.decode("utf-8")
+            )
+            break
+        return prior_records_dict
+
     def validate_preparation_changes(
-        self, *, records: typing.List[dict], search_records: list
-    ) -> None:
+        self, *, records: typing.List[dict], target_commit
+    ) -> list:
         from colrev_core.record import Record
 
-        self.REVIEW_MANAGER.logger.info("Calculating preparation differences...")
+        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+
+        self.REVIEW_MANAGER.logger.debug("Calculating preparation differences...")
         change_diff = []
         for record in records:
+            # input(record)
             if "changed_in_target_commit" not in record:
                 continue
             del record["changed_in_target_commit"]
             del record["colrev_status"]
-            # del record['colrev_origin']
             for cur_record_link in record["colrev_origin"].split(";"):
                 prior_records = [
                     x
-                    for x in search_records
+                    for x in prior_records_dict.values()
                     if cur_record_link in x["colrev_origin"].split(",")
                 ]
                 for prior_record in prior_records:
                     similarity = Record.get_record_similarity(
                         RECORD_A=Record(data=record), RECORD_B=Record(data=prior_record)
                     )
-                    change_diff.append([record["ID"], cur_record_link, similarity])
+                    # change_diff.append([record["ID"], cur_record_link, similarity])
+                    change_diff.append([prior_record, record, similarity])
 
-        change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
+        change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
 
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)
-        input("continue")
 
-        for eid, record_link, difference in change_diff:
-            # Escape sequence to clear terminal output for each new comparison
-            os.system("cls" if os.name == "nt" else "clear")
-            self.REVIEW_MANAGER.logger.info("Record with ID: " + eid)
-
-            self.REVIEW_MANAGER.logger.info(
-                "Difference: " + str(round(difference, 4)) + "\n\n"
-            )
-            record_1 = [x for x in search_records if record_link == x["colrev_origin"]]
-            print(Record(data=record_1[0]))
-            record_2 = [x for x in records if eid == x["ID"]]
-            print(Record(data=record_2[0]))
-
-            print("\n\n")
-            for diff in list(dictdiffer.diff(record_1, record_2)):
-                # Note: may treat fields differently (e.g., status, ID, ...)
-                self.REVIEW_MANAGER.pp.pprint(diff)
-
-            if "n" == input("continue (y/n)?"):
-                break
-            # input('TODO: correct? if not, replace current record with old one')
-
-        return
+        return change_diff
 
     def validate_merging_changes(
-        self, *, records: typing.List[dict], search_records: list
-    ) -> None:
+        self, *, records: typing.List[dict], target_commit
+    ) -> list:
         from colrev_core.record import Record
 
-        os.system("cls" if os.name == "nt" else "clear")
-        self.REVIEW_MANAGER.logger.info(
-            "Calculating differences between merged records..."
-        )
+        prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
+
         change_diff = []
         merged_records = False
         for record in records:
@@ -115,16 +122,24 @@ class Validate(Process):
                 els = record["colrev_origin"].split(";")
                 duplicate_el_pairs = list(itertools.combinations(els, 2))
                 for el_1, el_2 in duplicate_el_pairs:
-                    record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
-                    record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
+                    record_1 = [
+                        x
+                        for x in prior_records_dict.values()
+                        if el_1 == x["colrev_origin"]
+                    ]
+                    record_2 = [
+                        x
+                        for x in prior_records_dict.values()
+                        if el_2 == x["colrev_origin"]
+                    ]
 
                     similarity = Record.get_record_similarity(
                         RECORD_A=Record(data=record_1[0]),
                         RECORD_B=Record(data=record_2[0]),
                     )
-                    change_diff.append([el_1, el_2, similarity])
+                    change_diff.append([record_1[0], record_2[0], similarity])
 
-        change_diff = [[e1, e2, 1 - sim] for [e1, e2, sim] in change_diff if sim < 1]
+        change_diff = [[e1, e2, sim] for [e1, e2, sim] in change_diff if sim < 1]
 
         if 0 == len(change_diff):
             if merged_records:
@@ -135,22 +150,7 @@ class Validate(Process):
         # sort according to similarity
         change_diff.sort(key=lambda x: x[2], reverse=True)
 
-        for el_1, el_2, difference in change_diff:
-            # Escape sequence to clear terminal output for each new comparison
-            os.system("cls" if os.name == "nt" else "clear")
-
-            print(
-                "Differences between merged records:" + f" {round(difference, 4)}\n\n"
-            )
-            record_1 = [x for x in search_records if el_1 == x["colrev_origin"]]
-            print(Record(data=record_1[0]))
-            record_2 = [x for x in search_records if el_2 == x["colrev_origin"]]
-            print(Record(data=record_2[0]))
-
-            if "n" == input("continue (y/n)?"):
-                break
-
-        return
+        return change_diff
 
     def load_records(self, *, target_commit: str = None) -> typing.List[dict]:
 
@@ -260,32 +260,62 @@ class Validate(Process):
 
         return
 
+    def __set_scope_based_on_target_commit(self, *, target_commit):
+        import git
+
+        target_commit = self.REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
+
+        repo = git.Repo()
+
+        revlist = list(
+            (
+                commit.hexsha,
+                commit.message,
+            )
+            for commit in repo.iter_commits(paths="status.yaml")
+        )
+        for commit_id, msg in revlist:
+            if commit_id == target_commit:
+                if "colrev prep" in msg:
+                    scope = "prepare"
+                elif "colrev dedupe" in msg:
+                    scope = "merge"
+                else:
+                    scope = "unspecified"
+        return scope
+
     def main(
         self, *, scope: str, properties: bool = False, target_commit: str = None
-    ) -> None:
+    ) -> list:
 
         if properties:
             self.validate_properties(target_commit=target_commit)
-            return
+            return []
 
         # extension: filter for changes of contributor (git author)
         records = self.load_records(target_commit=target_commit)
 
-        # Note: search records are considered immutable
-        # we therefore load the latest files
-        search_records = self.get_search_records()
+        if target_commit is None and "unspecified" == scope:
+            scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)
 
         if "prepare" == scope or "all" == scope:
-            self.validate_preparation_changes(
-                records=records, search_records=search_records
+            validation_details = self.validate_preparation_changes(
+                records=records, target_commit=target_commit
             )
 
         if "merge" == scope or "all" == scope:
-            self.validate_merging_changes(
-                records=records, search_records=search_records
+            validation_details = self.validate_merging_changes(
+                records=records, target_commit=target_commit
             )
 
-        return
+        # if 'unspecified' == scope:
+        #     repo = git.Repo()
+        #     t = repo.head.commit.tree
+        #     print(repo.git.diff('HEAD~1'))
+        #     validation_details = {}
+        #     input('stop')
+
+        return validation_details
 
 
 if __name__ == "__main__":

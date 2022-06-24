@@ -17,7 +17,7 @@ Mention agreement on a shared data structure and steps of the literature review
    :alt: Workflow cycle
 
 
-CoLRev Status
+CoLRev status
 -------------------------------
 
 The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
@@ -36,31 +36,11 @@ It consists of the following (as shown in the screenshot below):
    - Reports the state of the records in the process
 
    |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
-   |
 
    **Instructions section**
 
    - Recommends commands for the next processing steps
 
-   |
-   |
    |
 
    **Checks section**
@@ -70,53 +50,24 @@ It consists of the following (as shown in the screenshot below):
 
 .. code-block:: bash
 
-   ________________________ Status _______________________________
+   Status
 
-   Search
-      - Records retrieved     7661  *   6266 curated (81.81%)
-   ______________________________________________________________
-   | Metadata preparation
-   |  - Records imported     7661
-   |  - Records prepared     7661
-   |                               *   1282 to deduplicate
-   |  - Records processed    6377  ->     2 duplicates removed
-   |_____________________________________________________________
+      Search         7661 retrieved    (0% curated)
+      Metadata       7042 processed    (619 duplicates removed)
+      Prescreen       577 included     (5807 excluded)
+      PDFs            577 prepared
+      Screen           49 included     (528 excluded)
+      Data              0 synthesized  (49 to synthesize)
 
-   Prescreen
-      - Prescreen size        6377
-      - Included               578  ->  5799 records excluded
-   ______________________________________________________________
-   | PDF preparation
-   |  - PDFs imported         578
-   |  - PDFs prepared         578
-   |_____________________________________________________________
-
-   Screen
-      - Screen size            578
-      - Included                49  ->   529 records excluded
-                                    -    265 : empiricalBC4_contract
-                                    -    264 : theory
-
-   Data and synthesis
-      - Total                   49
-      - Synthesized              0  *     49 to synthesize
-   _______________________________________________________________
-
-   Progress: |███████████████▊       |69%
-
-
-   ______________________ Next steps _____________________________
+      Progress: |██████████████████▊    |82%
 
    Review project
 
-     Deduplicate records  i.e., use
      colrev dedupe
 
    Versioning and collaboration
 
-     Sharing requirement: processed
      Up-to-date
-     No versioning/collaboration tasks required at the moment.
 
 
    Checks
@@ -125,31 +76,55 @@ It consists of the following (as shown in the screenshot below):
      ReviewManager.format()      ...  Everything ok.
 
 
-CoLRev Operation
+CoLRev operation
 -------------------------------
 
+The status provides an overview of the six steps and corresponding operations:
 
+Step Search
+   - Operation: Search
+Step Metadata
+   - Operation: Load
+   - Operation: Prep
+   - Operation: Dedupe
+Step Prescreen
+   - Operation: Prescreen
+Step PDFs
+   - Operation: PDF get
+   - Operation: PDF prep
+Step Screen
+   - Operation: Screen
+Step Data
+   - Operation: Data
+   - Operation: Paper
+
+Operations lead records to transition between states as illustrated in the following
+
+TODO : add search
 
 .. figure:: ../../../figures/state-machine.svg
    :width: 700
    :alt: Overview of states
 
 
-Git: analyze changes
+CoLRev validate
 -------------------------------
 
-After each step, check and validate the changes using a git `client of your choice <https://git-scm.com/downloads/guis>`_:
+After each step, check and validate the changes using
 
 .. code-block:: bash
 
-      git status
-      gitk
-      colrev status
+      colrev validate
 
-Using git, you can validate the individual changes and the commit report for each version.
-Instructions on how to correct and trace errors are available in the guidelines for the respective step.
+TODO : include example of colrev validate
+
+..
+   Using git, you can validate the individual changes and the commit report for each version.
+   Instructions on how to correct and trace errors are available in the guidelines for the respective step.
 
 CoLRev also ensures that the git-diffs are readable:
+
+TODO : update (e.g., colrev_origin, provenance fields)
 
 .. code-block:: diff
 
@@ -172,92 +147,65 @@ CoLRev also ensures that the git-diffs are readable:
    +  url                 = {http://aisel.aisnet.org/icis2012/proceedings/GlobalIssues/6},
    }
 
+Note: you can also use a `git client of your choice <https://git-scm.com/downloads/guis>`_.
 
-A git commit report provides a higher-level overview of the repository's state:
+..
+      A git commit report provides a higher-level overview of the repository's state:
 
-.. code-block:: diff
+      .. code-block:: diff
 
-    Author: script:colrev_core prep main <>  2022-04-06 06:10:52
-    Committer: Gerit Wagner <gerit.wagner@hec.ca>  2022-04-06 06:10:52
-    Parent: 3ad86d73f7e04ee30b8687648b4dea140c526623 (Prepare records (exclusion)*)
-    Child:  a7df1f2025e95419989e1d5b4a80223ddf099bc4 (Prepare records (medium_confidence)*)
-    Branches: main, remotes/origin/main
-    Follows:
-    Precedes:
+         Author: script:colrev_core prep main <>  2022-04-06 06:10:52
+         Committer: Gerit Wagner <gerit.wagner@hec.ca>  2022-04-06 06:10:52
+         Parent: 3ad86d73f7e04ee30b8687648b4dea140c526623 (Prepare records (exclusion)*)
+         Child:  a7df1f2025e95419989e1d5b4a80223ddf099bc4 (Prepare records (medium_confidence)*)
+         Branches: main, remotes/origin/main
+         Follows:
+         Precedes:
 
-        Prepare records (high_confidence)*
+            Prepare records (high_confidence)*
 
-        Report
+            Report
 
-        Command
-        colrev prep \
-            --reprocess_state \
-            --debug_ids=NA \
-            --debug_file=NA \
-            --similarity=0.99
-        On git repo with version 3ad86d73f7e04ee30b8687648b4dea140c526623
+            Command
+            colrev prep \
+                  --reprocess_state \
+                  --debug_ids=NA \
+                  --debug_file=NA \
+                  --similarity=0.99
+            On git repo with version 3ad86d73f7e04ee30b8687648b4dea140c526623
 
+            Status
 
-        ________________________ Status _______________________________
+               Search           7661 retrieved    (0% curated)
+               Metadata         7042 processed    (619 duplicates removed)
+               Prescreen         577 included     (5807 excluded, 658 to prescreen)
+               PDFs              577 prepared
+               Screen             49 included     (528 excluded)
+               Data                0 synthesized  (49 to synthesize)
 
-        Search
-        - Records retrieved     7661  *   6247 curated (83.46%)
-        ______________________________________________________________
-        | Metadata preparation
-        |  - Records imported     7661
-        |                               *    174 need preparation
-        |  - Records prepared     7487
-        |                               *   1108 to deduplicate
-        |  - Records processed    6377  ->     2 duplicates removed
-        |_____________________________________________________________
+            Properties for tree 170bae9a6651d86fc027d1196506452546b4a52f
+            - Traceability of records          YES
+            - Consistency (based on hooks)     YES
+            - Completeness of iteration        NO
+            To check tree_hash use             git log --pretty=raw -1
+            To validate use                    colrev validate --properties
+                                                --commit INSERT_COMMIT_HASH
 
-        Prescreen
-        - Prescreen size        6377
-        - Included               578  ->  5799 records excluded
-        ______________________________________________________________
-        | PDF preparation
-        |  - PDFs imported         578
-        |  - PDFs prepared         578
-        |_____________________________________________________________
+            Software
+            - colrev_core:               version 0.3.0+180.gc112ca4.dirty
+            - colrev hooks:              version 0.3.0
+            - Python:                    version 3.8.10
+            - Git:                       version 2.25.1
+            - Docker:                    version 20.10.7, build 20.10.7-0ubuntu5~20.04.2
+            - colrev:                    version 0+untagged.20.g914a30b.dirty
+                  * created with a modified version (not reproducible)
 
-        Screen
-        - Screen size            578
-        - Included                49  ->   529 records excluded
-                                        -     13 : BC1_digital_technology
-                                        -    120 : BC2_value_network
-                                        -     56 : BC3_centralized_governance
-                                        -    255 : BC4_contract
-                                        -    415 : BC5_knowledge_work
+            Processing report
 
-        Data and synthesis
-        - Total                   49
-        - Synthesized              0  *     49 to synthesize
-        _______________________________________________________________
+            Detailed report
 
 
-        Properties for tree 170bae9a6651d86fc027d1196506452546b4a52f
-        - Traceability of records          YES
-        - Consistency (based on hooks)     YES
-        - Completeness of iteration        NO
-        To check tree_hash use             git log --pretty=raw -1
-        To validate use                    colrev validate --properties
-                                            --commit INSERT_COMMIT_HASH
+            2022-04-06 12:08:30 [INFO] Dropped eissn field
+            2022-04-06 12:08:30 [INFO] Dropped earlyaccessdate field
 
-        Software
-        - colrev_core:               version 0.3.0+180.gc112ca4.dirty
-        - colrev hooks:              version 0.3.0
-        - Python:                    version 3.8.10
-        - Git:                       version 2.25.1
-        - Docker:                    version 20.10.7, build 20.10.7-0ubuntu5~20.04.2
-        - colrev:                    version 0+untagged.20.g914a30b.dirty
-            * created with a modified version (not reproducible)
-
-        Processing report
-
-        Detailed report
-
-
-        2022-04-06 12:08:30 [INFO] Dropped eissn field
-        2022-04-06 12:08:30 [INFO] Dropped earlyaccessdate field
-
-        ...
+            ...
