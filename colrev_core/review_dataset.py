@@ -484,13 +484,13 @@ class ReviewDataset:
                 raise_error=False,
             )
 
-            # We need to insert the a new element into records
-            # to make sure that the IDs are actually saved
-            record.update(ID=new_id)
-            records[new_id] = record
-            del records[old_id]
             ID_list.append(new_id)
             if old_id != new_id:
+                # We need to insert the a new element into records
+                # to make sure that the IDs are actually saved
+                record.update(ID=new_id)
+                records[new_id] = record
+                del records[old_id]
                 self.REVIEW_MANAGER.report_logger.info(f"set_ID({old_id}) to {new_id}")
                 if old_id in ID_list:
                     ID_list.remove(old_id)
