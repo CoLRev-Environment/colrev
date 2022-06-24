@@ -1305,6 +1305,8 @@ class Data(Process):
             raise NoDataEndpointsRegistered()
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        if 0 == len(records):
+            return {"ask_to_commit": False}
 
         self.__PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
 

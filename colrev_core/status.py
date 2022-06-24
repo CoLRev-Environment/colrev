@@ -817,7 +817,6 @@ class Status(Process):
             item = {
                 "title": "Up-to-date",
                 "level": "SUCCESS",
-                "msg": "No action required.",
             }
             collaboration_instructions["items"].append(item)
 
@@ -871,7 +870,7 @@ class Status(Process):
         )
         search_add_info = []
         if stat["overall"]["md_prepared"] > 0:
-            search_add_info.append(f"{round(perc_curated*100, 2)}% curated")
+            search_add_info.append(f"{str(int(perc_curated))}% curated")
         if stat["currently"]["md_retrieved"] > 0:
             search_add_info.append(
                 f'{colors.ORANGE}{stat["currently"]["md_retrieved"]}'

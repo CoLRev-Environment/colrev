@@ -21,14 +21,3 @@ colrev\_core.dedupe
       :nosignatures:
 
       Dedupe
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      DedupeError

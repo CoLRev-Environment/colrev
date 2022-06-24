@@ -31,7 +31,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 - :any:`priority_processing`
 - :any:`check_and_undo`
 
-:any:`area_institutional`
+:any:`area_community`
 
 - :any:`adopting_a_shared_curation_standard`
 - :any:`curation_layers`
@@ -450,9 +450,9 @@ E.g., prep-rounds, asreview ordered screen or reading heuristics
 - Algorithmic application of changes and (efficient) undo is preferred over manual entry/changes
 - Reuse (curated, across projects) to avoid redundant efforts
 
-.. _area_institutional:
+.. _area_community:
 
-4. Design area: Institutional
+4. Design area: Community
 ----------------------------------------------
 
 .. _adopting_a_shared_curation_standard:
