@@ -158,7 +158,7 @@ class PDF_Retrieval(Process):
 
         if "file" in retrieved_record:
             record["file"] = retrieved_record["file"]
-            self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record)
+            self.REVIEW_MANAGER.REVIEW_DATASET.import_file(record=record)
 
         return record
 
