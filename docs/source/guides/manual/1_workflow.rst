@@ -21,32 +21,16 @@ CoLRev status
 -------------------------------
 
 The CoLRev status command serves as a starting point for all steps and helps to make CoLRev self-explanatory.
-It consists of the following (as shown in the screenshot below):
+It consists of the following (as shown below):
 
-- A checks section, which validates data structures and formats
-- A status section, which provides an overview of the review project
-- An instructions section (next steps), which provides situational instructions on the next steps of the review project, versioning and collaboration, and the local CoLRev environment
+- The **status section**, which provides an overview of the review project and reports the state of the records in the process
+
+- The **instructions section**, which provides situational instructions on the next steps of the review project (highlighted in yellow), versioning and collaboration, and the local CoLRev environment
+
+- The **checks section**, which checks consistency of file formats and structure
+
 
 `colrev status` should provide all necessary instructions for your project.
-
-.. sidebar::
-
-   **Status section**
-
-   - Reports the state of the records in the process
-
-   |
-
-   **Instructions section**
-
-   - Recommends commands for the next processing steps
-
-   |
-
-   **Checks section**
-
-   - Checks consistency of file formats and structure
-
 
 .. code-block:: bash
 
@@ -79,7 +63,10 @@ It consists of the following (as shown in the screenshot below):
 CoLRev operation
 -------------------------------
 
-The status provides an overview of the six steps and corresponding operations:
+The status provides an overview of the six steps and corresponding operations.
+The sequence of steps and operations as well as the corresponding state transitions of records are standardized across CoLRev projects.
+Within this standardized structure, each operation can be configured.
+Through the settings, it is possible to rely on the default configuration (the CoLRev reference implementation with reasonable parameters), to adapt selected parameters, to plug in CoLRev packages (community packages or custom built ones).
 
 Step Search
    - Operation: Search
