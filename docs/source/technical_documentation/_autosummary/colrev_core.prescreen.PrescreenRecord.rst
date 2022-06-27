@@ -30,7 +30,6 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.get_colrev_id
       ~PrescreenRecord.get_container_title
       ~PrescreenRecord.get_data
-      ~PrescreenRecord.get_field
       ~PrescreenRecord.get_incomplete_fields
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
@@ -40,6 +39,7 @@ colrev\_core.prescreen.PrescreenRecord
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
       ~PrescreenRecord.get_source_repo
+      ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
       ~PrescreenRecord.masterdata_is_complete
@@ -67,7 +67,7 @@ colrev\_core.prescreen.PrescreenRecord
 
    .. autosummary::
 
-      ~PrescreenRecord.identifying_fields
+      ~PrescreenRecord.identifying_field_keys
       ~PrescreenRecord.pp
       ~PrescreenRecord.preferred_sources
       ~PrescreenRecord.provenance_keys

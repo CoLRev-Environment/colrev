@@ -35,7 +35,6 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.get_colrev_id
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
-      ~PrepRecord.get_field
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_origins
@@ -46,6 +45,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
       ~PrepRecord.get_source_repo
+      ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
       ~PrepRecord.masterdata_is_complete
@@ -73,7 +73,7 @@ colrev\_core.prep.PrepRecord
 
    .. autosummary::
 
-      ~PrepRecord.identifying_fields
+      ~PrepRecord.identifying_field_keys
       ~PrepRecord.pp
       ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys

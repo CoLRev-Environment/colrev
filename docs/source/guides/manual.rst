@@ -31,7 +31,7 @@ Extensions are available in the `extensions section <../guides/extensions.html>`
 
 **Python venv**
 
-It is optional but recommended to operate CoLRev in a virtual environment.
+It is recommended to run CoLRev in a virtual environment.
 CoLRev relies on several fixed-version dependencies for reproducibility and venv helps to avoid dependency conflicts with other packages.
 
 .. TODO : at some point, we may start to include links to other resources/tutorials/workshops

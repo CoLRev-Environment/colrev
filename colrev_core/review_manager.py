@@ -662,10 +662,12 @@ class ReviewManager:
             return False
 
     def __is_colrev_core_project(self) -> bool:
-        # Note : 'private_config.ini', 'shared_config.ini' are optional
-        # "search",
-        required_paths = [Path(".pre-commit-config.yaml"), Path(".gitignore")]
-        if not all(x.is_file() for x in required_paths):
+        required_paths = [
+            Path(".pre-commit-config.yaml"),
+            Path(".gitignore"),
+            Path("settings.json"),
+        ]
+        if not all((self.path / x).is_file() for x in required_paths):
             return False
         return True
 

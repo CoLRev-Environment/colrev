@@ -30,7 +30,6 @@ colrev\_core.record.Record
       ~Record.get_colrev_id
       ~Record.get_container_title
       ~Record.get_data
-      ~Record.get_field
       ~Record.get_incomplete_fields
       ~Record.get_inconsistencies
       ~Record.get_origins
@@ -40,6 +39,7 @@ colrev\_core.record.Record
       ~Record.get_similarity
       ~Record.get_similarity_detailed
       ~Record.get_source_repo
+      ~Record.get_value
       ~Record.has_incomplete_fields
       ~Record.has_inconsistent_fields
       ~Record.masterdata_is_complete
@@ -67,7 +67,7 @@ colrev\_core.record.Record
 
    .. autosummary::
 
-      ~Record.identifying_fields
+      ~Record.identifying_field_keys
       ~Record.pp
       ~Record.preferred_sources
       ~Record.provenance_keys

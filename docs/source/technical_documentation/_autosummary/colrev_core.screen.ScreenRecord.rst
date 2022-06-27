@@ -30,7 +30,6 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.get_colrev_id
       ~ScreenRecord.get_container_title
       ~ScreenRecord.get_data
-      ~ScreenRecord.get_field
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_origins
@@ -40,6 +39,7 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
       ~ScreenRecord.get_source_repo
+      ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
       ~ScreenRecord.masterdata_is_complete
@@ -67,7 +67,7 @@ colrev\_core.screen.ScreenRecord
 
    .. autosummary::
 
-      ~ScreenRecord.identifying_fields
+      ~ScreenRecord.identifying_field_keys
       ~ScreenRecord.pp
       ~ScreenRecord.preferred_sources
       ~ScreenRecord.provenance_keys

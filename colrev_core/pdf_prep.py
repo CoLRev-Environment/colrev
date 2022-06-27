@@ -131,7 +131,7 @@ class PDF_Preparation(Process):
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(field="file", hint="pdf_reader_error")
+            RECORD.add_data_provenance_hint(key="file", hint="pdf_reader_error")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
@@ -140,7 +140,7 @@ class PDF_Preparation(Process):
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(field="file", hint="pdf_protected")
+            RECORD.add_data_provenance_hint(key="file", hint="pdf_protected")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
@@ -149,7 +149,7 @@ class PDF_Preparation(Process):
             self.REVIEW_MANAGER.report_logger.error(msg)
             self.REVIEW_MANAGER.logger.error(msg)
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(field="file", hint="pdf_syntax_error")
+            RECORD.add_data_provenance_hint(key="file", hint="pdf_syntax_error")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
@@ -199,9 +199,7 @@ class PDF_Preparation(Process):
         subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
 
         RECORD = Record(data=record)
-        RECORD.add_data_provenance_hint(
-            field="file", hint="pdf_processed with OCRMYPDF"
-        )
+        RECORD.add_data_provenance_hint(key="file", hint="pdf_processed with OCRMYPDF")
         record = RECORD.get_data()
         record["file"] = str(ocred_filename.relative_to(self.REVIEW_MANAGER.path))
         record = self.get_text_from_pdf(record, PAD)
@@ -230,9 +228,7 @@ class PDF_Preparation(Process):
             )
             self.REVIEW_MANAGER.report_logger.error(msg)
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(
-                field="file", hint="pdf_language_not_english"
-            )
+            RECORD.add_data_provenance_hint(key="file", hint="pdf_language_not_english")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
@@ -379,7 +375,7 @@ class PDF_Preparation(Process):
                 self.REVIEW_MANAGER.report_logger.error(msg)
 
             hints = ",".join([hint for hint in validation_info["pdf_prep_hints"]])
-            RECORD.add_data_provenance_hint(field="file", hint=hints)
+            RECORD.add_data_provenance_hint(key="file", hint=hints)
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
@@ -456,7 +452,7 @@ class PDF_Preparation(Process):
             )
             self.REVIEW_MANAGER.report_logger.error(msg)
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(field="file", hint="not_full_version")
+            RECORD.add_data_provenance_hint(key="file", hint="not_full_version")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return record
@@ -480,7 +476,7 @@ class PDF_Preparation(Process):
                 + "Could not validate completeness: no pages in metadata"
             )
             RECORD = Record(data=record)
-            RECORD.add_data_provenance_hint(field="file", hint="no_pages_in_metadata")
+            RECORD.add_data_provenance_hint(key="file", hint="no_pages_in_metadata")
             record = RECORD.get_data()
             record.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return record
@@ -494,7 +490,7 @@ class PDF_Preparation(Process):
             if nr_pages_metadata == int(record["pages_in_file"]) - 1:
 
                 RECORD = Record(data=record)
-                RECORD.add_data_provenance_hint(field="file", hint="more_pages_in_pdf")
+                RECORD.add_data_provenance_hint(key="file", hint="more_pages_in_pdf")
                 record = RECORD.get_data()
 
             elif self.__longer_with_appendix(
@@ -512,7 +508,7 @@ class PDF_Preparation(Process):
 
                 RECORD = Record(data=record)
                 RECORD.add_data_provenance_hint(
-                    field="file", hint="nr_pages_not_matching"
+                    key="file", hint="nr_pages_not_matching"
                 )
                 record = RECORD.get_data()
                 record.update(colrev_status=RecordState.pdf_needs_manual_preparation)

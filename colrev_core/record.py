@@ -14,7 +14,7 @@ from thefuzz import fuzz
 
 class Record:
 
-    identifying_fields = [
+    identifying_field_keys = [
         "title",
         "author",
         "year",
@@ -24,7 +24,7 @@ class Record:
         "number",
         "pages",
     ]
-    """Identifying fields considered for masterdata provenance"""
+    """Keys of identifying fields considered for masterdata provenance"""
 
     # Based on https://en.wikipedia.org/wiki/BibTeX
     record_field_requirements = {
@@ -83,7 +83,7 @@ class Record:
     def __str__(self) -> str:
 
         self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
-            k for k in self.identifying_fields if k in self.data
+            k for k in self.identifying_field_keys if k in self.data
         ]
         complementary_keys_order = [
             k for k, v in self.data.items() if k not in self.identifying_keys_order
@@ -142,29 +142,29 @@ class Record:
         if stringify:
 
             # separated by \n
-            for field in ReviewDataset.list_fields:
-                if field in self.data:
-                    if isinstance(self.data[field], str):
-                        self.data[field] = [
+            for key in ReviewDataset.list_fields_keys:
+                if key in self.data:
+                    if isinstance(self.data[key], str):
+                        self.data[key] = [
                             element.lstrip().rstrip()
-                            for element in self.data[field].split(";")
+                            for element in self.data[key].split(";")
                         ]
-                    if "colrev_id" == field:
-                        self.data[field] = sorted(list(set(self.data[field])))
-                    for ind, val in enumerate(self.data[field]):
+                    if "colrev_id" == key:
+                        self.data[key] = sorted(list(set(self.data[key])))
+                    for ind, val in enumerate(self.data[key]):
                         if len(val) > 0:
                             if ";" != val[-1]:
-                                self.data[field][ind] = val + ";"
-                    self.data[field] = list_to_str(val=self.data[field])
+                                self.data[key][ind] = val + ";"
+                    self.data[key] = list_to_str(val=self.data[key])
 
-            for field in ReviewDataset.dict_fields:
-                if field in self.data:
-                    if isinstance(self.data[field], dict):
-                        self.data[field] = save_field_dict(
-                            input_dict=self.data[field], key=field
+            for key in ReviewDataset.dict_fields_keys:
+                if key in self.data:
+                    if isinstance(self.data[key], dict):
+                        self.data[key] = save_field_dict(
+                            input_dict=self.data[key], key=key
                         )
-                    if isinstance(self.data[field], list):
-                        self.data[field] = list_to_str(val=self.data[field])
+                    if isinstance(self.data[key], list):
+                        self.data[key] = list_to_str(val=self.data[key])
 
         return self.data
 
@@ -200,7 +200,7 @@ class Record:
         else:
             origins = []
 
-        # Note : to cover legacy fieldname:
+        # Note : to cover legacy key:
         if "origin" in self.data:
             origins = self.data["origin"].split(";")
 
@@ -221,16 +221,16 @@ class Record:
             return self.data["source_path"]
         return "NO_SOURCE_INFO"
 
-    def get_field(self, *, field_key: str, default=None):
+    def get_value(self, *, key: str, default=None):
         if default is not None:
             try:
-                ret = self.data[field_key]
+                ret = self.data[key]
                 return ret
             except KeyError:
                 pass
                 return default
         else:
-            return self.data[field_key]
+            return self.data[key]
 
     def get_colrev_id(self) -> list:
         # Note : do not automatically create colrev_ids
@@ -243,43 +243,47 @@ class Record:
                 colrev_id = self.data["colrev_id"]
         return colrev_id
 
-    def update_field(
-        self, *, field: str, value, source: str, comment: str = ""
-    ) -> None:
-        if field in self.data:
-            if self.data[field] == value:
+    def update_field(self, *, key: str, value, source: str, comment: str = "") -> None:
+        if key in self.data:
+            if self.data[key] == value:
                 return
-        self.data[field] = value
-        if field in self.identifying_fields:
-            self.add_masterdata_provenance(field=field, source=source, hint=comment)
+        self.data[key] = value
+        if key in self.identifying_field_keys:
+            self.add_masterdata_provenance(key=key, source=source, hint=comment)
         else:
-            self.add_data_provenance(field=field, source=source, hint=comment)
+            self.add_data_provenance(key=key, source=source, hint=comment)
         return
 
-    def rename_field(self, *, field: str, new_field: str) -> None:
-        value = self.data[field]
-        self.data[new_field] = value
+    def rename_field(self, *, key: str, new_key: str) -> None:
+        value = self.data[key]
+        self.data[new_key] = value
 
-        if field in self.identifying_fields:
-            value_provenance = self.data["colrev_masterdata_provenance"][field]
-            self.data["colrev_masterdata_provenance"][new_field] = value_provenance
+        if key in self.identifying_field_keys:
+            value_provenance = self.data["colrev_masterdata_provenance"][key]
+            self.data["colrev_masterdata_provenance"][new_key] = value_provenance
         else:
-            value_provenance = self.data["colrev_data_provenance"][field]
-            self.data["colrev_data_provenance"][new_field] = value_provenance
+            value_provenance = self.data["colrev_data_provenance"][key]
+            self.data["colrev_data_provenance"][new_key] = value_provenance
 
-        self.remove_field(field=field)
+        self.remove_field(key=key)
 
         return
 
-    def remove_field(self, *, field: str) -> None:
-        if field in self.data:
-            del self.data[field]
-            if field in self.identifying_fields:
-                if field in self.data["colrev_masterdata_provenance"]:
-                    del self.data["colrev_masterdata_provenance"][field]
+    def change_ENTRYTYPE(self, *, ENTRYTYPE, NEW_ENTRYTYPE):
+
+        # TODO : reapply field requirements
+
+        return
+
+    def remove_field(self, *, key: str) -> None:
+        if key in self.data:
+            del self.data[key]
+            if key in self.identifying_field_keys:
+                if key in self.data["colrev_masterdata_provenance"]:
+                    del self.data["colrev_masterdata_provenance"][key]
             else:
-                if field in self.data["colrev_data_provenance"]:
-                    del self.data["colrev_data_provenance"][field]
+                if key in self.data["colrev_data_provenance"]:
+                    del self.data["colrev_data_provenance"][key]
 
         return
 
@@ -303,7 +307,9 @@ class Record:
         if self.masterdata_is_curated():
             return True
         if not any(
-            v == "UNKNOWN" for k, v in self.data.items() if k in self.identifying_fields
+            v == "UNKNOWN"
+            for k, v in self.data.items()
+            if k in self.identifying_field_keys
         ):
             return True
         return False
@@ -311,34 +317,36 @@ class Record:
     def set_masterdata_complete(self) -> None:
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
 
-        for identifying_field in self.identifying_fields:
-            if "UNKNOWN" == self.data.get(identifying_field, "NA"):
-                del self.data[identifying_field]
-            if identifying_field in md_p_dict:
-                note = md_p_dict[identifying_field]["note"]
+        for identifying_field_key in self.identifying_field_keys:
+            if "UNKNOWN" == self.data.get(identifying_field_key, "NA"):
+                del self.data[identifying_field_key]
+            if identifying_field_key in md_p_dict:
+                note = md_p_dict[identifying_field_key]["note"]
                 if "missing" in note:
-                    md_p_dict[identifying_field]["note"] = note.replace("missing", "")
+                    md_p_dict[identifying_field_key]["note"] = note.replace(
+                        "missing", ""
+                    )
         return
 
     def set_masterdata_consistent(self) -> None:
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
-        for identifying_field in self.identifying_fields:
-            if identifying_field in md_p_dict:
-                note = md_p_dict[identifying_field]["note"]
+        for identifying_field_key in self.identifying_field_keys:
+            if identifying_field_key in md_p_dict:
+                note = md_p_dict[identifying_field_key]["note"]
                 if "inconsistent with ENTRYTYPE" in note:
-                    md_p_dict[identifying_field]["note"] = note.replace(
+                    md_p_dict[identifying_field_key]["note"] = note.replace(
                         "inconsistent with ENTRYTYPE", ""
                     )
         return
 
     def set_fields_complete(self) -> None:
-        for identifying_field in self.identifying_fields:
-            if identifying_field in self.data["colrev_masterdata_provenance"]:
-                note = self.data["colrev_masterdata_provenance"][identifying_field][
+        for identifying_field_key in self.identifying_field_keys:
+            if identifying_field_key in self.data["colrev_masterdata_provenance"]:
+                note = self.data["colrev_masterdata_provenance"][identifying_field_key][
                     "note"
                 ]
                 if "incomplete" in self.data["colrev_masterdata_provenance"]:
-                    self.data["colrev_masterdata_provenance"][identifying_field][
+                    self.data["colrev_masterdata_provenance"][identifying_field_key][
                         "note"
                     ] = note.replace("incomplete", "")
         return
@@ -351,10 +359,10 @@ class Record:
         return
 
     def missing_fields(self) -> list:
-        missing_fields = []
+        missing_field_keys = []
         if self.data["ENTRYTYPE"] in Record.record_field_requirements.keys():
             reqs = Record.record_field_requirements[self.data["ENTRYTYPE"]]
-            missing_fields = [
+            missing_field_keys = [
                 x
                 for x in reqs
                 if x not in self.data.keys()
@@ -362,20 +370,20 @@ class Record:
                 or "UNKNOWN" == self.data[x]
             ]
         else:
-            missing_fields = ["no field requirements defined"]
-        return missing_fields
+            missing_field_keys = ["no field requirements defined"]
+        return missing_field_keys
 
     def get_inconsistencies(self) -> list:
-        inconsistent_fields = []
+        inconsistent_field_keys = []
         if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
             incons_fields = Record.record_field_inconsistencies[self.data["ENTRYTYPE"]]
-            inconsistent_fields = [x for x in incons_fields if x in self.data]
+            inconsistent_field_keys = [x for x in incons_fields if x in self.data]
         # Note: a thesis should be single-authored
         if "thesis" in self.data["ENTRYTYPE"] and " and " in self.data.get(
             "author", ""
         ):
-            inconsistent_fields.append("author")
-        return inconsistent_fields
+            inconsistent_field_keys.append("author")
+        return inconsistent_field_keys
 
     def has_inconsistent_fields(self) -> bool:
         found_inconsistencies = False
@@ -413,7 +421,7 @@ class Record:
             self.data["colrev_origin"] = ";".join(list(set(origins)))
 
         # if not self.masterdata_is_curated():
-        #     for k in self.identifying_fields:
+        #     for k in self.identifying_field_keys:
         #         if k in MERGING_RECORD.data and k not in self.data:
         #             self.data[k] = MERGING_RECORD.data[k]
 
@@ -428,7 +436,7 @@ class Record:
             ]
 
             for k in list(self.data.keys()):
-                if k in Record.identifying_fields and k != "pages":
+                if k in Record.identifying_field_keys and k != "pages":
                     del self.data[k]
 
         # TODO : TBD: merge colrev_ids?
@@ -452,11 +460,11 @@ class Record:
                 continue
 
             source = MERGING_RECORD.get_provenance_field_source(
-                field=key, default=default_source
+                key=key, default=default_source
             )
 
             # Part 1: identifying fields
-            if key in Record.identifying_fields:
+            if key in Record.identifying_field_keys:
 
                 # Always update from curated MERGING_RECORDs
                 if MERGING_RECORD.masterdata_is_curated():
@@ -481,7 +489,7 @@ class Record:
                 if key in self.data:
                     pass
                 else:
-                    self.update_field(field=key, value=str(val), source=source)
+                    self.update_field(key=key, value=str(val), source=source)
 
         return
 
@@ -607,9 +615,9 @@ class Record:
             if "author" in self.data:
                 best_author = select_best_author(self, MERGING_RECORD)
                 if self.data["author"] != best_author:
-                    self.update_field(field="author", value=best_author, source=source)
+                    self.update_field(key="author", value=best_author, source=source)
             else:
-                self.update_field(field="author", value=str(val), source=source)
+                self.update_field(key="author", value=str(val), source=source)
 
         elif "pages" == key:
             if "pages" in self.data:
@@ -617,20 +625,20 @@ class Record:
                     default=self.data["pages"], candidate=MERGING_RECORD.data["pages"]
                 )
                 if self.data["pages"] != best_pages:
-                    self.update_field(field="pages", value=best_pages, source=source)
+                    self.update_field(key="pages", value=best_pages, source=source)
 
             else:
-                self.update_field(field="pages", value=str(val), source=source)
+                self.update_field(key="pages", value=str(val), source=source)
 
         elif "title" == key:
             if "title" in self.data:
                 best_title = select_best_title(
                     default=self.data["title"], candidate=MERGING_RECORD.data["title"]
                 )
-                self.update_field(field="title", value=best_title, source=source)
+                self.update_field(key="title", value=best_title, source=source)
 
             else:
-                self.update_field(field="title", value=str(val), source=source)
+                self.update_field(key="title", value=str(val), source=source)
 
         elif "journal" == key:
             if "journal" in self.data:
@@ -638,9 +646,9 @@ class Record:
                     default=self.data["journal"],
                     candidate=MERGING_RECORD.data["journal"],
                 )
-                self.update_field(field="journal", value=best_journal, source=source)
+                self.update_field(key="journal", value=best_journal, source=source)
             else:
-                self.update_field(field="journal", value=str(val), source=source)
+                self.update_field(key="journal", value=str(val), source=source)
 
         elif "booktitle" == key:
             if "booktitle" in self.data:
@@ -649,12 +657,10 @@ class Record:
                     candidate=MERGING_RECORD.data["booktitle"],
                 )
                 # TBD: custom select_best_booktitle?
-                self.update_field(
-                    field="booktitle", value=best_booktitle, source=source
-                )
+                self.update_field(key="booktitle", value=best_booktitle, source=source)
 
             else:
-                self.update_field(field="booktitle", value=str(val), source=source)
+                self.update_field(key="booktitle", value=str(val), source=source)
 
         elif "file" == key:
             if "file" in self.data:
@@ -664,7 +670,7 @@ class Record:
             else:
                 self.data["file"] = MERGING_RECORD.data["file"]
         else:
-            self.update_field(field=key, value=str(val), source=source)
+            self.update_field(key=key, value=str(val), source=source)
         return
 
     @classmethod
@@ -771,7 +777,7 @@ class Record:
                 #         else:
                 #            pages_similarity = 0
 
-                # Put more weithe on other fields if the title is very common
+                # Put more weight on other fields if the title is very common
                 # ie., non-distinctive
                 # The list is based on a large export of distinct papers, tabulated
                 # according to titles and sorted by frequency
@@ -844,83 +850,81 @@ class Record:
             pass
         return {"score": similarity_score, "details": details}
 
-    def get_provenance_field_source(self, *, field, default="ORIGINAL") -> str:
+    def get_provenance_field_source(self, *, key, default="ORIGINAL") -> str:
 
-        if field in self.identifying_fields:
+        if key in self.identifying_field_keys:
             if "colrev_masterdata_provenance" in self.data:
-                if field in self.data["colrev_masterdata_provenance"]:
-                    if "source" in self.data["colrev_masterdata_provenance"][field]:
-                        return self.data["colrev_masterdata_provenance"][field][
-                            "source"
-                        ]
+                if key in self.data["colrev_masterdata_provenance"]:
+                    if "source" in self.data["colrev_masterdata_provenance"][key]:
+                        return self.data["colrev_masterdata_provenance"][key]["source"]
         else:
             if "colrev_data_provenance" in self.data:
-                if field in self.data["colrev_data_provenance"]:
-                    if "source" in self.data["colrev_data_provenance"][field]:
-                        return self.data["colrev_data_provenance"][field]["source"]
+                if key in self.data["colrev_data_provenance"]:
+                    if "source" in self.data["colrev_data_provenance"][key]:
+                        return self.data["colrev_data_provenance"][key]["source"]
 
         return default
 
-    def add_masterdata_provenance_hint(self, *, field, hint):
+    def add_masterdata_provenance_hint(self, *, key, hint):
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
-        if field in self.data["colrev_masterdata_provenance"]:
-            if hint not in self.data["colrev_masterdata_provenance"][field]["note"]:
-                self.data["colrev_masterdata_provenance"][field]["note"] += f",{hint}"
+        if key in self.data["colrev_masterdata_provenance"]:
+            if hint not in self.data["colrev_masterdata_provenance"][key]["note"]:
+                self.data["colrev_masterdata_provenance"][key]["note"] += f",{hint}"
         else:
-            self.data["colrev_masterdata_provenance"][field] = {
+            self.data["colrev_masterdata_provenance"][key] = {
                 "source": "ORIGINAL",
                 "note": hint,
             }
         return
 
-    def add_data_provenance_hint(self, *, field, hint):
+    def add_data_provenance_hint(self, *, key, hint):
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
-        if field in self.data["colrev_data_provenance"]:
-            if hint not in self.data["colrev_data_provenance"][field]["note"]:
-                self.data["colrev_data_provenance"][field]["note"] += f",{hint}"
+        if key in self.data["colrev_data_provenance"]:
+            if hint not in self.data["colrev_data_provenance"][key]["note"]:
+                self.data["colrev_data_provenance"][key]["note"] += f",{hint}"
         else:
             print(hint)
-            self.data["colrev_data_provenance"][field] = {
+            self.data["colrev_data_provenance"][key] = {
                 "source": "ORIGINAL",
                 "note": hint,
             }
         return
 
-    def add_masterdata_provenance(self, *, field, source, hint: str = ""):
+    def add_masterdata_provenance(self, *, key, source, hint: str = ""):
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
 
-        if field in md_p_dict:
+        if key in md_p_dict:
             if "" != hint:
-                md_p_dict[field]["note"] += f",{hint}"
+                md_p_dict[key]["note"] += f",{hint}"
             else:
-                md_p_dict[field]["note"] = ""
-            md_p_dict[field]["source"] = source
+                md_p_dict[key]["note"] = ""
+            md_p_dict[key]["source"] = source
         else:
-            md_p_dict[field] = {"source": source, "note": f"{hint}"}
+            md_p_dict[key] = {"source": source, "note": f"{hint}"}
         return
 
     def add_provenance_all(self, *, source):
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
         d_p_dict = self.data.get("colrev_data_provenance", {})
-        for field in self.data.keys():
-            if field in self.identifying_fields:
-                md_p_dict[field] = {"source": source, "note": ""}
+        for key in self.data.keys():
+            if key in self.identifying_field_keys:
+                md_p_dict[key] = {"source": source, "note": ""}
             else:
-                d_p_dict[field] = {"source": source, "note": ""}
+                d_p_dict[key] = {"source": source, "note": ""}
         return
 
-    def add_data_provenance(self, *, field, source, hint: str = ""):
+    def add_data_provenance(self, *, key, source, hint: str = ""):
         md_p_dict = self.data.get("colrev_data_provenance", {})
-        if field in md_p_dict:
+        if key in md_p_dict:
             if "" != hint:
-                md_p_dict[field]["note"] += f",{hint}"
+                md_p_dict[key]["note"] += f",{hint}"
             else:
-                md_p_dict[field]["note"] = ""
-            md_p_dict[field]["source"] = source
+                md_p_dict[key]["note"] = ""
+            md_p_dict[key]["source"] = source
         else:
-            md_p_dict[field] = {"source": source, "note": f"{hint}"}
+            md_p_dict[key] = {"source": source, "note": f"{hint}"}
         return
 
     def complete_provenance(self, *, source_info) -> bool:
@@ -940,22 +944,20 @@ class Record:
             ]:
                 continue
 
-            if key in self.identifying_fields:
+            if key in self.identifying_field_keys:
                 if not self.masterdata_is_curated:
-                    self.add_masterdata_provenance(
-                        field=key, source=source_info, hint=""
-                    )
+                    self.add_masterdata_provenance(key=key, source=source_info, hint="")
             else:
-                self.add_data_provenance(field=key, source=source_info, hint="")
+                self.add_data_provenance(key=key, source=source_info, hint="")
 
         return True
 
     def get_incomplete_fields(self) -> list:
-        incomplete_fields = []
+        incomplete_field_keys = []
         for key in self.data.keys():
             if key in ["title", "journal", "booktitle", "author"]:
                 if self.data[key].endswith("...") or self.data[key].endswith("…"):
-                    incomplete_fields.append(key)
+                    incomplete_field_keys.append(key)
 
             if "author" == key:
                 if (
@@ -965,20 +967,20 @@ class Record:
                     or ", and " in self.data[key]
                     or self.data[key].rstrip().endswith(",")
                 ):
-                    incomplete_fields.append(key)
+                    incomplete_field_keys.append(key)
 
-        return incomplete_fields
+        return incomplete_field_keys
 
     def get_quality_defects(self) -> list:
-        defect_fields = []
+        defect_field_keys = []
         for key in self.data.keys():
             if "author" == key:
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
-                    defect_fields.append(key)
+                    defect_field_keys.append(key)
                 if len(self.data[key]) < 5:
-                    defect_fields.append(key)
+                    defect_field_keys.append(key)
 
             if "title" == key:
                 # Note : titles that have no space and special characters
@@ -987,17 +989,17 @@ class Record:
                     any(x in self.data[key] for x in ["_", "."])
                     or any(char.isdigit() for char in self.data[key])
                 ):
-                    defect_fields.append(key)
+                    defect_field_keys.append(key)
 
-        return defect_fields
+        return defect_field_keys
 
     def remove_quality_defect_notes(self) -> None:
 
-        for field in self.data.keys():
-            if field in self.data["colrev_masterdata_provenance"]:
-                note = self.data["colrev_masterdata_provenance"][field]["note"]
+        for key in self.data.keys():
+            if key in self.data["colrev_masterdata_provenance"]:
+                note = self.data["colrev_masterdata_provenance"][key]["note"]
                 if "quality_defect" in note:
-                    self.data["colrev_masterdata_provenance"][field][
+                    self.data["colrev_masterdata_provenance"][key][
                         "note"
                     ] = note.replace("quality_defect", "")
         return
@@ -1137,7 +1139,7 @@ class Record:
             record = self.data
         else:
             # TODO : need a better design for selecting required fields
-            required_fields = [
+            required_fields_keys = [
                 k
                 for k in self.data.keys()
                 if k
@@ -1154,9 +1156,11 @@ class Record:
                 ]
             ]
 
-            missing_fields = [f for f in required_fields if f not in alsoKnownAsRecord]
-            if len(missing_fields) > 0:
-                raise NotEnoughDataToIdentifyException(",".join(missing_fields))
+            missing_field_keys = [
+                f for f in required_fields_keys if f not in alsoKnownAsRecord
+            ]
+            if len(missing_field_keys) > 0:
+                raise NotEnoughDataToIdentifyException(",".join(missing_field_keys))
             record = alsoKnownAsRecord
 
         try:
@@ -1214,7 +1218,7 @@ class Record:
             if "UNKNOWN" == v:
                 to_drop.append(k)
         for k in to_drop:
-            self.remove_field(field=k)
+            self.remove_field(key=k)
 
         return
 

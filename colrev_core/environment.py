@@ -549,8 +549,8 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
-                source_info = Record(data=record).get_provenance_field_source(field=k)
-                SAVED_RECORD.update_field(field=k, value=v, source=source_info)
+                source_info = Record(data=record).get_provenance_field_source(key=k)
+                SAVED_RECORD.update_field(key=k, value=v, source=source_info)
 
             if "file" in record and "fulltext" not in SAVED_RECORD.data:
                 try:

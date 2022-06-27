@@ -18,7 +18,7 @@ class PrescreenRecord(Record):
     def __str__(self) -> str:
 
         self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
-            k for k in self.identifying_fields if k in self.data
+            k for k in self.identifying_field_keys if k in self.data
         ]
         complementary_keys_order = [
             k for k, v in self.data.items() if k not in self.identifying_keys_order

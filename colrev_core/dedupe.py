@@ -212,39 +212,39 @@ class Dedupe(Process):
             # It is ignored in the field-definitions by the deduper!
             # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
             clean_row = [
-                (k, self.__preProcess(k=k, column=v)) for (k, v) in row.items()
+                (k, self.__preProcess(key=k, value=v)) for (k, v) in row.items()
             ]
             data_d[row["ID"]] = dict(clean_row)
 
         return data_d
 
-    def __preProcess(self, *, k, column):
+    def __preProcess(self, *, key, value):
         """
         Do a little bit of data cleaning with the help of Unidecode and Regex.
         Things like casing, extra spaces, quotes and new lines can be ignored.
         """
-        if k in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
-            return column
+        if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
+            return value
 
-        column = str(column)
+        value = str(value)
         if any(
-            column == x
+            value == x
             for x in ["no issue", "no volume", "no pages", "no author", "nan"]
         ):
-            column = None
-            return column
+            value = None
+            return value
 
         # Note unidecode may be an alternative to rmdiacritics/remove_accents.
         # It would be important to operate on a per-character basis
         # instead of throwing an exception when processing whole strings
-        # column = unidecode(column)
-        column = re.sub("  +", " ", column)
-        column = re.sub("\n", " ", column)
-        column = column.strip().strip('"').strip("'").lower().strip()
+        # value = unidecode(value)
+        value = re.sub("  +", " ", value)
+        value = re.sub("\n", " ", value)
+        value = value.strip().strip('"').strip("'").lower().strip()
         # If data is missing, indicate that by setting the value to `None`
-        if not column:
-            column = None
-        return column
+        if not value:
+            value = None
+        return value
 
     def __readData(self):
         from colrev_core.record import Record, NotEnoughDataToIdentifyException

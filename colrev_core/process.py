@@ -8,8 +8,6 @@ from transitions import Machine
 
 from colrev_core.record import RecordState
 
-# from colrev_core.review_manager import ReviewManager
-
 
 class ProcessType(Enum):
     load = auto()

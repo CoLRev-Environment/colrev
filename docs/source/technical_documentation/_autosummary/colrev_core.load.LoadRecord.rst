@@ -30,7 +30,6 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.get_colrev_id
       ~LoadRecord.get_container_title
       ~LoadRecord.get_data
-      ~LoadRecord.get_field
       ~LoadRecord.get_incomplete_fields
       ~LoadRecord.get_inconsistencies
       ~LoadRecord.get_origins
@@ -40,6 +39,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.get_similarity
       ~LoadRecord.get_similarity_detailed
       ~LoadRecord.get_source_repo
+      ~LoadRecord.get_value
       ~LoadRecord.has_incomplete_fields
       ~LoadRecord.has_inconsistent_fields
       ~LoadRecord.import_provenance
@@ -68,7 +68,7 @@ colrev\_core.load.LoadRecord
 
    .. autosummary::
 
-      ~LoadRecord.identifying_fields
+      ~LoadRecord.identifying_field_keys
       ~LoadRecord.pp
       ~LoadRecord.preferred_sources
       ~LoadRecord.provenance_keys

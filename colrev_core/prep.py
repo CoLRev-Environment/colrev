@@ -633,7 +633,7 @@ class Preparation(Process):
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    RECORD.remove_field(field="url")
+                    RECORD.remove_field(key="url")
         except requests.exceptions.RequestException:
             pass
         try:
@@ -645,7 +645,7 @@ class Preparation(Process):
                     timeout=self.TIMEOUT,
                 )
                 if r.status_code >= 500:
-                    RECORD.remove_field(field="fulltext")
+                    RECORD.remove_field(key="fulltext")
         except requests.exceptions.RequestException:
             pass
 
@@ -657,7 +657,7 @@ class Preparation(Process):
             # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
             d = re.match(r"^10.\d{4,9}\/", RECORD.data["doi"])
             if not d:
-                RECORD.remove_field(field="doi")
+                RECORD.remove_field(key="doi")
         if "isbn" in RECORD.data:
             isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
             url = f"https://openlibrary.org/isbn/{isbn}.json"
@@ -665,7 +665,7 @@ class Preparation(Process):
                 "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
             )
             if '"error": "notfound"' in ret.text:
-                RECORD.remove_field(field="isbn")
+                RECORD.remove_field(key="isbn")
 
         return RECORD
 
@@ -696,7 +696,7 @@ class Preparation(Process):
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_hint(
-                            field=k, hint=f"disagreement with doi metadata ({v})"
+                            key=k, hint=f"disagreement with doi metadata ({v})"
                         )
 
         if "url" in RECORD.data:
@@ -720,7 +720,7 @@ class Preparation(Process):
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_hint(
-                            field=k,
+                            key=k,
                             hint=f"disagreement with website metadata ({v})",
                         )
 
@@ -820,7 +820,7 @@ class Preparation(Process):
 
         if "pages" in RECORD.data:
             if "N.PAG" == RECORD.data.get("pages", ""):
-                RECORD.remove_field(field="pages")
+                RECORD.remove_field(key="pages")
             else:
                 RECORD.data.update(
                     pages=self.__unify_pages_field(input_string=RECORD.data["pages"])
@@ -848,13 +848,13 @@ class Preparation(Process):
 
         if "number" not in RECORD.data and "issue" in RECORD.data:
             RECORD.data.update(number=RECORD.data["issue"])
-            RECORD.remove_field(field="issue")
+            RECORD.remove_field(key="issue")
         if "volume" in RECORD.data:
             RECORD.data.update(volume=RECORD.data["volume"].replace("Volume ", ""))
 
         if "url" in RECORD.data and "fulltext" in RECORD.data:
             if RECORD.data["url"] == RECORD.data["fulltext"]:
-                RECORD.remove_field(field="fulltext")
+                RECORD.remove_field(key="fulltext")
 
         return RECORD
 
@@ -924,7 +924,7 @@ class Preparation(Process):
             red_record_copy = deepcopy(RECORD.get_data())
             for key in ["volume", "number", "number", "pages"]:
                 if key in red_record_copy:
-                    RECORD.remove_field(field=key)
+                    RECORD.remove_field(key=key)
             RED_REC_COPY = PrepRecord(data=red_record_copy)
 
             similarity = PrepRecord.get_retrieval_similarity(
@@ -1124,7 +1124,7 @@ class Preparation(Process):
                 ret.raise_for_status()
                 self.REVIEW_MANAGER.logger.debug(url)
                 if '"error": "notfound"' in ret.text:
-                    RECORD.remove_field(field="isbn")
+                    RECORD.remove_field(key="isbn")
 
                 item = json.loads(ret.text)
 
@@ -1174,7 +1174,7 @@ class Preparation(Process):
             RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
 
             # if "title" in RECORD.data and "booktitle" in RECORD.data:
-            #     RECORD.remove_field(field="booktitle")
+            #     RECORD.remove_field(key="booktitle")
 
         except requests.exceptions.RequestException:
             pass
@@ -1234,7 +1234,7 @@ class Preparation(Process):
             self.REVIEW_MANAGER.logger.debug(years.count(most_common))
             if years.count(most_common) > 3:
                 RECORD.update_field(
-                    field="year", value=most_common, source="CROSSREF(average)"
+                    key="year", value=most_common, source="CROSSREF(average)"
                 )
         except requests.exceptions.RequestException:
             pass
@@ -1344,26 +1344,26 @@ class Preparation(Process):
                 RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
         if RECORD.data.get("volume", "") == "ahead-of-print":
-            RECORD.remove_field(field="volume")
+            RECORD.remove_field(key="volume")
         if RECORD.data.get("number", "") == "ahead-of-print":
-            RECORD.remove_field(field="number")
+            RECORD.remove_field(key="number")
 
         return RECORD
 
     def drop_fields(self, RECORD: PrepRecord) -> PrepRecord:
         for key in list(RECORD.data.keys()):
             if key not in self.fields_to_keep:
-                RECORD.remove_field(field=key)
+                RECORD.remove_field(key=key)
                 self.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
 
             # for key in list(RECORD.data.keys()):
             #     if key in self.fields_to_keep:
             #         continue
             elif RECORD.data[key] in ["", "NA"]:
-                RECORD.remove_field(field=key)
+                RECORD.remove_field(key=key)
 
         if RECORD.data.get("publisher", "") in ["researchgate.net"]:
-            RECORD.remove_field(field="publisher")
+            RECORD.remove_field(key="publisher")
 
         if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
             # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
@@ -1375,7 +1375,7 @@ class Preparation(Process):
             )
             for field_to_remove in fields_to_remove:
                 if field_to_remove in RECORD.data:
-                    RECORD.remove_field(field=field_to_remove)
+                    RECORD.remove_field(key=field_to_remove)
 
         return RECORD
 
@@ -1389,7 +1389,7 @@ class Preparation(Process):
                     / 100
                     > 0.9
                 ):
-                    RECORD.remove_field(field="booktitle")
+                    RECORD.remove_field(key="booktitle")
         if "inproceedings" == RECORD.data["ENTRYTYPE"]:
             if "journal" in RECORD.data and "booktitle" in RECORD.data:
                 if (
@@ -1399,7 +1399,7 @@ class Preparation(Process):
                     / 100
                     > 0.9
                 ):
-                    RECORD.remove_field(field="journal")
+                    RECORD.remove_field(key="journal")
         return RECORD
 
     def correct_recordtype(self, RECORD: PrepRecord) -> PrepRecord:
@@ -1453,18 +1453,18 @@ class Preparation(Process):
             if "booktitle" in RECORD.data:
                 if "journal" not in RECORD.data:
                     RECORD.data.update(journal=RECORD.data["booktitle"])
-                    RECORD.remove_field(field="booktitle")
+                    RECORD.remove_field(key="booktitle")
             if "series" in RECORD.data:
                 if "journal" not in RECORD.data:
                     RECORD.data.update(journal=RECORD.data["series"])
-                    RECORD.remove_field(field="series")
+                    RECORD.remove_field(key="series")
 
         if "article" == RECORD.data["ENTRYTYPE"]:
             if "journal" not in RECORD.data:
                 if "series" in RECORD.data:
                     journal_string = RECORD.data["series"]
                     RECORD.data.update(journal=journal_string)
-                    RECORD.remove_field(field="series")
+                    RECORD.remove_field(key="series")
 
         return RECORD
 
@@ -1552,7 +1552,7 @@ class Preparation(Process):
                     ret = self.session.request(
                         "GET", url, headers=self.requests_headers, timeout=self.TIMEOUT
                     )
-            RECORD.update_field(field="url", value=str(url), source=doi_url)
+            RECORD.update_field(key="url", value=str(url), source=doi_url)
         except requests.exceptions.RequestException:
             pass
         return RECORD
@@ -1967,7 +1967,7 @@ class Preparation(Process):
             if value in ["", "None"] or value is None:
                 keys_to_drop.append(key)
         for key in keys_to_drop:
-            RECORD_IN.remove_field(field=key)
+            RECORD_IN.remove_field(key=key)
 
         REC = PrepRecord(data=retrieved_record)
         REC.add_provenance_all(source=record_retrieval_url)
@@ -2187,9 +2187,7 @@ class Preparation(Process):
         missing_fields = RECORD.missing_fields()
         if missing_fields:
             for missing_field in missing_fields:
-                RECORD.add_masterdata_provenance_hint(
-                    field=missing_field, hint="missing"
-                )
+                RECORD.add_masterdata_provenance_hint(key=missing_field, hint="missing")
         else:
             RECORD.set_masterdata_complete()
 
@@ -2197,7 +2195,7 @@ class Preparation(Process):
         if inconsistencies:
             for inconsistency in inconsistencies:
                 RECORD.add_masterdata_provenance_hint(
-                    field=inconsistency,
+                    key=inconsistency,
                     hint="inconsistent with ENTRYTYPE",
                 )
         else:
@@ -2207,7 +2205,7 @@ class Preparation(Process):
         if incomplete_fields:
             for incomplete_field in incomplete_fields:
                 RECORD.add_masterdata_provenance_hint(
-                    field=incomplete_field, hint="incomplete"
+                    key=incomplete_field, hint="incomplete"
                 )
         else:
             RECORD.set_fields_complete()
@@ -2216,7 +2214,7 @@ class Preparation(Process):
         if defect_fields:
             for defect_field in defect_fields:
                 RECORD.add_masterdata_provenance_hint(
-                    field=defect_field, hint="quality_defect"
+                    key=defect_field, hint="quality_defect"
                 )
         else:
             RECORD.remove_quality_defect_notes()

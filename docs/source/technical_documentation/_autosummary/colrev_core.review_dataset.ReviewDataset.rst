@@ -80,5 +80,5 @@ colrev\_core.review\_dataset.ReviewDataset
 
    .. autosummary::
 
-      ~ReviewDataset.dict_fields
-      ~ReviewDataset.list_fields
+      ~ReviewDataset.dict_fields_keys
+      ~ReviewDataset.list_fields_keys
