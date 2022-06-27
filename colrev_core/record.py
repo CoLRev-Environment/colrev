@@ -6,6 +6,7 @@ import unicodedata
 from copy import deepcopy
 from enum import auto
 from enum import Enum
+from pathlib import Path
 
 import pandas as pd
 from nameparser import HumanName
@@ -1221,6 +1222,124 @@ class Record:
             self.remove_field(key=k)
 
         return
+
+    def extract_text_by_page(self, *, pages: list = None, project_path) -> str:
+        from pdfminer.pdfpage import PDFPage
+        from pdfminer.pdfinterp import PDFResourceManager
+        from pdfminer.converter import TextConverter
+        import io
+        from pdfminer.pdfinterp import PDFPageInterpreter
+
+        text_list: list = []
+        pdf_path = project_path / Path(self.data["file"])
+        with open(pdf_path, "rb") as fh:
+            try:
+                for page in PDFPage.get_pages(
+                    fh,
+                    pagenos=pages,  # note: maybe skip potential cover pages?
+                    caching=True,
+                    check_extractable=True,
+                ):
+                    resource_manager = PDFResourceManager()
+                    fake_file_handle = io.StringIO()
+                    converter = TextConverter(resource_manager, fake_file_handle)
+                    page_interpreter = PDFPageInterpreter(resource_manager, converter)
+                    page_interpreter.process_page(page)
+
+                    text = fake_file_handle.getvalue()
+                    text_list += text
+
+                    # close open handles
+                    converter.close()
+                    fake_file_handle.close()
+            except TypeError:
+                pass
+        return "".join(text_list)
+
+    def get_pages_in_pdf(self, *, project_path: Path):
+        from pdfminer.pdfparser import PDFParser
+        from pdfminer.pdfinterp import resolve1
+        from pdfminer.pdfdocument import PDFDocument
+
+        pdf_path = project_path / Path(self.data["file"])
+        with open(pdf_path, "rb") as file:
+            parser = PDFParser(file)
+            document = PDFDocument(parser)
+            pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+        self.data["pages_in_file"] = pages_in_file
+        return
+
+    def get_text_from_pdf(self, *, project_path: Path):
+        from pdfminer.pdfparser import PDFSyntaxError
+        from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
+
+        self.data["text_from_pdf"] = ""
+        try:
+            self.get_pages_in_pdf(project_path=project_path)
+            text = self.extract_text_by_page(pages=[0, 1, 2], project_path=project_path)
+            self.data["text_from_pdf"] = text
+
+        except PDFSyntaxError:
+            # msg = (
+            #     f'{record["file"]}'.ljust(PAD, " ")
+            #     + "PDF reader error: check whether is a pdf"
+            # )
+            # self.REVIEW_MANAGER.report_logger.error(msg)
+            # self.REVIEW_MANAGER.logger.error(msg)
+            self.add_data_provenance_hint(key="file", hint="pdf_reader_error")
+            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            pass
+        except PDFTextExtractionNotAllowed:
+            # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
+            # self.REVIEW_MANAGER.report_logger.error(msg)
+            # self.REVIEW_MANAGER.logger.error(msg)
+            self.add_data_provenance_hint(key="file", hint="pdf_protected")
+            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            pass
+        except PDFSyntaxError:
+            # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDFSyntaxError"
+            # self.REVIEW_MANAGER.report_logger.error(msg)
+            # self.REVIEW_MANAGER.logger.error(msg)
+            self.add_data_provenance_hint(key="file", hint="pdf_syntax_error")
+            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            pass
+        return
+
+    def extract_pages(
+        self, *, pages: list, type: str, project_path: Path, save_to_path: Path
+    ) -> None:
+        from PyPDF2 import PdfFileReader
+        from PyPDF2 import PdfFileWriter
+
+        pdf_path = project_path / Path(self.data["file"])
+        pdfReader = PdfFileReader(pdf_path, strict=False)
+        writer = PdfFileWriter()
+        for i in range(0, pdfReader.getNumPages()):
+            if i in pages:
+                continue
+            writer.addPage(pdfReader.getPage(i))
+        with open(pdf_path, "wb") as outfile:
+            writer.write(outfile)
+
+        if save_to_path:
+            writer_cp = PdfFileWriter()
+            writer_cp.addPage(pdfReader.getPage(0))
+            filepath = Path(pdf_path)
+            with open(save_to_path / filepath.name, "wb") as outfile:
+                writer_cp.write(outfile)
+        return
+
+    def get_colrev_pdf_id(self, *, path: Path) -> str:
+        from pdf2image import convert_from_path
+        import imagehash
+
+        cpid1 = "cpid1:" + str(
+            imagehash.average_hash(
+                convert_from_path(path, first_page=1, last_page=1)[0],
+                hash_size=32,
+            )
+        )
+        return cpid1
 
 
 class RecordState(Enum):

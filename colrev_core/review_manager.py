@@ -439,6 +439,18 @@ class ReviewManager:
                 if "exclude_predatory_journals" in e_r["scripts"]:
                     e_r["scripts"].remove("exclude_predatory_journals")
             settings["prescreen"]["scope"] = [{"LanguageScope": ["en"]}]
+            settings["pdf_get"]["scripts"] = [
+                {"endpoint": "unpaywall"},
+                {"endpoint": "local_index"},
+            ]
+
+            settings["pdf_prep"]["scripts"] = [
+                {"endpoint": "pdf_check_ocr"},
+                {"endpoint": "remove_coverpage"},
+                {"endpoint": "remove_last_page"},
+                {"endpoint": "validate_pdf_metadata"},
+                {"endpoint": "validate_completeness"},
+            ]
 
             for x in settings["data"]["data_format"]:
                 if "MANUSCRIPT" == x["endpoint"]:

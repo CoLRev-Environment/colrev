@@ -222,9 +222,14 @@ class PrescreenConfiguration:
 @dataclass
 class PDFGetConfiguration:
     pdf_path_type: str  # TODO : "symlink" or "copy"
+    scripts: list
 
     def __str__(self):
-        return f" - pdf_path_type: {self.pdf_path_type}"
+        return (
+            f" - pdf_path_type: {self.pdf_path_type}"
+            + " - "
+            + ",".join([s for s in self.scripts])
+        )
 
 
 # PDF prep
@@ -232,10 +237,10 @@ class PDFGetConfiguration:
 
 @dataclass
 class PDFPrepConfiguration:
-    pass
+    scripts: list
 
     def __str__(self):
-        return " - TODO"
+        return " - " + ",".join([s for s in self.scripts])
 
 
 # Screen

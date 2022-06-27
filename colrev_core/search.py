@@ -980,9 +980,9 @@ class PDFSearchEndpoint:
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = self.PDF_PREPARATION.get_text_from_pdf(
-                        record=record, PAD=40
-                    )
+                    RECORD = Record(data=record)
+                    RECORD.get_text_from_pdf(project_path=REVIEW_MANAGER.path)
+                    record = RECORD.get_data()
                     if "text_from_pdf" in record:
                         text: str = record["text_from_pdf"]
                         if "bookreview" in text.replace(" ", "").lower():

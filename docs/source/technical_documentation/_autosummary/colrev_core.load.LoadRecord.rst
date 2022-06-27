@@ -25,20 +25,25 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.change_ENTRYTYPE
       ~LoadRecord.complete_provenance
       ~LoadRecord.create_colrev_id
+      ~LoadRecord.extract_pages
+      ~LoadRecord.extract_text_by_page
       ~LoadRecord.format_bib_style
       ~LoadRecord.fuse_best_field
       ~LoadRecord.get_colrev_id
+      ~LoadRecord.get_colrev_pdf_id
       ~LoadRecord.get_container_title
       ~LoadRecord.get_data
       ~LoadRecord.get_incomplete_fields
       ~LoadRecord.get_inconsistencies
       ~LoadRecord.get_origins
+      ~LoadRecord.get_pages_in_pdf
       ~LoadRecord.get_provenance_field_source
       ~LoadRecord.get_quality_defects
       ~LoadRecord.get_record_similarity
       ~LoadRecord.get_similarity
       ~LoadRecord.get_similarity_detailed
       ~LoadRecord.get_source_repo
+      ~LoadRecord.get_text_from_pdf
       ~LoadRecord.get_value
       ~LoadRecord.has_incomplete_fields
       ~LoadRecord.has_inconsistent_fields

@@ -1,9 +1,9 @@
-colrev\_core.settings.PDFPrepConfiguration
+colrev\_core.pdf\_prep.PDFCheckOCREndpoint
 ==========================================
 
-.. currentmodule:: colrev_core.settings
+.. currentmodule:: colrev_core.pdf_prep
 
-.. autoclass:: PDFPrepConfiguration
+.. autoclass:: PDFCheckOCREndpoint
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,6 +16,7 @@ colrev\_core.settings.PDFPrepConfiguration
    .. autosummary::
       :nosignatures:
 
+      ~PDFCheckOCREndpoint.prep_pdf
 
 
 
@@ -25,4 +26,4 @@ colrev\_core.settings.PDFPrepConfiguration
 
    .. autosummary::
 
-      ~PDFPrepConfiguration.scripts
+      ~PDFCheckOCREndpoint.language_detector

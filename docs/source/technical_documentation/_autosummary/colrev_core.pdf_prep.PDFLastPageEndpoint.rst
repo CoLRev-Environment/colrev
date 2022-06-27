@@ -1,9 +1,9 @@
-colrev\_core.settings.PDFPrepConfiguration
+colrev\_core.pdf\_prep.PDFLastPageEndpoint
 ==========================================
 
-.. currentmodule:: colrev_core.settings
+.. currentmodule:: colrev_core.pdf_prep
 
-.. autoclass:: PDFPrepConfiguration
+.. autoclass:: PDFLastPageEndpoint
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,13 +16,4 @@ colrev\_core.settings.PDFPrepConfiguration
    .. autosummary::
       :nosignatures:
 
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~PDFPrepConfiguration.scripts
+      ~PDFLastPageEndpoint.prep_pdf
