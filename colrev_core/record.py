@@ -1205,6 +1205,19 @@ class Record:
 
         return srep
 
+    def prescreen_exclude(self, *, reason) -> None:
+        self.data["colrev_status"] = RecordState.rev_prescreen_excluded
+        self.data["prescreen_exclusion"] = reason
+
+        to_drop = []
+        for k, v in self.data.items():
+            if "UNKNOWN" == v:
+                to_drop.append(k)
+        for k in to_drop:
+            self.remove_field(field=k)
+
+        return
+
 
 class RecordState(Enum):
     # without the md_retrieved state, we could not display the load transition

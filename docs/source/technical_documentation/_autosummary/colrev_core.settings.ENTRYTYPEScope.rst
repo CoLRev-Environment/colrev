@@ -1,9 +1,9 @@
-colrev\_core.settings.PrescreenConfiguration
-============================================
+colrev\_core.settings.ENTRYTYPEScope
+====================================
 
 .. currentmodule:: colrev_core.settings
 
-.. autoclass:: PrescreenConfiguration
+.. autoclass:: ENTRYTYPEScope
    :members:
    :show-inheritance:
    :inherited-members:
@@ -25,6 +25,4 @@ colrev\_core.settings.PrescreenConfiguration
 
    .. autosummary::
 
-      ~PrescreenConfiguration.plugin
-      ~PrescreenConfiguration.mode
-      ~PrescreenConfiguration.scope
+      ~ENTRYTYPEScope.ENTRYTYPEScope

@@ -46,6 +46,7 @@ colrev\_core.record.Record
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.missing_fields
+      ~Record.prescreen_exclude
       ~Record.remove_accents
       ~Record.remove_field
       ~Record.remove_quality_defect_notes

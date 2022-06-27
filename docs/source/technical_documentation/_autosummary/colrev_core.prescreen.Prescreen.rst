@@ -22,4 +22,5 @@ colrev\_core.prescreen.Prescreen
       ~Prescreen.get_data
       ~Prescreen.import_table
       ~Prescreen.include_all_in_prescreen
+      ~Prescreen.run_scope_based_prescreen
       ~Prescreen.set_data

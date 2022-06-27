@@ -141,9 +141,76 @@ class DedupeConfiguration:
 
 
 @dataclass
+class TimeScopeFrom:
+    TimeScopeFrom: int
+
+    def __str__(self):
+        return "TimeScopeFrom"
+
+
+@dataclass
+class TimeScopeTo:
+    TimeScopeTo: int
+
+    def __str__(self):
+        return "TimeScopeTo"
+
+
+@dataclass
+class LanguageScope:
+    LanguageScope: list
+
+    def __str__(self):
+        return "LanguageScope"
+
+
+@dataclass
+class ComplementaryMaterialsScope:
+    ComplementaryMaterialsScope: bool
+
+    def __str__(self):
+        return "ComplementaryMaterialsScope"
+
+
+@dataclass
+class OutletInclusionScope:
+    OutletInclusionScope: dict
+
+    def __str__(self):
+        return "OutletInclusionScope"
+
+
+@dataclass
+class OutletExclusionScope:
+    OutletExclusionScope: dict
+
+    def __str__(self):
+        return "OutletExclusionScope"
+
+
+@dataclass
+class ENTRYTYPEScope:
+    ENTRYTYPEScope: list
+
+    def __str__(self):
+        return "ENTRYTYPEScope"
+
+
+@dataclass
 class PrescreenConfiguration:
     plugin: typing.Optional[str]
     mode: typing.Optional[str]
+    scope: typing.List[
+        typing.Union[
+            TimeScopeFrom,
+            TimeScopeTo,
+            LanguageScope,
+            ComplementaryMaterialsScope,
+            OutletInclusionScope,
+            OutletExclusionScope,
+            ENTRYTYPEScope,
+        ]
+    ]
 
     def __str__(self):
         return f" - mode: {self.mode}"

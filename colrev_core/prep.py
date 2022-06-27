@@ -229,19 +229,6 @@ class PrepRecord(Record):
                 self.data["note"] = "withdrawn (according to DBLP)"
         return
 
-    def prescreen_exclude(self, *, reason) -> None:
-        self.data["colrev_status"] = RecordState.rev_prescreen_excluded
-        self.data["prescreen_exclusion"] = reason
-
-        to_drop = []
-        for k, v in self.data.items():
-            if "UNKNOWN" == v:
-                to_drop.append(k)
-        for k in to_drop:
-            self.remove_field(field=k)
-
-        return
-
 
 class PrepScript(zope.interface.Interface):
     def prepare(self, x):
@@ -333,7 +320,6 @@ class Preparation(Process):
         similarity: float = 0.9,
         notify_state_transition_process: bool = True,
         debug: str = "NA",
-        languages_to_include: str = "en",
     ):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
@@ -345,11 +331,8 @@ class Preparation(Process):
 
         self.RETRIEVAL_SIMILARITY = similarity
 
-        self.languages_to_include = languages_to_include.split(",")
-
         self.fields_to_keep += self.REVIEW_MANAGER.settings.prep.fields_to_keep
 
-        self.predatory_journals = self.load_predatory_journals()
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
         # It performs particularly well for short strings (single words/word pairs)
@@ -376,9 +359,6 @@ class Preparation(Process):
             },
             "exclude_collections": {
                 "script": self.exclude_collections,
-            },
-            "exclude_predatory_journals": {
-                "script": self.exclude_predatory_journals,
             },
             "remove_urls_with_500_errors": {
                 "script": self.remove_urls_with_500_errors,
@@ -532,19 +512,6 @@ class Preparation(Process):
                 raise ServiceNotAvailableException("OPENLIBRARY")
         return
 
-    def load_predatory_journals(self) -> dict:
-
-        import pkgutil
-
-        predatory_journals = {}
-
-        filedata = pkgutil.get_data(__name__, "template/predatory_journals_beall.csv")
-        if filedata:
-            for pj in filedata.decode("utf-8").splitlines():
-                predatory_journals[pj.lower()] = pj.lower()
-
-        return predatory_journals
-
     #
     # prep_scripts (in the order in which they should run)
     #
@@ -596,17 +563,30 @@ class Preparation(Process):
 
     def exclude_languages(self, RECORD: PrepRecord) -> PrepRecord:
 
+        from colrev_core.settings import LanguageScope
+
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
+
+        languages_to_include = [
+            sr.LanguageScope
+            for sr in self.REVIEW_MANAGER.settings.prescreen.scope
+            if isinstance(sr, LanguageScope)
+        ][0]
+
+        # Note : other languages are not yet supported
+        # becuase the dedupe does not yet support cross-language merges
+        assert ["en"] == languages_to_include
+
         if "language" in RECORD.data:
             RECORD.data["language"] = (
                 RECORD.data["language"].replace("English", "en").replace("ENG", "en")
             )
-            if RECORD.data["language"] not in self.languages_to_include:
+            if RECORD.data["language"] not in languages_to_include:
                 RECORD.prescreen_exclude(
                     reason=(
                         "language of title not in "
-                        f"[{','.join(self.languages_to_include)}]"
+                        f"[{','.join(languages_to_include)}]"
                     )
                 )
 
@@ -630,7 +610,7 @@ class Preparation(Process):
                     return RECORD
 
         RECORD.prescreen_exclude(
-            reason=f"language of title not in [{','.join(self.languages_to_include)}]"
+            reason=f"language of title not in [{','.join(languages_to_include)}]"
         )
 
         return RECORD
@@ -639,13 +619,6 @@ class Preparation(Process):
 
         if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
             RECORD.prescreen_exclude(reason="collection/proceedings")
-
-        return RECORD
-
-    def exclude_predatory_journals(self, RECORD: PrepRecord) -> PrepRecord:
-
-        if RECORD.data.get("journal", "NA").lower() in self.predatory_journals:
-            RECORD.prescreen_exclude(reason="predatory_journal")
 
         return RECORD
 

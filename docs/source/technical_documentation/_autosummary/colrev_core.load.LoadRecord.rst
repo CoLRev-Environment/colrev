@@ -47,6 +47,7 @@ colrev\_core.load.LoadRecord
       ~LoadRecord.masterdata_is_curated
       ~LoadRecord.merge
       ~LoadRecord.missing_fields
+      ~LoadRecord.prescreen_exclude
       ~LoadRecord.remove_accents
       ~LoadRecord.remove_field
       ~LoadRecord.remove_quality_defect_notes

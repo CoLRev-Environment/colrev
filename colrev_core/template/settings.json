@@ -35,8 +35,7 @@
             "scripts": [
                 "exclude_non_latin_alphabets",
                 "exclude_languages",
-                "exclude_collections",
-                "exclude_predatory_journals"
+                "exclude_collections"
             ]
         },
         {
@@ -108,7 +107,10 @@
     "same_source_merges": "prevent"
 },
   "prescreen": {"plugin": null,
-                "mode": null},
+                "mode": null,
+                "scope": [{
+                    "LanguageScope": ["en"]
+                }]},
   "pdf_get": {"pdf_path_type": "symlink"},
   "pdf_prep": {},
   "screen": {"process": {"overlapp": null,

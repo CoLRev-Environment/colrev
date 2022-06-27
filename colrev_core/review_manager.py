@@ -430,6 +430,16 @@ class ReviewManager:
 
                 settings["search"]["sources"] = sources
 
+            if any(r["name"] == "exclusion" for r in settings["prep"]["prep_rounds"]):
+                e_r = [
+                    r
+                    for r in settings["prep"]["prep_rounds"]
+                    if r["name"] == "exclusion"
+                ][0]
+                if "exclude_predatory_journals" in e_r["scripts"]:
+                    e_r["scripts"].remove("exclude_predatory_journals")
+            settings["prescreen"]["scope"] = [{"LanguageScope": ["en"]}]
+
             for x in settings["data"]["data_format"]:
                 if "MANUSCRIPT" == x["endpoint"]:
                     if "paper_endpoint_version" not in x:

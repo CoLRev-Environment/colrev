@@ -46,6 +46,7 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
+      ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes

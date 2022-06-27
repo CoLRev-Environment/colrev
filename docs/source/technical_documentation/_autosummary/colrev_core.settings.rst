@@ -20,16 +20,21 @@ colrev\_core.settings
       :template: custom-class-template.rst
       :nosignatures:
 
+      ComplementaryMaterialsScope
       Configuration
       CustomDataFormat
       DataConfiguration
       DataField
       DataStructuredFormat
       DedupeConfiguration
+      ENTRYTYPEScope
       EndnoteFormat
       IDPpattern
+      LanguageScope
       LoadConfiguration
       ManuscriptFormat
+      OutletExclusionScope
+      OutletInclusionScope
       PDFGetConfiguration
       PDFPrepConfiguration
       PRISMAFormat
@@ -43,4 +48,6 @@ colrev\_core.settings
       SearchConfiguration
       SearchSource
       SearchType
+      TimeScopeFrom
+      TimeScopeTo
       ZettlrFormat

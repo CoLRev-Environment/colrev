@@ -174,6 +174,133 @@ class Prescreen(Process):
 
         return
 
+    def run_scope_based_prescreen(self) -> None:
+        from colrev_core.settings import (
+            TimeScopeFrom,
+            TimeScopeTo,
+            OutletInclusionScope,
+            OutletExclusionScope,
+            ENTRYTYPEScope,
+            ComplementaryMaterialsScope,
+        )
+
+        def load_predatory_journals_beal() -> dict:
+
+            import pkgutil
+
+            predatory_journals = {}
+
+            filedata = pkgutil.get_data(
+                __name__, "template/predatory_journals_beall.csv"
+            )
+            if filedata:
+                for pj in filedata.decode("utf-8").splitlines():
+                    predatory_journals[pj.lower()] = pj.lower()
+
+            return predatory_journals
+
+        self.predatory_journals_beal = load_predatory_journals_beal()
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        saved_args = locals()
+        PAD = 50
+        for record in records.values():
+            if record["colrev_status"] != RecordState.md_processed:
+                continue
+
+            # Note : LanguageScope is covered in prep
+            # because dedupe cannot handle merges between languages
+
+            for scope_restriction in self.REVIEW_MANAGER.settings.prescreen.scope:
+
+                if isinstance(scope_restriction, ENTRYTYPEScope):
+                    if record["ENTRYTYPE"] not in scope_restriction.ENTRYTYPEScope:
+                        Record(data=record).prescreen_exclude(
+                            reason="not in ENTRYTYPEScope"
+                        )
+
+                if isinstance(scope_restriction, OutletExclusionScope):
+                    if "values" in scope_restriction.OutletExclusionScope:
+                        for r in scope_restriction.OutletExclusionScope["values"]:
+                            for key, value in r.items():
+                                if key in record and record.get(key, "") == value:
+                                    Record(data=record).prescreen_exclude(
+                                        reason="in OutletExclusionScope"
+                                    )
+                    if "list" in scope_restriction.OutletExclusionScope:
+                        for r in scope_restriction.OutletExclusionScope["list"]:
+                            for key, value in r.items():
+                                if (
+                                    "resource" == key
+                                    and "predatory_journals_beal" == value
+                                ):
+                                    if "journal" in record:
+                                        if (
+                                            record["journal"].lower()
+                                            in self.predatory_journals_beal
+                                        ):
+                                            Record(data=record).prescreen_exclude(
+                                                reason="predatory_journals_beal"
+                                            )
+
+                if isinstance(scope_restriction, TimeScopeFrom):
+                    if int(record.get("year", 0)) < scope_restriction.TimeScopeFrom:
+                        Record(data=record).prescreen_exclude(
+                            reason="not in TimeScopeFrom "
+                            f"(>{scope_restriction.TimeScopeFrom})"
+                        )
+
+                if isinstance(scope_restriction, TimeScopeTo):
+                    if int(record.get("year", 5000)) > scope_restriction.TimeScopeTo:
+                        Record(data=record).prescreen_exclude(
+                            reason="not in TimeScopeTo "
+                            f"(<{scope_restriction.TimeScopeTo})"
+                        )
+
+                if isinstance(scope_restriction, OutletInclusionScope):
+                    in_outlet_scope = False
+                    if "values" in scope_restriction.OutletInclusionScope:
+                        for r in scope_restriction.OutletInclusionScope["values"]:
+                            for key, value in r.items():
+                                if key in record and record.get(key, "") == value:
+                                    in_outlet_scope = True
+                    if not in_outlet_scope:
+                        Record(data=record).prescreen_exclude(
+                            reason="not in OutletInclusionScope"
+                        )
+
+                # TODO : discuss whether we should move this to the prep scripts
+                if isinstance(scope_restriction, ComplementaryMaterialsScope):
+                    if scope_restriction.ComplementaryMaterialsScope:
+                        if "title" in record:
+                            # TODO : extend/test the following
+                            if record["title"].lower() in [
+                                "about our authors",
+                                "editorial board",
+                                "author index",
+                                "contents",
+                                "index of authors",
+                                "list of reviewers",
+                            ]:
+                                Record(data=record).prescreen_exclude(
+                                    reason="complementary material"
+                                )
+
+            if record["colrev_status"] != RecordState.rev_prescreen_excluded:
+                self.REVIEW_MANAGER.report_logger.info(
+                    f' {record["ID"]}'.ljust(PAD, " ")
+                    + "Prescreen excluded (automatically)"
+                )
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.REVIEW_MANAGER.create_commit(
+            msg="Pre-screen (scope)", manual_author=False, saved_args=saved_args
+        )
+
+        return
+
     def get_data(self) -> dict:
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()

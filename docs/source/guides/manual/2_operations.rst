@@ -119,7 +119,8 @@ Settings
       },
       "dedupe": {"merge_threshold": 0.8, "partition_threshold": 0.5},
       "prescreen": {"plugin": null,
-                     "mode": null},
+                     "mode": null,
+                     "scope": []},
       "pdf_get": {"pdf_path_type": "symlink"},
       "pdf_prep": {},
       "screen": {"process": {"overlapp": null,
@@ -308,6 +309,48 @@ Pre-screen
 .. option:: --split STR
 
     Complete the prescreen for the specified split.
+
+The settings can be used to specify scope variables which are applied automatically before the manual prescreen:
+
+.. code-block:: json
+
+        "prescreen": {"plugin": null,
+                    "mode": null,
+                    "scope": [
+                            {
+                                "TimeScopeFrom": 2000
+                            },
+                            {
+                                "TimeScopeTo": 2010
+                            },
+                            {
+                                "OutletExclusionScope": {
+                                    "values": [
+                                        {
+                                            "journal": "Science"
+                                        }
+                                    ],
+                                    "list": [
+                                        {
+                                            "resource": "predatory_journals_beal"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "OutletInclusionScope": {
+                                    "values": [
+                                        {
+                                            "journal": "Nature"
+                                        },
+                                        {
+                                            "journal": "MIS Quarterly"
+                                        }
+                                    ]
+                                }
+                            },
+                            ]
+                    }
 
 
 .. _PDF get:
