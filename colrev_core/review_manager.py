@@ -447,6 +447,9 @@ class ReviewManager:
                 {"endpoint": "scope_prescreen"},
                 {"endpoint": "colrev_cli_prescreen"},
             ]
+            if "process" in settings["screen"]:
+                del settings["screen"]["process"]
+            settings["screen"]["scripts"] = [{"endpoint": "colrev_cli_screen"}]
             settings["pdf_get"]["scripts"] = [
                 {"endpoint": "unpaywall"},
                 {"endpoint": "local_index"},

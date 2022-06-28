@@ -44,7 +44,6 @@ colrev\_core.settings
       ProjectConfiguration
       ScreenConfiguration
       ScreenCriterion
-      ScreeningProcessConfig
       SearchConfiguration
       SearchSource
       SearchType

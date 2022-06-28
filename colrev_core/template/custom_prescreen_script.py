@@ -23,4 +23,10 @@ class CustomPrescreen:
         PRESCREEN.REVIEW_MANAGER.create_commit(
             msg="Pre-screen (random)", manual_author=False
         )
+
+        # Alternatively (does not change the records argument   )
+        # presscreen_data = PRESCREEN.get_data()
+        # for record in prescreen_data["items"]:
+        # PRESCREEN.set_data(record=record)
+
         return records

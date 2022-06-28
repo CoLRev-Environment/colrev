@@ -255,16 +255,9 @@ class ScreenCriterion:
 
 
 @dataclass
-class ScreeningProcessConfig:
-    overlapp: typing.Optional[int]
-    mode: typing.Optional[str]
-    parallel_independent: typing.Optional[str]
-
-
-@dataclass
 class ScreenConfiguration:
-    process: ScreeningProcessConfig
     criteria: typing.List[ScreenCriterion]
+    scripts: list
 
     def __str__(self):
         return " - " + "\n - ".join([str(c) for c in self.criteria])

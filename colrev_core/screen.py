@@ -1,8 +1,157 @@
 #! /usr/bin/env python
+import importlib
+import sys
+import typing
+from pathlib import Path
+
+import zope.interface
+from zope.interface.verify import verifyObject
+
 from colrev_core.prescreen import PrescreenRecord
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+
+
+class ScreenEndpoint(zope.interface.Interface):
+    def run_screen(SCREEN, records: dict, split: list) -> dict:
+        pass
+
+
+@zope.interface.implementer(ScreenEndpoint)
+class CoLRevCLIScreenEndpoint:
+    @classmethod
+    def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
+        from colrev.cli import screen_cli
+
+        records = screen_cli(SCREEN, split)
+
+        return records
+
+
+@zope.interface.implementer(ScreenEndpoint)
+class SpreadsheetScreenEndpoint:
+    @classmethod
+    def export_table(cls, SCREEN, records, split, export_table_format="csv") -> None:
+        # TODO : add delta (records not yet in the spreadsheet)
+        # instead of overwriting
+        # TODO : export_table_format as a settings parameter
+        import csv
+        import pandas as pd
+
+        SCREEN.REVIEW_MANAGER.logger.info("Loading records for export")
+
+        tbl = []
+        for record in records.values():
+
+            if record["colrev_status"] not in [
+                RecordState.pdf_prepared,
+                RecordState.rev_excluded,
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                continue
+
+            if len(split) > 0:
+                if record["ID"] not in split:
+                    continue
+
+            inclusion_2 = "NA"
+
+            if RecordState.pdf_prepared == record["colrev_status"]:
+                inclusion_2 = "TODO"
+            if RecordState.rev_excluded == record["colrev_status"]:
+                inclusion_2 = "no"
+            if record["colrev_status"] in [
+                RecordState.rev_included,
+                RecordState.rev_synthesized,
+            ]:
+                inclusion_2 = "yes"
+
+            exclusion_criteria = record.get("exclusion_criteria", "NA")
+            if exclusion_criteria == "NA" and inclusion_2 == "yes":
+                exclusion_criteria = "TODO"
+
+            row = {
+                "ID": record["ID"],
+                "author": record.get("author", ""),
+                "title": record.get("title", ""),
+                "journal": record.get("journal", ""),
+                "booktitle": record.get("booktitle", ""),
+                "year": record.get("year", ""),
+                "volume": record.get("volume", ""),
+                "number": record.get("number", ""),
+                "pages": record.get("pages", ""),
+                "doi": record.get("doi", ""),
+                "abstract": record.get("abstract", ""),
+                "screen_inclusion": inclusion_2,
+                "exclusion_criteria": exclusion_criteria,
+            }
+            # row.update    (exclusion_criteria)
+            tbl.append(row)
+
+        if "csv" == export_table_format.lower():
+            screen_df = pd.DataFrame(tbl)
+            screen_df.to_csv("screen.csv", index=False, quoting=csv.QUOTE_ALL)
+            SCREEN.REVIEW_MANAGER.logger.info("Created screen.csv")
+
+        if "xlsx" == export_table_format.lower():
+            screen_df = pd.DataFrame(tbl)
+            screen_df.to_excel("screen.xlsx", index=False, sheet_name="screen")
+            SCREEN.REVIEW_MANAGER.logger.info("Created screen.xlsx")
+
+        return
+
+    @classmethod
+    def import_table(cls, SCREEN, records, import_table_path="screen.csv") -> None:
+        import pandas as pd
+
+        if not Path(import_table_path).is_file():
+            SCREEN.REVIEW_MANAGER.logger.error(
+                f"Did not find {import_table_path} - exiting."
+            )
+            return
+        screen_df = pd.read_csv(import_table_path)
+        screen_df.fillna("", inplace=True)
+        screened_records = screen_df.to_dict("records")
+
+        SCREEN.REVIEW_MANAGER.logger.warning(
+            "import_table not completed (exclusion_criteria not yet imported)"
+        )
+
+        for screened_record in screened_records:
+            if screened_record.get("ID", "") in records:
+                record = records[screened_record.get("ID", "")]
+                if "no" == screened_record.get("inclusion_1", ""):
+                    record["colrev_status"] = RecordState.rev_prescreen_excluded
+                if "yes" == screened_record.get("inclusion_1", ""):
+                    record["colrev_status"] = RecordState.rev_prescreen_included
+                if "no" == screened_record.get("inclusion_2", ""):
+                    record["colrev_status"] = RecordState.rev_excluded
+                if "yes" == screened_record.get("inclusion_2", ""):
+                    record["colrev_status"] = RecordState.rev_included
+                if "" != screened_record.get("exclusion_criteria", ""):
+                    record["exclusion_criteria"] = screened_record.get(
+                        "exclusion_criteria", ""
+                    )
+
+        SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        return
+
+    @classmethod
+    def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
+
+        if "y" == input("create screen spreadsheet [y,n]?"):
+            cls.export_table(SCREEN, records, split)
+
+        if "y" == input("import screen spreadsheet [y,n]?"):
+            cls.import_table(SCREEN, records)
+
+        if SCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            if "y" == input("create commit [y,n]?"):
+                SCREEN.REVIEW_MANAGER.create_commit(msg="Screen", manual_author=True)
+        return records
 
 
 class ScreenRecord(PrescreenRecord):
@@ -19,6 +168,55 @@ class Screen(Process):
             type=ProcessType.screen,
             notify_state_transition_process=notify_state_transition_process,
         )
+
+        self.verbose = True
+
+        self.screen_endpoints: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+            "colrev_cli_screen": {
+                "endpoint": CoLRevCLIScreenEndpoint,
+            },
+            "spreadsheed_screen": {"endpoint": SpreadsheetScreenEndpoint},
+            # "conditional_screen": {"endpoint": ConditionalScreenEndpoint},
+        }
+
+        list_custom_scripts = [
+            s["endpoint"]
+            for s in REVIEW_MANAGER.settings.screen.scripts
+            if s["endpoint"] not in self.screen_endpoints
+            and Path(s["endpoint"] + ".py").is_file()
+        ]
+        sys.path.append(".")  # to import custom scripts from the project dir
+        for plugin_script in list_custom_scripts:
+            custom_screen_script = importlib.import_module(
+                plugin_script, "."
+            ).CustomScreen
+            verifyObject(ScreenEndpoint, custom_screen_script())
+            self.screen_endpoints[plugin_script] = {"endpoint": custom_screen_script}
+
+        # TODO : test the module screen_scripts
+        list_module_scripts = [
+            s["endpoint"]
+            for s in REVIEW_MANAGER.settings.screen.scripts
+            if s["endpoint"] not in self.screen_endpoints
+            and not Path(s["endpoint"] + ".py").is_file()
+        ]
+        for plugin_script in list_module_scripts:
+            try:
+                custom_screen_script = importlib.import_module(
+                    plugin_script
+                ).CustomScreen
+                verifyObject(ScreenEndpoint, custom_screen_script())
+                self.screen_endpoints[plugin_script] = {
+                    "endpoint": custom_screen_script
+                }
+            except ModuleNotFoundError:
+                pass
+                # raise MissingDependencyError
+                print(
+                    "Dependency screen_script " + f"{plugin_script} not found. "
+                    "Please install it\n  pip install "
+                    f"{plugin_script}"
+                )
 
     def include_all_in_screen(
         self,
@@ -203,6 +401,66 @@ class Screen(Process):
         self.REVIEW_MANAGER.create_commit(
             msg=f"Removed screening criterion: {criterion_to_delete}"
         )
+
+        return
+
+    def create_screen_split(self, *, create_split: int) -> list:
+        import math
+
+        screen_splits = []
+
+        data = self.get_data()
+        nrecs = math.floor(data["nr_tasks"] / create_split)
+
+        self.REVIEW_MANAGER.report_logger.info(
+            f"Creating screen splits for {create_split} researchers " f"({nrecs} each)"
+        )
+
+        added: typing.List[str] = []
+        for i in range(0, create_split):
+            while len(added) < nrecs:
+                added.append(next(data["items"])["ID"])
+        screen_splits.append("colrev screen --split " + ",".join(added))
+
+        return screen_splits
+
+    def setup_custom_script(self) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, "template/custom_screen_script.py")
+        if filedata:
+            with open("custom_screen_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_screen_script.py")
+
+        self.REVIEW_MANAGER.settings.screen.scripts.append(
+            {"endpoint": "custom_screen_script"}
+        )
+        self.REVIEW_MANAGER.save_settings()
+
+        return
+
+    def main(self, *, split_str: str):
+
+        split = []
+        if split_str != "NA":
+            split = split_str.split(",")
+            split.remove("")
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        for SCREEN_SCRIPT in self.REVIEW_MANAGER.settings.screen.scripts:
+
+            if SCREEN_SCRIPT["endpoint"] not in list(self.screen_endpoints.keys()):
+                if self.verbose:
+                    print(f"Error: endpoint not available: {SCREEN_SCRIPT}")
+                continue
+
+            endpoint = self.screen_endpoints[SCREEN_SCRIPT["endpoint"]]
+
+            ENDPOINT = endpoint["endpoint"]()
+            records = ENDPOINT.run_screen(self, records, split)
 
         return
 
