@@ -439,6 +439,14 @@ class ReviewManager:
                 if "exclude_predatory_journals" in e_r["scripts"]:
                     e_r["scripts"].remove("exclude_predatory_journals")
             settings["prescreen"]["scope"] = [{"LanguageScope": ["en"]}]
+            if "plugin" in settings["prescreen"]:
+                del settings["prescreen"]["plugin"]
+            if "mode" in settings["prescreen"]:
+                del settings["prescreen"]["mode"]
+            settings["prescreen"]["scripts"] = [
+                {"endpoint": "scope_prescreen"},
+                {"endpoint": "colrev_cli_prescreen"},
+            ]
             settings["pdf_get"]["scripts"] = [
                 {"endpoint": "unpaywall"},
                 {"endpoint": "local_index"},

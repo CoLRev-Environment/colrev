@@ -198,8 +198,6 @@ class ENTRYTYPEScope:
 
 @dataclass
 class PrescreenConfiguration:
-    plugin: typing.Optional[str]
-    mode: typing.Optional[str]
     scope: typing.List[
         typing.Union[
             TimeScopeFrom,
@@ -211,6 +209,7 @@ class PrescreenConfiguration:
             ENTRYTYPEScope,
         ]
     ]
+    scripts: list
 
     def __str__(self):
         return f" - mode: {self.mode}"
