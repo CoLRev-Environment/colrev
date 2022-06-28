@@ -331,7 +331,7 @@ class DBLPSearchEndpoint:
 @zope.interface.implementer(SearchEndpoint)
 class BackwardSearchEndpoint:
 
-    source_identifier = "{{file}} (references)"
+    source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
 
     def run_search(self, *, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
@@ -353,10 +353,13 @@ class BackwardSearchEndpoint:
 
         if feed_file.is_file():
             with open(feed_file, encoding="utf8") as bibtex_file:
-                feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                    load_str=bibtex_file.read()
-                )
-                feed_file_records = list(feed_rd.values())
+                if bibtex_file.read() == "":
+                    feed_file_records = []
+                else:
+                    feed_rd = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                        load_str=bibtex_file.read()
+                    )
+                    feed_file_records = list(feed_rd.values())
         else:
             feed_file_records = []
 
@@ -393,6 +396,7 @@ class BackwardSearchEndpoint:
                 # IDs have to be distinct
                 new_record["ID"] = record["ID"] + "_backward_search_" + new_record["ID"]
                 new_record["cited_by"] = record["ID"]
+                new_record["cited_by_file"] = record["file"]
                 if new_record["ID"] not in [r["ID"] for r in feed_file_records]:
                     feed_file_records.append(new_record)
 
@@ -976,9 +980,9 @@ class PDFSearchEndpoint:
                 document = PDFDocument(parser)
                 pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                 if pages_in_file < 6:
-                    record = self.PDF_PREPARATION.get_text_from_pdf(
-                        record=record, PAD=40
-                    )
+                    RECORD = Record(data=record)
+                    RECORD.get_text_from_pdf(project_path=REVIEW_MANAGER.path)
+                    record = RECORD.get_data()
                     if "text_from_pdf" in record:
                         text: str = record["text_from_pdf"]
                         if "bookreview" in text.replace(" ", "").lower():
@@ -1367,7 +1371,7 @@ class Search(Process):
                 source_identifier = "{{file}}"
                 search_type = "COLREV_REPO"
             elif "BACKWARD_SEARCH" == source:
-                source_identifier = "{{file}} (references)"
+                source_identifier = "{{cited_by_file}} (references)"
                 search_type = "FEED"
             else:
                 source_identifier = "TODO"

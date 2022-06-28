@@ -25,5 +25,5 @@ colrev\_core.settings.ScreenConfiguration
 
    .. autosummary::
 
-      ~ScreenConfiguration.process
       ~ScreenConfiguration.criteria
+      ~ScreenConfiguration.scripts

@@ -37,4 +37,3 @@ colrev\_core.data
       :toctree:
 
       ManuscriptRecordSourceTagError
-      NoDataEndpointsRegistered

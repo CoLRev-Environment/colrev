@@ -31,7 +31,7 @@ The Collaborative Literature Reviews (CoLRev) framework provides a standardized 
 - :any:`priority_processing`
 - :any:`check_and_undo`
 
-:any:`area_institutional`
+:any:`area_community`
 
 - :any:`adopting_a_shared_curation_standard`
 - :any:`curation_layers`
@@ -184,7 +184,7 @@ The extensible part of **colrev_core** adopts **batteries included but swappable
    - Supervised: ReviewManager is notified before a process is started, usually interactive processes requiring frequent user input (e.g., screening)
    - Consulted: ReviewManager is called after files have been modified and checked for consistency (e.g., writing the synthesis)
 
-   In addition, the ReviewManager keeps a detailed `report <../guides/changes.html#git-commit-report>`_ of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset.
+   In addition, the ReviewManager keeps a detailed `report <../guides/manual/1_workflow.html#colrev-validate>`_ of (1) the review environment and parameters (2) the current state of the review, and (3) the individual steps (commands) and the changes applied to the dataset.
 
    principle: review manager is instantiated for the current commit, not for historical commits.
    the data strucutres of colrev_status/colrev_origin will not change as much as the colrev_settings etc.?
@@ -450,9 +450,9 @@ E.g., prep-rounds, asreview ordered screen or reading heuristics
 - Algorithmic application of changes and (efficient) undo is preferred over manual entry/changes
 - Reuse (curated, across projects) to avoid redundant efforts
 
-.. _area_institutional:
+.. _area_community:
 
-4. Design area: Institutional
+4. Design area: Community
 ----------------------------------------------
 
 .. _adopting_a_shared_curation_standard:

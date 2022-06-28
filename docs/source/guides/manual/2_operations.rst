@@ -17,7 +17,7 @@ Init
 
 .. TODO : include options for different types of reviews once available
 
-Once the repository is set up, you can share it with your team (see `instructions <best_practices.html#collaborate-in-a-team>`_).
+Once the repository is set up, you can share it with your team (see `instructions <3_collaboration>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
 
@@ -119,7 +119,8 @@ Settings
       },
       "dedupe": {"merge_threshold": 0.8, "partition_threshold": 0.5},
       "prescreen": {"plugin": null,
-                     "mode": null},
+                     "mode": null,
+                     "scope": []},
       "pdf_get": {"pdf_path_type": "symlink"},
       "pdf_prep": {},
       "screen": {"process": {"overlapp": null,
@@ -309,6 +310,48 @@ Pre-screen
 
     Complete the prescreen for the specified split.
 
+The settings can be used to specify scope variables which are applied automatically before the manual prescreen:
+
+.. code-block:: json
+
+        "prescreen": {"plugin": null,
+                    "mode": null,
+                    "scope": [
+                            {
+                                "TimeScopeFrom": 2000
+                            },
+                            {
+                                "TimeScopeTo": 2010
+                            },
+                            {
+                                "OutletExclusionScope": {
+                                    "values": [
+                                        {
+                                            "journal": "Science"
+                                        }
+                                    ],
+                                    "list": [
+                                        {
+                                            "resource": "predatory_journals_beal"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "OutletInclusionScope": {
+                                    "values": [
+                                        {
+                                            "journal": "Nature"
+                                        },
+                                        {
+                                            "journal": "MIS Quarterly"
+                                        }
+                                    ]
+                                }
+                            },
+                            ]
+                    }
+
 
 .. _PDF get:
 
@@ -327,7 +370,7 @@ When PDFs cannot be retrieved automatically, CoLRev provides an interactive conv
 
 	colrev pdf-get [options]
 
-Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, use `colrev config -s PDF_PATH_TYPE=COPY`
+Per default, CoLRev creates symlinks (setting `PDF_PATH_TYPE=SYMLINK`). To copy PDFs to the repository per default, set `PDF_PATH_TYPE=COPY` in settings.json.
 
 .. link to justification of pdf handling (reuse/shared settings)
 .. the use of shared/team PDFs is built in (just clone and index!)
@@ -391,16 +434,15 @@ Data
 
 To select the data format, please consult the best practices for different `types of reviews <./best_practices.html#types-of-literature-reviews>`_.
 
-To set the data format, run
+To set the data format, run any (combination) of the following:
 
 .. code:: bash
 
-    colrev config --set DATA_FORMAT=['MANUSCRIPT', 'STRUCTURED']
-
-    # commit changes:
-    git add shared_config.ini
-    git commit -m 'update data format'
-
+    colrev data --add_endpoint MANUSCRIPT
+    colrev data --add_endpoint STRUCTURED
+    colrev data --add_endpoint PRISMA
+    colrev data --add_endpoint ZETTLR
+    colrev data --add_endpoint ENDNOTE
 
 Depending on the data format, the :program:`colrev data` command
 
@@ -433,8 +475,8 @@ Paper
 
 	colrev paper [options]
 
-Links and references for standalone literature reviews are available in the `best practices <./best_practices.html>`_ section.
+Links and references for standalone literature reviews will be made available here (TODO).
 
 **References**
 
-.. [WagnerEtAl2020] Wagner, G. and Empl, P. and Schryen, G. (2020). Designing a novel strategy for exploring literature corpora. Proceedings of the European Conference on Information Sytems.
+.. [WagnerEtAl2020] Wagner, G. and Empl, P. and Schryen, G. (2020). Designing a novel strategy for exploring literature corpora. *Proceedings of the European Conference on Information Sytems*.

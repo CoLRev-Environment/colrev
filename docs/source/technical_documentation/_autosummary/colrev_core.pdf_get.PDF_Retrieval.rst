@@ -25,3 +25,4 @@ colrev\_core.pdf\_get.PDF\_Retrieval
       ~PDF_Retrieval.relink_files
       ~PDF_Retrieval.rename_pdfs
       ~PDF_Retrieval.retrieve_pdf
+      ~PDF_Retrieval.setup_custom_script

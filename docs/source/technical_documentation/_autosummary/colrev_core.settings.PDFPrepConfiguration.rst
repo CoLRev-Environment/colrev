@@ -15,3 +15,14 @@ colrev\_core.settings.PDFPrepConfiguration
 
    .. autosummary::
       :nosignatures:
+
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDFPrepConfiguration.scripts

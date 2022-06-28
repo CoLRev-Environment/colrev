@@ -29,7 +29,7 @@ Developing CoLRev extensions in Python/R is easy. Instructions and examples are 
 
 **Recommendations**:
 
-- Get paths (as shown in :program:`colrev config`) from REVIEW_MANAGER.paths
+- Get paths (as shown in :program:`colrev settings`) from REVIEW_MANAGER.paths
 - Use the logger (report vs tool/extension)
     - colrev_report logger: log info that are helpful to examine and validate the process, including links to the docs where instructions for tracing and fixing errors are available
     - extension logger: log info on the progress. The output should be relatively short and allow users to see the progress and judge whether any errors occurred
@@ -109,7 +109,15 @@ Link to the repository: `colrev_cml_assistant <https://github.com/geritwagner/co
 Custom script extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Store the following script in the project dir and include filename in settings
+To develop a custom extension script, run the command for the respective operation:
 
-.. literalinclude:: ../../../../colrev_core/template/custom_prep_script.py
-   :language: python
+.. code-block::
+
+    colrev search -scs
+    colrev prep -scs
+    colrev prescreen -scs
+    colrev pdf-get -scs
+    colrev pdf-prep -scs
+    colrev pdf-prep -scs
+    colrev screen -scs
+    colrev data -scs

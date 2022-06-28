@@ -22,17 +22,3 @@ colrev\_core.sync.Sync
       ~Sync.get_IDs_in_paper
       ~Sync.get_cited_papers
       ~Sync.get_non_unique
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~Sync.colrev_path
-      ~Sync.docker_images
-      ~Sync.os_db
-      ~Sync.paths
-      ~Sync.registry

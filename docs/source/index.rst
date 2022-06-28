@@ -8,7 +8,7 @@ Collaborative Literature Reviews
    :alt: Logo
 
 CoLRev is an open-source environment for collaborative reviews.
-To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and institutional.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment records with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
 Compared to other environments, the following innovations stand out:
 
 - leveraging the transparent collaboration model of **git** for the entire literature review process
@@ -27,11 +27,9 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 .. code-block::
 
    # Install
-   git clone https://github.com/geritwagner/colrev_core
-   cd colrev_core
-   pip install .
-   # once CoLRev is available on PyPI:
-   # pip install colrev
+   git clone https://github.com/geritwagner/colrev_core && cd colrev_core && pip install .
+   # or
+   pip install colrev
 
    # ... and start with the main command
    colrev status
@@ -40,7 +38,7 @@ The status command displays the current state of the review and guides you to th
 After each operation, `check the changes <guides/manual.html#analyze-changes>`_ to complete the three-step cycle:
 
 .. figure:: ../figures/workflow.svg
-   :width: 400
+   :width: 600
    :align: center
    :alt: Workflow cycle
 
@@ -48,8 +46,9 @@ Conducting a literature review should be as simple as running the following oper
 
 .. code-block:: bash
 
-      # Initialize the project (remove the "--example" flag to create an empty project)
-      colrev init --example
+      # Initialize the project
+      colrev init
+      # To try colrev: colrev init --example
 
       # Run new search or store search results in the ./search directory
       colrev search --add "FROM crossref WHERE digital"
@@ -121,6 +120,7 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 
    technical_documentation/colrev
    technical_documentation/api
+   technical_documentation/identification
    Code repository <https://github.com/geritwagner/colrev_core>
 
 .. toctree::

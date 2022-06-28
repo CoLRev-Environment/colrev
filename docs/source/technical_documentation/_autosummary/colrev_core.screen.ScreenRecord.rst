@@ -25,27 +25,33 @@ colrev\_core.screen.ScreenRecord
       ~ScreenRecord.change_ENTRYTYPE
       ~ScreenRecord.complete_provenance
       ~ScreenRecord.create_colrev_id
+      ~ScreenRecord.extract_pages
+      ~ScreenRecord.extract_text_by_page
       ~ScreenRecord.format_bib_style
       ~ScreenRecord.fuse_best_field
       ~ScreenRecord.get_colrev_id
+      ~ScreenRecord.get_colrev_pdf_id
       ~ScreenRecord.get_container_title
       ~ScreenRecord.get_data
-      ~ScreenRecord.get_field
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_origins
+      ~ScreenRecord.get_pages_in_pdf
       ~ScreenRecord.get_provenance_field_source
       ~ScreenRecord.get_quality_defects
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
       ~ScreenRecord.get_source_repo
+      ~ScreenRecord.get_text_from_pdf
+      ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
+      ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes
@@ -66,7 +72,7 @@ colrev\_core.screen.ScreenRecord
 
    .. autosummary::
 
-      ~ScreenRecord.identifying_fields
+      ~ScreenRecord.identifying_field_keys
       ~ScreenRecord.pp
       ~ScreenRecord.preferred_sources
       ~ScreenRecord.provenance_keys

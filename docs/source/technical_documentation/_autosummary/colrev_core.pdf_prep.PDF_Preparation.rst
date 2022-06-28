@@ -17,25 +17,7 @@ colrev\_core.pdf\_prep.PDF\_Preparation
       :nosignatures:
 
       ~PDF_Preparation.check_precondition
-      ~PDF_Preparation.get_colrev_pdf_id
-      ~PDF_Preparation.get_text_from_pdf
       ~PDF_Preparation.main
-      ~PDF_Preparation.pdf_check_ocr
       ~PDF_Preparation.prepare_pdf
-      ~PDF_Preparation.remove_coverpage
-      ~PDF_Preparation.remove_last_page
+      ~PDF_Preparation.setup_custom_script
       ~PDF_Preparation.update_colrev_pdf_ids
-      ~PDF_Preparation.validate_completeness
-      ~PDF_Preparation.validate_pdf_metadata
-      ~PDF_Preparation.validates_based_on_metadata
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~PDF_Preparation.roman_page_pattern
-      ~PDF_Preparation.roman_pages_pattern

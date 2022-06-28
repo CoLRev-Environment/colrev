@@ -27,11 +27,11 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    pip install colrev
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <../guides/extensions.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+Extensions are available in the `extensions section <guides/manual/A_appendix.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 **Python venv**
 
-It is optional but recommended to operate CoLRev in a virtual environment.
+It is recommended to run CoLRev in a virtual environment.
 CoLRev relies on several fixed-version dependencies for reproducibility and venv helps to avoid dependency conflicts with other packages.
 
 .. TODO : at some point, we may start to include links to other resources/tutorials/workshops

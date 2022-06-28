@@ -1301,10 +1301,16 @@ class Data(Process):
 
         saved_args = locals()
 
-        if 0 == len(self.REVIEW_MANAGER.settings.data.data_format):
-            raise NoDataEndpointsRegistered()
+        no_endpoints_registered = 0 == len(
+            self.REVIEW_MANAGER.settings.data.data_format
+        )
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        if 0 == len(records):
+            return {
+                "ask_to_commit": False,
+                "no_endpoints_registered": no_endpoints_registered,
+            }
 
         self.__PAD = min((max(len(ID) for ID in records.keys()) + 2), 35)
 
@@ -1339,8 +1345,8 @@ class Data(Process):
                 ID: default_row.copy() for ID in included
             }
 
-            if self.verbose:
-                self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
+            # if self.verbose:
+            #     self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
 
             # TODO : include paper.md / data.csv as arguments of the data endpoint
             # not the review_manager? (but: the other scripts/checks may rely
@@ -1388,16 +1394,22 @@ class Data(Process):
                 else:
                     records[ID].update(colrev_status=RecordState.rev_included)
 
-            if self.verbose:
-                self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
+            # if self.verbose:
+            #     self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)
 
             CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
                 records=records
             )
             CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-            return {"ask_to_commit": True}
-        return {"ask_to_commit": False}
+            return {
+                "ask_to_commit": True,
+                "no_endpoints_registered": no_endpoints_registered,
+            }
+        return {
+            "ask_to_commit": False,
+            "no_endpoints_registered": no_endpoints_registered,
+        }
 
     def setup_custom_script(self) -> None:
         import pkgutil
@@ -1418,15 +1430,6 @@ class Data(Process):
         self.REVIEW_MANAGER.save_settings()
 
         return
-
-
-class NoDataEndpointsRegistered(Exception):
-    """No data endpoints (data_format field) registered in settings.json"""
-
-    def __init__(self):
-        super().__init__(
-            "No data endpoints (data_format field) registered in settings.json"
-        )
 
 
 class ManuscriptRecordSourceTagError(Exception):

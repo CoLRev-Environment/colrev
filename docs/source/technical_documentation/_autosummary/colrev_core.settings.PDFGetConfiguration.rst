@@ -26,3 +26,4 @@ colrev\_core.settings.PDFGetConfiguration
    .. autosummary::
 
       ~PDFGetConfiguration.pdf_path_type
+      ~PDFGetConfiguration.scripts

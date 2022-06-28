@@ -46,7 +46,7 @@ class LoadRecord(Record):
             colrev_masterdata_provenance = {}
             colrev_data_provenance = {}
             for key in self.data.keys():
-                if key in Record.identifying_fields:
+                if key in Record.identifying_field_keys:
                     colrev_masterdata_provenance[key] = {
                         "source": source_identifier_string,
                         "note": "",
@@ -71,7 +71,7 @@ class LoadRecord(Record):
                     if required_field in self.data:
                         if percent_upper_chars(self.data[required_field]) > 0.8:
                             self.add_masterdata_provenance_hint(
-                                field=required_field, hint="mostly upper case"
+                                key=required_field, hint="mostly upper case"
                             )
                     else:
                         self.data[required_field] = "UNKNOWN"
@@ -87,20 +87,18 @@ class LoadRecord(Record):
                         f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
                     )
                     self.add_masterdata_provenance_hint(
-                        field=inconsistent_field, hint=inconsistency_hint
+                        key=inconsistent_field, hint=inconsistency_hint
                     )
 
         incomplete_fields = self.get_incomplete_fields()
         for incomplete_field in incomplete_fields:
-            self.add_masterdata_provenance_hint(
-                field=incomplete_field, hint="incomplete"
-            )
+            self.add_masterdata_provenance_hint(key=incomplete_field, hint="incomplete")
 
         defect_fields = self.get_quality_defects()
         if defect_fields:
             for defect_field in defect_fields:
                 self.add_masterdata_provenance_hint(
-                    field=defect_field, hint="quality_defect"
+                    key=defect_field, hint="quality_defect"
                 )
 
         self.data["colrev_data_provenance"] = colrev_data_provenance

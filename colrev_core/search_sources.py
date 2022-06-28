@@ -20,7 +20,7 @@ class SearchSources:
         # Note : warning: do not create a new dict.
         for key in prior_keys:
             if key.lower() in mapping:
-                RECORD.rename_field(field=key, new_field=mapping[key.lower()])
+                RECORD.rename_field(key=key, new_key=mapping[key.lower()])
                 # RECORD.data[mapping[key.lower()]] = RECORD.data[key]
                 # del RECORD.data[key]
 
@@ -30,7 +30,7 @@ class SearchSources:
     def drop_fields(cls, *, RECORD: PrepRecord, drop=list) -> PrepRecord:
         # records = [{k: v for k, v in r.items() if k not in drop} for r in records]
         for key_to_drop in drop:
-            RECORD.remove_field(field=key_to_drop)
+            RECORD.remove_field(key=key_to_drop)
         return RECORD
 
     # AIS eLibrary ------------------------------------------------
@@ -57,12 +57,12 @@ class SearchSources:
         if RECORD.data["journal"] in ["Research-in-Progress Papers", "Research Papers"]:
             if "https://aisel.aisnet.org/ecis" in RECORD.data.get("url", ""):
                 RECORD.update_field(
-                    field="journal", value="ECIS", source="prep_ais_source"
+                    key="journal", value="ECIS", source="prep_ais_source"
                 )
 
         if RECORD.data["journal"] == "Management Information Systems Quarterly":
             RECORD.update_field(
-                field="journal", value="MIS Quarterly", source="prep_ais_source"
+                key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
 
         # Note : simple heuristic
@@ -76,21 +76,21 @@ class SearchSources:
         ):
             RECORD.data["ENTRYTYPE"] = "article"
             if "journal" not in RECORD.data and "booktitle" in RECORD.data:
-                RECORD.rename_field(field="booktitle", new_field="journal")
+                RECORD.rename_field(key="booktitle", new_key="journal")
             if (
                 "journal" not in RECORD.data
                 and "title" in RECORD.data
                 and "chapter" in RECORD.data
             ):
-                RECORD.rename_field(field="title", new_field="journal")
-                RECORD.rename_field(field="chapter", new_field="title")
+                RECORD.rename_field(key="title", new_key="journal")
+                RECORD.rename_field(key="chapter", new_key="title")
 
         else:
             RECORD.data["ENTRYTYPE"] = "inproceedings"
             if RECORD.data.get("volume", "") == "UNKNOWN":
-                RECORD.remove_field(field="volume")
+                RECORD.remove_field(key="volume")
             if RECORD.data.get("number", "") == "UNKNOWN":
-                RECORD.remove_field(field="number")
+                RECORD.remove_field(key="number")
 
             if (
                 "booktitle" not in RECORD.data
@@ -98,49 +98,49 @@ class SearchSources:
                 and "chapter" in RECORD.data
             ):
 
-                RECORD.rename_field(field="title", new_field="booktitle")
-                RECORD.rename_field(field="chapter", new_field="title")
+                RECORD.rename_field(key="title", new_key="booktitle")
+                RECORD.rename_field(key="chapter", new_key="title")
 
             if "journal" in RECORD.data and "booktitle" not in RECORD.data:
-                RECORD.rename_field(field="journal", new_field="booktitle")
+                RECORD.rename_field(key="journal", new_key="booktitle")
 
             if "ICIS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
-                    field="booktitle",
+                    key="booktitle",
                     value="International Conference on Information Systems",
                     source="prep_ais_source",
                 )
             if "PACIS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
-                    field="booktitle",
+                    key="booktitle",
                     value="Pacific-Asia Conference on Information Systems",
                     source="prep_ais_source",
                 )
             if "ECIS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
-                    field="booktitle",
+                    key="booktitle",
                     value="European Conference on Information Systems",
                     source="prep_ais_source",
                 )
             if "AMCIS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
-                    field="booktitle",
+                    key="booktitle",
                     value="Americas Conference on Information Systems",
                     source="prep_ais_source",
                 )
             if "HICSS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
-                    field="booktitle",
+                    key="booktitle",
                     value="Hawaii International Conference on System Sciences",
                     source="prep_ais_source",
                 )
 
         if "abstract" in RECORD.data:
             if "N/A" == RECORD.data["abstract"]:
-                RECORD.remove_field(field="abstract")
+                RECORD.remove_field(key="abstract")
         if "author" in RECORD.data:
             RECORD.update_field(
-                field="author",
+                key="author",
                 value=RECORD.data["author"].replace("\n", " "),
                 source="prep_ais_source",
             )
@@ -192,7 +192,7 @@ class SearchSources:
                 RECORD.data["ENTRYTYPE"] = "article"
             if "C" == RECORD.data["Publication_Type"]:
                 RECORD.data["ENTRYTYPE"] = "inproceedings"
-            RECORD.remove_field(field="Publication_Type")
+            RECORD.remove_field(key="Publication_Type")
 
         if "Start_Page" in RECORD.data and "End_Page" in RECORD.data:
             if RECORD.data["Start_Page"] != "nan" and RECORD.data["End_Page"] != "nan":
@@ -200,8 +200,8 @@ class SearchSources:
                     RECORD.data["Start_Page"] + "--" + RECORD.data["End_Page"]
                 )
                 RECORD.data["pages"] = RECORD.data["pages"].replace(".0", "")
-                RECORD.remove_field(field="Start_Page")
-                RECORD.remove_field(field="End_Page")
+                RECORD.remove_field(key="Start_Page")
+                RECORD.remove_field(key="End_Page")
 
         if "author" in RECORD.data:
             RECORD.data["author"] = RECORD.data["author"].replace("; ", " and ")
@@ -231,16 +231,16 @@ class SearchSources:
             if RECORD.data["document_type"] == "Conference Paper":
                 RECORD.data["ENTRYTYPE"] = "inproceedings"
                 if "journal" in RECORD.data:
-                    RECORD.rename_field(field="journal", new_field="booktitle")
+                    RECORD.rename_field(key="journal", new_key="booktitle")
             elif RECORD.data["document_type"] == "Conference Review":
                 RECORD.data["ENTRYTYPE"] = "proceedings"
                 if "journal" in RECORD.data:
-                    RECORD.rename_field(field="journal", new_field="booktitle")
+                    RECORD.rename_field(key="journal", new_key="booktitle")
 
             elif RECORD.data["document_type"] == "Article":
                 RECORD.data["ENTRYTYPE"] = "article"
 
-            RECORD.remove_field(field="document_type")
+            RECORD.remove_field(key="document_type")
 
         if "Start_Page" in RECORD.data and "End_Page" in RECORD.data:
             if RECORD.data["Start_Page"] != "nan" and RECORD.data["End_Page"] != "nan":
@@ -248,12 +248,12 @@ class SearchSources:
                     RECORD.data["Start_Page"] + "--" + RECORD.data["End_Page"]
                 )
                 RECORD.data["pages"] = RECORD.data["pages"].replace(".0", "")
-                RECORD.remove_field(field="Start_Page")
-                RECORD.remove_field(field="End_Page")
+                RECORD.remove_field(key="Start_Page")
+                RECORD.remove_field(key="End_Page")
 
         if "note" in RECORD.data:
             if "cited By " in RECORD.data["note"]:
-                RECORD.rename_field(field="note", new_field="cited_by")
+                RECORD.rename_field(key="note", new_key="cited_by")
                 RECORD.data["cited_by"] = RECORD.data["cited_by"].replace(
                     "cited By ", ""
                 )
@@ -263,7 +263,7 @@ class SearchSources:
 
         drop = ["source"]
         for field_to_drop in drop:
-            RECORD.remove_field(field=field_to_drop)
+            RECORD.remove_field(key=field_to_drop)
 
         return RECORD
 
@@ -322,7 +322,7 @@ scripts: list[dict[str, typing.Any]] = [
     },
     {
         "source_name": "PDF backward search",
-        "source_identifier": "{{file}} (references)",
+        "source_identifier": "{{cited_by_file}} (references)",
         "heuristic": SearchSources.pdf_backward_search_heuristic,
     },
 ]

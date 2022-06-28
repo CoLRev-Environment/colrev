@@ -430,6 +430,39 @@ class ReviewManager:
 
                 settings["search"]["sources"] = sources
 
+            if any(r["name"] == "exclusion" for r in settings["prep"]["prep_rounds"]):
+                e_r = [
+                    r
+                    for r in settings["prep"]["prep_rounds"]
+                    if r["name"] == "exclusion"
+                ][0]
+                if "exclude_predatory_journals" in e_r["scripts"]:
+                    e_r["scripts"].remove("exclude_predatory_journals")
+            settings["prescreen"]["scope"] = [{"LanguageScope": ["en"]}]
+            if "plugin" in settings["prescreen"]:
+                del settings["prescreen"]["plugin"]
+            if "mode" in settings["prescreen"]:
+                del settings["prescreen"]["mode"]
+            settings["prescreen"]["scripts"] = [
+                {"endpoint": "scope_prescreen"},
+                {"endpoint": "colrev_cli_prescreen"},
+            ]
+            if "process" in settings["screen"]:
+                del settings["screen"]["process"]
+            settings["screen"]["scripts"] = [{"endpoint": "colrev_cli_screen"}]
+            settings["pdf_get"]["scripts"] = [
+                {"endpoint": "unpaywall"},
+                {"endpoint": "local_index"},
+            ]
+
+            settings["pdf_prep"]["scripts"] = [
+                {"endpoint": "pdf_check_ocr"},
+                {"endpoint": "remove_coverpage"},
+                {"endpoint": "remove_last_page"},
+                {"endpoint": "validate_pdf_metadata"},
+                {"endpoint": "validate_completeness"},
+            ]
+
             for x in settings["data"]["data_format"]:
                 if "MANUSCRIPT" == x["endpoint"]:
                     if "paper_endpoint_version" not in x:
@@ -531,13 +564,18 @@ class ReviewManager:
 
             return True
 
+        def migrate_0_5_0(self) -> None:
+
+            return
+
         # next version should be:
         # ...
         # {'from': '0.4.0', "to": '0.5.0', 'script': migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"from": "0.3.0", "to": "0.4.0", "script": migrate_0_3_0},
-            {"from": "0.4.0", "to": upcoming_version, "script": migrate_0_4_0},
+            {"from": "0.4.0", "to": "0.5.0", "script": migrate_0_4_0},
+            {"from": "0.5.0", "to": upcoming_version, "script": migrate_0_5_0},
         ]
 
         # Start with the first step if the version is older:
@@ -652,10 +690,12 @@ class ReviewManager:
             return False
 
     def __is_colrev_core_project(self) -> bool:
-        # Note : 'private_config.ini', 'shared_config.ini' are optional
-        # "search",
-        required_paths = [Path(".pre-commit-config.yaml"), Path(".gitignore")]
-        if not all(x.is_file() for x in required_paths):
+        required_paths = [
+            Path(".pre-commit-config.yaml"),
+            Path(".gitignore"),
+            Path("settings.json"),
+        ]
+        if not all((self.path / x).is_file() for x in required_paths):
             return False
         return True
 

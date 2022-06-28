@@ -18,9 +18,12 @@ colrev\_core.screen.Screen
 
       ~Screen.add_criterion
       ~Screen.check_precondition
+      ~Screen.create_screen_split
       ~Screen.delete_criterion
       ~Screen.get_data
       ~Screen.get_exclusion_criteria
       ~Screen.include_all_in_screen
+      ~Screen.main
       ~Screen.set_data
       ~Screen.set_exclusion_criteria
+      ~Screen.setup_custom_script

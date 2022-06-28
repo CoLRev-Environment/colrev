@@ -38,7 +38,7 @@ class EnvironmentManager:
     os_db = "opensearchproject/opensearch-dashboards:1.3.0"
 
     docker_images = {
-        "lfoppiano/grobid": "lfoppiano/grobid:0.7.0",
+        "lfoppiano/grobid": "lfoppiano/grobid:0.7.1",
         "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
         "jbarlow83/ocrmypdf": "jbarlow83/ocrmypdf:v13.3.0",
         "zotero/translation-server": "zotero/translation-server:2.0.4",
@@ -549,8 +549,8 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
-                source_info = Record(data=record).get_provenance_field_source(field=k)
-                SAVED_RECORD.update_field(field=k, value=v, source=source_info)
+                source_info = Record(data=record).get_provenance_field_source(key=k)
+                SAVED_RECORD.update_field(key=k, value=v, source=source_info)
 
             if "file" in record and "fulltext" not in SAVED_RECORD.data:
                 try:
@@ -967,7 +967,7 @@ class LocalIndex:
 
                 [
                     Record(data=record).add_data_provenance(
-                        field=curated_field, source=f"CURATED:{curation_url};;"
+                        key=curated_field, source=f"CURATED:{curation_url};;"
                     )
                     for record in records.values()
                 ]
