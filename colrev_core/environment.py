@@ -967,7 +967,7 @@ class LocalIndex:
 
                 [
                     Record(data=record).add_data_provenance(
-                        field=curated_field, source=f"CURATED:{curation_url};;"
+                        key=curated_field, source=f"CURATED:{curation_url};;"
                     )
                     for record in records.values()
                 ]
