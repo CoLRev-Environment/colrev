@@ -23,7 +23,7 @@ from colrev_core.record import RecordState
 
 
 class PDFRetrievalEndpoint(zope.interface.Interface):
-    def get_pdf(self, REVIEW_MANAGER, RECORD):
+    def get_pdf(REVIEW_MANAGER, RECORD):
         return RECORD
 
 
@@ -579,6 +579,24 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return records
+
+    def setup_custom_script(self) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, "template/custom_pdf_get_script.py")
+        if filedata:
+            with open("custom_pdf_get_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_get_script.py")
+
+        self.REVIEW_MANAGER.settings.pdf_get.scripts.append(
+            {"endpoint": "custom_pdf_get_script"}
+        )
+
+        self.REVIEW_MANAGER.save_settings()
+
+        return
 
     def main(self) -> None:
 

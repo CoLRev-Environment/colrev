@@ -26,7 +26,7 @@ from colrev_core.record import RecordState
 
 
 class PDFPreparationEndpoint(zope.interface.Interface):
-    def prep_pdf(self, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(REVIEW_MANAGER, RECORD, PAD) -> dict:
         return RECORD.data
 
 
@@ -961,6 +961,24 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(msg="Update colrev_pdf_ids")
+        return
+
+    def setup_custom_script(self) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, "template/custom_pdf_prep_script.py")
+        if filedata:
+            with open("custom_pdf_prep_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_prep_script.py")
+
+        self.REVIEW_MANAGER.settings.pdf_prep.scripts.append(
+            {"endpoint": "custom_pdf_prep_script"}
+        )
+
+        self.REVIEW_MANAGER.save_settings()
+
         return
 
     def main(

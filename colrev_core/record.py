@@ -353,6 +353,8 @@ class Record:
         return
 
     def reset_pdf_provenance_hints(self) -> None:
+        if "colrev_data_provenance" not in self.data:
+            self.add_data_provenance_hint(key="file", hint="")
         if "file" in self.data["colrev_data_provenance"]:
             # TODO : check note and remove hints selectively
             # note = d_p_dict['file']['note']
