@@ -564,13 +564,18 @@ class ReviewManager:
 
             return True
 
+        def migrate_0_5_0(self) -> None:
+
+            return
+
         # next version should be:
         # ...
         # {'from': '0.4.0', "to": '0.5.0', 'script': migrate_0_4_0}
         # {'from': '0.5.0', "to": upcoming_version, 'script': migrate_0_5_0}
         migration_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"from": "0.3.0", "to": "0.4.0", "script": migrate_0_3_0},
-            {"from": "0.4.0", "to": upcoming_version, "script": migrate_0_4_0},
+            {"from": "0.4.0", "to": "0.5.0", "script": migrate_0_4_0},
+            {"from": "0.5.0", "to": upcoming_version, "script": migrate_0_5_0},
         ]
 
         # Start with the first step if the version is older:

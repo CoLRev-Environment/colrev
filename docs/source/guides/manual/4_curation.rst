@@ -18,7 +18,7 @@ Search available curations on `GitHub <https://github.com/topics/colrev-curation
       colrev env --install https://github.com/u_name/repo_name
       colrev env --index
 
-See `reuse of community-curated data <../technical_documentation/colrev.html#reuse>`_ for details.
+See `reuse of community-curated data <../../technical_documentation/colrev.html>`_ for details.
 
 
 

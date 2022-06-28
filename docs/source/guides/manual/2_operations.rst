@@ -17,7 +17,7 @@ Init
 
 .. TODO : include options for different types of reviews once available
 
-Once the repository is set up, you can share it with your team (see `instructions <best_practices.html#collaborate-in-a-team>`_).
+Once the repository is set up, you can share it with your team (see `instructions <3_collaboration>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
 
@@ -475,7 +475,7 @@ Paper
 
 	colrev paper [options]
 
-Links and references for standalone literature reviews are available in the `best practices <./best_practices.html>`_ section.
+Links and references for standalone literature reviews will be made available here (TODO).
 
 **References**
 

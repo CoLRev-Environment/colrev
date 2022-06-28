@@ -14,17 +14,20 @@ Upcoming
 - Templates for review_types
 - Synchronous session support
 
-2022-08-01: v0.6.0 (expected)
+2022-09-01: v0.6.0 (expected)
 --------------------------------------
 
 - Tests
 - Architecture refactoring
 
-2022-06-01: v0.5.0 (expected)
+2022-06-28: v0.5.0
 --------------------------------------
 
 - Data provenance model
+- Extensible endpoints (search, prep, prescreen, pdf-get, pdf-prep, screen, data)
+- Prescreen scope
 - Documentation
+- Push/pull (including corrections), sync, validate, service operations
 
 2022-04-06: v0.4.0
 ---------------------------

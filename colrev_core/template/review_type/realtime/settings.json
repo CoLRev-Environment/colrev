@@ -55,14 +55,20 @@
     "same_source_merges": "prevent"
   },
   "prescreen": {
-    "plugin": null,
-    "mode": null,
     "scope": [
-      {
-        "LanguageScope": [
-          "en"
-        ]
-      }
+        {
+            "LanguageScope": [
+                "en"
+            ]
+        }
+    ],
+    "scripts": [
+        {
+            "endpoint": "scope_prescreen"
+        },
+        {
+            "endpoint": "colrev_cli_prescreen"
+        }
     ]
   },
   "pdf_get": {
@@ -96,12 +102,12 @@
     ]
   },
   "screen": {
-    "process": {
-      "overlapp": null,
-      "mode": null,
-      "parallel_independent": null
-    },
-    "criteria": []
+    "criteria": [],
+    "scripts": [
+        {
+            "endpoint": "colrev_cli_screen"
+        }
+    ]
   },
   "data": {
     "data_format": [

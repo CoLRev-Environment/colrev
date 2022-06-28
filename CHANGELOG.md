@@ -15,6 +15,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0).
 
 ### Fixed
 
+
+### [0.5.0] - 2022-06-28
+
+### Added
+
+- Push/pull (including corrections), sync, validate, service operations
+- Data provenance model (colrev_data_provenance, colrev_masterdata_provenance)
+- Extensible endpoints (search, prep, prescreen, pdf-get, pdf-prep, screen, data)
+- Prescreen scope
+
+### Changed
+
+- Improvements: prep, dedupe operations
+- Performance improvements (e.g., status, bibtexparser > pybtex)
+- Extended Record class (e.g., merge and fuse_best_fields)
+- LocalIndex: Elasticsearch to Opensearch
+- Dedupe: testing and parameter optimization (option to prevent same-source merges)
+- Settings.json and validation
+- Updated documentation
+- Testing and refactoring (e.g., for Windows, prefer keyword arguments in functions, python package type information)
+
+
 ### [0.4.0] - 2022-04-06
 
 ### Added
