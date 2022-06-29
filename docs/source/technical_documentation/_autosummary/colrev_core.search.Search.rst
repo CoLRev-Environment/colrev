@@ -18,8 +18,10 @@ colrev\_core.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
+      ~Search.load_search_scripts
       ~Search.parse_parameters
       ~Search.parse_sources
+      ~Search.save_feed_file
       ~Search.setup_custom_script
       ~Search.update
       ~Search.validate_query
