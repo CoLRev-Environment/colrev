@@ -24,6 +24,7 @@ colrev\_core.environment
       GrobidService
       LocalIndex
       Resources
+      ScreenshotService
       TEIParser
       ZoteroTranslationService
 

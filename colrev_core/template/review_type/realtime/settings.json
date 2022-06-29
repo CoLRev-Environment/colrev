@@ -79,6 +79,9 @@
       },
       {
         "endpoint": "local_index"
+      },
+      {
+        "endpoint": "website_screenshot"
       }
     ]
   },

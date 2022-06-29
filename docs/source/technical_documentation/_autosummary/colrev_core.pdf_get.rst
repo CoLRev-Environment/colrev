@@ -23,3 +23,4 @@ colrev\_core.pdf\_get
       LocalIndexEndpoint
       PDF_Retrieval
       UnpaywallEndpoint
+      WebsiteScreenshotEndpoint

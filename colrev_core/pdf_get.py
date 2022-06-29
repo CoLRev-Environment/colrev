@@ -141,6 +141,29 @@ class LocalIndexEndpoint:
         return RECORD
 
 
+@zope.interface.implementer(PDFRetrievalEndpoint)
+class WebsiteScreenshotEndpoint:
+    @classmethod
+    def get_pdf(cls, REVIEW_MANAGER, RECORD):
+        from colrev_core.environment import ScreenshotService
+
+        if "online" == RECORD.data["ENTRYTYPE"]:
+            SCREENSHOT_SERVICE = ScreenshotService()
+            SCREENSHOT_SERVICE.start_screenshot_service()
+
+            pdf_filepath = REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+                f"{RECORD.data['ID']}.pdf"
+            )
+            RECORD = SCREENSHOT_SERVICE.add_screenshot(
+                RECORD=RECORD, pdf_filepath=pdf_filepath
+            )
+
+            if "file" in RECORD.data:
+                REVIEW_MANAGER.REVIEW_DATASET.import_file(record=RECORD.data)
+
+        return RECORD
+
+
 class PDF_Retrieval(Process):
     def __init__(
         self,
@@ -167,6 +190,9 @@ class PDF_Retrieval(Process):
             },
             "local_index": {
                 "endpoint": LocalIndexEndpoint,
+            },
+            "website_screenshot": {
+                "endpoint": WebsiteScreenshotEndpoint,
             },
         }
 

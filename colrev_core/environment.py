@@ -45,6 +45,7 @@ class EnvironmentManager:
         "zotero/translation-server": "zotero/translation-server:2.0.4",
         "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
         "opensearchproject/opensearch-dashboards": os_db,
+        "browserless/chrome": "browserless/chrome:latest",
     }
 
     def __init__(self):
@@ -1329,6 +1330,111 @@ class ZoteroTranslationService:
         except requests.exceptions.ConnectionError:
             pass
         return False
+
+
+class ScreenshotService:
+    def __init__(self):
+        pass
+
+    # TODO : close service after the script has run
+
+    def start_screenshot_service(self) -> None:
+        import docker
+        from colrev_core.environment import EnvironmentManager
+        import time
+
+        if self.screenshot_service_available():
+            return
+
+        EnvironmentManager.build_docker_images()
+
+        chrome_browserless_image = EnvironmentManager.docker_images[
+            "browserless/chrome"
+        ]
+
+        client = docker.from_env()
+
+        running_containers = [
+            str(container.image) for container in client.containers.list()
+        ]
+        if chrome_browserless_image not in running_containers:
+            client.containers.run(
+                chrome_browserless_image,
+                ports={"3000/tcp": ("127.0.0.1", 3000)},
+                auto_remove=True,
+                detach=True,
+            )
+
+        i = 0
+        while i < 45:
+            if self.screenshot_service_available():
+                break
+            time.sleep(1)
+            i += 1
+        return
+
+    def screenshot_service_available(self) -> bool:
+        import requests
+
+        content_type_header = {"Content-type": "text/plain"}
+
+        browserless_chrome_available = False
+        try:
+            et = requests.get(
+                "http://127.0.0.1:3000/",
+                headers=content_type_header,
+            )
+            browserless_chrome_available = et.status_code == 200
+
+        except requests.exceptions.ConnectionError:
+            pass
+
+        if browserless_chrome_available:
+            return True
+        else:
+            return False
+
+    def add_screenshot(self, *, RECORD, pdf_filepath):
+        if "url" not in RECORD.data:
+            return RECORD
+
+        import requests
+        from datetime import datetime
+
+        urldate = datetime.today().strftime("%Y-%m-%d")
+
+        json_val = {
+            "url": RECORD.data["url"],
+            "options": {
+                "displayHeaderFooter": True,
+                "printBackground": False,
+                "format": "A2",
+            },
+        }
+
+        r = requests.post("http://127.0.0.1:3000/pdf", json=json_val)
+
+        if 200 == r.status_code:
+            with open(pdf_filepath, "wb") as f:
+                f.write(r.content)
+
+            RECORD.update_field(
+                key="file",
+                value=str(pdf_filepath),
+                source="browserless/chrome screenshot",
+            )
+            RECORD.data.update(colrev_status=RecordState.rev_prescreen_included)
+            RECORD.update_field(
+                key="urldate", value=urldate, source="browserless/chrome screenshot"
+            )
+
+        else:
+            print(
+                "URL screenshot retrieval error "
+                f"{r.status_code}/{RECORD.data['url']}"
+            )
+
+        return RECORD
 
 
 class GrobidService:

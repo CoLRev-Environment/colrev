@@ -565,6 +565,18 @@ class ReviewManager:
             return True
 
         def migrate_0_5_0(self) -> None:
+            import json
+
+            with open("settings.json") as f:
+                settings = json.load(f)
+            settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
+
+            with open("settings.json", "w") as outfile:
+                json.dump(settings, outfile, indent=4)
+
+            self.settings = self.load_settings()
+            self.save_settings()
+            self.REVIEW_DATASET.add_setting_changes()
 
             return
 
