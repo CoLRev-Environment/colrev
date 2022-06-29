@@ -37,6 +37,7 @@ class EnvironmentManager:
 
     os_db = "opensearchproject/opensearch-dashboards:1.3.0"
 
+    # TODO : include ports in the dict?
     docker_images = {
         "lfoppiano/grobid": "lfoppiano/grobid:0.7.1",
         "pandoc/ubuntu-latex": "pandoc/ubuntu-latex:2.14",
@@ -141,18 +142,10 @@ class EnvironmentManager:
         repo_tags = [image.tags for image in client.images.list()]
         repo_tags = [tag[0][: tag[0].find(":")] for tag in repo_tags if tag]
 
-        if "lfoppiano/grobid" not in repo_tags:
-            print("Pulling grobid Docker image...")
-            client.images.pull(cls.docker_images["lfoppiano/grobid"])
-        if "pandoc/ubuntu-latex" not in repo_tags:
-            print("Pulling pandoc/ubuntu-latex image...")
-            client.images.pull(cls.docker_images["pandoc/ubuntu-latex"])
-        if "jbarlow83/ocrmypdf" not in repo_tags:
-            print("Pulling jbarlow83/ocrmypdf image...")
-            client.images.pull(cls.docker_images["jbarlow83/ocrmypdf"])
-        if "zotero/translation-server" not in repo_tags:
-            print("Pulling zotero/translation-server image...")
-            client.images.pull(cls.docker_images["zotero/translation-server"])
+        for img_name, img_version in cls.docker_images.items():
+            if img_name not in repo_tags:
+                print(f"Pulling {img_name} Docker image...")
+                client.images.pull(img_version)
 
         return
 

@@ -297,6 +297,7 @@ class Preparation(Process):
         "note",
         "issn",
         "language",
+        "howpublished",
     ]
 
     # Note : the followin objects have heavy memory footprints and should be
@@ -536,6 +537,18 @@ class Preparation(Process):
                 if s["source_name"] == origin_source_name
             ][0]
             RECORD = custom_prep_script(RECORD=RECORD)
+
+        if "howpublished" in RECORD.data and "url" not in RECORD.data:
+            if "url" in RECORD.data["howpublished"]:
+                RECORD.rename_field(key="howpublished", new_key="url")
+                RECORD.data["url"] = (
+                    RECORD.data["url"].replace("\\url{", "").rstrip("}")
+                )
+
+        if "webpage" == RECORD.data["ENTRYTYPE"].lower() or (
+            "misc" == RECORD.data["ENTRYTYPE"].lower() and "url" in RECORD.data
+        ):
+            RECORD.data["ENTRYTYPE"] = "online"
 
         return RECORD
 
@@ -2219,6 +2232,9 @@ class Preparation(Process):
         else:
             RECORD.remove_quality_defect_notes()
 
+        if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
+
         change = 1 - Record.get_record_similarity(
             RECORD_A=RECORD, RECORD_B=UNPREPARED_RECORD
         )
@@ -2365,6 +2381,9 @@ class Preparation(Process):
                 or item["prep_round"] in ["load_fixes"]
             ):
                 RECORD.data = preparation_record.copy()
+                RECORD = self.update_masterdata_provenance(
+                    RECORD=RECORD, UNPREPARED_RECORD=UNPREPARED_RECORD
+                )
                 # break
 
             # diff = (datetime.now() - startTime).total_seconds()
@@ -2375,13 +2394,9 @@ class Preparation(Process):
 
         if self.LAST_ROUND:
             RECORD.data = preparation_record.copy()
-            if (
-                RecordState.md_needs_manual_preparation
-                == preparation_record["colrev_status"]
-            ):
-                RECORD = self.update_masterdata_provenance(
-                    RECORD=RECORD, UNPREPARED_RECORD=UNPREPARED_RECORD
-                )
+            RECORD = self.update_masterdata_provenance(
+                RECORD=RECORD, UNPREPARED_RECORD=UNPREPARED_RECORD
+            )
         else:
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 if (

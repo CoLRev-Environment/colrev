@@ -873,7 +873,10 @@ class Record:
             self.data["colrev_masterdata_provenance"] = {}
         if key in self.data["colrev_masterdata_provenance"]:
             if hint not in self.data["colrev_masterdata_provenance"][key]["note"]:
-                self.data["colrev_masterdata_provenance"][key]["note"] += f",{hint}"
+                if "" == self.data["colrev_masterdata_provenance"][key]["note"]:
+                    self.data["colrev_masterdata_provenance"][key]["note"] += f"{hint}"
+                else:
+                    self.data["colrev_masterdata_provenance"][key]["note"] += f",{hint}"
         else:
             self.data["colrev_masterdata_provenance"][key] = {
                 "source": "ORIGINAL",
@@ -983,6 +986,11 @@ class Record:
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
                     defect_field_keys.append(key)
                 if len(self.data[key]) < 5:
+                    defect_field_keys.append(key)
+
+                if str(self.data[key]).count(" ") > (
+                    2 * str(self.data[key]).count(",")
+                ):
                     defect_field_keys.append(key)
 
             if "title" == key:
