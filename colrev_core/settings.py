@@ -17,10 +17,29 @@ class IDPpattern(Enum):
     three_authors_year = "THREE_AUTHORS_YEAR"
 
 
+class ReviewType(Enum):
+    curated_masterdata = "curated_masterdata"
+    realtime = "realtime"
+    literature_review = "literature_review"
+    narrative_review = "narrative_review"
+    descriptive_review = "descriptive_review"
+    scoping_review = "scoping_review"
+    critical_review = "critical_review"
+    theoretical_review = "theoretical_review"
+    conceptual_review = "conceptual_review"
+    qualitative_systematic_review = "qualitative_systematic_review"
+    meta_analysis = "meta_analysis"
+
+    def __str__(self):
+        return (
+            f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
+        )
+
+
 @dataclass
 class ProjectConfiguration:
     id_pattern: IDPpattern
-    review_type: str
+    review_type: ReviewType
     share_stat_req: str
     delay_automated_processing: bool
     curation_url: typing.Optional[str]

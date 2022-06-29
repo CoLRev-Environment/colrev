@@ -241,8 +241,21 @@ class ManuscriptEndpoint:
 
             author = authorship_heuristic()
 
-            PAPER_resource_path = Path("template/") / PAPER_RELATIVE
-            retrieve_package_file(PAPER_resource_path, PAPER)
+            review_type = REVIEW_MANAGER.settings.project.review_type
+
+            r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
+            PAPER_resource_path = (
+                Path(f"template/review_type/{r_type_path}/") / PAPER_RELATIVE
+            )
+            try:
+                retrieve_package_file(PAPER_resource_path, PAPER)
+            except Exception as e:
+                print(e)
+                PAPER_resource_path = Path("template/") / PAPER_RELATIVE
+                retrieve_package_file(PAPER_resource_path, PAPER)
+                pass
+
+            inplace_change(PAPER, "{{review_type}}", str(review_type))
             inplace_change(PAPER, "{{project_title}}", title)
             inplace_change(PAPER, "{{author}}", author)
             REVIEW_MANAGER.logger.info(

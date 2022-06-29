@@ -4,6 +4,8 @@ from pathlib import Path
 
 import git
 
+from colrev_core.settings import ReviewType
+
 
 class Initializer:
     def __init__(
@@ -11,7 +13,7 @@ class Initializer:
         *,
         project_name: str,
         SHARE_STAT_REQ: str,
-        type: bool = False,
+        type: str,
         url: str = "NA",
         example: bool = False,
         local_index_repo: bool = False,
@@ -25,6 +27,8 @@ class Initializer:
             self.project_name = str(Path.cwd().name)
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
         assert not (example and local_index_repo)
+        assert type in ReviewType._member_names_
+
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
         self.review_type = type
         self.url = url
@@ -74,9 +78,7 @@ class Initializer:
         import json
 
         # Note: parse instead of copy to avoid format changes
-        filedata = pkgutil.get_data(
-            __name__, "template/review_type/default/settings.json"
-        )
+        filedata = pkgutil.get_data(__name__, "template/settings.json")
         if filedata:
             settings = json.loads(filedata.decode("utf-8"))
             with open("settings.json", "w", encoding="utf8") as file:
@@ -98,28 +100,138 @@ class Initializer:
         for rp, p in files_to_retrieve:
             self.__retrieve_package_file(template_file=rp, target=p)
 
-        if "curated_masterdata" == self.review_type:
+        with open("settings.json") as f:
+            settings = json.load(f)
+
+        settings["project"]["review_type"] = self.review_type
+        # Principle: adapt values provided by the default settings.json
+        # instead of creating a new settings.json
+
+        if self.review_type not in ["curated_masterdata"]:
+            settings["data"]["data_format"] = [
+                {
+                    "endpoint": "MANUSCRIPT",
+                    "paper_endpoint_version": "1.0",
+                    "word_template": "APA-7.docx",
+                    "csl_style": "apa.csl",
+                }
+            ]
+
+        if "literature_review" == self.review_type:
+            pass
+
+        elif "narrative_review" == self.review_type:
+            pass
+
+        elif "descriptive_review" == self.review_type:
+            settings["data"]["data_format"].append(
+                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
+            )
+
+        elif "scoping_review" == self.review_type:
+            settings["data"]["data_format"].append(
+                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
+            )
+
+        elif "critical_review" == self.review_type:
+            settings["data"]["data_format"].append(
+                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
+            )
+
+        elif "theoretical_review" == self.review_type:
+            pass
+
+        elif "conceptual_review" == self.review_type:
+            pass
+
+        elif "qualitative_systematic_review" == self.review_type:
+            settings["data"]["data_format"].append(
+                {
+                    "endpoint": "STRUCTURED",
+                    "structured_data_endpoint_version": "1.0",
+                    "fields": [],
+                }
+            )
+            settings["data"]["data_format"].append(
+                {"endpoint": "PrismaDiagram", "prisma_data_endpoint_version": "1.0"}
+            )
+
+        elif "meta_analysis" == self.review_type:
+            settings["data"]["data_format"].append(
+                {
+                    "endpoint": "STRUCTURED",
+                    "structured_data_endpoint_version": "1.0",
+                    "fields": [],
+                }
+            )
+            settings["data"]["data_format"].append(
+                {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
+            )
+
+        elif "realtime" == self.review_type:
+            settings["project"]["delay_automated_processing"] = False
+            settings["prep"]["prep_rounds"] = [
+                {
+                    "name": "high_confidence",
+                    "similarity": 0.95,
+                    "scripts": [
+                        "load_fixes",
+                        "remove_urls_with_500_errors",
+                        "remove_broken_IDs",
+                        "global_ids_consistency_check",
+                        "prep_curated",
+                        "format",
+                        "resolve_crossrefs",
+                        "get_doi_from_urls",
+                        "get_masterdata_from_doi",
+                        "get_masterdata_from_crossref",
+                        "get_masterdata_from_dblp",
+                        "get_masterdata_from_open_library",
+                        "get_year_from_vol_iss_jour_crossref",
+                        "get_record_from_local_index",
+                        "remove_nicknames",
+                        "format_minor",
+                        "drop_fields",
+                    ],
+                }
+            ]
+
+        elif "curated_masterdata" == self.review_type:
             # replace readme
             self.__retrieve_package_file(
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
+            if self.url:
+                self.__inplace_change(
+                    filename=Path("readme.md"),
+                    old_string="{{url}}",
+                    new_string=self.url,
+                )
+
+            settings["project"]["curated_masterdata"] = True
+            settings["prescreen"]["scripts"] = [{"endpoint": "conditional_prescreen"}]
+            settings["screen"]["scripts"] = [{"endpoint": "conditional_screen"}]
+            settings["pdf_get"]["scripts"] = []
+
+        with open("settings.json", "w") as outfile:
+            json.dump(settings, outfile, indent=4)
+
+        if "review" in self.project_name.lower():
             self.__inplace_change(
-                filename=Path("readme.md"), old_string="{{url}}", new_string=self.url
+                filename=Path("readme.md"),
+                old_string="{{project_title}}",
+                new_string=self.project_name.rstrip(" "),
             )
-
-        elif "realtime" == self.review_type:
-            # replace settings
-            self.__retrieve_package_file(
-                template_file=Path("template/review_type/realtime/settings.json"),
-                target=Path("settings.json"),
+        else:
+            r_type_suffix = self.review_type.replace("_", " ").replace(
+                "meta analysis", "meta-analysis"
             )
-
-        self.__inplace_change(
-            filename=Path("readme.md"),
-            old_string="{{project_title}}",
-            new_string=self.project_name.rstrip(" "),
-        )
+            self.__inplace_change(
+                filename=Path("readme.md"),
+                old_string="{{project_title}}",
+                new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
+            )
 
         global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
         if 2 != len(global_git_vars):
@@ -256,6 +368,7 @@ class Initializer:
             Initializer(
                 project_name="local_index",
                 SHARE_STAT_REQ="PROCESSED",
+                type="curated_masterdata",
                 local_index_repo=True,
             )
             print("Created local_index repository")

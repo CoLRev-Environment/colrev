@@ -497,11 +497,18 @@ class ReviewManager:
 
             settings["dedupe"]["same_source_merges"] = "prevent"
 
+            if settings["project"]["review_type"] == "NA":
+                if "curated_metadata" in str(self.path):
+                    settings["project"]["review_type"] = "curated_masterdata"
+                else:
+                    settings["project"]["review_type"] = "literature_review"
+
             with open("settings.json", "w") as outfile:
                 json.dump(settings, outfile, indent=4)
 
             self.settings = self.load_settings()
             self.save_settings()
+
             self.REVIEW_DATASET.add_setting_changes()
             self.sources = self.REVIEW_DATASET.load_sources()
             records = self.REVIEW_DATASET.load_records_dict()
@@ -570,6 +577,11 @@ class ReviewManager:
             with open("settings.json") as f:
                 settings = json.load(f)
             settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
+            if settings["project"]["review_type"] == "NA":
+                if "curated_metadata" in str(self.path):
+                    settings["project"]["review_type"] = "curated_masterdata"
+                else:
+                    settings["project"]["review_type"] = "literature_review"
 
             with open("settings.json", "w") as outfile:
                 json.dump(settings, outfile, indent=4)

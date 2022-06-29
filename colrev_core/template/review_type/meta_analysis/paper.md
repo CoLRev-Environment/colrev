@@ -12,17 +12,23 @@ tblPrefix: "Table"
 
 # Introduction
 
-# Background
-
 # Methodology
+
+## Search
+
+## Screen
+
+## Data extraction
+
+## Risk of bias assessment
+
+## Analysis
 
 # Synthesis
 
-# Discussion
-
 # Conclusion
 
-# Coding and synthesis
+# Appendix
 
 <!-- NEW_RECORD_SOURCE -->
 
