@@ -182,9 +182,7 @@ class Record:
                     if "colrev_id" not in self.data:
                         self.data["colrev_id"] = colrev_id
                     elif colrev_id not in self.data["colrev_id"]:
-                        self.data["colrev_id"] = (
-                            self.data["colrev_id"] + ";" + colrev_id
-                        )
+                        self.data["colrev_id"] += ";" + colrev_id
 
                     # else should not happen because colrev_ids should only be
                     # created once records are prepared (complete)
@@ -989,7 +987,12 @@ class Record:
                     defect_field_keys.append(key)
 
                 if str(self.data[key]).count(" ") > (
-                    2 * str(self.data[key]).count(",")
+                    4 * str(self.data[key]).count(",")
+                ):
+                    defect_field_keys.append(key)
+
+                if str(self.data[key]).count(" and ") != (
+                    str(self.data[key]).count(",") - 1
                 ):
                     defect_field_keys.append(key)
 

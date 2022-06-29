@@ -2197,43 +2197,49 @@ class Preparation(Process):
         self, *, RECORD: PrepRecord, UNPREPARED_RECORD: PrepRecord
     ) -> PrepRecord:
 
-        missing_fields = RECORD.missing_fields()
-        if missing_fields:
-            for missing_field in missing_fields:
-                RECORD.add_masterdata_provenance_hint(key=missing_field, hint="missing")
-        else:
-            RECORD.set_masterdata_complete()
+        if not RECORD.masterdata_is_curated():
 
-        inconsistencies = RECORD.get_inconsistencies()
-        if inconsistencies:
-            for inconsistency in inconsistencies:
-                RECORD.add_masterdata_provenance_hint(
-                    key=inconsistency,
-                    hint="inconsistent with ENTRYTYPE",
+            missing_fields = RECORD.missing_fields()
+            if missing_fields:
+                for missing_field in missing_fields:
+                    RECORD.add_masterdata_provenance_hint(
+                        key=missing_field, hint="missing"
+                    )
+            else:
+                RECORD.set_masterdata_complete()
+
+            inconsistencies = RECORD.get_inconsistencies()
+            if inconsistencies:
+                for inconsistency in inconsistencies:
+                    RECORD.add_masterdata_provenance_hint(
+                        key=inconsistency,
+                        hint="inconsistent with ENTRYTYPE",
+                    )
+            else:
+                RECORD.set_masterdata_consistent()
+
+            incomplete_fields = RECORD.get_incomplete_fields()
+            if incomplete_fields:
+                for incomplete_field in incomplete_fields:
+                    RECORD.add_masterdata_provenance_hint(
+                        key=incomplete_field, hint="incomplete"
+                    )
+            else:
+                RECORD.set_fields_complete()
+
+            defect_fields = RECORD.get_quality_defects()
+            if defect_fields:
+                for defect_field in defect_fields:
+                    RECORD.add_masterdata_provenance_hint(
+                        key=defect_field, hint="quality_defect"
+                    )
+            else:
+                RECORD.remove_quality_defect_notes()
+
+            if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+                RECORD.data.update(
+                    colrev_status=RecordState.md_needs_manual_preparation
                 )
-        else:
-            RECORD.set_masterdata_consistent()
-
-        incomplete_fields = RECORD.get_incomplete_fields()
-        if incomplete_fields:
-            for incomplete_field in incomplete_fields:
-                RECORD.add_masterdata_provenance_hint(
-                    key=incomplete_field, hint="incomplete"
-                )
-        else:
-            RECORD.set_fields_complete()
-
-        defect_fields = RECORD.get_quality_defects()
-        if defect_fields:
-            for defect_field in defect_fields:
-                RECORD.add_masterdata_provenance_hint(
-                    key=defect_field, hint="quality_defect"
-                )
-        else:
-            RECORD.remove_quality_defect_notes()
-
-        if missing_fields or inconsistencies or incomplete_fields or defect_fields:
-            RECORD.data.update(colrev_status=RecordState.md_needs_manual_preparation)
 
         change = 1 - Record.get_record_similarity(
             RECORD_A=RECORD, RECORD_B=UNPREPARED_RECORD

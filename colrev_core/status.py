@@ -861,7 +861,7 @@ class Status(Process):
         )
         if denominator > 0:
 
-            perc_curated = stat["CURATED_records"] / (denominator)
+            perc_curated = (stat["CURATED_records"] / (denominator)) * 100
 
         rjust_padd = 7
         search_info = (
