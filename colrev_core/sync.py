@@ -107,12 +107,12 @@ class Sync:
             self.records_to_import.append(record)
         return
 
-    def format_ref(self, *, v) -> str:
+    def format_ref(self, *, reference: dict) -> str:
         formatted_ref = (
-            f"{v.get('author', '')} ({v.get('year', '')}) "
-            + f"{v.get('title', '')}. "
-            + f"{v.get('journal', '')}{v.get('booktitle', '')}, "
-            + f"{v.get('volume', '')} ({v.get('number', '')})"
+            f"{reference.get('author', '')} ({reference.get('year', '')}) "
+            + f"{reference.get('title', '')}. "
+            + f"{reference.get('journal', '')}{reference.get('booktitle', '')}, "
+            + f"{reference.get('volume', '')} ({reference.get('number', '')})"
         )
         return formatted_ref
 
@@ -146,7 +146,7 @@ class Sync:
         if len(added) > 0:
             print("Loaded:")
             for element in added:
-                print(" - " + self.format_ref(v=element))
+                print(" - " + self.format_ref(reference=element))
 
             print(f"Loaded {len(added)} papers")
 
