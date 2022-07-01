@@ -42,6 +42,7 @@ colrev\_core.settings
       PrepRound
       PrescreenConfiguration
       ProjectConfiguration
+      ReviewType
       ScreenConfiguration
       ScreenCriterion
       SearchConfiguration
