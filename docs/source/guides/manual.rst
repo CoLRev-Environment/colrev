@@ -27,7 +27,7 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    pip install colrev
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
-Extensions are available in the `extensions section <guides/manual/A_appendix.html>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
+Extensions are available in the `extensions section <manual/A_appendix.html#extension>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.
 
 **Python venv**
 

@@ -314,16 +314,16 @@ class PrepMan(Process):
         return md_prep_man_data
 
     def set_data(self, *, record, PAD: int = 40) -> None:
-        from colrev_core.record import Record
+        from colrev_core.record import PrepRecord
 
         PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
         record.update(colrev_status=RecordState.md_prepared)
-        RECORD = Record(data=record)
+        RECORD = PrepRecord(data=record)
         RECORD.set_masterdata_complete()
         RECORD.set_masterdata_consistent()
         RECORD.set_fields_complete()
+        RECORD.drop_fields(PREPARATION)
         record = RECORD.get_data()
-        record = PREPARATION.drop_fields(RECORD=record)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

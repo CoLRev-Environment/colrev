@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from colrev_core.prep import PrepRecord
+    from colrev_core.record import PrepRecord
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 

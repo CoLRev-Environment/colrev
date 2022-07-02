@@ -553,7 +553,7 @@ class ReviewDataset:
         """Generate a blacklist to avoid setting duplicate IDs"""
         from colrev_core.environment import RecordNotInIndexException
         from colrev_core.settings import IDPpattern
-        from colrev_core.prep import PrepRecord
+        from colrev_core.record import PrepRecord
         import re
         import unicodedata
 
@@ -912,12 +912,8 @@ class ReviewDataset:
         return
 
     def format_main_references(self) -> bool:
-        from colrev_core.prep import Preparation, PrepRecord
+        from colrev_core.record import PrepRecord
         from colrev_core.process import FormatProcess
-
-        PREPARATION = Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
 
         FormatProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)  # to notify
 
@@ -933,12 +929,12 @@ class ReviewDataset:
                 RecordState.md_needs_manual_preparation,
                 RecordState.md_imported,
             ]:
-                RECORD = PREPARATION.update_masterdata_provenance(
-                    RECORD=RECORD, UNPREPARED_RECORD=RECORD
+                RECORD.update_masterdata_provenance(
+                    UNPREPARED_RECORD=RECORD, REVIEW_MANAGER=self.REVIEW_MANAGER
                 )
 
             if record["colrev_status"] == RecordState.md_needs_manual_preparation:
-                RECORD = PREPARATION.update_metadata_status(RECORD=RECORD)
+                RECORD.update_metadata_status(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
                 RECORD.reset_pdf_provenance_hints()

@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 import zope.interface
 
-from colrev_core.prep import PrepScript
+from colrev_core.process import PreparationEndpoint
 
 
-@zope.interface.implementer(PrepScript)
+@zope.interface.implementer(PreparationEndpoint)
 class CustomPrepare:
     @classmethod
-    def prepare(cls, PREP_RECORD):
+    def prepare(cls, PREPARATION, RECORD):
 
-        if "journal" in PREP_RECORD.data:
-            PREP_RECORD.data["journal"] = PREP_RECORD.data["journal"].replace(
+        if "journal" in RECORD.data:
+            RECORD.data["journal"] = RECORD.data["journal"].replace(
                 "MISQ", "MIS Quarterly"
             )
 
-        return PREP_RECORD
+        return RECORD
 
 
 if __name__ == "__main__":

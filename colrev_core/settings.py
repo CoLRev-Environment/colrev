@@ -231,7 +231,7 @@ class PrescreenConfiguration:
     scripts: list
 
     def __str__(self):
-        return f" - mode: {self.mode}"
+        return "Scripts: " + ",".join([s["endpoint"] for s in self.scripts])
 
 
 # PDF get
@@ -246,7 +246,7 @@ class PDFGetConfiguration:
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
             + " - "
-            + ",".join([s for s in self.scripts])
+            + ",".join([s["endpoint"] for s in self.scripts])
         )
 
 
@@ -258,7 +258,7 @@ class PDFPrepConfiguration:
     scripts: list
 
     def __str__(self):
-        return " - " + ",".join([s for s in self.scripts])
+        return " - " + ",".join([s["endpoint"] for s in self.scripts])
 
 
 # Screen

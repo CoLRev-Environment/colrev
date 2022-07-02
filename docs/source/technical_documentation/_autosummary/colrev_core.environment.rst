@@ -20,6 +20,7 @@ colrev\_core.environment
       :template: custom-class-template.rst
       :nosignatures:
 
+      AdapterManager
       EnvironmentManager
       GrobidService
       LocalIndex

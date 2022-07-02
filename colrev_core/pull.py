@@ -40,7 +40,8 @@ class Pull(Process):
             self.REVIEW_MANAGER.logger.info(f"Returned flag {res[0].flags}")
 
     def pull_records_from_index(self) -> None:
-        from colrev_core.prep import Preparation, PrepRecord
+        from colrev_core.prep import Preparation
+        from corlev_core.record import PrepRecord
         from pathos.multiprocessing import ProcessPool
         import multiprocessing as mp
 

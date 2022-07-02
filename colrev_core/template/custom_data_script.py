@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import zope.interface
 
-from colrev_core.data import DataEndpoint
+from colrev_core.process import DataEndpoint
 
 
 @zope.interface.implementer(DataEndpoint)

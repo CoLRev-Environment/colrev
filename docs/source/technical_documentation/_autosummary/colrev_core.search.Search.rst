@@ -26,3 +26,13 @@ colrev\_core.search.Search
       ~Search.update
       ~Search.validate_query
       ~Search.view_sources
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Search.built_in_search_scripts

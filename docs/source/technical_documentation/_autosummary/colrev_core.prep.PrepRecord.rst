@@ -28,10 +28,12 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
       ~PrepRecord.create_colrev_id
+      ~PrepRecord.drop_fields
       ~PrepRecord.extract_pages
       ~PrepRecord.extract_text_by_page
       ~PrepRecord.format_author_field
       ~PrepRecord.format_bib_style
+      ~PrepRecord.format_if_mostly_upper
       ~PrepRecord.fuse_best_field
       ~PrepRecord.get_abbrev_container_min_len
       ~PrepRecord.get_colrev_id
@@ -40,6 +42,7 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.get_data
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
+      ~PrepRecord.get_link_from_doi
       ~PrepRecord.get_origins
       ~PrepRecord.get_pages_in_pdf
       ~PrepRecord.get_provenance_field_source
@@ -63,12 +66,16 @@ colrev\_core.prep.PrepRecord
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
       ~PrepRecord.reset_pdf_provenance_hints
+      ~PrepRecord.retrieve_md_from_url
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_status
       ~PrepRecord.shares_origins
+      ~PrepRecord.unify_pages_field
       ~PrepRecord.update_field
+      ~PrepRecord.update_masterdata_provenance
+      ~PrepRecord.update_metadata_status
 
 
 

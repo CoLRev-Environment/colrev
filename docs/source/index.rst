@@ -35,7 +35,7 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    colrev status
 
 The status command displays the current state of the review and guides you to the next steps (`CoLRev operations <guides/manual.html>`_).
-After each operation, `check the changes <guides/manual.html#analyze-changes>`_ to complete the three-step cycle:
+After each operation, `validate the changes <guides/manual/1_workflow.html#colrev-validate>`_ to complete the three-step cycle:
 
 .. figure:: ../figures/workflow.svg
    :width: 600

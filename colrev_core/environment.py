@@ -28,6 +28,155 @@ from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
+class AdapterManager:
+    @classmethod
+    def load_scripts(
+        cls, *, PROCESS, scripts
+    ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
+
+        from colrev_core.review_manager import MissingDependencyError
+        import importlib
+        import sys
+        from zope.interface.verify import verifyObject
+        from colrev_core.process import ProcessType
+
+        scripts_dict = {}
+
+        # 1. Load built-in scripts
+        list_built_in_scripts = [s for s in scripts if s in PROCESS.built_in_scripts]
+        for plugin_script in list_built_in_scripts:
+            built_in_script = PROCESS.built_in_scripts[plugin_script]["endpoint"]
+            scripts_dict[plugin_script] = {"endpoint": built_in_script()}
+
+        # 2. Load module scripts
+        # TODO : test the module prep_scripts
+        list_module_scripts = [
+            s
+            for s in scripts
+            if s not in scripts_dict and not Path(s + ".py").is_file()
+        ]
+        for plugin_script in list_module_scripts:
+            try:
+                module_script = importlib.import_module(plugin_script)
+                scripts_dict[plugin_script] = {
+                    "endpoint": module_script,
+                    "custom_flag": True,
+                }
+            except ModuleNotFoundError:
+                pass
+                raise MissingDependencyError(
+                    "Dependency prep_script " + f"{plugin_script} not found. "
+                    "Please install it\n  pip install "
+                    f"{plugin_script}"
+                )
+
+        # 3. Load custom scripts in the directory
+        list_custom_scripts = [
+            s for s in scripts if s not in scripts_dict and Path(s + ".py").is_file()
+        ]
+        sys.path.append(".")  # to import custom scripts from the project dir
+        for plugin_script in list_custom_scripts:
+            custom_script = importlib.import_module(plugin_script, ".")
+            scripts_dict[plugin_script] = {
+                "endpoint": custom_script,
+                "custom_flag": True,
+            }
+
+        if ProcessType.search == PROCESS.type:
+            from colrev_core.process import SearchEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomSearch
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(SearchEndpoint, script["endpoint"])
+
+        if ProcessType.prep == PROCESS.type:
+            from colrev_core.process import PreparationEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPrepare
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PreparationEndpoint, script["endpoint"])
+
+        elif ProcessType.prescreen == PROCESS.type:
+            from colrev_core.process import PrescreenEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPrescreen
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PrescreenEndpoint, script["endpoint"])
+
+        elif ProcessType.pdf_get == PROCESS.type:
+            from colrev_core.process import PDFRetrievalEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPDFRetrieval
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PDFRetrievalEndpoint, script["endpoint"])
+
+        elif ProcessType.pdf_prep == PROCESS.type:
+            from colrev_core.process import PDFPreparationEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPDFPrepratation
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PDFPreparationEndpoint, script["endpoint"])
+
+        elif ProcessType.screen == PROCESS.type:
+            from colrev_core.process import ScreenEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomScreen
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(ScreenEndpoint, script["endpoint"])
+
+        elif ProcessType.data == PROCESS.type:
+            from colrev_core.process import DataEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomData
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(DataEndpoint, script["endpoint"])
+
+        else:
+            print(f"ERROR: process type not implemented: {PROCESS.type}")
+
+        return scripts_dict
+
+
 class EnvironmentManager:
 
     colrev_path = Path.home().joinpath("colrev")
@@ -589,28 +738,33 @@ class LocalIndex:
         """Compares the record to available toc items and
         returns fields to remove (if any)"""
 
+        from copy import deepcopy
+
+        internal_record = deepcopy(record)
         fields_to_remove = []
-        if "volume" in record.keys() and "number" in record.keys():
+        if "volume" in internal_record.keys() and "number" in internal_record.keys():
 
-            toc_key_full = self.__get_toc_key(record=record)
+            toc_key_full = self.__get_toc_key(record=internal_record)
 
-            wo_nr = record.copy()
+            wo_nr = deepcopy(internal_record)
             del wo_nr["number"]
             toc_key_wo_nr = self.__get_toc_key(record=wo_nr)
             if not self.os.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_nr):
                 fields_to_remove.append("number")
+                return fields_to_remove
 
-            wo_vol = record.copy()
+            wo_vol = deepcopy(internal_record)
             del wo_vol["volume"]
             toc_key_wo_vol = self.__get_toc_key(record=wo_vol)
             if not self.os.exists(
                 index=self.TOC_INDEX, id=toc_key_full
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol):
                 fields_to_remove.append("volume")
+                return fields_to_remove
 
-            wo_vol_nr = record.copy()
+            wo_vol_nr = deepcopy(internal_record)
             del wo_vol_nr["volume"]
             del wo_vol_nr["number"]
             toc_key_wo_vol_nr = self.__get_toc_key(record=wo_vol_nr)
@@ -619,6 +773,7 @@ class LocalIndex:
             ) and self.os.exists(index=self.TOC_INDEX, id=toc_key_wo_vol_nr):
                 fields_to_remove.append("number")
                 fields_to_remove.append("volume")
+                return fields_to_remove
 
         return fields_to_remove
 
@@ -1149,6 +1304,9 @@ class LocalIndex:
             r2_index = self.__retrieve_based_on_colrev_id(
                 cids_to_retrieve=record2_colrev_id
             )
+
+            print("TODO : CURATED and non-identical IDs may not be enough?")
+
             # Same repo (colrev_masterdata_provenance = CURATED: ...) and in LocalIndex
             # implies status > md_processed
             # ie., no duplicates if IDs differ

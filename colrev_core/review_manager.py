@@ -20,7 +20,6 @@ import yaml
 from dacite import from_dict
 
 from colrev_core import review_dataset
-from colrev_core.data import ManuscriptRecordSourceTagError
 from colrev_core.environment import EnvironmentManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -895,14 +894,15 @@ class ReviewManager:
             if not PAPER.is_file():
                 self.logger.debug("Checks for PAPER not activated\n")
             else:
-                from colrev_core.data import Data, ManuscriptEndpoint
+                from colrev_core.data import Data
 
                 DATA = Data(self, notify_state_transition_process=False)
                 manuscript_checks = [
-                    {
-                        "script": ManuscriptEndpoint.check_new_record_source_tag,
-                        "params": [self],
-                    },
+                    # TODO : check the whole script
+                    # {
+                    #     "script": ManuscriptEndpoint.check_new_record_source_tag,
+                    #     "params": [self],
+                    # },
                     {
                         "script": DATA.main,
                         "params": [True],
@@ -945,7 +945,6 @@ class ReviewManager:
                 OriginError,
                 FieldError,
                 review_dataset.StatusTransitionError,
-                ManuscriptRecordSourceTagError,
                 UnstagedGitChangesError,
                 review_dataset.StatusFieldValueError,
             ) as e:

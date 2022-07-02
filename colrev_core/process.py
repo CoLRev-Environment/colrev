@@ -2,14 +2,17 @@
 import typing
 from enum import auto
 from enum import Enum
+from pathlib import Path
 
 import git
+import zope.interface
 from transitions import Machine
 
 from colrev_core.record import RecordState
 
 
 class ProcessType(Enum):
+    search = auto()
     load = auto()
     prep = auto()
     prep_man = auto()
@@ -417,6 +420,63 @@ class ProcessModel:
             if len(intersection) != 0:
                 raise ProcessOrderViolation(process, self.state, intersection)
         return
+
+
+class SearchEndpoint(zope.interface.Interface):
+
+    source_identifier = zope.interface.Attribute("""Source identifier""")
+    mode = zope.interface.Attribute("""Mode""")
+
+    def run_search(SEARCH, params: dict, feed_file: Path) -> None:
+        pass
+
+    def validate_params(query: str) -> None:
+        pass
+
+
+class PreparationEndpoint(zope.interface.Interface):
+
+    source_correction_hint = zope.interface.Attribute(
+        """Hint on how to correct metadata at source"""
+    )
+
+    def prepare(PREPARATION, RECORD):
+        pass
+
+
+class PrescreenEndpoint(zope.interface.Interface):
+    def run_prescreen(PRESCREEN, records: dict, split: list) -> dict:
+        pass
+
+
+class PDFRetrievalEndpoint(zope.interface.Interface):
+    def get_pdf(REVIEW_MANAGER, RECORD):
+        return RECORD
+
+
+class PDFPreparationEndpoint(zope.interface.Interface):
+    def prep_pdf(REVIEW_MANAGER, RECORD, PAD) -> dict:
+        return RECORD.data
+
+
+class ScreenEndpoint(zope.interface.Interface):
+    def run_screen(SCREEN, records: dict, split: list) -> dict:
+        pass
+
+
+class DataEndpoint(zope.interface.Interface):
+    def get_default_setup() -> dict:
+        return {}
+
+    def update_data(
+        REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+    ) -> None:
+        pass
+
+    def update_record_status_matrix(
+        REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+    ) -> None:
+        pass
 
 
 class NoRecordsError(Exception):

@@ -17,7 +17,7 @@ Init
 
 .. TODO : include options for different types of reviews once available
 
-Once the repository is set up, you can share it with your team (see `instructions <3_collaboration>`_).
+Once the repository is set up, you can share it with your team (see `instructions <3_collaboration.html>`_).
 
 Instead of initializing a new repository, you can also pull an existing one:
 

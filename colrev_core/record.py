@@ -274,15 +274,31 @@ class Record:
 
         return
 
-    def remove_field(self, *, key: str) -> None:
+    def remove_field(
+        self, *, key: str, not_missing_hint: bool = False, source=""
+    ) -> None:
         if key in self.data:
             del self.data[key]
-            if key in self.identifying_field_keys:
-                if key in self.data["colrev_masterdata_provenance"]:
-                    del self.data["colrev_masterdata_provenance"][key]
+            if not_missing_hint:
+                if key in self.identifying_field_keys:
+                    # Example: journal without number
+                    # we should keep that information that a particular masterdata
+                    # field is not required
+                    if key in self.data["colrev_masterdata_provenance"]:
+                        self.data["colrev_masterdata_provenance"][key][
+                            "note"
+                        ] = "not_missing"
+                        self.data["colrev_masterdata_provenance"][key][
+                            "source"
+                        ] = source
+
             else:
-                if key in self.data["colrev_data_provenance"]:
-                    del self.data["colrev_data_provenance"][key]
+                if key in self.identifying_field_keys:
+                    if key in self.data["colrev_masterdata_provenance"]:
+                        del self.data["colrev_masterdata_provenance"][key]
+                else:
+                    if key in self.data["colrev_data_provenance"]:
+                        del self.data["colrev_data_provenance"][key]
 
         return
 
@@ -321,7 +337,7 @@ class Record:
                 del self.data[identifying_field_key]
             if identifying_field_key in md_p_dict:
                 note = md_p_dict[identifying_field_key]["note"]
-                if "missing" in note:
+                if "missing" in note and "not_missing" not in note:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
                         "missing", ""
                     )
@@ -1353,6 +1369,405 @@ class Record:
             )
         )
         return cpid1
+
+
+class PrepRecord(Record):
+    # Note: add methods that are called multiple times
+    # TODO : or includ all functionality?
+    # distinguish:
+    # 1. independent processing operation (format, ...)
+    # 2. processing operation using curated data
+    # 3. processing operation using external, non-curated data
+    #  (-> merge/fuse_best_field)
+
+    def __init__(self, *, data: dict):
+        super().__init__(data=data)
+
+    @classmethod
+    def format_author_field(cls, *, input_string: str) -> str:
+        def mostly_upper_case(input_string: str) -> bool:
+            if not re.match(r"[a-zA-Z]+", input_string):
+                return False
+            input_string = input_string.replace(".", "").replace(",", "")
+            words = input_string.split()
+            return sum(word.isupper() for word in words) / len(words) > 0.8
+
+        input_string = input_string.replace("\n", " ")
+        # DBLP appends identifiers to non-unique authors
+        input_string = str(re.sub(r"[0-9]{4}", "", input_string))
+
+        names = input_string.split(" and ")
+        author_string = ""
+        for name in names:
+            # Note: https://github.com/derek73/python-nameparser
+            # is very effective (maybe not perfect)
+
+            parsed_name = HumanName(name)
+            if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
+                parsed_name.capitalize(force=True)
+
+            parsed_name.string_format = "{last} {suffix}, {first} {middle}"
+            # '{last} {suffix}, {first} ({nickname}) {middle}'
+            author_name_string = str(parsed_name).replace(" , ", ", ")
+            # Note: there are errors for the following author:
+            # JR Cromwell and HK Gardner
+            # The JR is probably recognized as Junior.
+            # Check whether this is fixed in the Grobid name parser
+
+            if author_string == "":
+                author_string = author_name_string
+            else:
+                author_string = author_string + " and " + author_name_string
+
+        return author_string
+
+    @classmethod
+    def get_retrieval_similarity(
+        cls, *, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
+    ) -> float:
+        def format_authors_string_for_comparison(REC_IN):
+            if "author" not in REC_IN.data:
+                return
+            authors = REC_IN.data["author"]
+            authors = str(authors).lower()
+            authors_string = ""
+            authors = Record.remove_accents(input_str=authors)
+
+            # abbreviate first names
+            # "Webster, Jane" -> "Webster, J"
+            # also remove all special characters and do not include separators (and)
+            for author in authors.split(" and "):
+                if "," in author:
+                    last_names = [
+                        word[0]
+                        for word in author.split(",")[1].split(" ")
+                        if len(word) > 0
+                    ]
+                    authors_string = (
+                        authors_string
+                        + author.split(",")[0]
+                        + " "
+                        + " ".join(last_names)
+                        + " "
+                    )
+                else:
+                    authors_string = authors_string + author + " "
+            authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
+            REC_IN.data["author"] = authors_string
+            return
+
+        RECORD = PrepRecord(data=deepcopy(RECORD_ORIGINAL.get_data()))
+        RETRIEVED_RECORD = PrepRecord(
+            data=deepcopy(RETRIEVED_RECORD_ORIGINAL.get_data())
+        )
+        if RECORD.container_is_abbreviated():
+            min_len = RECORD.get_abbrev_container_min_len()
+            RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
+            RECORD.abbreviate_container(min_len=min_len)
+        if RETRIEVED_RECORD.container_is_abbreviated():
+            min_len = RETRIEVED_RECORD.get_abbrev_container_min_len()
+            RECORD.abbreviate_container(min_len=min_len)
+            RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
+
+        if "title" in RECORD.data:
+            RECORD.data["title"] = RECORD.data["title"][:90]
+        if "title" in RETRIEVED_RECORD.data:
+            RETRIEVED_RECORD.data["title"] = RETRIEVED_RECORD.data["title"][:90]
+
+        if "author" in RECORD.data:
+            format_authors_string_for_comparison(RECORD)
+            RECORD.data["author"] = RECORD.data["author"][:45]
+        if "author" in RETRIEVED_RECORD.data:
+            format_authors_string_for_comparison(RETRIEVED_RECORD)
+            RETRIEVED_RECORD.data["author"] = RETRIEVED_RECORD.data["author"][:45]
+        if not ("volume" in RECORD.data and "volume" in RETRIEVED_RECORD.data):
+            RECORD.data["volume"] = "nan"
+            RETRIEVED_RECORD.data["volume"] = "nan"
+        if not ("number" in RECORD.data and "number" in RETRIEVED_RECORD.data):
+            RECORD.data["number"] = "nan"
+            RETRIEVED_RECORD.data["number"] = "nan"
+        if not ("pages" in RECORD.data and "pages" in RETRIEVED_RECORD.data):
+            RECORD.data["pages"] = "nan"
+            RETRIEVED_RECORD.data["pages"] = "nan"
+        # Sometimes, the number of pages is provided (not the range)
+        elif not (
+            "--" in RECORD.data["pages"] and "--" in RETRIEVED_RECORD.data["pages"]
+        ):
+            RECORD.data["pages"] = "nan"
+            RETRIEVED_RECORD.data["pages"] = "nan"
+
+        if "editorial" in RECORD.data.get("title", "NA").lower():
+            if not all(x in RECORD.data for x in ["volume", "number"]):
+                return 0
+        # print(RECORD)
+        # print(RETRIEVED_RECORD)
+        similarity = Record.get_record_similarity(
+            RECORD_A=RECORD, RECORD_B=RETRIEVED_RECORD
+        )
+
+        return similarity
+
+    def format_if_mostly_upper(self, *, key: str, case: str = "capitalize") -> None:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
+        if not re.match(r"[a-zA-Z]+", self.data[key]):
+            return
+
+        self.data[key] = self.data[key].replace("\n", " ")
+
+        if percent_upper_chars(self.data[key]) > 0.8:
+            if "capitalize" == case:
+                self.data[key] = self.data[key].capitalize()
+            if "title" == case:
+                self.data[key] = (
+                    self.data[key]
+                    .title()
+                    .replace(" Of ", " of ")
+                    .replace(" For ", " for ")
+                    .replace(" The ", " the ")
+                    .replace("Ieee", "IEEE")
+                    .replace("Acm", "ACM")
+                    .replace(" And ", " and ")
+                )
+                return
+        return
+
+    def container_is_abbreviated(self) -> bool:
+        if "journal" in self.data:
+            if self.data["journal"].count(".") > 2:
+                return True
+            if self.data["journal"].isupper():
+                return True
+        if "booktitle" in self.data:
+            if self.data["booktitle"].count(".") > 2:
+                return True
+            if self.data["booktitle"].isupper():
+                return True
+        # add heuristics? (e.g., Hawaii Int Conf Syst Sci)
+        return False
+
+    def abbreviate_container(self, *, min_len: int):
+        if "journal" in self.data:
+            self.data["journal"] = " ".join(
+                [x[:min_len] for x in self.data["journal"].split(" ")]
+            )
+        return
+
+    def get_abbrev_container_min_len(self) -> int:
+        min_len = -1
+        if "journal" in self.data:
+            min_len = min(
+                len(x) for x in self.data["journal"].replace(".", "").split(" ")
+            )
+        if "booktitle" in self.data:
+            min_len = min(
+                len(x) for x in self.data["booktitle"].replace(".", "").split(" ")
+            )
+        return min_len
+
+    def check_potential_retracts(self) -> None:
+        # Note : we retrieved metadata in get_masterdata_from_crossref()
+        if self.data.get("crossmark", "") == "True":
+            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            if "note" in self.data:
+                self.data["note"] += ", crossmark_restriction_potential_retract"
+            else:
+                self.data["note"] = "crossmark_restriction_potential_retract"
+        if self.data.get("warning", "") == "Withdrawn (according to DBLP)":
+            self.data["colrev_status"] = RecordState.md_needs_manual_preparation
+            if "note" in self.data:
+                self.data["note"] += ", withdrawn (according to DBLP)"
+            else:
+                self.data["note"] = "withdrawn (according to DBLP)"
+        return
+
+    def unify_pages_field(self) -> None:
+        if "pages" not in self.data:
+            return
+        if not isinstance(self.data["pages"], str):
+            return
+        if 1 == self.data["pages"].count("-"):
+            self.data["pages"] = self.data["pages"].replace("-", "--")
+        self.data["pages"] = (
+            self.data["pages"]
+            .replace("–", "--")
+            .replace("----", "--")
+            .replace(" -- ", "--")
+            .rstrip(".")
+        )
+        return
+
+    def drop_fields(self, PREPARATION) -> None:
+        from colrev_core.environment import LocalIndex
+
+        for key in list(self.data.keys()):
+            if key not in PREPARATION.fields_to_keep:
+                self.remove_field(key=key)
+                PREPARATION.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
+
+            # for key in list(RECORD.data.keys()):
+            #     if key in PREPARATION.fields_to_keep:
+            #         continue
+            elif self.data[key] in ["", "NA"]:
+                self.remove_field(key=key)
+
+        if self.data.get("publisher", "") in ["researchgate.net"]:
+            self.remove_field(key="publisher")
+
+        if "volume" in self.data.keys() and "number" in self.data.keys():
+            # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
+            # because it creates problems with multiprocessing
+            LOCAL_INDEX = LocalIndex()
+
+            fields_to_remove = LOCAL_INDEX.get_fields_to_remove(record=self.get_data())
+            for field_to_remove in fields_to_remove:
+                if field_to_remove in self.data:
+                    # TODO : maybe use set_masterdata_complete()?
+                    self.remove_field(
+                        key=field_to_remove, not_missing_hint=True, source="local_index"
+                    )
+                    # TODO : we need to keep track of the information
+                    # that a certain field is not required
+        return
+
+    def update_metadata_status(self, *, REVIEW_MANAGER):
+
+        self.check_potential_retracts()
+
+        if "crossmark" in self.data:
+            return
+        if self.masterdata_is_curated():
+            self.set_status(target_state=RecordState.md_prepared)
+            return
+
+        REVIEW_MANAGER.logger.debug(
+            f'is_incomplete({self.data["ID"]}): {not self.masterdata_is_complete()}'
+        )
+
+        REVIEW_MANAGER.logger.debug(
+            f'has_inconsistent_fields({self.data["ID"]}): '
+            f"{self.has_inconsistent_fields()}"
+        )
+        REVIEW_MANAGER.logger.debug(
+            f'has_incomplete_fields({self.data["ID"]}): '
+            f"{self.has_incomplete_fields()}"
+        )
+
+        if (
+            not self.masterdata_is_complete()
+            or self.has_incomplete_fields()
+            or self.has_inconsistent_fields()
+        ):
+            self.set_status(target_state=RecordState.md_needs_manual_preparation)
+        else:
+            self.set_status(target_state=RecordState.md_prepared)
+
+        return
+
+    def update_masterdata_provenance(
+        self, *, UNPREPARED_RECORD, REVIEW_MANAGER
+    ) -> None:
+
+        if not self.masterdata_is_curated():
+
+            missing_fields = self.missing_fields()
+            not_missing_fields = []
+            if missing_fields:
+                for missing_field in missing_fields:
+                    if missing_field in self.data["colrev_masterdata_provenance"]:
+                        if (
+                            "not_missing"
+                            in self.data["colrev_masterdata_provenance"][missing_field][
+                                "note"
+                            ]
+                        ):
+                            not_missing_fields.append(missing_field)
+                            continue
+                    self.add_masterdata_provenance_hint(
+                        key=missing_field, hint="missing"
+                    )
+            for not_missing_field in not_missing_fields:
+                missing_fields.remove(missing_field)
+
+            if not missing_fields:
+                self.set_masterdata_complete()
+
+            inconsistencies = self.get_inconsistencies()
+            if inconsistencies:
+                for inconsistency in inconsistencies:
+                    self.add_masterdata_provenance_hint(
+                        key=inconsistency,
+                        hint="inconsistent with ENTRYTYPE",
+                    )
+            else:
+                self.set_masterdata_consistent()
+
+            incomplete_fields = self.get_incomplete_fields()
+            if incomplete_fields:
+                for incomplete_field in incomplete_fields:
+                    self.add_masterdata_provenance_hint(
+                        key=incomplete_field, hint="incomplete"
+                    )
+            else:
+                self.set_fields_complete()
+
+            defect_fields = self.get_quality_defects()
+            if defect_fields:
+                for defect_field in defect_fields:
+                    self.add_masterdata_provenance_hint(
+                        key=defect_field, hint="quality_defect"
+                    )
+            else:
+                self.remove_quality_defect_notes()
+
+            if missing_fields or inconsistencies or incomplete_fields or defect_fields:
+                self.set_status(target_state=RecordState.md_needs_manual_preparation)
+
+        change = 1 - Record.get_record_similarity(
+            RECORD_A=self, RECORD_B=UNPREPARED_RECORD
+        )
+        if change > 0.1:
+            REVIEW_MANAGER.report_logger.info(
+                f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
+            )
+
+        return
+
+
+class PrescreenRecord(Record):
+    def __init__(self, *, data: dict):
+        super().__init__(data=data)
+
+    def __str__(self) -> str:
+
+        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
+            k for k in self.identifying_field_keys if k in self.data
+        ]
+        complementary_keys_order = [
+            k for k, v in self.data.items() if k not in self.identifying_keys_order
+        ]
+
+        ik_sorted = {
+            k: v for k, v in self.data.items() if k in self.identifying_keys_order
+        }
+        ck_sorted = {
+            k: v
+            for k, v in self.data.items()
+            if k in complementary_keys_order and k not in self.provenance_keys
+        }
+        ret_str = (
+            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+        )
+
+        return ret_str
+
+
+class ScreenRecord(PrescreenRecord):
+
+    # Note : currently still identical with PrescreenRecord
+    def __init__(self, data: dict):
+        super().__init__(data=data)
 
 
 class RecordState(Enum):

@@ -3,8 +3,8 @@ import random
 
 import zope.interface
 
-from colrev_core.pdf_prep import PDFPreparationEndpoint
 from colrev_core.pdf_prep import RecordState
+from colrev_core.process import PDFPreparationEndpoint
 
 
 @zope.interface.implementer(PDFPreparationEndpoint)

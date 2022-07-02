@@ -3,7 +3,7 @@ import random
 
 import zope.interface
 
-from colrev_core.prescreen import PrescreenEndpoint
+from colrev_core.process import PrescreenEndpoint
 from colrev_core.record import RecordState
 
 

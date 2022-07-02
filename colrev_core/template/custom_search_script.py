@@ -3,8 +3,8 @@ from pathlib import Path
 
 import zope.interface
 
+from colrev_core.process import SearchEndpoint
 from colrev_core.search import InvalidQueryException
-from colrev_core.search import SearchEndpoint
 
 
 @zope.interface.implementer(SearchEndpoint)

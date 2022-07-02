@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 import zope.interface
 
-from colrev_core.pdf_get import PDFRetrievalEndpoint
+from colrev_core.process import PDFRetrievalEndpoint
 
 
 @zope.interface.implementer(PDFRetrievalEndpoint)

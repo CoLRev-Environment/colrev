@@ -3,8 +3,8 @@ import random
 
 import zope.interface
 
+from colrev_core.process import ScreenEndpoint
 from colrev_core.record import RecordState
-from colrev_core.screen import ScreenEndpoint
 
 
 @zope.interface.implementer(ScreenEndpoint)
