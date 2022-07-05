@@ -27,3 +27,13 @@ colrev\_core.screen.Screen
       ~Screen.set_data
       ~Screen.set_exclusion_criteria
       ~Screen.setup_custom_script
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Screen.built_in_scripts

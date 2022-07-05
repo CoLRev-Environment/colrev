@@ -30,4 +30,5 @@ colrev\_core.settings.SearchSource
       ~SearchSource.source_name
       ~SearchSource.source_identifier
       ~SearchSource.search_parameters
+      ~SearchSource.script
       ~SearchSource.comment

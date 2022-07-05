@@ -437,6 +437,11 @@ class ReviewManager:
                 ][0]
                 if "exclude_predatory_journals" in e_r["scripts"]:
                     e_r["scripts"].remove("exclude_predatory_journals")
+
+            for source in settings["search"]["sources"]:
+                source["script"] = {"endpoint": "bib_pybtex"}
+
+            settings["prep"]["man_prep_scripts"] = [{"endpoint": "colrev_cli_man_prep"}]
             settings["prescreen"]["scope"] = [{"LanguageScope": ["en"]}]
             if "plugin" in settings["prescreen"]:
                 del settings["prescreen"]["plugin"]
@@ -449,6 +454,10 @@ class ReviewManager:
             if "process" in settings["screen"]:
                 del settings["screen"]["process"]
             settings["screen"]["scripts"] = [{"endpoint": "colrev_cli_screen"}]
+
+            settings["pdf_get"]["man_pdf_get_scripts"] = [
+                {"endpoint": "colrev_cli_pdf_get_man"}
+            ]
             settings["pdf_get"]["scripts"] = [
                 {"endpoint": "unpaywall"},
                 {"endpoint": "local_index"},
@@ -460,6 +469,9 @@ class ReviewManager:
                 {"endpoint": "remove_last_page"},
                 {"endpoint": "validate_pdf_metadata"},
                 {"endpoint": "validate_completeness"},
+            ]
+            settings["pdf_prep"]["man_pdf_prep_scripts"] = [
+                {"endpoint": "colrev_cli_pdf_prep_man"}
             ]
 
             for x in settings["data"]["data_format"]:
@@ -581,6 +593,21 @@ class ReviewManager:
                     settings["project"]["review_type"] = "curated_masterdata"
                 else:
                     settings["project"]["review_type"] = "literature_review"
+
+            settings["prep"]["man_prep_scripts"] = [{"endpoint": "colrev_cli_man_prep"}]
+
+            for prep_round in settings["prep"]["prep_rounds"]:
+                prep_round["scripts"] = [{"endpoint": s} for s in prep_round["scripts"]]
+
+            for source in settings["search"]["sources"]:
+                source["script"] = {"endpoint": "bib_pybtex"}
+
+            settings["pdf_get"]["man_pdf_get_scripts"] = [
+                {"endpoint": "colrev_cli_pdf_get_man"}
+            ]
+            settings["pdf_prep"]["man_pdf_prep_scripts"] = [
+                {"endpoint": "colrev_cli_pdf_prep_man"}
+            ]
 
             with open("settings.json", "w") as outfile:
                 json.dump(settings, outfile, indent=4)

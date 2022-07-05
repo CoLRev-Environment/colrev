@@ -870,7 +870,23 @@ class Status(Process):
         )
         search_add_info = []
         if stat["overall"]["md_prepared"] > 0:
-            search_add_info.append(f"{str(int(perc_curated))}% curated")
+            # search_add_info.append(f"{str(int(perc_curated))}% curated")
+            # Note: do not print percentages becaus
+            # - the other figures are all absolute numbers
+            # - the denominator changes (particularly confusing in the prep when
+            #   the number of curated records remains the same but the percentage
+            #   decreases)
+            if perc_curated < 30:
+                search_add_info.append(
+                    f"only {colors.RED}{str(stat['CURATED_records'])} "
+                    f"curated{colors.END}"
+                )
+            elif perc_curated > 60:
+                search_add_info.append(
+                    f"{colors.GREEN}{str(stat['CURATED_records'])} curated{colors.END}"
+                )
+            else:
+                search_add_info.append(f"{str(stat['CURATED_records'])} curated")
         if stat["currently"]["md_retrieved"] > 0:
             search_add_info.append(
                 f'{colors.ORANGE}{stat["currently"]["md_retrieved"]}'

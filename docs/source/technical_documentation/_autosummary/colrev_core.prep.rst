@@ -20,7 +20,6 @@ colrev\_core.prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PrepRecord
       Preparation
 
 

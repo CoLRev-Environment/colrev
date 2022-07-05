@@ -18,7 +18,6 @@ colrev\_core.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
-      ~Search.load_search_scripts
       ~Search.parse_parameters
       ~Search.parse_sources
       ~Search.save_feed_file
@@ -35,4 +34,4 @@ colrev\_core.search.Search
 
    .. autosummary::
 
-      ~Search.built_in_search_scripts
+      ~Search.built_in_scripts

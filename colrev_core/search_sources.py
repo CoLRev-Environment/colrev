@@ -41,7 +41,7 @@ class SearchSources:
         nr_ais_links = data.count("https://aisel.aisnet.org/")
         if nr_ais_links > 0:
             # for the enl file:
-            if nr_ais_links == data.count("%T "):
+            if nr_ais_links >= data.count("%U "):
                 return True
             # for the bib file:
             if nr_ais_links == data.count("\n}"):
@@ -54,13 +54,16 @@ class SearchSources:
         ais_mapping: dict = {}
         RECORD = cls.apply_field_mapping(RECORD=RECORD, mapping=ais_mapping)
 
-        if RECORD.data["journal"] in ["Research-in-Progress Papers", "Research Papers"]:
+        if RECORD.data.get("journal", "") in [
+            "Research-in-Progress Papers",
+            "Research Papers",
+        ]:
             if "https://aisel.aisnet.org/ecis" in RECORD.data.get("url", ""):
                 RECORD.update_field(
                     key="journal", value="ECIS", source="prep_ais_source"
                 )
 
-        if RECORD.data["journal"] == "Management Information Systems Quarterly":
+        if RECORD.data.get("journal", "") == "Management Information Systems Quarterly":
             RECORD.update_field(
                 key="journal", value="MIS Quarterly", source="prep_ais_source"
             )
@@ -87,6 +90,7 @@ class SearchSources:
 
         else:
             RECORD.data["ENTRYTYPE"] = "inproceedings"
+            RECORD.remove_field(key="publisher")
             if RECORD.data.get("volume", "") == "UNKNOWN":
                 RECORD.remove_field(key="volume")
             if RECORD.data.get("number", "") == "UNKNOWN":
@@ -132,6 +136,18 @@ class SearchSources:
                 RECORD.update_field(
                     key="booktitle",
                     value="Hawaii International Conference on System Sciences",
+                    source="prep_ais_source",
+                )
+            if "MCIS" in RECORD.data["booktitle"]:
+                RECORD.update_field(
+                    key="booktitle",
+                    value="Mediterranean Conference on Information Systems",
+                    source="prep_ais_source",
+                )
+            if "ACIS" in RECORD.data["booktitle"]:
+                RECORD.update_field(
+                    key="booktitle",
+                    value="Australasian Conference on Information Systems",
                     source="prep_ais_source",
                 )
 

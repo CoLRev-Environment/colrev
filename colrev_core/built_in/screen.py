@@ -9,8 +9,7 @@ from colrev_core.record import RecordState
 
 @zope.interface.implementer(ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
-    @classmethod
-    def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
+    def run_screen(self, SCREEN, records: dict, split: list) -> dict:
         from colrev.cli import screen_cli
 
         records = screen_cli(SCREEN, split)
@@ -20,8 +19,7 @@ class CoLRevCLIScreenEndpoint:
 
 @zope.interface.implementer(ScreenEndpoint)
 class SpreadsheetScreenEndpoint:
-    @classmethod
-    def export_table(cls, SCREEN, records, split, export_table_format="csv") -> None:
+    def export_table(self, SCREEN, records, split, export_table_format="csv") -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
@@ -91,8 +89,7 @@ class SpreadsheetScreenEndpoint:
 
         return
 
-    @classmethod
-    def import_table(cls, SCREEN, records, import_table_path="screen.csv") -> None:
+    def import_table(self, SCREEN, records, import_table_path="screen.csv") -> None:
         import pandas as pd
 
         if not Path(import_table_path).is_file():
@@ -128,14 +125,13 @@ class SpreadsheetScreenEndpoint:
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         return
 
-    @classmethod
-    def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
+    def run_screen(self, SCREEN, records: dict, split: list) -> dict:
 
         if "y" == input("create screen spreadsheet [y,n]?"):
-            cls.export_table(SCREEN, records, split)
+            self.export_table(SCREEN, records, split)
 
         if "y" == input("import screen spreadsheet [y,n]?"):
-            cls.import_table(SCREEN, records)
+            self.import_table(SCREEN, records)
 
         if SCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             if "y" == input("create commit [y,n]?"):

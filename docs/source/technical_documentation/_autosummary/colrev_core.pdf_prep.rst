@@ -20,9 +20,4 @@ colrev\_core.pdf\_prep
       :template: custom-class-template.rst
       :nosignatures:
 
-      PDFCheckOCREndpoint
-      PDFCompletenessValidationEndpoint
-      PDFCoverPageEndpoint
-      PDFLastPageEndpoint
-      PDFMetadataValidationEndpoint
       PDF_Preparation

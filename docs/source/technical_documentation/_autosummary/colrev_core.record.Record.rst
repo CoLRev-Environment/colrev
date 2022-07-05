@@ -18,9 +18,9 @@ colrev\_core.record.Record
 
       ~Record.add_colrev_ids
       ~Record.add_data_provenance
-      ~Record.add_data_provenance_hint
+      ~Record.add_data_provenance_note
       ~Record.add_masterdata_provenance
-      ~Record.add_masterdata_provenance_hint
+      ~Record.add_masterdata_provenance_note
       ~Record.add_provenance_all
       ~Record.change_ENTRYTYPE
       ~Record.complete_provenance
@@ -56,7 +56,7 @@ colrev\_core.record.Record
       ~Record.remove_field
       ~Record.remove_quality_defect_notes
       ~Record.rename_field
-      ~Record.reset_pdf_provenance_hints
+      ~Record.reset_pdf_provenance_notes
       ~Record.set_fields_complete
       ~Record.set_masterdata_complete
       ~Record.set_masterdata_consistent

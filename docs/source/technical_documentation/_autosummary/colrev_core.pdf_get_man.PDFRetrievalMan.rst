@@ -20,5 +20,16 @@ colrev\_core.pdf\_get\_man.PDFRetrievalMan
       ~PDFRetrievalMan.export_retrieval_table
       ~PDFRetrievalMan.get_data
       ~PDFRetrievalMan.get_pdf_get_man
+      ~PDFRetrievalMan.main
       ~PDFRetrievalMan.pdfs_retrieved_manually
       ~PDFRetrievalMan.set_data
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDFRetrievalMan.built_in_scripts

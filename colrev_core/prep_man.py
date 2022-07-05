@@ -1,20 +1,45 @@
 #! /usr/bin/env python
+import typing
 from pathlib import Path
 
 import pandas as pd
 
 from colrev_core import prep
+from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 
 
 class PrepMan(Process):
+
+    from colrev_core.built_in import prep_man as built_in_prep_man
+
+    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+        "colrev_cli_man_prep": {
+            "endpoint": built_in_prep_man.CoLRevCLIManPrep,
+        },
+        "export_man_prep": {
+            "endpoint": built_in_prep_man.ExportManPrep,
+        },
+    }
+
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
             type=ProcessType.prep_man,
             notify_state_transition_process=notify_state_transition_process,
+        )
+
+        self.verbose = True
+
+        self.prep_man_scripts: typing.Dict[
+            str, typing.Dict[str, typing.Any]
+        ] = AdapterManager.load_scripts(
+            PROCESS=self,
+            scripts=[
+                s["endpoint"] for s in REVIEW_MANAGER.settings.prep.man_prep_scripts
+            ],
         )
 
     def prep_man_stats(self) -> None:
@@ -327,6 +352,24 @@ class PrepMan(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
+    def main(self) -> None:
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        for PREP_MAN_SCRIPT in self.REVIEW_MANAGER.settings.prep.man_prep_scripts:
+
+            if PREP_MAN_SCRIPT["endpoint"] not in list(self.prep_man_scripts.keys()):
+                if self.verbose:
+                    print(f"Error: endpoint not available: {PREP_MAN_SCRIPT}")
+                continue
+
+            endpoint = self.prep_man_scripts[PREP_MAN_SCRIPT["endpoint"]]
+
+            ENDPOINT = endpoint["endpoint"]
+            records = ENDPOINT.prepare_manual(self, records)
 
         return
 

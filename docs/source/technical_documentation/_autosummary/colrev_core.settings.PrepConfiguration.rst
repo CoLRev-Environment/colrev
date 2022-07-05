@@ -27,3 +27,4 @@ colrev\_core.settings.PrepConfiguration
 
       ~PrepConfiguration.fields_to_keep
       ~PrepConfiguration.prep_rounds
+      ~PrepConfiguration.man_prep_scripts

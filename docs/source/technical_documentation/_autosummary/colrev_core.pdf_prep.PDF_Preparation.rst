@@ -21,3 +21,13 @@ colrev\_core.pdf\_prep.PDF\_Preparation
       ~PDF_Preparation.prepare_pdf
       ~PDF_Preparation.setup_custom_script
       ~PDF_Preparation.update_colrev_pdf_ids
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDF_Preparation.built_in_scripts

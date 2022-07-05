@@ -75,6 +75,7 @@ class SearchSource:
     source_name: str
     source_identifier: str
     search_parameters: str
+    script: dict
     comment: typing.Optional[str]
 
     def __str__(self):
@@ -83,6 +84,7 @@ class SearchSource:
             + f"filename: {self.filename})\n"
             + f"   source identifier:   {self.source_identifier}\n"
             + f"   search parameters:   {self.search_parameters}\n"
+            + f"   script:              {self.script['endpoint']}\n"
             + f"   comment:             {self.comment}"
         )
 
@@ -117,10 +119,10 @@ class PrepRound:
 
     name: str
     similarity: float
-    scripts: typing.List[str]
+    scripts: list
 
     def __str__(self):
-        short_list = [script for script in self.scripts][:3]
+        short_list = [script["endpoint"] for script in self.scripts][:3]
         if len(self.scripts) > 3:
             short_list.append("...")
         return f"{self.name} (" + ",".join(short_list) + ")"
@@ -130,6 +132,8 @@ class PrepRound:
 class PrepConfiguration:
     fields_to_keep: typing.List[str]
     prep_rounds: typing.List[PrepRound]
+
+    man_prep_scripts: list
 
     def __str__(self):
         return (
@@ -242,6 +246,8 @@ class PDFGetConfiguration:
     pdf_path_type: str  # TODO : "symlink" or "copy"
     scripts: list
 
+    man_pdf_get_scripts: list
+
     def __str__(self):
         return (
             f" - pdf_path_type: {self.pdf_path_type}"
@@ -256,6 +262,8 @@ class PDFGetConfiguration:
 @dataclass
 class PDFPrepConfiguration:
     scripts: list
+
+    man_pdf_prep_scripts: list
 
     def __str__(self):
         return " - " + ",".join([s["endpoint"] for s in self.scripts])
@@ -286,91 +294,11 @@ class ScreenConfiguration:
 
 
 @dataclass
-class DataField:
-    name: str
-    explanation: str
-    data_type: str
-
-
-@dataclass
-class DataStructuredFormat:
-    endpoint: str
-    structured_data_endpoint_version: str
-    fields: typing.List[DataField]
-
-    def __str__(self):
-        return "DataStructuredFormat"
-
-
-@dataclass
-class ManuscriptFormat:
-    endpoint: str
-    paper_endpoint_version: str
-    word_template: typing.Optional[str] = None
-    csl_style: typing.Optional[str] = None
-
-    def __str__(self):
-        return "ManuscriptFormat"
-
-
-@dataclass
-class PRISMAFormat:
-    endpoint: str
-    prisma_data_endpoint_version: str
-
-    def __str__(self):
-        return "PRISMAFormat"
-
-
-@dataclass
-class ZettlrFormat:
-    endpoint: str
-    zettlr_endpoint_version: str
-    config: dict
-
-    def __str__(self):
-        return "ZettlrFormat"
-
-
-@dataclass
-class EndnoteFormat:
-    endpoint: str
-    endnote_data_endpoint_version: str
-    config: dict
-
-    def __str__(self):
-        return "EndnoteFormat"
-
-
-@dataclass
-class CustomDataFormat:
-    endpoint: str
-    custom_data_format_version: str
-    config: dict
-
-    def __str__(self):
-        return "customFormat"
-
-
-# Note: data_format endpoints should have unique keys (e.g., paper_endpoint_version)
-# to enable strict union matching by dacite.
-
-
-@dataclass
 class DataConfiguration:
-    data_format: typing.List[
-        typing.Union[
-            ManuscriptFormat,
-            DataStructuredFormat,
-            PRISMAFormat,
-            ZettlrFormat,
-            EndnoteFormat,
-            CustomDataFormat,
-        ]
-    ]
+    data_format: list
 
     def __str__(self):
-        return " - " + "\n- ".join([str(c) for c in self.data_format])
+        return " - " + "\n- ".join([s["endpoint"] for s in self.data_format])
 
 
 @dataclass

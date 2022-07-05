@@ -21,5 +21,16 @@ colrev\_core.prep\_man.PrepMan
       ~PrepMan.check_precondition
       ~PrepMan.extract_needs_prep_man
       ~PrepMan.get_data
+      ~PrepMan.main
       ~PrepMan.prep_man_stats
       ~PrepMan.set_data
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PrepMan.built_in_scripts

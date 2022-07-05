@@ -22,22 +22,16 @@ colrev\_core.settings
 
       ComplementaryMaterialsScope
       Configuration
-      CustomDataFormat
       DataConfiguration
-      DataField
-      DataStructuredFormat
       DedupeConfiguration
       ENTRYTYPEScope
-      EndnoteFormat
       IDPpattern
       LanguageScope
       LoadConfiguration
-      ManuscriptFormat
       OutletExclusionScope
       OutletInclusionScope
       PDFGetConfiguration
       PDFPrepConfiguration
-      PRISMAFormat
       PrepConfiguration
       PrepRound
       PrescreenConfiguration
@@ -50,4 +44,3 @@ colrev\_core.settings
       SearchType
       TimeScopeFrom
       TimeScopeTo
-      ZettlrFormat

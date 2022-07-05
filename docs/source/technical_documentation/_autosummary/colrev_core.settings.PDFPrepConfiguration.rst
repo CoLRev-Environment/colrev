@@ -26,3 +26,4 @@ colrev\_core.settings.PDFPrepConfiguration
    .. autosummary::
 
       ~PDFPrepConfiguration.scripts
+      ~PDFPrepConfiguration.man_pdf_prep_scripts

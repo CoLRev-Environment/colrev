@@ -27,3 +27,4 @@ colrev\_core.settings.PDFGetConfiguration
 
       ~PDFGetConfiguration.pdf_path_type
       ~PDFGetConfiguration.scripts
+      ~PDFGetConfiguration.man_pdf_get_scripts

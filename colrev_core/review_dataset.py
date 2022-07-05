@@ -937,7 +937,7 @@ class ReviewDataset:
                 RECORD.update_metadata_status(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
-                RECORD.reset_pdf_provenance_hints()
+                RECORD.reset_pdf_provenance_notes()
 
             record = RECORD.get_data()
 

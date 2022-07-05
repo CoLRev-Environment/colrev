@@ -39,13 +39,57 @@ class Pull(Process):
         else:
             self.REVIEW_MANAGER.logger.info(f"Returned flag {res[0].flags}")
 
+    def pull_records_from_crossref(self) -> None:
+        from colrev_core.prep import Preparation
+        from colrev_core.record import PrepRecord
+        from colrev_core.built_in import prep as built_in_prep
+
+        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep()
+
+        self.REVIEW_MANAGER.logger.info("Pull records from index")
+
+        PREPARATION = Preparation(
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        for record in records.values():
+            RECORD = PrepRecord(data=record)
+            if (
+                not RECORD.masterdata_is_curated()
+                and "doi" in RECORD.data
+                and "forthcoming" == RECORD.data["year"]
+            ):
+                self.REVIEW_MANAGER.logger.info(
+                    f"Update published forthcoming paper: {RECORD.data['ID']}"
+                )
+                # TODO : only add fields? only consider identifying fields?
+                # TODO : should we set year=forthcoming and only update those records?
+                RECORD = CROSSREF_PREP.prepare(PREPARATION, RECORD)
+
+                # TODO : we could update the referenced_by/cited_by field for
+                # records that are included?
+                # TODO : we may create a full list here
+                colrev_id = RECORD.create_colrev_id(alsoKnownAsRecord=RECORD.get_data())
+                RECORD.data["colrev_id"] = colrev_id
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        self.REVIEW_MANAGER.create_commit(msg="Update records")
+
+        return
+
     def pull_records_from_index(self) -> None:
         from colrev_core.prep import Preparation
-        from corlev_core.record import PrepRecord
+        from colrev_core.record import PrepRecord
         from pathos.multiprocessing import ProcessPool
         import multiprocessing as mp
 
+        from colrev_core.built_in import prep as built_in_prep
+
         self.REVIEW_MANAGER.logger.info("Pull records from index")
+
+        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep()
 
         # Note : do not use named argument (used in multiprocessing)
         def pull_record(record):
@@ -55,14 +99,14 @@ class Pull(Process):
             previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
             prev_dblp_key = record.get("dblp_key", "")
 
-            RECORD = PrepRecord(record)
-            RETRIEVED_RECORD = PREPARATION.get_record_from_local_index(RECORD)
+            RECORD = PrepRecord(data=record)
+            RETRIEVED_RECORD = LOCAL_INDEX_PREP.prepare(PREPARATION, RECORD)
             source_info = "LOCAL_INDEX"
             if "CURATED:" in RETRIEVED_RECORD.data["colrev_masterdata_provenance"]:
                 source_info = RETRIEVED_RECORD.data[
                     "colrev_masterdata_provenance"
                 ].replace("CURATED:", "")
-            RECORD.merge(RETRIEVED_RECORD, source_info)
+            RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=source_info)
 
             record = RECORD.get_data()
             record["colrev_status"] = previous_status

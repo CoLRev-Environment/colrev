@@ -428,7 +428,6 @@ class Data(Process):
 
     def setup_custom_script(self) -> None:
         import pkgutil
-        from colrev_core.settings import CustomDataFormat
 
         filedata = pkgutil.get_data(__name__, "template/custom_data_script.py")
         if filedata:
@@ -437,9 +436,7 @@ class Data(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
 
-        NEW_DATA_ENDPOINT = CustomDataFormat(
-            endpoint="custom_data_script", custom_data_format_version="0.1", config={}
-        )
+        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
 
         self.REVIEW_MANAGER.settings.data.data_format.append(NEW_DATA_ENDPOINT)
         self.REVIEW_MANAGER.save_settings()

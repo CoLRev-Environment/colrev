@@ -20,7 +20,6 @@ colrev\_core.load
       :template: custom-class-template.rst
       :nosignatures:
 
-      LoadRecord
       Loader
 
 

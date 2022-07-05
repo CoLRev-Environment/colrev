@@ -119,7 +119,7 @@ class PDF_Preparation(Process):
                 )
 
                 ENDPOINT = endpoint["endpoint"]
-                RECORD.data = ENDPOINT.prep_pdf(self.REVIEW_MANAGER, RECORD, PAD)
+                RECORD.data = ENDPOINT.prep_pdf(self, RECORD, PAD)
                 # Note : the record should not be changed
                 # if the prep_script throws an exception
                 # prepped_record = prep_script["script"](*prep_script["params"])
@@ -257,7 +257,7 @@ class PDF_Preparation(Process):
 
             RECORD = Record(record)
             RECORD.data.update(colrev_status=RecordState.pdf_imported)
-            RECORD.reset_pdf_provenance_hints()
+            RECORD.reset_pdf_provenance_notes()
             record = RECORD.get_data()
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)

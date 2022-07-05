@@ -25,10 +25,9 @@ class PDFCheckOCREndpoint:
         LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
     )
 
-    @classmethod
-    def __text_is_english(cls, *, text: str) -> bool:
+    def __text_is_english(self, *, text: str) -> bool:
         # Format: ENGLISH
-        confidenceValues = cls.language_detector.compute_language_confidence_values(
+        confidenceValues = self.language_detector.compute_language_confidence_values(
             text=text
         )
         for lang, conf in confidenceValues:
@@ -40,8 +39,7 @@ class PDFCheckOCREndpoint:
             #     print(conf)
         return False
 
-    @classmethod
-    def __apply_ocr(cls, *, REVIEW_MANAGER, record: dict, PAD: int) -> None:
+    def __apply_ocr(self, *, REVIEW_MANAGER, record: dict, PAD: int) -> None:
 
         pdf_path = REVIEW_MANAGER.path / Path(record["file"])
         ocred_filename = Path(pdf_path.replace(".pdf", "_ocr.pdf"))
@@ -72,46 +70,46 @@ class PDFCheckOCREndpoint:
         subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
 
         RECORD = Record(data=record)
-        RECORD.add_data_provenance_hint(key="file", hint="pdf_processed with OCRMYPDF")
+        RECORD.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")
         RECORD.data["file"] = str(ocred_filename.relative_to(REVIEW_MANAGER.path))
         RECORD.get_text_from_pdf(project_path=REVIEW_MANAGER.path)
 
         return
 
-    @classmethod
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(cls, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
         # TODO : allow for other languages in this and the following if statement
-        if not cls.__text_is_english(text=RECORD.data["text_from_pdf"]):
-            REVIEW_MANAGER.report_logger.info(f'apply_ocr({RECORD.data["ID"]})')
-            cls.__apply_ocr(record=RECORD.data, PAD=PAD)
+        if not self.__text_is_english(text=RECORD.data["text_from_pdf"]):
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.info(
+                f'apply_ocr({RECORD.data["ID"]})'
+            )
+            self.__apply_ocr(record=RECORD.data, PAD=PAD)
 
-        if not cls.__text_is_english(text=RECORD.data["text_from_pdf"]):
+        if not self.__text_is_english(text=RECORD.data["text_from_pdf"]):
             msg = (
                 f'{RECORD.data["ID"]}'.ljust(PAD, " ")
                 + "Validation error (OCR problems)"
             )
-            REVIEW_MANAGER.report_logger.error(msg)
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
 
-        if not cls.__text_is_english(text=RECORD.data["text_from_pdf"]):
+        if not self.__text_is_english(text=RECORD.data["text_from_pdf"]):
             msg = (
                 f'{RECORD.data["ID"]}'.ljust(PAD, " ")
                 + "Validation error (Language not English)"
             )
-            REVIEW_MANAGER.report_logger.error(msg)
-            RECORD.add_data_provenance_hint(key="file", hint="pdf_language_not_english")
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
+            RECORD.add_data_provenance_note(key="file", note="pdf_language_not_english")
             RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
         return RECORD.data
 
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFCoverPageEndpoint:
-    @classmethod
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(cls, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
         from PyPDF2 import PdfFileReader
 
@@ -249,18 +247,18 @@ class PDFCoverPageEndpoint:
         if [] == coverpages:
             return RECORD.data
         if coverpages:
-            original = REVIEW_MANAGER.path / Path(RECORD.data["file"])
-            file_copy = REVIEW_MANAGER.path / Path(
+            original = PDF_PREPARATION.REVIEW_MANAGER.path / Path(RECORD.data["file"])
+            file_copy = PDF_PREPARATION.REVIEW_MANAGER.path / Path(
                 RECORD.data["file"].replace(".pdf", "_wo_cp.pdf")
             )
             shutil.copy(original, file_copy)
             RECORD.extract_pages(
                 pages=coverpages,
                 type="coverpage",
-                project_path=REVIEW_MANAGER,
+                project_path=PDF_PREPARATION.REVIEW_MANAGER,
                 save_to_path=cp_path,
             )
-            REVIEW_MANAGER.report_logger.info(
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.info(
                 f'removed cover page for ({RECORD.data["ID"]})'
             )
         return RECORD.data
@@ -268,9 +266,8 @@ class PDFCoverPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFLastPageEndpoint:
-    @classmethod
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(cls, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         from PyPDF2 import PdfFileReader
 
         lp_path = LocalIndex.local_environment_path / Path(".lastpages")
@@ -343,8 +340,8 @@ class PDFLastPageEndpoint:
         if [] == last_pages:
             return RECORD.data
         if last_pages:
-            original = REVIEW_MANAGER.path / Path(RECORD.data["file"])
-            file_copy = REVIEW_MANAGER.path / Path(
+            original = PDF_PREPARATION.REVIEW_MANAGER.path / Path(RECORD.data["file"])
+            file_copy = PDF_PREPARATION.REVIEW_MANAGER.path / Path(
                 RECORD.data["file"].replace(".pdf", "_wo_lp.pdf")
             )
             shutil.copy(original, file_copy)
@@ -352,10 +349,10 @@ class PDFLastPageEndpoint:
             RECORD.extract_pages(
                 pages=last_pages,
                 type="last_page",
-                project_path=REVIEW_MANAGER,
+                project_path=PDF_PREPARATION.REVIEW_MANAGER,
                 save_to_path=lp_path,
             )
-            REVIEW_MANAGER.report_logger.info(
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.info(
                 f'removed last page for ({RECORD.data["ID"]})'
             )
         return RECORD.data
@@ -363,8 +360,7 @@ class PDFLastPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFMetadataValidationEndpoint:
-    @classmethod
-    def validates_based_on_metadata(cls, *, REVIEW_MANAGER, RECORD) -> dict:
+    def validates_based_on_metadata(self, *, REVIEW_MANAGER, RECORD) -> dict:
         def __rmdiacritics(*, char: str) -> str:
             """
             Return the base character of char, by "removing" any
@@ -471,9 +467,8 @@ class PDFMetadataValidationEndpoint:
 
         return validation_info
 
-    @classmethod
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(cls, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
@@ -484,12 +479,12 @@ class PDFMetadataValidationEndpoint:
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record=RECORD.data)
 
-            pdf_path = REVIEW_MANAGER.path / Path(RECORD.data["file"])
+            pdf_path = PDF_PREPARATION.REVIEW_MANAGER.path / Path(RECORD.data["file"])
             current_cpid = RECORD.get_colrev_pdf_id(path=pdf_path)
 
             if "colrev_pdf_id" in retrieved_record:
                 if retrieved_record["colrev_pdf_id"] == str(current_cpid):
-                    REVIEW_MANAGER.logger.debug(
+                    PDF_PREPARATION.REVIEW_MANAGER.logger.debug(
                         "validated pdf metadata based on local_index "
                         f"({RECORD.data['ID']})"
                     )
@@ -499,15 +494,15 @@ class PDFMetadataValidationEndpoint:
         except RecordNotInIndexException:
             pass
 
-        validation_info = cls.validates_based_on_metadata(
-            REVIEW_MANAGER=REVIEW_MANAGER, RECORD=RECORD
+        validation_info = self.validates_based_on_metadata(
+            REVIEW_MANAGER=PDF_PREPARATION.REVIEW_MANAGER, RECORD=RECORD
         )
         if not validation_info["validates"]:
             for msg in validation_info["msgs"]:
-                REVIEW_MANAGER.report_logger.error(msg)
+                PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
 
-            hints = ",".join([hint for hint in validation_info["pdf_prep_hints"]])
-            RECORD.add_data_provenance_hint(key="file", hint=hints)
+            notes = ",".join(validation_info["pdf_prep_hints"])
+            RECORD.add_data_provenance_note(key="file", note=notes)
             RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
 
         return RECORD.data
@@ -525,8 +520,7 @@ class PDFCompletenessValidationEndpoint:
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
     )
 
-    @classmethod
-    def __longer_with_appendix(cls, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):
+    def __longer_with_appendix(self, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):
         if nr_pages_metadata < RECORD.data["pages_in_file"] and nr_pages_metadata > 10:
             text = RECORD.extract_text_by_page(
                 pages=[
@@ -540,9 +534,8 @@ class PDFCompletenessValidationEndpoint:
                 return True
         return False
 
-    @classmethod
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(cls, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
@@ -589,24 +582,24 @@ class PDFCompletenessValidationEndpoint:
             "morepagesareavailableinthefullversionofthisdocument,whichmaybepurchas"
         )
         if full_version_purchase_notice in RECORD.extract_text_by_page(
-            pages=[0, 1], project_path=REVIEW_MANAGER.path
+            pages=[0, 1], project_path=PDF_PREPARATION.REVIEW_MANAGER.path
         ).replace(" ", ""):
             msg = (
                 f'{RECORD.data["ID"]}'.ljust(PAD - 1, " ")
                 + " Not the full version of the paper"
             )
-            REVIEW_MANAGER.report_logger.error(msg)
-            RECORD.add_data_provenance_hint(key="file", hint="not_full_version")
+            PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
+            RECORD.add_data_provenance_note(key="file", note="not_full_version")
             RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return RECORD.data
 
         pages_metadata = RECORD.data.get("pages", "NA")
 
-        roman_pages_matched = re.match(cls.roman_pages_pattern, pages_metadata)
+        roman_pages_matched = re.match(self.roman_pages_pattern, pages_metadata)
         if roman_pages_matched:
             start_page, end_page = roman_pages_matched.group().split("--")
             pages_metadata = f"{__romanToInt(s=start_page)}--{__romanToInt(s=end_page)}"
-        roman_page_matched = re.match(cls.roman_page_pattern, pages_metadata)
+        roman_page_matched = re.match(self.roman_page_pattern, pages_metadata)
         if roman_page_matched:
             page = roman_page_matched.group()
             pages_metadata = f"{__romanToInt(s=page)}"
@@ -616,20 +609,20 @@ class PDFCompletenessValidationEndpoint:
                 f'{RECORD.data["ID"]}'.ljust(PAD - 1, " ")
                 + "Could not validate completeness: no pages in metadata"
             )
-            RECORD.add_data_provenance_hint(key="file", hint="no_pages_in_metadata")
+            RECORD.add_data_provenance_note(key="file", note="no_pages_in_metadata")
             RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             return RECORD.data
 
         nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
 
-        RECORD.get_pages_in_pdf(project_path=REVIEW_MANAGER.path)
+        RECORD.get_pages_in_pdf(project_path=PDF_PREPARATION.REVIEW_MANAGER.path)
         if nr_pages_metadata != RECORD.data["pages_in_file"]:
             if nr_pages_metadata == int(RECORD.data["pages_in_file"]) - 1:
 
-                RECORD.add_data_provenance_hint(key="file", hint="more_pages_in_pdf")
+                RECORD.add_data_provenance_note(key="file", note="more_pages_in_pdf")
 
-            elif cls.__longer_with_appendix(
-                REVIEW_MANAGER=REVIEW_MANAGER,
+            elif self.__longer_with_appendix(
+                REVIEW_MANAGER=PDF_PREPARATION.REVIEW_MANAGER,
                 RECORD=RECORD,
                 nr_pages_metadata=nr_pages_metadata,
             ):
@@ -643,8 +636,8 @@ class PDFCompletenessValidationEndpoint:
                     + f"({nr_pages_metadata} pages)"
                 )
 
-                RECORD.add_data_provenance_hint(
-                    key="file", hint="nr_pages_not_matching"
+                RECORD.add_data_provenance_note(
+                    key="file", note="nr_pages_not_matching"
                 )
                 RECORD.data.update(
                     colrev_status=RecordState.pdf_needs_manual_preparation

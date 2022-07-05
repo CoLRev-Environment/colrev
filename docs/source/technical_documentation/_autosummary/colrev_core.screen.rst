@@ -20,7 +20,4 @@ colrev\_core.screen
       :template: custom-class-template.rst
       :nosignatures:
 
-      CoLRevCLIScreenEndpoint
       Screen
-      ScreenRecord
-      SpreadsheetScreenEndpoint

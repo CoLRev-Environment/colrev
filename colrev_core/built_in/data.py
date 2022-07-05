@@ -28,20 +28,18 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
-    @classmethod
-    def get_default_setup(cls):
+    def get_default_setup(self):
 
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
             "paper_endpoint_version": "0.1",
-            "word_template": cls.retrieve_default_word_template(),
-            "csl_style": cls.retrieve_default_csl(),
+            "word_template": self.retrieve_default_word_template(),
+            "csl_style": self.retrieve_default_csl(),
         }
 
         return manuscript_endpoint_details
 
-    @classmethod
-    def retrieve_default_word_template(cls) -> str:
+    def retrieve_default_word_template(self) -> str:
         template_name = "APA-7.docx"
 
         filedata = pkgutil.get_data(__name__, str(Path("../template/APA-7.docx")))
@@ -51,8 +49,7 @@ class ManuscriptEndpoint:
 
         return template_name
 
-    @classmethod
-    def retrieve_default_csl(cls) -> str:
+    def retrieve_default_csl(self) -> str:
         csl_link = (
             "https://raw.githubusercontent.com/"
             + "citation-style-language/styles/master/apa.csl"
@@ -62,20 +59,18 @@ class ManuscriptEndpoint:
         csl = Path(csl_link).name
         return csl
 
-    @classmethod
-    def check_new_record_source_tag(cls, REVIEW_MANAGER) -> None:
+    def check_new_record_source_tag(self, REVIEW_MANAGER) -> None:
         PAPER = REVIEW_MANAGER.paths["PAPER"]
         with open(PAPER) as f:
             for line in f:
-                if cls.NEW_RECORD_SOURCE_TAG in line:
+                if self.NEW_RECORD_SOURCE_TAG in line:
                     return
         raise ManuscriptRecordSourceTagError(
-            f"Did not find {cls.NEW_RECORD_SOURCE_TAG} tag in {PAPER}"
+            f"Did not find {self.NEW_RECORD_SOURCE_TAG} tag in {PAPER}"
         )
 
-    @classmethod
     def update_manuscript(
-        cls,
+        self,
         REVIEW_MANAGER,
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
@@ -136,7 +131,7 @@ class ManuscriptEndpoint:
                 appended, completed = False, False
                 line = reader.readline()
                 while line != "":
-                    if cls.NEW_RECORD_SOURCE_TAG in line:
+                    if self.NEW_RECORD_SOURCE_TAG in line:
                         if "_Records to synthesize" not in line:
                             line = "_Records to synthesize_:" + line + "\n"
                             writer.write(line)
@@ -179,7 +174,7 @@ class ManuscriptEndpoint:
 
                 if not appended:
                     msg = (
-                        f"Marker {cls.NEW_RECORD_SOURCE_TAG} not found in "
+                        f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
                         + f"{PAPER.name}. Adding records at the end of "
                         + "the document."
                     )
@@ -188,7 +183,7 @@ class ManuscriptEndpoint:
 
                     if line != "\n":
                         writer.write("\n")
-                    marker = f"{cls.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
+                    marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
                     writer.write(marker)
                     for missing_record in missing_records:
                         writer.write(missing_record)
@@ -273,20 +268,16 @@ class ManuscriptEndpoint:
 
         return records
 
-    @classmethod
-    def update_data(
-        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         # Update manuscript
-        records = cls.update_manuscript(
-            REVIEW_MANAGER, records, synthesized_record_status_matrix
+        records = self.update_manuscript(
+            DATA.REVIEW_MANAGER, records, synthesized_record_status_matrix
         )
 
         return
 
-    @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
         def get_to_synthesize_in_manuscript(
             PAPER: Path, records_for_synthesis: list
@@ -295,7 +286,7 @@ class ManuscriptEndpoint:
             if PAPER.is_file():
                 with open(PAPER) as f:
                     for line in f:
-                        if cls.NEW_RECORD_SOURCE_TAG in line:
+                        if self.NEW_RECORD_SOURCE_TAG in line:
                             while line != "":
                                 line = f.readline()
                                 if re.search(r"- @.*", line):
@@ -329,7 +320,7 @@ class ManuscriptEndpoint:
 
         # Update status / synthesized_record_status_matrix
         synthesized_in_manuscript = get_synthesized_ids_paper(
-            REVIEW_MANAGER.paths["PAPER"],
+            DATA.REVIEW_MANAGER.paths["PAPER"],
             synthesized_record_status_matrix,
         )
         for syn_ID in synthesized_in_manuscript:
@@ -342,8 +333,7 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class StructuredDataEndpoint:
-    @classmethod
-    def get_default_setup(cls):
+    def get_default_setup(self):
         structured_endpoint_details = {
             "endpoint": "STRUCTURED",
             "structured_data_endpoint_version": "0.1",
@@ -357,10 +347,7 @@ class StructuredDataEndpoint:
         }
         return structured_endpoint_details
 
-    @classmethod
-    def update_data(
-        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         def update_structured_data(
             REVIEW_MANAGER,
             synthesized_record_status_matrix: dict,
@@ -417,17 +404,16 @@ class StructuredDataEndpoint:
             return records
 
         records = update_structured_data(
-            REVIEW_MANAGER, synthesized_record_status_matrix
+            DATA.REVIEW_MANAGER, synthesized_record_status_matrix
         )
 
-        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path=REVIEW_MANAGER.paths["DATA_RELATIVE"]
+        DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            path=DATA.REVIEW_MANAGER.paths["DATA_RELATIVE"]
         )
         return
 
-    @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
         def get_data_extracted(DATA: Path, records_for_data_extraction: list) -> list:
             data_extracted = []
@@ -461,9 +447,9 @@ class StructuredDataEndpoint:
             ]
             return data_extracted
 
-        DATA = REVIEW_MANAGER.paths["DATA"]
+        DATA_PATH = DATA.REVIEW_MANAGER.paths["DATA"]
         structured_data_extracted = get_structured_data_extracted(
-            synthesized_record_status_matrix, DATA
+            synthesized_record_status_matrix, DATA_PATH
         )
 
         for syn_ID in structured_data_extracted:
@@ -476,8 +462,7 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class EndnoteEndpoint:
-    @classmethod
-    def get_default_setup(cls):
+    def get_default_setup(self):
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",
             "endnote_data_endpoint_version": "0.1",
@@ -487,10 +472,7 @@ class EndnoteEndpoint:
         }
         return endnote_endpoint_details
 
-    @classmethod
-    def update_data(
-        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
 
         from colrev_core import load as cc_load
         from colrev_core.review_dataset import ReviewDataset
@@ -534,7 +516,7 @@ class EndnoteEndpoint:
         endpoint_path.mkdir(exist_ok=True, parents=True)
 
         if not any(Path(endpoint_path).iterdir()):
-            REVIEW_MANAGER.logger.info("Export all")
+            DATA.REVIEW_MANAGER.logger.info("Export all")
             export_filepath = endpoint_path / Path("export_part1.enl")
 
             selected_records = {
@@ -550,7 +532,7 @@ class EndnoteEndpoint:
 
             with open(export_filepath, "w") as w:
                 w.write(enl_data.decode("utf-8"))
-            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
 
         else:
 
@@ -565,7 +547,7 @@ class EndnoteEndpoint:
                             ID = line[3:].lstrip().rstrip()
                             exported_IDs.append(ID)
 
-            REVIEW_MANAGER.logger.info(
+            DATA.REVIEW_MANAGER.logger.info(
                 "IDs that have already been exported (in the other export files):"
                 f" {exported_IDs}"
             )
@@ -590,16 +572,17 @@ class EndnoteEndpoint:
                 print(export_filepath)
                 with open(export_filepath, "w") as w:
                     w.write(enl_data.decode("utf-8"))
-                REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
+                DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                    path=str(export_filepath)
+                )
 
             else:
-                REVIEW_MANAGER.logger.info("No additional records to export")
+                DATA.REVIEW_MANAGER.logger.info("No additional records to export")
 
         return
 
-    @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
@@ -610,18 +593,14 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class PRISMAEndpoint:
-    @classmethod
-    def get_default_setup(cls):
+    def get_default_setup(self):
         prisma_endpoint_details = {
             "endpoint": "PRISMA",
             "prisma_data_endpoint_version": "0.1",
         }
         return prisma_endpoint_details
 
-    @classmethod
-    def update_data(
-        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
 
         from colrev_core.status import Status
         import os
@@ -641,7 +620,7 @@ class PRISMAEndpoint:
             os.remove(PRISMA_path)
         retrieve_package_file(PRISMA_resource_path, PRISMA_path)
 
-        STATUS = Status(REVIEW_MANAGER=REVIEW_MANAGER)
+        STATUS = Status(REVIEW_MANAGER=DATA.REVIEW_MANAGER)
         stat = STATUS.get_status_freq()
         # print(stat)
 
@@ -690,9 +669,8 @@ class PRISMAEndpoint:
 
         return
 
-    @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
 
         # Note : automatically set all to True / synthesized
@@ -707,8 +685,7 @@ class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    @classmethod
-    def get_default_setup(cls):
+    def get_default_setup(self):
         zettlr_endpoint_details = {
             "endpoint": "ZETTLR",
             "zettlr_endpoint_version": "0.1",
@@ -716,17 +693,14 @@ class ZettlrEndpoint:
         }
         return zettlr_endpoint_details
 
-    @classmethod
-    def update_data(
-        cls, REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
-    ):
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         from colrev_core.data import Data
         import configparser
         import datetime
 
-        REVIEW_MANAGER.logger.info("Export to zettlr endpoint")
+        DATA.REVIEW_MANAGER.logger.info("Export to zettlr endpoint")
 
-        endpoint_path = REVIEW_MANAGER.path / Path("data/zettlr")
+        endpoint_path = DATA.REVIEW_MANAGER.path / Path("data/zettlr")
 
         # TODO : check if a main-zettlr file exists.
 
@@ -755,7 +729,7 @@ class ZettlrEndpoint:
             with open(filename) as f:
                 s = f.read()
                 if old_string not in s:
-                    REVIEW_MANAGER.logger.info(
+                    DATA.REVIEW_MANAGER.logger.info(
                         f'"{old_string}" not found in {filename}.'
                     )
                     return
@@ -773,7 +747,7 @@ class ZettlrEndpoint:
                 appended, completed = False, False
                 line = reader.readline()
                 while line != "":
-                    if cls.NEW_RECORD_SOURCE_TAG in line:
+                    if self.NEW_RECORD_SOURCE_TAG in line:
                         if "_Records to synthesize" not in line:
                             line = "_Records to synthesize_:" + line + "\n"
                             writer.write(line)
@@ -816,7 +790,7 @@ class ZettlrEndpoint:
 
                 if not appended:
                     msg = (
-                        f"Marker {cls.NEW_RECORD_SOURCE_TAG} not found in "
+                        f"Marker {self.NEW_RECORD_SOURCE_TAG} not found in "
                         + f"{PAPER.name}. Adding records at the end of "
                         + "the document."
                     )
@@ -825,7 +799,7 @@ class ZettlrEndpoint:
 
                     if line != "\n":
                         writer.write("\n")
-                    marker = f"{cls.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
+                    marker = f"{self.NEW_RECORD_SOURCE_TAG}_Records to synthesize_:\n\n"
                     writer.write(marker)
                     for missing_record in missing_records:
                         writer.write(missing_record)
@@ -859,11 +833,11 @@ class ZettlrEndpoint:
             zettlr_config["general"]["main"] = str(fname)
             with open(zettlr_config_path, "w") as configfile:
                 zettlr_config.write(configfile)
-            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(zettlr_config_path))
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(zettlr_config_path))
 
             retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
             title = "PROJECT_NAME"
-            readme_file = REVIEW_MANAGER.paths["README"]
+            readme_file = DATA.REVIEW_MANAGER.paths["README"]
             if readme_file.is_file():
                 with open(readme_file) as f:
                     title = f.readline()
@@ -871,9 +845,9 @@ class ZettlrEndpoint:
 
             inplace_change(ZETTLR_path, "{{project_title}}", title)
             # author = authorship_heuristic(REVIEW_MANAGER)
-            REVIEW_MANAGER.create_commit(msg="Add zettlr endpoint")
+            DATA.REVIEW_MANAGER.create_commit(msg="Add zettlr endpoint")
 
-        records_dict = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        records_dict = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         included = Data.get_record_ids_for_synthesis(records_dict)
 
@@ -893,16 +867,18 @@ class ZettlrEndpoint:
                 )
 
             add_missing_records_to_manuscript(
-                REVIEW_MANAGER=REVIEW_MANAGER,
+                REVIEW_MANAGER=DATA.REVIEW_MANAGER,
                 PAPER=ZETTLR_path,
                 missing_records=[
                     "\n- [[" + i + "]] @" + r + "\n" for i, r in missing_record_fields
                 ],
             )
 
-            REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
 
-            ZETTLR_resource_path = Path("../template/zettlr/") / Path("zettlr_bib_item.md")
+            ZETTLR_resource_path = Path("../template/zettlr/") / Path(
+                "zettlr_bib_item.md"
+            )
 
             for missing_record_field in missing_record_fields:
                 id, r = missing_record_field
@@ -914,17 +890,16 @@ class ZettlrEndpoint:
                 with ZETTLR_path.open("a") as f:
                     f.write(f"\n\n@{r}\n")
 
-                REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
+                DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
 
-            REVIEW_MANAGER.create_commit(msg="Setup zettlr")
+            DATA.REVIEW_MANAGER.create_commit(msg="Setup zettlr")
 
             print("TODO: recommend zettlr/snippest, adding tags")
 
         return
 
-    @classmethod
     def update_record_status_matrix(
-        cls, REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
         # TODO : not yet implemented!
         # TODO : records mentioned after the NEW_RECORD_SOURCE tag are not synthesized.

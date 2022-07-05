@@ -25,8 +25,7 @@ class CrossrefSearchEndpoint:
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
-    @classmethod
-    def run_search(cls, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import PrepRecord
 
         from colrev_core.built_in.prep import CrossrefConnector, DOIConnector
@@ -139,8 +138,7 @@ class CrossrefSearchEndpoint:
             SEARCH.save_feed_file(records, feed_file)
         return
 
-    @classmethod
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
             raise search.InvalidQueryException(
                 "CROSSREF queries require a SCOPE section"
@@ -160,8 +158,7 @@ class DBLPSearchEndpoint:
     source_identifier = "{{dblp_key}}"
     mode = "all"
 
-    @classmethod
-    def run_search(cls, SEARCH, params: dict, feed_file: Path) -> None:
+    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.built_in.prep import DBLPConnector
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
@@ -289,8 +286,7 @@ class DBLPSearchEndpoint:
 
         return
 
-    @classmethod
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
             raise search.InvalidQueryException("DBLP queries require a SCOPE section")
 
@@ -312,9 +308,14 @@ class BackwardSearchEndpoint:
     source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
 
-    def run_search(self, *, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev_core.record import RecordState
+    def __init__(self):
         from colrev_core.environment import GrobidService
+
+        self.GROBID_SERVICE = GrobidService()
+        self.GROBID_SERVICE.start()
+
+    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
+        from colrev_core.record import RecordState
 
         if params["scope"]["colrev_status"] != "rev_included|rev_synthesized":
             print("scopes other than rev_included|rev_synthesized not yet implemented")
@@ -323,9 +324,6 @@ class BackwardSearchEndpoint:
         if not SEARCH.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
             print("No records imported. Cannot run backward search yet.")
             return
-
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.start()
 
         records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -360,7 +358,7 @@ class BackwardSearchEndpoint:
 
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
-                GROBID_SERVICE.GROBID_URL + "/api/processReferences",
+                self.GROBID_SERVICE.GROBID_URL + "/api/processReferences",
                 files=dict(input=open(pdf_path, "rb"), encoding="utf8"),
                 data=options,
                 headers={"Accept": "application/x-bibtex"},
@@ -387,7 +385,7 @@ class BackwardSearchEndpoint:
             print("No new records added.")
         return
 
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         print("not yet imlemented")
         pass
 
@@ -468,7 +466,7 @@ class ColrevProjectSearchEndpoint:
             print("No records retrieved.")
         return
 
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
             raise search.InvalidQueryException(
                 "PROJECT queries require a SCOPE section"
@@ -566,7 +564,7 @@ class IndexSearchEndpoint:
             print("No records found")
         return
 
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         print("not yet imlemented")
         pass
 
@@ -1048,7 +1046,7 @@ class PDFSearchEndpoint:
             print("No records found")
         return
 
-    def validate_params(cls, query: str) -> None:
+    def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
             raise search.InvalidQueryException(
                 "PDFS_DIR queries require a SCOPE section"

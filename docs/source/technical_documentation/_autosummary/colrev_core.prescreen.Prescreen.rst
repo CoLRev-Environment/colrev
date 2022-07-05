@@ -25,3 +25,13 @@ colrev\_core.prescreen.Prescreen
       ~Prescreen.main
       ~Prescreen.set_data
       ~Prescreen.setup_custom_script
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Prescreen.built_in_scripts

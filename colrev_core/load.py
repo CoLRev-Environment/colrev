@@ -1,112 +1,42 @@
 #! /usr/bin/env python
 import itertools
 import re
-import shutil
 import string
 import typing
 from pathlib import Path
 
-import docker
-import pandas as pd
-import requests
-
+from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.record import Record
+from colrev_core.record import LoadRecord
 from colrev_core.record import RecordState
 
 
-class LoadRecord(Record):
-    def __init__(self, *, data: dict):
-        super().__init__(data=data)
-
-    def import_provenance(self) -> None:
-        def percent_upper_chars(input_string: str) -> float:
-            return sum(map(str.isupper, input_string)) / len(input_string)
-
-        # Initialize colrev_masterdata_provenance
-        if "colrev_masterdata_provenance" in self.data:
-            colrev_masterdata_provenance = self.data["colrev_masterdata_provenance"]
-        else:
-            source_identifier_string = self.data["colrev_source_identifier"]
-            marker = re.search(r"\{\{(.*)\}\}", source_identifier_string)
-            if marker:
-                marker_string = marker.group(0)
-                key = marker_string[2:-2]
-
-                try:
-                    marker_replacement = self.data[key]
-                    source_identifier_string = source_identifier_string.replace(
-                        marker_string, marker_replacement
-                    )
-                except KeyError as e:
-                    print(e)
-                    pass
-
-            colrev_masterdata_provenance = {}
-            colrev_data_provenance = {}
-            for key in self.data.keys():
-                if key in Record.identifying_field_keys:
-                    colrev_masterdata_provenance[key] = {
-                        "source": source_identifier_string,
-                        "note": "",
-                    }
-                elif key not in Record.provenance_keys and key not in [
-                    "colrev_source_identifier",
-                    "ID",
-                    "ENTRYTYPE",
-                    "source_url",
-                ]:
-                    colrev_data_provenance[key] = {
-                        "source": source_identifier_string,
-                        "note": "",
-                    }
-
-            del self.data["colrev_source_identifier"]
-
-        if not self.masterdata_is_curated():
-            if self.data["ENTRYTYPE"] in self.record_field_requirements:
-                required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
-                for required_field in required_fields:
-                    if required_field in self.data:
-                        if percent_upper_chars(self.data[required_field]) > 0.8:
-                            self.add_masterdata_provenance_hint(
-                                key=required_field, hint="mostly upper case"
-                            )
-                    else:
-                        self.data[required_field] = "UNKNOWN"
-            # TODO : how to handle cases where we do not have field_requirements?
-
-        if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
-            inconsistent_fields = self.record_field_inconsistencies[
-                self.data["ENTRYTYPE"]
-            ]
-            for inconsistent_field in inconsistent_fields:
-                if inconsistent_field in self.data:
-                    inconsistency_hint = (
-                        f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
-                    )
-                    self.add_masterdata_provenance_hint(
-                        key=inconsistent_field, hint=inconsistency_hint
-                    )
-
-        incomplete_fields = self.get_incomplete_fields()
-        for incomplete_field in incomplete_fields:
-            self.add_masterdata_provenance_hint(key=incomplete_field, hint="incomplete")
-
-        defect_fields = self.get_quality_defects()
-        if defect_fields:
-            for defect_field in defect_fields:
-                self.add_masterdata_provenance_hint(
-                    key=defect_field, hint="quality_defect"
-                )
-
-        self.data["colrev_data_provenance"] = colrev_data_provenance
-        self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
-        return
-
-
 class Loader(Process):
+
+    from colrev_core.built_in import load as built_in_load
+
+    # Note : PDFs should be stored in the pdfs directory
+    # They should be included through the search scripts (not the load scripts)
+    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+        "bib_pybtex": {
+            "endpoint": built_in_load.BibPybtexLoader,
+        },
+        "csv": {
+            "endpoint": built_in_load.CSVLoader,
+        },
+        "excel": {"endpoint": built_in_load.ExcelLoader},
+        "zotero_translate": {
+            "endpoint": built_in_load.ZoteroTranslationLoader,
+        },
+        "md_to_bib": {
+            "endpoint": built_in_load.MarkdownLoader,
+        },
+        "bibutils": {
+            "endpoint": built_in_load.BibutilsLoader,
+        },
+    }
+
     def __init__(
         self,
         *,
@@ -119,41 +49,27 @@ class Loader(Process):
             type=ProcessType.load,
             notify_state_transition_process=notify_state_transition_process,
         )
+        self.verbose = True
 
-        self.conversion_scripts = {
-            "ris": self.__zotero_translate,
-            # Zotero does not support enl:
-            # https://www.zotero.org/support/kb/endnote_import
-            # "enl": self.__zotero_translate,
-            # "end": self.__zotero_translate,
-            "rdf": self.__zotero_translate,
-            "json": self.__zotero_translate,
-            "mods": self.__zotero_translate,
-            "xml": self.__zotero_translate,
-            "marc": self.__zotero_translate,
-            "txt": self.__zotero_translate,  # __txt2bib,
-            "md": self.__txt2bib,
-            "csv": self.__csv2bib,
-            "xlsx": self.__xlsx2bib,
-            "xls": self.__xlsx2bib,
-            "pdf": self.__pdf2bib,
-            "pdf_refs": self.__pdfRefs2bib,
+        self.load_scripts: typing.Dict[
+            str, typing.Dict[str, typing.Any]
+        ] = AdapterManager.load_scripts(
+            PROCESS=self,
+            scripts=[
+                s.script["endpoint"] for s in REVIEW_MANAGER.settings.search.sources
+            ],
+        )
+
+        self.extensions_scripts = {
+            k: s["endpoint"].supported_extensions
+            for k, s in self.built_in_scripts.items()
         }
 
     def get_search_files(self, *, restrict: list = None) -> typing.List[Path]:
         """ "Retrieve search files"""
 
         supported_extensions = [
-            "bib",
-            "ris",
-            # "enl",
-            # "end",
-            "txt",
-            "csv",
-            "md",
-            "xlsx",
-            "xls",
-            "pdf",
+            item for sublist in self.extensions_scripts.values() for item in sublist
         ]
 
         if restrict:
@@ -218,7 +134,7 @@ class Loader(Process):
         source_identifier = [
             x.source_identifier
             for x in self.REVIEW_MANAGER.settings.search.sources
-            if str(filepath.name) == str(x.filename)
+            if str(filepath.name) == str(x.filename.name)
         ][0]
 
         record_list = []
@@ -322,341 +238,60 @@ class Loader(Process):
 
         return record
 
-    def __zotero_translate(self, *, file: Path) -> typing.List[dict]:
-        import requests
-        from colrev_core.environment import ZoteroTranslationService
-        import json
+    def validate_file_formats(self) -> None:
+        print("TODO : reactivate validate_file_formats()")
+        # search_files = self.get_search_files()
+        # for sfp in search_files:
+        #     if not any(
+        #         sfp.suffix == f".{ext}" for ext in self.conversion_scripts.keys()
+        #     ):
+        #         if not sfp.suffix == ".bib":
+        #             raise UnsupportedImportFormatError(sfp)
+        return None
 
-        ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
-        ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
+    def drop_empty_fields(self, *, records: typing.Dict) -> typing.Dict:
 
-        files = {"file": open(file, "rb")}
-        headers = {"Content-type": "text/plain"}
-        r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
-        headers = {"Content-type": "application/json"}
-        if "No suitable translators found" == r.content.decode("utf-8"):
-            raise ImportException(
-                "Zotero translators: No suitable import translators found"
-            )
+        records_list = list(records.values())
+        records_list = [
+            {k: v for k, v in record.items() if v is not None}
+            for record in records_list
+        ]
+        records_list = [
+            {k: v for k, v in record.items() if v != "nan"} for record in records_list
+        ]
 
-        try:
-            zotero_format = json.loads(r.content)
-            et = requests.post(
-                "http://127.0.0.1:1969/export?format=bibtex",
-                headers=headers,
-                json=zotero_format,
-            )
-            rec_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                load_str=et.content
-            )
+        return {r["ID"]: r for r in records_list}
 
-        except Exception as e:
-            pass
-            raise ImportException(f"Zotero import translators failed ({e})")
-
-        return rec_dict.values()
-
-    def __txt2bib(self, *, file: Path) -> typing.List[dict]:
-        from colrev_core.environment import GrobidService
-
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.check_grobid_availability()
-        with open(file, encoding="utf8") as f:
-            if file.suffix == ".md":
-                references = [line.rstrip() for line in f if "#" not in line[:2]]
-            else:
-                references = [line.rstrip() for line in f]
-
-        data = ""
-        ind = 0
-        for ref in references:
-            options = {}
-            options["consolidateCitations"] = "1"
-            options["citations"] = ref
-            r = requests.post(
-                GROBID_SERVICE.GROBID_URL + "/api/processCitation",
-                data=options,
-                headers={"Accept": "application/x-bibtex"},
-            )
-            ind += 1
-            data = data + "\n" + r.text.replace("{-1,", "{" + str(ind) + ",")
-
-        search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-            load_str=data
-        )
-
-        return search_records_dict.values()
-
-    def __preprocess_records(self, *, data: list) -> list:
-        ID = 1
-        for x in data:
-            if "ENTRYTYPE" not in x:
-                if "" != x.get("journal", ""):
-                    x["ENTRYTYPE"] = "article"
-                if "" != x.get("booktitle", ""):
-                    x["ENTRYTYPE"] = "inproceedings"
-                else:
-                    x["ENTRYTYPE"] = "misc"
-
-            if "ID" not in x:
-                if "citation_key" in x:
-                    x["ID"] = x["citation_key"]
-                else:
-                    x["ID"] = ID
-                    ID += 1
-
-            for k, v in x.items():
-                x[k] = str(v)
-
-        for x in data:
-            if "no year" == x.get("year", "NA"):
-                del x["year"]
-            if "no journal" == x.get("journal", "NA"):
-                del x["journal"]
-            if "no volume" == x.get("volume", "NA"):
-                del x["volume"]
-            if "no pages" == x.get("pages", "NA"):
-                del x["pages"]
-            if "no issue" == x.get("issue", "NA"):
-                del x["issue"]
-            if "no number" == x.get("number", "NA"):
-                del x["number"]
-            if "no doi" == x.get("doi", "NA"):
-                del x["doi"]
-            if "no type" == x.get("type", "NA"):
-                del x["type"]
-            if "author_count" in x:
-                del x["author_count"]
-            if "no Number-of-Cited-References" == x.get(
-                "number_of_cited_references", "NA"
-            ):
-                del x["number_of_cited_references"]
-            if "no file" in x.get("file_name", "NA"):
-                del x["file_name"]
-            if "times_cited" == x.get("times_cited", "NA"):
-                del x["times_cited"]
-
-        return data
-
-    def __csv2bib(self, *, file: Path) -> typing.List[dict]:
-        try:
-            data = pd.read_csv(file)
-        except pd.errors.ParserError:
-            self.REVIEW_MANAGER.logger.error(f"Error: Not a csv file? {file.name}")
-            pass
-            return []
-        data.columns = data.columns.str.replace(" ", "_")
-        data.columns = data.columns.str.replace("-", "_")
-        data = data.to_dict("records")
-        data = self.__preprocess_records(data=data)
-
-        return data
-
-    def __xlsx2bib(self, *, file: Path) -> typing.List[dict]:
-        try:
-            data = pd.read_excel(file, dtype=str)  # dtype=str to avoid type casting
-        except pd.errors.ParserError:
-            self.REVIEW_MANAGER.logger.error(f"Error: Not an xlsx file: {file.name}")
-            pass
-            return []
-        data.columns = data.columns.str.replace(" ", "_")
-        data.columns = data.columns.str.replace("-", "_")
-        data = data.to_dict("records")
-        data = self.__preprocess_records(data=data)
-
-        return data
-
-    def __move_to_pdf_dir(self, *, filepath: Path) -> Path:
-        PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
-        # We should avoid re-extracting data from PDFs repeatedly (e.g., status.py)
-        Path(PDF_DIRECTORY).mkdir(exist_ok=True)
-        new_fp = Path(PDF_DIRECTORY) / filepath.name
-        shutil.move(str(filepath), new_fp)
-        return new_fp
-
-    # curl -v --form input=@./profit.pdf localhost:8070/api/processHeaderDocument
-    # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
-    # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
-    def __pdf2bib(self, file: Path) -> typing.List[dict]:
-        from colrev_core.environment import GrobidService
-
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.check_grobid_availability()
-
-        # https://github.com/kermitt2/grobid/issues/837
-        r = requests.post(
-            GrobidService.GROBID_URL + "/api/processHeaderDocument",
-            headers={"Accept": "application/x-bibtex"},
-            params={"consolidateHeader": "1"},
-            files=dict(input=open(file, "rb"), encoding="utf8"),
-        )
-
-        if 200 == r.status_code:
-            search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                load_str=r.text
-            )
-            return search_records_dict.values()
-
-        if 500 == r.status_code:
-            self.REVIEW_MANAGER.report_logger.error(
-                f"Not a readable pdf file: {file.name}"
-            )
-            self.REVIEW_MANAGER.logger.error(f"Not a readable pdf file: {file.name}")
-            self.REVIEW_MANAGER.report_logger.debug(f"Grobid: {r.text}")
-            self.REVIEW_MANAGER.logger.debug(f"Grobid: {r.text}")
-            return []
-
-        self.REVIEW_MANAGER.report_logger.debug(f"Status: {r.status_code}")
-        self.REVIEW_MANAGER.logger.debug(f"Status: {r.status_code}")
-        self.REVIEW_MANAGER.report_logger.debug(f"Response: {r.text}")
-        self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
-        return []
-
-    def __pdfRefs2bib(self, *, file: Path) -> typing.List[dict]:
-        from colrev_core.environment import GrobidService
-
-        GROBID_SERVICE = GrobidService()
-        GROBID_SERVICE.check_grobid_availability()
-
-        r = requests.post(
-            GrobidService.GROBID_URL + "/api/processReferences",
-            files=dict(input=open(file, "rb"), encoding="utf8"),
-            data={"consolidateHeader": "0", "consolidateCitations": "1"},
-            headers={"Accept": "application/x-bibtex"},
-        )
-        if 200 == r.status_code:
-            search_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                load_str=r.text
-            )
-            search_records = search_records_dict.values()
-
-            # Use lpad to maintain the sort order (easier to catch errors)
-            for rec in search_records:
-                rec["ID"] = rec.get("ID", "").rjust(3, "0")
-
-            return search_records
-        if 500 == r.status_code:
-            self.REVIEW_MANAGER.report_logger.error(
-                f"Not a readable pdf file: {file.name}"
-            )
-            self.REVIEW_MANAGER.logger.error(f"Not a readable pdf file: {file.name}")
-            self.REVIEW_MANAGER.report_logger.debug(f"Grobid: {r.text}")
-            self.REVIEW_MANAGER.logger.debug(f"Grobid: {r.text}")
-            return []
-
-        self.REVIEW_MANAGER.report_logger.debug(f"Status: {r.status_code}")
-        self.REVIEW_MANAGER.logger.debug(f"Status: {r.status_code}")
-        self.REVIEW_MANAGER.report_logger.debug(f"Response: {r.text}")
-        self.REVIEW_MANAGER.logger.debug(f"Response: {r.text}")
-        return []
-
-    def __drop_empty_fields(self, *, records: typing.List[dict]) -> typing.List[dict]:
-        records = [{k: v for k, v in r.items() if v is not None} for r in records]
-        records = [{k: v for k, v in r.items() if v != "nan"} for r in records]
-        return records
-
-    def __set_incremental_IDs(self, *, records: typing.List[dict]) -> typing.List[dict]:
+    def set_incremental_IDs(self, *, records: typing.Dict) -> typing.Dict:
         # if IDs to set for some records
         if 0 != len([r for r in records if "ID" not in r]):
-            for i, record in enumerate(records):
+            i = 1
+            for ID, record in records.items():
                 if "ID" not in record:
                     if "UT_(Unique_WOS_ID)" in record:
                         record["ID"] = record["UT_(Unique_WOS_ID)"].replace(":", "_")
                     else:
                         record["ID"] = f"{i+1}".rjust(10, "0")
+                    i += 1
         return records
 
-    def __fix_keys(self, *, records: typing.List[dict]) -> typing.List[dict]:
-        for record in records:
+    def fix_keys(self, *, records: typing.Dict) -> typing.Dict:
+        for ID, record in records.items():
             record = {
                 re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
                 for k, v in record.items()
             }
         return records
 
-    def validate_file_formats(self) -> None:
-        search_files = self.get_search_files()
-        for sfp in search_files:
-            if not any(
-                sfp.suffix == f".{ext}" for ext in self.conversion_scripts.keys()
-            ):
-                if not sfp.suffix == ".bib":
-                    raise UnsupportedImportFormatError(sfp)
-        return None
+    def get_script(self, *, filepath: str) -> dict:
 
-    def __convert_to_bib(self, *, sfpath: Path) -> Path:
-        from colrev_core.environment import GrobidService
+        filetype = Path(filepath).suffix.replace(".", "")
 
-        corresponding_bib_file = sfpath.with_suffix(".bib")
+        for endpoint_name, endpoint_dict in self.built_in_scripts.items():
+            if filetype in endpoint_dict["endpoint"].supported_extensions:
+                return {"endpoint": endpoint_name}
 
-        if corresponding_bib_file.is_file():
-            return corresponding_bib_file
-
-        if not any(
-            sfpath.suffix == f".{ext}" for ext in self.conversion_scripts.keys()
-        ):
-            raise UnsupportedImportFormatError(sfpath)
-
-        filetype = sfpath.suffix.replace(".", "")
-        if "pdf" == filetype:
-            if str(sfpath).endswith("_ref_list.pdf"):
-                filetype = "pdf_refs"
-
-        if sfpath.suffix in [".pdf", ".md"]:
-            self.REVIEW_MANAGER.logger.info("Start grobid")
-            GROBID_SERVICE = GrobidService()
-            GROBID_SERVICE.start()
-
-        if filetype in self.conversion_scripts.keys():
-            self.REVIEW_MANAGER.report_logger.info(f"Loading {filetype}: {sfpath.name}")
-            self.REVIEW_MANAGER.logger.info(f"Loading {filetype}: {sfpath.name}")
-
-            try:
-                cur_tag = (
-                    docker.from_env().images.get("zotero/translation-server").tags[0]
-                )
-                self.REVIEW_MANAGER.report_logger.info(
-                    f"Running docker container created from {cur_tag}"
-                )
-                self.REVIEW_MANAGER.logger.info(
-                    f"Running docker container created from {cur_tag}"
-                )
-            except docker.errors.ImageNotFound:
-                pass
-
-            self.REVIEW_MANAGER.logger.debug(
-                f"Called {self.conversion_scripts[filetype].__name__}({sfpath})"
-            )
-            records = self.conversion_scripts[filetype](file=sfpath)
-
-            records = self.__fix_keys(records=records)
-            records = self.__set_incremental_IDs(records=records)
-
-            records = self.__drop_empty_fields(records=records)
-
-            if len(records) == 0:
-                self.REVIEW_MANAGER.report_logger.error("No records loaded")
-                self.REVIEW_MANAGER.logger.error("No records loaded")
-                return corresponding_bib_file
-
-            if corresponding_bib_file != str(sfpath) and sfpath.suffix != ".bib":
-                if not corresponding_bib_file.is_file():
-                    self.REVIEW_MANAGER.logger.info(
-                        f"Loaded {len(records)} " f"records from {sfpath.name}"
-                    )
-                    records_dict = {r["ID"]: r for r in records}
-                    self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
-                        records=records_dict, save_path=corresponding_bib_file
-                    )
-
-        else:
-            self.REVIEW_MANAGER.report_logger.info(
-                f"Filetype not recognized: {sfpath.name}"
-            )
-            self.REVIEW_MANAGER.logger.info(f"Filetype not recognized: {sfpath.name}")
-            return corresponding_bib_file
-
-        return corresponding_bib_file
+        return {"endpoint": "NA"}
 
     def get_unique_id(self, *, ID: str, ID_list: typing.List[str]) -> str:
 
@@ -740,12 +375,6 @@ class Loader(Process):
 
         return
 
-    def __get_currently_imported_origin_list(self) -> list:
-        record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-        imported_origins = [x["colrev_origin"].split(";") for x in record_header_list]
-        imported_origins = list(itertools.chain(*imported_origins))
-        return imported_origins
-
     def __get_nr_in_bib(self, *, file_path: Path) -> int:
 
         number_in_bib = 0
@@ -761,6 +390,78 @@ class Loader(Process):
 
         return number_in_bib
 
+    def get_currently_imported_origin_list(self) -> list:
+        record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
+        imported_origins = [x["colrev_origin"].split(";") for x in record_header_list]
+        imported_origins = list(itertools.chain(*imported_origins))
+        return imported_origins
+
+    def preprocess_records(self, *, records: list) -> list:
+        ID = 1
+        for x in records:
+            if "ENTRYTYPE" not in x:
+                if "" != x.get("journal", ""):
+                    x["ENTRYTYPE"] = "article"
+                if "" != x.get("booktitle", ""):
+                    x["ENTRYTYPE"] = "inproceedings"
+                else:
+                    x["ENTRYTYPE"] = "misc"
+
+            if "ID" not in x:
+                if "citation_key" in x:
+                    x["ID"] = x["citation_key"]
+                else:
+                    x["ID"] = ID
+                    ID += 1
+
+            for k, v in x.items():
+                x[k] = str(v)
+
+        for x in records:
+            if "no year" == x.get("year", "NA"):
+                del x["year"]
+            if "no journal" == x.get("journal", "NA"):
+                del x["journal"]
+            if "no volume" == x.get("volume", "NA"):
+                del x["volume"]
+            if "no pages" == x.get("pages", "NA"):
+                del x["pages"]
+            if "no issue" == x.get("issue", "NA"):
+                del x["issue"]
+            if "no number" == x.get("number", "NA"):
+                del x["number"]
+            if "no doi" == x.get("doi", "NA"):
+                del x["doi"]
+            if "no type" == x.get("type", "NA"):
+                del x["type"]
+            if "author_count" in x:
+                del x["author_count"]
+            if "no Number-of-Cited-References" == x.get(
+                "number_of_cited_references", "NA"
+            ):
+                del x["number_of_cited_references"]
+            if "no file" in x.get("file_name", "NA"):
+                del x["file_name"]
+            if "times_cited" == x.get("times_cited", "NA"):
+                del x["times_cited"]
+
+        return records
+
+    def save_records(self, *, records, corresponding_bib_file) -> None:
+        records = self.fix_keys(records=records)
+        records = self.set_incremental_IDs(records=records)
+        records = self.drop_empty_fields(records=records)
+
+        if len(records) == 0:
+            self.REVIEW_MANAGER.report_logger.error("No records loaded")
+            self.REVIEW_MANAGER.logger.error("No records loaded")
+
+        if not corresponding_bib_file.is_file():
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records=records, save_path=corresponding_bib_file
+            )
+        return
+
     def main(self, *, keep_ids: bool = False, combine_commits=False) -> None:
 
         saved_args = locals()
@@ -771,16 +472,39 @@ class Loader(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
         for search_file in self.get_search_files():
 
-            corresponding_bib_file = self.__convert_to_bib(sfpath=search_file)
+            if str(search_file.with_suffix(".bib").name) not in [
+                str(s.filename) for s in self.REVIEW_MANAGER.settings.search.sources
+            ]:
+                continue
+            SOURCE = [
+                s
+                for s in self.REVIEW_MANAGER.settings.search.sources
+                if str(s.filename) == str(search_file.with_suffix(".bib").name)
+            ][0]
+
+            if SOURCE.script["endpoint"] not in list(self.load_scripts.keys()):
+                if self.verbose:
+                    print(f"Error: endpoint not available: {SOURCE.script}")
+                continue
+
+            endpoint = self.load_scripts[SOURCE.script["endpoint"]]
+            ENDPOINT = endpoint["endpoint"]
+            self.REVIEW_MANAGER.report_logger.info(f"Loading {SOURCE}")
+            self.REVIEW_MANAGER.logger.info(f"Loading {SOURCE}")
+
+            corresponding_bib_file = ENDPOINT.load(
+                self, Path("search") / Path(search_file)
+            )
+
             if not corresponding_bib_file.is_file():
                 continue
 
-            imported_origins = self.__get_currently_imported_origin_list()
+            imported_origins = self.get_currently_imported_origin_list()
             len_before = len(imported_origins)
 
-            self.REVIEW_MANAGER.report_logger.info(f"Load {search_file.name}")
-            self.REVIEW_MANAGER.logger.info(f"Load {search_file.name}")
-            saved_args["file"] = search_file.name
+            self.REVIEW_MANAGER.report_logger.info(f"Load {SOURCE.filename.name}")
+            self.REVIEW_MANAGER.logger.info(f"Load {SOURCE.filename.name}")
+            saved_args["file"] = SOURCE.filename.name
 
             self.resolve_non_unique_IDs(corresponding_bib_file=corresponding_bib_file)
 
@@ -841,7 +565,9 @@ class Loader(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                 path=str(corresponding_bib_file)
             )
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(search_file))
+            self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                path=str(Path("search") / SOURCE.filename)
+            )
             if not combine_commits:
 
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -849,7 +575,7 @@ class Loader(Process):
                     msg=f"Load {saved_args['file']}", saved_args=saved_args
                 )
 
-            imported_origins = self.__get_currently_imported_origin_list()
+            imported_origins = self.get_currently_imported_origin_list()
             len_after = len(imported_origins)
             imported = len_after - len_before
 

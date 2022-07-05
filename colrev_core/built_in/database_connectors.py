@@ -358,17 +358,29 @@ class CrossrefConnector:
         if "language" in item:
             record["language"] = item["language"]
 
+        if (
+            "published-print" not in item
+            and "volume" not in record
+            and "number" not in record
+            and "year" in record
+        ):
+            record.update(published_online=record["year"])
+            record.update(year="forthcoming")
+
+        if "is-referenced-by-count" in item:
+            record["cited_by"] = item["is-referenced-by-count"]
+
         if "content-domain" in item:
             if "crossmark" in item["content-domain"]:
                 if item["content-domain"]["crossmark"]:
                     record["crossmark"] = "True"
 
         for k, v in record.items():
-            record[k] = v.replace("{", "").replace("}", "")
+            record[k] = str(v).replace("{", "").replace("}", "")
             if k in ["colrev_masterdata_provenance", "colrev_data_provenance", "doi"]:
                 continue
             # Note : some dois (and their provenance) contain html entities
-            record[k] = html.unescape(v)
+            record[k] = html.unescape(str(v))
 
         return record
 

@@ -281,6 +281,21 @@ class Search(Process):
                     "endpoint"
                 ].source_identifier
 
+            # TODO : add "USING script_x" when we add a search_script!
+            script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "DBLP":
+                script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "CROSSREF":
+                script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "BACKWARD_SEARCH":
+                script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "COLREV_PROJECT":
+                script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "INDEX":
+                script = {"endpoint": "bib_pybtex"}
+            if search_type == "FEED" and source == "PDFS":
+                script = {"endpoint": "bib_pybtex"}
+
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
                 "filename": filename,
@@ -288,6 +303,7 @@ class Search(Process):
                 "search_type": search_type,
                 "source_identifier": source_identifier,
                 "search_parameters": selection,
+                "script": script,
                 "comment": "",
             }
             self.REVIEW_MANAGER.pp.pprint(source_details)
@@ -375,6 +391,7 @@ class Search(Process):
             search_type=SearchType.FEED,
             source_name="custom_search_script",
             source_identifier="TODO",
+            script={"endpoint": "TODO"},
             search_parameters="TODO",
             comment="",
         )

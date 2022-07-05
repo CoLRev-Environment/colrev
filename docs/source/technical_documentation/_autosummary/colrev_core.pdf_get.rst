@@ -20,7 +20,4 @@ colrev\_core.pdf\_get
       :template: custom-class-template.rst
       :nosignatures:
 
-      LocalIndexEndpoint
       PDF_Retrieval
-      UnpaywallEndpoint
-      WebsiteScreenshotEndpoint

@@ -123,7 +123,7 @@ class PDF_Retrieval(Process):
             )
 
             ENDPOINT = endpoint["endpoint"]
-            ENDPOINT.get_pdf(self.REVIEW_MANAGER, RECORD)
+            ENDPOINT.get_pdf(self, RECORD)
 
             if "file" in RECORD.data:
                 self.REVIEW_MANAGER.report_logger.info(

@@ -65,7 +65,7 @@ class AdapterManager:
             except ModuleNotFoundError:
                 pass
                 raise MissingDependencyError(
-                    "Dependency prep_script " + f"{plugin_script} not found. "
+                    "Dependency " + f"{plugin_script} not found. "
                     "Please install it\n  pip install "
                     f"{plugin_script}"
                 )
@@ -95,7 +95,18 @@ class AdapterManager:
             for script in scripts_dict.values():
                 verifyObject(SearchEndpoint, script["endpoint"])
 
-        if ProcessType.prep == PROCESS.type:
+        elif ProcessType.load == PROCESS.type:
+            from colrev_core.process import LoadEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomLoad
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(LoadEndpoint, script["endpoint"])
+
+        elif ProcessType.prep == PROCESS.type:
             from colrev_core.process import PreparationEndpoint
 
             for k, val in scripts_dict.items():
@@ -107,6 +118,19 @@ class AdapterManager:
 
             for script in scripts_dict.values():
                 verifyObject(PreparationEndpoint, script["endpoint"])
+
+        elif ProcessType.prep_man == PROCESS.type:
+            from colrev_core.process import PreparationManualEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPrepMan
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PreparationManualEndpoint, script["endpoint"])
 
         elif ProcessType.prescreen == PROCESS.type:
             from colrev_core.process import PrescreenEndpoint
@@ -134,6 +158,19 @@ class AdapterManager:
             for script in scripts_dict.values():
                 verifyObject(PDFRetrievalEndpoint, script["endpoint"])
 
+        elif ProcessType.pdf_get_man == PROCESS.type:
+            from colrev_core.process import PDFRetrievalManualEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPDFManualRetrieval
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PDFRetrievalManualEndpoint, script["endpoint"])
+
         elif ProcessType.pdf_prep == PROCESS.type:
             from colrev_core.process import PDFPreparationEndpoint
 
@@ -146,6 +183,19 @@ class AdapterManager:
 
             for script in scripts_dict.values():
                 verifyObject(PDFPreparationEndpoint, script["endpoint"])
+
+        elif ProcessType.pdf_prep_man == PROCESS.type:
+            from colrev_core.process import PDFPreparationManualEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomPDFManualPrepratation
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(PDFPreparationManualEndpoint, script["endpoint"])
 
         elif ProcessType.screen == PROCESS.type:
             from colrev_core.process import ScreenEndpoint
@@ -195,6 +245,7 @@ class EnvironmentManager:
         "opensearchproject/opensearch": "opensearchproject/opensearch:1.3.0",
         "opensearchproject/opensearch-dashboards": os_db,
         "browserless/chrome": "browserless/chrome:latest",
+        "bibutils": "bibutils:latest",
     }
 
     def __init__(self):
@@ -286,6 +337,8 @@ class EnvironmentManager:
 
     @classmethod
     def build_docker_images(cls) -> None:
+        import pkgutil
+        import io
 
         client = docker.from_env()
 
@@ -294,8 +347,18 @@ class EnvironmentManager:
 
         for img_name, img_version in cls.docker_images.items():
             if img_name not in repo_tags:
-                print(f"Pulling {img_name} Docker image...")
-                client.images.pull(img_version)
+
+                if "bibutils" == img_name:
+                    print("Building bibutils Docker image...")
+                    filedata = pkgutil.get_data(__name__, "docker/bibutils/Dockerfile")
+                    if filedata:
+                        fileobj = io.BytesIO(filedata)
+                        client.images.build(fileobj=fileobj, tag="bibutils:latest")
+                    else:
+                        print("Cannot retrieve image bibutils")
+                else:
+                    print(f"Pulling {img_name} Docker image...")
+                    client.images.pull(img_version)
 
         return
 
@@ -834,6 +897,9 @@ class LocalIndex:
                 except NotFoundError:
                     pass
                     break
+                except Exception as e:
+                    print(e)
+                    pass
 
         # search colrev_id field
         for cid_to_retrieve in cids_to_retrieve:
@@ -850,6 +916,9 @@ class LocalIndex:
             except (IndexError, NotFoundError):
                 pass
                 raise RecordNotInIndexException
+            except Exception as e:
+                print(e)
+                pass
 
         raise RecordNotInIndexException
 
@@ -1234,6 +1303,7 @@ class LocalIndex:
         Convenience function to retrieve the indexed record metadata
         based on another record
         """
+        from simplejson.errors import JSONDecodeError
 
         retrieved_record: typing.Dict = dict()
 
@@ -1265,7 +1335,7 @@ class LocalIndex:
                         index_name=self.RECORD_INDEX, key=k, value=v
                     )
                     break
-                except (IndexError, NotFoundError):
+                except (IndexError, NotFoundError, JSONDecodeError):
                     pass
 
         if not retrieved_record:

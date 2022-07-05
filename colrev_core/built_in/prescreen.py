@@ -15,8 +15,7 @@ class ScopePrescreenEndpoint:
 
     # TODO : move the scope settings to the parameters of this endpoint
 
-    @classmethod
-    def run_prescreen(cls, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         from colrev_core.settings import (
             TimeScopeFrom,
             TimeScopeTo,
@@ -143,8 +142,7 @@ class ScopePrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
-    @classmethod
-    def run_prescreen(cls, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         from colrev.cli import prescreen_cli
 
         records = prescreen_cli(PRESCREEN, split)
@@ -153,16 +151,14 @@ class CoLRevCLIPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ASReviewPrescreenEndpoint:
-    @classmethod
-    def run_prescreen(cls, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         print("TODO")
         return records
 
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
-    @classmethod
-    def run_prescreen(cls, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         # TODO : conditions as a settings/parameter
         saved_args = locals()
         saved_args["include_all"] = ""
@@ -186,8 +182,9 @@ class ConditionalPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
-    @classmethod
-    def export_table(cls, PRESCREEN, records, split, export_table_format="csv") -> None:
+    def export_table(
+        self, PRESCREEN, records, split, export_table_format="csv"
+    ) -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
@@ -252,9 +249,8 @@ class SpreadsheetPrescreenEndpoint:
 
         return
 
-    @classmethod
     def import_table(
-        cls, PRESCREEN, records, import_table_path="prescreen.csv"
+        self, PRESCREEN, records, import_table_path="prescreen.csv"
     ) -> None:
         if not Path(import_table_path).is_file():
             PRESCREEN.REVIEW_MANAGER.logger.error(
@@ -281,14 +277,13 @@ class SpreadsheetPrescreenEndpoint:
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         return
 
-    @classmethod
-    def run_prescreen(cls, PRESCREEN, records: dict, split: list) -> dict:
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
 
         if "y" == input("create prescreen spreadsheet [y,n]?"):
-            cls.export_table(PRESCREEN, records, split)
+            self.export_table(PRESCREEN, records, split)
 
         if "y" == input("import prescreen spreadsheet [y,n]?"):
-            cls.import_table(PRESCREEN, records)
+            self.import_table(PRESCREEN, records)
 
         if PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             if "y" == input("create commit [y,n]?"):

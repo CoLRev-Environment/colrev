@@ -1,7 +1,7 @@
-﻿colrev\_core.prep.PrepRecord
-============================
+colrev\_core.record.PrepRecord
+==============================
 
-.. currentmodule:: colrev_core.prep
+.. currentmodule:: colrev_core.record
 
 .. autoclass:: PrepRecord
    :members:
@@ -19,9 +19,9 @@
       ~PrepRecord.abbreviate_container
       ~PrepRecord.add_colrev_ids
       ~PrepRecord.add_data_provenance
-      ~PrepRecord.add_data_provenance_hint
+      ~PrepRecord.add_data_provenance_note
       ~PrepRecord.add_masterdata_provenance
-      ~PrepRecord.add_masterdata_provenance_hint
+      ~PrepRecord.add_masterdata_provenance_note
       ~PrepRecord.add_provenance_all
       ~PrepRecord.change_ENTRYTYPE
       ~PrepRecord.check_potential_retracts
@@ -64,7 +64,7 @@
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
       ~PrepRecord.rename_field
-      ~PrepRecord.reset_pdf_provenance_hints
+      ~PrepRecord.reset_pdf_provenance_notes
       ~PrepRecord.set_fields_complete
       ~PrepRecord.set_masterdata_complete
       ~PrepRecord.set_masterdata_consistent

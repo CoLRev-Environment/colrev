@@ -434,6 +434,14 @@ class SearchEndpoint(zope.interface.Interface):
         pass
 
 
+class LoadEndpoint(zope.interface.Interface):
+
+    supported_extensions = zope.interface.Attribute("""List of supported extensions""")
+
+    def load(LOADER, filepath):
+        pass
+
+
 class PreparationEndpoint(zope.interface.Interface):
 
     source_correction_hint = zope.interface.Attribute(
@@ -444,19 +452,34 @@ class PreparationEndpoint(zope.interface.Interface):
         pass
 
 
+class PreparationManualEndpoint(zope.interface.Interface):
+    def prepare_manual(PREP_MAN, records):
+        pass
+
+
 class PrescreenEndpoint(zope.interface.Interface):
     def run_prescreen(PRESCREEN, records: dict, split: list) -> dict:
         pass
 
 
 class PDFRetrievalEndpoint(zope.interface.Interface):
-    def get_pdf(REVIEW_MANAGER, RECORD):
+    def get_pdf(PDF_RETRIEVAL, RECORD):
         return RECORD
 
 
+class PDFRetrievalManualEndpoint(zope.interface.Interface):
+    def get_man_pdf(PDF_RETRIEVAL_MAN, records):
+        return records
+
+
 class PDFPreparationEndpoint(zope.interface.Interface):
-    def prep_pdf(REVIEW_MANAGER, RECORD, PAD) -> dict:
+    def prep_pdf(PDF_PREPARATION, RECORD, PAD) -> dict:
         return RECORD.data
+
+
+class PDFPreparationManualEndpoint(zope.interface.Interface):
+    def prep_man_pdf(PDF_PREP_MAN, records):
+        return records
 
 
 class ScreenEndpoint(zope.interface.Interface):
@@ -465,16 +488,16 @@ class ScreenEndpoint(zope.interface.Interface):
 
 
 class DataEndpoint(zope.interface.Interface):
-    def get_default_setup() -> dict:
+    def get_default_setup() -> dict:  # type: ignore
         return {}
 
     def update_data(
-        REVIEW_MANAGER, records: dict, synthesized_record_status_matrix: dict
+        DATA, records: dict, synthesized_record_status_matrix: dict
     ) -> None:
         pass
 
     def update_record_status_matrix(
-        REVIEW_MANAGER, synthesized_record_status_matrix, endpoint_identifier
+        DATA, synthesized_record_status_matrix, endpoint_identifier
     ) -> None:
         pass
 

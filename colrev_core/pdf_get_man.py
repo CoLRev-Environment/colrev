@@ -5,18 +5,39 @@ from pathlib import Path
 
 import pandas as pd
 
+from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 
 
 class PDFRetrievalMan(Process):
+
+    from colrev_core.built_in import pdf_get_man as built_in_pdf_get_man
+
+    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+        "colrev_cli_pdf_get_man": {
+            "endpoint": built_in_pdf_get_man.CoLRevCLIPDFRetrievalManual,
+        }
+    }
+
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
             type=ProcessType.pdf_get_man,
             notify_state_transition_process=notify_state_transition_process,
+        )
+
+        self.verbose = True
+        self.pdf_get_man_scripts: typing.Dict[
+            str, typing.Dict[str, typing.Any]
+        ] = AdapterManager.load_scripts(
+            PROCESS=self,
+            scripts=[
+                s["endpoint"]
+                for s in REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts
+            ],
         )
 
     def get_pdf_get_man(self, *, records: typing.Dict) -> list:
@@ -104,6 +125,28 @@ class PDFRetrievalMan(Process):
 
     def pdfs_retrieved_manually(self) -> bool:
         return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
+
+    def main(self) -> None:
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        for (
+            PDF_GET_MAN_SCRIPT
+        ) in self.REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts:
+
+            if PDF_GET_MAN_SCRIPT["endpoint"] not in list(
+                self.pdf_get_man_scripts.keys()
+            ):
+                if self.verbose:
+                    print(f"Error: endpoint not available: {PDF_GET_MAN_SCRIPT}")
+                continue
+
+            endpoint = self.pdf_get_man_scripts[PDF_GET_MAN_SCRIPT["endpoint"]]
+
+            ENDPOINT = endpoint["endpoint"]
+            records = ENDPOINT.get_man_pdf(self, records)
+
+        return
 
 
 if __name__ == "__main__":

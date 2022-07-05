@@ -82,6 +82,8 @@ class Preparation(Process):
         "issn",
         "language",
         "howpublished",
+        "cited_by",
+        "cited_by_file",
     ]
 
     # session = requests_cache.CachedSession("requests_cache")
@@ -191,10 +193,12 @@ class Preparation(Process):
         # RETRIEVAL_SIMILARITY = self.RETRIEVAL_SIMILARITY
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
-        self.CPUS = self.CPUS * 15
+        self.CPUS = self.CPUS * 1
 
         required_prep_scripts = [
-            s for r in REVIEW_MANAGER.settings.prep.prep_rounds for s in r.scripts
+            s["endpoint"]
+            for r in REVIEW_MANAGER.settings.prep.prep_rounds
+            for s in r.scripts
         ]
         required_prep_scripts.append("update_metadata_status")
 
@@ -253,7 +257,7 @@ class Preparation(Process):
                 "colrev_status": RecordState.md_prepared,  # type: ignore
             }
             DBLP_PREP = built_in_prep.DBLPMetadataPrep()
-            RET_REC = DBLP_PREP.prepare(self, PrepRecord(data=test_rec.copy()))
+            RET_REC = DBLP_PREP.prepare(self, PrepRecord(data=deepcopy(test_rec)))
             if 0 != len(RET_REC.data):
                 assert RET_REC.data["title"] == test_rec["title"]
                 assert RET_REC.data["author"] == test_rec["author"]
@@ -334,11 +338,11 @@ class Preparation(Process):
 
             # Note : we have to select scripts here because pathos/multiprocessing
             # does not support functions as parameters
-            prep_script = self.prep_scripts[settings_prep_script]
+            prep_script = self.prep_scripts[settings_prep_script["endpoint"]]
 
             # startTime = datetime.now()
 
-            prior = preparation_record.copy()
+            prior = deepcopy(preparation_record)
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 self.REVIEW_MANAGER.logger.info(f"{prep_script}(...) called")
@@ -375,24 +379,26 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.logger.debug(f"{prep_script} changed: -")
                 if self.REVIEW_MANAGER.DEBUG_MODE:
                     print("\n")
-                    time.sleep(0.7)
+                    time.sleep(0.3)
 
-            if (
-                preparation_record["colrev_status"]
-                in [
-                    RecordState.rev_prescreen_excluded,
-                    RecordState.md_prepared,
-                ]
-                or "disagreement with "
-                in preparation_record.get("colrev_masterdata_provenance", "")
-                or item["prep_round"] in ["load_fixes"]
+            # TODO : the endpoints may have a boolean flag indicating whether
+            # the changes should be applied always or only when there is a
+            # change in record status
+            if "load_fixes" == settings_prep_script["endpoint"]:
+                RECORD.data = deepcopy(preparation_record)
+
+            if preparation_record["colrev_status"] in [
+                RecordState.rev_prescreen_excluded,
+                RecordState.md_prepared,
+            ] or "disagreement with " in preparation_record.get(
+                "colrev_masterdata_provenance", ""
             ):
-                RECORD.data = preparation_record.copy()
+                RECORD.data = deepcopy(preparation_record)
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=UNPREPARED_RECORD,
                     REVIEW_MANAGER=self.REVIEW_MANAGER,
                 )
-                # break
+                break
 
             # diff = (datetime.now() - startTime).total_seconds()
             # with open("stats.csv", "a", encoding="utf8") as f:
@@ -401,10 +407,15 @@ class Preparation(Process):
         # TODO : deal with "crossmark" in preparation_record
 
         if self.LAST_ROUND:
-            RECORD.data = preparation_record.copy()
-            RECORD.update_masterdata_provenance(
-                UNPREPARED_RECORD=UNPREPARED_RECORD, REVIEW_MANAGER=self.REVIEW_MANAGER
-            )
+            if RECORD.data["colrev_status"] in [
+                RecordState.md_needs_manual_preparation,
+                RecordState.md_imported,
+            ]:
+                RECORD.data = deepcopy(preparation_record)
+                RECORD.update_masterdata_provenance(
+                    UNPREPARED_RECORD=UNPREPARED_RECORD,
+                    REVIEW_MANAGER=self.REVIEW_MANAGER,
+                )
         else:
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 if (
@@ -480,7 +491,7 @@ class Preparation(Process):
             self.REVIEW_MANAGER.logger.error(msg)
             self.REVIEW_MANAGER.report_logger.error(msg)
 
-        record_reset_list = [[record, record.copy()] for record in record_list]
+        record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
         MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
@@ -634,9 +645,9 @@ class Preparation(Process):
     def print_doi_metadata(self, *, doi: str) -> None:
         """CLI entrypoint"""
 
-        from colrev_core.built_in import prep as built_in_prep
+        from colrev_core.built_in import database_connectors
 
-        DOI_METADATA = built_in_prep.DOIMetadataPrep()
+        DOI_METADATA = database_connectors.DOIMetadataPrep()
 
         DUMMY_R = PrepRecord(data={"doi": doi})
         RECORD = DOI_METADATA.prepare(self, DUMMY_R)
@@ -644,7 +655,9 @@ class Preparation(Process):
 
         if "url" in RECORD.data:
             print("Metadata retrieved from website:")
-            RECORD.retrieve_md_from_url(self)
+
+            URL_CONNECTOR = database_connectors.URLConnector()
+            RECORD = URL_CONNECTOR.retrieve_md_from_url(RECORD=RECORD, PREPARATION=self)
             print(RECORD)
 
         return
@@ -837,7 +850,7 @@ class Preparation(Process):
             # Note : we add the script automatically (not as part of the settings.json)
             # because it must always be executed at the end
             if prep_round.name not in ["load_fixes", "exclusion"]:
-                prep_round.scripts.append("update_metadata_status")
+                prep_round.scripts.append({"endpoint": "update_metadata_status"})
 
             # Note : can set selected prep scripts/rounds in the settings...
             # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:

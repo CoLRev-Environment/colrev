@@ -1,7 +1,7 @@
-﻿colrev\_core.load.LoadRecord
-============================
+colrev\_core.record.LoadRecord
+==============================
 
-.. currentmodule:: colrev_core.load
+.. currentmodule:: colrev_core.record
 
 .. autoclass:: LoadRecord
    :members:
@@ -18,9 +18,9 @@
 
       ~LoadRecord.add_colrev_ids
       ~LoadRecord.add_data_provenance
-      ~LoadRecord.add_data_provenance_hint
+      ~LoadRecord.add_data_provenance_note
       ~LoadRecord.add_masterdata_provenance
-      ~LoadRecord.add_masterdata_provenance_hint
+      ~LoadRecord.add_masterdata_provenance_note
       ~LoadRecord.add_provenance_all
       ~LoadRecord.change_ENTRYTYPE
       ~LoadRecord.complete_provenance
@@ -57,7 +57,7 @@
       ~LoadRecord.remove_field
       ~LoadRecord.remove_quality_defect_notes
       ~LoadRecord.rename_field
-      ~LoadRecord.reset_pdf_provenance_hints
+      ~LoadRecord.reset_pdf_provenance_notes
       ~LoadRecord.set_fields_complete
       ~LoadRecord.set_masterdata_complete
       ~LoadRecord.set_masterdata_consistent

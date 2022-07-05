@@ -24,3 +24,13 @@ colrev\_core.data.Data
       ~Data.reading_heuristics
       ~Data.setup_custom_script
       ~Data.update_tei
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~Data.built_in_scripts

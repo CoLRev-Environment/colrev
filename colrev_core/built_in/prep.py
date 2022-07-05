@@ -251,6 +251,8 @@ class GlobalIDConsistencyPrep:
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
+        from colrev_core.built_in import database_connectors
+
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
         if "doi" in RECORD.data:
@@ -280,29 +282,35 @@ class GlobalIDConsistencyPrep:
                         )
 
         if "url" in RECORD.data:
-            URL_MD = PrepRecord(data=deepcopy(RECORD.get_data()))
-            URL_MD.retrieve_md_from_url(PREPARATION)
-            for k, v in URL_MD.data.items():
-                if k not in fields_to_check:
-                    continue
-                if not isinstance(v, str):
-                    continue
-                if k in RECORD.data:
-                    if len(URL_MD.data[k]) < 5 or len(RECORD.data[k]) < 5:
+            try:
+                URL_CONNECTOR = database_connectors.URLConnector()
+                URL_MD = PrepRecord(data=deepcopy(RECORD.get_data()))
+                URL_MD = URL_CONNECTOR.retrieve_md_from_url(
+                    RECORD=URL_MD, PREPARATION=PREPARATION
+                )
+                for k, v in URL_MD.data.items():
+                    if k not in fields_to_check:
                         continue
-                    if (
-                        fuzz.partial_ratio(
-                            RECORD.data[k].lower(), URL_MD.data[k].lower()
-                        )
-                        < 70
-                    ):
-                        RECORD.data[
-                            "colrev_status"
-                        ] = RecordState.md_needs_manual_preparation
-                        RECORD.add_masterdata_provenance_hint(
-                            key=k,
-                            hint=f"disagreement with website metadata ({v})",
-                        )
+                    if not isinstance(v, str):
+                        continue
+                    if k in RECORD.data:
+                        if len(URL_MD.data[k]) < 5 or len(RECORD.data[k]) < 5:
+                            continue
+                        if (
+                            fuzz.partial_ratio(
+                                RECORD.data[k].lower(), URL_MD.data[k].lower()
+                            )
+                            < 70
+                        ):
+                            RECORD.data[
+                                "colrev_status"
+                            ] = RecordState.md_needs_manual_preparation
+                            RECORD.add_masterdata_provenance_hint(
+                                key=k,
+                                hint=f"disagreement with website metadata ({v})",
+                            )
+            except AttributeError:
+                pass
 
         return RECORD
 
@@ -540,7 +548,8 @@ class SemanticScholarPrep:
         if "abstract" in item:
             retrieved_record.update(abstract=item["abstract"])
         if "doi" in item:
-            retrieved_record.update(doi=str(item["doi"]).upper())
+            if "none" != str(item["doi"]).lower():
+                retrieved_record.update(doi=str(item["doi"]).upper())
         if "title" in item:
             retrieved_record.update(title=item["title"])
         if "year" in item:
@@ -981,23 +990,24 @@ class CrossrefYearVolIssPrep:
 @zope.interface.implementer(PreparationEndpoint)
 class LocalIndexPrep:
 
+    from colrev_core.environment import LocalIndex
+
     source_correction_hint = (
         "correct the metadata in the source "
         + "repository (as linked in the provenance field)"
     )
+    LOCAL_INDEX = LocalIndex()
 
     def prepare(self, PREPARATION, RECORD):
-        from colrev_core.environment import LocalIndex
 
         # TODO: how to distinguish masterdata and complementary CURATED sources?
 
         # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
         # because it creates problems with multiprocessing
-        LOCAL_INDEX = LocalIndex()
 
         retrieved = False
         try:
-            retrieved_record = LOCAL_INDEX.retrieve(
+            retrieved_record = self.LOCAL_INDEX.retrieve(
                 record=RECORD.get_data(), include_file=False
             )
             retrieved = True
@@ -1006,7 +1016,7 @@ class LocalIndexPrep:
             try:
                 # Note: Records can be CURATED without being indexed
                 if not RECORD.masterdata_is_curated():
-                    retrieved_record = LOCAL_INDEX.retrieve_from_toc(
+                    retrieved_record = self.LOCAL_INDEX.retrieve_from_toc(
                         record=RECORD.data,
                         similarity_threshold=PREPARATION.RETRIEVAL_SIMILARITY,
                         include_file=False,

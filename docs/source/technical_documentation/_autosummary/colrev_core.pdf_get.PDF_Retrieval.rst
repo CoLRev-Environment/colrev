@@ -26,3 +26,13 @@ colrev\_core.pdf\_get.PDF\_Retrieval
       ~PDF_Retrieval.rename_pdfs
       ~PDF_Retrieval.retrieve_pdf
       ~PDF_Retrieval.setup_custom_script
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDF_Retrieval.built_in_scripts

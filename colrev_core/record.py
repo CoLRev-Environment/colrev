@@ -248,9 +248,9 @@ class Record:
                 return
         self.data[key] = value
         if key in self.identifying_field_keys:
-            self.add_masterdata_provenance(key=key, source=source, hint=comment)
+            self.add_masterdata_provenance(key=key, source=source, note=comment)
         else:
-            self.add_data_provenance(key=key, source=source, hint=comment)
+            self.add_data_provenance(key=key, source=source, note=comment)
         return
 
     def rename_field(self, *, key: str, new_key: str) -> None:
@@ -275,11 +275,11 @@ class Record:
         return
 
     def remove_field(
-        self, *, key: str, not_missing_hint: bool = False, source=""
+        self, *, key: str, not_missing_note: bool = False, source=""
     ) -> None:
         if key in self.data:
             del self.data[key]
-            if not_missing_hint:
+            if not_missing_note:
                 if key in self.identifying_field_keys:
                     # Example: journal without number
                     # we should keep that information that a particular masterdata
@@ -366,11 +366,11 @@ class Record:
                     ] = note.replace("incomplete", "")
         return
 
-    def reset_pdf_provenance_hints(self) -> None:
+    def reset_pdf_provenance_notes(self) -> None:
         if "colrev_data_provenance" not in self.data:
-            self.add_data_provenance_hint(key="file", hint="")
+            self.add_data_provenance_note(key="file", note="")
         if "file" in self.data["colrev_data_provenance"]:
-            # TODO : check note and remove hints selectively
+            # TODO : check note and remove notes selectively
             # note = d_p_dict['file']['note']
             self.data["colrev_data_provenance"]["file"]["note"] = ""
         return
@@ -511,7 +511,7 @@ class Record:
         return
 
     def fuse_best_field(self, *, MERGING_RECORD, key, val, source) -> None:
-        # Note : the assumption is that we need masterdata_provenance hints
+        # Note : the assumption is that we need masterdata_provenance notes
         # only for authors
 
         def percent_upper_chars(input_string: str) -> float:
@@ -525,25 +525,25 @@ class Record:
 
             if "author" in record_a_prov and "author" not in merging_record_a_prov:
                 # Prefer non-defect version
-                if "quality_defect" in record_a_prov["author"].get("hint", ""):
+                if "quality_defect" in record_a_prov["author"].get("note", ""):
                     return MERGING_RECORD.data["author"]
                 # Prefer complete version
-                if "incomplete" in record_a_prov["author"].get("hint", ""):
+                if "incomplete" in record_a_prov["author"].get("note", ""):
                     return MERGING_RECORD.data["author"]
             elif "author" in record_a_prov and "author" in merging_record_a_prov:
                 # Prefer non-defect version
                 if "quality_defect" in record_a_prov["author"].get(
-                    "hint", ""
+                    "note", ""
                 ) and "quality_defect" not in merging_record_a_prov["author"].get(
-                    "hint", ""
+                    "note", ""
                 ):
                     return MERGING_RECORD.data["author"]
 
                 # Prefer complete version
                 if "incomplete" in record_a_prov["author"].get(
-                    "hint", ""
+                    "note", ""
                 ) and "incomplete" not in merging_record_a_prov["author"].get(
-                    "hint", ""
+                    "note", ""
                 ):
                     return MERGING_RECORD.data["author"]
 
@@ -882,47 +882,46 @@ class Record:
 
         return default
 
-    def add_masterdata_provenance_hint(self, *, key, hint):
+    def add_masterdata_provenance_note(self, *, key, note):
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
         if key in self.data["colrev_masterdata_provenance"]:
-            if hint not in self.data["colrev_masterdata_provenance"][key]["note"]:
+            if note not in self.data["colrev_masterdata_provenance"][key]["note"]:
                 if "" == self.data["colrev_masterdata_provenance"][key]["note"]:
-                    self.data["colrev_masterdata_provenance"][key]["note"] += f"{hint}"
+                    self.data["colrev_masterdata_provenance"][key]["note"] += f"{note}"
                 else:
-                    self.data["colrev_masterdata_provenance"][key]["note"] += f",{hint}"
+                    self.data["colrev_masterdata_provenance"][key]["note"] += f",{note}"
         else:
             self.data["colrev_masterdata_provenance"][key] = {
                 "source": "ORIGINAL",
-                "note": hint,
+                "note": note,
             }
         return
 
-    def add_data_provenance_hint(self, *, key, hint):
+    def add_data_provenance_note(self, *, key, note):
         if "colrev_data_provenance" not in self.data:
             self.data["colrev_data_provenance"] = {}
         if key in self.data["colrev_data_provenance"]:
-            if hint not in self.data["colrev_data_provenance"][key]["note"]:
-                self.data["colrev_data_provenance"][key]["note"] += f",{hint}"
+            if note not in self.data["colrev_data_provenance"][key]["note"]:
+                self.data["colrev_data_provenance"][key]["note"] += f",{note}"
         else:
-            print(hint)
             self.data["colrev_data_provenance"][key] = {
                 "source": "ORIGINAL",
-                "note": hint,
+                "note": note,
             }
         return
 
-    def add_masterdata_provenance(self, *, key, source, hint: str = ""):
+    def add_masterdata_provenance(self, *, key, source, note: str = ""):
         md_p_dict = self.data.get("colrev_masterdata_provenance", {})
 
         if key in md_p_dict:
-            if "" != hint:
-                md_p_dict[key]["note"] += f",{hint}"
+            if "" != note:
+                md_p_dict[key]["note"] += f",{note}"
             else:
                 md_p_dict[key]["note"] = ""
             md_p_dict[key]["source"] = source
         else:
-            md_p_dict[key] = {"source": source, "note": f"{hint}"}
+            md_p_dict[key] = {"source": source, "note": f"{note}"}
         return
 
     def add_provenance_all(self, *, source):
@@ -935,16 +934,16 @@ class Record:
                 d_p_dict[key] = {"source": source, "note": ""}
         return
 
-    def add_data_provenance(self, *, key, source, hint: str = ""):
+    def add_data_provenance(self, *, key, source, note: str = ""):
         md_p_dict = self.data.get("colrev_data_provenance", {})
         if key in md_p_dict:
-            if "" != hint:
-                md_p_dict[key]["note"] += f",{hint}"
+            if "" != note:
+                md_p_dict[key]["note"] += f",{note}"
             else:
                 md_p_dict[key]["note"] = ""
             md_p_dict[key]["source"] = source
         else:
-            md_p_dict[key] = {"source": source, "note": f"{hint}"}
+            md_p_dict[key] = {"source": source, "note": f"{note}"}
         return
 
     def complete_provenance(self, *, source_info) -> bool:
@@ -966,9 +965,9 @@ class Record:
 
             if key in self.identifying_field_keys:
                 if not self.masterdata_is_curated:
-                    self.add_masterdata_provenance(key=key, source=source_info, hint="")
+                    self.add_masterdata_provenance(key=key, source=source_info, note="")
             else:
-                self.add_data_provenance(key=key, source=source_info, hint="")
+                self.add_data_provenance(key=key, source=source_info, note="")
 
         return True
 
@@ -1315,21 +1314,21 @@ class Record:
             # )
             # self.REVIEW_MANAGER.report_logger.error(msg)
             # self.REVIEW_MANAGER.logger.error(msg)
-            self.add_data_provenance_hint(key="file", hint="pdf_reader_error")
+            self.add_data_provenance_note(key="file", note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         except PDFTextExtractionNotAllowed:
             # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
             # self.REVIEW_MANAGER.report_logger.error(msg)
             # self.REVIEW_MANAGER.logger.error(msg)
-            self.add_data_provenance_hint(key="file", hint="pdf_protected")
+            self.add_data_provenance_note(key="file", note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         except PDFSyntaxError:
             # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDFSyntaxError"
             # self.REVIEW_MANAGER.report_logger.error(msg)
             # self.REVIEW_MANAGER.logger.error(msg)
-            self.add_data_provenance_hint(key="file", hint="pdf_syntax_error")
+            self.add_data_provenance_note(key="file", note="pdf_syntax_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
             pass
         return
@@ -1369,6 +1368,102 @@ class Record:
             )
         )
         return cpid1
+
+
+class LoadRecord(Record):
+    def __init__(self, *, data: dict):
+        super().__init__(data=data)
+
+    def import_provenance(self) -> None:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
+        # Initialize colrev_masterdata_provenance
+        if "colrev_masterdata_provenance" in self.data:
+            colrev_masterdata_provenance = self.data["colrev_masterdata_provenance"]
+        else:
+            source_identifier_string = self.data["colrev_source_identifier"]
+            marker = re.search(r"\{\{(.*)\}\}", source_identifier_string)
+            if marker:
+                marker_string = marker.group(0)
+                key = marker_string[2:-2]
+
+                try:
+                    marker_replacement = self.data[key]
+                    source_identifier_string = source_identifier_string.replace(
+                        marker_string, marker_replacement
+                    )
+                except KeyError as e:
+                    print(e)
+                    pass
+
+            colrev_masterdata_provenance = {}
+            colrev_data_provenance = {}
+            for key in self.data.keys():
+                if key in Record.identifying_field_keys:
+                    colrev_masterdata_provenance[key] = {
+                        "source": source_identifier_string,
+                        "note": "",
+                    }
+                elif key not in Record.provenance_keys and key not in [
+                    "colrev_source_identifier",
+                    "ID",
+                    "ENTRYTYPE",
+                    "source_url",
+                ]:
+                    colrev_data_provenance[key] = {
+                        "source": source_identifier_string,
+                        "note": "",
+                    }
+
+            del self.data["colrev_source_identifier"]
+        self.data["colrev_data_provenance"] = colrev_data_provenance
+        self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
+
+        if not self.masterdata_is_curated():
+            if self.data["ENTRYTYPE"] in self.record_field_requirements:
+                required_fields = self.record_field_requirements[self.data["ENTRYTYPE"]]
+                for required_field in required_fields:
+                    if required_field in self.data:
+                        if percent_upper_chars(self.data[required_field]) > 0.8:
+                            self.add_masterdata_provenance_note(
+                                key=required_field, note="mostly upper case"
+                            )
+                    else:
+                        # self.data[required_field] = "UNKNOWN"
+                        self.update_field(
+                            key=required_field,
+                            value="UNKNOWN",
+                            source="LOADER.import_provenance",
+                            comment="missing",
+                        )
+            # TODO : how to handle cases where we do not have field_requirements?
+
+        if self.data["ENTRYTYPE"] in self.record_field_inconsistencies:
+            inconsistent_fields = self.record_field_inconsistencies[
+                self.data["ENTRYTYPE"]
+            ]
+            for inconsistent_field in inconsistent_fields:
+                if inconsistent_field in self.data:
+                    inconsistency_note = (
+                        f"inconsistent with entrytype ({self.data['ENTRYTYPE']})"
+                    )
+                    self.add_masterdata_provenance_note(
+                        key=inconsistent_field, note=inconsistency_note
+                    )
+
+        incomplete_fields = self.get_incomplete_fields()
+        for incomplete_field in incomplete_fields:
+            self.add_masterdata_provenance_note(key=incomplete_field, note="incomplete")
+
+        defect_fields = self.get_quality_defects()
+        if defect_fields:
+            for defect_field in defect_fields:
+                self.add_masterdata_provenance_note(
+                    key=defect_field, note="quality_defect"
+                )
+
+        return
 
 
 class PrepRecord(Record):
@@ -1495,6 +1590,12 @@ class PrepRecord(Record):
         ):
             RECORD.data["pages"] = "nan"
             RETRIEVED_RECORD.data["pages"] = "nan"
+
+        if "year" in RECORD.data and "year" in RETRIEVED_RECORD.data:
+            if "forthcoming" == RECORD.data["year"]:
+                RECORD.data["year"] = RETRIEVED_RECORD.data["year"]
+            if "forthcoming" == RETRIEVED_RECORD.data["year"]:
+                RETRIEVED_RECORD.data["year"] = RECORD.data["year"]
 
         if "editorial" in RECORD.data.get("title", "NA").lower():
             if not all(x in RECORD.data for x in ["volume", "number"]):
@@ -1625,7 +1726,7 @@ class PrepRecord(Record):
                 if field_to_remove in self.data:
                     # TODO : maybe use set_masterdata_complete()?
                     self.remove_field(
-                        key=field_to_remove, not_missing_hint=True, source="local_index"
+                        key=field_to_remove, not_missing_note=True, source="local_index"
                     )
                     # TODO : we need to keep track of the information
                     # that a certain field is not required
@@ -1684,9 +1785,10 @@ class PrepRecord(Record):
                         ):
                             not_missing_fields.append(missing_field)
                             continue
-                    self.add_masterdata_provenance_hint(
-                        key=missing_field, hint="missing"
+                    self.add_masterdata_provenance_note(
+                        key=missing_field, note="missing"
                     )
+
             for not_missing_field in not_missing_fields:
                 missing_fields.remove(missing_field)
 
@@ -1696,9 +1798,9 @@ class PrepRecord(Record):
             inconsistencies = self.get_inconsistencies()
             if inconsistencies:
                 for inconsistency in inconsistencies:
-                    self.add_masterdata_provenance_hint(
+                    self.add_masterdata_provenance_note(
                         key=inconsistency,
-                        hint="inconsistent with ENTRYTYPE",
+                        note="inconsistent with ENTRYTYPE",
                     )
             else:
                 self.set_masterdata_consistent()
@@ -1706,8 +1808,8 @@ class PrepRecord(Record):
             incomplete_fields = self.get_incomplete_fields()
             if incomplete_fields:
                 for incomplete_field in incomplete_fields:
-                    self.add_masterdata_provenance_hint(
-                        key=incomplete_field, hint="incomplete"
+                    self.add_masterdata_provenance_note(
+                        key=incomplete_field, note="incomplete"
                     )
             else:
                 self.set_fields_complete()
@@ -1715,8 +1817,8 @@ class PrepRecord(Record):
             defect_fields = self.get_quality_defects()
             if defect_fields:
                 for defect_field in defect_fields:
-                    self.add_masterdata_provenance_hint(
-                        key=defect_field, hint="quality_defect"
+                    self.add_masterdata_provenance_note(
+                        key=defect_field, note="quality_defect"
                     )
             else:
                 self.remove_quality_defect_notes()

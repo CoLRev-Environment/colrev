@@ -19,6 +19,7 @@ colrev\_core.process.ProcessType
 
    .. autosummary::
 
+      ~ProcessType.search
       ~ProcessType.load
       ~ProcessType.prep
       ~ProcessType.prep_man

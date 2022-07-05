@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import typing
 from pathlib import Path
 
 import imagehash
@@ -7,18 +8,39 @@ from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
+from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
 
 
 class PDFPrepMan(Process):
+
+    from colrev_core.built_in import pdf_prep_man as built_in_pdf_prep_man
+
+    built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
+        "colrev_cli_pdf_prep_man": {
+            "endpoint": built_in_pdf_prep_man.CoLRevCLIPDFManPrep,
+        }
+    }
+
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
             type=ProcessType.pdf_prep_man,
             notify_state_transition_process=notify_state_transition_process,
+        )
+
+        self.verbose = True
+        self.pdf_prep_man_scripts: typing.Dict[
+            str, typing.Dict[str, typing.Any]
+        ] = AdapterManager.load_scripts(
+            PROCESS=self,
+            scripts=[
+                s["endpoint"]
+                for s in REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts
+            ],
         )
 
     def get_data(self) -> dict:
@@ -57,7 +79,7 @@ class PDFPrepMan(Process):
         record.update(colrev_status=RecordState.pdf_prepared)
 
         RECORD = Record(data=record)
-        RECORD.reset_pdf_provenance_hints()
+        RECORD.reset_pdf_provenance_notes()
         record = RECORD.get_data()
 
         pdf_path = Path(self.REVIEW_MANAGER.path / Path(record["file"]))
@@ -251,6 +273,28 @@ class PDFPrepMan(Process):
             writer.write(outfile)
         with open(cp_path / filepath.name, "wb") as outfile:
             writer_cp.write(outfile)
+        return
+
+    def main(self) -> None:
+
+        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        for (
+            PDF_PREP_MAN_SCRIPT
+        ) in self.REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts:
+
+            if PDF_PREP_MAN_SCRIPT["endpoint"] not in list(
+                self.pdf_prep_man_scripts.keys()
+            ):
+                if self.verbose:
+                    print(f"Error: endpoint not available: {PDF_PREP_MAN_SCRIPT}")
+                continue
+
+            endpoint = self.pdf_prep_man_scripts[PDF_PREP_MAN_SCRIPT["endpoint"]]
+
+            ENDPOINT = endpoint["endpoint"]
+            records = ENDPOINT.prep_man_pdf(self, records)
+
         return
 
 
