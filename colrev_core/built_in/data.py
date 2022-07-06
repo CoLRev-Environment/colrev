@@ -845,7 +845,9 @@ class ZettlrEndpoint:
 
             inplace_change(ZETTLR_path, "{{project_title}}", title)
             # author = authorship_heuristic(REVIEW_MANAGER)
-            DATA.REVIEW_MANAGER.create_commit(msg="Add zettlr endpoint")
+            DATA.REVIEW_MANAGER.create_commit(
+                msg="Add zettlr endpoint", script_call="colrev data"
+            )
 
         records_dict = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -892,7 +894,9 @@ class ZettlrEndpoint:
 
                 DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
 
-            DATA.REVIEW_MANAGER.create_commit(msg="Setup zettlr")
+            DATA.REVIEW_MANAGER.create_commit(
+                msg="Setup zettlr", script_call="colrev data"
+            )
 
             print("TODO: recommend zettlr/snippest, adding tags")
 

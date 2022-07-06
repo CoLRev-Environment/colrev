@@ -63,7 +63,10 @@ class Screen(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            msg="Screen (include_all)", manual_author=False, saved_args=saved_args
+            msg="Screen (include_all)",
+            manual_author=False,
+            script_call="colrev screen",
+            saved_args=saved_args,
         )
 
         return
@@ -156,7 +159,8 @@ class Screen(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            msg=f"Add screening criterion: {criterion_name}"
+            msg=f"Add screening criterion: {criterion_name}",
+            script_call="colrev screen",
         )
 
         return
@@ -215,7 +219,8 @@ class Screen(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            msg=f"Removed screening criterion: {criterion_to_delete}"
+            msg=f"Removed screening criterion: {criterion_to_delete}",
+            script_call="colrev screen",
         )
 
         return

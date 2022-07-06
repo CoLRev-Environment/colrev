@@ -351,7 +351,8 @@ class Loader(Process):
                 path=str(corresponding_bib_file)
             )
             self.REVIEW_MANAGER.create_commit(
-                msg=f"Save original search file: {corresponding_bib_file.name}"
+                msg=f"Save original search file: {corresponding_bib_file.name}",
+                script_call="colrev load",
             )
 
             for old_id, new_id in IDs_to_update:
@@ -572,7 +573,9 @@ class Loader(Process):
 
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
                 self.REVIEW_MANAGER.create_commit(
-                    msg=f"Load {saved_args['file']}", saved_args=saved_args
+                    msg=f"Load {saved_args['file']}",
+                    script_call="colrev load",
+                    saved_args=saved_args,
                 )
 
             imported_origins = self.get_currently_imported_origin_list()
@@ -610,7 +613,7 @@ class Loader(Process):
         if combine_commits and self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
             self.REVIEW_MANAGER.create_commit(
-                msg="Load (multiple)", saved_args=saved_args
+                msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
             )
         return
 

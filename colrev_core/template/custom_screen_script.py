@@ -42,5 +42,7 @@ class CustomScreen:
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        SCREEN.REVIEW_MANAGER.create_commit(msg="Screen (random)", manual_author=False)
+        SCREEN.REVIEW_MANAGER.create_commit(
+            msg="Screen (random)", manual_author=False, script_call="colrev screen"
+        )
         return records

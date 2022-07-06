@@ -380,7 +380,9 @@ class BackwardSearchEndpoint:
         SEARCH.save_feed_file(feed_file_records_dict, feed_file)
 
         if SEARCH.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            SEARCH.REVIEW_MANAGER.create_commit(msg="Backward search")
+            SEARCH.REVIEW_MANAGER.create_commit(
+                msg="Backward search", script_call="colrev search"
+            )
         else:
             print("No new records added.")
         return

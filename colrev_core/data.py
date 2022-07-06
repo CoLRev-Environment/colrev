@@ -118,7 +118,9 @@ class Data(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         if self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-            self.REVIEW_MANAGER.create_commit(msg="Create TEIs")
+            self.REVIEW_MANAGER.create_commit(
+                msg="Create TEIs", script_call="colrev data"
+            )
 
         # Enhance TEIs (link local IDs)
         for record in records.values():
@@ -150,7 +152,7 @@ class Data(Process):
                 # if tei_path.is_file():
                 #     git_repo.index.add([str(tei_path)])
 
-        self.REVIEW_MANAGER.create_commit(msg="Enhance TEIs")
+        self.REVIEW_MANAGER.create_commit(msg="Enhance TEIs", script_call="colrev data")
 
         return records
 

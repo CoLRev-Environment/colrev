@@ -579,7 +579,9 @@ class Preparation(Process):
         # self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
-            msg="Reset metadata for manual preparation", saved_args=saved_args
+            msg="Reset metadata for manual preparation",
+            script_call="colrev prep",
+            saved_args=saved_args,
         )
         return
 
@@ -925,14 +927,18 @@ class Preparation(Process):
                 # self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(
-                    msg=f"Prepare records ({prep_round.name})", saved_args=saved_args
+                    msg=f"Prepare records ({prep_round.name})",
+                    script_call="colrev prep",
+                    saved_args=saved_args,
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
 
         if not keep_ids and not self.REVIEW_MANAGER.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-            self.REVIEW_MANAGER.create_commit(msg="Set IDs", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(
+                msg="Set IDs", script_call="colrev prep", saved_args=saved_args
+            )
 
         return
 

@@ -21,7 +21,9 @@ class CustomPrescreen:
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         PRESCREEN.REVIEW_MANAGER.create_commit(
-            msg="Pre-screen (random)", manual_author=False
+            msg="Pre-screen (random)",
+            manual_author=False,
+            script_call="colrev prescreen",
         )
 
         # Alternatively (does not change the records argument   )

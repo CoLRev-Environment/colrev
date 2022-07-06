@@ -136,7 +136,10 @@ class ScopePrescreenEndpoint:
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         PRESCREEN.REVIEW_MANAGER.create_commit(
-            msg="Pre-screen (scope)", manual_author=False, saved_args=saved_args
+            msg="Pre-screen (scope)",
+            manual_author=False,
+            script_call="colrev prescreen",
+            saved_args=saved_args,
         )
         return records
 
@@ -299,6 +302,7 @@ class ASReviewPrescreenEndpoint:
         PRESCREEN.REVIEW_MANAGER.create_commit(
             msg="Pre-screening (manual, with asreview)",
             manual_author=True,
+            script_call="colrev prescreen",
             saved_args=saved_args,
         )
 
@@ -343,7 +347,9 @@ class ASReviewPrescreenEndpoint:
             if PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
                 if "y" == input("create commit [y,n]?"):
                     PRESCREEN.REVIEW_MANAGER.create_commit(
-                        msg="Pre-screen (spreadsheets)", manual_author=True
+                        msg="Pre-screen (spreadsheets)",
+                        manual_author=True,
+                        script_call="colrev prescreen",
                     )
 
         return records
@@ -368,7 +374,10 @@ class ConditionalPrescreenEndpoint:
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         PRESCREEN.REVIEW_MANAGER.create_commit(
-            msg="Pre-screen (include_all)", manual_author=False, saved_args=saved_args
+            msg="Pre-screen (include_all)",
+            manual_author=False,
+            script_call="colrev prescreen",
+            saved_args=saved_args,
         )
         return records
 
@@ -481,6 +490,8 @@ class SpreadsheetPrescreenEndpoint:
         if PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             if "y" == input("create commit [y,n]?"):
                 PRESCREEN.REVIEW_MANAGER.create_commit(
-                    msg="Pre-screen (spreadsheets)", manual_author=True
+                    msg="Pre-screen (spreadsheets)",
+                    manual_author=True,
+                    script_call="colrev prescreen",
                 )
         return records

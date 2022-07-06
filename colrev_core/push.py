@@ -273,7 +273,9 @@ class Push(Process):
 
             REVIEW_DATASET.save_records_dict(records=records)
             REVIEW_DATASET.add_record_changes()
-            CHECK_PROCESS.REVIEW_MANAGER.create_commit(msg=f"Update {record['ID']}")
+            CHECK_PROCESS.REVIEW_MANAGER.create_commit(
+                msg=f"Update {record['ID']}", script_call="colrev push"
+            )
 
             git_repo.remotes.origin.push(
                 refspec=f"{record_branch_name}:{record_branch_name}"

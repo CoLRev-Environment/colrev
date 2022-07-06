@@ -831,6 +831,7 @@ class Dedupe(Process):
             self.REVIEW_MANAGER.create_commit(
                 msg="Validate and correct duplicates",
                 manual_author=True,
+                script_call="colrev dedupe",
                 saved_args=saved_args,
             )
         else:
@@ -861,6 +862,7 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.create_commit(
             msg="Labeling of duplicates (active learning)",
             manual_author=True,
+            script_call="colrev dedupe",
             saved_args=saved_args,
         )
         # deduper.cleanup_training()
@@ -1257,6 +1259,7 @@ class Dedupe(Process):
 
         self.REVIEW_MANAGER.create_commit(
             msg="Deduplication (based on active-learning clusters)",
+            script_call="colrev dedupe",
             saved_args=saved_args,
         )
 
@@ -1591,7 +1594,7 @@ class Dedupe(Process):
         self.dedupe_references = references
 
         self.REVIEW_MANAGER.create_commit(
-            msg="Process duplicates", saved_args=saved_args
+            msg="Process duplicates", script_call="colrev dedupe", saved_args=saved_args
         )
 
         return

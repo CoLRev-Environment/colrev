@@ -243,7 +243,9 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(msg="Relink PDFs")
+        self.REVIEW_MANAGER.create_commit(
+            msg="Relink PDFs", script_call="colrev pdf-get"
+        )
 
         return
 
@@ -491,7 +493,9 @@ class PDF_Retrieval(Process):
             # Note : do not pass records as an argument.
             self.rename_pdfs()
 
-            self.REVIEW_MANAGER.create_commit(msg="Get PDFs", saved_args=saved_args)
+            self.REVIEW_MANAGER.create_commit(
+                msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
+            )
 
         if i == 1:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")

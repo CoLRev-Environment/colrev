@@ -135,5 +135,7 @@ class SpreadsheetScreenEndpoint:
 
         if SCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             if "y" == input("create commit [y,n]?"):
-                SCREEN.REVIEW_MANAGER.create_commit(msg="Screen", manual_author=True)
+                SCREEN.REVIEW_MANAGER.create_commit(
+                    msg="Screen", manual_author=True, script_call="colrev screen"
+                )
         return records

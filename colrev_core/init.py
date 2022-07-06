@@ -68,7 +68,10 @@ class Initializer:
         )
         del saved_args["local_index_repo"]
         self.REVIEW_MANAGER.create_commit(
-            msg="Initial commit", manual_author=True, saved_args=saved_args
+            msg="Initial commit",
+            manual_author=True,
+            script_call="colrev init",
+            saved_args=saved_args,
         )
         return
 

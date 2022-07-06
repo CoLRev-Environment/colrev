@@ -659,7 +659,10 @@ class ReviewManager:
                 break
 
         if self.REVIEW_DATASET.has_changes():
-            self.create_commit(msg=f"Upgrade to CoLRev {upcoming_version}")
+            self.create_commit(
+                msg=f"Upgrade to CoLRev {upcoming_version}",
+                script_call="colrev settings -u",
+            )
         else:
             self.logger.info("Nothing to do.")
             self.logger.info(
@@ -1370,6 +1373,7 @@ class ReviewManager:
         *,
         msg: str,
         manual_author: bool = False,
+        script_call: str = "",
         saved_args: dict = None,
         realtime_override: bool = False,
     ) -> bool:
@@ -1440,33 +1444,19 @@ class ReviewManager:
 
                 processing_report = "\nProcessing report\n" + "".join(processing_report)
 
-            caller = sys._getframe(1)
-            from inspect import stack
-
-            script = (
-                str(caller.f_globals["__name__"]).replace("-", "_").replace(".", " ")
-                + " "
-                + str(stack()[1].function)
-            )
-            if "Update pre-commit-config" in msg:
-                script = "pre-commit autoupdate"
-            # TODO: test and update the following
-            if "__apply_correction" in script:
-                script = "apply_corrections"
-
             if manual_author:
                 git_author = git.Actor(self.COMMITTER, self.EMAIL)
             else:
-                git_author = git.Actor(f"script:{script}", "")
+                git_author = git.Actor(f"script:{script_call}", "")
             # TODO: test and update the following
-            if "apply_correction" in script:
+            if "apply_correction" in script_call:
                 cmsg = msg
             else:
                 cmsg = (
                     msg
                     + self.__get_version_flag()
                     + self.__get_commit_report(
-                        script_name=f"{script}", saved_args=saved_args
+                        script_name=f"{script_call}", saved_args=saved_args
                     )
                     + processing_report
                 )

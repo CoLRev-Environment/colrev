@@ -278,7 +278,9 @@ class PDF_Preparation(Process):
         records = {r["ID"]: r for r in records_list}
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(msg="Update colrev_pdf_ids")
+        self.REVIEW_MANAGER.create_commit(
+            msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
+        )
         return
 
     def setup_custom_script(self) -> None:
@@ -343,7 +345,9 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        self.REVIEW_MANAGER.create_commit(msg="Prepare PDFs", saved_args=saved_args)
+        self.REVIEW_MANAGER.create_commit(
+            msg="Prepare PDFs", script_call="colrev pdf-prep", saved_args=saved_args
+        )
 
         return
 

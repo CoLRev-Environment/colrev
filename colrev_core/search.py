@@ -312,7 +312,9 @@ class Search(Process):
             self.REVIEW_MANAGER.save_settings()
 
             self.REVIEW_MANAGER.create_commit(
-                msg=f"Add search source {filename}", saved_args=saved_args
+                msg=f"Add search source {filename}",
+                script_call="colrev search",
+                saved_args=saved_args,
             )
 
         self.update(selection_str="all")
@@ -368,7 +370,9 @@ class Search(Process):
 
             if feed_file.is_file():
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
-                self.REVIEW_MANAGER.create_commit(msg="Run search")
+                self.REVIEW_MANAGER.create_commit(
+                    msg="Run search", script_call="colrev search"
+                )
 
         if len(feed_sources) == 0:
             raise NoSearchFeedRegistered()
