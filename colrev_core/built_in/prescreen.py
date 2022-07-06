@@ -8,6 +8,7 @@ import zope.interface
 from colrev_core.process import PrescreenEndpoint
 from colrev_core.record import Record
 from colrev_core.record import RecordState
+from colrev_core.review_manager import MissingDependencyError
 
 
 @zope.interface.implementer(PrescreenEndpoint)
@@ -151,8 +152,200 @@ class CoLRevCLIPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ASReviewPrescreenEndpoint:
+
+    endpoint_path = Path("prescreen/asreview")
+    export_filepath = endpoint_path / Path("records_to_screen.csv")
+
+    def __init__(self) -> None:
+
+        try:
+            import asreview  # noqa: F401
+        except ImportError or ModuleNotFoundError:
+            pass
+            raise MissingDependencyError(
+                "Dependency asreview not found. "
+                "Please install it\n  pip install asreview"
+            )
+
+    def export_for_asreview(self, PRESCREEN, records, split) -> None:
+
+        self.endpoint_path.mkdir(exist_ok=True, parents=True)
+
+        PRESCREEN.REVIEW_MANAGER.logger.info("Export: asreview")
+
+        # TODO : tbd. whether the selection is necessary
+        records = [
+            r
+            for ID, r in records.items()
+            if r["colrev_status"] in [RecordState.md_processed]
+        ]
+        # Casting to string (in particular the RecordState Enum)
+        records = [
+            {
+                k: str(v)
+                for k, v in r.items()
+                if k
+                not in [
+                    "colrev_origin",
+                    "colrev_status",
+                    "colrev_masterdata_provenance",
+                    "colrev_id",
+                    "colrev_data_provenance",
+                ]
+            }
+            for r in records
+        ]
+
+        to_screen_df = pd.DataFrame.from_dict(records)
+        to_screen_df.to_csv(self.export_filepath, quoting=csv.QUOTE_NONNUMERIC)
+
+        return
+
+    def import_from_asreview(self, PRESCREEN, records):
+        def get_last_modified(input_paths) -> Path:
+            import os
+
+            latest_file = max(input_paths, key=os.path.getmtime)
+            return Path(latest_file)
+
+        available_files = [
+            str(x)
+            for x in self.endpoint_path.glob("**/*")
+            if "records_to_screen" not in str(x)
+        ]
+        if 0 == len(available_files):
+            return
+
+        asreview_project_file = get_last_modified(available_files)
+
+        print(f"Loading prescreen results from {asreview_project_file}")
+
+        # TODO : get asreview (python package) version / Docker asreview version
+        # If both are available (and if they differ), the user will have to select
+        # the one that was actually used
+
+        # TODO : if the included column is not set, no decision has been recorded
+        # The idea of asreview is that they could be set to "excluded" automatically
+        # We would probably want to do that in a separate commit
+
+        if asreview_project_file.suffix == ".asreview":  # "Export project" in asreview
+
+            print(
+                "the project export seems to have changed. we now need to parse"
+                "the results.sql file..."
+            )
+            return
+            # import zipfile
+            # with zipfile.ZipFile(asreview_project_file, "r") as zip_ref:
+            #     zip_ref.extractall(self.endpoint_path)
+            # os.remove(asreview_project_file)
+
+            # PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.\
+            # add_changes(path=str(self.endpoint_path))
+            # csv_dir = self.endpoint_path / Path("data")
+            # csv_path = next(csv_dir.glob("*.csv"))
+            # to_import = pd.read_csv(csv_path)
+
+            # labels_json_path = self.endpoint_path / Path("labeled.json")
+            # with open(labels_json_path) as json_str:
+            #     label_data = json.loads(json_str.read())
+            # label_df = pd.DataFrame(label_data, columns=["row_num", "included"])
+            # label_df.reset_index(drop=True)
+            # label_df.set_index("row_num", inplace=True)
+
+            # to_import = pd.merge(to_import, label_df,
+            #  left_index=True, right_index=True)
+
+            # for index, row in to_import.iterrows():
+            #     if 1 == row["included"]:
+            #         PRESCREEN.set_data(
+            #             record={"ID": row["ID"]},
+            #             prescreen_inclusion=True,
+            #         )
+            #     if 0 == row["included"]:
+            #         PRESCREEN.set_data(
+            #             record={"ID": row["ID"]},
+            #             prescreen_inclusion=False,
+            #         )
+
+            # result_json_path = self.endpoint_path / Path("result.json")
+            # with open(result_json_path) as json_str:
+            #     json_data = json.loads(json_str.read())
+
+            # saved_args = {
+            #     "version": json_data["version"],
+            #     "software_version": json_data["software_version"],
+            # }
+            # PRESCREEN.REVIEW_MANAGER.report_logger.info(
+            #     "asreview settings: "
+            # f"\n{PRESCREEN.REVIEW_MANAGER.pp.pformat(json_data['settings'])}"
+            # )
+
+        if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
+            to_import = pd.read_csv(asreview_project_file)
+            for index, row in to_import.iterrows():
+                if 1 == row["included"]:
+                    PRESCREEN.set_data(
+                        record={"ID": row["ID"]},
+                        prescreen_inclusion=True,
+                    )
+                if 0 == row["included"]:
+                    PRESCREEN.set_data(
+                        record={"ID": row["ID"]},
+                        prescreen_inclusion=False,
+                    )
+            saved_args = {"software": "asreview (version: TODO)"}
+
+        PRESCREEN.REVIEW_MANAGER.create_commit(
+            msg="Pre-screening (manual, with asreview)",
+            manual_author=True,
+            saved_args=saved_args,
+        )
+
+        return
+
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
-        print("TODO")
+
+        # there may be an optional setting to change the endpoint_path
+
+        # Note : we always update/overwrite the to_screen csv
+        self.export_for_asreview(PRESCREEN, records, split)
+
+        if "y" == input("Start prescreening [y,n]?"):
+
+            # Note : the Docker image throws errors for Linux machines
+            # The pip package is recommended anyway.
+
+            print("\n\n  ASReview will open shortly.")
+            print(
+                "\n  To start the prescreen, create a project and import"
+                f" the following csv file: \n\n     {self.export_filepath}"
+            )
+            print(
+                "\n\n  Once completed, export the results as a csv file and"
+                f" save in {self.endpoint_path}"
+            )
+            input("\n  Press Enter to start and ctrl+c to stop ...")
+
+            # TODO : if not available: ask to "pip install asreview"
+            from asreview.entry_points import LABEntryPoint
+
+            try:
+                ASREVIEW = LABEntryPoint()
+                ASREVIEW.execute(argv={})
+            except KeyboardInterrupt:
+                print("\n\n\nCompleted prescreen. ")
+                pass
+
+        if "y" == input("Import prescreen from asreview [y,n]?"):
+            self.import_from_asreview(PRESCREEN, records)
+
+            if PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+                if "y" == input("create commit [y,n]?"):
+                    PRESCREEN.REVIEW_MANAGER.create_commit(
+                        msg="Pre-screen (spreadsheets)", manual_author=True
+                    )
+
         return records
 
 

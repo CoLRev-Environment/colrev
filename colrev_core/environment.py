@@ -735,49 +735,49 @@ class LocalIndex:
 
     def __amend_record(self, *, hash: str, record: dict) -> None:
 
-        try:
-            saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
-            saved_record = saved_record_response["_source"]
+        # try:
+        #     saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
+        #     saved_record = saved_record_response["_source"]
 
-            SAVED_RECORD = Record(data=self.parse_record(record=saved_record))
+        #     SAVED_RECORD = Record(data=self.parse_record(record=saved_record))
 
-            RECORD = Record(data=record)
+        #     RECORD = Record(data=record)
 
-            if "source_link" in RECORD.data:
-                del RECORD.data["source_link"]
-            if "source_path" in RECORD.data:
-                del RECORD.data["source_path"]
-            record = RECORD.get_data()
+        #     if "source_link" in RECORD.data:
+        #         del RECORD.data["source_link"]
+        #     if "source_path" in RECORD.data:
+        #         del RECORD.data["source_path"]
+        #     record = RECORD.get_data()
 
-            # amend saved record
-            for k, v in record.items():
-                # Note : the record from the first repository should take precedence)
-                if k in saved_record or k in ["colrev_status"]:
-                    continue
+        #     # amend saved record
+        #     for k, v in record.items():
+        #         # Note : the record from the first repository should take precedence)
+        #         if k in saved_record or k in ["colrev_status"]:
+        #             continue
 
-                source_info = Record(data=record).get_provenance_field_source(key=k)
-                SAVED_RECORD.update_field(key=k, value=v, source=source_info)
+        #         source_info = Record(data=record).get_provenance_field_source(key=k)
+        #         SAVED_RECORD.update_field(key=k, value=v, source=source_info)
 
-            if "file" in record and "fulltext" not in SAVED_RECORD.data:
-                try:
-                    tei_path = self.__get_tei_index_file(hash=hash)
-                    tei_path.parents[0].mkdir(exist_ok=True, parents=True)
-                    if Path(record["file"]).is_file():
-                        TEI_INSTANCE = TEIParser(
-                            pdf_path=Path(record["file"]),
-                            tei_path=tei_path,
-                        )
-                        SAVED_RECORD.data["fulltext"] = TEI_INSTANCE.get_tei_str()
-                except (TEI_Exception, AttributeError, SerialisationError):
-                    pass
+        #     if "file" in record and "fulltext" not in SAVED_RECORD.data:
+        #         try:
+        #             tei_path = self.__get_tei_index_file(hash=hash)
+        #             tei_path.parents[0].mkdir(exist_ok=True, parents=True)
+        #             if Path(record["file"]).is_file():
+        #                 TEI_INSTANCE = TEIParser(
+        #                     pdf_path=Path(record["file"]),
+        #                     tei_path=tei_path,
+        #                 )
+        #                 SAVED_RECORD.data["fulltext"] = TEI_INSTANCE.get_tei_str()
+        #         except (TEI_Exception, AttributeError, SerialisationError):
+        #             pass
 
-            self.os.update(
-                index=self.RECORD_INDEX,
-                id=hash,
-                body={"doc": SAVED_RECORD.get_data(stringify=True)},
-            )
-        except NotFoundError:
-            pass
+        #     self.os.update(
+        #         index=self.RECORD_INDEX,
+        #         id=hash,
+        #         body={"doc": SAVED_RECORD.get_data(stringify=True)},
+        #     )
+        # except NotFoundError:
+        #     pass
         return
 
     def __get_toc_key(self, *, record: dict) -> str:
