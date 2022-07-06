@@ -26,7 +26,6 @@ colrev\_core.prep.Preparation
       ~Preparation.reset_records
       ~Preparation.set_ids
       ~Preparation.setup_custom_script
-      ~Preparation.update_doi_md
 
 
 

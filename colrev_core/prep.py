@@ -625,25 +625,6 @@ class Preparation(Process):
 
         return
 
-    def update_doi_md(
-        self,
-    ) -> None:
-        # Note: entrypoint for CLI
-
-        from colrev_core.built_in import prep as built_in_prep
-
-        DOI_METADATA = built_in_prep.DOIMetadataPrep()
-        records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-        for record in records.values():
-            if "doi" in record and record.get("journal", "") == "MIS Quarterly":
-                RECORD = PrepRecord(data=record)
-                RECORD = DOI_METADATA.prepare(self, RECORD)
-                record = RECORD.get_data()
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-        self.REVIEW_MANAGER.create_commit(msg="Update metadata based on DOIs")
-        return
-
     def print_doi_metadata(self, *, doi: str) -> None:
         """CLI entrypoint"""
 
