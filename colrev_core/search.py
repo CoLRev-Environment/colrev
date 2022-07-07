@@ -270,7 +270,7 @@ class Search(Process):
                     i += 1
                     filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
 
-            feed_file_path = Path.cwd() / Path("search") / Path(filename)
+            feed_file_path = self.REVIEW_MANAGER.path / Path(filename)
             assert not feed_file_path.is_file()
 
             # The following must be in line with settings.py/SearchSource
@@ -348,7 +348,7 @@ class Search(Process):
                 return
 
         for feed_item in feed_sources:
-            feed_file = Path.cwd() / Path("search") / Path(feed_item.filename)
+            feed_file = self.REVIEW_MANAGER.path / Path(feed_item.filename)
 
             if feed_item.source_name not in self.search_scripts:
                 print(

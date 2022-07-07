@@ -1703,7 +1703,7 @@ class ReviewDataset:
 
         text_formats = [".txt", ".csv", ".md", ".bib", ".yaml"]
         notifications = []
-        for root, dirs, files in os.walk(os.getcwd(), topdown=False):
+        for root, dirs, files in os.walk(self.REVIEW_MANAGER.path, topdown=False):
             for name in files:
                 if any((x in name) or (x in root) for x in ignore_patterns):
                     continue
