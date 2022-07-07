@@ -9,7 +9,6 @@ from pathlib import Path
 
 import dictdiffer
 import git
-import requests
 import requests_cache
 from pathos.multiprocessing import ProcessPool
 
@@ -210,83 +209,20 @@ class Preparation(Process):
         )
 
     def check_DBs_availability(self) -> None:
-        from colrev_core.built_in import prep as built_in_prep
+        from colrev_core.built_in import database_connectors as database_connectors
 
-        try:
-            test_rec = {
-                "doi": "10.17705/1cais.04607",
-                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-                "and Paré, Guy",
-                "title": "A Knowledge Development Perspective on Literature Reviews: "
-                "Validation of a new Typology in the IS Field",
-                "ID": "SchryenEtAl2021",
-                "journal": "Communications of the Association for Information Systems",
-            }
-            RETURNED_REC = built_in_prep.CrossrefConnector.crossref_query(
-                REVIEW_MANAGER=self.REVIEW_MANAGER,
-                RECORD_INPUT=PrepRecord(data=test_rec),
-                jour_vol_iss_list=False,
-                session=self.session,
-                TIMEOUT=self.TIMEOUT,
-            )[0]
+        # TODO : check_status as a default method for the PreparationInterface
+        # and iterate over it?
 
-            if 0 != len(RETURNED_REC.data):
-                assert RETURNED_REC.data["title"] == test_rec["title"]
-                assert RETURNED_REC.data["author"] == test_rec["author"]
-            else:
-                if not self.force_mode:
-                    raise ServiceNotAvailableException("CROSSREF")
-        except requests.exceptions.RequestException as e:
-            print(e)
-            pass
-            if not self.force_mode:
-                raise ServiceNotAvailableException("CROSSREF")
+        self.REVIEW_MANAGER.logger.info("Check availability of connectors...")
+        database_connectors.CrossrefConnector.check_status(PREPARATION=self)
+        self.REVIEW_MANAGER.logger.info("CrossrefConnector available")
+        database_connectors.DBLPConnector.check_status(PREPARATION=self)
+        self.REVIEW_MANAGER.logger.info("DBLPConnector available")
+        database_connectors.OpenLibraryConnector.check_status(PREPARATION=self)
+        self.REVIEW_MANAGER.logger.info("OpenLibraryConnector available")
 
-        try:
-            test_rec = {
-                "ENTRYTYPE": "article",
-                "doi": "10.17705/1cais.04607",
-                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
-                "and Paré, Guy",
-                "title": "A Knowledge Development Perspective on Literature Reviews - "
-                "Validation of a new Typology in the IS Field.",
-                "ID": "SchryenEtAl2021",
-                "journal": "Communications of the Association for Information Systems",
-                "volume": "46",
-                "year": "2020",
-                "colrev_status": RecordState.md_prepared,  # type: ignore
-            }
-            DBLP_PREP = built_in_prep.DBLPMetadataPrep()
-            RET_REC = DBLP_PREP.prepare(self, PrepRecord(data=deepcopy(test_rec)))
-            if 0 != len(RET_REC.data):
-                assert RET_REC.data["title"] == test_rec["title"]
-                assert RET_REC.data["author"] == test_rec["author"]
-            else:
-                if not self.force_mode:
-                    raise ServiceNotAvailableException("DBLP")
-        except requests.exceptions.RequestException:
-            pass
-            if not self.force_mode:
-                raise ServiceNotAvailableException("DBLP")
-
-        test_rec = {
-            "ENTRYTYPE": "book",
-            "isbn": "9781446201435",
-            # 'author': 'Ridley, Diana',
-            "title": "The Literature Review A Stepbystep Guide For Students",
-            "ID": "Ridley2012",
-            "year": "2012",
-        }
-        try:
-            url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
-            ret = requests.get(url, headers=self.requests_headers, timeout=self.TIMEOUT)
-            if ret.status_code != 200:
-                if not self.force_mode:
-                    raise ServiceNotAvailableException("OPENLIBRARY")
-        except requests.exceptions.RequestException:
-            pass
-            if not self.force_mode:
-                raise ServiceNotAvailableException("OPENLIBRARY")
+        print()
         return
 
     # TODO : integrate the following ?

@@ -206,23 +206,19 @@ class Loader(Process):
                         "Replace Early Access Date in bibfile before loading! "
                         f"{file.name}"
                     )
-
             with open(file, encoding="utf8") as bibtex_file:
                 search_records_dict = (
                     self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         load_str=bibtex_file.read()
                     )
                 )
-
             return search_records_dict.values()
 
         def import_record(*, record: dict) -> dict:
-
             self.REVIEW_MANAGER.logger.debug(
                 f'import_record {record["ID"]}: '
                 f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
             )
-
             if RecordState.md_retrieved != record["colrev_status"]:
                 return record
 
@@ -268,14 +264,11 @@ class Loader(Process):
 
             RECORD = LoadRecord(data=record)
             RECORD.import_provenance()
-            record = RECORD.get_data()
+            RECORD.set_status(target_state=RecordState.md_imported)
 
-            record.update(colrev_status=RecordState.md_imported)
-
-            return record
+            return RECORD.get_data()
 
         def get_nr_in_bib(*, file_path: Path) -> int:
-
             number_in_bib = 0
             with open(file_path, encoding="utf8") as f:
                 line = f.readline()
@@ -286,7 +279,6 @@ class Loader(Process):
                         if "@comment" not in line[:10].lower():
                             number_in_bib += 1
                     line = f.readline()
-
             return number_in_bib
 
         if SOURCE.corresponding_bib_file.is_file():
@@ -327,9 +319,7 @@ class Loader(Process):
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if "colrev_status" not in record:
-                record.update(colrev_status=RecordState.md_retrieved)
-            elif record["colrev_status"] in [
+            if record.get("colrev_status", "") in [
                 str(RecordState.md_processed),
                 str(RecordState.rev_prescreen_included),
                 str(RecordState.rev_prescreen_excluded),
@@ -343,7 +333,9 @@ class Loader(Process):
             ]:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record["colrev_status"] = RecordState.md_prepared
+                record.update(colrev_status=RecordState.md_prepared)
+            else:
+                record.update(colrev_status=RecordState.md_retrieved)
 
             if "doi" in record:
                 record.update(
@@ -383,7 +375,6 @@ class Loader(Process):
             sr["ID"] = next_unique_ID
             records[sr["ID"]] = sr
 
-        self.REVIEW_MANAGER.logger.info("Save records to references.bib")
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         if not keep_ids:
@@ -398,6 +389,7 @@ class Loader(Process):
             path=str(SOURCE.corresponding_bib_file)
         )
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(SOURCE.filename))
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
 
@@ -410,15 +402,10 @@ class Loader(Process):
         imported = len_after - SOURCE.len_before
 
         if imported != SOURCE.to_import:
-
-            origins_to_import = [o["colrev_origin"] for o in SOURCE.source_records_list]
-
-            # self.REVIEW_MANAGER.pp.pprint(source_records_list)
-            # print(origins_to_import)
-            # self.REVIEW_MANAGER.pp.pprint(imported_origins)
-
             self.REVIEW_MANAGER.logger.error(f"len_before: {SOURCE.len_before}")
             self.REVIEW_MANAGER.logger.error(f"len_after: {len_after}")
+
+            origins_to_import = [o["colrev_origin"] for o in SOURCE.source_records_list]
             if SOURCE.to_import - imported > 0:
                 self.REVIEW_MANAGER.logger.error(
                     f"PROBLEM: delta: {SOURCE.to_import - imported} records missing"
@@ -500,22 +487,26 @@ class Loader(Process):
             # TODO : keep_ids as a potential parameter for the source/settings?
             del saved_args["keep_ids"]
 
-        self.REVIEW_MANAGER.REVIEW_DATASET.check_sources()
+        REVIEW_DATASET = self.REVIEW_MANAGER.REVIEW_DATASET
 
-        for SOURCE in self.REVIEW_MANAGER.settings.search.sources:
+        def load_active_sources() -> list:
+            REVIEW_DATASET.check_sources()
+            SOURCES = []
+            for SOURCE in self.REVIEW_MANAGER.settings.search.sources:
+                if SOURCE.script["endpoint"] not in list(self.load_scripts.keys()):
+                    if self.verbose:
+                        print(f"Error: endpoint not available: {SOURCE.script}")
+                    continue
+                SOURCE.corresponding_bib_file = SOURCE.filename.with_suffix(".bib")
+                imported_origins = REVIEW_DATASET.get_currently_imported_origin_list()
+                SOURCE.imported_origins = imported_origins
+                SOURCE.len_before = len(SOURCE.imported_origins)
+                SOURCES.append(SOURCE)
+            return SOURCES
 
-            if SOURCE.script["endpoint"] not in list(self.load_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {SOURCE.script}")
-                continue
-
+        for SOURCE in load_active_sources():
             self.REVIEW_MANAGER.logger.info(f"Loading {SOURCE}")
             saved_args["file"] = SOURCE.filename.name
-            SOURCE.corresponding_bib_file = SOURCE.filename.with_suffix(".bib")
-            SOURCE.imported_origins = (
-                self.REVIEW_MANAGER.REVIEW_DATASET.get_currently_imported_origin_list()
-            )
-            SOURCE.len_before = len(SOURCE.imported_origins)
 
             # 1. convert to bib (if necessary)
             ENDPOINT = self.load_scripts[SOURCE.script["endpoint"]]["endpoint"]
@@ -533,15 +524,13 @@ class Loader(Process):
             self.validate_load(SOURCE=SOURCE)
 
             if not combine_commits:
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
                 self.REVIEW_MANAGER.create_commit(
                     msg=f"Load {saved_args['file']}",
                     script_call="colrev load",
                     saved_args=saved_args,
                 )
 
-        if combine_commits and self.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-            self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+        if combine_commits and REVIEW_DATASET.has_changes():
             self.REVIEW_MANAGER.create_commit(
                 msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
             )

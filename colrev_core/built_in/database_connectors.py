@@ -19,6 +19,35 @@ from colrev_core.record import PrepRecord
 from colrev_core.record import RecordState
 
 
+class OpenLibraryConnector:
+    @classmethod
+    def check_status(cls, *, PREPARATION) -> None:
+        from colrev_core.prep import ServiceNotAvailableException
+
+        test_rec = {
+            "ENTRYTYPE": "book",
+            "isbn": "9781446201435",
+            # 'author': 'Ridley, Diana',
+            "title": "The Literature Review A Stepbystep Guide For Students",
+            "ID": "Ridley2012",
+            "year": "2012",
+        }
+        try:
+            url = f"https://openlibrary.org/isbn/{test_rec['isbn']}.json"
+            ret = requests.get(
+                url, headers=PREPARATION.requests_headers, timeout=PREPARATION.TIMEOUT
+            )
+            if ret.status_code != 200:
+                if not PREPARATION.force_mode:
+                    raise ServiceNotAvailableException("OPENLIBRARY")
+        except requests.exceptions.RequestException:
+            pass
+            if not PREPARATION.force_mode:
+                raise ServiceNotAvailableException("OPENLIBRARY")
+
+        return
+
+
 class URLConnector:
     @classmethod
     def retrieve_md_from_url(cls, *, RECORD, PREPARATION) -> None:
@@ -249,6 +278,41 @@ class DOIConnector:
 
 
 class CrossrefConnector:
+    @classmethod
+    def check_status(cls, *, PREPARATION) -> None:
+        from colrev_core.prep import ServiceNotAvailableException
+
+        try:
+            test_rec = {
+                "doi": "10.17705/1cais.04607",
+                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                "Validation of a new Typology in the IS Field",
+                "ID": "SchryenEtAl2021",
+                "journal": "Communications of the Association for Information Systems",
+            }
+            RETURNED_REC = cls.crossref_query(
+                REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
+                RECORD_INPUT=PrepRecord(data=test_rec),
+                jour_vol_iss_list=False,
+                session=PREPARATION.session,
+                TIMEOUT=PREPARATION.TIMEOUT,
+            )[0]
+
+            if 0 != len(RETURNED_REC.data):
+                assert RETURNED_REC.data["title"] == test_rec["title"]
+                assert RETURNED_REC.data["author"] == test_rec["author"]
+            else:
+                if not PREPARATION.force_mode:
+                    raise ServiceNotAvailableException("CROSSREF")
+        except requests.exceptions.RequestException as e:
+            print(e)
+            pass
+            if not PREPARATION.force_mode:
+                raise ServiceNotAvailableException("CROSSREF")
+        return
+
     @classmethod
     def crossref_json_to_record(cls, *, item: dict) -> dict:
         # Note: the format differst between crossref and doi.org
@@ -582,6 +646,46 @@ class CrossrefConnector:
 
 
 class DBLPConnector:
+    @classmethod
+    def check_status(cls, *, PREPARATION) -> None:
+        from colrev_core.prep import ServiceNotAvailableException
+
+        try:
+            test_rec = {
+                "ENTRYTYPE": "article",
+                "doi": "10.17705/1cais.04607",
+                "author": "Schryen, Guido and Wagner, Gerit and Benlian, Alexander "
+                "and Paré, Guy",
+                "title": "A Knowledge Development Perspective on Literature Reviews: "
+                "Validation of a new Typology in the IS Field",
+                "ID": "SchryenEtAl2021",
+                "journal": "Communications of the Association for Information Systems",
+                "volume": "46",
+                "year": "2020",
+                "colrev_status": RecordState.md_prepared,  # type: ignore
+            }
+
+            query = "" + str(test_rec.get("title", "")).replace("-", "_")
+
+            DBLP_REC = DBLPConnector.retrieve_dblp_records(
+                REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
+                query=query,
+                session=PREPARATION.session,
+            )[0]
+
+            if 0 != len(DBLP_REC.data):
+                assert DBLP_REC.data["title"] == test_rec["title"]
+                assert DBLP_REC.data["author"] == test_rec["author"]
+            else:
+                if not PREPARATION.force_mode:
+                    raise ServiceNotAvailableException("DBLP")
+        except requests.exceptions.RequestException:
+            pass
+            if not PREPARATION.force_mode:
+                raise ServiceNotAvailableException("DBLP")
+
+        return
+
     @classmethod
     def retrieve_dblp_records(
         cls,

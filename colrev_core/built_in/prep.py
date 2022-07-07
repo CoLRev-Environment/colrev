@@ -32,12 +32,12 @@ class LoadFixesPrep:
 
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
-
+        # TODO : store custom load-prep script as source attribute
         origin_source = RECORD.data["colrev_origin"].split("/")[0]
         origin_source_name = [
             s.source_name
             for s in PREPARATION.REVIEW_MANAGER.settings.search.sources
-            if s.filename == Path(origin_source)
+            if s.filename == Path("search") / Path(origin_source)
         ][0]
 
         if origin_source_name in [
@@ -219,6 +219,8 @@ class RemoveError500URLsPrep:
 class RemoveBrokenIDPrep:
 
     source_correction_hint = "check with the developer"
+
+    # check_status: relies on crossref / openlibrary connectors!
 
     def prepare(self, PREPARATION, RECORD):
 
