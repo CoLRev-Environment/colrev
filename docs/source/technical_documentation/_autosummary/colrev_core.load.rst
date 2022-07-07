@@ -33,5 +33,4 @@ colrev\_core.load
 
       BibFileFormatError
       ImportException
-      NoSearchResultsAvailableError
       UnsupportedImportFormatError

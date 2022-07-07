@@ -344,7 +344,7 @@ scripts: list[dict[str, typing.Any]] = [
 ]
 
 
-def apply_source_heuristics(*, original: Path) -> list:
+def apply_source_heuristics(*, filepath: Path) -> list:
     """Apply heuristics to identify source"""
 
     # TODO : we should consider all records
@@ -354,12 +354,12 @@ def apply_source_heuristics(*, original: Path) -> list:
     data = ""
     # TODO : deal with misleading file extensions.
     try:
-        data = original.read_text()
+        data = filepath.read_text()
     except UnicodeDecodeError:
         pass
 
     for source in [x for x in scripts if "heuristic" in x]:
-        if source["heuristic"](filename=original, data=data):
+        if source["heuristic"](filename=filepath, data=data):
             return [
                 source["source_name"],
                 source["source_identifier"],

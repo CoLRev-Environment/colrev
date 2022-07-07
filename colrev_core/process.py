@@ -438,7 +438,7 @@ class LoadEndpoint(zope.interface.Interface):
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")
 
-    def load(LOADER, filepath):
+    def load(LOADER, SOURCE):
         pass
 
 

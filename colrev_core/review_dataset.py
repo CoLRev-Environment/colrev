@@ -69,6 +69,12 @@ class ReviewDataset:
             for record_header_item in self.__read_record_header_items()
         ]
 
+    def get_currently_imported_origin_list(self) -> list:
+        record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
+        imported_origins = [x["colrev_origin"].split(";") for x in record_header_list]
+        imported_origins = list(itertools.chain(*imported_origins))
+        return imported_origins
+
     def get_states_set(self, *, record_state_list: list = None) -> set:
         """Get the record_states_set"""
 
@@ -447,14 +453,11 @@ class ReviewDataset:
     ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
-        from colrev_core.prep import Preparation
+
         from colrev_core.record import Record
         from colrev_core.environment import LocalIndex
 
         self.LOCAL_INDEX = LocalIndex()
-        self.PREPARATION = Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
 
         if len(records) == 0:
             records = self.load_records_dict()
@@ -1774,41 +1777,31 @@ class ReviewDataset:
     def check_sources(self) -> None:
         from colrev_core.settings import SearchType
 
-        sources = self.REVIEW_MANAGER.settings.search.sources
+        SOURCES = self.REVIEW_MANAGER.settings.search.sources
 
-        SEARCHDIR = self.REVIEW_MANAGER.paths["SEARCHDIR"]
+        for SOURCE in SOURCES:
 
-        for search_file in SEARCHDIR.glob("*.bib"):
-            if search_file.name not in [str(x.filename) for x in sources]:
-                raise SearchDetailsError(
-                    f"Search file not in settings.json: ({search_file.name})"
-                )
-
-        # date_regex = r"^\d{4}-\d{2}-\d{2}$"
-        for search_record in sources:
-
-            search_record_filename = SEARCHDIR / search_record.filename
-            if not search_record_filename.is_file():
-                logging.warning(
-                    f"Search details without file: {search_record.filename}"
-                )
+            if not SOURCE.filename.is_file():
+                logging.warning(f"Search details without file: {SOURCE.filename}")
                 # raise SearchDetailsError('File not found: "
-                #                       f"{search_record["filename"]}')
-            if str(search_record.search_type) not in SearchType._member_names_:
+                #                       f"{SOURCE["filename"]}')
+            if str(SOURCE.search_type) not in SearchType._member_names_:
                 raise SearchDetailsError(
-                    f"{search_record.search_type} not in {SearchType._member_names_}"
+                    f"{SOURCE.search_type} not in {SearchType._member_names_}"
                 )
-            # if "completion_date" in search_record:
-            #     if not re.search(date_regex, search_record["completion_date"]):
+
+            # date_regex = r"^\d{4}-\d{2}-\d{2}$"
+            # if "completion_date" in SOURCE:
+            #     if not re.search(date_regex, SOURCE["completion_date"]):
             #         raise SearchDetailsError(
             #             "completion date not matching YYYY-MM-DD format: "
-            #             f'{search_record["completion_date"]}'
+            #             f'{SOURCE["completion_date"]}'
             #         )
-            # if "start_date" in search_record:
-            #     if not re.search(date_regex, search_record["start_date"]):
+            # if "start_date" in SOURCE:
+            #     if not re.search(date_regex, SOURCE["start_date"]):
             #         raise SearchDetailsError(
             #             "start_date date not matchin YYYY-MM-DD format: "
-            #             f'{search_record["start_date"]}'
+            #             f'{SOURCE["start_date"]}'
             #         )
 
         return

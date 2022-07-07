@@ -298,7 +298,7 @@ class Search(Process):
 
             # NOTE: for now, the parameters are limited to whole journals.
             source_details = {
-                "filename": filename,
+                "filename": f"search/{filename}",
                 "source_name": source,
                 "search_type": search_type,
                 "source_identifier": source_identifier,

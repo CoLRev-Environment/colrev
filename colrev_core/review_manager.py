@@ -151,7 +151,6 @@ class ReviewManager:
 
         # TODO : check validation
         # (e..g, non-float values for prep/similarity do not through errors)
-
         settings = from_dict(
             data_class=Configuration,
             data=loaded_settings,
@@ -601,6 +600,8 @@ class ReviewManager:
 
             for source in settings["search"]["sources"]:
                 source["script"] = {"endpoint": "bib_pybtex"}
+                if "search" not in source["filename"]:
+                    source["filename"] = "search/" + source["filename"]
 
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}

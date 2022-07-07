@@ -17,18 +17,13 @@ colrev\_core.load.Loader
       :nosignatures:
 
       ~Loader.check_precondition
-      ~Loader.drop_empty_fields
-      ~Loader.fix_keys
-      ~Loader.get_currently_imported_origin_list
+      ~Loader.get_new_search_files
       ~Loader.get_script
-      ~Loader.get_search_files
-      ~Loader.get_unique_id
+      ~Loader.load_source_records
       ~Loader.main
-      ~Loader.preprocess_records
       ~Loader.resolve_non_unique_IDs
       ~Loader.save_records
-      ~Loader.set_incremental_IDs
-      ~Loader.validate_file_formats
+      ~Loader.validate_load
 
 
 

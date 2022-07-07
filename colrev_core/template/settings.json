@@ -1,7 +1,7 @@
 {
     "project": {
         "id_pattern": "THREE_AUTHORS_YEAR",
-        "review_type": "NA",
+        "review_type": "literature_review",
         "share_stat_req": "processed",
         "delay_automated_processing": true,
         "curation_url": null,
@@ -11,7 +11,7 @@
     "search": {
         "sources": [
             {
-                "filename": "pdfs.bib",
+                "filename": "search/pdfs.bib",
                 "search_type": "FEED",
                 "source_name": "PDFS",
                 "source_identifier": "{{file}}",
