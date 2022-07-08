@@ -188,6 +188,9 @@ class DOIConnector:
             RECORD.set_masterdata_complete()
             if "colrev_status" in RECORD.data:
                 RECORD.set_status(target_state=RecordState.md_prepared)
+            if "retracted" in RECORD.data.get("warning", ""):
+                RECORD.prescreen_exclude(reason="retracted")
+                RECORD.remove_field(key="warning")
 
         except json.decoder.JSONDecodeError:
             pass
@@ -434,10 +437,10 @@ class CrossrefConnector:
         if "is-referenced-by-count" in item:
             record["cited_by"] = item["is-referenced-by-count"]
 
-        if "content-domain" in item:
-            if "crossmark" in item["content-domain"]:
-                if item["content-domain"]["crossmark"]:
-                    record["crossmark"] = "True"
+        if "update-to" in item:
+            for update_item in item["update-to"]:
+                if update_item["type"] == "retraction":
+                    record["warning"] = "retracted"
 
         for k, v in record.items():
             record[k] = str(v).replace("{", "").replace("}", "")
@@ -548,6 +551,10 @@ class CrossrefConnector:
                 # pp.pprint(retrieved_record)
 
                 RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+                if "retracted" in RETRIEVED_RECORD.data.get("warning", ""):
+                    RETRIEVED_RECORD.prescreen_exclude(reason="retracted")
+                    RETRIEVED_RECORD.remove_field(key="warning")
+
                 RETRIEVED_RECORD.add_provenance_all(
                     source=f'https://api.crossref.org/works/{retrieved_record["doi"]}'
                 )
@@ -627,9 +634,14 @@ class CrossrefConnector:
                     RECORD.merge(
                         MERGING_RECORD=RETRIEVED_RECORD, default_source=source_link
                     )
-                    DOIConnector.get_link_from_doi(RECORD=RECORD)
-                    RECORD.set_masterdata_complete()
-                    RECORD.set_status(target_state=RecordState.md_prepared)
+
+                    if "retracted" in RECORD.data.get("warning", ""):
+                        RECORD.prescreen_exclude(reason="retracted")
+                        RECORD.remove_field(key="warning")
+                    else:
+                        DOIConnector.get_link_from_doi(RECORD=RECORD)
+                        RECORD.set_masterdata_complete()
+                        RECORD.set_status(target_state=RecordState.md_prepared)
 
                 else:
                     PREPARATION.REVIEW_MANAGER.logger.debug(

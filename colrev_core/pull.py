@@ -41,37 +41,63 @@ class Pull(Process):
 
     def pull_records_from_crossref(self) -> None:
         from colrev_core.prep import Preparation
-        from colrev_core.record import PrepRecord
+        from colrev_core.record import PrepRecord, Record
         from colrev_core.built_in import prep as built_in_prep
+        from tqdm import tqdm
 
         CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep()
 
-        self.REVIEW_MANAGER.logger.info("Pull records from index")
+        self.REVIEW_MANAGER.logger.info("Pull records from crossref")
 
         PREPARATION = Preparation(
             REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        for record in records.values():
+        for record in tqdm(records.values()):
             RECORD = PrepRecord(data=record)
-            if (
-                not RECORD.masterdata_is_curated()
-                and "doi" in RECORD.data
-                and "forthcoming" == RECORD.data["year"]
-            ):
-                self.REVIEW_MANAGER.logger.info(
-                    f"Update published forthcoming paper: {RECORD.data['ID']}"
+            # TODO : use masterdata_is_curated() for identifying_fields_keys only?
+            if not RECORD.masterdata_is_curated() and "doi" in RECORD.data:
+                CROSSREF_RECORD = CROSSREF_PREP.prepare(
+                    PREPARATION, RECORD.copy_prep_rec()
                 )
-                # TODO : only add fields? only consider identifying fields?
-                # TODO : should we set year=forthcoming and only update those records?
-                RECORD = CROSSREF_PREP.prepare(PREPARATION, RECORD)
 
-                # TODO : we could update the referenced_by/cited_by field for
-                # records that are included?
-                # TODO : we may create a full list here
-                colrev_id = RECORD.create_colrev_id(alsoKnownAsRecord=RECORD.get_data())
-                RECORD.data["colrev_id"] = colrev_id
+                if "retracted" in CROSSREF_RECORD.data.get("prescreen_exclusion", ""):
+                    RECORD.prescreen_exclude(reason="retracted", print_warning=True)
+                    RECORD.remove_field(key="warning")
+
+                elif "forthcoming" == RECORD.data["year"]:
+                    self.REVIEW_MANAGER.logger.info(
+                        f"Update published forthcoming paper: {RECORD.data['ID']}"
+                    )
+                    RECORD = CROSSREF_PREP.prepare(PREPARATION, RECORD)
+
+                    # TODO : we may create a full list here
+                    colrev_id = RECORD.create_colrev_id(
+                        alsoKnownAsRecord=RECORD.get_data()
+                    )
+                    RECORD.data["colrev_id"] = colrev_id
+                else:
+                    for k, v in CROSSREF_RECORD.data.items():
+                        if (
+                            k
+                            not in Record.identifying_field_keys
+                            + Record.provenance_keys
+                            + ["ID", "ENTRYTYPE", "exclusion_criteria"]
+                        ):
+                            try:
+                                source = CROSSREF_RECORD.data["colrev_data_provenance"][
+                                    k
+                                ]["source"]
+                            except KeyError:
+                                pass
+                                source = (
+                                    "https://api.crossref.org/works/"
+                                    + f"{RECORD.data['doi']}"
+                                )
+                            RECORD.update_field(
+                                key=k, value=v, source=source, keep_source_if_equal=True
+                            )
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

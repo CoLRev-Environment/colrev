@@ -24,6 +24,8 @@ colrev\_core.record.LoadRecord
       ~LoadRecord.add_provenance_all
       ~LoadRecord.change_ENTRYTYPE
       ~LoadRecord.complete_provenance
+      ~LoadRecord.copy
+      ~LoadRecord.copy_prep_rec
       ~LoadRecord.create_colrev_id
       ~LoadRecord.extract_pages
       ~LoadRecord.extract_text_by_page
@@ -33,6 +35,7 @@ colrev\_core.record.LoadRecord
       ~LoadRecord.get_colrev_pdf_id
       ~LoadRecord.get_container_title
       ~LoadRecord.get_data
+      ~LoadRecord.get_diff
       ~LoadRecord.get_incomplete_fields
       ~LoadRecord.get_inconsistencies
       ~LoadRecord.get_origins
@@ -63,6 +66,7 @@ colrev\_core.record.LoadRecord
       ~LoadRecord.set_masterdata_consistent
       ~LoadRecord.set_status
       ~LoadRecord.shares_origins
+      ~LoadRecord.update_by_record
       ~LoadRecord.update_field
 
 

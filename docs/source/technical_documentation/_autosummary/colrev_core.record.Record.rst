@@ -24,6 +24,8 @@ colrev\_core.record.Record
       ~Record.add_provenance_all
       ~Record.change_ENTRYTYPE
       ~Record.complete_provenance
+      ~Record.copy
+      ~Record.copy_prep_rec
       ~Record.create_colrev_id
       ~Record.extract_pages
       ~Record.extract_text_by_page
@@ -33,6 +35,7 @@ colrev\_core.record.Record
       ~Record.get_colrev_pdf_id
       ~Record.get_container_title
       ~Record.get_data
+      ~Record.get_diff
       ~Record.get_incomplete_fields
       ~Record.get_inconsistencies
       ~Record.get_origins
@@ -62,6 +65,7 @@ colrev\_core.record.Record
       ~Record.set_masterdata_consistent
       ~Record.set_status
       ~Record.shares_origins
+      ~Record.update_by_record
       ~Record.update_field
 
 

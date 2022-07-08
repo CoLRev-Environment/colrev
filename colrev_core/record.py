@@ -102,6 +102,22 @@ class Record:
 
         return ret_str
 
+    def copy(self):
+        return Record(data=deepcopy(self.data))
+
+    def copy_prep_rec(self):
+        return PrepRecord(data=deepcopy(self.data))
+
+    def update_by_record(self, *, UPDATE):
+        self.data = UPDATE.copy_prep_rec().get_data()
+        return
+
+    def get_diff(self, *, OTHER_RECORD) -> list:
+        import dictdiffer
+
+        diff = list(dictdiffer.diff(self.get_data(), OTHER_RECORD.get_data()))
+        return diff
+
     def format_bib_style(self) -> str:
         bib_formatted = (
             self.data.get("author", "")
@@ -303,10 +319,10 @@ class Record:
 
             else:
                 if key in self.identifying_field_keys:
-                    if key in self.data["colrev_masterdata_provenance"]:
+                    if key in self.data.get("colrev_masterdata_provenance", ""):
                         del self.data["colrev_masterdata_provenance"][key]
                 else:
-                    if key in self.data["colrev_data_provenance"]:
+                    if key in self.data.get("colrev_data_provenance", ""):
                         del self.data["colrev_data_provenance"][key]
 
         return
@@ -513,7 +529,9 @@ class Record:
             else:
                 # keep existing values per default
                 if key in self.data:
-                    pass
+                    # except for those that should be updated regularly
+                    if key in ["cited_by"]:
+                        self.update_field(key=key, value=str(val), source=source)
                 else:
                     self.update_field(key=key, value=str(val), source=source)
 
@@ -1261,9 +1279,24 @@ class Record:
 
         return srep
 
-    def prescreen_exclude(self, *, reason) -> None:
+    def prescreen_exclude(self, *, reason, print_warning: bool = False) -> None:
         self.data["colrev_status"] = RecordState.rev_prescreen_excluded
+
+        if (
+            "retracted" not in self.data.get("prescreen_exclusion", "")
+            and "retracted" == reason
+            and print_warning
+        ):
+            red = "\033[91m"
+            end = "\033[0m"
+            print(
+                f"\n{red}Paper retracted and prescreen "
+                f"excluded: {self.data['ID']}{end}\n"
+            )
+
         self.data["prescreen_exclusion"] = reason
+
+        # TODO : warn/remove from data extraction/synthesis?
 
         to_drop = []
         for k, v in self.data.items():
@@ -1754,6 +1787,34 @@ class PrepRecord(Record):
                     # TODO : we need to keep track of the information
                     # that a certain field is not required
         return
+
+    def preparation_save_condition(self) -> bool:
+
+        if self.data["colrev_status"] in [
+            RecordState.rev_prescreen_excluded,
+            RecordState.md_prepared,
+        ]:
+            return True
+        if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
+            return True
+
+        return False
+
+    def preparation_break_condition(self) -> bool:
+        if "disagreement with " in self.data.get("colrev_masterdata_provenance", ""):
+            return True
+
+        if self.data["colrev_status"] in [
+            RecordState.rev_prescreen_excluded,
+        ]:
+            return True
+        return False
+
+    def status_to_prepare(self) -> bool:
+        return self.data["colrev_status"] in [
+            RecordState.md_needs_manual_preparation,
+            RecordState.md_imported,
+        ]
 
     def update_metadata_status(self, *, REVIEW_MANAGER):
 

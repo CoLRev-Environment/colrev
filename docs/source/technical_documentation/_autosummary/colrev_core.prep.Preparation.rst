@@ -20,11 +20,9 @@ colrev\_core.prep.Preparation
       ~Preparation.check_precondition
       ~Preparation.main
       ~Preparation.prepare
-      ~Preparation.print_doi_metadata
       ~Preparation.reset
       ~Preparation.reset_ids
       ~Preparation.reset_records
-      ~Preparation.set_ids
       ~Preparation.setup_custom_script
 
 

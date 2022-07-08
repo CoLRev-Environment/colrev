@@ -27,6 +27,8 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.check_potential_retracts
       ~PrepRecord.complete_provenance
       ~PrepRecord.container_is_abbreviated
+      ~PrepRecord.copy
+      ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id
       ~PrepRecord.drop_fields
       ~PrepRecord.extract_pages
@@ -40,6 +42,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_colrev_pdf_id
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
+      ~PrepRecord.get_diff
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_origins
@@ -59,6 +62,8 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.missing_fields
+      ~PrepRecord.preparation_break_condition
+      ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_field
@@ -70,7 +75,9 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.set_masterdata_consistent
       ~PrepRecord.set_status
       ~PrepRecord.shares_origins
+      ~PrepRecord.status_to_prepare
       ~PrepRecord.unify_pages_field
+      ~PrepRecord.update_by_record
       ~PrepRecord.update_field
       ~PrepRecord.update_masterdata_provenance
       ~PrepRecord.update_metadata_status

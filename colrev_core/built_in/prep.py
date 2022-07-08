@@ -792,6 +792,12 @@ class DBLPMetadataPrep:
                     )
                     RECORD.set_masterdata_complete()
                     RECORD.set_status(target_state=RecordState.md_prepared)
+                    if "Withdrawn (according to DBLP)" in RECORD.data.get(
+                        "warning", ""
+                    ):
+                        RECORD.prescreen_exclude(reason="retracted")
+                        RECORD.remove_field(key="warning")
+
                 else:
                     PREPARATION.REVIEW_MANAGER.logger.debug(
                         f"dblp similarity: {similarity} "

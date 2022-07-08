@@ -603,6 +603,13 @@ class ReviewManager:
 
             with open("settings.json") as f:
                 settings = json.load(f)
+
+            settings["pdf_get"]["scripts"] = [
+                s
+                for s in settings["pdf_get"]["scripts"]
+                if s["endpoint"] != "website_screenshot"
+            ]
+
             settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):
@@ -613,7 +620,10 @@ class ReviewManager:
             settings["prep"]["man_prep_scripts"] = [{"endpoint": "colrev_cli_man_prep"}]
 
             for prep_round in settings["prep"]["prep_rounds"]:
-                prep_round["scripts"] = [{"endpoint": s} for s in prep_round["scripts"]]
+                prep_round["scripts"] = [
+                    {"endpoint": s} if "endpoint" not in s and isinstance(str, s) else s
+                    for s in prep_round["scripts"]
+                ]
 
             for source in settings["search"]["sources"]:
                 source["script"] = {"endpoint": "bib_pybtex"}

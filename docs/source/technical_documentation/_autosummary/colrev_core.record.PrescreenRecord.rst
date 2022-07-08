@@ -24,6 +24,8 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.add_provenance_all
       ~PrescreenRecord.change_ENTRYTYPE
       ~PrescreenRecord.complete_provenance
+      ~PrescreenRecord.copy
+      ~PrescreenRecord.copy_prep_rec
       ~PrescreenRecord.create_colrev_id
       ~PrescreenRecord.extract_pages
       ~PrescreenRecord.extract_text_by_page
@@ -33,6 +35,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_colrev_pdf_id
       ~PrescreenRecord.get_container_title
       ~PrescreenRecord.get_data
+      ~PrescreenRecord.get_diff
       ~PrescreenRecord.get_incomplete_fields
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
@@ -62,6 +65,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.set_masterdata_consistent
       ~PrescreenRecord.set_status
       ~PrescreenRecord.shares_origins
+      ~PrescreenRecord.update_by_record
       ~PrescreenRecord.update_field
 
 

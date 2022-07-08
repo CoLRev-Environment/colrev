@@ -3,11 +3,9 @@ import logging
 import multiprocessing as mp
 import time
 import typing
-from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
 
-import dictdiffer
 import git
 import requests_cache
 from pathos.multiprocessing import ProcessPool
@@ -225,170 +223,97 @@ class Preparation(Process):
         print()
         return
 
+    def __print_diffs_for_debug(self, PRIOR, PREPARATION_RECORD, prep_script):
+        diffs = PRIOR.get_diff(OTHER_RECORD=PREPARATION_RECORD)
+        if diffs:
+            change_report = (
+                f"{prep_script}"
+                f'({PREPARATION_RECORD.data["ID"]})'
+                f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
+            )
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                self.REVIEW_MANAGER.logger.info(change_report)
+                self.REVIEW_MANAGER.logger.info(
+                    "To correct errors in the script,"
+                    " open an issue at "
+                    "https://github.com/geritwagner/colrev_core/issues"
+                )
+                self.REVIEW_MANAGER.logger.info(
+                    "To correct potential errors at source,"
+                    f" {prep_script['endpoint'].source_correction_hint}"
+                )
+                input("Press Enter to continue")
+                print("\n")
+        else:
+            self.REVIEW_MANAGER.logger.debug(f"{prep_script} changed: -")
+            if self.REVIEW_MANAGER.DEBUG_MODE:
+                print("\n")
+                time.sleep(0.3)
+        return
+
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
 
         RECORD = item["record"]
 
-        # TODO : if we exclude the RecordState.md_prepared
-        # from all of the following prep-scripts, we are missing out
-        # on potential improvements...
-        # if RecordState.md_imported != record["colrev_status"]:
-        if RECORD.data["colrev_status"] not in [
-            RecordState.md_imported,
-            RecordState.md_needs_manual_preparation,
-        ]:
+        if not RECORD.status_to_prepare():
             return RECORD
 
         self.REVIEW_MANAGER.logger.info("Prepare " + RECORD.data["ID"])
 
-        #  preparation_record will change and eventually replace record (if successful)
-        preparation_record = deepcopy(RECORD.get_data())
+        # PREPARATION_RECORD changes with each script and
+        # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
+        PREPARATION_RECORD = RECORD.copy_prep_rec()
 
         # UNPREPARED_RECORD will not change (for diffs)
-        UNPREPARED_RECORD = PrepRecord(data=deepcopy(RECORD.get_data()))
+        UNPREPARED_RECORD = RECORD.copy_prep_rec()
 
-        # Note: we require (almost) perfect matches for the scripts.
-        # Cases with higher dissimilarity will be handled in the prep_man.py
-        # Note : the record should always be the first element of the list.
-        # Note : we need to rerun all preparation scripts because records are not stored
-        # if not prepared successfully.
+        for prep_round_script in item["prep_round_scripts"]:
 
-        # TODO : extract the following in a function
-        SF_REC = PrepRecord(data=deepcopy(RECORD.get_data()))
-        SF_REC.drop_fields(self)
-
-        for settings_prep_script in item["prep_round_scripts"]:
-
-            # Note : we have to select scripts here because pathos/multiprocessing
-            # does not support functions as parameters
-            prep_script = self.prep_scripts[settings_prep_script["endpoint"]]
-
-            # startTime = datetime.now()
-
-            prior = deepcopy(preparation_record)
+            prep_script = self.prep_scripts[prep_round_script["endpoint"]]
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 self.REVIEW_MANAGER.logger.info(f"{prep_script}(...) called")
 
-            PREPARATION_RECORD = PrepRecord(data=preparation_record)
+            PRIOR = PREPARATION_RECORD.copy_prep_rec()
+
             PREPARATION_RECORD = prep_script["endpoint"].prepare(
                 self, PREPARATION_RECORD
             )
-            preparation_record = PREPARATION_RECORD.get_data()
 
-            diffs = list(dictdiffer.diff(prior, preparation_record))
-            if diffs:
-                # print(PREPARATION_RECORD)
-                change_report = (
-                    f"{prep_script}"
-                    f'({preparation_record["ID"]})'
-                    f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
-                )
-                if self.REVIEW_MANAGER.DEBUG_MODE:
-                    self.REVIEW_MANAGER.logger.info(change_report)
-                    self.REVIEW_MANAGER.logger.info(
-                        "To correct errors in the script,"
-                        " open an issue at "
-                        "https://github.com/geritwagner/colrev_core/issues"
-                    )
-                    self.REVIEW_MANAGER.logger.info(
-                        "To correct potential errors at source,"
-                        f" {prep_script['endpoint'].source_correction_hint}"
-                    )
-                    input("Press Enter to continue")
-                    print("\n")
-            else:
-                self.REVIEW_MANAGER.logger.debug(f"{prep_script} changed: -")
-                if self.REVIEW_MANAGER.DEBUG_MODE:
-                    print("\n")
-                    time.sleep(0.3)
-
-            # TODO NOW: there should be a general condition for setting data
-            # (RECORD.data = deepcopy())
-            # e.g., the "load_fixes" should have an "always_apply" flag
-            # (similar to scripts that lead to rev_prescreen_excluded)
+            self.__print_diffs_for_debug(
+                PRIOR=PRIOR,
+                PREPARATION_RECORD=PREPARATION_RECORD,
+                prep_script=prep_script,
+            )
 
             if prep_script["endpoint"].always_apply_changes:
-                RECORD.data = deepcopy(preparation_record)
+                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
 
-            if preparation_record["colrev_status"] in [
-                RecordState.rev_prescreen_excluded,
-                RecordState.md_prepared,
-            ] or "disagreement with " in preparation_record.get(
-                "colrev_masterdata_provenance", ""
-            ):
-                RECORD.data = deepcopy(preparation_record)
+            if PREPARATION_RECORD.preparation_save_condition():
+                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=UNPREPARED_RECORD,
                     REVIEW_MANAGER=self.REVIEW_MANAGER,
                 )
-            if "disagreement with " in preparation_record.get(
-                "colrev_masterdata_provenance", ""
-            ):
+
+            if PREPARATION_RECORD.preparation_break_condition():
                 break
 
-            # diff = (datetime.now() - startTime).total_seconds()
-            # with open("stats.csv", "a", encoding="utf8") as f:
-            #     f.write(f'{prep_script};{record["ID"]};{diff};\n')
-
-        # TODO : deal with "crossmark" in preparation_record
-
-        # for the readability of diffs,
-        # we change records only once (in the last round)
         if self.LAST_ROUND:
-            if RECORD.data["colrev_status"] in [
-                RecordState.md_needs_manual_preparation,
-                RecordState.md_imported,
-            ]:
-                RECORD.data = deepcopy(preparation_record)
+            if RECORD.status_to_prepare():
+                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
+                # Note: update_masterdata_provenance sets to md_needs_manual_preparation
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=UNPREPARED_RECORD,
                     REVIEW_MANAGER=self.REVIEW_MANAGER,
                 )
-        else:
-            if self.REVIEW_MANAGER.DEBUG_MODE:
-                if (
-                    RecordState.md_needs_manual_preparation
-                    == preparation_record["colrev_status"]
-                ):
-                    self.REVIEW_MANAGER.logger.debug(
-                        "Resetting values (instead of saving them)."
-                    )
 
         return RECORD
 
-    def __log_details(self, *, preparation_batch: list) -> None:
-
-        nr_recs = len(
-            [
-                record
-                for record in preparation_batch
-                if record["colrev_status"] == RecordState.md_needs_manual_preparation
-            ]
-        )
-        if nr_recs > 0:
-            self.REVIEW_MANAGER.report_logger.info(
-                f"Statistics: {nr_recs} records not prepared"
-            )
-
-        nr_recs = len(
-            [
-                record
-                for record in preparation_batch
-                if record["colrev_status"] == RecordState.rev_prescreen_excluded
-            ]
-        )
-        if nr_recs > 0:
-            self.REVIEW_MANAGER.report_logger.info(
-                f"Statistics: {nr_recs} records (prescreen) excluded "
-                "(non-latin alphabet)"
-            )
-
-        return
-
     def reset(self, *, record_list: typing.List[dict]):
         from colrev_core.prep_man import PrepMan
+        from copy import deepcopy
 
         record_list = [
             r
@@ -540,36 +465,6 @@ class Preparation(Process):
 
         return
 
-    def set_ids(
-        self,
-    ) -> None:
-        # Note: entrypoint for CLI
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
-        self.REVIEW_MANAGER.create_commit(msg="Set IDs")
-
-        return
-
-    def print_doi_metadata(self, *, doi: str) -> None:
-        """CLI entrypoint"""
-
-        from colrev_core.built_in import database_connectors
-
-        DOI_METADATA = database_connectors.DOIMetadataPrep()
-
-        DUMMY_R = PrepRecord(data={"doi": doi})
-        RECORD = DOI_METADATA.prepare(self, DUMMY_R)
-        print(RECORD)
-
-        if "url" in RECORD.data:
-            print("Metadata retrieved from website:")
-
-            URL_CONNECTOR = database_connectors.URLConnector()
-            RECORD = URL_CONNECTOR.retrieve_md_from_url(RECORD=RECORD, PREPARATION=self)
-            print(RECORD)
-
-        return
-
     def setup_custom_script(self) -> None:
         import pkgutil
 
@@ -628,7 +523,10 @@ class Preparation(Process):
                 ]
             )
 
-            PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
+            if 0 == len(record_state_list):
+                PAD = 35
+            else:
+                PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
 
             items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
                 conditions=[
@@ -680,6 +578,9 @@ class Preparation(Process):
                 batch.append(
                     {
                         "record": PrepRecord(data=item),
+                        # Note : we cannot load scripts here
+                        # because pathos/multiprocessing
+                        # does not support functions as parameters
                         "prep_round_scripts": prep_round.scripts,
                         "prep_round": prep_round.name,
                     }
@@ -760,15 +661,6 @@ class Preparation(Process):
             if prep_round.name not in ["load_fixes", "exclusion"]:
                 prep_round.scripts.append({"endpoint": "update_metadata_status"})
 
-            # Note : can set selected prep scripts/rounds in the settings...
-            # if self.FIRST_ROUND and not self.REVIEW_MANAGER.DEBUG_MODE:
-            #     if prepare_data["nr_tasks"] < 20:
-            #         self.REVIEW_MANAGER.logger.info(
-            #             "Less than 20 records: prepare in one batch."
-            #         )
-            #         modes = [m for m in modes if "low_confidence" == m["name"]]
-            # use one mode/run to avoid multiple commits
-
             self.REVIEW_MANAGER.logger.info(f"Prepare ({prep_round.name})")
             if self.FIRST_ROUND:
                 self.session.remove_expired_responses()  # Note : this takes long...
@@ -778,6 +670,36 @@ class Preparation(Process):
             self.REVIEW_MANAGER.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
+            return
+
+        def log_details(*, preparation_batch: list) -> None:
+
+            nr_recs = len(
+                [
+                    record
+                    for record in preparation_batch
+                    if record["colrev_status"]
+                    == RecordState.md_needs_manual_preparation
+                ]
+            )
+            if nr_recs > 0:
+                self.REVIEW_MANAGER.report_logger.info(
+                    f"Statistics: {nr_recs} records not prepared"
+                )
+
+            nr_recs = len(
+                [
+                    record
+                    for record in preparation_batch
+                    if record["colrev_status"] == RecordState.rev_prescreen_excluded
+                ]
+            )
+            if nr_recs > 0:
+                self.REVIEW_MANAGER.report_logger.info(
+                    f"Statistics: {nr_recs} records (prescreen) excluded "
+                    "(non-latin alphabet)"
+                )
+
             return
 
         if "NA" != debug_ids:
@@ -820,17 +742,12 @@ class Preparation(Process):
                     record_list=preparation_batch
                 )
 
-                self.__log_details(preparation_batch=preparation_batch)
+                log_details(preparation_batch=preparation_batch)
 
                 # Multiprocessing mixes logs of different records.
                 # For better readability:
                 preparation_batch_IDs = [x["ID"] for x in preparation_batch]
                 self.REVIEW_MANAGER.reorder_log(IDs=preparation_batch_IDs)
-
-                # Note: for formatting...
-                # records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-                # self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-                # self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
                 self.REVIEW_MANAGER.create_commit(
                     msg=f"Prepare records ({prep_round.name})",

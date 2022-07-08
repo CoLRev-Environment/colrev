@@ -24,6 +24,8 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.add_provenance_all
       ~ScreenRecord.change_ENTRYTYPE
       ~ScreenRecord.complete_provenance
+      ~ScreenRecord.copy
+      ~ScreenRecord.copy_prep_rec
       ~ScreenRecord.create_colrev_id
       ~ScreenRecord.extract_pages
       ~ScreenRecord.extract_text_by_page
@@ -33,6 +35,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_colrev_pdf_id
       ~ScreenRecord.get_container_title
       ~ScreenRecord.get_data
+      ~ScreenRecord.get_diff
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_origins
@@ -62,6 +65,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.set_masterdata_consistent
       ~ScreenRecord.set_status
       ~ScreenRecord.shares_origins
+      ~ScreenRecord.update_by_record
       ~ScreenRecord.update_field
 
 
