@@ -242,10 +242,19 @@ class Record:
                 colrev_id = self.data["colrev_id"]
         return colrev_id
 
-    def update_field(self, *, key: str, value, source: str, comment: str = "") -> None:
-        if key in self.data:
-            if self.data[key] == value:
-                return
+    def update_field(
+        self,
+        *,
+        key: str,
+        value,
+        source: str,
+        comment: str = "",
+        keep_source_if_equal: bool = False,
+    ) -> None:
+        if keep_source_if_equal:
+            if key in self.data:
+                if self.data[key] == value:
+                    return
         self.data[key] = value
         if key in self.identifying_field_keys:
             self.add_masterdata_provenance(key=key, source=source, note=comment)
@@ -868,7 +877,6 @@ class Record:
         return {"score": similarity_score, "details": details}
 
     def get_provenance_field_source(self, *, key, default="ORIGINAL") -> str:
-
         if key in self.identifying_field_keys:
             if "colrev_masterdata_provenance" in self.data:
                 if key in self.data["colrev_masterdata_provenance"]:
@@ -925,17 +933,32 @@ class Record:
         return
 
     def add_provenance_all(self, *, source):
-        md_p_dict = self.data.get("colrev_masterdata_provenance", {})
-        d_p_dict = self.data.get("colrev_data_provenance", {})
+        if "colrev_masterdata_provenance" not in self.data:
+            self.data["colrev_masterdata_provenance"] = {}
+        if "colrev_data_provenance" not in self.data:
+            self.data["colrev_data_provenance"] = {}
+
+        md_p_dict = self.data["colrev_masterdata_provenance"]
+        d_p_dict = self.data["colrev_data_provenance"]
         for key in self.data.keys():
-            if key in self.identifying_field_keys:
+            if key in [
+                "ENTRYTYPE",
+                "colrev_data_provenance",
+                "colrev_masterdata_provenance",
+                "colrev_status",
+                "colrev_id",
+            ]:
+                continue
+            elif key in self.identifying_field_keys:
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
                 d_p_dict[key] = {"source": source, "note": ""}
         return
 
     def add_data_provenance(self, *, key, source, note: str = ""):
-        md_p_dict = self.data.get("colrev_data_provenance", {})
+        if "colrev_data_provenance" not in self.data:
+            self.data["colrev_data_provenance"] = {}
+        md_p_dict = self.data["colrev_data_provenance"]
         if key in md_p_dict:
             if "" != note:
                 md_p_dict[key]["note"] += f",{note}"

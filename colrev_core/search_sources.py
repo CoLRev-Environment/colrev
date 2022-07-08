@@ -75,7 +75,14 @@ class SearchSources:
             or RECORD.data.get("number", "UNKNOWN") != "UNKNOWN"
         ) and not any(
             x in RECORD.data.get("journal", "")
-            for x in ["HICSS", "ICIS", "ECIS", "AMCIS", "Proceedings"]
+            for x in [
+                "HICSS",
+                "ICIS",
+                "ECIS",
+                "AMCIS",
+                "Proceedings",
+                "All Sprouts Content",
+            ]
         ):
             RECORD.data["ENTRYTYPE"] = "article"
             if "journal" not in RECORD.data and "booktitle" in RECORD.data:
@@ -87,6 +94,7 @@ class SearchSources:
             ):
                 RECORD.rename_field(key="title", new_key="journal")
                 RECORD.rename_field(key="chapter", new_key="title")
+                RECORD.remove_field(key="publisher")
 
         else:
             RECORD.data["ENTRYTYPE"] = "inproceedings"
@@ -159,6 +167,7 @@ class SearchSources:
                 key="author",
                 value=RECORD.data["author"].replace("\n", " "),
                 source="prep_ais_source",
+                keep_source_if_equal=True,
             )
 
         return RECORD

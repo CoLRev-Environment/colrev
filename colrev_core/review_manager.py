@@ -343,6 +343,23 @@ class ReviewManager:
                     file.write(filedata.decode("utf-8"))
             return
 
+        def print_release_notes(version: str):
+            import pkgutil
+
+            filedata = pkgutil.get_data(__name__, "../CHANGELOG.md")
+            active = False
+            if filedata:
+                for line in filedata.decode("utf-8").split("\n"):
+                    if version in line:
+                        active = True
+                        print(f"Release notes v{version}")
+                        continue
+                    if "### [" in line and version not in line:
+                        active = False
+                    if active:
+                        print(line)
+            return
+
         def migrate_0_3_0(self) -> bool:
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
@@ -664,6 +681,7 @@ class ReviewManager:
                 msg=f"Upgrade to CoLRev {upcoming_version}",
                 script_call="colrev settings -u",
             )
+            print_release_notes(version=upcoming_version)
         else:
             self.logger.info("Nothing to do.")
             self.logger.info(

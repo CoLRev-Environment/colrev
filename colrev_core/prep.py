@@ -122,7 +122,7 @@ class Preparation(Process):
             "endpoint": built_in_prep.FormatPrep,
         },
         "resolve_crossrefs": {
-            "endpoint": built_in_prep.CrossrefResolutionPrep,
+            "endpoint": built_in_prep.BibTexCrossrefResolutionPrep,
         },
         "get_doi_from_sem_scholar": {
             "endpoint": built_in_prep.SemanticScholarPrep,
@@ -225,12 +225,6 @@ class Preparation(Process):
         print()
         return
 
-    # TODO : integrate the following ?
-    # e.g.,
-    # class SemanticScholarPrep(SemanticScholarConnector)
-    # with SemanticScholarConnector implementing the methods to retrieve the metadata
-    # Generally: design a connector class that may implement
-
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
 
@@ -242,7 +236,6 @@ class Preparation(Process):
         # if RecordState.md_imported != record["colrev_status"]:
         if RECORD.data["colrev_status"] not in [
             RecordState.md_imported,
-            # RecordState.md_prepared, # avoid changing prepared records
             RecordState.md_needs_manual_preparation,
         ]:
             return RECORD
@@ -264,11 +257,6 @@ class Preparation(Process):
         # TODO : extract the following in a function
         SF_REC = PrepRecord(data=deepcopy(RECORD.get_data()))
         SF_REC.drop_fields(self)
-
-        preparation_details = []
-        preparation_details.append(
-            f'prepare({RECORD.data["ID"]})' + f" called with: \n{SF_REC}\n\n"
-        )
 
         for settings_prep_script in item["prep_round_scripts"]:
 
@@ -297,7 +285,6 @@ class Preparation(Process):
                     f'({preparation_record["ID"]})'
                     f" changed:\n{self.REVIEW_MANAGER.pp.pformat(diffs)}\n"
                 )
-                preparation_details.append(change_report)
                 if self.REVIEW_MANAGER.DEBUG_MODE:
                     self.REVIEW_MANAGER.logger.info(change_report)
                     self.REVIEW_MANAGER.logger.info(
@@ -317,10 +304,12 @@ class Preparation(Process):
                     print("\n")
                     time.sleep(0.3)
 
-            # TODO : the endpoints may have a boolean flag indicating whether
-            # the changes should be applied always or only when there is a
-            # change in record status
-            if "load_fixes" == settings_prep_script["endpoint"]:
+            # TODO NOW: there should be a general condition for setting data
+            # (RECORD.data = deepcopy())
+            # e.g., the "load_fixes" should have an "always_apply" flag
+            # (similar to scripts that lead to rev_prescreen_excluded)
+
+            if prep_script["endpoint"].always_apply_changes:
                 RECORD.data = deepcopy(preparation_record)
 
             if preparation_record["colrev_status"] in [
@@ -334,6 +323,9 @@ class Preparation(Process):
                     UNPREPARED_RECORD=UNPREPARED_RECORD,
                     REVIEW_MANAGER=self.REVIEW_MANAGER,
                 )
+            if "disagreement with " in preparation_record.get(
+                "colrev_masterdata_provenance", ""
+            ):
                 break
 
             # diff = (datetime.now() - startTime).total_seconds()
@@ -342,6 +334,8 @@ class Preparation(Process):
 
         # TODO : deal with "crossmark" in preparation_record
 
+        # for the readability of diffs,
+        # we change records only once (in the last round)
         if self.LAST_ROUND:
             if RECORD.data["colrev_status"] in [
                 RecordState.md_needs_manual_preparation,
@@ -361,12 +355,7 @@ class Preparation(Process):
                     self.REVIEW_MANAGER.logger.debug(
                         "Resetting values (instead of saving them)."
                     )
-                    # for the readability of diffs,
-                    # we change records only once (in the last round)
 
-        # TBD: rely on colrev prep --debug ID (instead of printing everyting?)
-        # for preparation_detail in preparation_details:
-        #     self.REVIEW_MANAGER.report_logger.info(preparation_detail)
         return RECORD
 
     def __log_details(self, *, preparation_batch: list) -> None:

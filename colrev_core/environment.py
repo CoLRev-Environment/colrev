@@ -18,6 +18,7 @@ from lxml.etree import SerialisationError
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import ConnectionError
+from opensearchpy.exceptions import ConnectionTimeout
 from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -1257,8 +1258,12 @@ class LocalIndex:
         # 1. get TOC
         toc_items = []
         if self.os.exists(index=self.TOC_INDEX, id=toc_key):
-            res = self.__retrieve_toc_index(toc_key=toc_key)
-            toc_items = res["colrev_ids"]  # type: ignore
+            try:
+                res = self.__retrieve_toc_index(toc_key=toc_key)
+                toc_items = res["colrev_ids"]  # type: ignore
+            except ConnectionTimeout:
+                pass
+                toc_items = []
 
         # 2. get most similar record
         if len(toc_items) > 0:
@@ -1335,7 +1340,7 @@ class LocalIndex:
                         index_name=self.RECORD_INDEX, key=k, value=v
                     )
                     break
-                except (IndexError, NotFoundError, JSONDecodeError):
+                except (IndexError, NotFoundError, JSONDecodeError, KeyError):
                     pass
 
         if not retrieved_record:
@@ -1518,6 +1523,7 @@ class ZoteroTranslationService:
         import docker
         from colrev_core.environment import EnvironmentManager
         import time
+        from docker.errors import APIError
 
         if self.zotero_service_available():
             return
@@ -1528,12 +1534,16 @@ class ZoteroTranslationService:
         for container in client.containers.list():
             if zotero_image in str(container.image):
                 return
-        container = client.containers.run(
-            zotero_image,
-            ports={"1969/tcp": ("127.0.0.1", 1969)},
-            auto_remove=True,
-            detach=True,
-        )
+        try:
+            container = client.containers.run(
+                zotero_image,
+                ports={"1969/tcp": ("127.0.0.1", 1969)},
+                auto_remove=True,
+                detach=True,
+            )
+        except APIError:
+            pass
+
         i = 0
         while i < 45:
             if self.zotero_service_available():

@@ -448,6 +448,11 @@ class PreparationEndpoint(zope.interface.Interface):
         """Hint on how to correct metadata at source"""
     )
 
+    always_apply_changes = zope.interface.Attribute(
+        """Flag indicating whether changes should always be applied
+        (even if the colrev_status does not transition to md_prepared)"""
+    )
+
     def prepare(PREPARATION, RECORD):
         pass
 

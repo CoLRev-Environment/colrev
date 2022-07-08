@@ -29,6 +29,7 @@ from colrev_core.record import RecordState
 class LoadFixesPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
@@ -37,7 +38,7 @@ class LoadFixesPrep:
         origin_source_name = [
             s.source_name
             for s in PREPARATION.REVIEW_MANAGER.settings.search.sources
-            if s.filename == Path("search") / Path(origin_source)
+            if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
         ][0]
 
         if origin_source_name in [
@@ -69,6 +70,7 @@ class LoadFixesPrep:
 class ExcludeNonLatinAlphabetsPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
     alphabet_detector = AlphabetDetector()
 
     def prepare(self, PREPARATION, RECORD):
@@ -98,6 +100,7 @@ class ExcludeNonLatinAlphabetsPrep:
 class ExcludeLanguagesPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def __init__(self):
 
@@ -173,6 +176,7 @@ class ExcludeLanguagesPrep:
 class ExcludeCollectionsPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
         if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
@@ -184,6 +188,7 @@ class ExcludeCollectionsPrep:
 class RemoveError500URLsPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -219,6 +224,7 @@ class RemoveError500URLsPrep:
 class RemoveBrokenIDPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     # check_status: relies on crossref / openlibrary connectors!
 
@@ -247,6 +253,7 @@ class RemoveBrokenIDPrep:
 class GlobalIDConsistencyPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -321,6 +328,7 @@ class GlobalIDConsistencyPrep:
 class CuratedPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
         if RECORD.masterdata_is_curated():
@@ -334,6 +342,7 @@ class CuratedPrep:
 class FormatPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         fields_to_process = [
@@ -448,9 +457,10 @@ class FormatPrep:
 
 
 @zope.interface.implementer(PreparationEndpoint)
-class CrossrefResolutionPrep:
+class BibTexCrossrefResolutionPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         def read_next_record_str() -> typing.Iterator[str]:
@@ -510,6 +520,7 @@ class SemanticScholarPrep:
         "fill out the online form: "
         + "https://www.semanticscholar.org/faq#correct-error"
     )
+    always_apply_changes = False
 
     def retrieve_record_from_semantic_scholar(
         self, *, PREPARATION, url: str, RECORD_IN: PrepRecord
@@ -638,6 +649,8 @@ class SemanticScholarPrep:
 class DOIFromURLsPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
+
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
@@ -702,6 +715,7 @@ class DOIMetadataPrep:
         + " (see https://www.crossref.org/blog/"
         + "metadata-corrections-updates-and-additions-in-metadata-manager/"
     )
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         if "doi" not in RECORD.data:
@@ -724,6 +738,7 @@ class CrossrefMetadataPrep:
         + " (see https://www.crossref.org/blog/"
         + "metadata-corrections-updates-and-additions-in-metadata-manager/"
     )
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         CrossrefConnector.get_masterdata_from_crossref(
@@ -739,6 +754,7 @@ class DBLPMetadataPrep:
         "send and email to dblp@dagstuhl.de"
         + " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)"
     )
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         if "dblp_key" in RECORD.data:
@@ -796,6 +812,7 @@ class OpenLibraryMetadataPrep:
         + " (see https://www.crossref.org/blog/"
         + "metadata-corrections-updates-and-additions-in-metadata-manager/"
     )
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         def open_library_json_to_record(*, item: dict, url=str) -> PrepRecord:
@@ -921,6 +938,7 @@ class CrossrefYearVolIssPrep:
         + " (see https://www.crossref.org/blog/"
         + "metadata-corrections-updates-and-additions-in-metadata-manager/"
     )
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
         # The year depends on journal x volume x issue
@@ -998,6 +1016,7 @@ class LocalIndexPrep:
         "correct the metadata in the source "
         + "repository (as linked in the provenance field)"
     )
+    always_apply_changes = True
     LOCAL_INDEX = LocalIndex()
 
     def prepare(self, PREPARATION, RECORD):
@@ -1006,7 +1025,6 @@ class LocalIndexPrep:
 
         # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
         # because it creates problems with multiprocessing
-
         retrieved = False
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve(
@@ -1061,6 +1079,7 @@ class LocalIndexPrep:
 class RemoveNicknamesPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
         if "author" in RECORD.data:
@@ -1074,6 +1093,7 @@ class RemoveNicknamesPrep:
 class FormatMinorPRep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
     HTML_CLEANER = re.compile("<.*?>")
 
     def prepare(self, PREPARATION, RECORD):
@@ -1123,6 +1143,7 @@ class FormatMinorPRep:
 class DropFieldsPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1135,6 +1156,7 @@ class DropFieldsPrep:
 class RemoveRedundantFieldPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = False
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1165,6 +1187,7 @@ class RemoveRedundantFieldPrep:
 class CorrectRecordTypePrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1236,6 +1259,7 @@ class CorrectRecordTypePrep:
 class UpdateMetadataStatusPrep:
 
     source_correction_hint = "check with the developer"
+    always_apply_changes = True
 
     def prepare(self, PREPARATION, RECORD):
 
