@@ -8,18 +8,20 @@
         "curated_masterdata": false,
         "curated_fields": []
     },
+    "sources": [
+        {
+            "filename": "search/pdfs.bib",
+            "search_type": "FEED",
+            "source_name": "PDFS",
+            "source_identifier": "{{file}}",
+            "search_parameters": "SCOPE path='pdfs'",
+            "search_script": {"endpoint": "backward_search"},
+            "conversion_script": {"endpoint": "bibtex"},
+            "source_prep_scripts": [],
+            "comment": ""
+        }
+    ],
     "search": {
-        "sources": [
-            {
-                "filename": "search/pdfs.bib",
-                "search_type": "FEED",
-                "source_name": "PDFS",
-                "source_identifier": "{{file}}",
-                "search_parameters": "SCOPE path='pdfs'",
-                "script": {"endpoint": "bib_pybtex"},
-                "comment": ""
-            }
-        ]
     },
     "load": {},
     "prep": {

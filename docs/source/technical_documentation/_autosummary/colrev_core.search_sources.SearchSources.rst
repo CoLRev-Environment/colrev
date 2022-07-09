@@ -16,16 +16,14 @@ colrev\_core.search\_sources.SearchSources
    .. autosummary::
       :nosignatures:
 
-      ~SearchSources.ais_heuristic
-      ~SearchSources.apply_field_mapping
-      ~SearchSources.dblp_heuristic
-      ~SearchSources.drop_fields
-      ~SearchSources.gs_heuristic
-      ~SearchSources.pdf_backward_search_heuristic
-      ~SearchSources.pdf_heuristic
-      ~SearchSources.prep_ais_source
-      ~SearchSources.prep_gs_source
-      ~SearchSources.prep_scopus_source
-      ~SearchSources.prep_wos_source
-      ~SearchSources.scopus_heuristic
-      ~SearchSources.wos_heuristic
+      ~SearchSources.apply_source_heuristics
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~SearchSources.built_in_scripts

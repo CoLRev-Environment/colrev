@@ -434,6 +434,17 @@ class SearchEndpoint(zope.interface.Interface):
         pass
 
 
+class SearchSourceEndpoint(zope.interface.Interface):
+
+    source_identifier = zope.interface.Attribute("""Source identifier for provenance""")
+
+    def heuristic(filename, data):
+        pass
+
+    def prepare(RECORD):
+        pass
+
+
 class LoadEndpoint(zope.interface.Interface):
 
     supported_extensions = zope.interface.Attribute("""List of supported extensions""")

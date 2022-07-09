@@ -8,7 +8,7 @@ from pathlib import Path
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.record import LoadRecord
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
@@ -19,7 +19,7 @@ class Loader(Process):
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
-        "bib_pybtex": {
+        "bibtex": {
             "endpoint": built_in_load.BibPybtexLoader,
         },
         "csv": {
@@ -56,7 +56,7 @@ class Loader(Process):
         ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
-                s.script["endpoint"] for s in REVIEW_MANAGER.settings.search.sources
+                s.conversion_script["endpoint"] for s in REVIEW_MANAGER.settings.sources
             ],
         )
 
@@ -79,7 +79,7 @@ class Loader(Process):
 
         # Only supported filetypes
         files = [
-            f
+            f.relative_to(self.REVIEW_MANAGER.path)
             for f_ in [search_dir.glob(f"**/*.{e}") for e in self.supported_extensions]
             for f in f_
         ]
@@ -90,20 +90,21 @@ class Loader(Process):
             f
             for f in files
             # if str(f.with_suffix(".bib").name)
-            if str(f.with_suffix(".bib").name)
+            if str(f.with_suffix(".bib"))
             not in [
                 str(s.filename.with_suffix(".bib"))
-                for s in self.REVIEW_MANAGER.settings.search.sources
+                for s in self.REVIEW_MANAGER.settings.sources
             ]
         ]
 
-        return sorted(files)
+        return sorted(list(set(files)))
 
-    def get_script(self, *, filepath: str) -> dict:
+    @classmethod
+    def get_conversion_script(cls, *, filepath: Path) -> dict:
 
-        filetype = Path(filepath).suffix.replace(".", "")
+        filetype = filepath.suffix.replace(".", "")
 
-        for endpoint_name, endpoint_dict in self.built_in_scripts.items():
+        for endpoint_name, endpoint_dict in cls.built_in_scripts.items():
             if filetype in endpoint_dict["endpoint"].supported_extensions:
                 return {"endpoint": endpoint_name}
 
@@ -262,8 +263,8 @@ class Loader(Process):
                 record.update(number=record["issue"])
                 del record["issue"]
 
-            RECORD = LoadRecord(data=record)
-            RECORD.import_provenance()
+            RECORD = Record(data=record)
+            RECORD.import_provenance(source_identifier=SOURCE.source_identifier)
             RECORD.set_status(target_state=RecordState.md_imported)
 
             return RECORD.get_data()
@@ -314,7 +315,6 @@ class Loader(Process):
             record.update(
                 colrev_origin=f"{SOURCE.corresponding_bib_file.name}/{record['ID']}"
             )
-            record.update(colrev_source_identifier=SOURCE.source_identifier)
 
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
@@ -492,10 +492,14 @@ class Loader(Process):
         def load_active_sources() -> list:
             REVIEW_DATASET.check_sources()
             SOURCES = []
-            for SOURCE in self.REVIEW_MANAGER.settings.search.sources:
-                if SOURCE.script["endpoint"] not in list(self.load_scripts.keys()):
+            for SOURCE in self.REVIEW_MANAGER.settings.sources:
+                if SOURCE.conversion_script["endpoint"] not in list(
+                    self.load_scripts.keys()
+                ):
                     if self.verbose:
-                        print(f"Error: endpoint not available: {SOURCE.script}")
+                        print(
+                            f"Error: endpoint not available: {SOURCE.conversion_script}"
+                        )
                     continue
                 SOURCE.corresponding_bib_file = SOURCE.filename.with_suffix(".bib")
                 imported_origins = REVIEW_DATASET.get_currently_imported_origin_list()
@@ -509,7 +513,9 @@ class Loader(Process):
             saved_args["file"] = SOURCE.filename.name
 
             # 1. convert to bib (if necessary)
-            ENDPOINT = self.load_scripts[SOURCE.script["endpoint"]]["endpoint"]
+            ENDPOINT = self.load_scripts[SOURCE.conversion_script["endpoint"]][
+                "endpoint"
+            ]
             ENDPOINT.load(self, SOURCE)
 
             # 2. resolve non-unique IDs (if any)

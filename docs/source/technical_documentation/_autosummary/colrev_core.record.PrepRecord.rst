@@ -58,6 +58,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
+      ~PrepRecord.import_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge

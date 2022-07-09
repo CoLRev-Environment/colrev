@@ -75,26 +75,42 @@ class SearchSource:
     source_name: str
     source_identifier: str
     search_parameters: str
-    script: dict
+    search_script: dict
+    conversion_script: dict
+    source_prep_scripts: list
     comment: typing.Optional[str]
 
     def __str__(self):
+        source_prep_scripts_string = ",".join(
+            s["endpoint"] for s in self.source_prep_scripts
+        )
         return (
             f"{self.source_name} (type: {self.search_type}, "
             + f"filename: {self.filename})\n"
             + f"   source identifier:   {self.source_identifier}\n"
             + f"   search parameters:   {self.search_parameters}\n"
-            + f"   script:              {self.script['endpoint']}\n"
+            + f"   search_script:       {self.search_script.get('endpoint', '')}\n"
+            + f"   conversion_script:   {self.conversion_script['endpoint']}\n"
+            + f"   source_prep_script:  {source_prep_scripts_string}\n"
             + f"   comment:             {self.comment}"
         )
 
 
+# @dataclass
+# class SearchSources:
+
+#     sources: typing.List[SearchSource]
+
+#     def __str__(self):
+#         return " - " + "\n - ".join([str(s) for s in self.sources])
+
+
 @dataclass
 class SearchConfiguration:
-    sources: typing.List[SearchSource]
+    pass
 
     def __str__(self):
-        return " - " + "\n - ".join([str(s) for s in self.sources])
+        return " - TODO"
 
 
 # Load
@@ -305,6 +321,7 @@ class DataConfiguration:
 class Configuration:
 
     project: ProjectConfiguration
+    sources: typing.List[SearchSource]
     search: SearchConfiguration
     load: LoadConfiguration
     prep: PrepConfiguration
@@ -320,6 +337,8 @@ class Configuration:
             str(self.project)
             + "\nSearch\n"
             + str(self.search)
+            + "\nSources\n"
+            + str(self.sources)
             + "\nLoad\n"
             + str(self.load)
             + "\nPreparation\n"

@@ -9,14 +9,6 @@ colrev\_core.search\_sources
 
 
 
-   .. rubric:: Functions
-
-   .. autosummary::
-      :toctree:
-      :nosignatures:
-
-      apply_source_heuristics
-
 
 
 

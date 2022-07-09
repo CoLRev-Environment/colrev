@@ -335,7 +335,7 @@ class PDF_Retrieval(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # We may use other pdfs_search_files from the sources:
-        # REVIEW_MANAGER.settings.search.sources
+        # REVIEW_MANAGER.settings.sources
         pdfs_search_file = Path("search/pdfs.bib")
 
         for record in records.values():

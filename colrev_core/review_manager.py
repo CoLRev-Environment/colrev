@@ -609,6 +609,53 @@ class ReviewManager:
                 for s in settings["pdf_get"]["scripts"]
                 if s["endpoint"] != "website_screenshot"
             ]
+            if "sources" in settings["search"]:
+                for source in settings["search"]["sources"]:
+                    source["script"] = {"endpoint": "bib_pybtex"}
+                    if "search" not in source["filename"]:
+                        source["filename"] = "search/" + source["filename"]
+
+                if "sources" not in settings:
+                    settings["sources"] = settings["search"]["sources"]
+                    del settings["search"]["sources"]
+
+                    for source in settings["sources"]:
+                        source["search_script"] = source["script"]
+                        del source["script"]
+
+                        source["conversion_script"] = {"endpoint": "bibtex"}
+
+                        source["source_prep_scripts"] = []
+                        if "CROSSREF" == source["source_name"]:
+                            source["search_script"] = {"endpoint": "search_crossref"}
+                        if "DBLP" == source["source_name"]:
+                            source["search_script"] = {"endpoint": "search_dblp"}
+                        if "BACKWARD_SEARCH" == source["source_name"]:
+                            source["search_script"] = {"endpoint": "backward_search"}
+                        if "COLREV_PROJECT" == source["source_name"]:
+                            source["search_script"] = {
+                                "endpoint": "search_colrev_project"
+                            }
+                        if "INDEX" == source["source_name"]:
+                            source["search_script"] = {"endpoint": "search_local_index"}
+                        if "PDFS" == source["source_name"]:
+                            source["search_script"] = {"endpoint": "search_pdfs_dir"}
+                        if "bib_pybtex" == source["source_name"]:
+                            source["search_script"] = {}
+
+                settings = {
+                    "project": settings["project"],
+                    "sources": settings["sources"],
+                    "search": settings["search"],
+                    "load": settings["load"],
+                    "prep": settings["prep"],
+                    "dedupe": settings["dedupe"],
+                    "prescreen": settings["prescreen"],
+                    "pdf_get": settings["pdf_get"],
+                    "pdf_prep": settings["pdf_prep"],
+                    "screen": settings["screen"],
+                    "data": settings["data"],
+                }
 
             settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
             if settings["project"]["review_type"] == "NA":
@@ -624,11 +671,6 @@ class ReviewManager:
                     {"endpoint": s} if "endpoint" not in s and isinstance(str, s) else s
                     for s in prep_round["scripts"]
                 ]
-
-            for source in settings["search"]["sources"]:
-                source["script"] = {"endpoint": "bib_pybtex"}
-                if "search" not in source["filename"]:
-                    source["filename"] = "search/" + source["filename"]
 
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}

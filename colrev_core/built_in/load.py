@@ -21,7 +21,7 @@ class BibPybtexLoader:
 
 class SpreadsheetLoadUtility:
     @classmethod
-    def preprocess_records(cls, *, records: list) -> list:
+    def preprocess_records(cls, *, records: list) -> dict:
         ID = 1
         for x in records:
             if "ENTRYTYPE" not in x:
@@ -70,7 +70,13 @@ class SpreadsheetLoadUtility:
             if "times_cited" == x.get("times_cited", "NA"):
                 del x["times_cited"]
 
-        return records
+        if all("ID" in r for r in records):
+            records_dict = {r["ID"]: r for r in records}
+        else:
+            records_dict = {}
+            for i, record in enumerate(records):
+                records_dict[str(i)] = record
+        return records_dict
 
 
 @zope.interface.implementer(LoadEndpoint)
@@ -92,7 +98,6 @@ class CSVLoader:
         data.columns = data.columns.str.replace("-", "_")
         records = data.to_dict("records")
         records = SpreadsheetLoadUtility.preprocess_records(records=records)
-
         LOADER.save_records(
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )

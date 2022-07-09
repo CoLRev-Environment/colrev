@@ -20,7 +20,6 @@ colrev\_core.record
       :template: custom-class-template.rst
       :nosignatures:
 
-      LoadRecord
       PrepRecord
       PrescreenRecord
       Record

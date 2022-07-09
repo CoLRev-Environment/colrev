@@ -50,6 +50,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
+      ~ScreenRecord.import_provenance
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge

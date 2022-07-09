@@ -293,7 +293,9 @@ class Record:
 
         return
 
-    def change_ENTRYTYPE(self, *, ENTRYTYPE, NEW_ENTRYTYPE):
+    def change_ENTRYTYPE(self, *, NEW_ENTRYTYPE):
+
+        self.data["ENTRYTYPE"] = NEW_ENTRYTYPE
 
         # TODO : reapply field requirements
 
@@ -1035,6 +1037,8 @@ class Record:
         defect_field_keys = []
         for key in self.data.keys():
             if "author" == key:
+                if "UNKNOWN" == self.data[key]:
+                    continue
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
@@ -1425,54 +1429,46 @@ class Record:
         )
         return cpid1
 
-
-class LoadRecord(Record):
-    def __init__(self, *, data: dict):
-        super().__init__(data=data)
-
-    def import_provenance(self) -> None:
+    def import_provenance(self, *, source_identifier: str) -> None:
         def percent_upper_chars(input_string: str) -> float:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
         # Initialize colrev_masterdata_provenance
-        if "colrev_masterdata_provenance" in self.data:
-            colrev_masterdata_provenance = self.data["colrev_masterdata_provenance"]
-        else:
-            source_identifier_string = self.data["colrev_source_identifier"]
-            marker = re.search(r"\{\{(.*)\}\}", source_identifier_string)
-            if marker:
-                marker_string = marker.group(0)
-                key = marker_string[2:-2]
+        colrev_masterdata_provenance = {}
+        colrev_data_provenance = {}
+        marker = re.search(r"\{\{(.*)\}\}", source_identifier)
+        source_identifier_string = source_identifier
+        if marker:
+            marker_string = marker.group(0)
+            key = marker_string[2:-2]
 
-                try:
-                    marker_replacement = self.data[key]
-                    source_identifier_string = source_identifier_string.replace(
-                        marker_string, marker_replacement
-                    )
-                except KeyError as e:
-                    print(e)
-                    pass
+            try:
+                marker_replacement = self.data[key]
+                source_identifier_string = source_identifier.replace(
+                    marker_string, marker_replacement
+                )
+            except KeyError as e:
+                print(e)
+                pass
 
-            colrev_masterdata_provenance = {}
-            colrev_data_provenance = {}
-            for key in self.data.keys():
-                if key in Record.identifying_field_keys:
+        for key in self.data.keys():
+            if key in Record.identifying_field_keys:
+                if key not in colrev_masterdata_provenance:
                     colrev_masterdata_provenance[key] = {
                         "source": source_identifier_string,
                         "note": "",
                     }
-                elif key not in Record.provenance_keys and key not in [
-                    "colrev_source_identifier",
-                    "ID",
-                    "ENTRYTYPE",
-                    "source_url",
-                ]:
-                    colrev_data_provenance[key] = {
-                        "source": source_identifier_string,
-                        "note": "",
-                    }
+            elif key not in Record.provenance_keys and key not in [
+                "colrev_source_identifier",
+                "ID",
+                "ENTRYTYPE",
+                "source_url",
+            ]:
+                colrev_data_provenance[key] = {
+                    "source": source_identifier_string,
+                    "note": "",
+                }
 
-            del self.data["colrev_source_identifier"]
         self.data["colrev_data_provenance"] = colrev_data_provenance
         self.data["colrev_masterdata_provenance"] = colrev_masterdata_provenance
 

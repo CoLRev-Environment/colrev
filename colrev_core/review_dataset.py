@@ -37,7 +37,7 @@ class ReviewDataset:
     def load_sources(self) -> list:
         """Load the source details"""
         # TODO : this file may no longer be needed...
-        return self.REVIEW_MANAGER.settings.search.sources
+        return self.REVIEW_MANAGER.settings.sources
 
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
@@ -1777,7 +1777,7 @@ class ReviewDataset:
     def check_sources(self) -> None:
         from colrev_core.settings import SearchType
 
-        SOURCES = self.REVIEW_MANAGER.settings.search.sources
+        SOURCES = self.REVIEW_MANAGER.settings.sources
 
         for SOURCE in SOURCES:
 

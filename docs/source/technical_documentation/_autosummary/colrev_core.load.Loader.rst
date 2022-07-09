@@ -17,8 +17,8 @@ colrev\_core.load.Loader
       :nosignatures:
 
       ~Loader.check_precondition
+      ~Loader.get_conversion_script
       ~Loader.get_new_search_files
-      ~Loader.get_script
       ~Loader.load_source_records
       ~Loader.main
       ~Loader.resolve_non_unique_IDs

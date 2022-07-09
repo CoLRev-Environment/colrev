@@ -32,7 +32,7 @@ from colrev_core.record import RecordState
 class AdapterManager:
     @classmethod
     def load_scripts(
-        cls, *, PROCESS, scripts
+        cls, *, PROCESS, scripts, script_type: str = ""
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
 
         from colrev_core.review_manager import MissingDependencyError
@@ -221,6 +221,24 @@ class AdapterManager:
 
             for script in scripts_dict.values():
                 verifyObject(DataEndpoint, script["endpoint"])
+
+        elif ProcessType.check == PROCESS.type:
+            if "SearchSource" == script_type:
+                from colrev_core.process import SearchSourceEndpoint
+
+                for k, val in scripts_dict.items():
+                    if "custom_flag" in val:
+                        scripts_dict[k]["endpoint"] = scripts_dict[k][
+                            "endpoint"
+                        ].CustomSearchSource
+                        del scripts_dict[k]["custom_flag"]
+
+                for script in scripts_dict.values():
+                    verifyObject(SearchSourceEndpoint, script["endpoint"])
+            else:
+                print(
+                    f"ERROR: process type not implemented: {PROCESS.type}/{script_type}"
+                )
 
         else:
             print(f"ERROR: process type not implemented: {PROCESS.type}")

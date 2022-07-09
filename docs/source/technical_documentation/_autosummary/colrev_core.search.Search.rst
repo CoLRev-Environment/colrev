@@ -18,6 +18,7 @@ colrev\_core.search.Search
 
       ~Search.add_source
       ~Search.check_precondition
+      ~Search.get_feed_config
       ~Search.parse_parameters
       ~Search.parse_sources
       ~Search.save_feed_file

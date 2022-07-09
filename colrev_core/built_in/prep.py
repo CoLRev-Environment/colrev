@@ -15,7 +15,6 @@ from lingua.builder import LanguageDetectorBuilder
 from opensearchpy import NotFoundError
 from thefuzz import fuzz
 
-from colrev_core import search_sources
 from colrev_core.built_in.database_connectors import CrossrefConnector
 from colrev_core.built_in.database_connectors import DBLPConnector
 from colrev_core.built_in.database_connectors import DOIConnector
@@ -33,23 +32,30 @@ class LoadFixesPrep:
 
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
-        # TODO : store custom load-prep script as source attribute
-        origin_source = RECORD.data["colrev_origin"].split("/")[0]
-        origin_source_name = [
-            s.source_name
-            for s in PREPARATION.REVIEW_MANAGER.settings.search.sources
-            if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
-        ][0]
 
-        if origin_source_name in [
-            s["source_name"] for s in search_sources.scripts if "prep_script" in s
-        ]:
-            custom_prep_script = [
-                s["prep_script"]
-                for s in search_sources.scripts
-                if s["source_name"] == origin_source_name
-            ][0]
-            RECORD = custom_prep_script(RECORD=RECORD)
+        from colrev_core.search_sources import SearchSources
+
+        SEARCH_SCOURCES = SearchSources(REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER)
+
+        origin_source = RECORD.data["colrev_origin"].split("/")[0]
+
+        custom_prep_scripts = [
+            r["endpoint"]
+            for s in PREPARATION.REVIEW_MANAGER.settings.sources
+            if s.filename.with_suffix(".bib") == Path("search") / Path(origin_source)
+            for r in s.source_prep_scripts
+        ]
+
+        for custom_prep_script_name in custom_prep_scripts:
+
+            endpoint = SEARCH_SCOURCES.search_source_scripts[custom_prep_script_name][
+                "endpoint"
+            ]
+
+            if callable(endpoint.prepare):
+                RECORD = endpoint.prepare(RECORD)
+            else:
+                print(f"error: {custom_prep_script_name}")
 
         if "howpublished" in RECORD.data and "url" not in RECORD.data:
             if "url" in RECORD.data["howpublished"]:

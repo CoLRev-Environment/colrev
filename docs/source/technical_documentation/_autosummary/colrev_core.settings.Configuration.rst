@@ -26,6 +26,7 @@ colrev\_core.settings.Configuration
    .. autosummary::
 
       ~Configuration.project
+      ~Configuration.sources
       ~Configuration.search
       ~Configuration.load
       ~Configuration.prep

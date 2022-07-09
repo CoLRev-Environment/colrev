@@ -13,22 +13,22 @@ class Search(Process):
     from colrev_core.built_in import search as built_in_search
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
-        "CROSSREF": {
+        "search_crossref": {
             "endpoint": built_in_search.CrossrefSearchEndpoint,
         },
-        "DBLP": {
+        "search_dblp": {
             "endpoint": built_in_search.DBLPSearchEndpoint,
         },
-        "BACKWARD_SEARCH": {
+        "backward_search": {
             "endpoint": built_in_search.BackwardSearchEndpoint,
         },
-        "COLREV_PROJECT": {
+        "search_colrev_project": {
             "endpoint": built_in_search.ColrevProjectSearchEndpoint,
         },
-        "INDEX": {
+        "search_local_index": {
             "endpoint": built_in_search.IndexSearchEndpoint,
         },
-        "PDFS": {
+        "search_pdfs_dir": {
             "endpoint": built_in_search.PDFSearchEndpoint,
         },
     }
@@ -49,7 +49,7 @@ class Search(Process):
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         required_search_scripts = [
-            s.source_name for s in REVIEW_MANAGER.settings.search.sources
+            s.search_script["endpoint"] for s in REVIEW_MANAGER.settings.sources
         ]
 
         self.search_scripts: typing.Dict[
@@ -161,19 +161,18 @@ class Search(Process):
 
         sources = self.parse_sources(query=query)
 
+        scripts = []
+        for source_name in sources:
+            feed_config = self.get_feed_config(source_name=source_name)
+            scripts.append(feed_config["search_script"]["endpoint"])
+
+        required_search_scripts = [
+            s.search_script["endpoint"] for s in self.REVIEW_MANAGER.settings.sources
+        ]
         self.search_scripts = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=sources,
+            scripts=scripts + required_search_scripts,
         )
-
-        if not all(source in self.search_scripts for source in sources):
-            violation = [
-                source for source in sources if source not in self.search_scripts
-            ]
-            raise InvalidQueryException(
-                f"source {violation} not in available sources "
-                f"({self.search_scripts.keys()})"
-            )
 
         if len(sources) > 1:
             individual_sources = [
@@ -190,15 +189,51 @@ class Search(Process):
                     f" used individually: {violations}"
                 )
 
-        for source in sources:
-            SCRIPT = self.search_scripts[source]["endpoint"]
-            SCRIPT.validate_params(query=query)
-
-        # TODO : parse params (which may also raise errors)
+        for source_name in sources:
+            feed_config = self.get_feed_config(source_name=source_name)
+            for source in sources:
+                # TODO : parse params (which may also raise errors)
+                SCRIPT = self.search_scripts[feed_config["search_script"]["endpoint"]][
+                    "endpoint"
+                ]
+                SCRIPT.validate_params(query=query)
 
         return
 
+    def get_feed_config(self, *, source_name) -> dict:
+
+        conversion_script = {"endpoint": "bibtex"}
+
+        search_script = {"endpoint": "TODO"}
+        if source_name == "DBLP":
+            search_script = {"endpoint": "search_dblp"}
+        elif source_name == "CROSSREF":
+            search_script = {"endpoint": "search_crossref"}
+        elif source_name == "BACKWARD_SEARCH":
+            search_script = {"endpoint": "backward_search"}
+        elif source_name == "COLREV_PROJECT":
+            search_script = {"endpoint": "search_colrev_project"}
+        elif source_name == "INDEX":
+            search_script = {"endpoint": "search_local_index"}
+        elif source_name == "PDFS":
+            search_script = {"endpoint": "search_pdfs_dir"}
+
+        source_identifier = "TODO"
+        if search_script["endpoint"] in self.built_in_scripts:
+            source_identifier = self.built_in_scripts[search_script["endpoint"]][
+                "endpoint"
+            ].source_identifier
+
+        return {
+            "source_identifier": source_identifier,
+            "search_script": search_script,
+            "conversion_script": conversion_script,
+            "source_prep_scripts": [],
+        }
+
     def add_source(self, *, query: str) -> None:
+
+        from colrev_core.settings import SearchSource, SearchType
 
         # TODO : parse query (input format changed to sql-like string)
         # TODO : the search query/syntax translation has to be checked carefully
@@ -242,13 +277,13 @@ class Search(Process):
 
         source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        for source in sources:
+        for source_name in sources:
             duplicate_source = []
             try:
                 duplicate_source = [
                     x
                     for x in source_details
-                    if source == x["search_parameters"][0]["endpoint"]
+                    if source_name == x["search_parameters"][0]["endpoint"]
                     and selection == x["search_parameters"][0]["params"]
                 ]
             except TypeError:
@@ -257,14 +292,14 @@ class Search(Process):
             if len(duplicate_source) > 0:
                 print(
                     "Source already exists: "
-                    f"RETRIEVE * FROM {source} {selection}\nSkipping.\n"
+                    f"RETRIEVE * FROM {source_name} {selection}\nSkipping.\n"
                 )
                 continue
 
             if as_filename != "":
                 filename = as_filename
             else:
-                filename = f"{source}.bib"
+                filename = f"{source_name}.bib"
                 i = 0
                 while filename in [x.filename for x in source_details]:
                     i += 1
@@ -276,39 +311,36 @@ class Search(Process):
             # The following must be in line with settings.py/SearchSource
             search_type = "FEED"
             source_identifier = "TODO"
-            if source in self.search_scripts:
-                source_identifier = self.search_scripts[source][
-                    "endpoint"
-                ].source_identifier
 
             # TODO : add "USING script_x" when we add a search_script!
-            script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "DBLP":
-                script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "CROSSREF":
-                script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "BACKWARD_SEARCH":
-                script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "COLREV_PROJECT":
-                script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "INDEX":
-                script = {"endpoint": "bib_pybtex"}
-            if search_type == "FEED" and source == "PDFS":
-                script = {"endpoint": "bib_pybtex"}
+
+            if search_type == "FEED":
+                feed_config = self.get_feed_config(source_name=source_name)
+                source_identifier = feed_config["source_identifier"]
+                search_script = feed_config["search_script"]
+                conversion_script = feed_config["conversion_script"]
+                source_prep_scripts = feed_config["source_prep_scripts"]
+            else:
+                search_script = {}
+                conversion_script = {"endpoint": "bibtex"}
+                source_prep_scripts = []
 
             # NOTE: for now, the parameters are limited to whole journals.
-            source_details = {
-                "filename": f"search/{filename}",
-                "source_name": source,
-                "search_type": search_type,
-                "source_identifier": source_identifier,
-                "search_parameters": selection,
-                "script": script,
-                "comment": "",
-            }
-            self.REVIEW_MANAGER.pp.pprint(source_details)
-
-            self.REVIEW_MANAGER.sources.append(source_details)
+            add_source = SearchSource(
+                filename=Path(
+                    f"search/{filename}",
+                ),
+                search_type=SearchType(search_type),
+                source_name=source_name,
+                source_identifier=source_identifier,
+                search_parameters=selection,
+                search_script=search_script,
+                conversion_script=conversion_script,
+                source_prep_scripts=source_prep_scripts,
+                comment="",
+            )
+            self.REVIEW_MANAGER.pp.pprint(add_source)
+            self.REVIEW_MANAGER.sources.append(add_source)
             self.REVIEW_MANAGER.save_settings()
 
             self.REVIEW_MANAGER.create_commit(
@@ -330,42 +362,41 @@ class Search(Process):
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        feed_sources = [x for x in sources if SearchType.FEED == x.search_type]
+        def load_active_feeds() -> list:
 
-        if selection_str is not None:
-            feed_sources_selected = feed_sources
-            if "all" != selection_str:
-                feed_sources_selected = [
-                    f
-                    for f in feed_sources
-                    if str(f.filename) in selection_str.split(",")
-                ]
-            if len(feed_sources_selected) != 0:
-                feed_sources = feed_sources_selected
-            else:
-                available_options = ", ".join([str(f.filename) for f in feed_sources])
-                print(f"Error: {selection_str} not in {available_options}")
-                return
+            FEED_SOURCES = [x for x in sources if SearchType.FEED == x.search_type]
 
-        for feed_item in feed_sources:
-            feed_file = self.REVIEW_MANAGER.path / Path(feed_item.filename)
+            FEED_SOURCES_SELECTED = FEED_SOURCES
+            if selection_str is not None:
+                if "all" != selection_str:
+                    FEED_SOURCES_SELECTED = [
+                        f
+                        for f in FEED_SOURCES
+                        if str(f.filename) in selection_str.split(",")
+                    ]
+                if len(FEED_SOURCES_SELECTED) != 0:
+                    FEED_SOURCES = FEED_SOURCES_SELECTED
+                else:
+                    available_options = ", ".join(
+                        [str(f.filename) for f in FEED_SOURCES]
+                    )
+                    print(f"Error: {selection_str} not in {available_options}")
+                    raise NoSearchFeedRegistered()
 
-            if feed_item.source_name not in self.search_scripts:
-                print(
-                    "Endpoint not supported:"
-                    f" {feed_item.source_identifier} (skipping)"
-                )
-                continue
+            return FEED_SOURCES_SELECTED
 
-            script = self.search_scripts[feed_item.source_name]
+        for FEED in load_active_feeds():
+            feed_file = self.REVIEW_MANAGER.path / Path(FEED.filename)
 
-            params = self.parse_parameters(search_params=feed_item.search_parameters)
+            params = self.parse_parameters(search_params=FEED.search_parameters)
             print()
             self.REVIEW_MANAGER.logger.info(
-                f"Retrieve from {feed_item.source_name}: {params}"
+                f"Retrieve from {FEED.source_name}: {params}"
             )
 
-            SEARCH_SCRIPT = script["endpoint"]
+            SEARCH_SCRIPT = self.search_scripts[FEED.search_script["endpoint"]][
+                "endpoint"
+            ]
             SEARCH_SCRIPT.run_search(SEARCH=self, params=params, feed_file=feed_file)
 
             if feed_file.is_file():
@@ -373,9 +404,6 @@ class Search(Process):
                 self.REVIEW_MANAGER.create_commit(
                     msg="Run search", script_call="colrev search"
                 )
-
-        if len(feed_sources) == 0:
-            raise NoSearchFeedRegistered()
 
         return
 
@@ -395,12 +423,14 @@ class Search(Process):
             search_type=SearchType.FEED,
             source_name="custom_search_script",
             source_identifier="TODO",
-            script={"endpoint": "TODO"},
             search_parameters="TODO",
+            search_script={"endpoint": "TODO"},
+            conversion_script={"endpoint": "TODO"},
+            source_prep_scripts=[{"endpoint": "TODO"}],
             comment="",
         )
 
-        self.REVIEW_MANAGER.settings.search.sources.append(NEW_SOURCE)
+        self.REVIEW_MANAGER.settings.sources.append(NEW_SOURCE)
         self.REVIEW_MANAGER.save_settings()
 
         return
