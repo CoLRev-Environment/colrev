@@ -61,8 +61,6 @@ class SearchType(Enum):
     FORWARD_SEARCH = "FORWARD_SEARCH"
     PDFS = "PDFS"
     OTHER = "OTHER"
-    FEED = "FEED"
-    COLREV_REPO = "COLREV_REPO"
 
     def __str__(self):
         return f"{self.name}"

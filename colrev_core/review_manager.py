@@ -638,9 +638,9 @@ class ReviewManager:
                             }
                         if "INDEX" == source["source_name"]:
                             source["search_script"] = {"endpoint": "search_local_index"}
-                        if "PDFS" == source["source_name"]:
+                        if "PDFs" == source["source_name"]:
                             source["search_script"] = {"endpoint": "search_pdfs_dir"}
-                        if "bib_pybtex" == source["source_name"]:
+                        if "bib_pybtex" == source["search_script"]["endpoint"]:
                             source["search_script"] = {}
 
                 settings = {
@@ -656,6 +656,17 @@ class ReviewManager:
                     "screen": settings["screen"],
                     "data": settings["data"],
                 }
+
+            for source in settings["sources"]:
+                if "FEED" == source["search_type"]:
+                    if "CROSSREF" == source["source_name"]:
+                        source["search_type"] = "DB"
+                    elif "DBLP" == source["source_name"]:
+                        source["search_type"] = "DB"
+                    elif "pdfs" == source["source_name"].lower():
+                        source["search_type"] = "PDFS"
+                    else:
+                        source["search_type"] = "DB"
 
             settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
             if settings["project"]["review_type"] == "NA":

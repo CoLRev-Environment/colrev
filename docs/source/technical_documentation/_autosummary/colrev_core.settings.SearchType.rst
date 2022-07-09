@@ -25,5 +25,3 @@ colrev\_core.settings.SearchType
       ~SearchType.FORWARD_SEARCH
       ~SearchType.PDFS
       ~SearchType.OTHER
-      ~SearchType.FEED
-      ~SearchType.COLREV_REPO

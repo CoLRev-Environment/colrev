@@ -11,7 +11,7 @@
     "sources": [
         {
             "filename": "search/pdfs.bib",
-            "search_type": "FEED",
+            "search_type": "PDFS",
             "source_name": "PDFS",
             "source_identifier": "{{file}}",
             "search_parameters": "SCOPE path='pdfs'",

@@ -148,21 +148,18 @@ class PDF_Retrieval(Process):
 
     def relink_files(self) -> None:
         def relink_pdf_files(records):
-            from colrev_core.settings import SearchType
-
             # Relink files in source file
-            sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-            feeds = [x for x in sources if SearchType.FEED == x.search_type]
+            SOURCES = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
             feed_filename = ""
             feed_filepath = ""
             source_records = []
-            for feed in feeds:
-                if "{{file}}" == feed.source_identifier:
-                    feed_filepath = Path("search") / feed.filename
+            for SOURCE in SOURCES:
+                if "{{file}}" == SOURCE.source_identifier:
+                    feed_filepath = Path("search") / SOURCE.filename
                     if feed_filepath.is_file():
-                        feed_filename = feed.filename
+                        feed_filename = SOURCE.filename
                         with open(
-                            Path("search") / feed.filename, encoding="utf8"
+                            Path("search") / SOURCE.filename, encoding="utf8"
                         ) as target_db:
                             source_records_dict = (
                                 self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(

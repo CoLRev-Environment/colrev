@@ -309,12 +309,12 @@ class Search(Process):
             assert not feed_file_path.is_file()
 
             # The following must be in line with settings.py/SearchSource
-            search_type = "FEED"
+            search_type = "DB"
             source_identifier = "TODO"
 
             # TODO : add "USING script_x" when we add a search_script!
 
-            if search_type == "FEED":
+            if search_type == "DB":
                 feed_config = self.get_feed_config(source_name=source_name)
                 source_identifier = feed_config["source_identifier"]
                 search_script = feed_config["search_script"]
@@ -354,7 +354,6 @@ class Search(Process):
         return
 
     def update(self, *, selection_str: str) -> None:
-        from colrev_core.settings import SearchType
 
         # Reload the settings because the search sources may have been updated
         self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
@@ -362,45 +361,50 @@ class Search(Process):
         # TODO : when the search_file has been filled only query the last years
         sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        def load_active_feeds() -> list:
+        def load_automated_search_sources() -> list:
 
-            FEED_SOURCES = [x for x in sources if SearchType.FEED == x.search_type]
+            AUTOMATED_SOURCES = [x for x in sources if "endpoint" in x.search_script]
 
-            FEED_SOURCES_SELECTED = FEED_SOURCES
+            AUTOMATED_SOURCES_SELECTED = AUTOMATED_SOURCES
             if selection_str is not None:
                 if "all" != selection_str:
-                    FEED_SOURCES_SELECTED = [
+                    AUTOMATED_SOURCES_SELECTED = [
                         f
-                        for f in FEED_SOURCES
+                        for f in AUTOMATED_SOURCES
                         if str(f.filename) in selection_str.split(",")
                     ]
-                if len(FEED_SOURCES_SELECTED) != 0:
-                    FEED_SOURCES = FEED_SOURCES_SELECTED
-                else:
+                if len(AUTOMATED_SOURCES_SELECTED) == 0:
                     available_options = ", ".join(
-                        [str(f.filename) for f in FEED_SOURCES]
+                        [str(f.filename) for f in AUTOMATED_SOURCES]
                     )
                     print(f"Error: {selection_str} not in {available_options}")
                     raise NoSearchFeedRegistered()
 
-            return FEED_SOURCES_SELECTED
+            for SOURCE in AUTOMATED_SOURCES_SELECTED:
+                SOURCE.feed_file = self.REVIEW_MANAGER.path / Path(SOURCE.filename)
 
-        for FEED in load_active_feeds():
-            feed_file = self.REVIEW_MANAGER.path / Path(FEED.filename)
+            return AUTOMATED_SOURCES_SELECTED
 
-            params = self.parse_parameters(search_params=FEED.search_parameters)
+        for SOURCE in load_automated_search_sources():
+
+            params = self.parse_parameters(search_params=SOURCE.search_parameters)
+
             print()
             self.REVIEW_MANAGER.logger.info(
-                f"Retrieve from {FEED.source_name}: {params}"
+                f"Retrieve from {SOURCE.source_name}: {params}"
             )
 
-            SEARCH_SCRIPT = self.search_scripts[FEED.search_script["endpoint"]][
+            SEARCH_SCRIPT = self.search_scripts[SOURCE.search_script["endpoint"]][
                 "endpoint"
             ]
-            SEARCH_SCRIPT.run_search(SEARCH=self, params=params, feed_file=feed_file)
+            SEARCH_SCRIPT.run_search(
+                SEARCH=self, params=params, feed_file=SOURCE.feed_file
+            )
 
-            if feed_file.is_file():
-                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
+            if SOURCE.feed_file.is_file():
+                self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+                    path=str(SOURCE.feed_file)
+                )
                 self.REVIEW_MANAGER.create_commit(
                     msg="Run search", script_call="colrev search"
                 )
@@ -420,7 +424,7 @@ class Search(Process):
 
         NEW_SOURCE = SearchSource(
             filename=Path("custom_search.bib"),
-            search_type=SearchType.FEED,
+            search_type=SearchType.DB,
             source_name="custom_search_script",
             source_identifier="TODO",
             search_parameters="TODO",
@@ -442,7 +446,7 @@ class Search(Process):
 
         print("\nOptions:")
         options = ", ".join(list(self.search_scripts.keys()))
-        print(f"- endpoints (FEED): {options}")
+        print(f"- endpoints: {options}")
         return
 
 
