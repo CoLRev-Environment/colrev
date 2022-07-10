@@ -200,9 +200,17 @@
         ]
     },
     "dedupe": {
-        "merge_threshold": 0.8,
-        "partition_threshold": 0.5,
-        "same_source_merges": "prevent"
+        "same_source_merges": "prevent",
+        "scripts": [
+            {
+                "endpoint": "active_learning_training"
+            },
+            {
+                "endpoint": "active_learning_automated",
+                "merge_threshold": 0.8,
+                "partition_threshold": 0.5
+            }
+        ]
     },
     "prescreen": {
         "scope": [

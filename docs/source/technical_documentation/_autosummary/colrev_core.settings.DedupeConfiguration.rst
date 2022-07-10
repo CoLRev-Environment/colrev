@@ -25,6 +25,5 @@ colrev\_core.settings.DedupeConfiguration
 
    .. autosummary::
 
-      ~DedupeConfiguration.merge_threshold
-      ~DedupeConfiguration.partition_threshold
       ~DedupeConfiguration.same_source_merges
+      ~DedupeConfiguration.scripts

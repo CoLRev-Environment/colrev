@@ -133,6 +133,19 @@ class AdapterManager:
             for script in scripts_dict.values():
                 verifyObject(PreparationManualEndpoint, script["endpoint"])
 
+        elif ProcessType.dedupe == PROCESS.type:
+            from colrev_core.process import DedupeEndpoint
+
+            for k, val in scripts_dict.items():
+                if "custom_flag" in val:
+                    scripts_dict[k]["endpoint"] = scripts_dict[k][
+                        "endpoint"
+                    ].CustomDedupe
+                    del scripts_dict[k]["custom_flag"]
+
+            for script in scripts_dict.values():
+                verifyObject(DedupeEndpoint, script["endpoint"])
+
         elif ProcessType.prescreen == PROCESS.type:
             from colrev_core.process import PrescreenEndpoint
 

@@ -473,6 +473,11 @@ class PreparationManualEndpoint(zope.interface.Interface):
         pass
 
 
+class DedupeEndpoint(zope.interface.Interface):
+    def run_dedupe(DEDUPE, SETTINGS):
+        pass
+
+
 class PrescreenEndpoint(zope.interface.Interface):
     def run_prescreen(PRESCREEN, records: dict, split: list) -> dict:
         pass

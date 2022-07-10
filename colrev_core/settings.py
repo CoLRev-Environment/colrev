@@ -162,15 +162,16 @@ class PrepConfiguration:
 
 @dataclass
 class DedupeConfiguration:
-    merge_threshold: float
-    partition_threshold: float
     same_source_merges: str  # TODO : "prevent" or "apply"
+    scripts: list
 
     def __str__(self):
         return (
             f" - merge_threshold: {self.merge_threshold}\n"
             + f" - partition_threshold: {self.partition_threshold}\n"
             + f" - same_source_merges: {self.same_source_merges}"
+            + " - "
+            + ",".join([s["endpoint"] for s in self.scripts])
         )
 
 

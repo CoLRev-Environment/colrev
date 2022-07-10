@@ -683,6 +683,16 @@ class ReviewManager:
                     for s in prep_round["scripts"]
                 ]
 
+            if "scripts" not in settings["dedupe"]:
+                settings["dedupe"]["scripts"] = [
+                    {"endpoint": "active_learning_training"},
+                    {
+                        "endpoint": "active_learning_automated",
+                        "merge_threshold": 0.8,
+                        "partition_threshold": 0.5,
+                    },
+                ]
+
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}
             ]

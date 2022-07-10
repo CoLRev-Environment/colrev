@@ -36,6 +36,7 @@ requirements = [
     "PyPDF2==1.26.0",
     "PyYAML==6.0",
     "p_tqdm==1.3.3",
+    "psutil==5.9.1",
     "pybtex==0.24.0",
     "requests==2.27.1",
     "requests-cache==0.9.3",
