@@ -172,10 +172,6 @@ The architecture of CoLRev is divided into three packages:
 
 The extensible part of **colrev_core** adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
 
-.. figure:: ../../figures/architecture.svg
-    :align: center
-    :figwidth: 800px
-
 ..
    The **ReviewManager** supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).
    Essentially, the ReviewManager operates in three modes:

@@ -26,6 +26,7 @@
    :template: custom-module-template.rst
    :recursive:
 
+   colrev_core.built_in
    colrev_core.cli
    colrev_core.clone
    colrev_core.data

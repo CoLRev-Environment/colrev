@@ -110,7 +110,7 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
    :caption: Guidelines
 
    Manual <guides/manual>
-   guides/cli
+   guides/cheatsheet
    guides/help
 
 .. toctree::
@@ -120,7 +120,8 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 
    technical_documentation/colrev
    technical_documentation/api
-   technical_documentation/identification
+   technical_documentation/reference_implementation
+   technical_documentation/cli
    Code repository <https://github.com/geritwagner/colrev_core>
 
 .. toctree::
