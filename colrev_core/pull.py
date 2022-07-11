@@ -45,7 +45,7 @@ class Pull(Process):
         from colrev_core.built_in import prep as built_in_prep
         from tqdm import tqdm
 
-        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep()
+        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep(SETTINGS={})
 
         self.REVIEW_MANAGER.logger.info("Pull records from crossref")
 
@@ -117,7 +117,7 @@ class Pull(Process):
 
         self.REVIEW_MANAGER.logger.info("Pull records from index")
 
-        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep()
+        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep(SETTINGS={})
 
         # Note : do not use named argument (used in multiprocessing)
         def pull_record(record):

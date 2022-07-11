@@ -264,6 +264,11 @@ class Loader(Process):
                 del record["issue"]
 
             RECORD = Record(data=record)
+            if "doi" in RECORD.data:
+                RECORD.data.update(
+                    doi=RECORD.data["doi"].replace("http://dx.doi.org/", "").upper()
+                )
+
             RECORD.import_provenance(source_identifier=SOURCE.source_identifier)
             RECORD.set_status(target_state=RecordState.md_imported)
 
