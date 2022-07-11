@@ -51,15 +51,11 @@ class PDF_Retrieval(Process):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
 
-        required_pdf_retrieval_scripts = [
-            s["endpoint"] for s in REVIEW_MANAGER.settings.pdf_get.scripts
-        ]
-
         self.pdf_retrieval_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=required_pdf_retrieval_scripts,
+            scripts=REVIEW_MANAGER.settings.pdf_get.scripts,
         )
 
     def copy_pdfs_to_repo(self) -> None:
@@ -109,26 +105,18 @@ class PDF_Retrieval(Process):
 
         for PDF_GET_SCRIPT in self.REVIEW_MANAGER.settings.pdf_get.scripts:
 
-            if PDF_GET_SCRIPT["endpoint"] not in list(
-                self.pdf_retrieval_scripts.keys()
-            ):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {PDF_GET_SCRIPT}")
-                continue
-
-            endpoint = self.pdf_retrieval_scripts[PDF_GET_SCRIPT["endpoint"]]
+            ENDPOINT = self.pdf_retrieval_scripts[PDF_GET_SCRIPT["endpoint"]]
             self.REVIEW_MANAGER.report_logger.info(
                 # f'{retrieval_script["script"].__name__}({record["ID"]}) called'
-                f'{endpoint}({record["ID"]}) called'
+                f'{ENDPOINT.SETTINGS.name}({record["ID"]}) called'
             )
 
-            ENDPOINT = endpoint["endpoint"]
             ENDPOINT.get_pdf(self, RECORD)
 
             if "file" in RECORD.data:
                 self.REVIEW_MANAGER.report_logger.info(
                     # f'{retrieval_script["script"].__name__}'
-                    f"{endpoint}"
+                    f"{ENDPOINT.SETTINGS.name}"
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
                 RECORD.data.update(colrev_status=RecordState.pdf_imported)

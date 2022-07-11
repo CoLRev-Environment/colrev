@@ -6,13 +6,16 @@ import re
 import tempfile
 import typing
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import requests
 import zope.interface
+from dacite import from_dict
 
 from colrev_core.process import DataEndpoint
+from colrev_core.process import DefaultSettings
 from colrev_core.record import RecordState
 
 
@@ -27,6 +30,9 @@ class ManuscriptEndpoint:
 
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):
 
@@ -333,6 +339,9 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class StructuredDataEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def get_default_setup(self):
         structured_endpoint_details = {
             "endpoint": "STRUCTURED",
@@ -462,6 +471,9 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class EndnoteEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def get_default_setup(self):
         endnote_endpoint_details = {
             "endpoint": "ENDNOTE",
@@ -593,6 +605,9 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class PRISMAEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def get_default_setup(self):
         prisma_endpoint_details = {
             "endpoint": "PRISMA",
@@ -680,10 +695,20 @@ class PRISMAEndpoint:
         return
 
 
+@dataclass
+class ZettlrSettings:
+    name: str
+    zettlr_endpoint_version: str
+    config: dict
+
+
 @zope.interface.implementer(DataEndpoint)
 class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=ZettlrSettings, data=SETTINGS)
 
     def get_default_setup(self):
         zettlr_endpoint_details = {

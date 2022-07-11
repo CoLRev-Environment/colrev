@@ -39,10 +39,10 @@ class Prescreen(Process):
         self.verbose = True
 
         self.prescreen_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s["endpoint"] for s in REVIEW_MANAGER.settings.prescreen.scripts],
+            scripts=REVIEW_MANAGER.settings.prescreen.scripts,
         )
 
     def export_table(self, *, export_table_format: str) -> None:
@@ -166,15 +166,9 @@ class Prescreen(Process):
 
         for PRESCREEN_SCRIPT in self.REVIEW_MANAGER.settings.prescreen.scripts:
 
-            if PRESCREEN_SCRIPT["endpoint"] not in list(self.prescreen_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {PRESCREEN_SCRIPT}")
-                continue
-
-            endpoint = self.prescreen_scripts[PRESCREEN_SCRIPT["endpoint"]]
-
-            ENDPOINT = endpoint["endpoint"]
+            ENDPOINT = self.prescreen_scripts[PRESCREEN_SCRIPT["endpoint"]]
             records = ENDPOINT.run_prescreen(self, records, split)
+
         return
 
 

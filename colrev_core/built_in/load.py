@@ -3,8 +3,11 @@ from pathlib import Path
 
 import docker
 import zope.interface
+from dacite import from_dict
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import LoadEndpoint
+
 
 # TODO : TBD: what to return when conversion failed? ([]?)
 
@@ -13,6 +16,9 @@ from colrev_core.process import LoadEndpoint
 class BibPybtexLoader:
 
     supported_extensions = ["bib"]
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
 
@@ -83,6 +89,9 @@ class SpreadsheetLoadUtility:
 class CSVLoader:
     supported_extensions = ["csv"]
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def load(self, LOADER, SOURCE):
         import pandas as pd
 
@@ -109,6 +118,9 @@ class CSVLoader:
 class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
         import pandas as pd
@@ -140,8 +152,10 @@ class ZoteroTranslationLoader:
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
-    def __init__(self):
+    def __init__(self, *, SETTINGS):
         from colrev_core.environment import ZoteroTranslationService
+
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
         self.ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
         self.ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
@@ -187,6 +201,9 @@ class MarkdownLoader:
 
     supported_extensions = ["md"]
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def load(self, LOADER, SOURCE):
         import requests
 
@@ -227,6 +244,9 @@ class MarkdownLoader:
 class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     @classmethod
     def bibutils_convert(cls, script: str, data: str) -> str:

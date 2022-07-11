@@ -2,13 +2,16 @@
 import logging
 import os
 import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
 import zope.interface
 from colrev.cli import console_duplicate_instance_label
+from dacite import from_dict
 
 from colrev_core.process import DedupeEndpoint
+from colrev_core.process import DefaultSettings
 
 
 class colors:
@@ -22,6 +25,9 @@ class colors:
 @zope.interface.implementer(DedupeEndpoint)
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def __calculate_similarities_record(
         self, *, DEDUPE, references: pd.DataFrame
@@ -144,7 +150,7 @@ class SimpleDedupeEndpoint:
         return ret
 
     # TODO : add similarity function as a parameter?
-    def run_dedupe(self, DEDUPE, DEDUPE_SCRIPT_SETTINGS):
+    def run_dedupe(self, DEDUPE):
         """Pairwise identification of duplicates based on static similarity measure
 
         This procedure should only be used in small samples on which active learning
@@ -234,7 +240,9 @@ class SimpleDedupeEndpoint:
 
         dedupe_batch_results = []
         for item in batch_data:
-            dedupe_batch_results.append(DEDUPE.append_merges(batch_item=item))
+            dedupe_batch_results.append(
+                self.append_merges(DEDUPE=DEDUPE, batch_item=item)
+            )
 
         # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
 
@@ -316,6 +324,9 @@ class SimpleDedupeEndpoint:
 
 @zope.interface.implementer(DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def apply_active_learning(self, *, DEDUPE, results, saved_args):
 
         DEDUPE.apply_manual_deduplication_decisions(results=results)
@@ -468,6 +479,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         # If we have training data saved from a previous run of dedupe,
         # look for it and load it in.
         # __Note:__ if you want to train from scratch, delete the training_file
+
         if DEDUPE.training_file.is_file():
             DEDUPE.REVIEW_MANAGER.logger.info(
                 f"Reading pre-labeled training data from {DEDUPE.training_file.name} "
@@ -656,7 +668,7 @@ class ActiveLearningDedupeTrainingEndpoint:
 
         return
 
-    def run_dedupe(self, DEDUPE, DEDUPE_SCRIPT_SETTINGS):
+    def run_dedupe(self, DEDUPE):
 
         # def run_active_learning_dedupe(
         #     *,
@@ -695,9 +707,23 @@ class ActiveLearningDedupeTrainingEndpoint:
         return
 
 
+@dataclass
+class ActiveLearningSettings:
+    name: str
+    merge_threshold: float
+    partition_threshold: float
+
+
 @zope.interface.implementer(DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
-    def run_dedupe(self, DEDUPE, DEDUPE_SCRIPT_SETTINGS):
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=ActiveLearningSettings, data=SETTINGS)
+        assert self.SETTINGS.merge_threshold >= 0.0
+        assert self.SETTINGS.merge_threshold <= 1.0
+        assert self.SETTINGS.partition_threshold >= 0.0
+        assert self.SETTINGS.partition_threshold <= 1.0
+
+    def run_dedupe(self, DEDUPE):
         """Cluster potential duplicates, merge, and export validation spreadsheets"""
 
         import statistics
@@ -731,18 +757,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
 
-        merge_threshold = DEDUPE_SCRIPT_SETTINGS["merge_threshold"]
-        partition_threshold = DEDUPE_SCRIPT_SETTINGS["partition_threshold"]
-
-        saved_args.update(merge_threshold=str(merge_threshold))
-        saved_args.update(partition_threshold=str(partition_threshold))
+        saved_args.update(merge_threshold=str(self.merge_threshold))
+        saved_args.update(partition_threshold=str(self.partition_threshold))
 
         if in_memory:
             DEDUPE.REVIEW_MANAGER.report_logger.info(
-                f"set partition_threshold: {partition_threshold}"
+                f"set partition_threshold: {self.partition_threshold}"
             )
 
-            clustered_dupes = deduper.partition(data_d, partition_threshold)
+            clustered_dupes = deduper.partition(data_d, self.partition_threshold)
 
             # from dedupe.core import BlockingError
             # except BlockingError:
@@ -856,13 +879,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
         auto_dedupe = []
         ID_list = []
         DEDUPE.REVIEW_MANAGER.report_logger.info(
-            f"set merge_threshold: {merge_threshold}"
+            f"set merge_threshold: {self.merge_threshold}"
         )
-        DEDUPE.REVIEW_MANAGER.logger.info(f"set merge_threshold: {merge_threshold}")
+        DEDUPE.REVIEW_MANAGER.logger.info(
+            f"set merge_threshold: {self.merge_threshold}"
+        )
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:
-                if dedupe_decision["score"] > merge_threshold:
+                if dedupe_decision["score"] > self.merge_threshold:
                     orig_rec = dedupe_decision["records"].pop()
                     ID_list.append(orig_rec)
                     if 0 == len(dedupe_decision["records"]):
@@ -989,7 +1014,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             if ID in cluster_membership:
                 cur_cluster_membership = cluster_membership[ID]
                 vals.update(cur_cluster_membership)
-                if cur_cluster_membership["confidence_score"] > merge_threshold:
+                if cur_cluster_membership["confidence_score"] > self.merge_threshold:
                     collected_duplicates.append(vals)
                 else:
                     collected_non_duplicates.append(vals)

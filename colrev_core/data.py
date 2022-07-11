@@ -49,11 +49,9 @@ class Data(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.data_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.data_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s.endpoint for s in REVIEW_MANAGER.settings.data.data_format],
+            scripts=REVIEW_MANAGER.settings.data.data_format,
         )
 
     @classmethod
@@ -308,6 +306,23 @@ class Data(Process):
 
         return
 
+    def setup_custom_script(self) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, "template/custom_data_script.py")
+        if filedata:
+            with open("custom_data_script.py", "w") as file:
+                file.write(filedata.decode("utf-8"))
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
+
+        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
+
+        self.REVIEW_MANAGER.settings.data.data_format.append(NEW_DATA_ENDPOINT)
+        self.REVIEW_MANAGER.save_settings()
+
+        return
+
     def main(self, pre_commit_hook=False) -> dict:
 
         if pre_commit_hook:
@@ -355,7 +370,7 @@ class Data(Process):
             # its overall status is set to synthesized
             # Some endpoints may always set synthesized
             default_row = {
-                df.endpoint: False
+                df["endpoint"]: False
                 for df in self.REVIEW_MANAGER.settings.data.data_format
             }
             synthesized_record_status_matrix = {
@@ -371,25 +386,17 @@ class Data(Process):
 
             for DATA_FORMAT in self.REVIEW_MANAGER.settings.data.data_format:
 
-                if DATA_FORMAT.endpoint not in list(self.data_scripts.keys()):
-                    if self.verbose:
-                        print(f"Error: endpoint not available: {DATA_FORMAT}")
-                    continue
+                ENDPOINT = self.data_scripts[DATA_FORMAT["endpoint"]]
 
-                endpoint = self.data_scripts[DATA_FORMAT.endpoint]
-
-                ENDPOINT = endpoint["endpoint"]
-                ENDPOINT.update_data(
-                    self.REVIEW_MANAGER, records, synthesized_record_status_matrix
-                )
+                ENDPOINT.update_data(self, records, synthesized_record_status_matrix)
                 ENDPOINT.update_record_status_matrix(
-                    self.REVIEW_MANAGER,
+                    self,
                     synthesized_record_status_matrix,
-                    DATA_FORMAT.endpoint,
+                    DATA_FORMAT["endpoint"],
                 )
 
                 if self.verbose:
-                    print(f"updated {endpoint}")
+                    print(f"updated {ENDPOINT.SETTINGS.name}")
 
                 # if "TEI" == DATA_FORMAT.endpoint:
                 #     records = self.update_tei(records, included)
@@ -427,23 +434,6 @@ class Data(Process):
             "ask_to_commit": False,
             "no_endpoints_registered": no_endpoints_registered,
         }
-
-    def setup_custom_script(self) -> None:
-        import pkgutil
-
-        filedata = pkgutil.get_data(__name__, "template/custom_data_script.py")
-        if filedata:
-            with open("custom_data_script.py", "w") as file:
-                file.write(filedata.decode("utf-8"))
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
-
-        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
-
-        self.REVIEW_MANAGER.settings.data.data_format.append(NEW_DATA_ENDPOINT)
-        self.REVIEW_MANAGER.save_settings()
-
-        return
 
 
 if __name__ == "__main__":

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import typing
+from dataclasses import dataclass
 from enum import auto
 from enum import Enum
 from pathlib import Path
@@ -464,7 +465,7 @@ class PreparationEndpoint(zope.interface.Interface):
         (even if the colrev_status does not transition to md_prepared)"""
     )
 
-    def prepare(PREPARATION, RECORD):
+    def prepare(PREPARATION, PREP_RECORD):
         pass
 
 
@@ -474,7 +475,7 @@ class PreparationManualEndpoint(zope.interface.Interface):
 
 
 class DedupeEndpoint(zope.interface.Interface):
-    def run_dedupe(DEDUPE, SETTINGS):
+    def run_dedupe(DEDUPE):
         pass
 
 
@@ -552,6 +553,17 @@ class ProcessOrderViolation(Exception):
             f" {process.type.name}() requires all records to have at least "
             + f"'{required_state}', but there are records with {violating_records}."
         )
+        super().__init__(self.message)
+
+
+@dataclass
+class DefaultSettings:
+    name: str
+
+
+class SettingsError(Exception):
+    def __init__(self, message):
+        self.message = message
         super().__init__(self.message)
 
 

@@ -64,11 +64,9 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.report_logger.info("Dedupe")
         self.REVIEW_MANAGER.logger.info("Dedupe")
 
-        self.dedupe_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.dedupe_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s["endpoint"] for s in REVIEW_MANAGER.settings.dedupe.scripts],
+            scripts=REVIEW_MANAGER.settings.dedupe.scripts,
         )
 
     def prep_references(self, *, references: pd.DataFrame) -> dict:
@@ -768,14 +766,9 @@ class Dedupe(Process):
 
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
-            if DEDUPE_SCRIPT["endpoint"] not in list(self.dedupe_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {DEDUPE_SCRIPT}")
-                continue
+            ENDPOINT = self.dedupe_scripts[DEDUPE_SCRIPT["endpoint"]]
 
-            ENDPOINT = self.dedupe_scripts[DEDUPE_SCRIPT.pop("endpoint")]["endpoint"]
-
-            ENDPOINT.run_dedupe(self, DEDUPE_SCRIPT)
+            ENDPOINT.run_dedupe(self)
 
         return
 

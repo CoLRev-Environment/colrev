@@ -8,10 +8,12 @@ from pathlib import Path
 import imagehash
 import timeout_decorator
 import zope.interface
+from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
 
 from colrev_core.environment import LocalIndex
+from colrev_core.process import DefaultSettings
 from colrev_core.process import PDFPreparationEndpoint
 from colrev_core.record import Record
 from colrev_core.record import RecordState
@@ -19,6 +21,8 @@ from colrev_core.record import RecordState
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFCheckOCREndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     # TODO : test whether this is too slow:
     language_detector = (
@@ -86,7 +90,11 @@ class PDFCheckOCREndpoint:
             PDF_PREPARATION.REVIEW_MANAGER.report_logger.info(
                 f'apply_ocr({RECORD.data["ID"]})'
             )
-            self.__apply_ocr(record=RECORD.data, PAD=PAD)
+            self.__apply_ocr(
+                REVIEW_MANAGER=PDF_PREPARATION.REVIEW_MANAGER,
+                record=RECORD.data,
+                PAD=PAD,
+            )
 
         if not self.__text_is_english(text=RECORD.data["text_from_pdf"]):
             msg = (
@@ -108,6 +116,9 @@ class PDFCheckOCREndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFCoverPageEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
@@ -266,6 +277,9 @@ class PDFCoverPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFLastPageEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         from PyPDF2 import PdfFileReader
@@ -360,6 +374,9 @@ class PDFLastPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFMetadataValidationEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def validates_based_on_metadata(self, *, REVIEW_MANAGER, RECORD) -> dict:
         def __rmdiacritics(*, char: str) -> str:
             """
@@ -519,6 +536,9 @@ class PDFCompletenessValidationEndpoint:
     roman_page_pattern = re.compile(
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
     )
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def __longer_with_appendix(self, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):
         if nr_pages_metadata < RECORD.data["pages_in_file"] and nr_pages_metadata > 10:

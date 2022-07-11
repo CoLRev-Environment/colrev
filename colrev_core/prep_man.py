@@ -34,12 +34,10 @@ class PrepMan(Process):
         self.verbose = True
 
         self.prep_man_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[
-                s["endpoint"] for s in REVIEW_MANAGER.settings.prep.man_prep_scripts
-            ],
+            scripts=REVIEW_MANAGER.settings.prep.man_prep_scripts,
         )
 
     def prep_man_stats(self) -> None:
@@ -361,14 +359,7 @@ class PrepMan(Process):
 
         for PREP_MAN_SCRIPT in self.REVIEW_MANAGER.settings.prep.man_prep_scripts:
 
-            if PREP_MAN_SCRIPT["endpoint"] not in list(self.prep_man_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {PREP_MAN_SCRIPT}")
-                continue
-
-            endpoint = self.prep_man_scripts[PREP_MAN_SCRIPT["endpoint"]]
-
-            ENDPOINT = endpoint["endpoint"]
+            ENDPOINT = self.prep_man_scripts[PREP_MAN_SCRIPT["endpoint"]]
             records = ENDPOINT.prepare_manual(self, records)
 
         return

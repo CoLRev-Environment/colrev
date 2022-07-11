@@ -2,13 +2,18 @@
 from pathlib import Path
 
 import zope.interface
+from dacite import from_dict
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import ScreenEndpoint
 from colrev_core.record import RecordState
 
 
 @zope.interface.implementer(ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def run_screen(self, SCREEN, records: dict, split: list) -> dict:
         from colrev.cli import screen_cli
 
@@ -19,6 +24,9 @@ class CoLRevCLIScreenEndpoint:
 
 @zope.interface.implementer(ScreenEndpoint)
 class SpreadsheetScreenEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def export_table(self, SCREEN, records, split, export_table_format="csv") -> None:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting

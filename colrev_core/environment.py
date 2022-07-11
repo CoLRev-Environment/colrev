@@ -40,48 +40,55 @@ class AdapterManager:
         import sys
         from zope.interface.verify import verifyObject
         from colrev_core.process import ProcessType
+        from copy import deepcopy
 
-        scripts_dict = {}
+        # avoid changes in the config
+        scripts = deepcopy(scripts)
+        scripts_dict: dict = {}
+        for script in scripts:
+            script_name = script["endpoint"]
+            scripts_dict[script_name] = {}
 
-        # 1. Load built-in scripts
-        list_built_in_scripts = [s for s in scripts if s in PROCESS.built_in_scripts]
-        for plugin_script in list_built_in_scripts:
-            built_in_script = PROCESS.built_in_scripts[plugin_script]["endpoint"]
-            scripts_dict[plugin_script] = {"endpoint": built_in_script()}
+            # 1. Load built-in scripts
+            if script_name in PROCESS.built_in_scripts:
+                scripts_dict[script_name]["settings"] = script
+                scripts_dict[script_name]["endpoint"] = PROCESS.built_in_scripts[
+                    script_name
+                ]["endpoint"]
 
-        # 2. Load module scripts
-        # TODO : test the module prep_scripts
-        list_module_scripts = [
-            s
-            for s in scripts
-            if s not in scripts_dict and not Path(s + ".py").is_file()
-        ]
-        for plugin_script in list_module_scripts:
-            try:
-                module_script = importlib.import_module(plugin_script)
-                scripts_dict[plugin_script] = {
-                    "endpoint": module_script,
-                    "custom_flag": True,
-                }
-            except ModuleNotFoundError:
-                pass
-                raise MissingDependencyError(
-                    "Dependency " + f"{plugin_script} not found. "
-                    "Please install it\n  pip install "
-                    f"{plugin_script}"
+            # 2. Load module scripts
+            # TODO : test the module prep_scripts
+            elif not not Path(script_name + ".py").is_file():
+                try:
+                    scripts_dict[script_name]["settings"] = script
+                    scripts_dict[script_name]["endpoint"] = importlib.import_module(
+                        script_name
+                    )
+                    scripts_dict[script_name]["endpoint"]["custom_flag"] = True
+
+                except ModuleNotFoundError:
+                    pass
+                    raise MissingDependencyError(
+                        "Dependency " + f"{script_name} not found. "
+                        "Please install it\n  pip install "
+                        f"{script_name}"
+                    )
+
+            # 3. Load custom scripts in the directory
+            elif not Path(script_name + ".py").is_file():
+                sys.path.append(".")  # to import custom scripts from the project dir
+                scripts_dict[script_name]["settings"] = script
+                scripts_dict[script_name]["endpoint"] = importlib.import_module(
+                    script_name, "."
                 )
-
-        # 3. Load custom scripts in the directory
-        list_custom_scripts = [
-            s for s in scripts if s not in scripts_dict and Path(s + ".py").is_file()
-        ]
-        sys.path.append(".")  # to import custom scripts from the project dir
-        for plugin_script in list_custom_scripts:
-            custom_script = importlib.import_module(plugin_script, ".")
-            scripts_dict[plugin_script] = {
-                "endpoint": custom_script,
-                "custom_flag": True,
-            }
+                scripts_dict[script_name]["endpoint"]["custom_flag"] = True
+            else:
+                print(f"Could not load {script}")
+                continue
+            scripts_dict[script_name]["settings"]["name"] = scripts_dict[script_name][
+                "settings"
+            ]["endpoint"]
+            del scripts_dict[script_name]["settings"]["endpoint"]
 
         if ProcessType.search == PROCESS.type:
             from colrev_core.process import SearchEndpoint
@@ -93,8 +100,11 @@ class AdapterManager:
                     ].CustomSearch
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(SearchEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.load == PROCESS.type:
             from colrev_core.process import LoadEndpoint
@@ -104,8 +114,11 @@ class AdapterManager:
                     scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomLoad
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(LoadEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.prep == PROCESS.type:
             from colrev_core.process import PreparationEndpoint
@@ -117,8 +130,11 @@ class AdapterManager:
                     ].CustomPrepare
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PreparationEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PreparationEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.prep_man == PROCESS.type:
             from colrev_core.process import PreparationManualEndpoint
@@ -130,8 +146,11 @@ class AdapterManager:
                     ].CustomPrepMan
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PreparationManualEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PreparationManualEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.dedupe == PROCESS.type:
             from colrev_core.process import DedupeEndpoint
@@ -143,8 +162,11 @@ class AdapterManager:
                     ].CustomDedupe
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(DedupeEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.prescreen == PROCESS.type:
             from colrev_core.process import PrescreenEndpoint
@@ -156,8 +178,11 @@ class AdapterManager:
                     ].CustomPrescreen
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PrescreenEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.pdf_get == PROCESS.type:
             from colrev_core.process import PDFRetrievalEndpoint
@@ -169,8 +194,11 @@ class AdapterManager:
                     ].CustomPDFRetrieval
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PDFRetrievalEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PDFRetrievalEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.pdf_get_man == PROCESS.type:
             from colrev_core.process import PDFRetrievalManualEndpoint
@@ -182,8 +210,11 @@ class AdapterManager:
                     ].CustomPDFManualRetrieval
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PDFRetrievalManualEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PDFRetrievalManualEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.pdf_prep == PROCESS.type:
             from colrev_core.process import PDFPreparationEndpoint
@@ -195,8 +226,11 @@ class AdapterManager:
                     ].CustomPDFPrepratation
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PDFPreparationEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PDFPreparationEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.pdf_prep_man == PROCESS.type:
             from colrev_core.process import PDFPreparationManualEndpoint
@@ -208,8 +242,11 @@ class AdapterManager:
                     ].CustomPDFManualPrepratation
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(PDFPreparationManualEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(PDFPreparationManualEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.screen == PROCESS.type:
             from colrev_core.process import ScreenEndpoint
@@ -221,8 +258,11 @@ class AdapterManager:
                     ].CustomScreen
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(ScreenEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.data == PROCESS.type:
             from colrev_core.process import DataEndpoint
@@ -232,8 +272,11 @@ class AdapterManager:
                     scripts_dict[k]["endpoint"] = scripts_dict[k]["endpoint"].CustomData
                     del scripts_dict[k]["custom_flag"]
 
-            for script in scripts_dict.values():
-                verifyObject(DataEndpoint, script["endpoint"])
+            for endpoint_name, script in scripts_dict.items():
+                scripts_dict[endpoint_name] = script["endpoint"](
+                    SETTINGS=script["settings"]
+                )
+                verifyObject(DataEndpoint, scripts_dict[endpoint_name])
 
         elif ProcessType.check == PROCESS.type:
             if "SearchSource" == script_type:
@@ -246,8 +289,11 @@ class AdapterManager:
                         ].CustomSearchSource
                         del scripts_dict[k]["custom_flag"]
 
-                for script in scripts_dict.values():
-                    verifyObject(SearchSourceEndpoint, script["endpoint"])
+                for endpoint_name, script in scripts_dict.items():
+                    scripts_dict[endpoint_name] = script["endpoint"](
+                        SETTINGS=script["settings"]
+                    )
+                    verifyObject(SearchSourceEndpoint, scripts_dict[endpoint_name])
             else:
                 print(
                     f"ERROR: process type not implemented: {PROCESS.type}/{script_type}"

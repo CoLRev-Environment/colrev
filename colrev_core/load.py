@@ -51,12 +51,12 @@ class Loader(Process):
         )
         self.verbose = True
 
-        self.load_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.load_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
-                s.conversion_script["endpoint"] for s in REVIEW_MANAGER.settings.sources
+                s.conversion_script
+                for s in REVIEW_MANAGER.settings.sources
+                if "endpoint" in s.conversion_script
             ],
         )
 
@@ -502,20 +502,20 @@ class Loader(Process):
                         )
                     continue
                 SOURCE.corresponding_bib_file = SOURCE.filename.with_suffix(".bib")
-                imported_origins = REVIEW_DATASET.get_currently_imported_origin_list()
-                SOURCE.imported_origins = imported_origins
-                SOURCE.len_before = len(SOURCE.imported_origins)
                 SOURCES.append(SOURCE)
             return SOURCES
 
         for SOURCE in load_active_sources():
             self.REVIEW_MANAGER.logger.info(f"Loading {SOURCE}")
             saved_args["file"] = SOURCE.filename.name
+            imported_origins = REVIEW_DATASET.get_currently_imported_origin_list()
+            SOURCE.imported_origins = imported_origins
+            SOURCE.len_before = len(SOURCE.imported_origins)
+
+            conversion_script_name = SOURCE.conversion_script["endpoint"]
 
             # 1. convert to bib (if necessary)
-            ENDPOINT = self.load_scripts[SOURCE.conversion_script["endpoint"]][
-                "endpoint"
-            ]
+            ENDPOINT = self.load_scripts[conversion_script_name]
             ENDPOINT.load(self, SOURCE)
 
             # 2. resolve non-unique IDs (if any)

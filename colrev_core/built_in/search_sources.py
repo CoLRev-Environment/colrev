@@ -1,6 +1,10 @@
 #! /usr/bin/env python
-import zope.interface
+from dataclasses import asdict
 
+import zope.interface
+from dacite import from_dict
+
+from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchSourceEndpoint
 from colrev_core.record import PrepRecord
 
@@ -65,6 +69,9 @@ def drop_fields(*, RECORD: PrepRecord, drop=list) -> PrepRecord:
 @zope.interface.implementer(SearchSourceEndpoint)
 class AISeLibrarySearchSource:
     source_identifier = "https://aisel.aisnet.org/"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -208,6 +215,9 @@ class AISeLibrarySearchSource:
 class GoogleScholarSearchSource:
     source_identifier = "https://scholar.google.com/"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         if "related = {https://scholar.google.com/scholar?q=relat" in data:
@@ -225,6 +235,9 @@ class WebOfScienceSearchSource:
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def heuristic(self, filename, data):
 
@@ -250,6 +263,9 @@ class WebOfScienceSearchSource:
 @zope.interface.implementer(SearchSourceEndpoint)
 class ScopusSearchSource:
     source_identifier = "{{url}}"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -306,6 +322,9 @@ class ACMDigitalLibrary:
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
@@ -325,6 +344,9 @@ class ACMDigitalLibrary:
 class PubMed:
 
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -368,6 +390,9 @@ class WileyOnlineLibrary:
 
     source_identifier = "{{url}}"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
 
@@ -388,6 +413,9 @@ class DBLP:
 
     source_identifier = "{{biburl}}"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
@@ -406,6 +434,9 @@ class TransportResearchInternationalDocumentation:
 
     source_identifier = "{{biburl}}"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Simple heuristic:
@@ -423,9 +454,13 @@ class TransportResearchInternationalDocumentation:
 class PDFSearchSource:
     source_identifier = "{{file}}"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
-        BSWH = BackwardSearchSearchSource()
+        # Note : quick fix (passing the PDFSearchSource settings)
+        BSWH = BackwardSearchSearchSource(SETTINGS=asdict(self.SETTINGS))
         if filename.suffix == ".pdf" and not BSWH.pdf_backward_search_heuristic(
             filename=filename, data=data
         ):
@@ -442,6 +477,9 @@ class PDFSearchSource:
 @zope.interface.implementer(SearchSourceEndpoint)
 class BackwardSearchSearchSource:
     source_identifier = "{{cited_by_file}} (references)"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}

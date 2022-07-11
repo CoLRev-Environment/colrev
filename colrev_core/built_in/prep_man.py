@@ -2,12 +2,17 @@
 from pathlib import Path
 
 import zope.interface
+from dacite import from_dict
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationManualEndpoint
 
 
 @zope.interface.implementer(PreparationManualEndpoint)
 class CoLRevCLIManPrep:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare_manual(self, PREP_MAN, records):
 
         from colrev.cli import prep_man_records_cli
@@ -19,6 +24,9 @@ class CoLRevCLIManPrep:
 
 @zope.interface.implementer(PreparationManualEndpoint)
 class ExportManPrep:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare_manual(self, PREP_MAN, records):
         from colrev_core.record import RecordState
 

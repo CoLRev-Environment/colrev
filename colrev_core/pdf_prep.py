@@ -63,10 +63,10 @@ class PDF_Preparation(Process):
         self.CPUS = 8
 
         self.pdf_prep_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s["endpoint"] for s in REVIEW_MANAGER.settings.pdf_prep.scripts],
+            scripts=REVIEW_MANAGER.settings.pdf_prep.scripts,
         )
 
     def __cleanup_pdf_processing_fields(self, *, record: dict) -> dict:
@@ -105,20 +105,16 @@ class PDF_Preparation(Process):
         # if it remains 'imported', all preparation checks have passed
         for PDF_PREP_SCRIPT in self.REVIEW_MANAGER.settings.pdf_prep.scripts:
 
-            if PDF_PREP_SCRIPT["endpoint"] not in list(self.pdf_prep_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {PDF_PREP_SCRIPT}")
-                continue
-
             try:
-                endpoint = self.pdf_prep_scripts[PDF_PREP_SCRIPT["endpoint"]]
-                self.REVIEW_MANAGER.logger.debug(f"{endpoint}(...) called")
-
-                self.REVIEW_MANAGER.report_logger.info(
-                    f'{endpoint}({RECORD.data["ID"]}) called'
+                ENDPOINT = self.pdf_prep_scripts[PDF_PREP_SCRIPT["endpoint"]]
+                self.REVIEW_MANAGER.logger.debug(
+                    f"{ENDPOINT.SETTINGS.name}(...) called"
                 )
 
-                ENDPOINT = endpoint["endpoint"]
+                self.REVIEW_MANAGER.report_logger.info(
+                    f'{ENDPOINT.SETTINGS.name}({RECORD.data["ID"]}) called'
+                )
+
                 RECORD.data = ENDPOINT.prep_pdf(self, RECORD, PAD)
                 # Note : the record should not be changed
                 # if the prep_script throws an exception
@@ -132,7 +128,8 @@ class PDF_Preparation(Process):
                 timeout_decorator.timeout_decorator.TimeoutError,
             ) as err:
                 self.REVIEW_MANAGER.logger.error(
-                    f'Error for {RECORD.data["ID"]} ' f"(in {endpoint} : {err})"
+                    f'Error for {RECORD.data["ID"]} '
+                    f"(in {ENDPOINT.SETTINGS.name} : {err})"
                 )
                 pass
                 RECORD.data["colrev_status"] = RecordState.pdf_needs_manual_preparation
@@ -143,7 +140,9 @@ class PDF_Preparation(Process):
             failed = (
                 RecordState.pdf_needs_manual_preparation == RECORD.data["colrev_status"]
             )
-            msg = f'{endpoint}({RECORD.data["ID"]}):'.ljust(PAD, " ") + " "
+            msg = (
+                f'{ENDPOINT.SETTINGS.name}({RECORD.data["ID"]}):'.ljust(PAD, " ") + " "
+            )
             msg += "fail" if failed else "pass"
             self.REVIEW_MANAGER.report_logger.info(msg)
             if failed:

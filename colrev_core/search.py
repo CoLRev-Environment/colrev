@@ -48,15 +48,9 @@ class Search(Process):
 
         self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
-        required_search_scripts = [
-            s.search_script["endpoint"] for s in REVIEW_MANAGER.settings.sources
-        ]
-
-        self.search_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=required_search_scripts,
+            scripts=[s.search_script for s in REVIEW_MANAGER.settings.sources],
         )
 
     def save_feed_file(self, records: dict, feed_file: Path) -> None:
@@ -164,10 +158,10 @@ class Search(Process):
         scripts = []
         for source_name in sources:
             feed_config = self.get_feed_config(source_name=source_name)
-            scripts.append(feed_config["search_script"]["endpoint"])
+            scripts.append(feed_config["search_script"])
 
         required_search_scripts = [
-            s.search_script["endpoint"] for s in self.REVIEW_MANAGER.settings.sources
+            s.search_script for s in self.REVIEW_MANAGER.settings.sources
         ]
         self.search_scripts = AdapterManager.load_scripts(
             PROCESS=self,
@@ -349,11 +343,11 @@ class Search(Process):
                 saved_args=saved_args,
             )
 
-        self.update(selection_str="all")
+        self.main(selection_str="all")
 
         return
 
-    def update(self, *, selection_str: str) -> None:
+    def main(self, *, selection_str: str) -> None:
 
         # Reload the settings because the search sources may have been updated
         self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
@@ -394,11 +388,11 @@ class Search(Process):
                 f"Retrieve from {SOURCE.source_name}: {params}"
             )
 
-            SEARCH_SCRIPT = self.search_scripts[SOURCE.search_script["endpoint"]][
-                "endpoint"
-            ]
+            SEARCH_SCRIPT = self.search_scripts[SOURCE.search_script["endpoint"]]
             SEARCH_SCRIPT.run_search(
-                SEARCH=self, params=params, feed_file=SOURCE.feed_file
+                SEARCH=self,
+                params=params,
+                feed_file=SOURCE.feed_file,
             )
 
             if SOURCE.feed_file.is_file():

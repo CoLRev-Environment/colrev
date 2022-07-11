@@ -21,6 +21,7 @@ colrev\_core.process
       :nosignatures:
 
       CheckProcess
+      DefaultSettings
       FormatProcess
       Process
       ProcessModel
@@ -38,4 +39,5 @@ colrev\_core.process
       CleanRepoRequiredError
       NoRecordsError
       ProcessOrderViolation
+      SettingsError
       UnstagedGitChangesError

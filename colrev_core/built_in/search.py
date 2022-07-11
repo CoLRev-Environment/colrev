@@ -11,10 +11,12 @@ import pandasql as ps
 import requests
 import zope.interface
 from crossref.restful import Journals
+from dacite import from_dict
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
 
 from colrev_core import search
+from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
 from colrev_core.record import Record
 
@@ -24,6 +26,9 @@ class CrossrefSearchEndpoint:
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import PrepRecord
@@ -158,6 +163,9 @@ class DBLPSearchEndpoint:
     source_identifier = "{{dblp_key}}"
     mode = "all"
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.built_in.prep import DBLPConnector
 
@@ -195,6 +203,7 @@ class DBLPSearchEndpoint:
             start = 1980
             if len(records) > 100 and not SEARCH.REVIEW_MANAGER.force_mode:
                 start = datetime.now().year - 2
+            records_dict = {r["ID"]: r for r in records}
             for year in range(start, datetime.now().year):
                 SEARCH.REVIEW_MANAGER.logger.info(f"Retrieving year {year}")
                 query = params["scope"]["journal_abbreviated"] + "+" + str(year)
@@ -308,8 +317,10 @@ class BackwardSearchEndpoint:
     source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
 
-    def __init__(self):
+    def __init__(self, *, SETTINGS):
         from colrev_core.environment import GrobidService
+
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
         self.GROBID_SERVICE = GrobidService()
         self.GROBID_SERVICE.start()
@@ -399,7 +410,10 @@ class ColrevProjectSearchEndpoint:
     source_identifier = "project"
     mode = "individual"
 
-    def run_search(self, *, SEARCH, params: dict, feed_file: Path) -> None:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.review_manager import ReviewManager
         from colrev_core.load import Loader
         from tqdm import tqdm
@@ -488,7 +502,10 @@ class IndexSearchEndpoint:
     source_identifier = "index"
     mode = "individual"
 
-    def run_search(self, *, SEARCH, params: dict, feed_file: Path) -> None:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         assert "selection_clause" in params
 
         if not feed_file.is_file():
@@ -576,6 +593,9 @@ class PDFSearchEndpoint:
 
     source_identifier = "{{file}}"
     mode = "all"
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from collections import Counter

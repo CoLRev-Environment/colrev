@@ -11,6 +11,7 @@ import git
 import requests
 import zope.interface
 from alphabet_detector import AlphabetDetector
+from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from opensearchpy import NotFoundError
 from thefuzz import fuzz
@@ -19,6 +20,7 @@ from colrev_core.built_in.database_connectors import CrossrefConnector
 from colrev_core.built_in.database_connectors import DBLPConnector
 from colrev_core.built_in.database_connectors import DOIConnector
 from colrev_core.environment import RecordNotInIndexException
+from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationEndpoint
 from colrev_core.record import PrepRecord
 from colrev_core.record import RecordState
@@ -29,6 +31,9 @@ class LoadFixesPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
@@ -79,6 +84,9 @@ class ExcludeNonLatinAlphabetsPrep:
     always_apply_changes = True
     alphabet_detector = AlphabetDetector()
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         def mostly_latin_alphabet(str_to_check) -> bool:
             assert len(str_to_check) != 0
@@ -108,7 +116,9 @@ class ExcludeLanguagesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self):
+    def __init__(self, *, SETTINGS):
+
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
@@ -184,6 +194,9 @@ class ExcludeCollectionsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
             RECORD.prescreen_exclude(reason="collection/proceedings")
@@ -195,6 +208,9 @@ class RemoveError500URLsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -233,6 +249,8 @@ class RemoveBrokenIDPrep:
     always_apply_changes = True
 
     # check_status: relies on crossref / openlibrary connectors!
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -260,6 +278,9 @@ class GlobalIDConsistencyPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -336,6 +357,9 @@ class CuratedPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         if RECORD.masterdata_is_curated():
             if RecordState.md_imported == RECORD.data["colrev_status"]:
@@ -349,6 +373,9 @@ class FormatPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         fields_to_process = [
@@ -468,6 +495,9 @@ class BibTexCrossrefResolutionPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         def read_next_record_str() -> typing.Iterator[str]:
             with open(
@@ -527,6 +557,9 @@ class SemanticScholarPrep:
         + "https://www.semanticscholar.org/faq#correct-error"
     )
     always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def retrieve_record_from_semantic_scholar(
         self, *, PREPARATION, url: str, RECORD_IN: PrepRecord
@@ -648,8 +681,6 @@ class SemanticScholarPrep:
             pass
         return RECORD
 
-        return RECORD
-
 
 @zope.interface.implementer(PreparationEndpoint)
 class DOIFromURLsPrep:
@@ -659,6 +690,9 @@ class DOIFromURLsPrep:
 
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         url = RECORD.data.get("url", RECORD.data.get("fulltext", "NA"))
@@ -723,6 +757,9 @@ class DOIMetadataPrep:
     )
     always_apply_changes = False
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         if "doi" not in RECORD.data:
             return RECORD
@@ -746,6 +783,9 @@ class CrossrefMetadataPrep:
     )
     always_apply_changes = False
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         CrossrefConnector.get_masterdata_from_crossref(
             PREPARATION=PREPARATION, RECORD=RECORD
@@ -761,6 +801,9 @@ class DBLPMetadataPrep:
         + " (see https://dblp.org/faq/How+can+I+correct+errors+in+dblp.html)"
     )
     always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         if "dblp_key" in RECORD.data:
@@ -825,6 +868,9 @@ class OpenLibraryMetadataPrep:
         + "metadata-corrections-updates-and-additions-in-metadata-manager/"
     )
     always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         def open_library_json_to_record(*, item: dict, url=str) -> PrepRecord:
@@ -952,6 +998,9 @@ class CrossrefYearVolIssPrep:
     )
     always_apply_changes = True
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         # The year depends on journal x volume x issue
         if (
@@ -1022,14 +1071,17 @@ class CrossrefYearVolIssPrep:
 @zope.interface.implementer(PreparationEndpoint)
 class LocalIndexPrep:
 
-    from colrev_core.environment import LocalIndex
-
     source_correction_hint = (
         "correct the metadata in the source "
         + "repository (as linked in the provenance field)"
     )
     always_apply_changes = True
-    LOCAL_INDEX = LocalIndex()
+
+    def __init__(self, *, SETTINGS):
+        from colrev_core.environment import LocalIndex
+
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.LOCAL_INDEX = LocalIndex()
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1062,9 +1114,10 @@ class LocalIndexPrep:
 
             default_source = "UNDETERMINED"
             if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
-                default_source = RETRIEVED_RECORD.data["colrev_masterdata_provenance"][
-                    "CURATED"
-                ]["source"]
+                if "CURATED" in RETRIEVED_RECORD.data["colrev_masterdata_provenance"]:
+                    default_source = RETRIEVED_RECORD.data[
+                        "colrev_masterdata_provenance"
+                    ]["CURATED"]["source"]
             RECORD.merge(
                 MERGING_RECORD=RETRIEVED_RECORD,
                 default_source=default_source,
@@ -1093,6 +1146,9 @@ class RemoveNicknamesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
         if "author" in RECORD.data:
             # Replace nicknames in parentheses
@@ -1107,6 +1163,9 @@ class FormatMinorPRep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
     HTML_CLEANER = re.compile("<.*?>")
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
         fields_to_process = [
@@ -1157,6 +1216,9 @@ class DropFieldsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def prepare(self, PREPARATION, RECORD):
 
         RECORD.drop_fields(PREPARATION)
@@ -1169,6 +1231,9 @@ class RemoveRedundantFieldPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1200,6 +1265,9 @@ class CorrectRecordTypePrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 
@@ -1272,6 +1340,9 @@ class UpdateMetadataStatusPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
 

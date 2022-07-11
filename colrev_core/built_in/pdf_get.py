@@ -5,14 +5,19 @@ from pathlib import Path
 
 import requests
 import zope.interface
+from dacite import from_dict
 from pdfminer.high_level import extract_text
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import PDFRetrievalEndpoint
 from colrev_core.record import RecordState
 
 
 @zope.interface.implementer(PDFRetrievalEndpoint)
 class UnpaywallEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def __unpaywall(
         self, *, REVIEW_MANAGER, doi: str, retry: int = 0, pdfonly: bool = True
     ) -> str:
@@ -103,6 +108,9 @@ class UnpaywallEndpoint:
 
 @zope.interface.implementer(PDFRetrievalEndpoint)
 class LocalIndexEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
@@ -125,6 +133,9 @@ class LocalIndexEndpoint:
 
 @zope.interface.implementer(PDFRetrievalEndpoint)
 class WebsiteScreenshotEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
         from colrev_core.environment import ScreenshotService
 

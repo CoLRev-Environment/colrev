@@ -193,15 +193,11 @@ class Preparation(Process):
         self.CPUS = self.CPUS * 1
 
         required_prep_scripts = [
-            s["endpoint"]
-            for r in REVIEW_MANAGER.settings.prep.prep_rounds
-            for s in r.scripts
+            s for r in REVIEW_MANAGER.settings.prep.prep_rounds for s in r.scripts
         ]
-        required_prep_scripts.append("update_metadata_status")
+        required_prep_scripts.append({"endpoint": "update_metadata_status"})
 
-        self.prep_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.prep_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=required_prep_scripts,
         )
@@ -253,6 +249,7 @@ class Preparation(Process):
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
+        from copy import deepcopy
 
         RECORD = item["record"]
 
@@ -268,26 +265,26 @@ class Preparation(Process):
         # UNPREPARED_RECORD will not change (for diffs)
         UNPREPARED_RECORD = RECORD.copy_prep_rec()
 
-        for prep_round_script in item["prep_round_scripts"]:
+        for prep_round_script in deepcopy(item["prep_round_scripts"]):
 
-            prep_script = self.prep_scripts[prep_round_script["endpoint"]]
+            PREP_SCRIPT = self.prep_scripts[prep_round_script["endpoint"]]
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
-                self.REVIEW_MANAGER.logger.info(f"{prep_script}(...) called")
+                self.REVIEW_MANAGER.logger.info(
+                    f"{PREP_SCRIPT.SETTINGS.name}(...) called"
+                )
 
             PRIOR = PREPARATION_RECORD.copy_prep_rec()
 
-            PREPARATION_RECORD = prep_script["endpoint"].prepare(
-                self, PREPARATION_RECORD
-            )
+            PREPARATION_RECORD = PREP_SCRIPT.prepare(self, PREPARATION_RECORD)
 
             self.__print_diffs_for_debug(
                 PRIOR=PRIOR,
                 PREPARATION_RECORD=PREPARATION_RECORD,
-                prep_script=prep_script,
+                prep_script=PREP_SCRIPT,
             )
 
-            if prep_script["endpoint"].always_apply_changes:
+            if PREP_SCRIPT.always_apply_changes:
                 RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
 
             if PREPARATION_RECORD.preparation_save_condition():

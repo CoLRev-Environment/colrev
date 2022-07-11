@@ -27,11 +27,9 @@ class Screen(Process):
 
         self.verbose = True
 
-        self.screen_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.screen_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s["endpoint"] for s in REVIEW_MANAGER.settings.screen.scripts],
+            scripts=REVIEW_MANAGER.settings.screen.scripts,
         )
 
     def include_all_in_screen(
@@ -273,14 +271,7 @@ class Screen(Process):
 
         for SCREEN_SCRIPT in self.REVIEW_MANAGER.settings.screen.scripts:
 
-            if SCREEN_SCRIPT["endpoint"] not in list(self.screen_scripts.keys()):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {SCREEN_SCRIPT}")
-                continue
-
-            endpoint = self.screen_scripts[SCREEN_SCRIPT["endpoint"]]
-
-            ENDPOINT = endpoint["endpoint"]
+            ENDPOINT = self.screen_scripts[SCREEN_SCRIPT["endpoint"]]
             records = ENDPOINT.run_screen(self, records, split)
 
         return

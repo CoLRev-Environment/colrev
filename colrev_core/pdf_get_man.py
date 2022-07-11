@@ -31,13 +31,10 @@ class PDFRetrievalMan(Process):
 
         self.verbose = True
         self.pdf_get_man_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[
-                s["endpoint"]
-                for s in REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts
-            ],
+            scripts=REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts,
         )
 
     def get_pdf_get_man(self, *, records: typing.Dict) -> list:
@@ -134,16 +131,8 @@ class PDFRetrievalMan(Process):
             PDF_GET_MAN_SCRIPT
         ) in self.REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts:
 
-            if PDF_GET_MAN_SCRIPT["endpoint"] not in list(
-                self.pdf_get_man_scripts.keys()
-            ):
-                if self.verbose:
-                    print(f"Error: endpoint not available: {PDF_GET_MAN_SCRIPT}")
-                continue
+            ENDPOINT = self.pdf_get_man_scripts[PDF_GET_MAN_SCRIPT["endpoint"]]
 
-            endpoint = self.pdf_get_man_scripts[PDF_GET_MAN_SCRIPT["endpoint"]]
-
-            ENDPOINT = endpoint["endpoint"]
             records = ENDPOINT.get_man_pdf(self, records)
 
         return

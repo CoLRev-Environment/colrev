@@ -35,16 +35,14 @@ class SearchSources:
 
     def __init__(self, *, REVIEW_MANAGER):
         required_search_scripts = [
-            r["endpoint"]
+            {"endpoint": r}
             for s in REVIEW_MANAGER.settings.sources
             for r in s.source_prep_scripts
-        ] + list(self.built_in_scripts.keys())
+        ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
 
         self.type = ProcessType.check
 
-        self.search_source_scripts: dict[
-            str, dict[str, typing.Any]
-        ] = AdapterManager.load_scripts(
+        self.search_source_scripts: dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 
@@ -61,17 +59,19 @@ class SearchSources:
         results_list = []
 
         for source_name, endpoint in self.search_source_scripts.items():
-            res = endpoint["endpoint"].heuristic(filepath, data)
+            res = endpoint.heuristic(filepath, data)
             if res["confidence"] > 0:
                 # TODO : also return the conversion_script
                 res["source_name"] = source_name
                 res["source_prep_scripts"] = (
-                    [source_name] if callable(endpoint["endpoint"].prepare) else []
+                    [source_name] if callable(endpoint.prepare) else []
                 )
                 if "conversion_script" not in res:
                     res["conversion_script"] = Loader.get_conversion_script(
                         filepath=filepath
                     )
+                if "search_script" not in res:
+                    res["search_script"] = {}
 
                 results_list.append(res)
 

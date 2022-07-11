@@ -4,7 +4,9 @@ from pathlib import Path
 
 import pandas as pd
 import zope.interface
+from dacite import from_dict
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import PrescreenEndpoint
 from colrev_core.record import Record
 from colrev_core.record import RecordState
@@ -15,6 +17,9 @@ from colrev_core.review_manager import MissingDependencyError
 class ScopePrescreenEndpoint:
 
     # TODO : move the scope settings to the parameters of this endpoint
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         from colrev_core.settings import (
@@ -146,6 +151,9 @@ class ScopePrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         from colrev.cli import prescreen_cli
 
@@ -159,7 +167,8 @@ class ASReviewPrescreenEndpoint:
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
 
-    def __init__(self) -> None:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
         try:
             import asreview  # noqa: F401
@@ -357,6 +366,9 @@ class ASReviewPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         # TODO : conditions as a settings/parameter
         saved_args = locals()
@@ -384,6 +396,9 @@ class ConditionalPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
     def export_table(
         self, PRESCREEN, records, split, export_table_format="csv"
     ) -> None:

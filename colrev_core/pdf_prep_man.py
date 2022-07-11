@@ -34,13 +34,10 @@ class PDFPrepMan(Process):
 
         self.verbose = True
         self.pdf_prep_man_scripts: typing.Dict[
-            str, typing.Dict[str, typing.Any]
+            str, typing.Any
         ] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[
-                s["endpoint"]
-                for s in REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts
-            ],
+            scripts=REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts,
         )
 
     def get_data(self) -> dict:
