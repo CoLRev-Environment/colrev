@@ -25,12 +25,16 @@ colrev\_core.exceptions
       BibFileFormatError
       CitationKeyPropagationError
       CleanRepoRequiredError
+      ConsistencyError
       CuratedOutletNotUnique
       DedupeError
+      DirtyRepoAfterProcessingError
       DuplicatesError
       FieldError
+      GitConflictError
       ImportException
       InvalidQueryException
+      MissingDependencyError
       NoPaperEndpointRegistered
       NoRecordsError
       NoSearchFeedRegistered
@@ -42,10 +46,13 @@ colrev\_core.exceptions
       RecordFormatError
       RecordNotInIndexException
       RecordNotInRepoException
+      RepoSetupError
       ReviewManagerNotNofiedError
       SearchDetailsError
+      SearchDetailsMissingError
       ServiceNotAvailableException
       SettingsError
+      SoftwareUpgradeError
       StatusFieldValueError
       StatusTransitionError
       TEI_Exception

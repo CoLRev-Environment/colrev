@@ -1,4 +1,4 @@
-colrev\_core.review\_manager.GitConflictError
+﻿colrev\_core.review\_manager.GitConflictError
 =============================================
 
 .. currentmodule:: colrev_core.review_manager

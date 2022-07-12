@@ -21,20 +21,3 @@ colrev\_core.review\_manager
       :nosignatures:
 
       ReviewManager
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      ConsistencyError
-      DirtyRepoAfterProcessingError
-      GitConflictError
-      MissingDependencyError
-      RepoSetupError
-      SearchDetailsMissingError
-      SoftwareUpgradeError

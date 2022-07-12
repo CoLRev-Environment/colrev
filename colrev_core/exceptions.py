@@ -201,3 +201,51 @@ class NotEnoughDataToIdentifyException(Exception):
     def __init__(self, msg: str = None):
         self.message = msg
         super().__init__(self.message)
+
+
+class MissingDependencyError(Exception):
+    def __init__(self, dep):
+        self.message = f"{dep}"
+        super().__init__(self.message)
+
+
+class SoftwareUpgradeError(Exception):
+    def __init__(self, old, new):
+        self.message = (
+            f"Detected upgrade from {old} to {new}. To upgrade use\n     "
+            "colrev config --upgrade"
+        )
+        super().__init__(self.message)
+
+
+class GitConflictError(Exception):
+    def __init__(self, path):
+        self.message = f"please resolve git conflict in {path}"
+        super().__init__(self.message)
+
+
+class DirtyRepoAfterProcessingError(Exception):
+    pass
+
+
+class ConsistencyError(Exception):
+    pass
+
+
+class RepoSetupError(Exception):
+    def __init__(self, msg):
+        self.message = f" {msg}"
+        super().__init__(self.message)
+
+
+class SearchDetailsMissingError(Exception):
+    def __init__(
+        self,
+        search_results_path,
+    ):
+        self.message = (
+            "Search results path "
+            + f"({search_results_path.name}) "
+            + "is not in sources.yaml"
+        )
+        super().__init__(self.message)
