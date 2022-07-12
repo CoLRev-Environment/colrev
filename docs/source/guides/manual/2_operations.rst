@@ -476,7 +476,3 @@ Paper
 	colrev paper [options]
 
 Links and references for standalone literature reviews will be made available here (TODO).
-
-**References**
-
-.. [WagnerEtAl2020] Wagner, G. and Empl, P. and Schryen, G. (2020). Designing a novel strategy for exploring literature corpora. *Proceedings of the European Conference on Information Sytems*.

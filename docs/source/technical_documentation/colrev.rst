@@ -198,6 +198,7 @@ Versioning and collaboration principles
 
 .. - CoLRev builds on git as the most capable collaborative versioning system currently available.
 .. - Git was originally developed as a distributed versioning system for (software) source code. The collaborative development of software code (semi-structured data) resembles scientific research processes (especially when analyses are implemented in Python or R scripts) and git has been an integral part of the reproducible research movement. A particular strength of git is its capability to merge different versions of a repository.
+
 - One benefit of building on git is that CoLRev has the full flexibility of `distributed workflow setups <TODO:ADD_LINK>`_ built in.
 - Git is used most effectively for line-based versioning of text-files. Visualizing changes is more demanding for structured data (csv) and impossible for binaries (e.g., Word documents).
 - A missing element in git-based literature reviews is a "workflow engine" that operates a shared model of the review steps and thereby enables collaboration.
@@ -370,8 +371,7 @@ colrev_id:
 - Advantage of full/long colrev_ids: manual interpretation/comparison and similarity-measures are meaningful (in retrieval)
 - should always be based on full records in the repository (enables updating of colrev_id fields/schemes)
 - should be combined in the indexing process
- - exact, ID/container-based identification should be used within a repo (not between repos)
-
+- exact, ID/container-based identification should be used within a repo (not between repos)
 
 .. _algorithms:
 
