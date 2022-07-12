@@ -12,6 +12,8 @@ import pandas as pd
 from nameparser import HumanName
 from thefuzz import fuzz
 
+from colrev_core.exceptions import NotEnoughDataToIdentifyException
+
 
 class Record:
 
@@ -2047,12 +2049,6 @@ class RecordState(Enum):
 
     def __str__(self):
         return f"{self.name}"
-
-
-class NotEnoughDataToIdentifyException(Exception):
-    def __init__(self, msg: str = None):
-        self.message = msg
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

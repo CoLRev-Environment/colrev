@@ -21,14 +21,3 @@ colrev\_core.prep
       :nosignatures:
 
       Preparation
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      ServiceNotAvailableException

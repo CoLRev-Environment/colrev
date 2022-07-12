@@ -23,6 +23,10 @@ from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 from tqdm import tqdm
 
+from colrev_core.exceptions import CuratedOutletNotUnique
+from colrev_core.exceptions import RecordNotInIndexException
+from colrev_core.exceptions import TEI_Exception
+from colrev_core.exceptions import TEI_TimeoutException
 from colrev_core.process import CheckProcess
 from colrev_core.record import NotEnoughDataToIdentifyException
 from colrev_core.record import Record
@@ -2463,29 +2467,6 @@ class TEIParser:
             tree.write(str(self.tei_path), pretty_print=True, encoding="utf-8")
 
         return self.root
-
-
-class TEI_TimeoutException(Exception):
-    pass
-
-
-class TEI_Exception(Exception):
-    pass
-
-
-class RecordNotInIndexException(Exception):
-    def __init__(self, id: str = None):
-        if id is not None:
-            self.message = f"Record not in index ({id})"
-        else:
-            self.message = "Record not in index"
-        super().__init__(self.message)
-
-
-class CuratedOutletNotUnique(Exception):
-    def __init__(self, msg: str = None):
-        self.message = msg
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

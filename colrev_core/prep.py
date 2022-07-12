@@ -763,11 +763,5 @@ class Preparation(Process):
         return
 
 
-class ServiceNotAvailableException(Exception):
-    def __init__(self, msg: str):
-        self.message = msg
-        super().__init__(f"Service not available: {self.message}")
-
-
 if __name__ == "__main__":
     pass

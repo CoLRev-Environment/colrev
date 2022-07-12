@@ -1,4 +1,4 @@
-colrev\_core.search.InvalidQueryException
+﻿colrev\_core.search.InvalidQueryException
 =========================================
 
 .. currentmodule:: colrev_core.search

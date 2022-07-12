@@ -1,4 +1,4 @@
-colrev\_core.review\_dataset.ReviewManagerNotNofiedError
+﻿colrev\_core.review\_dataset.ReviewManagerNotNofiedError
 ========================================================
 
 .. currentmodule:: colrev_core.review_dataset

@@ -1,4 +1,4 @@
-colrev\_core.record.NotEnoughDataToIdentifyException
+﻿colrev\_core.record.NotEnoughDataToIdentifyException
 ====================================================
 
 .. currentmodule:: colrev_core.record

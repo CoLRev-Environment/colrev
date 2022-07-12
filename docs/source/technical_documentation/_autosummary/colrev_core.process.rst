@@ -26,18 +26,3 @@ colrev\_core.process
       Process
       ProcessModel
       ProcessType
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      CleanRepoRequiredError
-      NoRecordsError
-      ProcessOrderViolation
-      SettingsError
-      UnstagedGitChangesError

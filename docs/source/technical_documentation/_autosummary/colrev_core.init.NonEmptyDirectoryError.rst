@@ -1,4 +1,4 @@
-colrev\_core.init.NonEmptyDirectoryError
+﻿colrev\_core.init.NonEmptyDirectoryError
 ========================================
 
 .. currentmodule:: colrev_core.init

@@ -1,4 +1,4 @@
-colrev\_core.paper.NoPaperEndpointRegistered
+﻿colrev\_core.paper.NoPaperEndpointRegistered
 ============================================
 
 .. currentmodule:: colrev_core.paper

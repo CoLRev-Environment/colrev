@@ -1,4 +1,4 @@
-colrev\_core.process.ProcessOrderViolation
+﻿colrev\_core.process.ProcessOrderViolation
 ==========================================
 
 .. currentmodule:: colrev_core.process

@@ -1,4 +1,4 @@
-colrev\_core.review\_dataset.DuplicatesError
+﻿colrev\_core.review\_dataset.DuplicatesError
 ============================================
 
 .. currentmodule:: colrev_core.review_dataset

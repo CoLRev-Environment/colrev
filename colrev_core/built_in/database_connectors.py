@@ -22,7 +22,7 @@ from colrev_core.record import RecordState
 class OpenLibraryConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.prep import ServiceNotAvailableException
+        from colrev_core.exceptions import ServiceNotAvailableException
 
         test_rec = {
             "ENTRYTYPE": "book",
@@ -283,7 +283,7 @@ class DOIConnector:
 class CrossrefConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.prep import ServiceNotAvailableException
+        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {
@@ -663,7 +663,7 @@ class CrossrefConnector:
 class DBLPConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.prep import ServiceNotAvailableException
+        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {

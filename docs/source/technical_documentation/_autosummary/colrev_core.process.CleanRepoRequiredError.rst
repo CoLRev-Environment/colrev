@@ -1,4 +1,4 @@
-colrev\_core.process.CleanRepoRequiredError
+﻿colrev\_core.process.CleanRepoRequiredError
 ===========================================
 
 .. currentmodule:: colrev_core.process

@@ -21,15 +21,3 @@ colrev\_core.load
       :nosignatures:
 
       Loader
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      BibFileFormatError
-      UnsupportedImportFormatError

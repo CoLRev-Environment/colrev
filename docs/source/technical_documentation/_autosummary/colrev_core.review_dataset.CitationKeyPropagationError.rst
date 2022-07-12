@@ -1,4 +1,4 @@
-colrev\_core.review\_dataset.CitationKeyPropagationError
+﻿colrev\_core.review\_dataset.CitationKeyPropagationError
 ========================================================
 
 .. currentmodule:: colrev_core.review_dataset

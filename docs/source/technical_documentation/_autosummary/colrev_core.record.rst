@@ -25,14 +25,3 @@ colrev\_core.record
       Record
       RecordState
       ScreenRecord
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      NotEnoughDataToIdentifyException

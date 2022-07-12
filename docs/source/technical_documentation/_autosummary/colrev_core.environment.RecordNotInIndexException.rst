@@ -1,4 +1,4 @@
-colrev\_core.environment.RecordNotInIndexException
+﻿colrev\_core.environment.RecordNotInIndexException
 ==================================================
 
 .. currentmodule:: colrev_core.environment

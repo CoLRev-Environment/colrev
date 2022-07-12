@@ -21,15 +21,3 @@ colrev\_core.search
       :nosignatures:
 
       Search
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      InvalidQueryException
-      NoSearchFeedRegistered

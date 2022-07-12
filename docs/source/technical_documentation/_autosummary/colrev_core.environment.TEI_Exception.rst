@@ -1,4 +1,4 @@
-colrev\_core.environment.TEI\_Exception
+﻿colrev\_core.environment.TEI\_Exception
 =======================================
 
 .. currentmodule:: colrev_core.environment

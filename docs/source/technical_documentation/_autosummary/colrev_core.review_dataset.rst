@@ -21,24 +21,3 @@ colrev\_core.review\_dataset
       :nosignatures:
 
       ReviewDataset
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      CitationKeyPropagationError
-      DuplicatesError
-      FieldError
-      OriginError
-      PropagatedIDChange
-      RecordFormatError
-      RecordNotInRepoException
-      ReviewManagerNotNofiedError
-      SearchDetailsError
-      StatusFieldValueError
-      StatusTransitionError

@@ -1,4 +1,4 @@
-colrev\_core.process.NoRecordsError
+﻿colrev\_core.process.NoRecordsError
 ===================================
 
 .. currentmodule:: colrev_core.process

@@ -9,6 +9,10 @@ import git
 import zope.interface
 from transitions import Machine
 
+from colrev_core.exceptions import CleanRepoRequiredError
+from colrev_core.exceptions import NoRecordsError
+from colrev_core.exceptions import ProcessOrderViolation
+from colrev_core.exceptions import UnstagedGitChangesError
 from colrev_core.record import RecordState
 
 
@@ -524,47 +528,9 @@ class DataEndpoint(zope.interface.Interface):
         pass
 
 
-class NoRecordsError(Exception):
-    def __init__(self):
-        self.message = "no records imported yet"
-        super().__init__(self.message)
-
-
-class UnstagedGitChangesError(Exception):
-    def __init__(self, changedFiles):
-        self.message = (
-            f"changes not yet staged: {changedFiles} (use git add . or stash)"
-        )
-        super().__init__(self.message)
-
-
-class CleanRepoRequiredError(Exception):
-    def __init__(self, changedFiles, ignore_pattern):
-        self.message = (
-            "clean repository required (use git commit, discard or stash "
-            + f"{changedFiles}; ignore_pattern={ignore_pattern})."
-        )
-        super().__init__(self.message)
-
-
-class ProcessOrderViolation(Exception):
-    def __init__(self, process, required_state: str, violating_records: list):
-        self.message = (
-            f" {process.type.name}() requires all records to have at least "
-            + f"'{required_state}', but there are records with {violating_records}."
-        )
-        super().__init__(self.message)
-
-
 @dataclass
 class DefaultSettings:
     name: str
-
-
-class SettingsError(Exception):
-    def __init__(self, message):
-        self.message = message
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

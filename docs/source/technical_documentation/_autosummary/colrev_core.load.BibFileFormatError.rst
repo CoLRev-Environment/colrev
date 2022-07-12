@@ -1,4 +1,4 @@
-colrev\_core.load.BibFileFormatError
+﻿colrev\_core.load.BibFileFormatError
 ====================================
 
 .. currentmodule:: colrev_core.load

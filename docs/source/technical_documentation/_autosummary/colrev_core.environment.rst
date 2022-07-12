@@ -28,17 +28,3 @@ colrev\_core.environment
       ScreenshotService
       TEIParser
       ZoteroTranslationService
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      CuratedOutletNotUnique
-      RecordNotInIndexException
-      TEI_Exception
-      TEI_TimeoutException

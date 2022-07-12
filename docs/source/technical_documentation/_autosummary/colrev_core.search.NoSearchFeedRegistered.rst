@@ -1,4 +1,4 @@
-colrev\_core.search.NoSearchFeedRegistered
+﻿colrev\_core.search.NoSearchFeedRegistered
 ==========================================
 
 .. currentmodule:: colrev_core.search

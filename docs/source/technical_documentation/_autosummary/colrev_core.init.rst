@@ -21,14 +21,3 @@ colrev\_core.init
       :nosignatures:
 
       Initializer
-
-
-
-
-
-   .. rubric:: Exceptions
-
-   .. autosummary::
-      :toctree:
-
-      NonEmptyDirectoryError

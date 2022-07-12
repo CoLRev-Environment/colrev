@@ -1,4 +1,4 @@
-colrev\_core.environment.TEI\_TimeoutException
+﻿colrev\_core.environment.TEI\_TimeoutException
 ==============================================
 
 .. currentmodule:: colrev_core.environment

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import git
 
+from colrev_core.exceptions import NonEmptyDirectoryError
 from colrev_core.settings import ReviewType
 
 
@@ -380,12 +381,6 @@ class Initializer:
 
         os.chdir(curdir)
         return
-
-
-class NonEmptyDirectoryError(Exception):
-    def __init__(self):
-        self.message = "please change to an empty directory to initialize a project"
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

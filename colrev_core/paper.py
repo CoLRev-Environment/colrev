@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 from pathlib import Path
 
+from colrev_core.exceptions import NoPaperEndpointRegistered
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -67,14 +68,6 @@ class Paper(Process):
             pass
 
         return
-
-
-class NoPaperEndpointRegistered(Exception):
-    """No paper endpoint registered in settings.json"""
-
-    def __init__(self):
-        self.message = "No paper endpoint registered in settings.json"
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

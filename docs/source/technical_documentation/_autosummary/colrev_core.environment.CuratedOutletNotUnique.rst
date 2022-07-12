@@ -1,4 +1,4 @@
-colrev\_core.environment.CuratedOutletNotUnique
+﻿colrev\_core.environment.CuratedOutletNotUnique
 ===============================================
 
 .. currentmodule:: colrev_core.environment

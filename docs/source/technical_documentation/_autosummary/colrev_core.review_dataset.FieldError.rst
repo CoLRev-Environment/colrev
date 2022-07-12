@@ -1,4 +1,4 @@
-colrev\_core.review\_dataset.FieldError
+﻿colrev\_core.review\_dataset.FieldError
 =======================================
 
 .. currentmodule:: colrev_core.review_dataset

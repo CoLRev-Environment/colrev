@@ -12,6 +12,16 @@ from pathlib import Path
 import git
 import pandas as pd
 
+from colrev_core.exceptions import CitationKeyPropagationError
+from colrev_core.exceptions import DuplicatesError
+from colrev_core.exceptions import FieldError
+from colrev_core.exceptions import OriginError
+from colrev_core.exceptions import PropagatedIDChange
+from colrev_core.exceptions import RecordNotInRepoException
+from colrev_core.exceptions import ReviewManagerNotNofiedError
+from colrev_core.exceptions import SearchDetailsError
+from colrev_core.exceptions import StatusFieldValueError
+from colrev_core.exceptions import StatusTransitionError
 from colrev_core.record import RecordState
 
 
@@ -1956,79 +1966,6 @@ class ReviewDataset:
             o = self.__git_repo.remotes.origin
             o.pull()
         return
-
-
-class SearchDetailsError(Exception):
-    def __init__(
-        self,
-        msg,
-    ):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class StatusTransitionError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class StatusFieldValueError(Exception):
-    def __init__(self, record: str, status_type: str, status_value: str):
-        self.message = f"{status_type} set to '{status_value}' in {record}."
-        super().__init__(self.message)
-
-
-class RecordFormatError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class CitationKeyPropagationError(Exception):
-    pass
-
-
-class DuplicatesError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class OriginError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class FieldError(Exception):
-    def __init__(self, msg):
-        self.message = f" {msg}"
-        super().__init__(self.message)
-
-
-class PropagatedIDChange(Exception):
-    def __init__(self, notifications):
-        self.message = "\n    ".join(notifications)
-        super().__init__(self.message)
-
-
-class ReviewManagerNotNofiedError(Exception):
-    def __init__(self):
-        self.message = (
-            "create a process and inform the review manager in advance"
-            + " to avoid conflicts."
-        )
-        super().__init__(self.message)
-
-
-class RecordNotInRepoException(Exception):
-    def __init__(self, id: str = None):
-        if id is not None:
-            self.message = f"Record not in index ({id})"
-        else:
-            self.message = "Record not in index"
-        super().__init__(self.message)
 
 
 if __name__ == "__main__":

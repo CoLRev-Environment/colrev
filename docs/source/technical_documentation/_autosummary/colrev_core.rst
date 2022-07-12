@@ -34,6 +34,7 @@
    colrev_core.dedupe
    colrev_core.distribute
    colrev_core.environment
+   colrev_core.exceptions
    colrev_core.init
    colrev_core.load
    colrev_core.paper

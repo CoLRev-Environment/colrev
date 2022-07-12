@@ -1,4 +1,4 @@
-colrev\_core.process.UnstagedGitChangesError
+﻿colrev\_core.process.UnstagedGitChangesError
 ============================================
 
 .. currentmodule:: colrev_core.process

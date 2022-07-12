@@ -6,6 +6,8 @@ import typing
 from pathlib import Path
 
 from colrev_core.environment import AdapterManager
+from colrev_core.exceptions import BibFileFormatError
+from colrev_core.exceptions import ImportException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
@@ -112,12 +114,12 @@ class Loader(Process):
 
     def check_bib_file(self, SOURCE, record_dict) -> None:
         if not any("author" in r for ID, r in record_dict.items()):
-            raise self.ImportException(
+            raise ImportException(
                 f"Import failed (no record with author field): {SOURCE.filename.name}"
             )
 
         if not any("title" in r for ID, r in record_dict.items()):
-            raise self.ImportException(
+            raise ImportException(
                 f"Import failed (no record with title field): {SOURCE.filename.name}"
             )
 
@@ -559,28 +561,6 @@ class Loader(Process):
                 msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
             )
         return
-
-    class ImportException(Exception):
-        def __init__(self, message):
-            super().__init__(message)
-
-
-class UnsupportedImportFormatError(Exception):
-    def __init__(
-        self,
-        import_path,
-    ):
-        self.import_path = import_path
-        self.message = (
-            "Format of search result file not (yet) supported "
-            + f"({self.import_path.name}) "
-        )
-        super().__init__(self.message)
-
-
-class BibFileFormatError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
 
 
 if __name__ == "__main__":

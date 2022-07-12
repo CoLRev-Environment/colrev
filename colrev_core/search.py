@@ -4,6 +4,8 @@ import typing
 from pathlib import Path
 
 from colrev_core.environment import AdapterManager
+from colrev_core.exceptions import InvalidQueryException
+from colrev_core.exceptions import NoSearchFeedRegistered
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -442,19 +444,6 @@ class Search(Process):
         options = ", ".join(list(self.search_scripts.keys()))
         print(f"- endpoints: {options}")
         return
-
-
-class InvalidQueryException(Exception):
-    def __init__(self, msg: str):
-        self.message = msg
-        super().__init__(self.message)
-
-
-class NoSearchFeedRegistered(Exception):
-    """No search feed endpoints registered in settings.json"""
-
-    def __init__(self):
-        super().__init__("No search feed endpoints registered in settings.json")
 
 
 if __name__ == "__main__":
