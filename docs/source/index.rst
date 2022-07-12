@@ -27,9 +27,10 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 .. code-block::
 
    # Install
-   git clone https://github.com/geritwagner/colrev_core && cd colrev_core && pip install .
+   git clone https://github.com/geritwagner/colrev_core && cd colrev_core && pip install . && cd ..
+   git clone https://github.com/geritwagner/colrev && cd colrev && pip install .
    # or
-   pip install colrev
+   pip install colrev_core colrev
 
    # ... and start with the main command
    colrev status
