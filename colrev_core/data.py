@@ -51,7 +51,7 @@ class Data(Process):
 
         self.data_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.data.data_format,
+            scripts=REVIEW_MANAGER.settings.data.scripts,
         )
 
     @classmethod
@@ -301,7 +301,7 @@ class Data(Process):
 
     def add_data_endpoint(self, data_endpoint) -> None:
 
-        self.REVIEW_MANAGER.settings.data.data_format.append(data_endpoint)
+        self.REVIEW_MANAGER.settings.data.scripts.append(data_endpoint)
         self.REVIEW_MANAGER.save_settings()
 
         return
@@ -318,7 +318,7 @@ class Data(Process):
 
         NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
 
-        self.REVIEW_MANAGER.settings.data.data_format.append(NEW_DATA_ENDPOINT)
+        self.REVIEW_MANAGER.settings.data.scripts.append(NEW_DATA_ENDPOINT)
         self.REVIEW_MANAGER.save_settings()
 
         return
@@ -333,9 +333,7 @@ class Data(Process):
 
         saved_args = locals()
 
-        no_endpoints_registered = 0 == len(
-            self.REVIEW_MANAGER.settings.data.data_format
-        )
+        no_endpoints_registered = 0 == len(self.REVIEW_MANAGER.settings.data.scripts)
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         if 0 == len(records):
@@ -371,7 +369,7 @@ class Data(Process):
             # Some endpoints may always set synthesized
             default_row = {
                 df["endpoint"]: False
-                for df in self.REVIEW_MANAGER.settings.data.data_format
+                for df in self.REVIEW_MANAGER.settings.data.scripts
             }
             synthesized_record_status_matrix = {
                 ID: default_row.copy() for ID in included
@@ -384,21 +382,21 @@ class Data(Process):
             # not the review_manager? (but: the other scripts/checks may rely
             # on the review_manager/path variables....)
 
-            for DATA_FORMAT in self.REVIEW_MANAGER.settings.data.data_format:
+            for DATA_SCRIPT in self.REVIEW_MANAGER.settings.data.scripts:
 
-                ENDPOINT = self.data_scripts[DATA_FORMAT["endpoint"]]
+                ENDPOINT = self.data_scripts[DATA_SCRIPT["endpoint"]]
 
                 ENDPOINT.update_data(self, records, synthesized_record_status_matrix)
                 ENDPOINT.update_record_status_matrix(
                     self,
                     synthesized_record_status_matrix,
-                    DATA_FORMAT["endpoint"],
+                    DATA_SCRIPT["endpoint"],
                 )
 
                 if self.verbose:
                     print(f"updated {ENDPOINT.SETTINGS.name}")
 
-                # if "TEI" == DATA_FORMAT.endpoint:
+                # if "TEI" == DATA_SCRIPT.endpoint:
                 #     records = self.update_tei(records, included)
                 #     self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
                 #     self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

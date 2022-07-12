@@ -17,9 +17,9 @@ class Paper(Process):
         from colrev_core.environment import EnvironmentManager
 
         paper_endpoint_settings_l = [
-            e
-            for e in self.REVIEW_MANAGER.settings.data.data_format
-            if "MANUSCRIPT" == e.endpoint
+            s
+            for s in self.REVIEW_MANAGER.settings.data.scripts
+            if "MANUSCRIPT" == s["endpoint"]
         ]
 
         if len(paper_endpoint_settings_l) != 1:

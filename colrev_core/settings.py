@@ -308,10 +308,10 @@ class ScreenConfiguration:
 
 @dataclass
 class DataConfiguration:
-    data_format: list
+    scripts: list
 
     def __str__(self):
-        return " - " + "\n- ".join([s["endpoint"] for s in self.data_format])
+        return " - " + "\n- ".join([s["endpoint"] for s in self.scripts])
 
 
 @dataclass

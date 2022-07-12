@@ -25,4 +25,4 @@ colrev\_core.settings.DataConfiguration
 
    .. autosummary::
 
-      ~DataConfiguration.data_format
+      ~DataConfiguration.scripts

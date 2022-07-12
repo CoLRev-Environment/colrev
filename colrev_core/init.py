@@ -113,7 +113,7 @@ class Initializer:
         # instead of creating a new settings.json
 
         if self.review_type not in ["curated_masterdata"]:
-            settings["data"]["data_format"] = [
+            settings["data"]["scripts"] = [
                 {
                     "endpoint": "MANUSCRIPT",
                     "paper_endpoint_version": "1.0",
@@ -129,17 +129,17 @@ class Initializer:
             pass
 
         elif "descriptive_review" == self.review_type:
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
             )
 
         elif "scoping_review" == self.review_type:
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
             )
 
         elif "critical_review" == self.review_type:
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
             )
 
@@ -150,26 +150,26 @@ class Initializer:
             pass
 
         elif "qualitative_systematic_review" == self.review_type:
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {
                     "endpoint": "STRUCTURED",
                     "structured_data_endpoint_version": "1.0",
                     "fields": [],
                 }
             )
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {"endpoint": "PrismaDiagram", "prisma_data_endpoint_version": "1.0"}
             )
 
         elif "meta_analysis" == self.review_type:
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {
                     "endpoint": "STRUCTURED",
                     "structured_data_endpoint_version": "1.0",
                     "fields": [],
                 }
             )
-            settings["data"]["data_format"].append(
+            settings["data"]["scripts"].append(
                 {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
             )
 

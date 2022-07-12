@@ -705,6 +705,11 @@ class ReviewManager:
                 {"endpoint": "colrev_cli_pdf_prep_man"}
             ]
 
+            if "data_format" in settings["data"]:
+                data_scripts = settings["data"]["data_format"]
+                del settings["data"]["data_format"]
+                settings["data"]["scripts"] = data_scripts
+
             with open("settings.json", "w") as outfile:
                 json.dump(settings, outfile, indent=4)
 

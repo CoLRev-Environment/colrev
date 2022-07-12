@@ -646,7 +646,9 @@ class Status(Process):
                 }
                 review_instructions.append(instruction)
 
-        if "MANUSCRIPT" in self.REVIEW_MANAGER.settings.data.data_format:
+        if "MANUSCRIPT" in [
+            s["endpoint"] for s in self.REVIEW_MANAGER.settings.data.scripts
+        ]:
             instruction = {
                 "msg": "Build the paper",
                 "cmd": "colrev paper",
