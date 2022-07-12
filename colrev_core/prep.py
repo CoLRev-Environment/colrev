@@ -236,12 +236,12 @@ class Preparation(Process):
                 )
                 self.REVIEW_MANAGER.logger.info(
                     "To correct potential errors at source,"
-                    f" {prep_script['endpoint'].source_correction_hint}"
+                    f" {prep_script.source_correction_hint}"
                 )
                 input("Press Enter to continue")
                 print("\n")
         else:
-            self.REVIEW_MANAGER.logger.debug(f"{prep_script} changed: -")
+            self.REVIEW_MANAGER.logger.debug(f"{prep_script.prepare} changed: -")
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 print("\n")
                 time.sleep(0.3)

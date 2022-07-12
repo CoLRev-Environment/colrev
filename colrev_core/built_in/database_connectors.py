@@ -294,6 +294,7 @@ class CrossrefConnector:
                 "Validation of a new Typology in the IS Field",
                 "ID": "SchryenEtAl2021",
                 "journal": "Communications of the Association for Information Systems",
+                "ENTRYTYPE": "article",
             }
             RETURNED_REC = cls.crossref_query(
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
@@ -471,7 +472,6 @@ class CrossrefConnector:
             session = requests_cache.CachedSession(
                 str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
             )
-
         RECORD = PrepRecord(data=deepcopy(RECORD_INPUT.get_data()))
 
         if not jour_vol_iss_list:
@@ -558,6 +558,8 @@ class CrossrefConnector:
                 RETRIEVED_RECORD.add_provenance_all(
                     source=f'https://api.crossref.org/works/{retrieved_record["doi"]}'
                 )
+
+                RECORD.set_masterdata_complete()
 
                 if jour_vol_iss_list:
                     record_list.append(RETRIEVED_RECORD)

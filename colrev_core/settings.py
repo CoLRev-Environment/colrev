@@ -38,8 +38,8 @@ class ReviewType(Enum):
 
 @dataclass
 class ProjectConfiguration:
-    id_pattern: IDPpattern
     review_type: ReviewType
+    id_pattern: IDPpattern
     share_stat_req: str
     delay_automated_processing: bool
     curation_url: typing.Optional[str]
@@ -167,9 +167,7 @@ class DedupeConfiguration:
 
     def __str__(self):
         return (
-            f" - merge_threshold: {self.merge_threshold}\n"
-            + f" - partition_threshold: {self.partition_threshold}\n"
-            + f" - same_source_merges: {self.same_source_merges}"
+            f" - same_source_merges: {self.same_source_merges}\n"
             + " - "
             + ",".join([s["endpoint"] for s in self.scripts])
         )

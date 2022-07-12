@@ -36,11 +36,11 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_container_title
       ~ScreenRecord.get_data
       ~ScreenRecord.get_diff
+      ~ScreenRecord.get_field_provenance
       ~ScreenRecord.get_incomplete_fields
       ~ScreenRecord.get_inconsistencies
       ~ScreenRecord.get_origins
       ~ScreenRecord.get_pages_in_pdf
-      ~ScreenRecord.get_provenance_field_source
       ~ScreenRecord.get_quality_defects
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity

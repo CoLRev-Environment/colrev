@@ -43,11 +43,11 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_container_title
       ~PrepRecord.get_data
       ~PrepRecord.get_diff
+      ~PrepRecord.get_field_provenance
       ~PrepRecord.get_incomplete_fields
       ~PrepRecord.get_inconsistencies
       ~PrepRecord.get_origins
       ~PrepRecord.get_pages_in_pdf
-      ~PrepRecord.get_provenance_field_source
       ~PrepRecord.get_quality_defects
       ~PrepRecord.get_record_similarity
       ~PrepRecord.get_retrieval_similarity

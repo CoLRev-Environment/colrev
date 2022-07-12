@@ -36,11 +36,11 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_container_title
       ~PrescreenRecord.get_data
       ~PrescreenRecord.get_diff
+      ~PrescreenRecord.get_field_provenance
       ~PrescreenRecord.get_incomplete_fields
       ~PrescreenRecord.get_inconsistencies
       ~PrescreenRecord.get_origins
       ~PrescreenRecord.get_pages_in_pdf
-      ~PrescreenRecord.get_provenance_field_source
       ~PrescreenRecord.get_quality_defects
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity

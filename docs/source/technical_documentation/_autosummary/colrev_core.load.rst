@@ -32,5 +32,4 @@ colrev\_core.load
       :toctree:
 
       BibFileFormatError
-      ImportException
       UnsupportedImportFormatError

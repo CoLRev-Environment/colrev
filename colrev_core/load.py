@@ -110,6 +110,19 @@ class Loader(Process):
 
         return {"endpoint": "NA"}
 
+    def check_bib_file(self, SOURCE, record_dict) -> None:
+        if not any("author" in r for ID, r in record_dict.items()):
+            raise self.ImportException(
+                f"Import failed (no record with author field): {SOURCE.filename.name}"
+            )
+
+        if not any("title" in r for ID, r in record_dict.items()):
+            raise self.ImportException(
+                f"Import failed (no record with title field): {SOURCE.filename.name}"
+            )
+
+        return
+
     def resolve_non_unique_IDs(self, *, SOURCE) -> None:
         def get_unique_id(*, ID: str, ID_list: typing.List[str]) -> str:
 
@@ -547,6 +560,10 @@ class Loader(Process):
             )
         return
 
+    class ImportException(Exception):
+        def __init__(self, message):
+            super().__init__(message)
+
 
 class UnsupportedImportFormatError(Exception):
     def __init__(
@@ -562,11 +579,6 @@ class UnsupportedImportFormatError(Exception):
 
 
 class BibFileFormatError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
-
-
-class ImportException(Exception):
     def __init__(self, message):
         super().__init__(message)
 

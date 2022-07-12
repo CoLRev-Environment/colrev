@@ -53,9 +53,7 @@ class LoadFixesPrep:
 
         for custom_prep_script_name in custom_prep_scripts:
 
-            endpoint = SEARCH_SCOURCES.search_source_scripts[custom_prep_script_name][
-                "endpoint"
-            ]
+            endpoint = SEARCH_SCOURCES.search_source_scripts[custom_prep_script_name]
 
             if callable(endpoint.prepare):
                 RECORD = endpoint.prepare(RECORD)

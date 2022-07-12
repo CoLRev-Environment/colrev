@@ -717,7 +717,7 @@ class LocalIndex:
 
         available = False
         try:
-            self.os.get(index=self.RECORD_INDEX, id="test")
+            self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
         except (requests.exceptions.RequestException, ConnectionError):
             pass
         except NotFoundError:
@@ -728,7 +728,7 @@ class LocalIndex:
             print("Waiting until LocalIndex is available")
             for i in tqdm(range(0, 20)):
                 try:
-                    self.os.get(index=self.RECORD_INDEX, id="test")
+                    self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
                     break
                 except (
                     requests.exceptions.RequestException,
@@ -806,7 +806,9 @@ class LocalIndex:
 
     def __retrieve_toc_index(self, *, toc_key: str) -> list:
 
-        toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
+        toc_item_response = self.os.get(
+            index=self.TOC_INDEX, id=toc_key, request_timeout=30
+        )
         toc_item = toc_item_response["_source"]
 
         return toc_item
@@ -814,7 +816,8 @@ class LocalIndex:
     def __amend_record(self, *, hash: str, record: dict) -> None:
 
         # try:
-        #     saved_record_response = self.os.get(index=self.RECORD_INDEX, id=hash)
+        #     saved_record_response =
+        #       self.os.get(index=self.RECORD_INDEX, id=hash, request_timeout=30)
         #     saved_record = saved_record_response["_source"]
 
         #     SAVED_RECORD = Record(data=self.parse_record(record=saved_record))
@@ -853,6 +856,7 @@ class LocalIndex:
         #         index=self.RECORD_INDEX,
         #         id=hash,
         #         body={"doc": SAVED_RECORD.get_data(stringify=True)},
+        #         request_timeout=30
         #     )
         # except NotFoundError:
         #     pass
@@ -940,7 +944,9 @@ class LocalIndex:
                     }
                     self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
                 else:
-                    toc_item_response = self.os.get(index=self.TOC_INDEX, id=toc_key)
+                    toc_item_response = self.os.get(
+                        index=self.TOC_INDEX, id=toc_key, request_timeout=30
+                    )
                     toc_item = toc_item_response["_source"]
                     if toc_item["toc_key"] == toc_key:
                         # ok - no collision, update the record
@@ -965,7 +971,9 @@ class LocalIndex:
             hash = hashlib.sha256(cid_to_retrieve.encode("utf-8")).hexdigest()
             while True:  # Note : while breaks with NotFoundError
                 try:
-                    res = self.os.get(index=self.RECORD_INDEX, id=hash)
+                    res = self.os.get(
+                        index=self.RECORD_INDEX, id=hash, request_timeout=30
+                    )
                     retrieved_record = res["_source"]
                     if cid_to_retrieve in Record(data=retrieved_record).get_colrev_id():
                         return retrieved_record
@@ -987,6 +995,7 @@ class LocalIndex:
                 resp = self.os.search(
                     index=self.RECORD_INDEX,
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
+                    request_timeout=30,
                 )
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
@@ -1198,7 +1207,7 @@ class LocalIndex:
                     break
                 else:
                     saved_record_response = self.os.get(
-                        index=self.RECORD_INDEX, id=hash
+                        index=self.RECORD_INDEX, id=hash, request_timeout=30
                     )
                     saved_record = saved_record_response["_source"]
                     saved_record_cid = Record(data=saved_record).create_colrev_id(
@@ -1343,7 +1352,7 @@ class LocalIndex:
                 toc_items = []
 
         # 2. get most similar record
-        if len(toc_items) > 0:
+        elif len(toc_items) > 0:
             try:
                 # TODO : we need to search tocs even if records are not complete:
                 # and a NotEnoughDataToIdentifyException is thrown
@@ -1360,7 +1369,9 @@ class LocalIndex:
                     hash = hashlib.sha256(
                         toc_records_colrev_id.encode("utf-8")
                     ).hexdigest()
-                    res = self.os.get(index=self.RECORD_INDEX, id=str(hash))
+                    res = self.os.get(
+                        index=self.RECORD_INDEX, id=str(hash), request_timeout=30
+                    )
                     record = res["_source"]  # type: ignore
                     return self.prep_record_for_return(
                         record=record, include_file=include_file
@@ -1369,11 +1380,12 @@ class LocalIndex:
                 pass
 
         raise RecordNotInIndexException()
-        return record
 
     def get_from_index_exact_match(self, *, index_name, key, value) -> dict:
         resp = self.os.search(
-            index=index_name, body={"query": {"match_phrase": {key: value}}}
+            index=index_name,
+            body={"query": {"match_phrase": {key: value}}},
+            request_timeout=30,
         )
         res = resp["hits"]["hits"][0]["_source"]
         return res

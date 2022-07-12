@@ -16,7 +16,6 @@ colrev\_core.built\_in.load.BibutilsLoader
    .. autosummary::
       :nosignatures:
 
-      ~BibutilsLoader.bibutils_convert
       ~BibutilsLoader.load
 
 

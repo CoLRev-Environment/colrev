@@ -35,9 +35,7 @@ class SearchSources:
 
     def __init__(self, *, REVIEW_MANAGER):
         required_search_scripts = [
-            {"endpoint": r}
-            for s in REVIEW_MANAGER.settings.sources
-            for r in s.source_prep_scripts
+            r for s in REVIEW_MANAGER.settings.sources for r in s.source_prep_scripts
         ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
 
         self.type = ProcessType.check

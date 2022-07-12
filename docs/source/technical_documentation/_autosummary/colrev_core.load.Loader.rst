@@ -16,6 +16,7 @@ colrev\_core.load.Loader
    .. autosummary::
       :nosignatures:
 
+      ~Loader.check_bib_file
       ~Loader.check_precondition
       ~Loader.get_conversion_script
       ~Loader.get_new_search_files

@@ -95,6 +95,7 @@ class Initializer:
             [Path("template/.pre-commit-config.yaml"), Path(".pre-commit-config.yaml")],
             [Path("template/.markdownlint.yaml"), Path(".markdownlint.yaml")],
             [Path("template/.gitattributes"), Path(".gitattributes")],
+            [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
                 Path("template/docker-compose.yml"),
                 Path.home() / Path("colrev/docker-compose.yml"),
@@ -302,6 +303,7 @@ class Initializer:
                 ".gitignore",
                 "settings.json",
                 ".markdownlint.yaml",
+                "LICENSE.txt",
             ]
         )
         return

@@ -36,11 +36,11 @@ colrev\_core.record.Record
       ~Record.get_container_title
       ~Record.get_data
       ~Record.get_diff
+      ~Record.get_field_provenance
       ~Record.get_incomplete_fields
       ~Record.get_inconsistencies
       ~Record.get_origins
       ~Record.get_pages_in_pdf
-      ~Record.get_provenance_field_source
       ~Record.get_quality_defects
       ~Record.get_record_similarity
       ~Record.get_similarity
