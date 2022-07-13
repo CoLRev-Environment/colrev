@@ -1,6 +1,6 @@
-colrev\_core.exceptions.DuplicatesError
+colrev\_core.exceptions.FieldValueError
 =======================================
 
 .. currentmodule:: colrev_core.exceptions
 
-.. autoexception:: DuplicatesError
+.. autoexception:: FieldValueError

@@ -103,6 +103,7 @@ class Loader(Process):
 
     @classmethod
     def get_conversion_script(cls, *, filepath: Path) -> dict:
+        from colrev_core.exceptions import UnsupportedImportFormatError
 
         filetype = filepath.suffix.replace(".", "")
 
@@ -110,7 +111,7 @@ class Loader(Process):
             if filetype in endpoint_dict["endpoint"].supported_extensions:
                 return {"endpoint": endpoint_name}
 
-        return {"endpoint": "NA"}
+        raise UnsupportedImportFormatError(filepath)
 
     def check_bib_file(self, SOURCE, record_dict) -> None:
         if not any("author" in r for ID, r in record_dict.items()):

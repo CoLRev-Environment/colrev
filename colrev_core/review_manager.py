@@ -21,16 +21,16 @@ from dacite import from_dict
 
 from colrev_core import review_dataset
 from colrev_core.environment import EnvironmentManager
+from colrev_core.exceptions import CoLRevUpgradeError
 from colrev_core.exceptions import DirtyRepoAfterProcessingError
 from colrev_core.exceptions import GitConflictError
 from colrev_core.exceptions import MissingDependencyError
 from colrev_core.exceptions import RepoSetupError
-from colrev_core.exceptions import SoftwareUpgradeError
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.process import UnstagedGitChangesError
-from colrev_core.review_dataset import DuplicatesError
-from colrev_core.review_dataset import FieldError
+from colrev_core.review_dataset import DuplicateIDsError
+from colrev_core.review_dataset import FieldValueError
 from colrev_core.review_dataset import OriginError
 from colrev_core.review_dataset import PropagatedIDChange
 from colrev_core.settings import Configuration
@@ -309,7 +309,7 @@ class ReviewManager:
     def __check_software(self) -> None:
         last_version, current_version = self.__get_colrev_versions()
         if last_version != current_version:
-            raise SoftwareUpgradeError(last_version, current_version)
+            raise CoLRevUpgradeError(last_version, current_version)
         return
 
     def upgrade_colrev(self) -> None:
@@ -994,7 +994,7 @@ class ReviewManager:
                     "params": {"prior": prior, "data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_status_fields,
+                    "script": self.REVIEW_DATASET.check_fields,
                     "params": {"data": data},
                 },
                 {
@@ -1073,9 +1073,9 @@ class ReviewManager:
                 MissingDependencyError,
                 GitConflictError,
                 PropagatedIDChange,
-                DuplicatesError,
+                DuplicateIDsError,
                 OriginError,
-                FieldError,
+                FieldValueError,
                 review_dataset.StatusTransitionError,
                 UnstagedGitChangesError,
                 review_dataset.StatusFieldValueError,
@@ -1572,7 +1572,7 @@ class ReviewManager:
             self.logger.info("Created commit")
             self.reset_log()
             if self.REVIEW_DATASET.has_changes():
-                raise DirtyRepoAfterProcessingError
+                raise DirtyRepoAfterProcessingError("A clean repository is expected.")
             return True
         else:
             return False

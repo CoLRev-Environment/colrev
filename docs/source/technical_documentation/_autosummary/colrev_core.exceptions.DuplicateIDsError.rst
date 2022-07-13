@@ -1,6 +1,6 @@
-colrev\_core.exceptions.RecordFormatError
+colrev\_core.exceptions.DuplicateIDsError
 =========================================
 
 .. currentmodule:: colrev_core.exceptions
 
-.. autoexception:: RecordFormatError
+.. autoexception:: DuplicateIDsError

@@ -12,14 +12,13 @@ from pathlib import Path
 import git
 import pandas as pd
 
-from colrev_core.exceptions import CitationKeyPropagationError
-from colrev_core.exceptions import DuplicatesError
-from colrev_core.exceptions import FieldError
+from colrev_core.exceptions import DuplicateIDsError
+from colrev_core.exceptions import FieldValueError
 from colrev_core.exceptions import OriginError
 from colrev_core.exceptions import PropagatedIDChange
 from colrev_core.exceptions import RecordNotInRepoException
 from colrev_core.exceptions import ReviewManagerNotNofiedError
-from colrev_core.exceptions import SearchDetailsError
+from colrev_core.exceptions import SearchSettingsError
 from colrev_core.exceptions import StatusFieldValueError
 from colrev_core.exceptions import StatusTransitionError
 from colrev_core.record import RecordState
@@ -602,11 +601,7 @@ class ReviewDataset:
         # (this would break the chain of evidence)
         if raise_error:
             if self.propagated_ID(ID=record["ID"]):
-                raise CitationKeyPropagationError(
-                    "WARNING: do not change IDs that have been "
-                    + f'propagated to {self.REVIEW_MANAGER.paths["DATA"]} '
-                    + f'({record["ID"]})'
-                )
+                raise PropagatedIDChange([record["ID"]])
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve(record=record)
             temp_ID = retrieved_record["ID"]
@@ -1263,12 +1258,12 @@ class ReviewDataset:
         if not len(data["IDs"]) == len(set(data["IDs"])):
             duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
             if len(duplicates) > 20:
-                raise DuplicatesError(
+                raise DuplicateIDsError(
                     "Duplicates in MAIN_REFERENCES: "
                     f"({','.join(duplicates[0:20])}, ...)"
                 )
             else:
-                raise DuplicatesError(
+                raise DuplicateIDsError(
                     f"Duplicates in MAIN_REFERENCES: {','.join(duplicates)}"
                 )
         return
@@ -1328,12 +1323,12 @@ class ReviewDataset:
         #                 STATUS = FAIL
         return
 
-    def check_status_fields(self, *, data: dict) -> None:
+    def check_fields(self, *, data: dict) -> None:
         # Check status fields
         status_schema = [str(x) for x in RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
         if stat_diff:
-            raise FieldError(f"status field(s) {stat_diff} not in {status_schema}")
+            raise FieldValueError(f"status field(s) {stat_diff} not in {status_schema}")
         return
 
     def check_status_transitions(self, *, data: dict) -> None:
@@ -1672,7 +1667,7 @@ class ReviewDataset:
                             f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:
-            raise FieldError("\n    " + "\n    ".join(field_errors))
+            raise FieldValueError("\n    " + "\n    ".join(field_errors))
         return
 
     # def check_screen_data(screen, data):
@@ -1793,23 +1788,23 @@ class ReviewDataset:
 
             if not SOURCE.filename.is_file():
                 logging.warning(f"Search details without file: {SOURCE.filename}")
-                # raise SearchDetailsError('File not found: "
+                # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
             if str(SOURCE.search_type) not in SearchType._member_names_:
-                raise SearchDetailsError(
+                raise SearchSettingsError(
                     f"{SOURCE.search_type} not in {SearchType._member_names_}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"
             # if "completion_date" in SOURCE:
             #     if not re.search(date_regex, SOURCE["completion_date"]):
-            #         raise SearchDetailsError(
+            #         raise SearchSettingsError(
             #             "completion date not matching YYYY-MM-DD format: "
             #             f'{SOURCE["completion_date"]}'
             #         )
             # if "start_date" in SOURCE:
             #     if not re.search(date_regex, SOURCE["start_date"]):
-            #         raise SearchDetailsError(
+            #         raise SearchSettingsError(
             #             "start_date date not matchin YYYY-MM-DD format: "
             #             f'{SOURCE["start_date"]}'
             #         )

@@ -23,14 +23,13 @@ colrev\_core.exceptions
       :toctree:
 
       BibFileFormatError
-      CitationKeyPropagationError
       CleanRepoRequiredError
-      ConsistencyError
+      CoLRevException
+      CoLRevUpgradeError
       CuratedOutletNotUnique
-      DedupeError
       DirtyRepoAfterProcessingError
-      DuplicatesError
-      FieldError
+      DuplicateIDsError
+      FieldValueError
       GitConflictError
       ImportException
       InvalidQueryException
@@ -43,16 +42,12 @@ colrev\_core.exceptions
       OriginError
       ProcessOrderViolation
       PropagatedIDChange
-      RecordFormatError
       RecordNotInIndexException
       RecordNotInRepoException
       RepoSetupError
       ReviewManagerNotNofiedError
-      SearchDetailsError
-      SearchDetailsMissingError
+      SearchSettingsError
       ServiceNotAvailableException
-      SettingsError
-      SoftwareUpgradeError
       StatusFieldValueError
       StatusTransitionError
       TEI_Exception
