@@ -287,8 +287,8 @@ class PDFPrepConfiguration:
 
 @dataclass
 class ScreenCriterion:
-    name: str
     explanation: str
+    comment: typing.Optional[str]
 
     def __str__(self):
         return f"{self.name} ({self.explanation})"
@@ -296,7 +296,7 @@ class ScreenCriterion:
 
 @dataclass
 class ScreenConfiguration:
-    criteria: typing.List[ScreenCriterion]
+    criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
 
     def __str__(self):

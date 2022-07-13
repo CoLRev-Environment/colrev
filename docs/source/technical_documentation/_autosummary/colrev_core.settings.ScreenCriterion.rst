@@ -25,5 +25,5 @@ colrev\_core.settings.ScreenCriterion
 
    .. autosummary::
 
-      ~ScreenCriterion.name
       ~ScreenCriterion.explanation
+      ~ScreenCriterion.comment

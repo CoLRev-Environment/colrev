@@ -72,7 +72,7 @@ class Screen(Process):
     def get_exclusion_criteria(self) -> list:
         """Get the list of exclusion criteria from settings"""
 
-        return [c.name for c in self.REVIEW_MANAGER.settings.screen.criteria]
+        return list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
 
     def set_exclusion_criteria(self, *, exclusion_criteria) -> None:
         self.REVIEW_MANAGER.settings.screen.criteria = exclusion_criteria
@@ -124,13 +124,13 @@ class Screen(Process):
         criterion_name, criterion_explanation = criterion_to_add.split(",")
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        if criterion_name not in [
-            c.name for c in self.REVIEW_MANAGER.settings.screen.criteria
-        ]:
+        if criterion_name not in self.REVIEW_MANAGER.settings.screen.criteria:
+
             ADD_CRITERION = ScreenCriterion(
-                name=criterion_name, explanation=criterion_explanation
+                explanation=criterion_explanation, comment=""
             )
-            self.REVIEW_MANAGER.settings.screen.criteria.append(ADD_CRITERION)
+            self.REVIEW_MANAGER.settings.screen.criteria[criterion_name] = ADD_CRITERION
+
             self.REVIEW_MANAGER.save_settings()
             self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
         else:
@@ -167,12 +167,8 @@ class Screen(Process):
         """Delete a screening criterion from the records and settings"""
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        if criterion_to_delete in [
-            c.name for c in self.REVIEW_MANAGER.settings.screen.criteria
-        ]:
-            for i, c in enumerate(self.REVIEW_MANAGER.settings.screen.criteria):
-                if c.name == criterion_to_delete:
-                    del self.REVIEW_MANAGER.settings.screen.criteria[i]
+        if criterion_to_delete in self.REVIEW_MANAGER.settings.screen.criteria:
+            del self.REVIEW_MANAGER.settings.screen.criteria[criterion_to_delete]
             self.REVIEW_MANAGER.save_settings()
             self.REVIEW_MANAGER.REVIEW_DATASET.add_setting_changes()
         else:

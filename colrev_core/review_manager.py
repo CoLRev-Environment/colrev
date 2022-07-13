@@ -688,6 +688,8 @@ class ReviewManager:
                     for s in prep_round["scripts"]
                 ]
 
+            if settings["screen"]["criteria"] == []:
+                settings["screen"]["criteria"] = {}
             if "scripts" not in settings["dedupe"]:
                 settings["dedupe"]["scripts"] = [
                     {"endpoint": "active_learning_training"},

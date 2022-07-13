@@ -273,7 +273,7 @@
         ]
     },
     "screen": {
-        "criteria": [],
+        "criteria": {},
         "scripts": [
             {
                 "endpoint": "colrev_cli_screen"
