@@ -1,7 +1,7 @@
 {
     "project": {
-        "id_pattern": "THREE_AUTHORS_YEAR",
         "review_type": "literature_review",
+        "id_pattern": "THREE_AUTHORS_YEAR",
         "share_stat_req": "processed",
         "delay_automated_processing": true,
         "curation_url": null,
@@ -15,7 +15,7 @@
             "source_name": "PDFS",
             "source_identifier": "{{file}}",
             "search_parameters": "SCOPE path='pdfs'",
-            "search_script": {"endpoint": "backward_search"},
+            "search_script": {"endpoint": "search_pdfs_dir"},
             "conversion_script": {"endpoint": "bibtex"},
             "source_prep_scripts": [],
             "comment": ""

@@ -189,10 +189,8 @@ class Search(Process):
             feed_config = self.get_feed_config(source_name=source_name)
             for source in sources:
                 # TODO : parse params (which may also raise errors)
-                SCRIPT = self.search_scripts[feed_config["search_script"]["endpoint"]][
-                    "endpoint"
-                ]
-                SCRIPT.validate_params(query=query)
+                SCRIPT = self.search_scripts[feed_config["search_script"]["endpoint"]]
+                SCRIPT.validate_params(query=query)  # type: ignore
 
         return
 
@@ -252,6 +250,9 @@ class Search(Process):
         as_filename = ""
         if " AS " in query:
             as_filename = query[query.find(" AS ") + 4 :]
+            as_filename = (
+                as_filename.replace("'", "").replace('"', "").replace(" ", "_")
+            )
             if ".bib" not in as_filename:
                 as_filename = f"{as_filename}.bib"
             query = query[: query.find(" AS ")]

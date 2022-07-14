@@ -47,9 +47,6 @@ class Status(Process):
         stat = self.get_status_freq()
         return stat["completeness_condition"]
 
-    def get_exclusion_criteria(self, *, ec_string: str) -> list:
-        return [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
-
     def get_status_freq(self) -> dict:
         from colrev_core.record import RecordState
         from colrev_core.process import ProcessModel
@@ -60,7 +57,7 @@ class Status(Process):
         exclusion_criteria = [
             x["exclusion_criteria"]
             for x in record_header_list
-            if x["exclusion_criteria"] != ""
+            if x["exclusion_criteria"] not in ["", "NA"]
         ]
         md_duplicates_removed = sum(
             (x["colrev_origin"].count(";")) for x in record_header_list
@@ -74,14 +71,14 @@ class Status(Process):
 
         stat: dict = {"colrev_status": {}}
 
-        exclusion_statistics = {}
-        if exclusion_criteria:
-            criteria = self.get_exclusion_criteria(ec_string=exclusion_criteria[0])
-            exclusion_statistics = {crit: 0 for crit in criteria}
-            for exclusion_case in exclusion_criteria:
-                for crit in criteria:
-                    if crit + "=yes" in exclusion_case:
-                        exclusion_statistics[crit] += 1
+        criteria = list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
+        exclusion_statistics = {crit: 0 for crit in criteria}
+
+        for exclusion_case in exclusion_criteria:
+            for exclusion_criterion in exclusion_case.split(";"):
+                criterion_name, decision = exclusion_criterion.split("=")
+                if "yes" == decision:
+                    exclusion_statistics[criterion_name] += 1
 
         stat["colrev_status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
         stat["colrev_status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}

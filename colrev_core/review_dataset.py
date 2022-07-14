@@ -1610,7 +1610,9 @@ class ReviewDataset:
             exclusion_criteria = data["exclusion_criteria_list"][0][2]
             if exclusion_criteria != "NA":
                 criteria = self.__get_exclusion_criteria(ec_string=exclusion_criteria)
-                settings_criteria = list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
+                settings_criteria = list(
+                    self.REVIEW_MANAGER.settings.screen.criteria.keys()
+                )
                 if not set(criteria) == set(settings_criteria):
                     field_errors.append(
                         "Mismatch in screening criteria: records:"
