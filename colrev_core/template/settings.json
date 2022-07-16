@@ -213,16 +213,11 @@
         ]
     },
     "prescreen": {
-        "scope": [
-            {
-                "LanguageScope": [
-                    "en"
-                ]
-            }
-        ],
+        "explanation": "",
         "scripts": [
             {
-                "endpoint": "scope_prescreen"
+                "endpoint": "scope_prescreen",
+                "LanguageScope": ["en"]
             },
             {
                 "endpoint": "colrev_cli_prescreen"

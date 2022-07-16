@@ -687,9 +687,30 @@ class ReviewManager:
                     {"endpoint": s} if "endpoint" not in s and isinstance(str, s) else s
                     for s in prep_round["scripts"]
                 ]
+            if "explanation" not in settings["prescreen"]:
+                settings["prescreen"]["explanation"] = ""
+            if "scope" in settings["prescreen"]:
+                scope_items = settings["prescreen"]["scope"]
+                del settings["prescreen"]["scope"]
+
+                if len(scope_items) > 0:
+
+                    if "scope_prescreen" not in [
+                        s["endpoint"] for s in settings["prescreen"]["scripts"]
+                    ]:
+                        settings["prescreen"].insert(0, {"endpoint": "scope_prescreen"})
+                    scope_prescreen = [
+                        s
+                        for s in settings["prescreen"]["scripts"]
+                        if s["endpoint"] == "scope_prescreen"
+                    ][0]
+                    for elements in scope_items:
+                        for scope_key, scope_item in elements.items():
+                            scope_prescreen[scope_key] = scope_item
 
             if settings["screen"]["criteria"] == []:
                 settings["screen"]["criteria"] = {}
+
             if "scripts" not in settings["dedupe"]:
                 settings["dedupe"]["scripts"] = [
                     {"endpoint": "active_learning_training"},

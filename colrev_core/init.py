@@ -215,7 +215,11 @@ class Initializer:
                 )
 
             settings["project"]["curated_masterdata"] = True
-            settings["prescreen"]["scripts"] = [{"endpoint": "conditional_prescreen"}]
+            settings["prescreen"]["scripts"] = [
+                {"endpoint": "scope_prescreen"},
+                {"endpoint": "conditional_prescreen"},
+            ]
+            settings["prescreen"]["scope"] = [{"ExcludeComplementaryMaterials": True}]
             settings["screen"]["scripts"] = [{"endpoint": "conditional_screen"}]
             settings["pdf_get"]["scripts"] = []
 

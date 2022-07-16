@@ -24,4 +24,5 @@ colrev\_core.built\_in.prescreen
       CoLRevCLIPrescreenEndpoint
       ConditionalPrescreenEndpoint
       ScopePrescreenEndpoint
+      ScopePrescreenEndpointSettings
       SpreadsheetPrescreenEndpoint
