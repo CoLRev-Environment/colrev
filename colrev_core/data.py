@@ -316,7 +316,7 @@ class Data(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
 
-        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
+        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script"}
 
         self.REVIEW_MANAGER.settings.data.scripts.append(NEW_DATA_ENDPOINT)
         self.REVIEW_MANAGER.save_settings()

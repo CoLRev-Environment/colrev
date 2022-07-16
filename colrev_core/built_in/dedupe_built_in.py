@@ -10,6 +10,7 @@ import zope.interface
 from colrev.cli import console_duplicate_instance_label
 from dacite import from_dict
 
+from colrev_core.exceptions import DedupeError
 from colrev_core.process import DedupeEndpoint
 from colrev_core.process import DefaultSettings
 
@@ -480,15 +481,22 @@ class ActiveLearningDedupeTrainingEndpoint:
         # look for it and load it in.
         # __Note:__ if you want to train from scratch, delete the training_file
 
-        if DEDUPE.training_file.is_file():
-            DEDUPE.REVIEW_MANAGER.logger.info(
-                f"Reading pre-labeled training data from {DEDUPE.training_file.name} "
-                "and preparing data"
-            )
-            with open(DEDUPE.training_file, "rb") as f:
-                deduper.prepare_training(data_d, f)
-        else:
-            deduper.prepare_training(data_d)
+        try:
+            if DEDUPE.training_file.is_file():
+                DEDUPE.REVIEW_MANAGER.logger.info(
+                    "Reading pre-labeled training data from "
+                    f"{DEDUPE.training_file.name} "
+                    "and preparing data"
+                )
+                with open(DEDUPE.training_file, "rb") as f:
+                    deduper.prepare_training(data_d, f)
+            else:
+                deduper.prepare_training(data_d)
+        except AttributeError:
+            if len(data_d) < 50:
+                raise DedupeError(
+                    'Sample size too small (use {"endpoint": "simple_dedupe"} instead).'
+                )
 
         # TODO  input('del data_d - check memory')
         del data_d

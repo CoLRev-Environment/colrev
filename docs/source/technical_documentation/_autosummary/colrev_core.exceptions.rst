@@ -27,6 +27,7 @@ colrev\_core.exceptions
       CoLRevException
       CoLRevUpgradeError
       CuratedOutletNotUnique
+      DedupeError
       DirtyRepoAfterProcessingError
       DuplicateIDsError
       FieldValueError

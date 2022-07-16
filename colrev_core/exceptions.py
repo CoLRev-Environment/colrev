@@ -240,6 +240,15 @@ class BibFileFormatError(CoLRevException):
         super().__init__(message)
 
 
+# Dedupe
+
+
+class DedupeError(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
+
+
 # Data
 
 

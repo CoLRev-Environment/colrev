@@ -473,7 +473,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_prep_script.py")
 
         prep_round = self.REVIEW_MANAGER.settings.prep.prep_rounds[-1]
-        prep_round.scripts.append("custom_prep_script")
+        prep_round.scripts.append({"endpoint": "custom_prep_script"})
         self.REVIEW_MANAGER.save_settings()
 
         return

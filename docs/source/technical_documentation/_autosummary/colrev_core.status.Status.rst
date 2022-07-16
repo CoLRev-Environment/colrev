@@ -23,7 +23,6 @@ colrev\_core.status.Status
       ~Status.get_collaboration_instructions
       ~Status.get_completeness_condition
       ~Status.get_environment_instructions
-      ~Status.get_exclusion_criteria
       ~Status.get_instructions
       ~Status.get_nr_search
       ~Status.get_priority_transition
