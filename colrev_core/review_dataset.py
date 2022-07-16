@@ -1787,7 +1787,9 @@ class ReviewDataset:
         for SOURCE in SOURCES:
 
             if not SOURCE.filename.is_file():
-                logging.warning(f"Search details without file: {SOURCE.filename}")
+                self.REVIEW_MANAGER.logger.debug(
+                    f"Search details without file: {SOURCE.filename}"
+                )
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
             if str(SOURCE.search_type) not in SearchType._member_names_:
