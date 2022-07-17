@@ -4,7 +4,6 @@ import json
 import re
 import sys
 import urllib
-from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
 from urllib.parse import unquote
@@ -55,7 +54,7 @@ class URLConnector:
         from colrev_core.record import PrepRecord
 
         """Note: retrieve_md_from_url replaces prior data in RECORD
-        (use deepcopy() before if necessary)"""
+        (RECORD.copy() - deepcopy() before if necessary)"""
 
         ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
         ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
@@ -472,7 +471,7 @@ class CrossrefConnector:
             session = requests_cache.CachedSession(
                 str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
             )
-        RECORD = PrepRecord(data=deepcopy(RECORD_INPUT.get_data()))
+        RECORD = PrepRecord(data=RECORD_INPUT.copy_prep_rec())
 
         if not jour_vol_iss_list:
             params = {"rows": "15"}
