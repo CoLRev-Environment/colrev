@@ -45,6 +45,8 @@ function App() {
     }
   };
 
+  const apiEndpoint = config.apiEndpoint + "/api";
+
   return (
     <>
       <header>
@@ -57,7 +59,7 @@ function App() {
           </button>
           <a
             className="align-self-center"
-            href={config.apiEndpoint + "/data/settings.json"}
+            href={`${apiEndpoint}/getSettings`}
             target="_blank"
             rel="noreferrer"
           >

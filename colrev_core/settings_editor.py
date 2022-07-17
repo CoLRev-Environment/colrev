@@ -18,9 +18,14 @@ class Settings(Process):
     def open_settings_editor(self):
 
         SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
+        # SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
 
         app = Flask(__name__, static_url_path="", static_folder="frontend/build")
         CORS(app)
+
+        app.config["path"] = str(self.REVIEW_MANAGER.path / Path("settings.json"))
+
+        print("Settings File Path: ", app.config["path"])
 
         @app.route("/", defaults={"path": ""})
         def serve(path):
