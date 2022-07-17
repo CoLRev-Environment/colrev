@@ -22,16 +22,16 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.behind_remote
       ~ReviewDataset.check_corrections_of_curated_records
       ~ReviewDataset.check_fields
-      ~ReviewDataset.check_main_references_duplicates
-      ~ReviewDataset.check_main_references_origin
-      ~ReviewDataset.check_main_references_screen
+      ~ReviewDataset.check_main_records_duplicates
+      ~ReviewDataset.check_main_records_origin
+      ~ReviewDataset.check_main_records_screen
       ~ReviewDataset.check_persisted_ID_changes
       ~ReviewDataset.check_propagated_IDs
       ~ReviewDataset.check_sources
       ~ReviewDataset.check_status_transitions
       ~ReviewDataset.create_commit
       ~ReviewDataset.file_in_history
-      ~ReviewDataset.format_main_references
+      ~ReviewDataset.format_records_file
       ~ReviewDataset.get_commit_message
       ~ReviewDataset.get_currently_imported_origin_list
       ~ReviewDataset.get_last_commit_sha

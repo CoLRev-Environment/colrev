@@ -256,7 +256,7 @@ class Initializer:
             + "manual_cleansing_statistics.csv\n"
             + "data.csv\n"
             + "venv\n"
-            + ".references_learned_settings\n"
+            + ".records_learned_settings\n"
             + ".corrections\n"
             + ".ipynb_checkpoints/\n"
             + "pdfs\n"

@@ -48,7 +48,7 @@ class AdapterManager:
 
         # avoid changes in the config
         scripts = deepcopy(scripts)
-        scripts_dict: dict = {}
+        scripts_dict: typing.Dict = {}
         for script in scripts:
             script_name = script["endpoint"]
             scripts_dict[script_name] = {}
@@ -566,7 +566,7 @@ class EnvironmentManager:
                     first_line = f.readline()
                 curated_outlets.append(first_line.lstrip("# ").replace("\n", ""))
 
-                with open(f"{source_url}/references.bib") as r:
+                with open(f"{source_url}/records.bib") as r:
                     outlets = []
                     for line in r.readlines():
                         # Note : the second part ("journal:"/"booktitle:")
@@ -1253,7 +1253,7 @@ class LocalIndex:
             os.chdir(source_url)
             REVIEW_MANAGER = ReviewManager(path_str=str(source_url))
             CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
-            if not CHECK_PROCESS.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+            if not CHECK_PROCESS.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
                 return
             records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -1589,7 +1589,7 @@ class Resources:
         print(f"Download curated resource from {curated_resource}")
         git.Repo.clone_from(curated_resource, repo_dir, depth=1)
 
-        if (repo_dir / Path("references.bib")).is_file():
+        if (repo_dir / Path("records.bib")).is_file():
             EnvironmentManager.register_repo(path_to_register=repo_dir)
         elif (repo_dir / Path("annotate.py")).is_file():
             shutil.move(str(repo_dir), str(annotator_dir))
@@ -1602,9 +1602,7 @@ class Resources:
                     curated_resource=line.replace("colrev env --install ", "")
                 )
         else:
-            print(
-                f"Error: repo does not contain a references.bib/linked repos {repo_dir}"
-            )
+            print(f"Error: repo does not contain a records.bib/linked repos {repo_dir}")
         return True
 
 

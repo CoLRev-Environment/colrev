@@ -84,7 +84,7 @@ class PDFPrepMan(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path=str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])
+            path=str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
         )
 
         return
@@ -97,7 +97,7 @@ class PDFPrepMan(Process):
         from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
-            f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
+            f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -156,12 +156,8 @@ class PDFPrepMan(Process):
 
     def extract_needs_pdf_prep_man(self) -> None:
 
-        prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
-            "prep-references.bib"
-        )
-        prep_csv_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
-            "prep-references.csv"
-        )
+        prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-records.bib")
+        prep_csv_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-records.csv")
 
         if prep_csv_path.is_file():
             print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
@@ -172,7 +168,7 @@ class PDFPrepMan(Process):
             return
 
         self.REVIEW_MANAGER.logger.info(
-            f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
+            f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -212,15 +208,15 @@ class PDFPrepMan(Process):
 
     def apply_pdf_prep_man(self) -> None:
 
-        if Path("prep-references.csv").is_file():
-            self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
-            bib_db_df = pd.read_csv("prep-references.csv")
+        if Path("prep-records.csv").is_file():
+            self.REVIEW_MANAGER.logger.info("Load prep-records.csv")
+            bib_db_df = pd.read_csv("prep-records.csv")
             records_changed = bib_db_df.to_dict("records")
 
-        if Path("prep-references.bib").is_file():
-            self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
+        if Path("prep-records.bib").is_file():
+            self.REVIEW_MANAGER.logger.info("Load prep-records.bib")
 
-            with open("prep-references.bib", encoding="utf8") as target_db:
+            with open("prep-records.bib", encoding="utf8") as target_db:
                 records_changed_dict = (
                     self.REVIEW_MANAGER.REVIEW_DATASEt.load_records_dict(
                         load_str=target_db.read()
@@ -250,7 +246,7 @@ class PDFPrepMan(Process):
                         del record[k]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.format_references()
+        self.REVIEW_MANAGER.format_records_file()
         self.REVIEW_MANAGER.check_repo()
         return
 

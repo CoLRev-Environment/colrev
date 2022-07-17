@@ -99,11 +99,11 @@ class Process:
             if len(git_repo.index.diff("HEAD")) == 0:
                 unstaged_changes = [item.a_path for item in git_repo.index.diff(None)]
                 if (
-                    self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+                    self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
                     in unstaged_changes
                 ):
                     git_repo.index.add(
-                        [self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+                        [self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
                     )
                 if self.REVIEW_MANAGER.paths["PAPER_RELATIVE"] in unstaged_changes:
                     git_repo.index.add([self.REVIEW_MANAGER.paths["PAPER_RELATIVE"]])
@@ -166,7 +166,7 @@ class Process:
 
         elif ProcessType.prep_man == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+                ignore_pattern=[self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
             )
             check_process_model_precondition()
 
@@ -176,7 +176,7 @@ class Process:
 
         elif ProcessType.prescreen == self.type:
             require_clean_repo_general(
-                ignore_pattern=[self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]]
+                ignore_pattern=[self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]]
             )
             check_process_model_precondition()
 

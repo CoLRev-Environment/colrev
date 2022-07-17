@@ -130,24 +130,29 @@ class ExcludeLanguagesPrep:
         self.language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )
-
-    def prepare(self, PREPARATION, RECORD):
-
-        from colrev_core.settings import LanguageScope
-
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
-        languages_to_include = [
-            sr.LanguageScope
-            for sr in PREPARATION.REVIEW_MANAGER.settings.prescreen.scope
-            if isinstance(sr, LanguageScope)
-        ][0]
+    def prepare(self, PREPARATION, RECORD):
+
+        languages_to_include = ["en"]
+        if "scope_prescreen" in [
+            s["endpoint"] for s in PREPARATION.REVIEW_MANAGER.settings.prescreen.scripts
+        ]:
+            for scope_prescreen in [
+                s
+                for s in PREPARATION.REVIEW_MANAGER.settings.prescreen.scripts
+                if "scope_prescreen" == s["endpoint"]
+            ]:
+                languages_to_include.extend(
+                    scope_prescreen.get("LanguageScope", ["en"])
+                )
+        languages_to_include = list(set(languages_to_include))
 
         # Note : other languages are not yet supported
         # becuase the dedupe does not yet support cross-language merges
-        assert ["en"] == languages_to_include
 
+        assert ["en"] == languages_to_include
         if "language" in RECORD.data:
             RECORD.data["language"] = (
                 RECORD.data["language"].replace("English", "en").replace("ENG", "en")
@@ -499,7 +504,7 @@ class BibTexCrossrefResolutionPrep:
     def prepare(self, PREPARATION, RECORD):
         def read_next_record_str() -> typing.Iterator[str]:
             with open(
-                PREPARATION.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8"
+                PREPARATION.REVIEW_MANAGER.paths["RECORDS_FILE"], encoding="utf8"
             ) as f:
                 data = ""
                 first_entry_processed = False

@@ -293,9 +293,7 @@ class Status(Process):
         environment_instructions = []
 
         if stat["colrev_status"]["currently"]["md_imported"] > 10:
-            with open(
-                self.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8"
-            ) as r:
+            with open(self.REVIEW_MANAGER.paths["RECORDS_FILE"], encoding="utf8") as r:
                 outlets = []
                 for line in r.readlines():
 
@@ -406,7 +404,7 @@ class Status(Process):
 
         # git_repo = REVIEW_MANAGER.get_repo()
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
 
         missing_files = self.REVIEW_MANAGER.REVIEW_DATASET.get_missing_files()
 
@@ -440,7 +438,7 @@ class Status(Process):
         # from colrev_core.process import ProcessModel
         # current_states_set = set([x['source'] for x in ProcessModel.transitions])
 
-        MAIN_REFS_CHANGED = str(MAIN_REFERENCES_RELATIVE) in [
+        MAIN_RECS_CHANGED = str(RECORDS_FILE_RELATIVE) in [
             item.a_path for item in git_repo.index.diff(None)
         ] + [x.a_path for x in git_repo.head.commit.diff()]
 
@@ -448,17 +446,17 @@ class Status(Process):
             revlist = (
                 (
                     commit.hexsha,
-                    (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                    (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
                 )
-                for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+                for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
             )
             filecontents = list(revlist)[0][1]
         except IndexError:
             pass
-            MAIN_REFS_CHANGED = False
+            MAIN_RECS_CHANGED = False
 
-        # If changes in MAIN_REFERENCES are staged, we need to detect the process type
-        if MAIN_REFS_CHANGED:
+        # If changes in RECORDS_FILE are staged, we need to detect the process type
+        if MAIN_RECS_CHANGED:
             # Detect and validate transitions
 
             from colrev_core.process import ProcessModel
@@ -609,7 +607,7 @@ class Status(Process):
                 ]:
                     review_instructions.append(instruction)
 
-        if not self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+        if not self.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
             instruction = {
                 "msg": "To import, copy search results to the search directory.",
                 "cmd": "colrev load",

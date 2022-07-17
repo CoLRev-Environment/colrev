@@ -47,10 +47,10 @@ class Dedupe(Process):
         )
 
         self.training_file = self.REVIEW_MANAGER.path / Path(
-            ".references_dedupe_training.json"
+            ".records_dedupe_training.json"
         )
         self.settings_file = self.REVIEW_MANAGER.path / Path(
-            ".references_learned_settings"
+            ".records_learned_settings"
         )
         self.non_dupe_file_xlsx = self.REVIEW_MANAGER.path / Path(
             "non_duplicates_to_validate.xlsx"
@@ -69,7 +69,7 @@ class Dedupe(Process):
             scripts=REVIEW_MANAGER.settings.dedupe.scripts,
         )
 
-    def prep_references(self, *, references: pd.DataFrame) -> dict:
+    def prep_records(self, *, records_df: pd.DataFrame) -> dict:
         def preProcess(*, key, value):
             if key in ["ID", "ENTRYTYPE", "colrev_status", "colrev_origin"]:
                 return value
@@ -94,76 +94,76 @@ class Dedupe(Process):
                 value = None
             return value
 
-        if "colrev_status" in references:
-            references["colrev_status"] = references["colrev_status"].astype(str)
+        if "colrev_status" in records_df:
+            records_df["colrev_status"] = records_df["colrev_status"].astype(str)
 
-        if "volume" not in references:
-            references["volume"] = "nan"
-        if "number" not in references:
-            references["number"] = "nan"
-        if "pages" not in references:
-            references["pages"] = "nan"
-        if "year" not in references:
-            references["year"] = "nan"
+        if "volume" not in records_df:
+            records_df["volume"] = "nan"
+        if "number" not in records_df:
+            records_df["number"] = "nan"
+        if "pages" not in records_df:
+            records_df["pages"] = "nan"
+        if "year" not in records_df:
+            records_df["year"] = "nan"
         else:
-            references["year"] = references["year"].astype(str)
-        if "author" not in references:
-            references["author"] = "nan"
+            records_df["year"] = records_df["year"].astype(str)
+        if "author" not in records_df:
+            records_df["author"] = "nan"
 
-        references["author"] = references["author"].str[:60]
+        records_df["author"] = records_df["author"].str[:60]
 
-        references.loc[
-            references.ENTRYTYPE == "inbook", "container_title"
-        ] = references.loc[references.ENTRYTYPE == "inbook", "title"]
-        if "chapter" in references:
-            references.loc[references.ENTRYTYPE == "inbook", "title"] = references.loc[
-                references.ENTRYTYPE == "inbook", "chapter"
+        records_df.loc[
+            records_df.ENTRYTYPE == "inbook", "container_title"
+        ] = records_df.loc[records_df.ENTRYTYPE == "inbook", "title"]
+        if "chapter" in records_df:
+            records_df.loc[records_df.ENTRYTYPE == "inbook", "title"] = records_df.loc[
+                records_df.ENTRYTYPE == "inbook", "chapter"
             ]
 
-        if "title" not in references:
-            references["title"] = "nan"
+        if "title" not in records_df:
+            records_df["title"] = "nan"
         else:
-            references["title"] = (
-                references["title"]
+            records_df["title"] = (
+                records_df["title"]
                 .str.replace(r"[^A-Za-z0-9, ]+", " ", regex=True)
                 .str.lower()
             )
-            references.loc[references["title"].isnull(), "title"] = "nan"
+            records_df.loc[records_df["title"].isnull(), "title"] = "nan"
 
-        if "journal" not in references:
-            references["journal"] = ""
+        if "journal" not in records_df:
+            records_df["journal"] = ""
         else:
-            references["journal"] = (
-                references["journal"]
+            records_df["journal"] = (
+                records_df["journal"]
                 .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
                 .str.lower()
             )
-        if "booktitle" not in references:
-            references["booktitle"] = ""
+        if "booktitle" not in records_df:
+            records_df["booktitle"] = ""
         else:
-            references["booktitle"] = (
-                references["booktitle"]
-                .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
-                .str.lower()
-            )
-
-        if "series" not in references:
-            references["series"] = ""
-        else:
-            references["series"] = (
-                references["series"]
+            records_df["booktitle"] = (
+                records_df["booktitle"]
                 .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
                 .str.lower()
             )
 
-        references["container_title"] = (
-            references["journal"].fillna("")
-            + references["booktitle"].fillna("")
-            + references["series"].fillna("")
+        if "series" not in records_df:
+            records_df["series"] = ""
+        else:
+            records_df["series"] = (
+                records_df["series"]
+                .str.replace(r"[^A-Za-z0-9, ]+", "", regex=True)
+                .str.lower()
+            )
+
+        records_df["container_title"] = (
+            records_df["journal"].fillna("")
+            + records_df["booktitle"].fillna("")
+            + records_df["series"].fillna("")
         )
 
         # To validate/improve preparation in jupyter notebook:
-        # return references
+        # return records_df
         # Copy to notebook:
         # from colrev_core.review_manager import ReviewManager
         # from colrev_core import dedupe
@@ -173,8 +173,8 @@ class Dedupe(Process):
         # EDITS
         # df.to_csv('export.csv', index=False)
 
-        references.drop(
-            references.columns.difference(
+        records_df.drop(
+            records_df.columns.difference(
                 [
                     "ID",
                     "author",
@@ -193,28 +193,26 @@ class Dedupe(Process):
             1,
             inplace=True,
         )
-        references[
+        records_df[
             ["author", "title", "journal", "container_title", "pages"]
-        ] = references[
+        ] = records_df[
             ["author", "title", "journal", "container_title", "pages"]
         ].astype(
             str
         )
-        references_dict = references.to_dict("records")
-        self.REVIEW_MANAGER.logger.debug(
-            self.REVIEW_MANAGER.pp.pformat(references_dict)
-        )
+        records_list = records_df.to_dict("records")
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(records_list))
 
-        data_d = {}
+        records = {}
 
-        for row in references_dict:
-            # Note: we need the ID to identify/remove duplicates in the MAIN_REFERENCES.
+        for row in records_list:
+            # Note: we need the ID to identify/remove duplicates in the RECORDS_FILE.
             # It is ignored in the field-definitions by the deduper!
             # clean_row = [(k, preProcess(k, v)) for (k, v) in row.items() if k != "ID"]
             clean_row = [(k, preProcess(key=k, value=v)) for (k, v) in row.items()]
-            data_d[row["ID"]] = dict(clean_row)
+            records[row["ID"]] = dict(clean_row)
 
-        return data_d
+        return records
 
     def readData(self):
         from colrev_core.record import Record, NotEnoughDataToIdentifyException
@@ -248,10 +246,10 @@ class Dedupe(Process):
                 r["colrev_id"] = "NA"
                 pass
 
-        references = pd.DataFrame.from_dict(records_queue)
-        references = self.prep_references(references=references)
+        records_df = pd.DataFrame.from_dict(records_queue)
+        records = self.prep_records(records_df=records_df)
 
-        return references
+        return records
 
     def select_primary_merge_record(self, rec_ID1, rec_ID2) -> list:
         from colrev_core.record import Record
@@ -575,13 +573,13 @@ class Dedupe(Process):
             if len(IDs_to_unmerge) > 0:
                 records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-                MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths[
-                    "MAIN_REFERENCES_RELATIVE"
+                RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths[
+                    "RECORDS_FILE_RELATIVE"
                 ]
                 revlist = (
-                    ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
+                    ((commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read())
                     for commit in git_repo.iter_commits(
-                        paths=str(MAIN_REFERENCES_RELATIVE)
+                        paths=str(RECORDS_FILE_RELATIVE)
                     )
                 )
 

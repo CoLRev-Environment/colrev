@@ -40,7 +40,7 @@ class ReviewDataset:
     def __init__(self, *, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
-        self.MAIN_REFERENCES_FILE = REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        self.RECORDS_FILE_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
         self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
 
     def load_sources(self) -> list:
@@ -51,7 +51,7 @@ class ReviewDataset:
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 
-        if not self.MAIN_REFERENCES_FILE.is_file():
+        if not self.RECORDS_FILE_FILE.is_file():
             record_state_list = []
         else:
             record_state_list = self.__read_record_header_items()
@@ -59,7 +59,7 @@ class ReviewDataset:
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:
         ret_dict = {}
-        if self.MAIN_REFERENCES_FILE.is_file():
+        if self.RECORDS_FILE_FILE.is_file():
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
             ):
@@ -71,7 +71,7 @@ class ReviewDataset:
     def get_record_header_list(self) -> list:
         """Get the record_header_list"""
 
-        if not self.MAIN_REFERENCES_FILE.is_file():
+        if not self.RECORDS_FILE_FILE.is_file():
             return []
         return [
             record_header_item
@@ -87,7 +87,7 @@ class ReviewDataset:
     def get_states_set(self, *, record_state_list: list = None) -> set:
         """Get the record_states_set"""
 
-        if not self.MAIN_REFERENCES_FILE.is_file():
+        if not self.RECORDS_FILE_FILE.is_file():
             return set()
         if record_state_list is None:
             record_state_list = self.get_record_state_list()
@@ -101,15 +101,15 @@ class ReviewDataset:
     ) -> typing.List:
 
         prior_records = []
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         git_repo = self.__git_repo
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
         retrieved = []
@@ -265,15 +265,15 @@ class ReviewDataset:
         if self.REVIEW_MANAGER.notified_next_process is None:
             raise ReviewManagerNotNofiedError()
 
-        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
+        RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
         parser = bibtex.Parser()
 
         if load_str:
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
-        elif MAIN_REFERENCES_FILE.is_file():
-            bib_data = parser.parse_file(MAIN_REFERENCES_FILE)
+        elif RECORDS_FILE_FILE.is_file():
+            bib_data = parser.parse_file(RECORDS_FILE_FILE)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
         else:
@@ -303,15 +303,15 @@ class ReviewDataset:
         return origin_records
 
     def load_from_git_history(self):
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
         for commit_id, cmsg, filecontents in list(revlist):
@@ -426,10 +426,10 @@ class ReviewDataset:
         return
 
     def save_records_dict(self, *, records) -> None:
-        """Save the records dict in MAIN_REFERENCES"""
+        """Save the records dict in RECORDS_FILE"""
 
-        MAIN_REFERENCES_FILE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]
-        self.save_records_dict_to_file(records=records, save_path=MAIN_REFERENCES_FILE)
+        RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
+        self.save_records_dict_to_file(records=records, save_path=RECORDS_FILE_FILE)
 
         return
 
@@ -440,9 +440,9 @@ class ReviewDataset:
 
         if "all" == id:
             # logging.info("Removing/reprocessing all records")
-            os.remove(self.MAIN_REFERENCES_FILE)
+            os.remove(self.RECORDS_FILE_FILE)
             self.__git_repo.index.remove(
-                [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])],
+                [str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])],
                 working_tree=True,
             )
         else:
@@ -680,7 +680,7 @@ class ReviewDataset:
         # Note : more than 10x faster than load_records_dict()
 
         if file_object is None:
-            file_object = open(self.MAIN_REFERENCES_FILE)
+            file_object = open(self.RECORDS_FILE_FILE)
 
         def parse_k_v(current_key_value_pair_str):
             if " = " in current_key_value_pair_str:
@@ -738,7 +738,7 @@ class ReviewDataset:
 
     def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
-            file_object = open(self.MAIN_REFERENCES_FILE, encoding="utf8")
+            file_object = open(self.RECORDS_FILE_FILE, encoding="utf8")
         data = ""
         first_entry_processed = False
         while True:
@@ -776,7 +776,7 @@ class ReviewDataset:
 
         val = val_str.encode("utf-8")
         current_ID_str = "NA"
-        with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
+        with open(self.RECORDS_FILE_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -819,7 +819,7 @@ class ReviewDataset:
         replacement = ReviewDataset.parse_bibtex_str(recs_dict_in=new_record_dict)
 
         current_ID_str = "NA"
-        with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
+        with open(self.RECORDS_FILE_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -873,8 +873,8 @@ class ReviewDataset:
         record_list[-1]["record"] = record_list[-1]["record"][:-1]
 
         current_ID_str = "NOTSET"
-        if self.MAIN_REFERENCES_FILE.is_file():
-            with open(self.MAIN_REFERENCES_FILE, "r+b") as fd:
+        if self.RECORDS_FILE_FILE.is_file():
+            with open(self.RECORDS_FILE_FILE, "r+b") as fd:
                 seekpos = fd.tell()
                 line = fd.readline()
                 while line:
@@ -906,7 +906,7 @@ class ReviewDataset:
 
         if len(record_list) > 0:
             if append_new:
-                with open(self.MAIN_REFERENCES_FILE, "a", encoding="utf8") as m_refs:
+                with open(self.RECORDS_FILE_FILE, "a", encoding="utf8") as m_refs:
                     for replacement in record_list:
                         m_refs.write(replacement["record"])
 
@@ -919,7 +919,7 @@ class ReviewDataset:
 
         return
 
-    def format_main_references(self) -> bool:
+    def format_records_file(self) -> bool:
         from colrev_core.record import PrepRecord
         from colrev_core.process import FormatProcess
 
@@ -950,7 +950,7 @@ class ReviewDataset:
             record = RECORD.get_data()
 
         self.save_records_dict(records=records)
-        CHANGED = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"] in [
+        CHANGED = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"] in [
             r.a_path for r in self.__git_repo.index.diff(None)
         ]
         return CHANGED
@@ -972,7 +972,7 @@ class ReviewDataset:
             "invalid_state_transitions": [],
         }
 
-        with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
+        with open(self.RECORDS_FILE_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(file_object=f):
                 ID, file, status, excl_crit, origin = (
                     "NA",
@@ -1084,15 +1084,13 @@ class ReviewDataset:
     def retrieve_prior(self) -> dict:
         import io
 
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(
-                paths=str(MAIN_REFERENCES_RELATIVE)
-            )
+            for commit in self.__git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
         prior: dict = {"colrev_status": [], "persisted_IDs": []}
         filecontents = list(revlist)[0][1]
@@ -1222,7 +1220,7 @@ class ReviewDataset:
             str(RecordState.rev_synthesized),
         ]
         missing_files = []
-        if self.REVIEW_MANAGER.paths["MAIN_REFERENCES"].is_file():
+        if self.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
             for record_header_item in self.__read_record_header_items():
                 if (
                     record_header_item["colrev_status"] in file_required_status
@@ -1253,22 +1251,22 @@ class ReviewDataset:
 
     # CHECKS --------------------------------------------------------------
 
-    def check_main_references_duplicates(self, *, data: dict) -> None:
+    def check_main_records_duplicates(self, *, data: dict) -> None:
 
         if not len(data["IDs"]) == len(set(data["IDs"])):
             duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
             if len(duplicates) > 20:
                 raise DuplicateIDsError(
-                    "Duplicates in MAIN_REFERENCES: "
+                    "Duplicates in RECORDS_FILE: "
                     f"({','.join(duplicates[0:20])}, ...)"
                 )
             else:
                 raise DuplicateIDsError(
-                    f"Duplicates in MAIN_REFERENCES: {','.join(duplicates)}"
+                    f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
                 )
         return
 
-    def check_main_references_origin(self, *, prior: dict, data: dict) -> None:
+    def check_main_records_origin(self, *, prior: dict, data: dict) -> None:
         import itertools
 
         # Check whether each record has an origin
@@ -1358,7 +1356,7 @@ class ReviewDataset:
         from dictdiffer import diff
         import io
 
-        if not self.MAIN_REFERENCES_FILE.is_file():
+        if not self.RECORDS_FILE_FILE.is_file():
             return
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
@@ -1384,15 +1382,13 @@ class ReviewDataset:
         ]
 
         self.REVIEW_MANAGER.logger.debug("Retrieve prior bib")
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in self.__git_repo.iter_commits(
-                paths=str(MAIN_REFERENCES_RELATIVE)
-            )
+            for commit in self.__git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
         prior: dict = {"curated_records": []}
 
@@ -1415,7 +1411,7 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER.logger.debug("Load current bib")
         curated_records = []
-        with open(self.MAIN_REFERENCES_FILE, encoding="utf8") as f:
+        with open(self.RECORDS_FILE_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(file_object=f):
 
                 # TBD: whether/how to detect dblp. Previously:
@@ -1597,7 +1593,7 @@ class ReviewDataset:
         # raise KeyError
         return
 
-    def check_main_references_screen(self, *, data: dict) -> None:
+    def check_main_records_screen(self, *, data: dict) -> None:
 
         # Check screen
         # Note: consistency of inclusion_2=yes -> inclusion_1=yes
@@ -1689,12 +1685,12 @@ class ReviewDataset:
     #     return
 
     # def check_id_integrity_data(data, IDs):
-    #     # Check consistency: all IDs in data.csv in references.bib
+    #     # Check consistency: all IDs in data.csv in records.bib
     #     missing_IDs = [ID for
     #                    ID in data['ID'].tolist()
     #                    if ID not in IDs]
     #     if not len(missing_IDs) == 0:
-    #         raise some error ('IDs in data.csv not in MAIN_REFERENCES: ' +
+    #         raise some error ('IDs in data.csv not in RECORDS_FILE: ' +
     #               str(set(missing_IDs)))
     #     return
 
@@ -1715,7 +1711,7 @@ class ReviewDataset:
                 if prior_id in name:
                     msg = (
                         f"Old ID ({prior_id}, changed to {new_id} in the "
-                        + f"MAIN_REFERENCES) found in filepath: {name}"
+                        + f"RECORDS_FILE) found in filepath: {name}"
                     )
                     if msg not in notifications:
                         notifications.append(msg)
@@ -1731,7 +1727,7 @@ class ReviewDataset:
                     if prior_id in retrieved_IDs:
                         msg = (
                             f"Old ID ({prior_id}, changed to {new_id} in "
-                            + f"the MAIN_REFERENCES) found in file: {name}"
+                            + f"the RECORDS_FILE) found in file: {name}"
                         )
                         if msg not in notifications:
                             notifications.append(msg)
@@ -1744,7 +1740,7 @@ class ReviewDataset:
                             if prior_id in line:
                                 msg = (
                                     f"Old ID ({prior_id}, to {new_id} in "
-                                    + f"the MAIN_REFERENCES) found in file: {name}"
+                                    + f"the RECORDS_FILE) found in file: {name}"
                                 )
                                 if msg not in notifications:
                                     notifications.append(msg)
@@ -1755,7 +1751,7 @@ class ReviewDataset:
                 if prior_id in name:
                     notifications.append(
                         f"Old ID ({prior_id}, changed to {new_id} in the "
-                        f"MAIN_REFERENCES) found in filepath: {name}"
+                        f"RECORDS_FILE) found in filepath: {name}"
                     )
         return notifications
 
@@ -1875,7 +1871,7 @@ class ReviewDataset:
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
         self.__git_repo.index.add(
-            [str(self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"])]
+            [str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])]
         )
         return
 

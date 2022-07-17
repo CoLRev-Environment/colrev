@@ -21,7 +21,7 @@ class Trace(Process):
 
         self.REVIEW_MANAGER.logger.info(f"Trace record by ID: {ID}")
 
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         DATA = self.REVIEW_MANAGER.paths["DATA"]
 
         revlist = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo().iter_commits()
@@ -42,9 +42,9 @@ class Trace(Process):
                 + f" {commit_message_first_line} (by {commit.author.name})"
             )
 
-            if str(MAIN_REFERENCES_RELATIVE) in commit.tree:
+            if str(RECORDS_FILE_RELATIVE) in commit.tree:
                 filecontents = (
-                    commit.tree / str(MAIN_REFERENCES_RELATIVE)
+                    commit.tree / str(RECORDS_FILE_RELATIVE)
                 ).data_stream.read()
 
                 records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(

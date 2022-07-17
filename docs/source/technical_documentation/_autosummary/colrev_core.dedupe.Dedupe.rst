@@ -22,7 +22,7 @@ colrev\_core.dedupe.Dedupe
       ~Dedupe.fix_errors
       ~Dedupe.get_info
       ~Dedupe.main
-      ~Dedupe.prep_references
+      ~Dedupe.prep_records
       ~Dedupe.readData
       ~Dedupe.select_primary_merge_record
       ~Dedupe.source_comparison

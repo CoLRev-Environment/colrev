@@ -1895,7 +1895,8 @@ class PrepRecord(Record):
     ) -> None:
 
         if not self.masterdata_is_curated():
-
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
             missing_fields = self.missing_fields()
             not_missing_fields = []
             if missing_fields:
@@ -2016,7 +2017,7 @@ class RecordState(Enum):
     md_retrieved = auto()
     """Record is retrieved and stored in the ./search directory"""
     md_imported = auto()
-    """Record is imported into the MAIN_REFERENCES"""
+    """Record is imported into the RECORDS_FILE"""
     md_needs_manual_preparation = auto()
     """Record requires manual preparation
     (colrev_masterdata_provenance provides hints)"""

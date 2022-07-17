@@ -44,7 +44,7 @@ class PrepMan(Process):
         from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
-            f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
+            f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -130,12 +130,8 @@ class PrepMan(Process):
 
     def extract_needs_prep_man(self) -> None:
 
-        prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
-            "prep-references.bib"
-        )
-        prep_csv_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path(
-            "prep-references.csv"
-        )
+        prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-records.bib")
+        prep_csv_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-records.csv")
 
         if prep_csv_path.is_file():
             print(f"Please rename file to avoid overwriting changes ({prep_csv_path})")
@@ -146,7 +142,7 @@ class PrepMan(Process):
             return
 
         self.REVIEW_MANAGER.logger.info(
-            f"Load {self.REVIEW_MANAGER.paths['MAIN_REFERENCES_RELATIVE']}"
+            f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -189,14 +185,14 @@ class PrepMan(Process):
 
         PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
-        if Path("prep-references.csv").is_file():
-            self.REVIEW_MANAGER.logger.info("Load prep-references.csv")
-            bib_db_df = pd.read_csv("prep-references.csv")
+        if Path("prep-records.csv").is_file():
+            self.REVIEW_MANAGER.logger.info("Load prep-records.csv")
+            bib_db_df = pd.read_csv("prep-records.csv")
             records_changed = bib_db_df.to_dict("records")
-        if Path("prep-references.bib").is_file():
-            self.REVIEW_MANAGER.logger.info("Load prep-references.bib")
+        if Path("prep-records.bib").is_file():
+            self.REVIEW_MANAGER.logger.info("Load prep-records.bib")
 
-            with open("prep-references.bib", encoding="utf8") as target_db:
+            with open("prep-records.bib", encoding="utf8") as target_db:
                 records_changed_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
                     load_str=target_db.read()
                 )
@@ -204,10 +200,10 @@ class PrepMan(Process):
                 records_changed = records_changed_dict.values()
 
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
-            ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            ((commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read())
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
         filecontents_current_commit = next(revlist)  # noqa
@@ -255,7 +251,7 @@ class PrepMan(Process):
             PREPARATION.reset(record_list=records_to_reset)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.format_references()
+        self.REVIEW_MANAGER.format_records_file()
         self.REVIEW_MANAGER.check_repo()
         return
 
