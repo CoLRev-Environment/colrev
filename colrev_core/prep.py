@@ -340,15 +340,15 @@ class Preparation(Process):
 
         record_reset_list = [[record, deepcopy(record)] for record in record_list]
 
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
         revlist = (
             (
                 commit.hexsha,
                 commit.message,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
         for commit_id, cmsg, filecontents in list(revlist):
@@ -423,7 +423,6 @@ class Preparation(Process):
 
         saved_args = {"reset_records": ",".join(reset_ids)}
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        # self.REVIEW_MANAGER.format_references()
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
         self.REVIEW_MANAGER.create_commit(
             msg="Reset metadata for manual preparation",
@@ -438,10 +437,10 @@ class Preparation(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
-            ((commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read())
-            for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            ((commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read())
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
         filecontents = next(revlist)  # noqa
         prior_records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records(
@@ -473,7 +472,7 @@ class Preparation(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_prep_script.py")
 
         prep_round = self.REVIEW_MANAGER.settings.prep.prep_rounds[-1]
-        prep_round.scripts.append("custom_prep_script")
+        prep_round.scripts.append({"endpoint": "custom_prep_script"})
         self.REVIEW_MANAGER.save_settings()
 
         return

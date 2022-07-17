@@ -747,8 +747,8 @@ class Record:
 
     @classmethod
     def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
-        record_a = deepcopy(RECORD_A.get_data())
-        record_b = deepcopy(RECORD_B.get_data())
+        record_a = RECORD_A.copy()
+        record_b = RECORD_B.copy()
 
         if "title" not in record_a:
             record_a["title"] = ""
@@ -1648,10 +1648,8 @@ class PrepRecord(Record):
             REC_IN.data["author"] = authors_string
             return
 
-        RECORD = PrepRecord(data=deepcopy(RECORD_ORIGINAL.get_data()))
-        RETRIEVED_RECORD = PrepRecord(
-            data=deepcopy(RETRIEVED_RECORD_ORIGINAL.get_data())
-        )
+        RECORD = PrepRecord(data=RECORD_ORIGINAL.copy_prep_rec())
+        RETRIEVED_RECORD = PrepRecord(data=RETRIEVED_RECORD_ORIGINAL.copy_prep_rec())
         if RECORD.container_is_abbreviated():
             min_len = RECORD.get_abbrev_container_min_len()
             RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
@@ -1895,7 +1893,8 @@ class PrepRecord(Record):
     ) -> None:
 
         if not self.masterdata_is_curated():
-
+            if "colrev_masterdata_provenance" not in self.data:
+                self.data["colrev_masterdata_provenance"] = {}
             missing_fields = self.missing_fields()
             not_missing_fields = []
             if missing_fields:
@@ -2016,7 +2015,7 @@ class RecordState(Enum):
     md_retrieved = auto()
     """Record is retrieved and stored in the ./search directory"""
     md_imported = auto()
-    """Record is imported into the MAIN_REFERENCES"""
+    """Record is imported into the RECORDS_FILE"""
     md_needs_manual_preparation = auto()
     """Record requires manual preparation
     (colrev_masterdata_provenance provides hints)"""

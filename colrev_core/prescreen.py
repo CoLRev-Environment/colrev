@@ -166,6 +166,7 @@ class Prescreen(Process):
 
         for PRESCREEN_SCRIPT in self.REVIEW_MANAGER.settings.prescreen.scripts:
 
+            self.REVIEW_MANAGER.logger.info(f"Run {PRESCREEN_SCRIPT['endpoint']}")
             ENDPOINT = self.prescreen_scripts[PRESCREEN_SCRIPT["endpoint"]]
             records = ENDPOINT.run_prescreen(self, records, split)
 

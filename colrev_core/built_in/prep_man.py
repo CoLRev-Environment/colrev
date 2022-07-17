@@ -30,7 +30,7 @@ class ExportManPrep:
     def prepare_manual(self, PREP_MAN, records):
         from colrev_core.record import RecordState
 
-        export_path = PREP_MAN.REVIEW_MANAGER.path / Path("references_prep_man.bib")
+        export_path = PREP_MAN.REVIEW_MANAGER.path / Path("records_prep_man.bib")
 
         if export_path.is_file():
             if "y" == input(f"Import changes from {export_path} [y,n]?"):

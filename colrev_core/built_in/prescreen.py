@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 import csv
+import typing
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
@@ -13,24 +15,36 @@ from colrev_core.record import RecordState
 from colrev_core.review_manager import MissingDependencyError
 
 
+@dataclass
+class ScopePrescreenEndpointSettings:
+    name: str
+    TimeScopeFrom: typing.Optional[int]
+    TimeScopeTo: typing.Optional[int]
+    LanguageScope: typing.Optional[list]
+    ExcludeComplementaryMaterials: typing.Optional[bool]
+    OutletInclusionScope: typing.Optional[dict]
+    OutletExclusionScope: typing.Optional[dict]
+    ENTRYTYPEScope: typing.Optional[list]
+
+
 @zope.interface.implementer(PrescreenEndpoint)
 class ScopePrescreenEndpoint:
-
-    # TODO : move the scope settings to the parameters of this endpoint
-
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        if "TimeScopeFrom" in SETTINGS:
+            assert SETTINGS["TimeScopeFrom"] > 1900
+        if "TimeScopeFrom" in SETTINGS:
+            assert SETTINGS["TimeScopeFrom"] < 2100
+        if "TimeScopeTo" in SETTINGS:
+            assert SETTINGS["TimeScopeTo"] > 1900
+        if "TimeScopeTo" in SETTINGS:
+            assert SETTINGS["TimeScopeTo"] < 2100
+        # TODO : validate values (assert, e.g., LanguageScope)
 
-    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
-        from colrev_core.settings import (
-            TimeScopeFrom,
-            TimeScopeTo,
-            OutletInclusionScope,
-            OutletExclusionScope,
-            ENTRYTYPEScope,
-            ComplementaryMaterialsScope,
+        self.SETTINGS = from_dict(
+            data_class=ScopePrescreenEndpointSettings, data=SETTINGS
         )
 
+    def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         def load_predatory_journals_beal() -> dict:
 
             import pkgutil
@@ -57,80 +71,77 @@ class ScopePrescreenEndpoint:
             # Note : LanguageScope is covered in prep
             # because dedupe cannot handle merges between languages
 
-            for scope_restriction in PRESCREEN.REVIEW_MANAGER.settings.prescreen.scope:
+            if self.SETTINGS.ENTRYTYPEScope:
+                if record["ENTRYTYPE"] not in self.SETTINGS.ENTRYTYPEScope:
+                    Record(data=record).prescreen_exclude(
+                        reason="not in ENTRYTYPEScope"
+                    )
 
-                if isinstance(scope_restriction, ENTRYTYPEScope):
-                    if record["ENTRYTYPE"] not in scope_restriction.ENTRYTYPEScope:
-                        Record(data=record).prescreen_exclude(
-                            reason="not in ENTRYTYPEScope"
-                        )
-
-                if isinstance(scope_restriction, OutletExclusionScope):
-                    if "values" in scope_restriction.OutletExclusionScope:
-                        for r in scope_restriction.OutletExclusionScope["values"]:
-                            for key, value in r.items():
-                                if key in record and record.get(key, "") == value:
-                                    Record(data=record).prescreen_exclude(
-                                        reason="in OutletExclusionScope"
-                                    )
-                    if "list" in scope_restriction.OutletExclusionScope:
-                        for r in scope_restriction.OutletExclusionScope["list"]:
-                            for key, value in r.items():
-                                if (
-                                    "resource" == key
-                                    and "predatory_journals_beal" == value
-                                ):
-                                    if "journal" in record:
-                                        if (
-                                            record["journal"].lower()
-                                            in predatory_journals_beal
-                                        ):
-                                            Record(data=record).prescreen_exclude(
-                                                reason="predatory_journals_beal"
-                                            )
-
-                if isinstance(scope_restriction, TimeScopeFrom):
-                    if int(record.get("year", 0)) < scope_restriction.TimeScopeFrom:
-                        Record(data=record).prescreen_exclude(
-                            reason="not in TimeScopeFrom "
-                            f"(>{scope_restriction.TimeScopeFrom})"
-                        )
-
-                if isinstance(scope_restriction, TimeScopeTo):
-                    if int(record.get("year", 5000)) > scope_restriction.TimeScopeTo:
-                        Record(data=record).prescreen_exclude(
-                            reason="not in TimeScopeTo "
-                            f"(<{scope_restriction.TimeScopeTo})"
-                        )
-
-                if isinstance(scope_restriction, OutletInclusionScope):
-                    in_outlet_scope = False
-                    if "values" in scope_restriction.OutletInclusionScope:
-                        for r in scope_restriction.OutletInclusionScope["values"]:
-                            for key, value in r.items():
-                                if key in record and record.get(key, "") == value:
-                                    in_outlet_scope = True
-                    if not in_outlet_scope:
-                        Record(data=record).prescreen_exclude(
-                            reason="not in OutletInclusionScope"
-                        )
-
-                # TODO : discuss whether we should move this to the prep scripts
-                if isinstance(scope_restriction, ComplementaryMaterialsScope):
-                    if scope_restriction.ComplementaryMaterialsScope:
-                        if "title" in record:
-                            # TODO : extend/test the following
-                            if record["title"].lower() in [
-                                "about our authors",
-                                "editorial board",
-                                "author index",
-                                "contents",
-                                "index of authors",
-                                "list of reviewers",
-                            ]:
+            if self.SETTINGS.OutletExclusionScope:
+                if "values" in self.SETTINGS.OutletExclusionScope:
+                    for r in self.SETTINGS.OutletExclusionScope["values"]:
+                        for key, value in r.items():
+                            if key in record and record.get(key, "") == value:
                                 Record(data=record).prescreen_exclude(
-                                    reason="complementary material"
+                                    reason="in OutletExclusionScope"
                                 )
+                if "list" in self.SETTINGS.OutletExclusionScope:
+                    for r in self.SETTINGS.OutletExclusionScope["list"]:
+                        for key, value in r.items():
+                            if "resource" == key and "predatory_journals_beal" == value:
+                                if "journal" in record:
+                                    if (
+                                        record["journal"].lower()
+                                        in predatory_journals_beal
+                                    ):
+                                        Record(data=record).prescreen_exclude(
+                                            reason="predatory_journals_beal"
+                                        )
+
+            if self.SETTINGS.TimeScopeFrom:
+                if int(record.get("year", 0)) < self.SETTINGS.TimeScopeFrom:
+                    Record(data=record).prescreen_exclude(
+                        reason="not in TimeScopeFrom "
+                        f"(>{self.SETTINGS.TimeScopeFrom})"
+                    )
+
+            if self.SETTINGS.TimeScopeTo:
+                if int(record.get("year", 5000)) > self.SETTINGS.TimeScopeTo:
+                    Record(data=record).prescreen_exclude(
+                        reason="not in TimeScopeTo " f"(<{self.SETTINGS.TimeScopeTo})"
+                    )
+
+            if self.SETTINGS.OutletInclusionScope:
+                in_outlet_scope = False
+                if "values" in self.SETTINGS.OutletInclusionScope:
+                    for r in self.SETTINGS.OutletInclusionScope["values"]:
+                        for key, value in r.items():
+                            if key in record and record.get(key, "") == value:
+                                in_outlet_scope = True
+                if not in_outlet_scope:
+                    Record(data=record).prescreen_exclude(
+                        reason="not in OutletInclusionScope"
+                    )
+
+            # TODO : discuss whether we should move this to the prep scripts
+            if self.SETTINGS.ExcludeComplementaryMaterials:
+                if self.SETTINGS.ExcludeComplementaryMaterials:
+                    if "title" in record:
+                        # TODO : extend/test the following
+                        if record["title"].lower() in [
+                            "about our authors",
+                            "editorial board",
+                            "author index",
+                            "contents",
+                            "index of authors",
+                            "list of reviewers",
+                            "issue information",
+                            "call for papers",
+                            "acknowledgments",
+                        ]:
+                            Record(data=record).prescreen_exclude(
+                                reason="complementary material"
+                            )
 
             if record["colrev_status"] == RecordState.rev_prescreen_excluded:
                 PRESCREEN.REVIEW_MANAGER.report_logger.info(

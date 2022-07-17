@@ -46,14 +46,14 @@ class Validate(Process):
 
         repo = git.Repo()
 
-        MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths["MAIN_REFERENCES_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
 
         revlist = (
             (
                 commit.hexsha,
-                (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            for commit in repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+            for commit in repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
         found_target_commit = False
@@ -164,20 +164,18 @@ class Validate(Process):
             self.REVIEW_MANAGER.logger.info("Loading data from history...")
             git_repo = git.Repo()
 
-            MAIN_REFERENCES_RELATIVE = self.REVIEW_MANAGER.paths[
-                "MAIN_REFERENCES_RELATIVE"
-            ]
+            RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
 
             revlist = (
                 (
                     commit.hexsha,
-                    (commit.tree / str(MAIN_REFERENCES_RELATIVE)).data_stream.read(),
+                    (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
                 )
-                for commit in git_repo.iter_commits(paths=str(MAIN_REFERENCES_RELATIVE))
+                for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
             )
             found = False
             for commit, filecontents in list(revlist):
-                if found:  # load the MAIN_REFERENCES_RELATIVE in the following commit
+                if found:  # load the RECORDS_FILE_RELATIVE in the following commit
                     prior_records_dict = (
                         self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                             load_str=filecontents.decode("utf-8")

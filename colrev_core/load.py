@@ -542,7 +542,7 @@ class Loader(Process):
             # 2. resolve non-unique IDs (if any)
             self.resolve_non_unique_IDs(SOURCE=SOURCE)
 
-            # 3. load and add records to references.bib
+            # 3. load and add records to records.bib
             self.load_source_records(SOURCE=SOURCE, keep_ids=keep_ids)
             if 0 == SOURCE.to_import:
                 continue

@@ -1,5 +1,5 @@
 ---
 title:         "{{project_name}}"
 keywords:      todo
-bibliography:  ../../references.bib
+bibliography:  ../../records.bib
 ---

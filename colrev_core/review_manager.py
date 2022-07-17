@@ -186,7 +186,7 @@ class ReviewManager:
 
     def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
-        main_refs = "references.bib"
+        main_refs = "records.bib"
         data = "data.csv"
         pdf_dir = "pdfs"
         paper = "paper.md"
@@ -198,8 +198,8 @@ class ReviewManager:
         settings = "settings.json"
         return {
             "REPO_DIR": repository_dir,
-            "MAIN_REFERENCES_RELATIVE": Path(main_refs),
-            "MAIN_REFERENCES": repository_dir.joinpath(main_refs),
+            "RECORDS_FILE_RELATIVE": Path(main_refs),
+            "RECORDS_FILE": repository_dir.joinpath(main_refs),
             "DATA_RELATIVE": Path(data),
             "DATA": repository_dir.joinpath(data),
             "PDF_DIRECTORY_RELATIVE": Path(pdf_dir),
@@ -687,9 +687,30 @@ class ReviewManager:
                     {"endpoint": s} if "endpoint" not in s and isinstance(str, s) else s
                     for s in prep_round["scripts"]
                 ]
+            if "explanation" not in settings["prescreen"]:
+                settings["prescreen"]["explanation"] = ""
+            if "scope" in settings["prescreen"]:
+                scope_items = settings["prescreen"]["scope"]
+                del settings["prescreen"]["scope"]
+
+                if len(scope_items) > 0:
+
+                    if "scope_prescreen" not in [
+                        s["endpoint"] for s in settings["prescreen"]["scripts"]
+                    ]:
+                        settings["prescreen"].insert(0, {"endpoint": "scope_prescreen"})
+                    scope_prescreen = [
+                        s
+                        for s in settings["prescreen"]["scripts"]
+                        if s["endpoint"] == "scope_prescreen"
+                    ][0]
+                    for elements in scope_items:
+                        for scope_key, scope_item in elements.items():
+                            scope_prescreen[scope_key] = scope_item
 
             if settings["screen"]["criteria"] == []:
                 settings["screen"]["criteria"] = {}
+
             if "scripts" not in settings["dedupe"]:
                 settings["dedupe"]["scripts"] = [
                     {"endpoint": "active_learning_training"},
@@ -718,6 +739,18 @@ class ReviewManager:
             self.settings = self.load_settings()
             self.save_settings()
             self.REVIEW_DATASET.add_setting_changes()
+
+            print("Manual steps required to rename references.bib > records.bib.")
+
+            # git branch backup
+            # git filter-branch --tree-filter 'if [ -f references.bib ];
+            # then mv references.bib records.bib; fi' HEAD
+            # rm -d -r .git/refs/original
+            # # DO NOT REPLACE IN SETTINGS.json (or in records.bib/references.bib/...)
+            # (some search sources may be named "references.bib")
+            # git filter-branch --tree-filter
+            # "find . \( -name **.md -o -name .pre-commit-config.yaml \)
+            # -exec sed -i -e \ 's/references.bib/records.bib/g' {} \;"
 
             return
 
@@ -961,20 +994,20 @@ class ReviewManager:
         not self.paths["SEARCHDIR"].mkdir(exist_ok=True)
 
         failure_items = []
-        if not self.paths["MAIN_REFERENCES"].is_file():
-            self.logger.debug("Checks for MAIN_REFERENCES not activated")
+        if not self.paths["RECORDS_FILE"].is_file():
+            self.logger.debug("Checks for RECORDS_FILE not activated")
         else:
 
             # Note : retrieving data once is more efficient than
-            # reading the MAIN_REFERENCES multiple times (for each check)
+            # reading the RECORDS_FILE multiple times (for each check)
 
             if self.REVIEW_DATASET.file_in_history(
-                filepath=self.paths["MAIN_REFERENCES_RELATIVE"]
+                filepath=self.paths["RECORDS_FILE_RELATIVE"]
             ):
                 prior = self.REVIEW_DATASET.retrieve_prior()
                 self.logger.debug("prior")
                 self.logger.debug(self.pp.pformat(prior))
-            else:  # if MAIN_REFERENCES not yet in git history
+            else:  # if RECORDS_FILE not yet in git history
                 prior = {}
 
             data = self.REVIEW_DATASET.retrieve_data(prior=prior)
@@ -988,11 +1021,11 @@ class ReviewManager:
                 },
                 {"script": self.REVIEW_DATASET.check_sources, "params": []},
                 {
-                    "script": self.REVIEW_DATASET.check_main_references_duplicates,
+                    "script": self.REVIEW_DATASET.check_main_records_duplicates,
                     "params": {"data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_references_origin,
+                    "script": self.REVIEW_DATASET.check_main_records_origin,
                     "params": {"prior": prior, "data": data},
                 },
                 {
@@ -1004,25 +1037,25 @@ class ReviewManager:
                     "params": {"data": data},
                 },
                 {
-                    "script": self.REVIEW_DATASET.check_main_references_screen,
+                    "script": self.REVIEW_DATASET.check_main_records_screen,
                     "params": {"data": data},
                 },
             ]
 
-            if prior == {}:  # Selected checks if MAIN_REFERENCES not yet in git history
+            if prior == {}:  # Selected checks if RECORDS_FILE not yet in git history
                 main_refs_checks = [
                     x
                     for x in main_refs_checks
                     if x["script"]
                     in [
                         "check_sources",
-                        "check_main_references_duplicates",
+                        "check_main_records_duplicates",
                     ]
                 ]
 
             check_scripts += main_refs_checks
 
-            self.logger.debug("Checks for MAIN_REFERENCES activated")
+            self.logger.debug("Checks for RECORDS_FILE activated")
 
             PAPER = self.paths["PAPER"]
             if not PAPER.is_file():
@@ -1134,17 +1167,17 @@ class ReviewManager:
         )
         return {"msg": msgs, "status": status_code}
 
-    def format_references(self) -> dict:
-        """Format the references
+    def format_records_file(self) -> dict:
+        """Format the records file
         Entrypoint for pre-commit hooks)
         """
 
         PASS, FAIL = 0, 1
-        if not self.paths["MAIN_REFERENCES"].is_file():
+        if not self.paths["RECORDS_FILE"].is_file():
             return {"status": PASS, "msg": "Everything ok."}
 
         try:
-            changed = self.REVIEW_DATASET.format_main_references()
+            changed = self.REVIEW_DATASET.format_records_file()
             self.update_status_yaml()
 
             self.settings = self.load_settings()
@@ -1155,7 +1188,7 @@ class ReviewManager:
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
 
         if changed:
-            return {"status": FAIL, "msg": "references formatted"}
+            return {"status": FAIL, "msg": "records file formatted"}
         else:
             return {"status": PASS, "msg": "Everything ok."}
 
@@ -1235,7 +1268,7 @@ class ReviewManager:
         report = report + status_page
 
         tree_hash = self.REVIEW_DATASET.get_tree_hash()
-        if self.paths["MAIN_REFERENCES"].is_file():
+        if self.paths["RECORDS_FILE"].is_file():
             tree_info = f"Properties for tree {tree_hash}\n"  # type: ignore
             report = report + "\n\n" + tree_info
             report = report + "   - Traceability of records ".ljust(38, " ") + "YES\n"
@@ -1393,7 +1426,7 @@ class ReviewManager:
                         "[INFO] To reset the metdatata",
                         "[INFO] Summary: ",
                         "[INFO] Continuing batch ",
-                        "[INFO] Load references.bib",
+                        "[INFO] Load records.bib",
                         "[INFO] Calculate statistics",
                         "[INFO] ReviewManager: run ",
                         "[INFO] Retrieve PDFs",

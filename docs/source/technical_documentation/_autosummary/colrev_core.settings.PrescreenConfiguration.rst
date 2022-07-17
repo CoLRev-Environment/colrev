@@ -25,5 +25,5 @@ colrev\_core.settings.PrescreenConfiguration
 
    .. autosummary::
 
-      ~PrescreenConfiguration.scope
+      ~PrescreenConfiguration.explanation
       ~PrescreenConfiguration.scripts

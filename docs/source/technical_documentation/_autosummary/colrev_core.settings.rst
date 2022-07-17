@@ -20,16 +20,11 @@ colrev\_core.settings
       :template: custom-class-template.rst
       :nosignatures:
 
-      ComplementaryMaterialsScope
       Configuration
       DataConfiguration
       DedupeConfiguration
-      ENTRYTYPEScope
       IDPpattern
-      LanguageScope
       LoadConfiguration
-      OutletExclusionScope
-      OutletInclusionScope
       PDFGetConfiguration
       PDFPrepConfiguration
       PrepConfiguration
@@ -42,5 +37,3 @@ colrev\_core.settings
       SearchConfiguration
       SearchSource
       SearchType
-      TimeScopeFrom
-      TimeScopeTo

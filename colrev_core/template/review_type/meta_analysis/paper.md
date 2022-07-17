@@ -1,7 +1,7 @@
 ---
 title: "{{project_title}}"
 author: "{{author}}"
-bibliography: [references.bib]
+bibliography: [records.bib]
 figPrefix: "Figure"
 tblPrefix: "Table"
 ---

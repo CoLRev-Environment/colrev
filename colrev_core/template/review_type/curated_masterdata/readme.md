@@ -6,8 +6,8 @@ This curated repository is based on the [ColRev](https://github.com/geritwagner/
 - Additional metadata should be curated in derivative repositories
 - Corrections are welcome and should be provided using a pull-request on GitHub (initiated by the `colrev push` operation)
 
-To install run
-
 ```
+# To install the curated metadata, run
 colrev env --install {{url}}
+colrev env --index
 ```

@@ -10,6 +10,7 @@ import zope.interface
 from colrev.cli import console_duplicate_instance_label
 from dacite import from_dict
 
+from colrev_core.exceptions import DedupeError
 from colrev_core.process import DedupeEndpoint
 from colrev_core.process import DefaultSettings
 
@@ -30,43 +31,43 @@ class SimpleDedupeEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def __calculate_similarities_record(
-        self, *, DEDUPE, references: pd.DataFrame
+        self, *, DEDUPE, records_df: pd.DataFrame
     ) -> list:
         from colrev_core.record import Record
 
         # Note: per definition, similarities are needed relative to the last row.
-        references["similarity"] = 0
-        references["details"] = 0
-        sim_col = references.columns.get_loc("similarity")
-        details_col = references.columns.get_loc("details")
-        for base_record_i in range(0, references.shape[0]):
+        records_df["similarity"] = 0
+        records_df["details"] = 0
+        sim_col = records_df.columns.get_loc("similarity")
+        details_col = records_df.columns.get_loc("details")
+        for base_record_i in range(0, records_df.shape[0]):
             sim_details = Record.get_similarity_detailed(
-                df_a=references.iloc[base_record_i], df_b=references.iloc[-1]
+                df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
             )
             DEDUPE.REVIEW_MANAGER.report_logger.debug(
                 f"Similarity score: {sim_details['score']}"
             )
             DEDUPE.REVIEW_MANAGER.report_logger.debug(sim_details["details"])
 
-            references.iloc[base_record_i, sim_col] = sim_details["score"]
-            references.iloc[base_record_i, details_col] = sim_details["details"]
+            records_df.iloc[base_record_i, sim_col] = sim_details["score"]
+            records_df.iloc[base_record_i, details_col] = sim_details["details"]
         # Note: return all other records (not the comparison record/first row)
         # and restrict it to the ID, similarity and details
-        ck_col = references.columns.get_loc("ID")
-        sim_col = references.columns.get_loc("similarity")
-        details_col = references.columns.get_loc("details")
-        return references.iloc[:, [ck_col, sim_col, details_col]]
+        ck_col = records_df.columns.get_loc("ID")
+        sim_col = records_df.columns.get_loc("similarity")
+        details_col = records_df.columns.get_loc("details")
+        return records_df.iloc[:, [ck_col, sim_col, details_col]]
 
     def append_merges(self, *, DEDUPE, batch_item: dict) -> dict:
 
         DEDUPE.REVIEW_MANAGER.logger.debug(f'append_merges {batch_item["record"]}')
 
-        references = batch_item["queue"]
+        records_df = batch_item["queue"]
 
         # if the record is the first one added to the records
         # (in a preceding processing step), it can be propagated
         # if len(batch_item["queue"]) < 2:
-        if len(references.index) < 2:
+        if len(records_df.index) < 2:
             return {
                 "ID1": batch_item["record"],
                 "ID2": "NA",
@@ -75,15 +76,15 @@ class SimpleDedupeEndpoint:
             }
 
         # df to get_similarities for each other record
-        references = self.__calculate_similarities_record(
-            DEDUPE=DEDUPE, references=references
+        records_df = self.__calculate_similarities_record(
+            DEDUPE=DEDUPE, records_df=records_df
         )
         # drop the first row (similarities are calculated relative to the last row)
-        references = references.iloc[:-1, :]
+        records_df = records_df.iloc[:-1, :]
         # if batch_item['record'] == 'AdamsNelsonTodd1992':
-        #     references.to_csv('last_similarities.csv')
+        #     records_df.to_csv('last_similarities.csv')
 
-        max_similarity = references.similarity.max()
+        max_similarity = records_df.similarity.max()
 
         # TODO: it may not be sufficient to consider
         # the record with the highest similarity
@@ -105,11 +106,11 @@ class SimpleDedupeEndpoint:
             and max_similarity < batch_item["MERGING_DUP_THRESHOLD"]
         ):
 
-            ID = references.loc[references["similarity"].idxmax()]["ID"]
+            ID = records_df.loc[records_df["similarity"].idxmax()]["ID"]
             DEDUPE.REVIEW_MANAGER.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
             )
-            details = references.loc[references["similarity"].idxmax()]["details"]
+            details = records_df.loc[records_df["similarity"].idxmax()]["details"]
             DEDUPE.REVIEW_MANAGER.logger.debug(details)
             # record_a, record_b = sorted([ID, record["ID"]])
             msg = (
@@ -129,11 +130,11 @@ class SimpleDedupeEndpoint:
             # note: the following status will not be saved in the bib file but
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
-            ID = references.loc[references["similarity"].idxmax()]["ID"]
+            ID = records_df.loc[records_df["similarity"].idxmax()]["ID"]
             DEDUPE.REVIEW_MANAGER.logger.debug(
                 f"max_similarity ({max_similarity}): {batch_item['record']} {ID}"
             )
-            details = references.loc[references["similarity"].idxmax()]["details"]
+            details = records_df.loc[records_df["similarity"].idxmax()]["details"]
             DEDUPE.REVIEW_MANAGER.logger.debug(details)
             msg = (
                 f'Dropped duplicate: {batch_item["record"]} (duplicate of {ID})'
@@ -221,10 +222,10 @@ class SimpleDedupeEndpoint:
             if ID in dedupe_data["queue"]  # type: ignore
         ]
 
-        records_queue = pd.DataFrame.from_dict(records_queue)
-        references = DEDUPE.prep_references(references=records_queue)
-        # DEDUPE.REVIEW_MANAGER.pp.pprint(references.values())
-        references_df = pd.DataFrame(references.values())
+        records_df_queue = pd.DataFrame.from_dict(records_queue)
+        records = DEDUPE.prep_records(records_df=records_df_queue)
+        # DEDUPE.REVIEW_MANAGER.pp.pprint(records.values())
+        records_df = pd.DataFrame(records.values())
 
         items_start = dedupe_data["items_start"]
         batch_data = []
@@ -232,7 +233,7 @@ class SimpleDedupeEndpoint:
             batch_data.append(
                 {
                     "record": dedupe_data["queue"][i],  # type: ignore
-                    "queue": references_df.iloc[: i + 1],
+                    "queue": records_df.iloc[: i + 1],
                     "MERGING_NON_DUP_THRESHOLD": MERGING_NON_DUP_THRESHOLD,
                     "MERGING_DUP_THRESHOLD": MERGING_DUP_THRESHOLD,
                 }
@@ -244,7 +245,7 @@ class SimpleDedupeEndpoint:
                 self.append_merges(DEDUPE=DEDUPE, batch_item=item)
             )
 
-        # dedupe_batch[-1]['queue'].to_csv('last_references.csv')
+        # dedupe_batch[-1]['queue'].to_csv('last_records.csv')
 
         DEDUPE.apply_merges(results=dedupe_batch_results)
 
@@ -256,12 +257,12 @@ class SimpleDedupeEndpoint:
 
         records = DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        records_queue = pd.DataFrame.from_dict(records.values())
-        references = DEDUPE.prep_references(references=records_queue)
-        # DEDUPE.REVIEW_MANAGER.pp.pprint(references.values())
-        references = pd.DataFrame(references.values())
+        records_df_queue = pd.DataFrame.from_dict(records.values())
+        records = DEDUPE.prep_records(records_df=records_df_queue)
+        # DEDUPE.REVIEW_MANAGER.pp.pprint(records.values())
+        records_df = pd.DataFrame(records.values())
 
-        DEDUPE.dedupe_references = references
+        DEDUPE.dedupe_records = records_df
 
         DEDUPE.REVIEW_MANAGER.create_commit(
             msg="Process duplicates", script_call="colrev dedupe", saved_args=saved_args
@@ -271,8 +272,8 @@ class SimpleDedupeEndpoint:
 
         print("The following may be called externally (cli)")
 
-        references = DEDUPE.dedupe_references
-        keys = list(references.columns)
+        records_df = DEDUPE.dedupe_records
+        keys = list(records_df.columns)
         for key_to_drop in [
             "ID",
             "colrev_origin",
@@ -285,8 +286,8 @@ class SimpleDedupeEndpoint:
 
         n_match, n_distinct = 0, 0
         for potential_duplicate in DEDUPE.potential_duplicates:
-            rec1 = references.loc[references["ID"] == potential_duplicate["ID1"], :]
-            rec2 = references.loc[references["ID"] == potential_duplicate["ID2"], :]
+            rec1 = records_df.loc[records_df["ID"] == potential_duplicate["ID1"], :]
+            rec2 = records_df.loc[records_df["ID"] == potential_duplicate["ID2"], :]
 
             record_pair = [rec1.to_dict("records")[0], rec2.to_dict("records")[0]]
 
@@ -480,15 +481,22 @@ class ActiveLearningDedupeTrainingEndpoint:
         # look for it and load it in.
         # __Note:__ if you want to train from scratch, delete the training_file
 
-        if DEDUPE.training_file.is_file():
-            DEDUPE.REVIEW_MANAGER.logger.info(
-                f"Reading pre-labeled training data from {DEDUPE.training_file.name} "
-                "and preparing data"
-            )
-            with open(DEDUPE.training_file, "rb") as f:
-                deduper.prepare_training(data_d, f)
-        else:
-            deduper.prepare_training(data_d)
+        try:
+            if DEDUPE.training_file.is_file():
+                DEDUPE.REVIEW_MANAGER.logger.info(
+                    "Reading pre-labeled training data from "
+                    f"{DEDUPE.training_file.name} "
+                    "and preparing data"
+                )
+                with open(DEDUPE.training_file, "rb") as f:
+                    deduper.prepare_training(data_d, f)
+            else:
+                deduper.prepare_training(data_d)
+        except AttributeError:
+            if len(data_d) < 50:
+                raise DedupeError(
+                    'Sample size too small (use {"endpoint": "simple_dedupe"} instead).'
+                )
 
         # TODO  input('del data_d - check memory')
         del data_d
@@ -781,7 +789,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             #     )
             #     DEDUPE.REVIEW_MANAGER.logger.info(
             #         "If there are errors, it could be necessary to remove the "
-            #         ".references_dedupe_training.json to train a fresh dedupe model."
+            #         ".records_dedupe_training.json to train a fresh dedupe model."
             #     )
 
             #     pass

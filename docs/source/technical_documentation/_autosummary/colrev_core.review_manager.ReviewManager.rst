@@ -19,7 +19,7 @@ colrev\_core.review\_manager.ReviewManager
       ~ReviewManager.check_repo
       ~ReviewManager.check_repository_setup
       ~ReviewManager.create_commit
-      ~ReviewManager.format_references
+      ~ReviewManager.format_records_file
       ~ReviewManager.get_remote_url
       ~ReviewManager.get_status
       ~ReviewManager.in_virtualenv

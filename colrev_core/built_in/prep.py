@@ -4,7 +4,6 @@ import json
 import re
 import sys
 import typing
-from copy import deepcopy
 from pathlib import Path
 
 import git
@@ -130,24 +129,29 @@ class ExcludeLanguagesPrep:
         self.language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )
-
-    def prepare(self, PREPARATION, RECORD):
-
-        from colrev_core.settings import LanguageScope
-
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
-        languages_to_include = [
-            sr.LanguageScope
-            for sr in PREPARATION.REVIEW_MANAGER.settings.prescreen.scope
-            if isinstance(sr, LanguageScope)
-        ][0]
+    def prepare(self, PREPARATION, RECORD):
+
+        languages_to_include = ["en"]
+        if "scope_prescreen" in [
+            s["endpoint"] for s in PREPARATION.REVIEW_MANAGER.settings.prescreen.scripts
+        ]:
+            for scope_prescreen in [
+                s
+                for s in PREPARATION.REVIEW_MANAGER.settings.prescreen.scripts
+                if "scope_prescreen" == s["endpoint"]
+            ]:
+                languages_to_include.extend(
+                    scope_prescreen.get("LanguageScope", ["en"])
+                )
+        languages_to_include = list(set(languages_to_include))
 
         # Note : other languages are not yet supported
         # becuase the dedupe does not yet support cross-language merges
-        assert ["en"] == languages_to_include
 
+        assert ["en"] == languages_to_include
         if "language" in RECORD.data:
             RECORD.data["language"] = (
                 RECORD.data["language"].replace("English", "en").replace("ENG", "en")
@@ -290,7 +294,7 @@ class GlobalIDConsistencyPrep:
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
         if "doi" in RECORD.data:
-            R_COPY = PrepRecord(data=deepcopy(RECORD.get_data()))
+            R_COPY = PrepRecord(data=RECORD.copy_prep_rec())
             CROSSREF_MD = CrossrefConnector.get_masterdata_from_crossref(
                 PREPARATION=PREPARATION, RECORD=R_COPY
             )
@@ -318,7 +322,7 @@ class GlobalIDConsistencyPrep:
         if "url" in RECORD.data:
             try:
                 URL_CONNECTOR = database_connectors.URLConnector()
-                URL_MD = PrepRecord(data=deepcopy(RECORD.get_data()))
+                URL_MD = PrepRecord(data=RECORD.copy_prep_rec())
                 URL_MD = URL_CONNECTOR.retrieve_md_from_url(
                     RECORD=URL_MD, PREPARATION=PREPARATION
                 )
@@ -499,7 +503,7 @@ class BibTexCrossrefResolutionPrep:
     def prepare(self, PREPARATION, RECORD):
         def read_next_record_str() -> typing.Iterator[str]:
             with open(
-                PREPARATION.REVIEW_MANAGER.paths["MAIN_REFERENCES"], encoding="utf8"
+                PREPARATION.REVIEW_MANAGER.paths["RECORDS_FILE"], encoding="utf8"
             ) as f:
                 data = ""
                 first_entry_processed = False
@@ -642,7 +646,7 @@ class SemanticScholarPrep:
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
-            red_record_copy = deepcopy(RECORD.get_data())
+            red_record_copy = RECORD.copy_prep_rec()
             for key in ["volume", "number", "number", "pages"]:
                 if key in red_record_copy:
                     RECORD.remove_field(key=key)
@@ -1011,7 +1015,7 @@ class CrossrefYearVolIssPrep:
             return RECORD
 
         try:
-            modified_record = deepcopy(RECORD.get_data())
+            modified_record = RECORD.copy_prep_rec()
             modified_record = {
                 k: v
                 for k, v in modified_record.items()

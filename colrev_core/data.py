@@ -198,11 +198,11 @@ class Data(Process):
 
         self.REVIEW_MANAGER.logger.info("Create sample profile")
 
-        def prep_references(records) -> pd.DataFrame:
+        def prep_records(*, records) -> pd.DataFrame:
             for record in records:
                 record["outlet"] = record.get("journal", record.get("booktitle", "NA"))
 
-            references = pd.DataFrame.from_dict(records)
+            records_df = pd.DataFrame.from_dict(records)
 
             required_cols = [
                 "ID",
@@ -218,12 +218,14 @@ class Data(Process):
                 "pages",
                 "doi",
             ]
-            available_cols = references.columns.intersection(set(required_cols))
+            available_cols = records_df.columns.intersection(set(required_cols))
             cols = [x for x in required_cols if x in available_cols]
-            references = references[cols]
-            return references
+            records_df = records_df[cols]
+            return records_df
 
-        def prep_observations(references: dict, records: typing.Dict) -> pd.DataFrame:
+        def prep_observations(
+            *, prepared_records_df: dict, records: typing.Dict
+        ) -> pd.DataFrame:
 
             included_papers = [
                 ID
@@ -231,7 +233,9 @@ class Data(Process):
                 if record["colrev_status"]
                 in [RecordState.rev_synthesized, RecordState.rev_included]
             ]
-            observations = references[references["ID"].isin(included_papers)].copy()
+            observations = prepared_records_df[
+                prepared_records_df["ID"].isin(included_papers)
+            ].copy()
             observations.loc[:, "year"] = observations.loc[:, "year"].astype(int)
             missing_outlet = observations[observations["outlet"].isnull()][
                 "ID"
@@ -251,8 +255,10 @@ class Data(Process):
         output_dir = self.REVIEW_MANAGER.path / Path("output")
         output_dir.mkdir(exist_ok=True)
 
-        references = prep_references(records.values())
-        observations = prep_observations(references, records)
+        prepared_records_df = prep_records(records=records.values())
+        observations = prep_observations(
+            prepared_records_df=prepared_records_df, records=records
+        )
 
         if observations.empty:
             self.REVIEW_MANAGER.logger.info("No sample/observations available")
@@ -316,7 +322,7 @@ class Data(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
 
-        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script", "config": {}}
+        NEW_DATA_ENDPOINT = {"endpoint": "custom_data_script"}
 
         self.REVIEW_MANAGER.settings.data.scripts.append(NEW_DATA_ENDPOINT)
         self.REVIEW_MANAGER.save_settings()

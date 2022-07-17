@@ -305,7 +305,7 @@ class Service:
                     self.q.task_done()
                     continue
                 else:
-                    if item["name"] not in ["git add references.bib"]:
+                    if item["name"] not in ["git add records.bib"]:
                         input(f'Complete task: {item["name"]}')
                     self.q.task_done()
 

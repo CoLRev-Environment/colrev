@@ -41,11 +41,11 @@ class Paper(Process):
         assert Path(WORD_TEMPLATE).is_file()
         assert Path(CSL_FILE).is_file()
 
-        uid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_uid
-        gid = os.stat(self.REVIEW_MANAGER.paths["MAIN_REFERENCES"]).st_gid
+        uid = os.stat(self.REVIEW_MANAGER.paths["RECORDS_FILE"]).st_uid
+        gid = os.stat(self.REVIEW_MANAGER.paths["RECORDS_FILE"]).st_gid
 
         script = (
-            "paper.md --citeproc --bibliography references.bib "
+            "paper.md --citeproc --bibliography records.bib "
             + f"--csl {CSL_FILE} "
             + f"--reference-doc {WORD_TEMPLATE} "
             + "--output paper.docx"
