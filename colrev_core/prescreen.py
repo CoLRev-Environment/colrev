@@ -88,33 +88,6 @@ class Prescreen(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
         return prescreen_data
 
-    def set_data(
-        self, *, record: dict, prescreen_inclusion: bool, PAD: int = 40
-    ) -> None:
-
-        if prescreen_inclusion:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                IDs=[record["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_included),
-            )
-        else:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                IDs=[record["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_excluded),
-            )
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
-
     def create_prescreen_split(self, *, create_split: int) -> list:
         import math
 

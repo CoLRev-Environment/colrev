@@ -225,6 +225,8 @@ class ASReviewPrescreenEndpoint:
         return
 
     def import_from_asreview(self, PRESCREEN, records):
+        from colrev_core.record import PrescreenRecord
+
         def get_last_modified(input_paths) -> Path:
             import os
 
@@ -280,17 +282,17 @@ class ASReviewPrescreenEndpoint:
             #  left_index=True, right_index=True)
 
             # for index, row in to_import.iterrows():
+            #     PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
             #     if 1 == row["included"]:
-            #         PRESCREEN.set_data(
-            #             record={"ID": row["ID"]},
-            #             prescreen_inclusion=True,
-            #         )
+            #       PRESCREEN_RECORD.prescreen(
+            #          REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+            #          prescreen_inclusion=True,
+            #       )
             #     if 0 == row["included"]:
-            #         PRESCREEN.set_data(
-            #             record={"ID": row["ID"]},
-            #             prescreen_inclusion=False,
-            #         )
-
+            #        PRESCREEN_RECORD.prescreen(
+            #            REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+            #            prescreen_inclusion=False,
+            #        )
             # result_json_path = self.endpoint_path / Path("result.json")
             # with open(result_json_path) as json_str:
             #     json_data = json.loads(json_str.read())
@@ -308,13 +310,15 @@ class ASReviewPrescreenEndpoint:
             to_import = pd.read_csv(asreview_project_file)
             for index, row in to_import.iterrows():
                 if 1 == row["included"]:
-                    PRESCREEN.set_data(
-                        record={"ID": row["ID"]},
+                    PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
+
+                    PRESCREEN_RECORD.prescreen(
+                        REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=True,
                     )
                 if 0 == row["included"]:
-                    PRESCREEN.set_data(
-                        record={"ID": row["ID"]},
+                    PRESCREEN_RECORD.prescreen(
+                        REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=False,
                     )
             saved_args = {"software": "asreview (version: TODO)"}

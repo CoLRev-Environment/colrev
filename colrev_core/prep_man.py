@@ -336,8 +336,8 @@ class PrepMan(Process):
         from colrev_core.record import PrepRecord
 
         PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
-        record.update(colrev_status=RecordState.md_prepared)
         RECORD = PrepRecord(data=record)
+        RECORD.set_status(target_state=RecordState.md_prepared)
         RECORD.set_masterdata_complete()
         RECORD.set_masterdata_consistent()
         RECORD.set_fields_complete()

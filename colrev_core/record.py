@@ -1975,6 +1975,49 @@ class PrepRecord(Record):
 
         return
 
+    def pdf_man_retrieve(
+        self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40
+    ) -> None:
+
+        if filepath is None:
+            self.set_status(target_state=RecordState.pdf_not_available)
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+            )
+            self.REVIEW_MANAGER.logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+            )
+
+        else:
+            self.set_status(target_state=RecordState.pdf_imported)
+            self.data.update(file=str(filepath))
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+            REVIEW_MANAGER.logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
+    def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
+
+        self.set_status(target_state=RecordState.pdf_prepared)
+        self.reset_pdf_provenance_notes()
+
+        pdf_path = Path(REVIEW_MANAGER.path / Path(self.data["file"]))
+        self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
+        )
+
+        return
+
 
 class PrescreenRecord(Record):
     def __init__(self, *, data: dict):
@@ -2003,12 +2046,69 @@ class PrescreenRecord(Record):
 
         return ret_str
 
+    def prescreen(
+        self, *, REVIEW_MANAGER, prescreen_inclusion: bool, PAD: int = 40
+    ) -> None:
+
+        if prescreen_inclusion:
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+                IDs=[self.data["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_included),
+            )
+        else:
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+                IDs=[self.data["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_excluded),
+            )
+
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
 
 class ScreenRecord(PrescreenRecord):
 
     # Note : currently still identical with PrescreenRecord
-    def __init__(self, data: dict):
+    def __init__(self, *, data: dict):
         super().__init__(data=data)
+
+    def screen(
+        self,
+        *,
+        REVIEW_MANAGER,
+        screen_inclusion: bool,
+        exclusion_criteria: str,
+        PAD: int = 40,
+    ) -> None:
+
+        """Set data (screening decision for a record)"""
+
+        self.data["exclusion_criteria"] = exclusion_criteria
+
+        if screen_inclusion:
+            self.set_status(target_state=RecordState.rev_included)
+
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Included in screen"
+            )
+        else:
+            self.set_status(target_state=RecordState.rev_excluded)
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
+            )
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
 
 
 class RecordState(Enum):

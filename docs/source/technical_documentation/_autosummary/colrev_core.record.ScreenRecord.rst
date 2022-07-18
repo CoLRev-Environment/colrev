@@ -55,12 +55,14 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
+      ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes
       ~ScreenRecord.rename_field
       ~ScreenRecord.reset_pdf_provenance_notes
+      ~ScreenRecord.screen
       ~ScreenRecord.set_fields_complete
       ~ScreenRecord.set_masterdata_complete
       ~ScreenRecord.set_masterdata_consistent

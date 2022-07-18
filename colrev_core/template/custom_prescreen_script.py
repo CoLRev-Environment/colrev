@@ -29,6 +29,8 @@ class CustomPrescreen:
         # Alternatively (does not change the records argument   )
         # presscreen_data = PRESCREEN.get_data()
         # for record in prescreen_data["items"]:
-        # PRESCREEN.set_data(record=record)
+        #   PRESCREEN_RECORD = PrescreenRecord(data=record)
+        #   PRESCREEN_RECORD.prescreen(REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+        #                               prescreen_inclusion=True/False)
 
         return records

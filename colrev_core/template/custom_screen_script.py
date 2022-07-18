@@ -4,7 +4,7 @@ import random
 import zope.interface
 
 from colrev_core.process import ScreenEndpoint
-from colrev_core.record import RecordState
+from colrev_core.record import ScreenRecord
 
 
 @zope.interface.implementer(ScreenEndpoint)
@@ -27,18 +27,27 @@ class CustomScreen:
                 if record["ID"] not in split:
                     continue
 
+            SCREEN_RECORD = ScreenRecord(data=record)
+
             if random.random() < 0.5:
-                record.update(colrev_status=RecordState.rev_included)
                 if exclusion_criteria_available:
                     # record criteria
                     pass
-                SCREEN.set_data(record=record)
+                SCREEN_RECORD.screen(
+                    REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                    screen_inclusion=True,
+                    exclusion_criteria="...",
+                )
+
             else:
-                record.update(colrev_status=RecordState.rev_excluded)
                 if exclusion_criteria_available:
                     # record criteria
                     pass
-                SCREEN.set_data(record=record)
+                SCREEN_RECORD.screen(
+                    REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                    screen_inclusion=False,
+                    exclusion_criteria="...",
+                )
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

@@ -98,24 +98,6 @@ class Screen(Process):
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
         return screen_data
 
-    def set_data(self, *, record: dict, PAD: int = 40) -> None:
-        """Set data (screening decision for a record)"""
-
-        if RecordState.rev_included == record["colrev_status"]:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Included in screen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
-        else:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Excluded in screen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
-
     def add_criterion(self, *, criterion_to_add) -> None:
         """Add a screening criterion to the records and settings"""
         from colrev_core.settings import ScreenCriterion

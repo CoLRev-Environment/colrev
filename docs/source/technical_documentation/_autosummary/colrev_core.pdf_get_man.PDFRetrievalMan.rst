@@ -22,7 +22,6 @@ colrev\_core.pdf\_get\_man.PDFRetrievalMan
       ~PDFRetrievalMan.get_pdf_get_man
       ~PDFRetrievalMan.main
       ~PDFRetrievalMan.pdfs_retrieved_manually
-      ~PDFRetrievalMan.set_data
 
 
 
