@@ -711,6 +711,9 @@ class ReviewManager:
             if settings["screen"]["criteria"] == []:
                 settings["screen"]["criteria"] = {}
 
+            if "colrev_version" not in settings["project"]:
+                settings["project"]["colrev_version"] = "0.5.0"
+
             if "scripts" not in settings["dedupe"]:
                 settings["dedupe"]["scripts"] = [
                     {"endpoint": "active_learning_training"},

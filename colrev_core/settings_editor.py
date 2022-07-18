@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from flask import Flask
+from flask import jsonify
 from flask import request
 from flask import send_from_directory
 from flask_cors import CORS
@@ -18,7 +19,6 @@ class Settings(Process):
     def open_settings_editor(self):
 
         SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
-        # SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
 
         app = Flask(__name__, static_url_path="", static_folder="frontend/build")
         CORS(app)
@@ -37,8 +37,6 @@ class Settings(Process):
 
         @app.route("/api/getSettings")
         def getSettings():
-            print(SETTINGS_FILE_PATH)
-            print(SETTINGS_FILE_PATH.is_file())
 
             with open(SETTINGS_FILE_PATH) as file:
                 json = file.read()
@@ -55,6 +53,24 @@ class Settings(Process):
                 outfile.write(json_string)
 
             return "ok"
+
+        @app.route("/api/getOptions")
+        def getOptions():
+            from colrev_core import settings
+            from colrev_core.load import Loader
+
+            setting_options = {
+                "project": {
+                    "review_type": settings.ReviewType._member_names_,
+                    "id_pattern": settings.IDPpattern._member_names_,
+                },
+                "source": {
+                    "conversion_script": list(Loader.built_in_scripts.keys())
+                    + ["CUSTOM_VALUE"]
+                },
+            }
+
+            return jsonify(setting_options)
 
         app.run(host="0.0.0.0", port="5000", debug=True)
         return

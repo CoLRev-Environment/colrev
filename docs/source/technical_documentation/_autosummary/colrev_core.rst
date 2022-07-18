@@ -56,6 +56,7 @@
    colrev_core.search_sources
    colrev_core.service
    colrev_core.settings
+   colrev_core.settings_editor
    colrev_core.status
    colrev_core.sync
    colrev_core.trace

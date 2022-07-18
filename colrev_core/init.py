@@ -80,6 +80,7 @@ class Initializer:
         from colrev_core.environment import EnvironmentManager
         import pkgutil
         import json
+        from importlib.metadata import version
 
         # Note: parse instead of copy to avoid format changes
         filedata = pkgutil.get_data(__name__, "template/settings.json")
@@ -108,6 +109,9 @@ class Initializer:
         with open("settings.json") as f:
             settings = json.load(f)
 
+        colrev_version = version("colrev_core")
+        colrev_version = colrev_version[: colrev_version.find("+")]
+        settings["project"]["colrev_version"] = colrev_version
         settings["project"]["review_type"] = self.review_type
         # Principle: adapt values provided by the default settings.json
         # instead of creating a new settings.json

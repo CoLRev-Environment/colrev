@@ -32,3 +32,4 @@ colrev\_core.settings.ProjectConfiguration
       ~ProjectConfiguration.curation_url
       ~ProjectConfiguration.curated_masterdata
       ~ProjectConfiguration.curated_fields
+      ~ProjectConfiguration.colrev_version

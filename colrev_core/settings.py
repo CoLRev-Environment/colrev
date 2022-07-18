@@ -45,6 +45,7 @@ class ProjectConfiguration:
     curation_url: typing.Optional[str]
     curated_masterdata: bool
     curated_fields: typing.List[str]
+    colrev_version: str
 
     def __str__(self):
         # TODO : add more
