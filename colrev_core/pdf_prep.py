@@ -225,6 +225,7 @@ class PDF_Preparation(Process):
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.pdf_imported}],
         )
+        self.to_prepare = nr_tasks
 
         prep_data = {
             "nr_tasks": nr_tasks,
@@ -280,6 +281,43 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.create_commit(
             msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
         )
+        return
+
+    def _print_stats(self, pdf_prep_batch) -> None:
+
+        self.pdf_prepared = len(
+            [
+                r
+                for r in pdf_prep_batch
+                if RecordState.pdf_prepared == r["colrev_status"]
+            ]
+        )
+
+        self.not_prepared = self.to_prepare - self.pdf_prepared
+
+        prepared_string = "Prepared: "
+        if self.pdf_prepared == 0:
+            prepared_string += f"{self.pdf_prepared} PDFs".rjust(30, " ")
+        elif self.pdf_prepared == 1:
+            prepared_string += f"\033[92m{self.pdf_prepared}\033[0m PDF".rjust(29, " ")
+        else:
+            prepared_string += f"\033[92m{self.pdf_prepared}\033[0m PDFs".rjust(30, " ")
+
+        not_prepared_string = "Not prepared: "
+        if self.not_prepared == 0:
+            not_prepared_string += f"{self.not_prepared} PDFs".rjust(17, " ")
+        elif self.not_prepared == 1:
+            not_prepared_string += f"\033[93m{self.not_prepared}\033[0m PDF".rjust(
+                16, " "
+            )
+        else:
+            not_prepared_string += f"\033[93m{self.not_prepared}\033[0m PDFs".rjust(
+                17, " "
+            )
+
+        self.REVIEW_MANAGER.logger.info(prepared_string)
+        self.REVIEW_MANAGER.logger.info(not_prepared_string)
+
         return
 
     def setup_custom_script(self) -> None:
@@ -338,6 +376,8 @@ class PDF_Preparation(Process):
             # Multiprocessing mixes logs of different records.
             # For better readability:
             self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_batch])
+
+        self._print_stats(pdf_prep_batch)
 
         # Note: for formatting...
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
