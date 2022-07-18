@@ -23,12 +23,31 @@ class colors:
     END = "\033[0m"
 
 
+@dataclass
+class SimpleDedupeSettings:
+    name: str
+    MERGING_NON_DUP_THRESHOLD: float
+    MERGING_DUP_THRESHOLD: float
+
+
 @zope.interface.implementer(DedupeEndpoint)
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+        # Set default values (if necessary)
+        if "MERGING_NON_DUP_THRESHOLD" not in SETTINGS:
+            SETTINGS["MERGING_NON_DUP_THRESHOLD"] = 0.7
+        if "MERGING_DUP_THRESHOLD" not in SETTINGS:
+            SETTINGS["MERGING_DUP_THRESHOLD"] = 0.95
+
+        self.SETTINGS = from_dict(data_class=SimpleDedupeSettings, data=SETTINGS)
+
+        assert self.SETTINGS.MERGING_NON_DUP_THRESHOLD >= 0.0
+        assert self.SETTINGS.MERGING_NON_DUP_THRESHOLD <= 1.0
+        assert self.SETTINGS.MERGING_DUP_THRESHOLD >= 0.0
+        assert self.SETTINGS.MERGING_DUP_THRESHOLD <= 1.0
 
     def __calculate_similarities_record(
         self, *, DEDUPE, records_df: pd.DataFrame
@@ -90,7 +109,7 @@ class SimpleDedupeEndpoint:
         # the record with the highest similarity
 
         ret = {}
-        if max_similarity <= batch_item["MERGING_NON_DUP_THRESHOLD"]:
+        if max_similarity <= self.SETTINGS.MERGING_NON_DUP_THRESHOLD:
             # Note: if no other record has a similarity exceeding the threshold,
             # it is considered a non-duplicate (in relation to all other records)
             DEDUPE.REVIEW_MANAGER.logger.debug(f"max_similarity ({max_similarity})")
@@ -102,8 +121,8 @@ class SimpleDedupeEndpoint:
             }
 
         elif (
-            max_similarity > batch_item["MERGING_NON_DUP_THRESHOLD"]
-            and max_similarity < batch_item["MERGING_DUP_THRESHOLD"]
+            max_similarity > self.SETTINGS.MERGING_NON_DUP_THRESHOLD
+            and max_similarity < self.SETTINGS.MERGING_DUP_THRESHOLD
         ):
 
             ID = records_df.loc[records_df["similarity"].idxmax()]["ID"]
@@ -126,7 +145,7 @@ class SimpleDedupeEndpoint:
                 "decision": "potential_duplicate",
             }
 
-        else:  # max_similarity >= batch_item["MERGING_DUP_THRESHOLD"]:
+        else:  # max_similarity >= self.SETTINGS.MERGING_DUP_THRESHOLD:
             # note: the following status will not be saved in the bib file but
             # in the duplicate_tuples.csv (which will be applied to the bib file
             # in the end)
@@ -162,9 +181,6 @@ class SimpleDedupeEndpoint:
         from colrev_core.record import RecordState
 
         pd.options.mode.chained_assignment = None  # default='warn'
-
-        MERGING_NON_DUP_THRESHOLD: float = 0.7
-        MERGING_DUP_THRESHOLD: float = 0.95
 
         saved_args = locals()
 
@@ -234,8 +250,6 @@ class SimpleDedupeEndpoint:
                 {
                     "record": dedupe_data["queue"][i],  # type: ignore
                     "queue": records_df.iloc[: i + 1],
-                    "MERGING_NON_DUP_THRESHOLD": MERGING_NON_DUP_THRESHOLD,
-                    "MERGING_DUP_THRESHOLD": MERGING_DUP_THRESHOLD,
                 }
             )
 
@@ -721,7 +735,15 @@ class ActiveLearningSettings:
 @zope.interface.implementer(DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
     def __init__(self, *, SETTINGS):
+
+        # Set default values (if necessary)
+        if "merge_threshold" not in SETTINGS:
+            SETTINGS["merge_threshold"] = 0.8
+        if "partition_threshold" not in SETTINGS:
+            SETTINGS["partition_threshold"] = 0.5
+
         self.SETTINGS = from_dict(data_class=ActiveLearningSettings, data=SETTINGS)
+
         assert self.SETTINGS.merge_threshold >= 0.0
         assert self.SETTINGS.merge_threshold <= 1.0
         assert self.SETTINGS.partition_threshold >= 0.0
