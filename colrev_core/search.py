@@ -48,11 +48,11 @@ class Search(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+        self.SOURCES = REVIEW_MANAGER.settings.sources
 
         self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s.search_script for s in REVIEW_MANAGER.settings.sources],
+            scripts=[s.search_script for s in self.SOURCES],
         )
 
     def save_feed_file(self, records: dict, feed_file: Path) -> None:
@@ -272,14 +272,12 @@ class Search(Process):
             print("Error: missing WHERE or SCOPE clause in query")
             return
 
-        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-
         for source_name in sources:
             duplicate_source = []
             try:
                 duplicate_source = [
                     x
-                    for x in source_details
+                    for x in self.SOURCES
                     if source_name == x["search_parameters"][0]["endpoint"]
                     and selection == x["search_parameters"][0]["params"]
                 ]
@@ -298,7 +296,8 @@ class Search(Process):
             else:
                 filename = f"{source_name}.bib"
                 i = 0
-                while filename in [x.filename for x in source_details]:
+                # TODO : filename may not yet exist (e.g., in other search feeds)
+                while filename in [x.filename for x in self.SOURCES]:
                     i += 1
                     filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
 
@@ -356,11 +355,12 @@ class Search(Process):
         self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
 
         # TODO : when the search_file has been filled only query the last years
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         def load_automated_search_sources() -> list:
 
-            AUTOMATED_SOURCES = [x for x in sources if "endpoint" in x.search_script]
+            AUTOMATED_SOURCES = [
+                x for x in self.SOURCES if "endpoint" in x.search_script
+            ]
 
             AUTOMATED_SOURCES_SELECTED = AUTOMATED_SOURCES
             if selection_str is not None:
@@ -437,9 +437,9 @@ class Search(Process):
         return
 
     def view_sources(self) -> None:
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        for source in sources:
-            self.REVIEW_MANAGER.pp.pprint(source)
+
+        for SOURCE in self.SOURCES:
+            self.REVIEW_MANAGER.pp.pprint(SOURCE)
 
         print("\nOptions:")
         options = ", ".join(list(self.search_scripts.keys()))

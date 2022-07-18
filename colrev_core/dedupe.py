@@ -525,8 +525,7 @@ class Dedupe(Process):
         """Exports a spreadsheet to support analyses of records that are not
         in all sources (for curated repositories)"""
 
-        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        source_filenames = [x.filename for x in source_details]
+        source_filenames = [x.filename for x in self.REVIEW_MANAGER.settings.sources]
         print("sources: " + ",".join(source_filenames))
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()

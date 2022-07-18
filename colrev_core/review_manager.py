@@ -107,8 +107,7 @@ class ReviewManager:
             self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.REVIEW_DATASET = ReviewDataset(REVIEW_MANAGER=self)
             """The review dataset object"""
-            self.sources = self.REVIEW_DATASET.load_sources()
-            """Information on sources (search directory)"""
+
         except Exception as e:
             if force_mode:
                 print(e)
@@ -542,7 +541,6 @@ class ReviewManager:
             self.save_settings()
 
             self.REVIEW_DATASET.add_setting_changes()
-            self.sources = self.REVIEW_DATASET.load_sources()
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():

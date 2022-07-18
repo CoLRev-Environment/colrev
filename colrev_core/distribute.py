@@ -16,6 +16,7 @@ class Distribute(Process):
 
     def main(self, *, path_str: str, target: Path) -> None:
         from colrev_core.environment import TEIParser, GrobidService
+        from colrev_core.settings import SearchSource, SearchType
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path
@@ -66,17 +67,22 @@ class Distribute(Process):
                         import_records = import_records_dict.values()
                 else:
                     import_records = []
-                    new_record = {
-                        "filename": str(target_bib_file.name),
-                        "search_type": "OTHER",
-                        "source_identifier": "Local import",
-                        "search_parameters": "",
-                        "comment": "",
-                    }
 
-                    sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-                    sources.append(new_record)
-                    self.REVIEW_MANAGER.REVIEW_DATASET.save_sources(sources)
+                    NEW_SOURCE = SearchSource(
+                        filename=Path("search") / target_bib_file.name,
+                        search_type=SearchType.OTHER,
+                        source_name="locally_distributed_references",
+                        source_identifier="",
+                        search_parameters="",
+                        search_script={},
+                        conversion_script={},
+                        source_prep_scripts=[{}],
+                        comment="",
+                    )
+
+                    SOURCES = self.REVIEW_MANAGER.settings.sources
+                    SOURCES.append(NEW_SOURCE)
+                    self.REVIEW_MANAGER.save_settings()
 
                 if 0 != len(import_records):
                     ID = int(get_last_ID(target_bib_file))

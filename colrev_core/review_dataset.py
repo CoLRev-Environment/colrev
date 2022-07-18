@@ -43,11 +43,6 @@ class ReviewDataset:
         self.RECORDS_FILE_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
         self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
 
-    def load_sources(self) -> list:
-        """Load the source details"""
-        # TODO : this file may no longer be needed...
-        return self.REVIEW_MANAGER.settings.sources
-
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 

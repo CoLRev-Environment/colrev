@@ -50,7 +50,6 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.load_from_git_history
       ~ReviewDataset.load_origin_records
       ~ReviewDataset.load_records_dict
-      ~ReviewDataset.load_sources
       ~ReviewDataset.parse_bibtex_str
       ~ReviewDataset.parse_records_dict
       ~ReviewDataset.propagated_ID

@@ -47,4 +47,3 @@ colrev\_core.review\_manager.ReviewManager
       ~ReviewManager.report_logger
       ~ReviewManager.logger
       ~ReviewManager.REVIEW_DATASET
-      ~ReviewManager.sources

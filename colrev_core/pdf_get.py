@@ -137,7 +137,7 @@ class PDF_Retrieval(Process):
     def relink_files(self) -> None:
         def relink_pdf_files(records):
             # Relink files in source file
-            SOURCES = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+            SOURCES = self.REVIEW_MANAGER.settings.sources
             feed_filename = ""
             feed_filepath = ""
             source_records = []
