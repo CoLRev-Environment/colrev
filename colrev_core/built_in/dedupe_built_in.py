@@ -268,10 +268,6 @@ class SimpleDedupeEndpoint:
             msg="Process duplicates", script_call="colrev dedupe", saved_args=saved_args
         )
 
-        # DEDUPE.simple_dedupe()
-
-        print("The following may be called externally (cli)")
-
         records_df = DEDUPE.dedupe_records
         keys = list(records_df.columns)
         for key_to_drop in [

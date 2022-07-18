@@ -747,8 +747,8 @@ class Record:
 
     @classmethod
     def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
-        record_a = RECORD_A.copy()
-        record_b = RECORD_B.copy()
+        record_a = RECORD_A.copy().get_data()
+        record_b = RECORD_B.copy().get_data()
 
         if "title" not in record_a:
             record_a["title"] = ""
@@ -1648,8 +1648,9 @@ class PrepRecord(Record):
             REC_IN.data["author"] = authors_string
             return
 
-        RECORD = PrepRecord(data=RECORD_ORIGINAL.copy_prep_rec())
-        RETRIEVED_RECORD = PrepRecord(data=RETRIEVED_RECORD_ORIGINAL.copy_prep_rec())
+        RECORD = RECORD_ORIGINAL.copy_prep_rec()
+        RETRIEVED_RECORD = RETRIEVED_RECORD_ORIGINAL.copy_prep_rec()
+
         if RECORD.container_is_abbreviated():
             min_len = RECORD.get_abbrev_container_min_len()
             RETRIEVED_RECORD.abbreviate_container(min_len=min_len)

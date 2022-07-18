@@ -13,9 +13,11 @@ class Pull(Process):
             self.pull_project()
         elif records_only:
             self.pull_records_from_index()
+            self.pull_records_from_crossref()
         else:
             self.pull_project()
             self.pull_records_from_index()
+            self.pull_records_from_crossref()
 
         return
 

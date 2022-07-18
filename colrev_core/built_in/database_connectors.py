@@ -471,7 +471,7 @@ class CrossrefConnector:
             session = requests_cache.CachedSession(
                 str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
             )
-        RECORD = PrepRecord(data=RECORD_INPUT.copy_prep_rec())
+        RECORD = RECORD_INPUT.copy_prep_rec()
 
         if not jour_vol_iss_list:
             params = {"rows": "15"}

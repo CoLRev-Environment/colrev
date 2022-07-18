@@ -214,14 +214,24 @@ class Initializer:
                     new_string=self.url,
                 )
 
+            settings["prescreen"][
+                "explanation"
+            ] = "All records are automatically prescreen included."
+
+            settings["screen"][
+                "explanation"
+            ] = "All records are automatically included in the screen."
+
             settings["project"]["curated_masterdata"] = True
             settings["prescreen"]["scripts"] = [
-                {"endpoint": "scope_prescreen"},
+                {"endpoint": "scope_prescreen", "ExcludeComplementaryMaterials": True},
                 {"endpoint": "conditional_prescreen"},
             ]
-            settings["prescreen"]["scope"] = [{"ExcludeComplementaryMaterials": True}]
             settings["screen"]["scripts"] = [{"endpoint": "conditional_screen"}]
             settings["pdf_get"]["scripts"] = []
+
+            # curated repo: automatically prescreen/screen-include papers
+            # (no data endpoint -> automatically rev_synthesized)
 
         with open("settings.json", "w") as outfile:
             json.dump(settings, outfile, indent=4)
