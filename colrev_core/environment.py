@@ -17,8 +17,6 @@ from lxml import etree
 from lxml.etree import SerialisationError
 from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
-from opensearchpy.exceptions import ConnectionError
-from opensearchpy.exceptions import ConnectionTimeout
 from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -618,14 +616,13 @@ class LocalIndex:
     # Note: we need the local_curated_metadata field for is_duplicate()
 
     def __init__(self, *, startup_without_waiting: bool = False):
-        from opensearchpy.exceptions import ConnectionError
 
         self.os = OpenSearch("http://localhost:9200")
 
         self.opensearch_index.mkdir(exist_ok=True, parents=True)
         try:
             self.check_opensearch_docker_available()
-        except ConnectionError:
+        except TransportError:
             pass
             self.start_opensearch_docker(
                 startup_without_waiting=startup_without_waiting
@@ -722,7 +719,7 @@ class LocalIndex:
         available = False
         try:
             self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
-        except (requests.exceptions.RequestException, ConnectionError):
+        except (requests.exceptions.RequestException, TransportError):
             pass
         except NotFoundError:
             available = True
@@ -736,7 +733,6 @@ class LocalIndex:
                     break
                 except (
                     requests.exceptions.RequestException,
-                    ConnectionError,
                     TransportError,
                 ):
                     time.sleep(3)
@@ -1351,7 +1347,7 @@ class LocalIndex:
             try:
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res["colrev_ids"]  # type: ignore
-            except ConnectionTimeout:
+            except TransportError:
                 pass
                 toc_items = []
 
