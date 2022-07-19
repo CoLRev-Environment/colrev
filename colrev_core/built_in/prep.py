@@ -991,6 +991,87 @@ class OpenLibraryMetadataPrep:
 
 
 @zope.interface.implementer(PreparationEndpoint)
+class CiteAsPrep:
+
+    source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
+    always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def prepare(self, PREPARATION, RECORD):
+        def cite_as_json_to_record(*, data: dict, url=str) -> PrepRecord:
+            retrieved_record: dict = {}
+
+            if "author" in data["metadata"]:
+                authors = data["metadata"]["author"]
+                authors_string = ""
+                for author in authors:
+                    authors_string += author.get("family", "") + ", "
+                    authors_string += author.get("given", "") + " "
+                authors_string = authors_string.lstrip().rstrip().replace("  ", " ")
+                retrieved_record.update(author=authors_string)
+            if "container-title" in data["metadata"]:
+                retrieved_record.update(title=data["metadata"]["container-title"])
+            if "URL" in data["metadata"]:
+                retrieved_record.update(url=data["metadata"]["URL"])
+            if "note" in data["metadata"]:
+                retrieved_record.update(note=data["metadata"]["note"])
+            if "type" in data["metadata"]:
+                retrieved_record.update(ENTRYTYPE=data["metadata"]["type"])
+            if "year" in data["metadata"]:
+                retrieved_record.update(year=data["metadata"]["year"])
+            if "DOI" in data["metadata"]:
+                retrieved_record.update(doi=data["metadata"]["DOI"])
+
+            REC = PrepRecord(data=retrieved_record)
+            REC.add_provenance_all(source=url)
+            return REC
+
+        if RECORD.data.get("ENTRYTYPE", "NA") not in ["misc", "software"]:
+            return RECORD
+        if "title" not in RECORD.data:
+            return RECORD
+
+        try:
+
+            url = (
+                f"https://api.citeas.org/product/{RECORD.data['title']}?"
+                + f"email={PREPARATION.REVIEW_MANAGER.EMAIL}"
+            )
+            ret = PREPARATION.session.request(
+                "GET",
+                url,
+                headers=PREPARATION.requests_headers,
+                timeout=PREPARATION.TIMEOUT,
+            )
+            ret.raise_for_status()
+            PREPARATION.REVIEW_MANAGER.logger.debug(url)
+
+            data = json.loads(ret.text)
+
+            RETRIEVED_RECORD = cite_as_json_to_record(data=data, url=url)
+
+            similarity = PrepRecord.get_retrieval_similarity(
+                RECORD_ORIGINAL=RETRIEVED_RECORD,
+                RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+            )
+            if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
+
+                RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
+
+        except requests.exceptions.RequestException:
+            pass
+        except UnicodeEncodeError:
+            PREPARATION.REVIEW_MANAGER.logger.error(
+                "UnicodeEncodeError - this needs to be fixed at some time"
+            )
+            pass
+
+        return RECORD
+
+
+@zope.interface.implementer(PreparationEndpoint)
 class CrossrefYearVolIssPrep:
 
     source_correction_hint = (

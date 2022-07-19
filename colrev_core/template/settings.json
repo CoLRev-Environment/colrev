@@ -170,6 +170,9 @@
                         "endpoint": "get_masterdata_from_dblp"
                     },
                     {
+                        "endpoint": "get_masterdata_from_citeas"
+                    },
+                    {
                         "endpoint": "get_masterdata_from_open_library"
                     },
                     {

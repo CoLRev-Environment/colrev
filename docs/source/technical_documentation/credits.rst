@@ -120,3 +120,6 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
    * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
      - Cross-disciplinary
      - > 30,000,000
+   * - `CiteAs.org <https://citeas.org/>`_ (metadata on research software, datasets, etc.)
+     - Cross-disciplinary
+     - ?

@@ -138,6 +138,9 @@ class Preparation(Process):
         "get_masterdata_from_open_library": {
             "endpoint": built_in_prep.OpenLibraryMetadataPrep,
         },
+        "get_masterdata_from_citeas": {
+            "endpoint": built_in_prep.CiteAsPrep,
+        },
         "get_year_from_vol_iss_jour_crossref": {
             "endpoint": built_in_prep.CrossrefYearVolIssPrep,
         },

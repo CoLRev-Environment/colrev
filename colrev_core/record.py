@@ -42,6 +42,7 @@ class Record:
         "techreport": ["author", "title", "institution", "year"],
         "unpublished": ["title", "author", "year"],
         "misc": ["author", "title", "year"],
+        "software": ["author", "title", "url"],
     }
     """Fields requirements for respective ENTRYTYPE"""
 
@@ -70,7 +71,7 @@ class Record:
         "MOVED_DUPE",
     ]
 
-    preferred_sources = ["https://api.crossref.org/works/"]
+    preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
