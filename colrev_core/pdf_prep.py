@@ -295,25 +295,31 @@ class PDF_Preparation(Process):
 
         self.not_prepared = self.to_prepare - self.pdf_prepared
 
-        prepared_string = "Prepared: "
+        prepared_string = "Prepared:    "
         if self.pdf_prepared == 0:
-            prepared_string += f"{self.pdf_prepared} PDFs".rjust(30, " ")
+            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += " PDFs"
         elif self.pdf_prepared == 1:
-            prepared_string += f"\033[92m{self.pdf_prepared}\033[0m PDF".rjust(29, " ")
+            prepared_string += "\033[92m"
+            prepared_string += f"{self.pdf_prepared}".rjust(10, " ")
+            prepared_string += "\033[0m PDF"
         else:
-            prepared_string += f"\033[92m{self.pdf_prepared}\033[0m PDFs".rjust(30, " ")
+            prepared_string += "\033[92m"
+            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += "\033[0m PDFs"
 
-        not_prepared_string = "Not prepared: "
+        not_prepared_string = "Not prepared:"
         if self.not_prepared == 0:
-            not_prepared_string += f"{self.not_prepared} PDFs".rjust(17, " ")
+            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += " PDFs"
         elif self.not_prepared == 1:
-            not_prepared_string += f"\033[93m{self.not_prepared}\033[0m PDF".rjust(
-                16, " "
-            )
+            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{self.not_prepared}".rjust(10, " ")
+            not_prepared_string += "\033[0m PDF"
         else:
-            not_prepared_string += f"\033[93m{self.not_prepared}\033[0m PDFs".rjust(
-                17, " "
-            )
+            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += "\033[0m PDFs"
 
         self.REVIEW_MANAGER.logger.info(prepared_string)
         self.REVIEW_MANAGER.logger.info(not_prepared_string)

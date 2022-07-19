@@ -414,23 +414,29 @@ class PDF_Retrieval(Process):
 
         retrieved_string = "Retrieved: "
         if self.retrieved == 0:
-            retrieved_string += f"{self.retrieved} PDFs".rjust(21, " ")
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += " PDFs"
         elif self.retrieved == 1:
-            retrieved_string += f"\033[92m{self.retrieved}\033[0m PDF".rjust(20, " ")
+            retrieved_string += "\033[92m"
+            retrieved_string += f"{self.retrieved}".rjust(10, " ")
+            retrieved_string += "\033[0m PDF"
         else:
-            retrieved_string += f"\033[92m{self.retrieved}\033[0m PDFs".rjust(21, " ")
+            retrieved_string += "\033[92m"
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += "\033[0m PDFs"
 
         not_retrieved_string = "Missing:   "
         if self.not_retrieved == 0:
-            not_retrieved_string += f"{self.not_retrieved} PDFs".rjust(21, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += " PDFs"
         elif self.not_retrieved == 1:
-            not_retrieved_string += f"\033[93m{self.not_retrieved}\033[0m PDF".rjust(
-                20, " "
-            )
+            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{self.not_retrieved}".rjust(10, " ")
+            not_retrieved_string += "\033[0m PDF"
         else:
-            not_retrieved_string += f"\033[93m{self.not_retrieved}\033[0m PDFs".rjust(
-                21, " "
-            )
+            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += "\033[0m PDFs"
 
         self.REVIEW_MANAGER.logger.info(retrieved_string)
         self.REVIEW_MANAGER.logger.info(not_retrieved_string)
