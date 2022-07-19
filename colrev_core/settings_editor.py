@@ -16,6 +16,18 @@ class Settings(Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
 
+    def _open_browser(self) -> None:
+
+        import webbrowser
+        from threading import Timer
+
+        url = "http://127.0.0.1:5000"
+
+        Timer(1, lambda: webbrowser.open_new(url)).start()
+        print(f"Open at {url}")
+
+        return
+
     def open_settings_editor(self):
 
         SETTINGS_FILE_PATH = self.REVIEW_MANAGER.path / Path("settings.json")
@@ -72,5 +84,6 @@ class Settings(Process):
 
             return jsonify(setting_options)
 
-        app.run(host="0.0.0.0", port="5000", debug=True)
+        self._open_browser()
+        app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)
         return
