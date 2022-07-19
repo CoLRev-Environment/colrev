@@ -29,6 +29,7 @@ class ReviewType(Enum):
     conceptual_review = "conceptual_review"
     qualitative_systematic_review = "qualitative_systematic_review"
     meta_analysis = "meta_analysis"
+    scientometric = "scientometric"
 
     def __str__(self):
         return (
@@ -191,6 +192,9 @@ class PrescreenConfiguration:
 @dataclass
 class PDFGetConfiguration:
     pdf_path_type: str  # TODO : "symlink" or "copy"
+    pdf_required_for_screen_and_synthesis: bool
+    """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
+    can be specified as mandatory (true) or optional (false) for the following steps"""
     scripts: list
 
     man_pdf_get_scripts: list

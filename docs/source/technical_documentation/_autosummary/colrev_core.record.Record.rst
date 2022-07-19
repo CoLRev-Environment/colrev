@@ -55,6 +55,8 @@ colrev\_core.record.Record
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.missing_fields
+      ~Record.pdf_get_man
+      ~Record.pdf_man_prep
       ~Record.prescreen_exclude
       ~Record.remove_accents
       ~Record.remove_field

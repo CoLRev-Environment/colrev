@@ -55,6 +55,8 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.masterdata_is_curated
       ~PrescreenRecord.merge
       ~PrescreenRecord.missing_fields
+      ~PrescreenRecord.pdf_get_man
+      ~PrescreenRecord.pdf_man_prep
       ~PrescreenRecord.prescreen
       ~PrescreenRecord.prescreen_exclude
       ~PrescreenRecord.remove_accents

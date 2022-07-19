@@ -660,6 +660,8 @@ class PRISMAEndpoint:
         prisma_data.loc["new_studies", "n"] = stat["colrev_status"]["overall"][
             "rev_included"
         ]
+        # TODO : TBD: if settings.pdf_get.pdf_required_for_screen_and_synthesis = False
+        # should the following be included?
         prisma_data.loc["dbr_notretrieved_reports", "n"] = stat["colrev_status"][
             "overall"
         ]["pdf_not_available"]

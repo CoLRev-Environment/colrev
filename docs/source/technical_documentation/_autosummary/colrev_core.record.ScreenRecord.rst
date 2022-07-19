@@ -55,6 +55,8 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
+      ~ScreenRecord.pdf_get_man
+      ~ScreenRecord.pdf_man_prep
       ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.remove_accents

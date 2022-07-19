@@ -63,8 +63,8 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.missing_fields
+      ~PrepRecord.pdf_get_man
       ~PrepRecord.pdf_man_prep
-      ~PrepRecord.pdf_man_retrieve
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude

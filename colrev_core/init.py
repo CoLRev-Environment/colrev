@@ -173,6 +173,9 @@ class Initializer:
                 {"endpoint": "PRISMA", "prisma_data_endpoint_version": "1.0"}
             )
 
+        elif "scientometric" == self.review_type:
+            settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = False
+
         elif "realtime" == self.review_type:
             settings["project"]["delay_automated_processing"] = False
             settings["prep"]["prep_rounds"] = [

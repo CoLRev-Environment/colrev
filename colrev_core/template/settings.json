@@ -224,6 +224,7 @@
     },
     "pdf_get": {
         "pdf_path_type": "symlink",
+        "pdf_required_for_screen_and_synthesis": true,
         "scripts": [
             {
                 "endpoint": "unpaywall"

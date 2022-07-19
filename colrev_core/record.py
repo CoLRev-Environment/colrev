@@ -431,7 +431,8 @@ class Record:
         if "file" in self.data["colrev_data_provenance"]:
             # TODO : check note and remove notes selectively
             # note = d_p_dict['file']['note']
-            self.data["colrev_data_provenance"]["file"]["note"] = ""
+            if "not_available" != self.data["colrev_data_provenance"]["file"]["note"]:
+                self.data["colrev_data_provenance"]["file"]["note"] = ""
         return
 
     def missing_fields(self) -> list:
@@ -1562,6 +1563,62 @@ class Record:
 
         return
 
+    def pdf_get_man(self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40) -> None:
+
+        if filepath is not None:
+            self.set_status(target_state=RecordState.pdf_imported)
+            self.data.update(file=str(filepath))
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+            REVIEW_MANAGER.logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+        else:
+            if REVIEW_MANAGER.settings.pdf_get.pdf_required_for_screen_and_synthesis:
+                self.set_status(target_state=RecordState.pdf_not_available)
+                REVIEW_MANAGER.report_logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+                )
+                REVIEW_MANAGER.logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+                )
+            else:
+                self.set_status(target_state=RecordState.pdf_prepared)
+
+                self.add_data_provenance(
+                    key="file", source="pdf-get-man", note="not_available"
+                )
+
+                REVIEW_MANAGER.report_logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+                REVIEW_MANAGER.logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
+    def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
+
+        self.set_status(target_state=RecordState.pdf_prepared)
+        self.reset_pdf_provenance_notes()
+
+        pdf_path = Path(REVIEW_MANAGER.path / Path(self.data["file"]))
+        self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
+        )
+
+        return
+
 
 class PrepRecord(Record):
     # Note: add methods that are called multiple times
@@ -1972,49 +2029,6 @@ class PrepRecord(Record):
             REVIEW_MANAGER.report_logger.info(
                 f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
             )
-
-        return
-
-    def pdf_man_retrieve(
-        self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40
-    ) -> None:
-
-        if filepath is None:
-            self.set_status(target_state=RecordState.pdf_not_available)
-            REVIEW_MANAGER.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
-            )
-            self.REVIEW_MANAGER.logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
-            )
-
-        else:
-            self.set_status(target_state=RecordState.pdf_imported)
-            self.data.update(file=str(filepath))
-            REVIEW_MANAGER.report_logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-            REVIEW_MANAGER.logger.info(
-                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-
-        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
-        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
-
-    def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
-
-        self.set_status(target_state=RecordState.pdf_prepared)
-        self.reset_pdf_provenance_notes()
-
-        pdf_path = Path(REVIEW_MANAGER.path / Path(self.data["file"]))
-        self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
-
-        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
-        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
-        )
 
         return
 

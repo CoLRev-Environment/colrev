@@ -722,6 +722,9 @@ class ReviewManager:
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}
             ]
+            if "pdf_required_for_screen_and_synthesis" not in settings["pdf_get"]:
+                settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = True
+
             settings["pdf_prep"]["man_pdf_prep_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_prep_man"}
             ]
