@@ -236,7 +236,7 @@ class ASReviewPrescreenEndpoint:
         available_files = [
             str(x)
             for x in self.endpoint_path.glob("**/*")
-            if "records_to_screen" not in str(x)
+            if "records_to_screen" not in str(x) and x.suffix in [".csv"]
         ]
         if 0 == len(available_files):
             return
@@ -309,19 +309,22 @@ class ASReviewPrescreenEndpoint:
         if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
             to_import = pd.read_csv(asreview_project_file)
             for index, row in to_import.iterrows():
-                if 1 == row["included"]:
-                    PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
-
+                PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
+                if "1" == str(row["included"]):
                     PRESCREEN_RECORD.prescreen(
                         REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=True,
                     )
-                if 0 == row["included"]:
+                elif "0" == str(row["included"]):
                     PRESCREEN_RECORD.prescreen(
                         REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=False,
                     )
-            saved_args = {"software": "asreview (version: TODO)"}
+                else:
+                    print(f'not prescreened: {row["ID"]}')
+
+        # TODO: add version
+        saved_args = {"software": "asreview"}
 
         PRESCREEN.REVIEW_MANAGER.create_commit(
             msg="Pre-screening (manual, with asreview)",
@@ -336,15 +339,21 @@ class ASReviewPrescreenEndpoint:
 
         # there may be an optional setting to change the endpoint_path
 
+        endpoint_path_empty = not any(Path(self.endpoint_path).iterdir())
+
         # Note : we always update/overwrite the to_screen csv
         self.export_for_asreview(PRESCREEN, records, split)
 
-        if "y" == input("Start prescreening [y,n]?"):
+        if endpoint_path_empty:
+            start_screen_selected = True
+        else:
+            start_screen_selected = "y" == input("Start prescreen [y,n]?")
+
+        if start_screen_selected:
 
             # Note : the Docker image throws errors for Linux machines
             # The pip package is recommended anyway.
 
-            print("\n\n  ASReview will open shortly.")
             print(
                 "\n  To start the prescreen, create a project and import"
                 f" the following csv file: \n\n     {self.export_filepath}"
@@ -354,6 +363,7 @@ class ASReviewPrescreenEndpoint:
                 f" save in {self.endpoint_path}"
             )
             input("\n  Press Enter to start and ctrl+c to stop ...")
+            print("\n\n  ASReview will open shortly.")
 
             # TODO : if not available: ask to "pip install asreview"
             from asreview.entry_points import LABEntryPoint
