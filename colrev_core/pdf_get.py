@@ -381,7 +381,7 @@ class PDF_Retrieval(Process):
 
         pdf_get_data = {
             "nr_tasks": nr_tasks,
-            "items": items,
+            "items": [{"record": item} for item in items],
         }
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(pdf_get_data))
 
@@ -395,20 +395,9 @@ class PDF_Retrieval(Process):
 
         return pdf_get_data
 
-    def __batch(self, *, items: typing.List[typing.Dict]):
-        # TODO : no longer batch...
-        batch = []
-        for item in items:
-            batch.append(
-                {
-                    "record": item,
-                }
-            )
-        yield batch
+    def _print_stats(self, *, retrieved_record_list) -> None:
 
-    def _print_stats(self, retrieval_batch) -> None:
-
-        self.retrieved = len([r for r in retrieval_batch if "file" in r])
+        self.retrieved = len([r for r in retrieved_record_list if "file" in r])
 
         self.not_retrieved = self.to_retrieve - self.retrieved
 
@@ -498,34 +487,29 @@ class PDF_Retrieval(Process):
 
         pdf_get_data = self.__get_data()
 
-        i = 1
-        for retrieval_batch in self.__batch(items=pdf_get_data["items"]):
-
-            print(f"Batch {i}")
-            i += 1
-
-            retrieval_batch = p_map(self.retrieve_pdf, retrieval_batch)
-
-            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                record_list=retrieval_batch
-            )
-
-            # Multiprocessing mixes logs of different records.
-            # For better readability:
-            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in retrieval_batch])
-
-            # Note: rename should be after copy.
-            # Note : do not pass records as an argument.
-            self.rename_pdfs()
-
-            self._print_stats(retrieval_batch)
-
-            self.REVIEW_MANAGER.create_commit(
-                msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
-            )
-
-        if i == 1:
+        if pdf_get_data["nr_tasks"] == 0:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
+            return
+
+        retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
+
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+            record_list=retrieved_record_list
+        )
+
+        # Multiprocessing mixes logs of different records.
+        # For better readability:
+        self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in retrieved_record_list])
+
+        # Note: rename should be after copy.
+        # Note : do not pass records as an argument.
+        self.rename_pdfs()
+
+        self._print_stats(retrieved_record_list=retrieved_record_list)
+
+        self.REVIEW_MANAGER.create_commit(
+            msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
+        )
 
         return
 

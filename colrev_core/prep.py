@@ -572,9 +572,9 @@ class Preparation(Process):
                 )
             self.PAD = prepare_data["PAD"]
             items = prepare_data["items"]
-            batch = []
+            prep_data = []
             for item in items:
-                batch.append(
+                prep_data.append(
                     {
                         "record": PrepRecord(data=item),
                         # Note : we cannot load scripts here
@@ -584,7 +584,7 @@ class Preparation(Process):
                         "prep_round": prep_round.name,
                     }
                 )
-            return batch
+            return prep_data
 
         def load_prep_data_for_debug(
             *, debug_ids: str, debug_file: str = "NA"
