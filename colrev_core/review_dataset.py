@@ -1330,7 +1330,7 @@ class ReviewDataset:
                 "multiple transitions from different "
                 f'start states ({set(data["start_states"])})'
             )
-        if len(set(data["invalid_state_transitions"])) > 1:
+        if len(set(data["invalid_state_transitions"])) > 0:
             raise StatusTransitionError(
                 "invalid state transitions: \n    "
                 + "\n    ".join(data["invalid_state_transitions"])
