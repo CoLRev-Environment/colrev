@@ -286,7 +286,7 @@ class MissingDependencyError(CoLRevException):
 
 
 class ServiceNotAvailableException(CoLRevException):
-    """The environment service is not available."""
+    """An environment service is not available."""
 
     def __init__(self, msg: str):
         self.message = msg
