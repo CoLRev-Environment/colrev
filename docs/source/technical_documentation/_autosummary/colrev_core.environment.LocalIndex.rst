@@ -29,7 +29,6 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.prep_record_for_return
       ~LocalIndex.retrieve
       ~LocalIndex.retrieve_from_toc
-      ~LocalIndex.set_source_path
       ~LocalIndex.start_opensearch_docker
       ~LocalIndex.start_opensearch_docker_dashboards
 

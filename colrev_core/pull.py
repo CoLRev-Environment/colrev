@@ -125,7 +125,6 @@ class Pull(Process):
         def pull_record(record):
             previous_status = record["colrev_status"]
             # TODO : remove the following
-            previous_source_url = record.get("source_url", "")
             previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
             prev_dblp_key = record.get("dblp_key", "")
 
@@ -141,8 +140,6 @@ class Pull(Process):
             record = RECORD.get_data()
             record["colrev_status"] = previous_status
 
-            if "" != previous_source_url:
-                record["source_url"] = previous_source_url
             if "" != previouscolrev_pdf_id:
                 record["colrev_pdf_id"] = previouscolrev_pdf_id
             if "" != prev_dblp_key:

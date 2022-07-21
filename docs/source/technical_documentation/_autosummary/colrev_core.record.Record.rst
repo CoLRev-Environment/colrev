@@ -45,11 +45,11 @@ colrev\_core.record.Record
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed
-      ~Record.get_source_repo
       ~Record.get_text_from_pdf
       ~Record.get_value
       ~Record.has_incomplete_fields
       ~Record.has_inconsistent_fields
+      ~Record.has_quality_defects
       ~Record.import_provenance
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated

@@ -115,9 +115,6 @@ class CrossrefSearchEndpoint:
                             record["ID"] = str(max_id).rjust(6, "0")
                             if "ENTRYTYPE" not in record:
                                 record["ENTRYTYPE"] = "misc"
-                            record["source_url"] = (
-                                "https://api.crossref.org/works/" + item["DOI"]
-                            )
                             PREP_RECORD = PrepRecord(data=record)
                             DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
                             record = PREP_RECORD.get_data()
@@ -247,10 +244,6 @@ class DBLPSearchEndpoint:
                             if "pages" in RETRIEVED_RECORD.data:
                                 del RETRIEVED_RECORD.data["pages"]
                             available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
-
-                            # RETRIEVED_RECORD.data["source_url"] = (
-                            #     RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
-                            # )
 
                             records = [
                                 {

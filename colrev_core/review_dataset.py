@@ -930,13 +930,10 @@ class ReviewDataset:
 
             if record["colrev_status"] in [
                 RecordState.md_needs_manual_preparation,
-                RecordState.md_imported,
             ]:
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=RECORD, REVIEW_MANAGER=self.REVIEW_MANAGER
                 )
-
-            if record["colrev_status"] == RecordState.md_needs_manual_preparation:
                 RECORD.update_metadata_status(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
@@ -1508,6 +1505,7 @@ class ReviewDataset:
                         "exclusion_criteria",
                         "colrev_status",
                         "source_url",
+                        "metadata_source_repository_paths",
                         "ID",
                         "grobid-version",
                         "colrev_pdf_id",

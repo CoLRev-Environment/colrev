@@ -211,6 +211,7 @@ class Record:
                 target_state = RecordState.md_needs_manual_preparation
 
         self.data["colrev_status"] = target_state
+        return
 
     def get_origins(self) -> list:
         if "colrev_origin" in self.data:
@@ -226,18 +227,6 @@ class Record:
 
     def shares_origins(self, *, other_record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
-
-    def get_source_repo(self) -> str:
-        # priority: return source_link first (then check for source_path)
-        if "source_link" in self.data:
-            if self.data["source_link"] is not None:
-                if "http" in self.data["source_link"]:
-                    return self.data["source_link"]
-            else:
-                print("source_link: none")
-        if "source_path" in self.data:
-            return self.data["source_path"]
-        return "NO_SOURCE_INFO"
 
     def get_value(self, *, key: str, default=None):
         if default is not None:
@@ -259,7 +248,8 @@ class Record:
                 colrev_id = [cid.lstrip() for cid in self.data["colrev_id"].split(";")]
             elif isinstance(self.data["colrev_id"], list):
                 colrev_id = self.data["colrev_id"]
-        return colrev_id
+
+        return [c for c in colrev_id if len(c) > 20]
 
     def update_field(
         self,
@@ -1040,13 +1030,11 @@ class Record:
         for key in list(self.data.keys()):
 
             if key in [
-                "source_link",
-                "source_url",
                 "colrev_id",
                 "colrev_status",
                 "ENTRYTYPE",
                 "ID",
-                "source_path",
+                "metadata_source_repository_paths",
                 "local_curated_metadata",
             ]:
                 continue
@@ -1079,6 +1067,9 @@ class Record:
         return list(set(incomplete_field_keys))
 
     def get_quality_defects(self) -> list:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
         defect_field_keys = []
         for key in self.data.keys():
             if "author" == key:
@@ -1110,7 +1101,14 @@ class Record:
                 ):
                     defect_field_keys.append(key)
 
+            if key in ["title", "author", "journal", "booktitle"]:
+                if percent_upper_chars(self.data[key]) > 0.8:
+                    defect_field_keys.append(key)
+
         return list(set(defect_field_keys))
+
+    def has_quality_defects(self) -> bool:
+        return len(self.get_quality_defects()) > 0
 
     def remove_quality_defect_notes(self) -> None:
 
@@ -1507,7 +1505,6 @@ class Record:
                 "colrev_source_identifier",
                 "ID",
                 "ENTRYTYPE",
-                "source_url",
             ]:
                 colrev_data_provenance[key] = {
                     "source": source_identifier_string,
@@ -1937,13 +1934,14 @@ class PrepRecord(Record):
         )
 
         if (
-            not self.masterdata_is_complete()
-            or self.has_incomplete_fields()
-            or self.has_inconsistent_fields()
+            self.masterdata_is_complete()
+            and not self.has_incomplete_fields()
+            and not self.has_inconsistent_fields()
+            and not self.has_quality_defects()
         ):
-            self.set_status(target_state=RecordState.md_needs_manual_preparation)
-        else:
             self.set_status(target_state=RecordState.md_prepared)
+        else:
+            self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
         return
 

@@ -33,7 +33,7 @@ class Clone:
             return
         EnvironmentManager.register_repo(path_to_register=self.local_path)
         LOCAL_INDEX = LocalIndex()
-        LOCAL_INDEX.index_colrev_project(source_url=str(self.local_path))
+        LOCAL_INDEX.index_colrev_project(repo_source_path=str(self.local_path))
         return
 
 

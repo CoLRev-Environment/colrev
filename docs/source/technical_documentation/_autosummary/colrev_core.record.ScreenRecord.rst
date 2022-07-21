@@ -45,11 +45,11 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
-      ~ScreenRecord.get_source_repo
       ~ScreenRecord.get_text_from_pdf
       ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
+      ~ScreenRecord.has_quality_defects
       ~ScreenRecord.import_provenance
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated

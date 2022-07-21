@@ -45,11 +45,11 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
-      ~PrescreenRecord.get_source_repo
       ~PrescreenRecord.get_text_from_pdf
       ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
+      ~PrescreenRecord.has_quality_defects
       ~PrescreenRecord.import_provenance
       ~PrescreenRecord.masterdata_is_complete
       ~PrescreenRecord.masterdata_is_curated

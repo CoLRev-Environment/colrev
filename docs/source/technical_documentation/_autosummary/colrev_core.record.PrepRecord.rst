@@ -53,11 +53,11 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
-      ~PrepRecord.get_source_repo
       ~PrepRecord.get_text_from_pdf
       ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
+      ~PrepRecord.has_quality_defects
       ~PrepRecord.import_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated

@@ -664,13 +664,11 @@ class CrossrefConnector:
                         f"crossref similarity: {similarity} "
                         f"(>{PREPARATION.RETRIEVAL_SIMILARITY})"
                     )
-                    source_link = (
+                    source = (
                         f"https://api.crossref.org/works/{RETRIEVED_RECORD.data['doi']}"
                     )
-                    RETRIEVED_RECORD.add_provenance_all(source=source_link)
-                    RECORD.merge(
-                        MERGING_RECORD=RETRIEVED_RECORD, default_source=source_link
-                    )
+                    RETRIEVED_RECORD.add_provenance_all(source=source)
+                    RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=source)
 
                     if "retracted" in RECORD.data.get("warning", ""):
                         RECORD.prescreen_exclude(reason="retracted")

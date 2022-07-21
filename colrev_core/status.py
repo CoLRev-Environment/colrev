@@ -339,7 +339,7 @@ class Status(Process):
                     environment_instructions.append(instruction)
 
         local_registry = EnvironmentManager.load_local_registry()
-        registered_paths = [Path(x["source_url"]) for x in local_registry]
+        registered_paths = [Path(x["repo_source_path"]) for x in local_registry]
         # Note : we can use many parallel processes
         # because append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
