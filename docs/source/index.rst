@@ -35,15 +35,15 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    # ... and start with the main command
    colrev status
 
-The status command displays the current state of the review and guides you to the next steps (`CoLRev operations <guides/manual.html>`_).
-After each operation, `validate the changes <guides/manual/1_workflow.html#colrev-validate>`_ to complete the three-step cycle:
+**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next `operation <user_resources/manual.html>`_.
+After each step, `validate the changes <user_resources/manual/1_workflow.html#colrev-validate>`_.
 
 .. figure:: ../figures/workflow.svg
    :width: 600
    :align: center
    :alt: Workflow cycle
 
-Conducting a literature review should be as simple as running the following operations:
+**The operations** allow you to complete a literature review running the following commands:
 
 .. code-block:: bash
 
@@ -81,17 +81,38 @@ Conducting a literature review should be as simple as running the following oper
       # Build the paper
       colrev paper
 
-A CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a content curation model.
-The corresponding *colrev pull* and *colrev push* operations make it easy to reuse and update record data from multiple curated repositories while collaborating on a specific project
 
-.. figure:: ../figures/reuse-vision.svg
+For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
+
+.. figure:: ../figures/settings.svg
+   :width: 600
+   :align: center
+   :alt: Settings
+
+
+**The project collaboration loop** allows you to synchronize the project repository with your team.
+The *colrev pull* and *colrev push* operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
+In essence, a CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a record-level curation loop.
+
+**The record curation loop** proposes a new vision for the review process.
+Reuse of community-curated data from different sources is built into each operation.
+It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
+The more records are curated, the more you can focus on the synthesis.
+
+.. figure:: ../figures/reuse-vision_loop.svg
    :width: 800
    :align: center
    :alt: Reuse vision
 
-Reuse of community-curated data from different sources is built into each operation.
-It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
-The more records are curated, the more you can focus on the synthesis.
+
+Several resources are provided as part of the CoLRev project, including
+
+- The user `manual <user_resources/manual.html>`_ and `cheatsheet <user_resources/cheatsheet.html>`_
+- The developer `api reference <technical_documentation/api.html>`_
+- The scientific foundations of the `CoLRev framework <technical_documentation/colrev.html>`_ and the `architecture rationales <https://github.com/geritwagner/colrev-architecture-rationales>`_
+- Contributions are always welcome (see `help page <user_resources/help.html>`_ and `github repository <https://github.com/geritwagner/colrev_core>`_)
+- Planned: resources for extension development, content curation, further educational materials (tutorials)
+
 
 Citing CoLRev
 -----------------
@@ -108,28 +129,28 @@ Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literat
 .. toctree::
    :hidden:
    :maxdepth: 2
-   :caption: Guidelines
+   :caption: User resources
 
-   Manual <guides/manual>
-   guides/cheatsheet
-   guides/help
+   Manual <user_resources/manual>
+   user_resources/cheatsheet
+   user_resources/credits
+   user_resources/help
 
 .. toctree::
    :hidden:
    :caption: Technical documentation
    :maxdepth: 1
 
-   technical_documentation/colrev
    technical_documentation/api
    technical_documentation/reference_implementation
    technical_documentation/cli
-   Code repository <https://github.com/geritwagner/colrev_core>
+   Repository <https://github.com/geritwagner/colrev_core>
 
 .. toctree::
    :hidden:
-   :caption: Resources
+   :caption: Foundations and governance
    :maxdepth: 1
 
-   technical_documentation/roadmap
-   technical_documentation/credits
-   technical_documentation/about
+   foundations_governance/colrev
+   foundations_governance/roadmap
+   foundations_governance/about
