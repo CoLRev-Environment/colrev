@@ -697,10 +697,10 @@ class ReviewDataset:
             "file": "NA",
             "colrev_masterdata_provenance": "NA",
         }
-        HEADER_ITEMS = len(default)
+        number_required_header_items = len(default)
 
         record_header_items = []
-        record_header_item = default
+        record_header_item = default.copy()
         current_header_item_count = 0
         current_key_value_pair_str = ""
         while True:
@@ -710,11 +710,12 @@ class ReviewDataset:
             if line[:1] == "%" or line == "\n":
                 continue
 
-            if current_header_item_count > HEADER_ITEMS or "}" == line:
+            if current_header_item_count > number_required_header_items or "}" == line:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0
                 continue
+
             if "@" in line[:2] and not "NA" == record_header_item["ID"]:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()

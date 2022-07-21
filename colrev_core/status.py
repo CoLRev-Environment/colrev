@@ -189,7 +189,7 @@ class Status(Process):
             x["colrev_masterdata_provenance"] for x in record_header_list
         ]
         stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in colrev_masterdata_items if "CURATED" in x]
+            [x for x in colrev_masterdata_items if "CURATED:" in x]
         )
         # Note : 'title' in curated_fields: simple heuristic for masterdata curation
         if self.REVIEW_MANAGER.settings.project.curated_masterdata:
