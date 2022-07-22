@@ -2098,13 +2098,13 @@ class ScreenRecord(PrescreenRecord):
         *,
         REVIEW_MANAGER,
         screen_inclusion: bool,
-        exclusion_criteria: str,
+        screening_criteria: str,
         PAD: int = 40,
     ) -> None:
 
         """Set data (screening decision for a record)"""
 
-        self.data["exclusion_criteria"] = exclusion_criteria
+        self.data["screening_criteria"] = screening_criteria
 
         if screen_inclusion:
             self.set_status(target_state=RecordState.rev_included)

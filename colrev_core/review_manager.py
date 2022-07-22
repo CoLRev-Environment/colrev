@@ -741,6 +741,15 @@ class ReviewManager:
             self.save_settings()
             self.REVIEW_DATASET.add_setting_changes()
 
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
+                    if "exclusion_criteria" in record:
+                        record["screening_criteria"] = record["exclusion_criteria"]
+
+                self.REVIEW_DATASET.save_records_dict(records=records)
+                self.REVIEW_DATASET.add_record_changes()
+
             print("Manual steps required to rename references.bib > records.bib.")
 
             # git branch backup

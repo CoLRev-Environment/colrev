@@ -63,9 +63,9 @@ class SpreadsheetScreenEndpoint:
             ]:
                 inclusion_2 = "yes"
 
-            exclusion_criteria = record.get("exclusion_criteria", "NA")
-            if exclusion_criteria == "NA" and inclusion_2 == "yes":
-                exclusion_criteria = "TODO"
+            screening_criteria = record.get("screening_criteria", "NA")
+            if screening_criteria == "NA" and inclusion_2 == "yes":
+                screening_criteria = "TODO"
 
             row = {
                 "ID": record["ID"],
@@ -80,9 +80,9 @@ class SpreadsheetScreenEndpoint:
                 "doi": record.get("doi", ""),
                 "abstract": record.get("abstract", ""),
                 "screen_inclusion": inclusion_2,
-                "exclusion_criteria": exclusion_criteria,
+                "screening_criteria": screening_criteria,
             }
-            # row.update    (exclusion_criteria)
+            # row.update    (screening_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -110,7 +110,7 @@ class SpreadsheetScreenEndpoint:
         screened_records = screen_df.to_dict("records")
 
         SCREEN.REVIEW_MANAGER.logger.warning(
-            "import_table not completed (exclusion_criteria not yet imported)"
+            "import_table not completed (screening_criteria not yet imported)"
         )
 
         for screened_record in screened_records:
@@ -124,9 +124,9 @@ class SpreadsheetScreenEndpoint:
                     record["colrev_status"] = RecordState.rev_excluded
                 if "yes" == screened_record.get("inclusion_2", ""):
                     record["colrev_status"] = RecordState.rev_included
-                if "" != screened_record.get("exclusion_criteria", ""):
-                    record["exclusion_criteria"] = screened_record.get(
-                        "exclusion_criteria", ""
+                if "" != screened_record.get("screening_criteria", ""):
+                    record["screening_criteria"] = screened_record.get(
+                        "screening_criteria", ""
                     )
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)

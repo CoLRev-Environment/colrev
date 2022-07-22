@@ -476,7 +476,6 @@ class SpreadsheetPrescreenEndpoint:
                 "abstract": record.get("abstract", ""),
                 "presceen_inclusion": inclusion_1,
             }
-            # row.update    (exclusion_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -503,9 +502,7 @@ class SpreadsheetPrescreenEndpoint:
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        PRESCREEN.REVIEW_MANAGER.logger.warning(
-            "import_table not completed (exclusion_criteria not yet imported)"
-        )
+        PRESCREEN.REVIEW_MANAGER.logger.warning("import_table not completed")
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:

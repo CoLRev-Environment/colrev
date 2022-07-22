@@ -27,3 +27,4 @@ colrev\_core.settings.ScreenCriterion
 
       ~ScreenCriterion.explanation
       ~ScreenCriterion.comment
+      ~ScreenCriterion.criterion_type

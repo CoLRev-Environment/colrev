@@ -85,7 +85,7 @@ class Pull(Process):
                             k
                             not in Record.identifying_field_keys
                             + Record.provenance_keys
-                            + ["ID", "ENTRYTYPE", "exclusion_criteria"]
+                            + ["ID", "ENTRYTYPE", "screening_criteria"]
                         ):
                             try:
                                 source = CROSSREF_RECORD.data["colrev_data_provenance"][

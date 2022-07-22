@@ -13,14 +13,13 @@ class CustomScreen:
     def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
 
         screen_data = SCREEN.get_data()
-        exclusion_criteria_full = SCREEN.REVIEW_MANAGER.settings.screen.criteria
+        screening_criteria = SCREEN.REVIEW_MANAGER.settings.screen.criteria
 
-        exclusion_criteria = [c.name for c in exclusion_criteria_full]
-        if exclusion_criteria:
-            exclusion_criteria_available = True
+        if screening_criteria:
+            screening_criteria_available = True
         else:
-            exclusion_criteria_available = False
-            exclusion_criteria = ["NA"]
+            screening_criteria_available = False
+            screening_criteria = ["NA"]
 
         for record in screen_data["items"]:
             if len(split) > 0:
@@ -30,23 +29,23 @@ class CustomScreen:
             SCREEN_RECORD = ScreenRecord(data=record)
 
             if random.random() < 0.5:
-                if exclusion_criteria_available:
+                if screening_criteria_available:
                     # record criteria
                     pass
                 SCREEN_RECORD.screen(
                     REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
                     screen_inclusion=True,
-                    exclusion_criteria="...",
+                    screening_criteria="...",
                 )
 
             else:
-                if exclusion_criteria_available:
+                if screening_criteria_available:
                     # record criteria
                     pass
                 SCREEN_RECORD.screen(
                     REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
                     screen_inclusion=False,
-                    exclusion_criteria="...",
+                    screening_criteria="...",
                 )
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)

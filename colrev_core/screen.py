@@ -39,7 +39,7 @@ class Screen(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        exclusion_criteria = self.get_exclusion_criteria()
+        screening_criteria = self.get_screening_criteria()
 
         saved_args = locals()
         saved_args["include_all"] = ""
@@ -50,11 +50,11 @@ class Screen(Process):
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
             )
-            if len(exclusion_criteria) == 0:
-                record.update(exclusion_criteria="NA")
+            if len(screening_criteria) == 0:
+                record.update(screening_criteria="NA")
             else:
                 record.update(
-                    exclusion_criteria=";".join([e + "=no" for e in exclusion_criteria])
+                    screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
             record.update(colrev_status=RecordState.rev_included)
 
@@ -69,13 +69,13 @@ class Screen(Process):
 
         return
 
-    def get_exclusion_criteria(self) -> list:
-        """Get the list of exclusion criteria from settings"""
+    def get_screening_criteria(self) -> list:
+        """Get the list of screening criteria from settings"""
 
         return list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
 
-    def set_exclusion_criteria(self, *, exclusion_criteria) -> None:
-        self.REVIEW_MANAGER.settings.screen.criteria = exclusion_criteria
+    def set_screening_criteria(self, *, screening_criteria) -> None:
+        self.REVIEW_MANAGER.settings.screen.criteria = screening_criteria
         self.REVIEW_MANAGER.save_settings()
         return
 
@@ -102,14 +102,18 @@ class Screen(Process):
         """Add a screening criterion to the records and settings"""
         from colrev_core.settings import ScreenCriterion
 
-        assert criterion_to_add.count(",") == 1
-        criterion_name, criterion_explanation = criterion_to_add.split(",")
+        assert criterion_to_add.count(",") == 2
+        criterion_name, criterion_type, criterion_explanation = criterion_to_add.split(
+            ","
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         if criterion_name not in self.REVIEW_MANAGER.settings.screen.criteria:
 
             ADD_CRITERION = ScreenCriterion(
-                explanation=criterion_explanation, comment=""
+                explanation=criterion_explanation,
+                criterion_type=criterion_type,
+                comment="",
             )
             self.REVIEW_MANAGER.settings.screen.criteria[criterion_name] = ADD_CRITERION
 
@@ -125,16 +129,16 @@ class Screen(Process):
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
-                record["exclusion_criteria"] += f";{criterion_name}=TODO"
+                record["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : we set the status to pdf_prepared because the screening
                 # decisions have to be updated (resulting in inclusion or exclusion)
                 record["colrev_status"] = RecordState.pdf_prepared
             if record["colrev_status"] == RecordState.rev_excluded:
-                record["exclusion_criteria"] += f";{criterion_name}=TODO"
+                record["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : no change in colrev_status
                 # because at least one of the other criteria led to exclusion decision
 
-        # TODO : screening: if exclusion_criteria field is already available
+        # TODO : screening: if screening_criteria field is already available
         # only go through the criteria with "TODO"
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -163,32 +167,32 @@ class Screen(Process):
                 RecordState.rev_included,
                 RecordState.rev_synthesized,
             ]:
-                record["exclusion_criteria"] = (
-                    record["exclusion_criteria"]
+                record["screening_criteria"] = (
+                    record["screening_criteria"]
                     .replace(f"{criterion_to_delete}=TODO", "")
-                    .replace(f"{criterion_to_delete}=yes", "")
-                    .replace(f"{criterion_to_delete}=no", "")
+                    .replace(f"{criterion_to_delete}=in", "")
+                    .replace(f"{criterion_to_delete}=out", "")
                     .replace(";;", ";")
                     .lstrip(";")
                     .rstrip(";")
                 )
                 # Note : colrev_status does not change
-                # because the other exclusion criteria do not change
+                # because the other screening criteria do not change
 
             if record["colrev_status"] in [RecordState.rev_excluded]:
-                record["exclusion_criteria"] = (
-                    record["exclusion_criteria"]
+                record["screening_criteria"] = (
+                    record["screening_criteria"]
                     .replace(f"{criterion_to_delete}=TODO", "")
-                    .replace(f"{criterion_to_delete}=yes", "")
-                    .replace(f"{criterion_to_delete}=no", "")
+                    .replace(f"{criterion_to_delete}=in", "")
+                    .replace(f"{criterion_to_delete}=out", "")
                     .replace(";;", ";")
                     .lstrip(";")
                     .rstrip(";")
                 )
-                # TODO : double-check if we go for inclusion criteria
+
                 if (
-                    "=yes" not in record["exclusion_criteria"]
-                    and "=TODO" not in record["exclusion_criteria"]
+                    "=out" not in record["screening_criteria"]
+                    and "=TODO" not in record["screening_criteria"]
                 ):
                     record["colrev_status"] = RecordState.rev_included
 

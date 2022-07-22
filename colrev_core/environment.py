@@ -1147,8 +1147,8 @@ class LocalIndex:
 
         # TODO : remove provenance on project-specific fields
 
-        if "exclusion_criteria" in record:
-            del record["exclusion_criteria"]
+        if "screening_criteria" in record:
+            del record["screening_criteria"]
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
         if record["colrev_status"] not in [

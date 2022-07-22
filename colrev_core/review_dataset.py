@@ -30,7 +30,7 @@ class ReviewDataset:
     list_fields_keys = [
         "colrev_id",
         # "colrev_pdf_id",
-        # "exclusion_criteria",
+        # "screening_criteria",
     ]
     dict_fields_keys = [
         "colrev_masterdata_provenance",
@@ -355,7 +355,7 @@ class ReviewDataset:
                 "colrev_data_provenance",
                 "colrev_id",
                 "colrev_pdf_id",
-                "exclusion_criteria",
+                "screening_criteria",
                 "file",  # Note : do not change this order (parsers rely on it)
                 "prescreen_exclusion",
                 "doi",
@@ -693,7 +693,7 @@ class ReviewDataset:
             "ID": "NA",
             "colrev_origin": "NA",
             "colrev_status": "NA",
-            "exclusion_criteria": "NA",
+            "screening_criteria": "NA",
             "file": "NA",
             "colrev_masterdata_provenance": "NA",
         }
@@ -956,7 +956,7 @@ class ReviewDataset:
             "status_fields": [],
             "status_transitions": [],
             "start_states": [],
-            "exclusion_criteria_list": [],
+            "screening_criteria_list": [],
             "IDs": [],
             "entries_without_origin": [],
             "record_links_in_bib": [],
@@ -985,7 +985,7 @@ class ReviewDataset:
                         file = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_status" == line.lstrip()[:13]:
                         status = line[line.find("{") + 1 : line.rfind("}")]
-                    if "exclusion_criteria" == line.lstrip()[:18]:
+                    if "screening_criteria" == line.lstrip()[:18]:
                         excl_crit = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_origin" == line.strip()[:13]:
                         origin = line[line.find("{") + 1 : line.rfind("}")]
@@ -1030,7 +1030,7 @@ class ReviewDataset:
 
                 if "not_set" != excl_crit:
                     ec_case = [ID, status, excl_crit]
-                    data["exclusion_criteria_list"].append(ec_case)
+                    data["screening_criteria_list"].append(ec_case)
 
                 # TODO : the origins of a record could be in multiple states
                 if "colrev_status" in prior:
@@ -1335,7 +1335,7 @@ class ReviewDataset:
             )
         return
 
-    def __get_exclusion_criteria(self, *, ec_string: str) -> list:
+    def __get_screening_criteria(self, *, ec_string: str) -> list:
         excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
         if [""] == excl_criteria:
             excl_criteria = []
@@ -1503,7 +1503,7 @@ class ReviewDataset:
                     change_items = list(changes)
 
                     keys_to_ignore = [
-                        "exclusion_criteria",
+                        "screening_criteria",
                         "colrev_status",
                         "source_url",
                         "metadata_source_repository_paths",
@@ -1596,10 +1596,10 @@ class ReviewDataset:
 
         field_errors = []
 
-        if data["exclusion_criteria_list"]:
-            exclusion_criteria = data["exclusion_criteria_list"][0][2]
-            if exclusion_criteria != "NA":
-                criteria = self.__get_exclusion_criteria(ec_string=exclusion_criteria)
+        if data["screening_criteria_list"]:
+            screening_criteria = data["screening_criteria_list"][0][2]
+            if screening_criteria != "NA":
+                criteria = self.__get_screening_criteria(ec_string=screening_criteria)
                 settings_criteria = list(
                     self.REVIEW_MANAGER.settings.screen.criteria.keys()
                 )
@@ -1608,19 +1608,19 @@ class ReviewDataset:
                         "Mismatch in screening criteria: records:"
                         f" {criteria} vs. settings: {settings_criteria}"
                     )
-                pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
-                pattern_inclusion = "=no;".join(criteria) + "=no"
+                pattern = "=(in|out);".join(criteria) + "=(in|out)"
+                pattern_inclusion = "=in;".join(criteria) + "=in"
             else:
                 criteria = ["NA"]
                 pattern = "^NA$"
                 pattern_inclusion = "^NA$"
-            for [ID, status, excl_crit] in data["exclusion_criteria_list"]:
+            for [ID, status, excl_crit] in data["screening_criteria_list"]:
                 # print([ID, status, excl_crit])
                 if not re.match(pattern, excl_crit):
                     # Note: this should also catch cases of missing
-                    # exclusion criteria
+                    # screening criteria
                     field_errors.append(
-                        "Exclusion criteria field not matching "
+                        "Screening criteria field not matching "
                         f"pattern: {excl_crit} ({ID}; criteria: {criteria})"
                     )
 
@@ -1634,26 +1634,26 @@ class ReviewDataset:
                     if "=yes" not in excl_crit:
                         logging.error(f"criteria: {criteria}")
                         field_errors.append(
-                            "Excluded record with no exclusion_criterion violated: "
+                            "Excluded record with no screening_criterion violated: "
                             f"{ID}, {status}, {excl_crit}"
                         )
 
                 # Note: we don't have to consider the cases of
                 # status=retrieved/prescreen_included/prescreen_excluded
-                # because they would not have exclusion_criteria.
+                # because they would not have screening_criteria.
                 elif status in [
                     str(RecordState.rev_included),
                     str(RecordState.rev_synthesized),
                 ]:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
-                            "Included record with exclusion_criterion satisfied: "
+                            "Included record with screening_criterion satisfied: "
                             f"{ID}, {status}, {excl_crit}"
                         )
                 else:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
-                            "Record with exclusion_criterion but before "
+                            "Record with screening_criterion but before "
                             f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:

@@ -54,10 +54,10 @@ class Status(Process):
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
 
         status_list = [x["colrev_status"] for x in record_header_list]
-        exclusion_criteria = [
-            x["exclusion_criteria"]
+        screening_criteria = [
+            x["screening_criteria"]
             for x in record_header_list
-            if x["exclusion_criteria"] not in ["", "NA"]
+            if x["screening_criteria"] not in ["", "NA"]
         ]
         md_duplicates_removed = sum(
             (x["colrev_origin"].count(";")) for x in record_header_list
@@ -72,13 +72,12 @@ class Status(Process):
         stat: dict = {"colrev_status": {}}
 
         criteria = list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
-        exclusion_statistics = {crit: 0 for crit in criteria}
-
-        for exclusion_case in exclusion_criteria:
-            for exclusion_criterion in exclusion_case.split(";"):
-                criterion_name, decision = exclusion_criterion.split("=")
-                if "yes" == decision:
-                    exclusion_statistics[criterion_name] += 1
+        screening_statistics = {crit: 0 for crit in criteria}
+        for screening_case in screening_criteria:
+            for criterion in screening_case.split(";"):
+                criterion_name, decision = criterion.split("=")
+                if "out" == decision:
+                    screening_statistics[criterion_name] += 1
 
         stat["colrev_status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
         stat["colrev_status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
@@ -173,7 +172,7 @@ class Status(Process):
             0 == stat["colrev_status"]["currently"]["md_retrieved"]
         )
 
-        stat["colrev_status"]["currently"]["exclusion"] = exclusion_statistics
+        stat["colrev_status"]["currently"]["exclusion"] = screening_statistics
 
         stat["colrev_status"]["overall"]["rev_screen"] = stat["colrev_status"][
             "overall"
