@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./App.css";
 import Project from "./models/project";
 import ProjectEdit from "./components/project/ProjectEdit";
@@ -6,18 +6,23 @@ import ScriptsEdit from "./components/scripts/ScriptsEdit";
 import Script from "./models/script";
 import Settings from "./models/settings";
 import dataService from "./services/dataService";
-import config from "./config.json";
+import Expander from "./components/common/Expander";
+import ExpanderItem from "./components/common/ExpanderItem";
 
 function App() {
   const [project, setProject] = useState<Project>();
   const [scripts, setScripts] = useState<Script[]>([]);
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
 
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const loadData = async () => {
     setIsFileSaved(false);
     const settings = await dataService.getSettings();
     setProject(settings.project);
-    setScripts(settings.load.scripts);
+    setScripts(settings.data.scripts);
   };
 
   const onProjectChanged = (project: Project) => {
@@ -33,7 +38,7 @@ function App() {
   const onSave = async () => {
     const settings = new Settings();
     settings.project = project ?? new Project();
-    settings.load.scripts = scripts;
+    settings.data.scripts = scripts;
 
     setIsFileSaved(false);
 
@@ -45,52 +50,51 @@ function App() {
     }
   };
 
-  const apiEndpoint = config.apiEndpoint + "/api";
-
   return (
     <>
       <header>
-        <h1 className="display-3 text-center my-4">File Editor</h1>
+        <h1 className="display-3 text-center my-4">Settings Editor</h1>
       </header>
       <div className="container" style={{ marginBottom: 100 }}>
-        <div className="mb-3 d-flex justify-content-between">
-          <button className="btn btn-primary" type="button" onClick={loadData}>
-            Load
-          </button>
-          <a
-            className="align-self-center"
-            href={`${apiEndpoint}/getSettings`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Download File
-          </a>
-        </div>
         {project && (
           <>
-            <div className="mb-3">
-              <ProjectEdit
-                project={project}
-                projectChanged={onProjectChanged}
-              />
-            </div>
-            <div className="mb-3">
-              <ScriptsEdit
-                scripts={scripts}
-                scriptsChanged={onScriptsChanged}
-              />
-            </div>
+            <Expander id="settingsExpander">
+              <ExpanderItem
+                name="Project"
+                id="project"
+                parentContainerId="settingsExpander"
+                show={true}
+              >
+                <ProjectEdit
+                  project={project}
+                  projectChanged={onProjectChanged}
+                />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Data"
+                id="data"
+                parentContainerId="settingsExpander"
+                show={false}
+              >
+                <ScriptsEdit
+                  scripts={scripts}
+                  scriptsChanged={onScriptsChanged}
+                />
+              </ExpanderItem>
+            </Expander>
+            <div className="mb-3"></div>
+            <div className="mb-3"></div>
             <div className="mb-3">
               <button
                 className="btn btn-primary"
                 type="button"
                 onClick={onSave}
               >
-                Save
+                Save Settings
               </button>
             </div>
             {isFileSaved && (
-              <div className="alert alert-success">File Saved</div>
+              <div className="alert alert-success">Settings Saved</div>
             )}
           </>
         )}

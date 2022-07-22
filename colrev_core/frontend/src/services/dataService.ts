@@ -11,8 +11,8 @@ const getSettings = async (): Promise<Settings> => {
   const settings = new Settings();
   settings.project = new Project();
   settings.project.title = response.data.project.title;
-  settings.project.relevantFields = response.data.project.relevant_fields;
-  settings.load = response.data.load;
+  settings.project.curatedFields = response.data.project.curated_fields;
+  settings.data = response.data.data;
 
   return Promise.resolve<Settings>(settings);
 };
@@ -21,9 +21,9 @@ const saveSettings = async (settings: Settings): Promise<void> => {
   const settingsFile = {
     project: {
       title: settings.project.title,
-      relevant_fields: settings.project.relevantFields,
+      curated_fields: settings.project.curatedFields,
     },
-    load: settings.load,
+    data: settings.data,
   };
 
   await httpService.post(`${apiEndpoint}/saveSettings`, settingsFile, {

@@ -6,12 +6,12 @@ const ProjectEdit: React.FC<{ project: Project; projectChanged: any }> = ({
   projectChanged,
 }) => {
   const [title, setTitle] = useState<string>();
-  const [relevantFields, setRelevantFields] = useState<string[]>([]);
+  const [curatedFields, setCuratedFields] = useState<string[]>([]);
 
   useEffect(() => {
     if (project) {
       setTitle(project.title);
-      setRelevantFields(project.relevantFields);
+      setCuratedFields(project.curatedFields);
     }
   }, [project]);
 
@@ -21,95 +21,88 @@ const ProjectEdit: React.FC<{ project: Project; projectChanged: any }> = ({
     updateProjectTitle(newTitle);
   };
 
-  const relevantFieldChangeHandler = (index: number, event: any) => {
-    const newRelevantFields = relevantFields.map((item, i) =>
+  const curatedFieldChangeHandler = (index: number, event: any) => {
+    const newCuratedFields = curatedFields.map((item, i) =>
       i === index ? event.target.value : item
     );
 
-    //setRelevantFields(newRelevantFields);
-    updateProjectRelevantFields(newRelevantFields);
+    //setCuratedFields(newCuratedFields);
+    updateProjectCuratedFields(newCuratedFields);
   };
 
-  const deleteRelevantFieldHandler = (index: number) => {
-    const newRelevantFields = relevantFields.filter((item, i) =>
+  const deleteCuratedFieldHandler = (index: number) => {
+    const newCuratedFields = curatedFields.filter((item, i) =>
       i === index ? false : true
     );
 
-    //setRelevantFields(newRelevantFields);
-    updateProjectRelevantFields(newRelevantFields);
+    //setCuratedFields(newCuratedFields);
+    updateProjectCuratedFields(newCuratedFields);
   };
 
-  const addNewRelevantFieldHandler = () => {
-    const newRelevantFields = [...relevantFields, ""];
-    //setRelevantFields(newRelevantFields);
-    updateProjectRelevantFields(newRelevantFields);
+  const addNewCuratedFieldHandler = () => {
+    const newCuratedFields = [...curatedFields, ""];
+    //setCuratedFields(newCuratedFields);
+    updateProjectCuratedFields(newCuratedFields);
   };
 
   const updateProjectTitle = (newTitle: string) => {
     const newProject = new Project();
     newProject.title = newTitle;
-    newProject.relevantFields = relevantFields;
+    newProject.curatedFields = curatedFields;
     projectChanged(newProject);
   };
 
-  const updateProjectRelevantFields = (newRelevantFields: string[]) => {
+  const updateProjectCuratedFields = (newCuratedFields: string[]) => {
     const newProject = new Project();
     newProject.title = title ?? "";
-    newProject.relevantFields = newRelevantFields;
+    newProject.curatedFields = newCuratedFields;
     projectChanged(newProject);
   };
 
   return (
     <div>
-      <div className="card">
-        <div className="card-header">Project</div>
-        <div className="card-body">
-          <div className="form-group">
-            <label htmlFor="title">Title</label>
-            <input
-              className="form-control"
-              type="text"
-              id="title"
-              value={title ?? ""}
-              onChange={titleChangeHandler}
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="title">Relevant Fields</label>
-            <ul className="list-group">
-              {relevantFields.map((relevantField: string, index: number) => (
-                <li
-                  className="d-flex justify-content-between align-items-center mb-2"
-                  key={index.toString()}
-                >
-                  <input
-                    className="form-control"
-                    style={{ marginRight: 8 }}
-                    type="text"
-                    value={relevantField}
-                    onChange={(event) =>
-                      relevantFieldChangeHandler(index, event)
-                    }
-                  />
-                  <button
-                    className="btn btn-danger"
-                    type="button"
-                    onClick={() => deleteRelevantFieldHandler(index)}
-                  >
-                    X
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              className="btn btn-primary"
-              type="button"
-              onClick={addNewRelevantFieldHandler}
+      <div className="form-group">
+        <label htmlFor="title">Title</label>
+        <input
+          className="form-control"
+          type="text"
+          id="title"
+          value={title ?? ""}
+          onChange={titleChangeHandler}
+        />
+      </div>
+      <div className="form-group">
+        <label htmlFor="title">Curated Fields</label>
+        <ul className="list-group">
+          {curatedFields.map((curatedField: string, index: number) => (
+            <li
+              className="d-flex justify-content-between align-items-center mb-2"
+              key={index.toString()}
             >
-              Add
-            </button>
-          </div>
-        </div>
+              <input
+                className="form-control"
+                style={{ marginRight: 8 }}
+                type="text"
+                value={curatedField}
+                onChange={(event) => curatedFieldChangeHandler(index, event)}
+              />
+              <button
+                className="btn btn-danger"
+                type="button"
+                onClick={() => deleteCuratedFieldHandler(index)}
+              >
+                X
+              </button>
+            </li>
+          ))}
+        </ul>
+        <button
+          className="btn btn-primary"
+          type="button"
+          onClick={addNewCuratedFieldHandler}
+        >
+          Add
+        </button>
       </div>
     </div>
   );
