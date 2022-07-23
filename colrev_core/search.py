@@ -238,9 +238,6 @@ class Search(Process):
         # https://medlinetranspose.github.io/documentation.html
         # https://sr-accelerator.com/#/help/polyglot
 
-        # Zotero connector:
-        # https://github.com/urschrei/pyzotero
-
         # Start with basic query
         # RETRIEVE * FROM crossref,dblp WHERE digital AND platform
         # Note: corresponds to "digital[all] AND platform[all]"
@@ -336,7 +333,7 @@ class Search(Process):
                 comment="",
             )
             self.REVIEW_MANAGER.pp.pprint(add_source)
-            self.REVIEW_MANAGER.sources.append(add_source)
+            self.REVIEW_MANAGER.settings.sources.append(add_source)
             self.REVIEW_MANAGER.save_settings()
 
             self.REVIEW_MANAGER.create_commit(

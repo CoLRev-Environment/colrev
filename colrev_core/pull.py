@@ -119,7 +119,9 @@ class Pull(Process):
 
         self.REVIEW_MANAGER.logger.info("Pull records from index")
 
-        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep(SETTINGS={})
+        LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep(
+            SETTINGS={"name": "local_index_prep"}
+        )
 
         # Note : do not use named argument (used in multiprocessing)
         def pull_record(record):
@@ -131,7 +133,9 @@ class Pull(Process):
             RECORD = PrepRecord(data=record)
             RETRIEVED_RECORD = LOCAL_INDEX_PREP.prepare(PREPARATION, RECORD)
             source_info = "LOCAL_INDEX"
-            if "CURATED:" in RETRIEVED_RECORD.data["colrev_masterdata_provenance"]:
+            if "CURATED:" in RETRIEVED_RECORD.data.get(
+                "colrev_masterdata_provenance", ""
+            ):
                 source_info = RETRIEVED_RECORD.data[
                     "colrev_masterdata_provenance"
                 ].replace("CURATED:", "")

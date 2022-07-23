@@ -39,13 +39,14 @@ class ManuscriptEndpoint:
         manuscript_endpoint_details = {
             "endpoint": "MANUSCRIPT",
             "paper_endpoint_version": "0.1",
-            "word_template": self.retrieve_default_word_template(),
-            "csl_style": self.retrieve_default_csl(),
+            "word_template": ManuscriptEndpoint.retrieve_default_word_template(),
+            "csl_style": ManuscriptEndpoint.retrieve_default_csl(),
         }
 
         return manuscript_endpoint_details
 
-    def retrieve_default_word_template(self) -> str:
+    @classmethod
+    def retrieve_default_word_template(cls) -> str:
         template_name = "APA-7.docx"
 
         filedata = pkgutil.get_data(__name__, str(Path("../template/APA-7.docx")))
@@ -55,7 +56,8 @@ class ManuscriptEndpoint:
 
         return template_name
 
-    def retrieve_default_csl(self) -> str:
+    @classmethod
+    def retrieve_default_csl(cls) -> str:
         csl_link = (
             "https://raw.githubusercontent.com/"
             + "citation-style-language/styles/master/apa.csl"

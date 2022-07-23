@@ -294,7 +294,7 @@ class GlobalIDConsistencyPrep:
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
         if "doi" in RECORD.data:
-            R_COPY = PrepRecord(data=RECORD.copy_prep_rec())
+            R_COPY = RECORD.copy_prep_rec()
             CROSSREF_MD = CrossrefConnector.get_masterdata_from_crossref(
                 PREPARATION=PREPARATION, RECORD=R_COPY
             )
@@ -322,7 +322,7 @@ class GlobalIDConsistencyPrep:
         if "url" in RECORD.data:
             try:
                 URL_CONNECTOR = database_connectors.URLConnector()
-                URL_MD = PrepRecord(data=RECORD.copy_prep_rec())
+                URL_MD = RECORD.copy_prep_rec()
                 URL_MD = URL_CONNECTOR.retrieve_md_from_url(
                     RECORD=URL_MD, PREPARATION=PREPARATION
                 )
@@ -646,11 +646,10 @@ class SemanticScholarPrep:
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
-            red_record_copy = RECORD.copy_prep_rec()
+            RED_REC_COPY = RECORD.copy_prep_rec()
             for key in ["volume", "number", "number", "pages"]:
-                if key in red_record_copy:
+                if key in RED_REC_COPY.data:
                     RECORD.remove_field(key=key)
-            RED_REC_COPY = PrepRecord(data=red_record_copy)
 
             similarity = PrepRecord.get_retrieval_similarity(
                 RECORD_ORIGINAL=RED_REC_COPY, RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD

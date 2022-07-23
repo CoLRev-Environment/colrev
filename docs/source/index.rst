@@ -43,7 +43,7 @@ After each step, `validate the changes <user_resources/manual/1_workflow.html#co
    :align: center
    :alt: Workflow cycle
 
-**The operations** allow you to complete a literature review running the following commands:
+**The operations** allow you to complete a literature review. It should be as simple as running the following commands:
 
 .. code-block:: bash
 

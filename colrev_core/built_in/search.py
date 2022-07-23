@@ -319,8 +319,21 @@ class BackwardSearchEndpoint:
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
 
-        if params["scope"]["colrev_status"] != "rev_included|rev_synthesized":
-            print("scopes other than rev_included|rev_synthesized not yet implemented")
+        if "colrev_status" in params["scope"]:
+            if params["scope"]["colrev_status"] not in [
+                "rev_included|rev_synthesized",
+            ]:
+                print("scope not yet implemented")
+                return
+
+        elif "file" in params["scope"]:
+            if params["scope"]["file"] not in [
+                "paper.pdf",
+            ]:
+                print("scope not yet implemented")
+                return
+        else:
+            print("scope not yet implemented")
             return
 
         if not SEARCH.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
@@ -344,11 +357,22 @@ class BackwardSearchEndpoint:
         for record in records.values():
 
             # rev_included/rev_synthesized
-            if record["colrev_status"] not in [
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            ]:
-                continue
+            if "colrev_status" in params["scope"]:
+                if (
+                    params["scope"]["colrev_status"] == "rev_included|rev_synthesized"
+                ) and record["colrev_status"] not in [
+                    RecordState.rev_included,
+                    RecordState.rev_synthesized,
+                ]:
+                    continue
+
+            # Note: this is for peer_reviews
+            if "file" in params["scope"]:
+                if (
+                    params["scope"]["file"] == "paper.pdf"
+                ) and "pdfs/paper.pdf" != record.get("file", ""):
+                    continue
+
             SEARCH.REVIEW_MANAGER.logger.info(
                 f'Running backward search for {record["ID"]} ({record["file"]})'
             )
@@ -380,6 +404,7 @@ class BackwardSearchEndpoint:
 
         feed_file_records_dict = {r["ID"]: r for r in feed_file_records}
         SEARCH.save_feed_file(feed_file_records_dict, feed_file)
+        SEARCH.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
 
         if SEARCH.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             SEARCH.REVIEW_MANAGER.create_commit(

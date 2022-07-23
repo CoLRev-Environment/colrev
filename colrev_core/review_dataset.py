@@ -1631,7 +1631,7 @@ class ReviewDataset:
                         else:
                             field_errors.append(f"excl_crit field not NA: {excl_crit}")
 
-                    if "=yes" not in excl_crit:
+                    if "=out" not in excl_crit:
                         logging.error(f"criteria: {criteria}")
                         field_errors.append(
                             "Excluded record with no screening_criterion violated: "
