@@ -10,11 +10,11 @@ import pandas as pd
 import pandasql as ps
 import requests
 import zope.interface
-from crossref.restful import Journals
 from dacite import from_dict
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core import search
 from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
@@ -32,125 +32,123 @@ class CrossrefSearchEndpoint:
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import PrepRecord
+        from colrev_core.built_in.database_connectors import (
+            CrossrefConnector,
+            DOIConnector,
+        )
 
-        from colrev_core.built_in.prep import CrossrefConnector, DOIConnector
+        # Note: not yet implemented/supported
+        if " AND " in params.get("selection_clause", ""):
+            raise search.InvalidQueryException(
+                "AND not supported in CROSSREF query selection_clause"
+            )
+        # Either one or the other is possible:
+        if not bool("selection_clause" in params) ^ bool(
+            "journal_issn" in params.get("scope", {})
+        ):
+            raise search.InvalidQueryException(
+                "combined selection_clause and journal_issn (scope) "
+                "not supported in CROSSREF query"
+            )
 
-        if "journal_issn" not in params["scope"]:
-            print("Error: journal_issn not in params")
-            return
-
-        # works = Works()
-        # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
-        # use FACETS!
-        # w1 = works.query(bibliographic='microsourcing')
-        # w1 = works.query(
-        #     container_title="Journal of the Association for Information Systems"
-        # )
-        if "selection_clause" in params:
-            query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-            SEARCH.REVIEW_MANAGER.logger.info(query)
-
-        for journal_issn in params["scope"]["journal_issn"].split("|"):
-
-            journals = Journals()
-            # t = journals.journal('1526-5536')
-            # input(feed_item['search_parameters'].split('=')[1])
-            w1 = journals.works(journal_issn).query()
-            # for it in t:
-            #     pp.pprint(it)
-            #     input('stop')
-
-            available_ids = []
-            max_id = 1
-            if not feed_file.is_file():
-                records = {}
-            else:
-                with open(feed_file, encoding="utf8") as bibtex_file:
-                    records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        load_str=bibtex_file.read()
-                    )
-
-                available_ids = [x["doi"] for x in records.values() if "doi" in x]
-                max_id = (
-                    max(
-                        [int(x["ID"]) for x in records.values() if x["ID"].isdigit()]
-                        + [1]
-                    )
-                    + 1
+        available_ids = []
+        max_id = 1
+        if not feed_file.is_file():
+            records = {}
+        else:
+            with open(feed_file, encoding="utf8") as bibtex_file:
+                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
                 )
 
+            available_ids = [x["doi"] for x in records.values() if "doi" in x]
+            max_id = (
+                max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
+                + 1
+            )
+
+        CROSSREF = CrossrefConnector(REVIEW_MANAGER=SEARCH.REVIEW_MANAGER)
+
+        def get_crossref_query_return(params):
+            if "selection_clause" in params:
+                crossref_query = {"bibliographic": params["selection_clause"]}
+                # TODO : add the container_title:
+                # crossref_query_return = works.query(
+                #     container_title=
+                #       "Journal of the Association for Information Systems"
+                # )
+                yield from CROSSREF.get_bibliographic_query_return(**crossref_query)
+
+            if "journal_issn" in params.get("scope", {}):
+
+                for journal_issn in params["scope"]["journal_issn"].split("|"):
+                    yield from CROSSREF.get_journal_query_return(
+                        journal_issn=journal_issn
+                    )
+
+        for record in get_crossref_query_return(params):
             try:
-                for item in w1:
-                    if "DOI" in item:
-                        if item["DOI"].upper() not in available_ids:
-                            record = CrossrefConnector.crossref_json_to_record(
-                                item=item
-                            )
+                if record["doi"].upper() not in available_ids:
 
-                            # TODO : collect list of records
-                            # for more efficient selection
-                            # select once (parse result to list of dicts?)
-                            if "selection_clause" in params:
-                                res = []
-                                try:
-                                    rec_df = pd.DataFrame.from_records([record])
-                                    # print(rec_df)
-                                    res = ps.sqldf(query, locals())
-                                except PandaSQLException:
-                                    # print(e)
-                                    pass
+                    # Note : discard "empty" records
+                    if "" == record.get("author", "") and "" == record.get("title", ""):
+                        continue
 
-                                if len(res) == 0:
-                                    continue
+                    SEARCH.REVIEW_MANAGER.logger.info("Retrieved " + record["doi"])
+                    record["ID"] = str(max_id).rjust(6, "0")
 
-                            # Note : do not download "empty" records
-                            if "" == record.get("author", "") and "" == record.get(
-                                "title", ""
-                            ):
-                                continue
+                    PREP_RECORD = PrepRecord(data=record)
+                    DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
+                    record = PREP_RECORD.get_data()
 
-                            SEARCH.REVIEW_MANAGER.logger.info(
-                                "Retrieved " + record["doi"]
-                            )
-                            record["ID"] = str(max_id).rjust(6, "0")
-                            if "ENTRYTYPE" not in record:
-                                record["ENTRYTYPE"] = "misc"
-                            PREP_RECORD = PrepRecord(data=record)
-                            DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
-                            record = PREP_RECORD.get_data()
-                            available_ids.append(record["doi"])
-                            records[record["ID"]] = record
-                            max_id += 1
+                    available_ids.append(record["doi"])
+                    records[record["ID"]] = record
+                    max_id += 1
             except requests.exceptions.JSONDecodeError as e:
+                if "504 Gateway Time-out" in str(e):
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        "Crossref (check https://status.crossref.org/)"
+                    )
                 print(e)
                 pass
 
-            # Note : we may have to set temporary IDs to ensure the sort order
-            # records = sorted(
-            #     records,
-            #     key=lambda e: (
-            #         e.get("year", ""),
-            #         e.get("volume", ""),
-            #         e.get("number", ""),
-            #         e.get("author", ""),
-            #         e.get("title", ""),
-            #     ),
-            # )
+        # Note : for local after-query selection:
+        # if "selection_clause" in params:
+        #     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+        #     SEARCH.REVIEW_MANAGER.logger.info(query)
 
-            SEARCH.save_feed_file(records, feed_file)
+        # TODO : collect list of records
+        # for more efficient selection
+        # select once (parse result to list of dicts?)
+        # if "selection_clause" in params:
+        #     res = []
+        #     try:
+        #         rec_df = pd.DataFrame.from_records([record])
+        #         # print(rec_df)
+        #         res = ps.sqldf(query, locals())
+        #     except PandaSQLException:
+        #         # print(e)
+        #         pass
+
+        #     if len(res) == 0:
+        #         continue
+
+        SEARCH.save_feed_file(records, feed_file)
+
         return
 
     def validate_params(self, query: str) -> None:
-        if " SCOPE " not in query:
+        if " SCOPE " not in query and " WHERE " not in query:
             raise search.InvalidQueryException(
-                "CROSSREF queries require a SCOPE section"
+                "CROSSREF queries require a SCOPE or WHERE section"
             )
 
-        scope = query[query.find(" SCOPE ") :]
-        if "journal_issn" not in scope:
-            raise search.InvalidQueryException(
-                "CROSSREF queries require a journal_issn field in the SCOPE section"
-            )
+        if " SCOPE " in query:
+            scope = query[query.find(" SCOPE ") :]
+            if "journal_issn" not in scope:
+                raise search.InvalidQueryException(
+                    "CROSSREF queries require a journal_issn field in the SCOPE section"
+                )
         pass
 
 

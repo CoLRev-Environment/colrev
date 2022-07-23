@@ -307,6 +307,21 @@ class DOIConnector:
 
 
 class CrossrefConnector:
+
+    issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
+
+    def __init__(self, *, REVIEW_MANAGER):
+
+        from crossref.restful import Etiquette
+        from importlib.metadata import version
+
+        self.etiquette = Etiquette(
+            "CoLRev",
+            version("colrev_core"),
+            "https://github.com/geritwagner/colrev_core",
+            REVIEW_MANAGER.EMAIL,
+        )
+
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
         from colrev_core.exceptions import ServiceNotAvailableException
@@ -342,6 +357,29 @@ class CrossrefConnector:
             if not PREPARATION.force_mode:
                 raise ServiceNotAvailableException("CROSSREF")
         return
+
+    def get_bibliographic_query_return(self, **kwargs):
+        from crossref.restful import Works
+
+        assert all(k in ["bibliographic"] for k in kwargs.keys())
+
+        works = Works(etiquette=self.etiquette)
+        # use facets:
+        # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
+
+        crossref_query_return = works.query(**kwargs)
+        for item in crossref_query_return:
+            yield self.crossref_json_to_record(item=item)
+
+    def get_journal_query_return(self, *, journal_issn):
+        from crossref.restful import Journals
+
+        assert re.match(self.issn_regex, journal_issn)
+
+        journals = Journals(etiquette=self.etiquette)
+        crossref_query_return = journals.works(journal_issn).query()
+        for item in crossref_query_return:
+            yield self.crossref_json_to_record(item=item)
 
     @classmethod
     def crossref_json_to_record(cls, *, item: dict) -> dict:
@@ -475,6 +513,9 @@ class CrossrefConnector:
                 continue
             # Note : some dois (and their provenance) contain html entities
             record[k] = html.unescape(str(v))
+
+        if "ENTRYTYPE" not in record:
+            record["ENTRYTYPE"] = "misc"
 
         return record
 

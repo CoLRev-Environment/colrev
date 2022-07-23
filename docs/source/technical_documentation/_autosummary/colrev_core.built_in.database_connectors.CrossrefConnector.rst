@@ -19,4 +19,16 @@ colrev\_core.built\_in.database\_connectors.CrossrefConnector
       ~CrossrefConnector.check_status
       ~CrossrefConnector.crossref_json_to_record
       ~CrossrefConnector.crossref_query
+      ~CrossrefConnector.get_bibliographic_query_return
+      ~CrossrefConnector.get_journal_query_return
       ~CrossrefConnector.get_masterdata_from_crossref
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~CrossrefConnector.issn_regex
