@@ -47,7 +47,9 @@ class Pull(Process):
         from colrev_core.built_in import prep as built_in_prep
         from tqdm import tqdm
 
-        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep(SETTINGS={})
+        CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep(
+            SETTINGS={"name": "local_index_prep"}
+        )
 
         self.REVIEW_MANAGER.logger.info("Pull records from crossref")
 

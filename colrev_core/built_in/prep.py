@@ -13,6 +13,7 @@ from alphabet_detector import AlphabetDetector
 from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from opensearchpy import NotFoundError
+from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
 from colrev_core.built_in.database_connectors import CrossrefConnector
@@ -1095,32 +1096,23 @@ class CrossrefYearVolIssPrep:
             return RECORD
 
         try:
-            modified_record = RECORD.copy_prep_rec()
-            modified_record = {
-                k: v
-                for k, v in modified_record.items()
-                if k in ["journal", "volume", "number"]
-            }
-
-            # http://api.crossref.org/works?
-            # query.container-title=%22MIS+Quarterly%22&query=%2216+2%22
 
             RETRIEVED_REC_L = CrossrefConnector.crossref_query(
-                REVIEW_MANAGER=self.REVIEW_MANAGER,
+                REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 RECORD_INPUT=RECORD,
                 jour_vol_iss_list=True,
-                session=self.session,
-                TIMEOUT=self.TIMEOUT,
+                session=PREPARATION.session,
+                TIMEOUT=PREPARATION.TIMEOUT,
             )
             retries = 0
             while not RETRIEVED_REC_L and retries < PREPARATION.MAX_RETRIES_ON_ERROR:
                 retries += 1
                 RETRIEVED_REC_L = CrossrefConnector.crossref_query(
-                    REVIEW_MANAGER=self.REVIEW_MANAGER,
+                    REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                     RECORD_INPUT=RECORD,
                     jour_vol_iss_list=True,
-                    session=self.session,
-                    TIMEOUT=self.TIMEOUT,
+                    session=PREPARATION.session,
+                    TIMEOUT=PREPARATION.TIMEOUT,
                 )
             if 0 == len(RETRIEVED_REC_L):
                 return RECORD
@@ -1188,7 +1180,7 @@ class LocalIndexPrep:
                         include_file=False,
                     )
                     retrieved = True
-            except (RecordNotInIndexException, NotFoundError):
+            except (RecordNotInIndexException, NotFoundError, TransportError):
                 pass
 
         if retrieved:

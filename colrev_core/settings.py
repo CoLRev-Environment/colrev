@@ -283,7 +283,7 @@ class Configuration:
             + "\nSearch\n"
             + str(self.search)
             + "\nSources\n"
-            + str(self.sources)
+            + "\n- ".join([str(s) for s in self.sources])
             + "\nLoad\n"
             + str(self.load)
             + "\nPreparation\n"

@@ -275,15 +275,15 @@ class Dedupe(Process):
             main_record = rec_ID1
             dupe_record = rec_ID2
 
-        # 3. If a record is md_processed, use it as the dupe record
+        # 3. If a record is md_processed, use the other record as the dupe record
         # -> during the fix_errors procedure, records are in md_processed
         # and beyond.
         elif rec_ID1["colrev_status"] == RecordState.md_processed:
-            main_record = rec_ID2
-            dupe_record = rec_ID1
-        elif rec_ID2["colrev_status"] == RecordState.md_processed:
             main_record = rec_ID1
             dupe_record = rec_ID2
+        elif rec_ID2["colrev_status"] == RecordState.md_processed:
+            main_record = rec_ID2
+            dupe_record = rec_ID1
 
         # 4. Merge into curated record (otherwise)
         else:

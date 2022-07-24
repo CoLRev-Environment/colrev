@@ -48,7 +48,9 @@ class Prescreen(Process):
     def export_table(self, *, export_table_format: str) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            SETTINGS={"name": "export_table"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.export_table(self, records, [])
         return
@@ -56,7 +58,9 @@ class Prescreen(Process):
     def import_table(self, *, import_table_path: str) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            SETTINGS={"name": "import_table"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.import_table(self, records, import_table_path)
 
@@ -65,7 +69,9 @@ class Prescreen(Process):
     def include_all_in_prescreen(self) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(
+            SETTINGS={"name": "include_all"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.run_prescreen(self, records, [])
         return

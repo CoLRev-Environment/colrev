@@ -113,7 +113,7 @@ class ReviewDataset:
                 load_str=filecontents.decode("utf-8")
             )
             for prior_record in prior_records_dict.values():
-                if str(prior_record["colrev_status"]) != str(condition_state):
+                if str(prior_record.get("colrev_status", "NA")) != str(condition_state):
                     continue
                 for original_record in original_records:
 

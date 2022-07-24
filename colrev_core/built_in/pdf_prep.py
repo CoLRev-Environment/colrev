@@ -485,7 +485,7 @@ class PDFMetadataValidationEndpoint:
         return validation_info
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD=40):
         from colrev_core.environment import LocalIndex, RecordNotInIndexException
 
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
