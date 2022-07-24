@@ -346,6 +346,24 @@ class Search(Process):
 
         return
 
+    def remove_forthcoming(self, *, SOURCE):
+        self.REVIEW_MANAGER.logger.info("Remove forthcoming")
+
+        with open(SOURCE.feed_file, encoding="utf8") as bibtex_file:
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=bibtex_file.read()
+            )
+
+            record_list = records.values()
+            record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
+            records = {r["ID"]: r for r in record_list}
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records=records, save_path=SOURCE.feed_file
+            )
+
+        return
+
     def main(self, *, selection_str: str) -> None:
 
         # Reload the settings because the search sources may have been updated
@@ -396,6 +414,9 @@ class Search(Process):
             )
 
             if SOURCE.feed_file.is_file():
+                if not self.REVIEW_MANAGER.settings.search.retrieve_forthcoming:
+                    self.remove_forthcoming(SOURCE=SOURCE)
+
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                     path=str(SOURCE.feed_file)
                 )

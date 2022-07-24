@@ -257,6 +257,7 @@ class Initializer:
                     old_string="{{url}}",
                     new_string=self.url,
                 )
+            settings["search"]["retrieve_forthcoming"] = False
 
             settings["prescreen"][
                 "explanation"

@@ -671,6 +671,19 @@ class ReviewManager:
                     else:
                         source["search_type"] = "DB"
 
+            for round in settings["prep"]["prep_rounds"]:
+                round["scripts"] = [
+                    s
+                    for s in round["scripts"]
+                    if "get_doi_from_sem_scholar" != s["endpoint"]
+                ]
+
+            if "retrieve_forthcoming" not in settings["search"]:
+                if "colrev/curated_metadata" in str(self.path):
+                    settings["search"]["retrieve_forthcoming"] = False
+                else:
+                    settings["search"]["retrieve_forthcoming"] = True
+
             settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):

@@ -15,3 +15,14 @@ colrev\_core.settings.SearchConfiguration
 
    .. autosummary::
       :nosignatures:
+
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~SearchConfiguration.retrieve_forthcoming

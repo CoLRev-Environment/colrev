@@ -107,10 +107,10 @@ class SearchSource:
 
 @dataclass
 class SearchConfiguration:
-    pass
+    retrieve_forthcoming: bool
 
     def __str__(self):
-        return " - TODO"
+        return f" - retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
 # Load
