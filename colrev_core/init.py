@@ -5,6 +5,7 @@ from pathlib import Path
 import git
 
 from colrev_core.exceptions import NonEmptyDirectoryError
+from colrev_core.review_manager import ReviewManager
 from colrev_core.settings import ReviewType
 
 
@@ -29,7 +30,7 @@ class Initializer:
         assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
         assert not (example and local_index_repo)
         assert type in ReviewType._member_names_
-
+        self.instructions = ""
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
         self.review_type = type
         self.url = url
@@ -42,12 +43,18 @@ class Initializer:
         print("Create commit")
         if example:
             self.__create_example_repo()
+
+        self.REVIEW_MANAGER = ReviewManager()
+
         self.__create_commit(saved_args=saved_args)
         if not example:
             print("Register repo")
             self.__register_repo()
         if local_index_repo:
             self.__create_local_index()
+
+        print("\n")
+        print(self.instructions)
 
     def __register_repo(self) -> None:
         from colrev_core.environment import EnvironmentManager
@@ -56,9 +63,6 @@ class Initializer:
         return
 
     def __create_commit(self, *, saved_args: dict) -> None:
-        from colrev_core.review_manager import ReviewManager
-
-        self.REVIEW_MANAGER = ReviewManager()
 
         self.REVIEW_MANAGER.report_logger.info("Initialize review repository")
         self.REVIEW_MANAGER.report_logger.info(
@@ -175,6 +179,43 @@ class Initializer:
 
         elif "scientometric" == self.review_type:
             settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = False
+
+        elif "peer_review" == self.review_type:
+            settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = False
+
+            settings["data"]["scripts"].append(
+                {
+                    "endpoint": "PEER_REVIEW",
+                }
+            )
+            settings["sources"].append(
+                {
+                    "filename": "search/references.bib",
+                    "search_type": "DB",
+                    "source_name": "BACKWARD_SEARCH",
+                    "source_identifier": "{{cited_by_file}} (references)",
+                    "search_parameters": "SCOPE file='paper.pdf'",
+                    "search_script": {"endpoint": "backward_search"},
+                    "conversion_script": {"endpoint": "bibtex"},
+                    "source_prep_scripts": [],
+                    "comment": "",
+                }
+            )
+
+            settings["prep"]["prep_rounds"] = [
+                d
+                for d in settings["prep"]["prep_rounds"]
+                if d.get("name", "") != "exclusion"
+            ]
+
+            self.instructions += "Store the file as paper.pdf in the pdfs directory\n"
+            self.instructions += (
+                "Afterwards, run colrev search && colrev load && colrev search\n"
+            )
+
+            # TODO : add backward search (only for peer-reviewed pdf)
+            # endpoint: extract diff between imported metadata and prepared metadata
+            # ordered in terms of change significance
 
         elif "realtime" == self.review_type:
             settings["project"]["delay_automated_processing"] = False

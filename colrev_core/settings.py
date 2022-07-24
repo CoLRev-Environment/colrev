@@ -30,6 +30,7 @@ class ReviewType(Enum):
     qualitative_systematic_review = "qualitative_systematic_review"
     meta_analysis = "meta_analysis"
     scientometric = "scientometric"
+    peer_review = "peer_review"
 
     def __str__(self):
         return (
