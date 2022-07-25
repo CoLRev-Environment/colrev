@@ -21,12 +21,8 @@ from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 from tqdm import tqdm
 
-from colrev_core.exceptions import CuratedOutletNotUnique
-from colrev_core.exceptions import RecordNotInIndexException
-from colrev_core.exceptions import TEI_Exception
-from colrev_core.exceptions import TEI_TimeoutException
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import CheckProcess
-from colrev_core.record import NotEnoughDataToIdentifyException
 from colrev_core.record import Record
 from colrev_core.record import RecordState
 
@@ -37,7 +33,6 @@ class AdapterManager:
         cls, *, PROCESS, scripts, script_type: str = ""
     ) -> typing.Dict[str, typing.Dict[str, typing.Any]]:
 
-        from colrev_core.review_manager import MissingDependencyError
         import importlib
         import sys
         from zope.interface.verify import verifyObject
@@ -70,7 +65,7 @@ class AdapterManager:
 
                 except ModuleNotFoundError:
                     pass
-                    raise MissingDependencyError(
+                    raise colrev_exceptions.MissingDependencyError(
                         "Dependency " + f"{script_name} not found. "
                         "Please install it\n  pip install "
                         f"{script_name}"
@@ -445,7 +440,6 @@ class EnvironmentManager:
     @classmethod
     def check_git_installed(cls) -> None:
         import subprocess
-        from colrev_core.review_manager import MissingDependencyError
 
         try:
             null = open("/dev/null", "w", encoding="utf8")
@@ -453,13 +447,12 @@ class EnvironmentManager:
             null.close()
         except OSError:
             pass
-            raise MissingDependencyError("git")
+            raise colrev_exceptions.MissingDependencyError("git")
         return
 
     @classmethod
     def check_docker_installed(cls) -> None:
         import subprocess
-        from colrev_core.review_manager import MissingDependencyError
 
         try:
             null = open("/dev/null", "w", encoding="utf8")
@@ -467,7 +460,7 @@ class EnvironmentManager:
             null.close()
         except OSError:
             pass
-            raise MissingDependencyError("docker")
+            raise colrev_exceptions.MissingDependencyError("docker")
         return
 
     def get_environment_details(self) -> dict:
@@ -583,7 +576,7 @@ class EnvironmentManager:
                             outlets.append(booktitle)
 
                     if len(set(outlets)) != 1:
-                        raise CuratedOutletNotUnique(
+                        raise colrev_exceptions.CuratedOutletNotUnique(
                             "Error: Duplicate outlets in curated_metadata of "
                             f"{repo_source_path} : {','.join(list(set(outlets)))}"
                         )
@@ -786,7 +779,11 @@ class LocalIndex:
                         tei_path=tei_path,
                     )
                     record["fulltext"] = TEI_INSTANCE.get_tei_str()
-            except (TEI_Exception, AttributeError, SerialisationError):
+            except (
+                colrev_exceptions.TEI_Exception,
+                AttributeError,
+                SerialisationError,
+            ):
                 pass
 
         RECORD = Record(data=record)
@@ -857,7 +854,11 @@ class LocalIndex:
                             tei_path=tei_path,
                         )
                         SAVED_RECORD.data["fulltext"] = TEI_INSTANCE.get_tei_str()
-                except (TEI_Exception, AttributeError, SerialisationError):
+                except (
+                    colrev_exceptions.TEI_Exception,
+                    AttributeError,
+                    SerialisationError,
+                ):
                     pass
 
             self.os.update(
@@ -967,7 +968,7 @@ class LocalIndex:
                             self.os.update(
                                 index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
                             )
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
 
         return
@@ -1011,12 +1012,12 @@ class LocalIndex:
                     return retrieved_record
             except (IndexError, NotFoundError):
                 pass
-                raise RecordNotInIndexException
+                raise colrev_exceptions.RecordNotInIndexException
             except Exception as e:
                 print(e)
                 pass
 
-        raise RecordNotInIndexException
+        raise colrev_exceptions.RecordNotInIndexException
 
     def __retrieve_from_record_index(self, *, record: dict) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
@@ -1031,7 +1032,7 @@ class LocalIndex:
             cids_to_retrieve=cid_to_retrieve
         )
         if retrieved_record["ENTRYTYPE"] != record["ENTRYTYPE"]:
-            raise RecordNotInIndexException
+            raise colrev_exceptions.RecordNotInIndexException
         return retrieved_record
 
     def parse_record(self, *, record: dict) -> dict:
@@ -1210,7 +1211,7 @@ class LocalIndex:
                         record=record,
                     )
                     return
-            except RecordNotInIndexException:
+            except colrev_exceptions.RecordNotInIndexException:
                 pass
 
             while True:
@@ -1239,7 +1240,7 @@ class LocalIndex:
                         print(saved_record)
                         hash = self.__increment_hash(hash=hash)
 
-        except NotEnoughDataToIdentifyException:
+        except colrev_exceptions.NotEnoughDataToIdentifyException:
             pass
             return
 
@@ -1395,10 +1396,10 @@ class LocalIndex:
                     return self.prep_record_for_return(
                         record=record, include_file=include_file
                     )
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
 
-        raise RecordNotInIndexException()
+        raise colrev_exceptions.RecordNotInIndexException()
 
     def get_from_index_exact_match(self, *, index_name, key, value) -> dict:
         resp = self.os.search(
@@ -1426,8 +1427,8 @@ class LocalIndex:
             retrieved_record = self.__retrieve_from_record_index(record=record)
         except (
             NotFoundError,
-            RecordNotInIndexException,
-            NotEnoughDataToIdentifyException,
+            colrev_exceptions.RecordNotInIndexException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
             TransportError,
         ):
             pass
@@ -1459,7 +1460,9 @@ class LocalIndex:
                     pass
 
         if not retrieved_record:
-            raise RecordNotInIndexException(record.get("ID", "no-key"))
+            raise colrev_exceptions.RecordNotInIndexException(
+                record.get("ID", "no-key")
+            )
 
         return self.prep_record_for_return(
             record=retrieved_record,
@@ -1558,9 +1561,9 @@ class LocalIndex:
                 return "no"
 
         except (
-            RecordNotInIndexException,
+            colrev_exceptions.RecordNotInIndexException,
             NotFoundError,
-            NotEnoughDataToIdentifyException,
+            colrev_exceptions.NotEnoughDataToIdentifyException,
         ):
             pass
 
@@ -1932,10 +1935,10 @@ class TEIParser:
                 # )
 
                 if r.status_code != 200:
-                    raise TEI_Exception()
+                    raise colrev_exceptions.TEI_Exception()
 
                 if b"[TIMEOUT]" in r.content:
-                    raise TEI_TimeoutException()
+                    raise colrev_exceptions.TEI_TimeoutException()
 
                 self.root = etree.fromstring(r.content)
 
@@ -1959,7 +1962,7 @@ class TEIParser:
             with open(tei_path) as ts:
                 xml_string = ts.read()
             if "[BAD_INPUT_DATA]" in xml_string[:100]:
-                raise TEI_Exception()
+                raise colrev_exceptions.TEI_Exception()
             self.root = etree.fromstring(xml_string)
 
     def get_tei_str(self) -> str:

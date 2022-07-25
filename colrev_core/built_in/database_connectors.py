@@ -23,7 +23,6 @@ from colrev_core.record import RecordState
 class OpenLibraryConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         test_rec = {
             "ENTRYTYPE": "book",
@@ -40,11 +39,11 @@ class OpenLibraryConnector:
             )
             if ret.status_code != 200:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("OPENLIBRARY")
+                    raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException:
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("OPENLIBRARY")
+                raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
 
         return
 
@@ -324,7 +323,6 @@ class CrossrefConnector:
 
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {
@@ -350,12 +348,12 @@ class CrossrefConnector:
                 assert RETURNED_REC.data["author"] == test_rec["author"]
             else:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("CROSSREF")
+                    raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         except requests.exceptions.RequestException as e:
             print(e)
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("CROSSREF")
+                raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         return
 
     def get_bibliographic_query_return(self, **kwargs):
@@ -737,7 +735,6 @@ class CrossrefConnector:
 class DBLPConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {
@@ -767,11 +764,11 @@ class DBLPConnector:
                 assert DBLP_REC.data["author"] == test_rec["author"]
             else:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("DBLP")
+                    raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException:
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("DBLP")
+                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
 
         return
 

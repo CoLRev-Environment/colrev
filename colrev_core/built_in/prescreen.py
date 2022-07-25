@@ -8,11 +8,11 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PrescreenEndpoint
 from colrev_core.record import Record
 from colrev_core.record import RecordState
-from colrev_core.review_manager import MissingDependencyError
 
 
 @dataclass
@@ -185,7 +185,7 @@ class ASReviewPrescreenEndpoint:
             import asreview  # noqa: F401
         except ImportError or ModuleNotFoundError:
             pass
-            raise MissingDependencyError(
+            raise colrev_exceptions.MissingDependencyError(
                 "Dependency asreview not found. "
                 "Please install it\n  pip install asreview"
             )

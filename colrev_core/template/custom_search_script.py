@@ -3,8 +3,8 @@ from pathlib import Path
 
 import zope.interface
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import SearchEndpoint
-from colrev_core.search import InvalidQueryException
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -48,11 +48,13 @@ class CustomSearch:
     @classmethod
     def validate_params(cls, query: str) -> None:
         if " SCOPE " not in query:
-            raise InvalidQueryException("CROSSREF queries require a SCOPE section")
+            raise colrev_exceptions.InvalidQueryException(
+                "CROSSREF queries require a SCOPE section"
+            )
 
         scope = query[query.find(" SCOPE ") :]
         if "journal_issn" not in scope:
-            raise InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a journal_issn field in the SCOPE section"
             )
         pass

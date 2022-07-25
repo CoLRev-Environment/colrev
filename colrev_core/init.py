@@ -4,7 +4,7 @@ from pathlib import Path
 
 import git
 
-from colrev_core.exceptions import NonEmptyDirectoryError
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.review_manager import ReviewManager
 from colrev_core.settings import ReviewType
 
@@ -379,7 +379,7 @@ class Initializer:
             cur_content.remove("report.log")
 
         if 0 != len(cur_content):
-            raise NonEmptyDirectoryError()
+            raise colrev_exceptions.NonEmptyDirectoryError()
 
     def __inplace_change(
         self, *, filename: Path, old_string: str, new_string: str

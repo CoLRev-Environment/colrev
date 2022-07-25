@@ -15,7 +15,6 @@ from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core import search
 from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
 from colrev_core.record import Record
@@ -39,14 +38,14 @@ class CrossrefSearchEndpoint:
 
         # Note: not yet implemented/supported
         if " AND " in params.get("selection_clause", ""):
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "AND not supported in CROSSREF query selection_clause"
             )
         # Either one or the other is possible:
         if not bool("selection_clause" in params) ^ bool(
             "journal_issn" in params.get("scope", {})
         ):
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "combined selection_clause and journal_issn (scope) "
                 "not supported in CROSSREF query"
             )
@@ -139,14 +138,14 @@ class CrossrefSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query and " WHERE " not in query:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a SCOPE or WHERE section"
             )
 
         if " SCOPE " in query:
             scope = query[query.find(" SCOPE ") :]
             if "journal_issn" not in scope:
-                raise search.InvalidQueryException(
+                raise colrev_exceptions.InvalidQueryException(
                     "CROSSREF queries require a journal_issn field in the SCOPE section"
                 )
         pass
@@ -288,15 +287,17 @@ class DBLPSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException("DBLP queries require a SCOPE section")
+            raise colrev_exceptions.InvalidQueryException(
+                "DBLP queries require a SCOPE section"
+            )
 
         scope = query[query.find(" SCOPE ") :]
         if "venue_key" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "DBLP queries require a venue_key in the SCOPE section"
             )
         if "journal_abbreviated" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "DBLP queries require a journal_abbreviated field in the SCOPE section"
             )
         pass
@@ -500,13 +501,13 @@ class ColrevProjectSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PROJECT queries require a SCOPE section"
             )
 
         scope = query[query.find(" SCOPE ") :]
         if "url" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PROJECT queries require a url field in the SCOPE section"
             )
         return
@@ -619,7 +620,6 @@ class PDFSearchEndpoint:
         from colrev_core.environment import GrobidService
 
         from colrev_core.environment import TEIParser
-        from colrev_core.environment import TEI_Exception
         from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfinterp import resolve1
         from pdfminer.pdfparser import PDFParser
@@ -1017,7 +1017,7 @@ class PDFSearchEndpoint:
                 # add details based on path
                 record = update_fields_based_on_pdf_dirs(record)
 
-            except TEI_Exception:
+            except colrev_exceptions.TEI_Exception:
                 pass
 
             return record
@@ -1086,13 +1086,13 @@ class PDFSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a SCOPE section"
             )
 
         scope = query[query.find(" SCOPE ") :]
         if "path" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a path field in the SCOPE section"
             )
 

@@ -5,9 +5,8 @@ import string
 import typing
 from pathlib import Path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
-from colrev_core.exceptions import BibFileFormatError
-from colrev_core.exceptions import ImportException
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import Record
@@ -103,7 +102,6 @@ class Loader(Process):
 
     @classmethod
     def get_conversion_script(cls, *, filepath: Path) -> dict:
-        from colrev_core.exceptions import UnsupportedImportFormatError
 
         filetype = filepath.suffix.replace(".", "")
 
@@ -111,16 +109,16 @@ class Loader(Process):
             if filetype in endpoint_dict["endpoint"].supported_extensions:
                 return {"endpoint": endpoint_name}
 
-        raise UnsupportedImportFormatError(filepath)
+        raise colrev_exceptions.UnsupportedImportFormatError(filepath)
 
     def check_bib_file(self, SOURCE, record_dict) -> None:
         if not any("author" in r for ID, r in record_dict.items()):
-            raise ImportException(
+            raise colrev_exceptions.ImportException(
                 f"Import failed (no record with author field): {SOURCE.filename.name}"
             )
 
         if not any("title" in r for ID, r in record_dict.items()):
-            raise ImportException(
+            raise colrev_exceptions.ImportException(
                 f"Import failed (no record with title field): {SOURCE.filename.name}"
             )
 
@@ -219,7 +217,7 @@ class Loader(Process):
                 if len(re.findall(bib_r, contents)) == 0:
                     self.REVIEW_MANAGER.logger.error(f"Not a bib file? {file.name}")
                 if "Early Access Date" in contents:
-                    raise BibFileFormatError(
+                    raise colrev_exceptions.BibFileFormatError(
                         "Replace Early Access Date in bibfile before loading! "
                         f"{file.name}"
                     )

@@ -6,9 +6,9 @@ import pandas as pd
 import requests
 from urllib3.exceptions import ProtocolError
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
 from colrev_core.environment import GrobidService
-from colrev_core.environment import TEI_TimeoutException
 from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -70,7 +70,6 @@ class Data(Process):
         from lxml.etree import XMLSyntaxError
 
         # from p_tqdm import p_map
-        from colrev_core.environment import TEI_Exception
 
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
@@ -101,8 +100,8 @@ class Data(Process):
                     etree.XMLSyntaxError,
                     ProtocolError,
                     requests.exceptions.ConnectionError,
-                    TEI_TimeoutException,
-                    TEI_Exception,
+                    colrev_exceptions.TEI_TimeoutException,
+                    colrev_exceptions.TEI_Exception,
                 ):
                     if "tei_file" in record:
                         del record["tei_file"]

@@ -16,10 +16,10 @@ from opensearchpy import NotFoundError
 from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.built_in.database_connectors import CrossrefConnector
 from colrev_core.built_in.database_connectors import DBLPConnector
 from colrev_core.built_in.database_connectors import DOIConnector
-from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationEndpoint
 from colrev_core.record import PrepRecord
@@ -1169,7 +1169,7 @@ class LocalIndexPrep:
                 record=RECORD.get_data(), include_file=False
             )
             retrieved = True
-        except (RecordNotInIndexException, NotFoundError):
+        except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
             pass
             try:
                 # Note: Records can be CURATED without being indexed
@@ -1180,7 +1180,11 @@ class LocalIndexPrep:
                         include_file=False,
                     )
                     retrieved = True
-            except (RecordNotInIndexException, NotFoundError, TransportError):
+            except (
+                colrev_exceptions.RecordNotInIndexException,
+                NotFoundError,
+                TransportError,
+            ):
                 pass
 
         if retrieved:

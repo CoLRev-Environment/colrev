@@ -10,7 +10,7 @@ import zope.interface
 from colrev.cli import console_duplicate_instance_label
 from dacite import from_dict
 
-from colrev_core.exceptions import DedupeError
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DedupeEndpoint
 from colrev_core.process import DefaultSettings
 
@@ -504,7 +504,7 @@ class ActiveLearningDedupeTrainingEndpoint:
                 deduper.prepare_training(data_d)
         except AttributeError:
             if len(data_d) < 50:
-                raise DedupeError(
+                raise colrev_exceptions.DedupeError(
                     'Sample size too small (use {"endpoint": "simple_dedupe"} instead).'
                 )
 

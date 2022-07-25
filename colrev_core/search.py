@@ -3,9 +3,8 @@ import re
 import typing
 from pathlib import Path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
-from colrev_core.exceptions import InvalidQueryException
-from colrev_core.exceptions import NoSearchFeedRegistered
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -153,7 +152,7 @@ class Search(Process):
     def validate_query(self, *, query: str) -> None:
 
         if " FROM " not in query:
-            raise InvalidQueryException('Query missing "FROM" clause')
+            raise colrev_exceptions.InvalidQueryException('Query missing "FROM" clause')
 
         sources = self.parse_sources(query=query)
 
@@ -180,7 +179,7 @@ class Search(Process):
                 violations = [
                     source for source in sources if source in individual_sources
                 ]
-                raise InvalidQueryException(
+                raise colrev_exceptions.InvalidQueryException(
                     "Multiple query sources include a source that can only be"
                     f" used individually: {violations}"
                 )
@@ -390,7 +389,7 @@ class Search(Process):
                         [str(f.filename) for f in AUTOMATED_SOURCES]
                     )
                     print(f"Error: {selection_str} not in {available_options}")
-                    raise NoSearchFeedRegistered()
+                    raise colrev_exceptions.NoSearchFeedRegistered()
 
             for SOURCE in AUTOMATED_SOURCES_SELECTED:
                 SOURCE.feed_file = self.REVIEW_MANAGER.path / Path(SOURCE.filename)

@@ -12,15 +12,7 @@ from pathlib import Path
 import git
 import pandas as pd
 
-from colrev_core.exceptions import DuplicateIDsError
-from colrev_core.exceptions import FieldValueError
-from colrev_core.exceptions import OriginError
-from colrev_core.exceptions import PropagatedIDChange
-from colrev_core.exceptions import RecordNotInRepoException
-from colrev_core.exceptions import ReviewManagerNotNofiedError
-from colrev_core.exceptions import SearchSettingsError
-from colrev_core.exceptions import StatusFieldValueError
-from colrev_core.exceptions import StatusTransitionError
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.record import RecordState
 
 
@@ -248,7 +240,6 @@ class ReviewDataset:
 
     def load_records_dict(self, *, load_str: str = None) -> dict:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
-        from colrev_core.review_dataset import ReviewManagerNotNofiedError
         from pybtex.database.input import bibtex
 
         # TODO : optional dict-key as a parameter
@@ -258,7 +249,7 @@ class ReviewDataset:
         pybtex.errors.set_strict_mode(False)
 
         if self.REVIEW_MANAGER.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNofiedError()
 
         RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
         parser = bibtex.Parser()
@@ -558,7 +549,6 @@ class ReviewDataset:
         raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
-        from colrev_core.environment import RecordNotInIndexException
         from colrev_core.settings import IDPpattern
         from colrev_core.record import PrepRecord
         import re
@@ -596,11 +586,11 @@ class ReviewDataset:
         # (this would break the chain of evidence)
         if raise_error:
             if self.propagated_ID(ID=record["ID"]):
-                raise PropagatedIDChange([record["ID"]])
+                raise colrev_exceptions.PropagatedIDChange([record["ID"]])
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve(record=record)
             temp_ID = retrieved_record["ID"]
-        except RecordNotInIndexException:
+        except colrev_exceptions.RecordNotInIndexException:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
@@ -1055,11 +1045,13 @@ class ReviewDataset:
                     if len(proc_transition_list) == 0 and prior_status[0] != status:
                         data["start_states"].append(prior_status[0])
                         if prior_status[0] not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(
+                            raise colrev_exceptions.StatusFieldValueError(
                                 ID, "colrev_status", prior_status[0]
                             )
                         if status not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(ID, "colrev_status", status)
+                            raise colrev_exceptions.StatusFieldValueError(
+                                ID, "colrev_status", status
+                            )
 
                         data["invalid_state_transitions"].append(
                             f"{ID}: {prior_status[0]} to {status}"
@@ -1158,11 +1150,11 @@ class ReviewDataset:
             if any(cid in Record(data=x).get_colrev_id() for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
-            raise RecordNotInRepoException
+            raise colrev_exceptions.RecordNotInRepoException
         return record_l[0]
 
     def update_colrev_ids(self) -> None:
-        from colrev_core.record import Record, NotEnoughDataToIdentifyException
+        from colrev_core.record import Record
         from tqdm import tqdm
 
         self.REVIEW_MANAGER.logger.info("Create colrev_id list from origins")
@@ -1174,7 +1166,7 @@ class ReviewDataset:
                 try:
                     colrev_id = RECORD.create_colrev_id()
                     RECORD.data["colrev_id"] = [colrev_id]
-                except NotEnoughDataToIdentifyException:
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
                     continue
                 origins = RECORD.get_origins()
@@ -1249,12 +1241,12 @@ class ReviewDataset:
         if not len(data["IDs"]) == len(set(data["IDs"])):
             duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
             if len(duplicates) > 20:
-                raise DuplicateIDsError(
+                raise colrev_exceptions.DuplicateIDsError(
                     "Duplicates in RECORDS_FILE: "
                     f"({','.join(duplicates[0:20])}, ...)"
                 )
             else:
-                raise DuplicateIDsError(
+                raise colrev_exceptions.DuplicateIDsError(
                     f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
                 )
         return
@@ -1264,7 +1256,7 @@ class ReviewDataset:
 
         # Check whether each record has an origin
         if not len(data["entries_without_origin"]) == 0:
-            raise OriginError(
+            raise colrev_exceptions.OriginError(
                 f"Entries without origin: {', '.join(data['entries_without_origin'])}"
             )
 
@@ -1277,7 +1269,7 @@ class ReviewDataset:
                 all_record_links.append(bib_file.name + "/" + x)
         delta = set(data["record_links_in_bib"]) - set(all_record_links)
         if len(delta) > 0:
-            raise OriginError(f"broken origins: {delta}")
+            raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
         origins = list(itertools.chain(*data["origin_list"]))
@@ -1288,7 +1280,9 @@ class ReviewDataset:
         if non_unique_origins:
             for ID, org in data["origin_list"]:
                 if org in non_unique_origins:
-                    raise OriginError(f'Non-unique origin: origin="{org}"')
+                    raise colrev_exceptions.OriginError(
+                        f'Non-unique origin: origin="{org}"'
+                    )
 
         # TODO : Check for removed origins
         # Raise an exception if origins were removed
@@ -1319,17 +1313,19 @@ class ReviewDataset:
         status_schema = [str(x) for x in RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
         if stat_diff:
-            raise FieldValueError(f"status field(s) {stat_diff} not in {status_schema}")
+            raise colrev_exceptions.FieldValueError(
+                f"status field(s) {stat_diff} not in {status_schema}"
+            )
         return
 
     def check_status_transitions(self, *, data: dict) -> None:
         if len(set(data["start_states"])) > 1:
-            raise StatusTransitionError(
+            raise colrev_exceptions.StatusTransitionError(
                 "multiple transitions from different "
                 f'start states ({set(data["start_states"])})'
             )
         if len(set(data["invalid_state_transitions"])) > 0:
-            raise StatusTransitionError(
+            raise colrev_exceptions.StatusTransitionError(
                 "invalid state transitions: \n    "
                 + "\n    ".join(data["invalid_state_transitions"])
             )
@@ -1343,7 +1339,6 @@ class ReviewDataset:
 
     def check_corrections_of_curated_records(self) -> None:
         from colrev_core.environment import LocalIndex, Resources
-        from colrev_core.environment import RecordNotInIndexException
         from colrev_core.prep import Preparation
         from colrev_core.record import Record
         from dictdiffer import diff
@@ -1464,7 +1459,7 @@ class ReviewDataset:
                                     f"{prov_inf})"
                                 )
                                 continue
-                        except (RecordNotInIndexException, KeyError):
+                        except (colrev_exceptions.RecordNotInIndexException, KeyError):
                             pass
                             original_curated_record = prior_cr.copy()
 
@@ -1657,7 +1652,9 @@ class ReviewDataset:
                             f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:
-            raise FieldValueError("\n    " + "\n    ".join(field_errors))
+            raise colrev_exceptions.FieldValueError(
+                "\n    " + "\n    ".join(field_errors)
+            )
         return
 
     # def check_screen_data(screen, data):
@@ -1755,7 +1752,7 @@ class ReviewDataset:
         for prior_origin, prior_id in prior["persisted_IDs"]:
             if prior_origin not in [x[0] for x in data["persisted_IDs"]]:
                 # Note: this does not catch origins removed before md_processed
-                raise OriginError(f"origin removed: {prior_origin}")
+                raise colrev_exceptions.OriginError(f"origin removed: {prior_origin}")
             for new_origin, new_id in data["persisted_IDs"]:
                 if new_origin == prior_origin:
                     if new_id != prior_id:
@@ -1766,7 +1763,7 @@ class ReviewDataset:
                             "ID of processed record changed from "
                             f"{prior_id} to {new_id}"
                         )
-                        raise PropagatedIDChange(notifications)
+                        raise colrev_exceptions.PropagatedIDChange(notifications)
         return
 
     def check_sources(self) -> None:
@@ -1783,7 +1780,7 @@ class ReviewDataset:
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
             if str(SOURCE.search_type) not in SearchType._member_names_:
-                raise SearchSettingsError(
+                raise colrev_exceptions.SearchSettingsError(
                     f"{SOURCE.search_type} not in {SearchType._member_names_}"
                 )
 
@@ -1809,7 +1806,7 @@ class ReviewDataset:
         """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
 
         if self.REVIEW_MANAGER.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNofiedError()
         return self.__git_repo
 
     def has_changes(self) -> bool:

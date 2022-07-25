@@ -12,7 +12,7 @@ import pandas as pd
 from nameparser import HumanName
 from thefuzz import fuzz
 
-from colrev_core.exceptions import NotEnoughDataToIdentifyException
+import colrev_core.exceptions as colrev_exceptions
 
 
 class Record:
@@ -205,7 +205,7 @@ class Record:
 
                     # else should not happen because colrev_ids should only be
                     # created once records are prepared (complete)
-                except NotEnoughDataToIdentifyException:
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
             else:
                 target_state = RecordState.md_needs_manual_preparation
@@ -335,7 +335,7 @@ class Record:
                     self.data["colrev_id"] = colrev_id
                 elif colrev_id not in self.data["colrev_id"]:
                     self.data["colrev_id"].append(colrev_id)
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
         return
 
@@ -1247,7 +1247,7 @@ class Record:
                 RecordState.md_needs_manual_preparation,
             ]:
                 if len(alsoKnownAsRecord) != 0:
-                    raise NotEnoughDataToIdentifyException(
+                    raise colrev_exceptions.NotEnoughDataToIdentifyException(
                         "cannot determine field requirements "
                         "(e.g., volume/number for journal articles)"
                     )
@@ -1277,7 +1277,9 @@ class Record:
                 f for f in required_fields_keys if f not in alsoKnownAsRecord
             ]
             if len(missing_field_keys) > 0:
-                raise NotEnoughDataToIdentifyException(",".join(missing_field_keys))
+                raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                    ",".join(missing_field_keys)
+                )
             record = alsoKnownAsRecord
 
         try:
@@ -1312,7 +1314,9 @@ class Record:
             srep = robust_append(input_string=srep, to_append=record["year"])
             author = format_author_field(record["author"])
             if "" == author.replace("-", ""):
-                raise NotEnoughDataToIdentifyException("author field format error")
+                raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                    "author field format error"
+                )
             srep = robust_append(input_string=srep, to_append=author)
             srep = robust_append(input_string=srep, to_append=record["title"])
 
@@ -1320,7 +1324,7 @@ class Record:
             # pages = record.get("pages", "")
             # srep = robust_append(srep, pages)
         except KeyError as e:
-            raise NotEnoughDataToIdentifyException(str(e))
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(str(e))
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 

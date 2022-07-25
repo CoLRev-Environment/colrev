@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from pathlib import Path
 
-from colrev_core.exceptions import NoPaperEndpointRegistered
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -24,7 +24,7 @@ class Paper(Process):
         ]
 
         if len(paper_endpoint_settings_l) != 1:
-            raise NoPaperEndpointRegistered()
+            raise colrev_exceptions.NoPaperEndpointRegistered()
 
         paper_endpoint_settings = paper_endpoint_settings_l[0]
 

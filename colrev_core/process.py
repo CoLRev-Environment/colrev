@@ -9,10 +9,7 @@ import git
 import zope.interface
 from transitions import Machine
 
-from colrev_core.exceptions import CleanRepoRequiredError
-from colrev_core.exceptions import NoRecordsError
-from colrev_core.exceptions import ProcessOrderViolation
-from colrev_core.exceptions import UnstagedGitChangesError
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.record import RecordState
 
 
@@ -112,7 +109,7 @@ class Process:
             # because processing functions may change content
             if git_repo.is_dirty(index=False):
                 changedFiles = [item.a_path for item in git_repo.index.diff(None)]
-                raise UnstagedGitChangesError(changedFiles)
+                raise colrev_exceptions.UnstagedGitChangesError(changedFiles)
 
             if git_repo.is_dirty():
                 if ignore_pattern is None:
@@ -125,7 +122,7 @@ class Process:
                         not in [str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])]
                     ]
                     if len(changedFiles) > 0:
-                        raise CleanRepoRequiredError(changedFiles, "")
+                        raise colrev_exceptions.CleanRepoRequiredError(changedFiles, "")
                 else:
                     changedFiles = [
                         item.a_path
@@ -144,7 +141,7 @@ class Process:
                             str(self.REVIEW_MANAGER.paths["STATUS_RELATIVE"])
                         )
                     if changedFiles:
-                        raise CleanRepoRequiredError(
+                        raise colrev_exceptions.CleanRepoRequiredError(
                             changedFiles, ",".join([str(x) for x in ignore_pattern])
                         )
             return True
@@ -421,9 +418,11 @@ class ProcessModel:
                 len(cur_state_list) == 0
                 and not process.type.name == "load"  # type: ignore
             ):
-                raise NoRecordsError()
+                raise colrev_exceptions.NoRecordsError()
             if len(intersection) != 0:
-                raise ProcessOrderViolation(process, self.state, intersection)
+                raise colrev_exceptions.ProcessOrderViolation(
+                    process, self.state, intersection
+                )
         return
 
 
