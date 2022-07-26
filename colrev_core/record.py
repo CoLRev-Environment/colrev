@@ -742,8 +742,29 @@ class Record:
                 )
             else:
                 self.data["file"] = MERGING_RECORD.data["file"]
+        elif "UNKNOWN" == self.data.get(
+            key, ""
+        ) and "UNKNOWN" != MERGING_RECORD.data.get(key, ""):
+            self.data[key] = MERGING_RECORD.data[key]
+        elif "UNKNOWN" == MERGING_RECORD.data.get(key, "UNKNOWN"):
+            pass
         else:
-            self.update_field(key=key, value=str(val), source=source, note=note)
+            try:
+                if key in self.identifying_field_keys:
+                    source = MERGING_RECORD.data["colrev_masterdata_provenance"][key][
+                        "source"
+                    ]
+                else:
+                    source = MERGING_RECORD.data["colrev_data_provenance"][key][
+                        "source"
+                    ]
+            except Exception:
+                # print(e)
+                pass
+            self.update_field(
+                key=key, value=str(MERGING_RECORD.data[key]), source=source, note=note
+            )
+            # self.update_field(key=key, value=str(val), source=source, note=note)
         return
 
     @classmethod

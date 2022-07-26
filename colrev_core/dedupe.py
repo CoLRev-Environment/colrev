@@ -28,6 +28,12 @@ class Dedupe(Process):
         "active_learning_automated": {
             "endpoint": built_in_dedupe.ActiveLearningDedupeAutomatedEndpoint,
         },
+        "curation_full_outlet_dedupe": {
+            "endpoint": built_in_dedupe.CurationDedupeEndpoint,
+        },
+        "curation_missing_dedupe": {
+            "endpoint": built_in_dedupe.CurationMissingDedupeEndpoint,
+        },
     }
 
     SIMPLE_SIMILARITY_BASED_DEDUPE = "simple_similarity_based_dedupe"
@@ -64,11 +70,6 @@ class Dedupe(Process):
 
         self.REVIEW_MANAGER.report_logger.info("Dedupe")
         self.REVIEW_MANAGER.logger.info("Dedupe")
-
-        self.dedupe_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.dedupe.scripts,
-        )
 
     def prep_records(self, *, records_df: pd.DataFrame) -> dict:
         def preProcess(*, key, value):
@@ -668,28 +669,7 @@ class Dedupe(Process):
 
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
-        import itertools
         from collections import Counter
-
-        def __get_toc_key(record: dict) -> str:
-            toc_key = "NA"
-            if "article" == record["ENTRYTYPE"]:
-                toc_key = f"{record.get('journal', '').lower()}"
-                if "year" in record:
-                    toc_key = toc_key + f"|{record['year']}"
-                if "volume" in record:
-                    toc_key = toc_key + f"|{record['volume']}"
-                if "number" in record:
-                    toc_key = toc_key + f"|{record['number']}"
-                else:
-                    toc_key = toc_key + "|"
-            elif "inproceedings" == record["ENTRYTYPE"]:
-                toc_key = (
-                    f"{record.get('booktitle', '').lower()}"
-                    + f"|{record.get('year', '')}"
-                )
-
-            return toc_key
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -697,14 +677,7 @@ class Dedupe(Process):
         origins = [item.split("/")[0] for sublist in origins for item in sublist]
         origins = list(set(origins))
 
-        cuts = {}
         same_source_merges = []
-        for L in range(1, len(origins) + 1):
-            for subset in itertools.combinations(origins, L):
-                cuts["/".join(list(subset))] = {
-                    "colrev_origins": list(subset),
-                    "records": [],
-                }
 
         for record in records.values():
 
@@ -724,32 +697,9 @@ class Dedupe(Process):
                     all_cases.append(f"{ds}: {cases}")
                 same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
 
-            cut_list = [
-                x
-                for k, x in cuts.items()
-                if set(x["colrev_origins"]) == set(rec_sources)
-            ]
-            if len(cut_list) != 1:
-                print(cut_list)
-                print(record["ID"], record["colrev_origin"])
-                continue
-            cut = cut_list[0]
-            cut["records"].append(record["ID"])
-
-            if "toc_items" not in cut:
-                cut["toc_items"] = {}  # type: ignore
-            toc_i = __get_toc_key(record)
-            if toc_i in cut["toc_items"]:
-                cut["toc_items"][toc_i] = cut["toc_items"][toc_i] + 1  # type: ignore
-            else:
-                cut["toc_items"][toc_i] = 1  # type: ignore
-
-        total = len(records.values())
-        for k, det in cuts.items():
-            det["size"] = len(det["records"])  # type: ignore
-            det["fraction"] = det["size"] / total * 100  # type: ignore
-
-        info = {"cuts": cuts, "same_source_merges": same_source_merges}
+        info = {
+            "same_source_merges": same_source_merges,
+        }
         return info
 
     def main(self):
@@ -764,9 +714,15 @@ class Dedupe(Process):
 
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
-            ENDPOINT = self.dedupe_scripts[DEDUPE_SCRIPT["endpoint"]]
+            dedupe_script = AdapterManager.load_scripts(
+                PROCESS=self,
+                scripts=[DEDUPE_SCRIPT],
+            )
+
+            ENDPOINT = dedupe_script[DEDUPE_SCRIPT["endpoint"]]
 
             ENDPOINT.run_dedupe(self)
+            print()
 
         return
 
