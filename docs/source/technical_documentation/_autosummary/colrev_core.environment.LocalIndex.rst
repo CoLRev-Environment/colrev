@@ -21,6 +21,7 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.duplicate_outlets
       ~LocalIndex.get_fields_to_remove
       ~LocalIndex.get_from_index_exact_match
+      ~LocalIndex.get_year_from_toc
       ~LocalIndex.index
       ~LocalIndex.index_colrev_project
       ~LocalIndex.index_record

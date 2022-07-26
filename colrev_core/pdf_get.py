@@ -407,7 +407,7 @@ class PDF_Retrieval(Process):
             retrieved_string += " PDFs"
         elif self.retrieved == 1:
             retrieved_string += "\033[92m"
-            retrieved_string += f"{self.retrieved}".rjust(10, " ")
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
             retrieved_string += "\033[0m PDF"
         else:
             retrieved_string += "\033[92m"
@@ -420,7 +420,7 @@ class PDF_Retrieval(Process):
             not_retrieved_string += " PDFs"
         elif self.not_retrieved == 1:
             not_retrieved_string += "\033[93m"
-            not_retrieved_string += f"{self.not_retrieved}".rjust(10, " ")
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
             not_retrieved_string += "\033[0m PDF"
         else:
             not_retrieved_string += "\033[93m"

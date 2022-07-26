@@ -152,11 +152,11 @@ class PrepMan(Process):
             if RecordState.md_needs_manual_preparation == record["colrev_status"]
         }
 
-        self.REVIEW_MANAGER.REVIEW_DATASEt.save_records_dict_to_file(
+        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
             records=records, save_path=prep_bib_path
         )
 
-        bib_db_df = pd.DataFrame.from_records(records.values())
+        bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
         col_names = [
             "ID",

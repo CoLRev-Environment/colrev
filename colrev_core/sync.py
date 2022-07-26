@@ -107,20 +107,12 @@ class Sync:
             self.records_to_import.append(record)
         return
 
-    def format_ref(self, *, reference: dict) -> str:
-        formatted_ref = (
-            f"{reference.get('author', '')} ({reference.get('year', '')}) "
-            + f"{reference.get('title', '')}. "
-            + f"{reference.get('journal', '')}{reference.get('booktitle', '')}, "
-            + f"{reference.get('volume', '')} ({reference.get('number', '')})"
-        )
-        return formatted_ref
-
     def add_to_bib(self) -> None:
 
         from pybtex.database.input import bibtex
         import pybtex.errors
         from colrev_core.review_dataset import ReviewDataset
+        from colrev_core.record import Record
 
         pybtex.errors.set_strict_mode(False)
 
@@ -145,8 +137,8 @@ class Sync:
 
         if len(added) > 0:
             print("Loaded:")
-            for element in added:
-                print(" - " + self.format_ref(reference=element))
+            for record in added:
+                Record(data=record).print_citation_format()
 
             print(f"Loaded {len(added)} papers")
 

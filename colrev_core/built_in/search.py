@@ -709,9 +709,9 @@ class PDFSearchEndpoint:
                 source_ids = list(search_rd.keys())
                 for record in records.values():
                     if str(feed_file.name) in record["colrev_origin"]:
-                        if (
-                            record["colrev_origin"].split(";")[0].split("/")[1]
-                            not in source_ids
+                        if not any(
+                            x.split("/")[1] in source_ids
+                            for x in record["colrev_origin"].split(";")
                         ):
                             print("REMOVE " + record["colrev_origin"])
                             to_remove.append(record["colrev_origin"])
@@ -768,7 +768,17 @@ class PDFSearchEndpoint:
                 )
                 records = list(feed_rd.values())
 
+        def fix_filenames() -> None:
+            overall_pdfs = path.glob("**/*.pdf")
+            for pdf in overall_pdfs:
+                if "  " in str(pdf):
+                    pdf.rename(str(pdf).replace("  ", " "))
+
+            return
+
         path = Path(params["scope"]["path"])
+
+        fix_filenames()
 
         remove_records_if_pdf_no_longer_exists()
 

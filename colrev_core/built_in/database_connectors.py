@@ -534,7 +534,19 @@ class CrossrefConnector:
 
         RECORD = RECORD_INPUT.copy_prep_rec()
 
-        if not jour_vol_iss_list:
+        if jour_vol_iss_list:
+            params = {"rows": "50"}
+            container_title = re.sub(r"[\W]+", " ", RECORD.data["journal"])
+            params["query.container-title"] = container_title.replace("_", " ")
+
+            query_field = ""
+            if "volume" in RECORD.data:
+                query_field = RECORD.data["volume"]
+            if "number" in RECORD.data:
+                query_field = query_field + "+" + RECORD.data["number"]
+            params["query"] = query_field
+
+        else:
             params = {"rows": "15"}
             bibl = (
                 RECORD.data["title"].replace("-", "_")
@@ -556,17 +568,6 @@ class CrossrefConnector:
             author_string = " ".join(author_last_names)
             author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
             params["query.author"] = author_string.replace("_", " ")
-        else:
-            params = {"rows": "25"}
-            container_title = re.sub(r"[\W]+", " ", RECORD.data["journal"])
-            params["query.container-title"] = container_title.replace("_", " ")
-
-            query_field = ""
-            if "volume" in RECORD.data:
-                query_field = RECORD.data["volume"]
-            if "number" in RECORD.data:
-                query_field = query_field + "+" + RECORD.data["number"]
-            params["query"] = query_field
 
         url = api_url + urllib.parse.urlencode(params)
         headers = {"user-agent": f"{__name__} (mailto:{REVIEW_MANAGER.EMAIL})"}

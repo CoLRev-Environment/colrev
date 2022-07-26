@@ -279,7 +279,9 @@ class SimpleDedupeEndpoint:
         DEDUPE.dedupe_records = records_df
 
         DEDUPE.REVIEW_MANAGER.create_commit(
-            msg="Process duplicates", script_call="colrev dedupe", saved_args=saved_args
+            msg="Merge duplicate records",
+            script_call="colrev dedupe",
+            saved_args=saved_args,
         )
 
         records_df = DEDUPE.dedupe_records
@@ -801,7 +803,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             #     )
             #     DEDUPE.apply_merges(results=[], remaining_non_dupe=True)
             #     DEDUPE.REVIEW_MANAGER.create_commit(
-            #         msg="Deduplication (no duplicates detected)",
+            #         msg="Merge duplicate records (no duplicates detected)",
             #         script_call="colrev dedupe",
             #         saved_args=saved_args,
             #     )
@@ -1156,7 +1158,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
                 non_duplicates_df.to_excel(DEDUPE.non_dupe_file_xlsx, index=False)
 
         DEDUPE.REVIEW_MANAGER.create_commit(
-            msg="Deduplication (based on active-learning clusters)",
+            msg="Merge duplicate records (based on active-learning clusters)",
             script_call="colrev dedupe",
             saved_args=saved_args,
         )

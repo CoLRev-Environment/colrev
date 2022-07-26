@@ -46,6 +46,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
       ~PrescreenRecord.get_text_from_pdf
+      ~PrescreenRecord.get_toc_key
       ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
@@ -59,6 +60,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.pdf_man_prep
       ~PrescreenRecord.prescreen
       ~PrescreenRecord.prescreen_exclude
+      ~PrescreenRecord.print_citation_format
       ~PrescreenRecord.remove_accents
       ~PrescreenRecord.remove_field
       ~PrescreenRecord.remove_quality_defect_notes

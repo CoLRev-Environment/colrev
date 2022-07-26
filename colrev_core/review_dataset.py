@@ -261,7 +261,6 @@ class ReviewDataset:
         elif RECORDS_FILE_FILE.is_file():
             bib_data = parser.parse_file(RECORDS_FILE_FILE)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
-
         else:
             records_dict = {}
 
@@ -651,7 +650,7 @@ class ReviewDataset:
             letters = list(string.ascii_lowercase)
             next_unique_ID = temp_ID
             appends: list = []
-            while next_unique_ID in other_ids:
+            while next_unique_ID.lower() in [i.lower() for i in other_ids]:
                 if len(appends) == 0:
                     order += 1
                     appends = [p for p in itertools.product(letters, repeat=order)]

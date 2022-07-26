@@ -145,7 +145,10 @@ class Record:
             list_to_return = []
             if "colrev_masterdata_provenance" == key:
                 for k, v in input_dict.items():
-                    list_to_return.append(f"{k}:{v['source']};{v['note']};")
+                    formated_node = ",".join(
+                        sorted(e for e in v["note"].split(",") if "" != e)
+                    )
+                    list_to_return.append(f"{k}:{v['source']};{formated_node};")
 
             elif "colrev_data_provenance" == key:
                 for k, v in input_dict.items():
@@ -158,6 +161,11 @@ class Record:
 
         def list_to_str(*, val: list) -> str:
             return ("\n" + " " * 36).join([f.rstrip() for f in val])
+
+        if not isinstance(self.data.get("colrev_id", []), list):
+            print(self.data)
+        assert isinstance(self.data.get("colrev_id", []), list)
+        assert all(x.startswith("colrev_id") for x in self.data.get("colrev_id", []))
 
         if stringify:
 
@@ -199,9 +207,9 @@ class Record:
                 try:
                     colrev_id = self.create_colrev_id()
                     if "colrev_id" not in self.data:
-                        self.data["colrev_id"] = colrev_id
+                        self.data["colrev_id"] = [colrev_id]
                     elif colrev_id not in self.data["colrev_id"]:
-                        self.data["colrev_id"] += ";" + colrev_id
+                        self.data["colrev_id"].append(colrev_id)
 
                     # else should not happen because colrev_ids should only be
                     # created once records are prepared (complete)
@@ -639,10 +647,11 @@ class Record:
             default_upper = percent_upper_chars(default)
             candidate_upper = percent_upper_chars(candidate)
 
-            # Relatively simple rule...
-            # catches cases when default is all upper or title case
-            if default_upper > candidate_upper:
-                best_title = candidate
+            if candidate[-1] not in ["*", "1", "2"]:
+                # Relatively simple rule...
+                # catches cases when default is all upper or title case
+                if default_upper > candidate_upper:
+                    best_title = candidate
 
             # self.REVIEW_MANAGER.logger.debug(
             #     f"best_title({default},\n"
@@ -810,7 +819,7 @@ class Record:
             )
 
             # partial ratio (catching 2010-10 or 2001-2002)
-            year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
+            year_similarity = fuzz.ratio(str(df_a["year"]), str(df_b["year"])) / 100
 
             outlet_similarity = (
                 fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
@@ -1072,9 +1081,9 @@ class Record:
 
         defect_field_keys = []
         for key in self.data.keys():
+            if "UNKNOWN" == self.data[key]:
+                continue
             if "author" == key:
-                if "UNKNOWN" == self.data[key]:
-                    continue
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
@@ -1525,7 +1534,7 @@ class Record:
                     if self.data.get(required_field, "") not in ["UNKNOWN", ""]:
                         if percent_upper_chars(self.data[required_field]) > 0.8:
                             self.add_masterdata_provenance_note(
-                                key=required_field, note="mostly upper case"
+                                key=required_field, note="quality_defect"
                             )
                     else:
                         # self.data[required_field] = "UNKNOWN"
@@ -1621,6 +1630,34 @@ class Record:
 
         return
 
+    def get_toc_key(self) -> str:
+        toc_key = ""
+        if "article" == self.data["ENTRYTYPE"]:
+            if "journal" in self.data:
+                toc_key += self.data["journal"]
+            if "volume" in self.data:
+                toc_key += self.data["volume"]
+            if "number" in self.data:
+                toc_key += self.data["number"]
+
+        if "inproceedings" == self.data["ENTRYTYPE"]:
+            if "booktitle" in self.data:
+                toc_key += self.data["booktitle"]
+                toc_key += self.data["year"]
+
+        return toc_key
+
+    def print_citation_format(self) -> None:
+
+        formatted_ref = (
+            f"{self.data.get('author', '')} ({self.data.get('year', '')}) "
+            + f"{self.data.get('title', '')}. "
+            + f"{self.data.get('journal', '')}{self.data.get('booktitle', '')}, "
+            + f"{self.data.get('volume', '')} ({self.data.get('number', '')})"
+        )
+        print(formatted_ref)
+        return
+
 
 class PrepRecord(Record):
     # Note: add methods that are called multiple times
@@ -1674,7 +1711,11 @@ class PrepRecord(Record):
 
     @classmethod
     def get_retrieval_similarity(
-        cls, *, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
+        cls,
+        *,
+        RECORD_ORIGINAL: Record,
+        RETRIEVED_RECORD_ORIGINAL: Record,
+        same_record_type_required: bool = False,
     ) -> float:
         def format_authors_string_for_comparison(REC_IN):
             if "author" not in REC_IN.data:
@@ -1706,6 +1747,12 @@ class PrepRecord(Record):
             authors_string = re.sub(r"[^A-Za-z0-9, ]+", "", authors_string.rstrip())
             REC_IN.data["author"] = authors_string
             return
+
+        if same_record_type_required:
+            if RECORD_ORIGINAL.data.get(
+                "ENTRYTYPE", "a"
+            ) != RETRIEVED_RECORD_ORIGINAL.data.get("ENTRYTYPE", "b"):
+                return 0.0
 
         RECORD = RECORD_ORIGINAL.copy_prep_rec()
         RETRIEVED_RECORD = RETRIEVED_RECORD_ORIGINAL.copy_prep_rec()
@@ -1785,7 +1832,14 @@ class PrepRecord(Record):
                     .replace("Acm", "ACM")
                     .replace(" And ", " and ")
                 )
-                return
+
+            if key in self.data["colrev_masterdata_provenance"]:
+                note = self.data["colrev_masterdata_provenance"][key]["note"]
+                if "quality_defect" in note:
+                    self.data["colrev_masterdata_provenance"][key][
+                        "note"
+                    ] = note.replace("quality_defect", "")
+
         return
 
     def container_is_abbreviated(self) -> bool:

@@ -5,22 +5,22 @@ repos:
     rev: 7b92b16a6690c2de01212fc5c54e746ad10c0460
     hooks:
     -   id: format
-        name: "ReviewManager: format"
+        name: "CoLRev ReviewManager: format"
         entry: colrev_hooks/format.py
         language: script
         files: 'records.bib|paper.md|settings.json'
     -   id: check
-        name: "ReviewManager: checks"
+        name: "CoLRev ReviewManager: checks"
         entry: colrev_hooks/check.py
         language: script
         files: 'records.bib|paper.md'
     -   id: report
-        name: "ReviewManager: report"
+        name: "CoLRev ReviewManager: report"
         entry: colrev_hooks/report.py
         language: script
         stages: [prepare-commit-msg]
     -   id: sharing
-        name: "ReviewManager: sharing"
+        name: "CoLRev ReviewManager: sharing"
         entry: colrev_hooks/sharing.py
         language: script
         stages: [push]

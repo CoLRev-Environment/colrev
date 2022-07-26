@@ -7,6 +7,7 @@ from pathlib import Path
 import git
 import pandas as pd
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -215,7 +216,7 @@ class Dedupe(Process):
         return records
 
     def readData(self):
-        from colrev_core.record import Record, NotEnoughDataToIdentifyException
+        from colrev_core.record import Record
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -242,7 +243,7 @@ class Dedupe(Process):
             try:
                 RECORD = Record(data=r)
                 r["colrev_id"] = RECORD.create_colrev_id()
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
                 pass
 

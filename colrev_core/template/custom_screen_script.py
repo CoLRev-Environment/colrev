@@ -2,15 +2,19 @@
 import random
 
 import zope.interface
+from dacite import from_dict
 
+from colrev_core.process import DefaultSettings
 from colrev_core.process import ScreenEndpoint
 from colrev_core.record import ScreenRecord
 
 
 @zope.interface.implementer(ScreenEndpoint)
 class CustomScreen:
-    @classmethod
-    def run_screen(cls, SCREEN, records: dict, split: list) -> dict:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def run_screen(self, SCREEN, records: dict, split: list) -> dict:
 
         screen_data = SCREEN.get_data()
         screening_criteria = SCREEN.REVIEW_MANAGER.settings.screen.criteria

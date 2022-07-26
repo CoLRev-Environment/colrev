@@ -298,6 +298,7 @@ class Preparation(Process):
                 )
 
             if PREPARATION_RECORD.preparation_break_condition():
+                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
                 break
 
         if self.LAST_ROUND:

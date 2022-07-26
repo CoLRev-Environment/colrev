@@ -162,7 +162,7 @@ class PDFPrepMan(Process):
             records=records, save_path=prep_bib_path
         )
 
-        bib_db_df = pd.DataFrame.from_records(records.values())
+        bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
         col_names = [
             "ID",

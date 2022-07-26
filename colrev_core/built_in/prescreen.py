@@ -29,6 +29,22 @@ class ScopePrescreenEndpointSettings:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ScopePrescreenEndpoint:
+
+    title_complementary_materials_keywords = [
+        "about our authors",
+        "editorial board",
+        "author index",
+        "contents",
+        "index of authors",
+        "list of reviewers",
+        "issue information",
+        "call for papers",
+        "acknowledgments",
+        "back matter",
+        "front matter",
+        "volume information",
+    ]
+
     def __init__(self, *, SETTINGS):
         if "TimeScopeFrom" in SETTINGS:
             assert SETTINGS["TimeScopeFrom"] > 1900
@@ -128,17 +144,10 @@ class ScopePrescreenEndpoint:
                 if self.SETTINGS.ExcludeComplementaryMaterials:
                     if "title" in record:
                         # TODO : extend/test the following
-                        if record["title"].lower() in [
-                            "about our authors",
-                            "editorial board",
-                            "author index",
-                            "contents",
-                            "index of authors",
-                            "list of reviewers",
-                            "issue information",
-                            "call for papers",
-                            "acknowledgments",
-                        ]:
+                        if (
+                            record["title"].lower()
+                            in self.title_complementary_materials_keywords
+                        ):
                             Record(data=record).prescreen_exclude(
                                 reason="complementary material"
                             )

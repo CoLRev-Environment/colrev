@@ -46,6 +46,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
       ~ScreenRecord.get_text_from_pdf
+      ~ScreenRecord.get_toc_key
       ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
@@ -59,6 +60,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.pdf_man_prep
       ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
+      ~ScreenRecord.print_citation_format
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes

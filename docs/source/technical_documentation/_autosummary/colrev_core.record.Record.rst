@@ -46,6 +46,7 @@ colrev\_core.record.Record
       ~Record.get_similarity
       ~Record.get_similarity_detailed
       ~Record.get_text_from_pdf
+      ~Record.get_toc_key
       ~Record.get_value
       ~Record.has_incomplete_fields
       ~Record.has_inconsistent_fields
@@ -58,6 +59,7 @@ colrev\_core.record.Record
       ~Record.pdf_get_man
       ~Record.pdf_man_prep
       ~Record.prescreen_exclude
+      ~Record.print_citation_format
       ~Record.remove_accents
       ~Record.remove_field
       ~Record.remove_quality_defect_notes

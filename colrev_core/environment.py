@@ -15,9 +15,11 @@ from dacite.exceptions import MissingValueError
 from git.exc import InvalidGitRepositoryError
 from lxml import etree
 from lxml.etree import SerialisationError
-from opensearchpy import NotFoundError
 from opensearchpy import OpenSearch
+from opensearchpy.exceptions import NotFoundError
+from opensearchpy.exceptions import SerializationError
 from opensearchpy.exceptions import TransportError
+from simplejson.errors import JSONDecodeError
 from thefuzz import fuzz
 from tqdm import tqdm
 
@@ -55,14 +57,13 @@ class AdapterManager:
 
             # 2. Load module scripts
             # TODO : test the module prep_scripts
-            elif not not Path(script_name + ".py").is_file():
+            elif not Path(script_name + ".py").is_file():
                 try:
                     scripts_dict[script_name]["settings"] = script
                     scripts_dict[script_name]["endpoint"] = importlib.import_module(
                         script_name
                     )
-                    scripts_dict[script_name]["endpoint"]["custom_flag"] = True
-
+                    scripts_dict[script_name]["custom_flag"] = True
                 except ModuleNotFoundError:
                     pass
                     raise colrev_exceptions.MissingDependencyError(
@@ -72,13 +73,13 @@ class AdapterManager:
                     )
 
             # 3. Load custom scripts in the directory
-            elif not Path(script_name + ".py").is_file():
+            elif Path(script_name + ".py").is_file():
                 sys.path.append(".")  # to import custom scripts from the project dir
                 scripts_dict[script_name]["settings"] = script
                 scripts_dict[script_name]["endpoint"] = importlib.import_module(
                     script_name, "."
                 )
-                scripts_dict[script_name]["endpoint"]["custom_flag"] = True
+                scripts_dict[script_name]["custom_flag"] = True
             else:
                 print(f"Could not load {script}")
                 continue
@@ -783,6 +784,7 @@ class LocalIndex:
                 colrev_exceptions.TEI_Exception,
                 AttributeError,
                 SerialisationError,
+                TransportError,
             ):
                 pass
 
@@ -797,13 +799,17 @@ class LocalIndex:
 
         return
 
-    def __retrieve_toc_index(self, *, toc_key: str) -> list:
+    def __retrieve_toc_index(self, *, toc_key: str) -> dict:
 
-        toc_item_response = self.os.get(
-            index=self.TOC_INDEX, id=toc_key, request_timeout=30
-        )
-        toc_item = toc_item_response["_source"]
-
+        toc_item = dict()
+        try:
+            toc_item_response = self.os.get(
+                index=self.TOC_INDEX, id=toc_key, request_timeout=30
+            )
+            if "_source" in toc_item_response:
+                toc_item = toc_item_response["_source"]
+        except SerializationError:
+            pass
         return toc_item
 
     def __amend_record(self, *, hash: str, record: dict) -> None:
@@ -858,6 +864,7 @@ class LocalIndex:
                     colrev_exceptions.TEI_Exception,
                     AttributeError,
                     SerialisationError,
+                    TransportError,
                 ):
                     pass
 
@@ -968,7 +975,7 @@ class LocalIndex:
                             self.os.update(
                                 index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
                             )
-            except colrev_exceptions.NotEnoughDataToIdentifyException:
+            except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
                 pass
 
         return
@@ -989,7 +996,7 @@ class LocalIndex:
                     else:
                         # Collision
                         hash = self.__increment_hash(hash=hash)
-                except NotFoundError:
+                except (NotFoundError, TransportError):
                     pass
                     break
                 except Exception as e:
@@ -1010,7 +1017,7 @@ class LocalIndex:
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
                     return retrieved_record
-            except (IndexError, NotFoundError):
+            except (IndexError, NotFoundError, TransportError, SerialisationError):
                 pass
                 raise colrev_exceptions.RecordNotInIndexException
             except Exception as e:
@@ -1211,7 +1218,7 @@ class LocalIndex:
                         record=record,
                     )
                     return
-            except colrev_exceptions.RecordNotInIndexException:
+            except (colrev_exceptions.RecordNotInIndexException, TransportError):
                 pass
 
             while True:
@@ -1240,7 +1247,7 @@ class LocalIndex:
                         print(saved_record)
                         hash = self.__increment_hash(hash=hash)
 
-        except colrev_exceptions.NotEnoughDataToIdentifyException:
+        except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
             pass
             return
 
@@ -1356,6 +1363,35 @@ class LocalIndex:
 
         return
 
+    def get_year_from_toc(self, *, record: dict) -> str:
+        year = "NA"
+
+        toc_key = self.__get_toc_key(record=record)
+        toc_items = []
+        try:
+            if self.os.exists(index=self.TOC_INDEX, id=toc_key):
+                res = self.__retrieve_toc_index(toc_key=toc_key)
+                toc_items = res.get("colrev_ids", [])  # type: ignore
+        except TransportError:
+            pass
+            toc_items = []
+
+        if len(toc_items) > 0:
+            try:
+
+                toc_records_colrev_id = toc_items[0]
+                hash = hashlib.sha256(toc_records_colrev_id.encode("utf-8")).hexdigest()
+                res = self.os.get(
+                    index=self.RECORD_INDEX, id=str(hash), request_timeout=30
+                )
+                record = res["_source"]  # type: ignore
+                year = record.get("year", "NA")
+
+            except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
+                pass
+
+        return year
+
     def retrieve_from_toc(
         self, *, record: dict, similarity_threshold: float, include_file=False
     ) -> dict:
@@ -1366,7 +1402,7 @@ class LocalIndex:
         if self.os.exists(index=self.TOC_INDEX, id=toc_key):
             try:
                 res = self.__retrieve_toc_index(toc_key=toc_key)
-                toc_items = res["colrev_ids"]  # type: ignore
+                toc_items = res.get("colrev_ids", [])  # type: ignore
             except TransportError:
                 pass
                 toc_items = []
@@ -1402,12 +1438,17 @@ class LocalIndex:
         raise colrev_exceptions.RecordNotInIndexException()
 
     def get_from_index_exact_match(self, *, index_name, key, value) -> dict:
-        resp = self.os.search(
-            index=index_name,
-            body={"query": {"match_phrase": {key: value}}},
-            request_timeout=30,
-        )
-        res = resp["hits"]["hits"][0]["_source"]
+
+        res = dict()
+        try:
+            resp = self.os.search(
+                index=index_name,
+                body={"query": {"match_phrase": {key: value}}},
+                request_timeout=30,
+            )
+            res = resp["hits"]["hits"][0]["_source"]
+        except (JSONDecodeError, NotFoundError, TransportError, SerialisationError):
+            pass
         return res
 
     def retrieve(
@@ -1417,7 +1458,6 @@ class LocalIndex:
         Convenience function to retrieve the indexed record metadata
         based on another record
         """
-        from simplejson.errors import JSONDecodeError
 
         retrieved_record: typing.Dict = dict()
 

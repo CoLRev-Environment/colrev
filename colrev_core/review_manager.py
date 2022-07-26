@@ -665,7 +665,8 @@ class ReviewManager:
                 round["scripts"] = [
                     s
                     for s in round["scripts"]
-                    if "get_doi_from_sem_scholar" != s["endpoint"]
+                    if s["endpoint"]
+                    not in ["get_doi_from_sem_scholar", "update_metadata_status"]
                 ]
 
             if "retrieve_forthcoming" not in settings["search"]:

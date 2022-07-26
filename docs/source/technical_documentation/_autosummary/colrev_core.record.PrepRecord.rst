@@ -54,6 +54,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
       ~PrepRecord.get_text_from_pdf
+      ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
@@ -68,6 +69,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
+      ~PrepRecord.print_citation_format
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
