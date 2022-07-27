@@ -105,6 +105,9 @@ class Record:
 
         return ret_str
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     def copy(self):
         return Record(data=deepcopy(self.data))
 
@@ -169,32 +172,43 @@ class Record:
 
         if stringify:
 
+            data_copy = deepcopy(self.data)
+
+            # TODO : maybe add to ReviewDataset.list_fields_keys?
+            if ";" in data_copy["colrev_origin"]:
+                data_copy["colrev_origin"] = ";".join(
+                    sorted(list(set(data_copy["colrev_origin"].split(";"))))
+                )
+
             # separated by \n
             for key in ReviewDataset.list_fields_keys:
-                if key in self.data:
-                    if isinstance(self.data[key], str):
-                        self.data[key] = [
+                if key in data_copy:
+                    if isinstance(data_copy[key], str):
+                        data_copy[key] = [
                             element.lstrip().rstrip()
-                            for element in self.data[key].split(";")
+                            for element in data_copy[key].split(";")
                         ]
                     if "colrev_id" == key:
-                        self.data[key] = sorted(list(set(self.data[key])))
-                    for ind, val in enumerate(self.data[key]):
+                        data_copy[key] = sorted(list(set(data_copy[key])))
+                    for ind, val in enumerate(data_copy[key]):
                         if len(val) > 0:
                             if ";" != val[-1]:
-                                self.data[key][ind] = val + ";"
-                    self.data[key] = list_to_str(val=self.data[key])
+                                data_copy[key][ind] = val + ";"
+                    data_copy[key] = list_to_str(val=data_copy[key])
 
             for key in ReviewDataset.dict_fields_keys:
-                if key in self.data:
-                    if isinstance(self.data[key], dict):
-                        self.data[key] = save_field_dict(
-                            input_dict=self.data[key], key=key
+                if key in data_copy:
+                    if isinstance(data_copy[key], dict):
+                        data_copy[key] = save_field_dict(
+                            input_dict=data_copy[key], key=key
                         )
-                    if isinstance(self.data[key], list):
-                        self.data[key] = list_to_str(val=self.data[key])
+                    if isinstance(data_copy[key], list):
+                        data_copy[key] = list_to_str(val=data_copy[key])
 
-        return self.data
+            return data_copy
+
+        else:
+            return self.data
 
     def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})

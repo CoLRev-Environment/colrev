@@ -329,36 +329,49 @@ class PDF_Retrieval(Process):
                 continue
 
             file = Path(record["file"])
-            new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
-                f"{record['ID']}.pdf"
-            )
+            new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
+            # Possible option: move to top (pdfs) directory:
+            # new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            #     f"{record['ID']}.pdf"
+            # )
             if str(file) == str(new_filename):
                 continue
 
+            # This should replace the file fields
+            __inplace_change(
+                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+                old_string="{" + str(file) + "}",
+                new_string="{" + str(new_filename) + "}",
+            )
+            # This should replace the provenance dict fields
+            __inplace_change(
+                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+                old_string=":" + str(file) + ";",
+                new_string=":" + str(new_filename) + ";",
+            )
+
+            if pdfs_search_file.is_file():
+                __inplace_change(
+                    filename=pdfs_search_file,
+                    old_string=str(file),
+                    new_string=str(new_filename),
+                )
+
+            if not file.is_file():
+                corrected_path = Path(str(file).replace("  ", " "))
+                if corrected_path.is_file():
+                    file = corrected_path
+
             if file.is_file():
-                if pdfs_search_file.is_file():
-                    __inplace_change(
-                        filename=pdfs_search_file,
-                        old_string=str(file),
-                        new_string=str(new_filename),
-                    )
                 file.rename(new_filename)
-                record["file"] = str(new_filename)
-                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
-            if file.is_symlink():
-                if pdfs_search_file.is_file():
-                    __inplace_change(
-                        filename=pdfs_search_file,
-                        old_string=str(file),
-                        new_string=str(new_filename),
-                    )
+            elif file.is_symlink():
                 os.rename(str(file), str(new_filename))
-                record["file"] = str(new_filename)
-                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
+
+            record["file"] = str(new_filename)
+            self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
         if pdfs_search_file.is_file():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(pdfs_search_file))
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -441,9 +454,6 @@ class PDF_Retrieval(Process):
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
                         record["colrev_status"] = RecordState.pdf_imported
-                        self.REVIEW_MANAGER.logger.info(
-                            f'Set colrev_status to pdf_imported for {record["ID"]}'
-                        )
                     else:
                         print(
                             "Warning: record with file field but no existing PDF "
@@ -503,7 +513,8 @@ class PDF_Retrieval(Process):
 
         # Note: rename should be after copy.
         # Note : do not pass records as an argument.
-        self.rename_pdfs()
+        if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+            self.rename_pdfs()
 
         self._print_stats(retrieved_record_list=retrieved_record_list)
 

@@ -396,7 +396,9 @@ class Loader(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
-        if not keep_ids:
+        if keep_ids:
+            print("Not yet fully implemented. Need to check/resolve ID duplicates.")
+        else:
             self.REVIEW_MANAGER.logger.info("Set IDs")
             records = self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs(
                 records=records,

@@ -1231,9 +1231,15 @@ class LocalIndexPrep:
         # TODO: how to distinguish masterdata and complementary CURATED sources?
 
         # TBD: maybe extract the following three lines as a separate script...
-        year = self.LOCAL_INDEX.get_year_from_toc(record=RECORD.get_data())
-        if "NA" != year:
-            RECORD.update_field(key="year", value=year, source="LocalIndexPrep")
+        if not RECORD.masterdata_is_curated():
+            year = self.LOCAL_INDEX.get_year_from_toc(record=RECORD.get_data())
+            if "NA" != year:
+                RECORD.update_field(
+                    key="year",
+                    value=year,
+                    source="LocalIndexPrep",
+                    keep_source_if_equal=True,
+                )
 
         # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
         # because it creates problems with multiprocessing

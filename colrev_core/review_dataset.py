@@ -21,6 +21,7 @@ class ReviewDataset:
     # Fields that are stored as lists (items separated by newlines)
     list_fields_keys = [
         "colrev_id",
+        # "colrev_origin",
         # "colrev_pdf_id",
         # "screening_criteria",
     ]

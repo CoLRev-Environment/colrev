@@ -7,6 +7,7 @@ import re
 import subprocess
 import time
 import typing
+from copy import deepcopy
 from pathlib import Path
 
 import docker
@@ -713,7 +714,11 @@ class LocalIndex:
         available = False
         try:
             self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
-        except (requests.exceptions.RequestException, TransportError):
+        except (
+            requests.exceptions.RequestException,
+            TransportError,
+            SerializationError,
+        ):
             pass
         except NotFoundError:
             available = True
@@ -728,6 +733,7 @@ class LocalIndex:
                 except (
                     requests.exceptions.RequestException,
                     TransportError,
+                    SerializationError,
                 ):
                     time.sleep(3)
                     pass
@@ -975,7 +981,11 @@ class LocalIndex:
                             self.os.update(
                                 index=self.TOC_INDEX, id=toc_key, body={"doc": toc_item}
                             )
-            except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
+            except (
+                colrev_exceptions.NotEnoughDataToIdentifyException,
+                TransportError,
+                SerialisationError,
+            ):
                 pass
 
         return
@@ -996,11 +1006,11 @@ class LocalIndex:
                     else:
                         # Collision
                         hash = self.__increment_hash(hash=hash)
-                except (NotFoundError, TransportError):
+                except (NotFoundError, TransportError, SerializationError):
                     pass
                     break
-                except Exception as e:
-                    print(e)
+                except Exception:
+                    # print(e)
                     pass
 
         # search colrev_id field
@@ -1020,8 +1030,8 @@ class LocalIndex:
             except (IndexError, NotFoundError, TransportError, SerialisationError):
                 pass
                 raise colrev_exceptions.RecordNotInIndexException
-            except Exception as e:
-                print(e)
+            except Exception:
+                # print(e)
                 pass
 
         raise colrev_exceptions.RecordNotInIndexException
@@ -1098,6 +1108,8 @@ class LocalIndex:
 
         if "excl_criteria" in record:
             del record["excl_criteria"]
+        if "exclusion_criteria" in record:
+            del record["exclusion_criteria"]
 
         if "local_curated_metadata" in record:
             del record["local_curated_metadata"]
@@ -1138,7 +1150,7 @@ class LocalIndex:
     def index_record(self, *, record: dict) -> None:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        copy_for_toc_index = record.copy()
+        copy_for_toc_index = deepcopy(record)
 
         if "colrev_status" not in record:
             return
@@ -1195,10 +1207,6 @@ class LocalIndex:
         elif "year" in record:
             del record["year"]
 
-        if "colrev_id" in record:
-            if isinstance(record["colrev_id"], list):
-                record["colrev_id"] = ";".join(record["colrev_id"])
-
         try:
 
             cid_to_index = Record(data=record).create_colrev_id()
@@ -1218,7 +1226,11 @@ class LocalIndex:
                         record=record,
                     )
                     return
-            except (colrev_exceptions.RecordNotInIndexException, TransportError):
+            except (
+                colrev_exceptions.RecordNotInIndexException,
+                TransportError,
+                SerializationError,
+            ):
                 pass
 
             while True:
@@ -1247,7 +1259,11 @@ class LocalIndex:
                         print(saved_record)
                         hash = self.__increment_hash(hash=hash)
 
-        except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
+        except (
+            colrev_exceptions.NotEnoughDataToIdentifyException,
+            TransportError,
+            SerialisationError,
+        ):
             pass
             return
 
@@ -1372,7 +1388,7 @@ class LocalIndex:
             if self.os.exists(index=self.TOC_INDEX, id=toc_key):
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
-        except TransportError:
+        except (TransportError, SerialisationError):
             pass
             toc_items = []
 
@@ -1387,7 +1403,11 @@ class LocalIndex:
                 record = res["_source"]  # type: ignore
                 year = record.get("year", "NA")
 
-            except (colrev_exceptions.NotEnoughDataToIdentifyException, TransportError):
+            except (
+                colrev_exceptions.NotEnoughDataToIdentifyException,
+                TransportError,
+                SerialisationError,
+            ):
                 pass
 
         return year
@@ -1403,7 +1423,7 @@ class LocalIndex:
             try:
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
-            except TransportError:
+            except (TransportError, SerialisationError):
                 pass
                 toc_items = []
 
@@ -1470,6 +1490,7 @@ class LocalIndex:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
             TransportError,
+            SerialisationError,
         ):
             pass
 
@@ -1496,6 +1517,7 @@ class LocalIndex:
                     JSONDecodeError,
                     KeyError,
                     TransportError,
+                    SerialisationError,
                 ):
                     pass
 

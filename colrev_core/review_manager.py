@@ -723,6 +723,9 @@ class ReviewManager:
                     },
                 ]
 
+            if "rename_pdfs" not in settings["pdf_get"]:
+                settings["pdf_get"]["rename_pdfs"] = True
+
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}
             ]

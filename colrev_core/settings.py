@@ -196,6 +196,7 @@ class PDFGetConfiguration:
     pdf_required_for_screen_and_synthesis: bool
     """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
     can be specified as mandatory (true) or optional (false) for the following steps"""
+    rename_pdfs: bool
     scripts: list
 
     man_pdf_get_scripts: list
