@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "./App.css";
 import Project from "./models/project";
-import ProjectEdit from "./components/project/ProjectEdit";
-import ScriptsEdit from "./components/scripts/ScriptsEdit";
+import ProjectEditor from "./components/project/ProjectEditor";
+import ScriptsEditor from "./components/scripts/ScriptsEditor";
 import Script from "./models/script";
 import Settings from "./models/settings";
 import dataService from "./services/dataService";
 import Expander from "./components/common/Expander";
 import ExpanderItem from "./components/common/ExpanderItem";
+import { KEY_S } from "keycode-js";
 
 function App() {
   const [project, setProject] = useState<Project>();
@@ -50,12 +51,23 @@ function App() {
     }
   };
 
+  const onKeyDown = (e: any) => {
+    if (e.ctrlKey && e.which === KEY_S) {
+      e.preventDefault();
+      onSave();
+    }
+  };
+
   return (
     <>
       <header>
         <h1 className="display-3 text-center my-4">Settings Editor</h1>
       </header>
-      <div className="container" style={{ marginBottom: 100 }}>
+      <div
+        className="container"
+        style={{ marginBottom: 100 }}
+        onKeyDown={onKeyDown}
+      >
         {project && (
           <>
             <Expander id="settingsExpander">
@@ -65,7 +77,7 @@ function App() {
                 parentContainerId="settingsExpander"
                 show={true}
               >
-                <ProjectEdit
+                <ProjectEditor
                   project={project}
                   projectChanged={onProjectChanged}
                 />
@@ -76,7 +88,7 @@ function App() {
                 parentContainerId="settingsExpander"
                 show={false}
               >
-                <ScriptsEdit
+                <ScriptsEditor
                   scripts={scripts}
                   scriptsChanged={onScriptsChanged}
                 />

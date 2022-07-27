@@ -5,28 +5,49 @@ import config from "../config.json";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
+let settingsFile: any = {};
+
 const getSettings = async (): Promise<Settings> => {
   const response = await httpService.get(`${apiEndpoint}/getSettings`);
 
+  settingsFile = response.data;
+
   const settings = new Settings();
+
   settings.project = new Project();
-  settings.project.title = response.data.project.title;
-  settings.project.curatedFields = response.data.project.curated_fields;
-  settings.data = response.data.data;
+  settings.project.reviewType = settingsFile.project.review_type;
+  settings.project.idPattern = settingsFile.project.id_pattern;
+  settings.project.shareStatReq = settingsFile.project.share_stat_req;
+  settings.project.delayAutomatedProcessing =
+    settingsFile.project.delay_automated_processing;
+  settings.project.curationUrl = settingsFile.project.curation_url;
+  settings.project.curatedMasterdata = settingsFile.project.curated_masterdata;
+  settings.project.curatedFields = settingsFile.project.curated_fields;
+
+  settings.data = settingsFile.data;
 
   return Promise.resolve<Settings>(settings);
 };
 
 const saveSettings = async (settings: Settings): Promise<void> => {
-  const settingsFile = {
+  const newSettingsFile = {
+    ...settingsFile,
+
     project: {
-      title: settings.project.title,
+      ...settingsFile.project,
+      review_type: settings.project.reviewType,
+      id_pattern: settings.project.idPattern,
+      share_stat_req: settings.project.shareStatReq,
+      delay_automated_processing: settings.project.delayAutomatedProcessing,
+      curation_url: settings.project.curationUrl,
+      curated_masterdata: settings.project.curatedMasterdata,
       curated_fields: settings.project.curatedFields,
     },
+
     data: settings.data,
   };
 
-  await httpService.post(`${apiEndpoint}/saveSettings`, settingsFile, {
+  await httpService.post(`${apiEndpoint}/saveSettings`, newSettingsFile, {
     headers: { "content-type": "application/json" },
   });
 
