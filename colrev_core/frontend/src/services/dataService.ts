@@ -2,6 +2,8 @@ import Project from "../models/project";
 import Settings from "../models/settings";
 import httpService from "./httpService";
 import config from "../config.json";
+import Source from "../models/source";
+import Script from "../models/script";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -15,14 +17,13 @@ const getSettings = async (): Promise<Settings> => {
   const settings = new Settings();
 
   settings.project = new Project();
-  settings.project.reviewType = settingsFile.project.review_type;
-  settings.project.idPattern = settingsFile.project.id_pattern;
-  settings.project.shareStatReq = settingsFile.project.share_stat_req;
-  settings.project.delayAutomatedProcessing =
-    settingsFile.project.delay_automated_processing;
-  settings.project.curationUrl = settingsFile.project.curation_url;
-  settings.project.curatedMasterdata = settingsFile.project.curated_masterdata;
-  settings.project.curatedFields = settingsFile.project.curated_fields;
+  projectFromSettings(settings.project, settingsFile.project);
+
+  for (const s of settingsFile.sources) {
+    const source = new Source();
+    sourceFromSettings(source, s);
+    settings.sources.push(source);
+  }
 
   settings.data = settingsFile.data;
 
@@ -32,26 +33,91 @@ const getSettings = async (): Promise<Settings> => {
 const saveSettings = async (settings: Settings): Promise<void> => {
   const newSettingsFile = {
     ...settingsFile,
-
-    project: {
-      ...settingsFile.project,
-      review_type: settings.project.reviewType,
-      id_pattern: settings.project.idPattern,
-      share_stat_req: settings.project.shareStatReq,
-      delay_automated_processing: settings.project.delayAutomatedProcessing,
-      curation_url: settings.project.curationUrl,
-      curated_masterdata: settings.project.curatedMasterdata,
-      curated_fields: settings.project.curatedFields,
-    },
-
+    project: projectToSettings(settings.project),
+    sources: [],
     data: settings.data,
   };
+
+  for (const source of settings.sources) {
+    const settingsFileSource = sourceToSettings(source);
+    newSettingsFile.sources.push(settingsFileSource);
+  }
 
   await httpService.post(`${apiEndpoint}/saveSettings`, newSettingsFile, {
     headers: { "content-type": "application/json" },
   });
 
   return Promise.resolve();
+};
+
+const projectFromSettings = (project: Project, settingsProject: any) => {
+  project.reviewType = settingsProject.review_type;
+  project.idPattern = settingsProject.id_pattern;
+  project.shareStatReq = settingsProject.share_stat_req;
+  project.delayAutomatedProcessing = settingsProject.delay_automated_processing;
+  project.curationUrl = settingsProject.curation_url;
+  project.curatedMasterdata = settingsProject.curated_masterdata;
+  project.curatedFields = settingsProject.curated_fields;
+};
+
+const projectToSettings = (project: Project): any => {
+  const settingsFileProject = {
+    ...settingsFile.project,
+    review_type: project.reviewType,
+    id_pattern: project.idPattern,
+    share_stat_req: project.shareStatReq,
+    delay_automated_processing: project.delayAutomatedProcessing,
+    curation_url: project.curationUrl,
+    curated_masterdata: project.curatedMasterdata,
+    curated_fields: project.curatedFields,
+  };
+  return settingsFileProject;
+};
+
+const sourceFromSettings = (source: Source, settingsSource: any) => {
+  source.filename = settingsSource.filename;
+  source.searchType = settingsSource.search_type;
+  source.sourceName = settingsSource.source_name;
+  source.sourceIdentifier = settingsSource.source_identifier;
+  source.searchParameters = settingsSource.search_parameters;
+
+  source.searchScript.endpoint = settingsSource.search_script.endpoint;
+  source.conversionScript.endpoint = settingsSource.conversion_script.endpoint;
+
+  for (const s of settingsSource.source_prep_scripts) {
+    const script = new Script();
+    script.endpoint = s.endpoint;
+    source.sourcePrepScripts.push(script);
+  }
+
+  source.comment = settingsSource.comment;
+};
+
+const sourceToSettings = (source: Source): any => {
+  const settingsFileSource = {
+    filename: source.filename,
+    search_type: source.searchType,
+    source_name: source.sourceName,
+    source_identifier: source.sourceIdentifier,
+    search_parameters: source.searchParameters,
+
+    search_script: {
+      endpoint: source.searchScript.endpoint,
+    },
+    conversion_script: {
+      endpoint: source.conversionScript.endpoint,
+    },
+    source_prep_scripts: [{}],
+    comment: source.comment,
+  };
+
+  settingsFileSource.source_prep_scripts.pop();
+  for (const script of source.sourcePrepScripts) {
+    const settingsScript = { endpoint: script.endpoint };
+    settingsFileSource.source_prep_scripts.push(settingsScript);
+  }
+
+  return settingsFileSource;
 };
 
 const dataService = {

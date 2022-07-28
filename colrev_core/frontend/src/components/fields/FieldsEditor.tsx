@@ -3,7 +3,7 @@ const FiedlsEditor: React.FC<{
   fields: string[];
   fieldsChanged: any;
 }> = ({ title, fields, fieldsChanged }) => {
-  const fieldChangeHandler = (index: number, event: any) => {
+  const fieldChangedHandler = (index: number, event: any) => {
     const newFields = fields.map((item, i) =>
       i === index ? event.target.value : item
     );
@@ -34,7 +34,7 @@ const FiedlsEditor: React.FC<{
               style={{ marginRight: 8 }}
               type="text"
               value={field}
-              onChange={(event) => fieldChangeHandler(index, event)}
+              onChange={(event) => fieldChangedHandler(index, event)}
             />
             <button
               className="btn btn-danger"

@@ -9,9 +9,12 @@ import dataService from "./services/dataService";
 import Expander from "./components/common/Expander";
 import ExpanderItem from "./components/common/ExpanderItem";
 import { KEY_S } from "keycode-js";
+import SourcesEditor from "./components/sources/SourcesEditor";
+import Source from "./models/source";
 
 function App() {
-  const [project, setProject] = useState<Project>();
+  const [project, setProject] = useState<Project>(new Project());
+  const [sources, setSources] = useState<Source[]>([]);
   const [scripts, setScripts] = useState<Script[]>([]);
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
 
@@ -23,12 +26,18 @@ function App() {
     setIsFileSaved(false);
     const settings = await dataService.getSettings();
     setProject(settings.project);
+    setSources(settings.sources);
     setScripts(settings.data.scripts);
   };
 
   const onProjectChanged = (project: Project) => {
     setIsFileSaved(false);
     setProject(project);
+  };
+
+  const onSourcesChanged = (sources: Source[]) => {
+    setIsFileSaved(false);
+    setSources(sources);
   };
 
   const onScriptsChanged = (scripts: Script[]) => {
@@ -38,7 +47,8 @@ function App() {
 
   const onSave = async () => {
     const settings = new Settings();
-    settings.project = project ?? new Project();
+    settings.project = project;
+    settings.sources = sources;
     settings.data.scripts = scripts;
 
     setIsFileSaved(false);
@@ -75,11 +85,22 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <ProjectEditor
                   project={project}
                   projectChanged={onProjectChanged}
+                />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Sources"
+                id="sources"
+                parentContainerId="settingsExpander"
+                show={true}
+              >
+                <SourcesEditor
+                  sources={sources}
+                  sourcesChanged={onSourcesChanged}
                 />
               </ExpanderItem>
               <ExpanderItem

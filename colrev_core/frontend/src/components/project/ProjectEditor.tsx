@@ -25,24 +25,24 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
     }
   }, [project]);
 
-  const reviewTypeChangeHandler = (event: any) => {
+  const reviewTypeChangedHandler = (event: any) => {
     const newValue = event.target.value;
     //setReviewType(newValue);
     const newProject = { ...project, reviewType: newValue };
     projectChanged(newProject);
   };
 
-  const idPatternChangeHandler = (event: any) => {
+  const idPatternChangedHandler = (event: any) => {
     const newProject = { ...project, idPattern: event.target.value };
     projectChanged(newProject);
   };
 
-  const shareStatReqChangeHandler = (event: any) => {
+  const shareStatReqChangedHandler = (event: any) => {
     const newProject = { ...project, shareStatReq: event.target.value };
     projectChanged(newProject);
   };
 
-  const delayAutomatedProcessingChangeHandler = () => {
+  const delayAutomatedProcessingChangedHandler = () => {
     const newValue = !delayAutomatedProcessing;
     setDelayAutomatedProcessing(newValue);
     const newProject = {
@@ -52,7 +52,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
     projectChanged(newProject);
   };
 
-  const curationUrlChangeHandler = (event: any) => {
+  const curationUrlChangedHandler = (event: any) => {
     let newValue = event.target.value;
 
     if (!newValue) {
@@ -63,7 +63,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
     projectChanged(newProject);
   };
 
-  const curatedMasterdataChangeHandler = () => {
+  const curatedMasterdataChangedHandler = () => {
     const newValue = !curatedMasterdata;
     setCuratedMasterdata(newValue);
     const newProject = {
@@ -87,7 +87,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="text"
           id="reviewType"
           value={reviewType ?? ""}
-          onChange={reviewTypeChangeHandler}
+          onChange={reviewTypeChangedHandler}
         />
       </div>
       <div className="mb-3">
@@ -97,7 +97,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="text"
           id="idPattern"
           value={idPattern ?? ""}
-          onChange={idPatternChangeHandler}
+          onChange={idPatternChangedHandler}
         />
       </div>
       <div className="mb-3">
@@ -107,7 +107,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="text"
           id="shareStatReq"
           value={shareStatReq ?? ""}
-          onChange={shareStatReqChangeHandler}
+          onChange={shareStatReqChangedHandler}
         />
       </div>
       <div className="form-check form-switch mb-3">
@@ -116,7 +116,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="checkbox"
           id="delayAutomatedProcessing"
           checked={delayAutomatedProcessing}
-          onChange={delayAutomatedProcessingChangeHandler}
+          onChange={delayAutomatedProcessingChangedHandler}
         />
         <label className="form-check-label" htmlFor="delayAutomatedProcessing">
           Delay Automated Processing
@@ -129,7 +129,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="text"
           id="curationUrl"
           value={curationUrl ?? ""}
-          onChange={curationUrlChangeHandler}
+          onChange={curationUrlChangedHandler}
         />
       </div>
       <div className="form-check form-switch mb-3">
@@ -138,7 +138,7 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
           type="checkbox"
           id="curatedMasterdata"
           checked={curatedMasterdata}
-          onChange={curatedMasterdataChangeHandler}
+          onChange={curatedMasterdataChangedHandler}
         />
         <label className="form-check-label" htmlFor="curatedMasterdata">
           Curated Masterdata

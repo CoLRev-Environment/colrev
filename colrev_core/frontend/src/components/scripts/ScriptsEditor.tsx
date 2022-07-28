@@ -1,12 +1,11 @@
 import Script from "../../models/script";
+import ScriptEditor from "./ScriptEditor";
 
 const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
   scripts,
   scriptsChanged,
 }) => {
-  const endpointChangeHandler = (script: Script, event: any) => {
-    const newEndpoint = event.target.value;
-    script.endpoint = newEndpoint;
+  const scriptChangedHandler = () => {
     const newScripts = [...scripts];
     scriptsChanged(newScripts);
   };
@@ -17,6 +16,7 @@ const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
   };
 
   const addScriptHandler = () => {
+    console.log("add");
     const newScripts = [...scripts, new Script()];
     scriptsChanged(newScripts);
   };
@@ -36,16 +36,10 @@ const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
             </button>
           </div>
           <div className="card-body">
-            <div className="form-group">
-              <label htmlFor="endpoint">Endpoint</label>
-              <input
-                className="form-control"
-                type="text"
-                id="endpoint"
-                value={script.endpoint ?? ""}
-                onChange={(event) => endpointChangeHandler(script, event)}
-              />
-            </div>
+            <ScriptEditor
+              script={script}
+              scriptChanged={scriptChangedHandler}
+            />
           </div>
         </div>
       ))}
