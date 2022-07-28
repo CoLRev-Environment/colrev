@@ -45,6 +45,16 @@ class ReviewManagerNotNofiedError(CoLRevException):
         super().__init__(self.message)
 
 
+class ParameterError(CoLRevException):
+    """
+    An invalid parameter was passed to CoLRev.
+    """
+
+    def __init__(self, *, parameter, value, options):
+        self.message = f"Invalid parameter {parameter}: {value}.\n Options: {options}"
+        super().__init__(self.message)
+
+
 # Valid commits, data structures, and repo states
 
 

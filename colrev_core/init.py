@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import logging
+import typing
 from pathlib import Path
 
 import git
@@ -9,13 +10,24 @@ from colrev_core.review_manager import ReviewManager
 from colrev_core.settings import ReviewType
 
 
+class colors:
+    RED = "\033[91m"
+    GREEN = "\033[92m"
+    ORANGE = "\033[93m"
+    BLUE = "\033[94m"
+    END = "\033[0m"
+
+
 class Initializer:
+
+    SHARE_STAT_REQ_options = ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+
     def __init__(
         self,
         *,
         project_name: str,
         SHARE_STAT_REQ: str,
-        type: str,
+        review_type: str,
         url: str = "NA",
         example: bool = False,
         local_index_repo: bool = False,
@@ -23,24 +35,38 @@ class Initializer:
 
         saved_args = locals()
 
+        assert not (example and local_index_repo)
         if project_name is not None:
             self.project_name = project_name
         else:
             self.project_name = str(Path.cwd().name)
-        assert SHARE_STAT_REQ in ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
-        assert not (example and local_index_repo)
-        assert type in ReviewType._member_names_
-        self.instructions = ""
+        if SHARE_STAT_REQ not in self.SHARE_STAT_REQ_options:
+            raise colrev_exceptions.ParameterError(
+                parameter="init.SHARE_STAT_REQ",
+                value=SHARE_STAT_REQ,
+                options=self.SHARE_STAT_REQ_options,
+            )
+
+        if review_type not in ReviewType._member_names_:
+            raise colrev_exceptions.ParameterError(
+                parameter="init.review_type",
+                value=f"'{review_type}'",
+                options=ReviewType._member_names_,
+            )
+
+        self.instructions: typing.List[str]
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
-        self.review_type = type
+        self.review_type = review_type
         self.url = url
 
+        self.logger = self.__setup_logger(level=logging.INFO)
+
         self.__require_empty_directory()
-        print("Setup files")
+        self.logger.info("Setup files")
         self.__setup_files()
-        print("Setup git")
+        self.logger.info("Setup git")
         self.__setup_git()
-        print("Create commit")
+        self.logger.info("Create commit")
         if example:
             self.__create_example_repo()
 
@@ -48,13 +74,40 @@ class Initializer:
 
         self.__create_commit(saved_args=saved_args)
         if not example:
-            print("Register repo")
+            self.REVIEW_MANAGER.logger.info("Register repo")
             self.__register_repo()
         if local_index_repo:
             self.__create_local_index()
 
+        self.REVIEW_MANAGER.logger.info("Post-commit edits")
+        self.__post_commit_edits()
+
         print("\n")
-        print(self.instructions)
+        for instruction in self.instructions:
+            self.REVIEW_MANAGER.logger.info(instruction)
+
+    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
+
+        logger = logging.getLogger("colrev_core-init_logger")
+
+        logger.setLevel(level)
+
+        if logger.handlers:
+            for handler in logger.handlers:
+                logger.removeHandler(handler)
+
+        formatter = logging.Formatter(
+            fmt="%(asctime)s [%(levelname)s] %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        handler = logging.StreamHandler()
+        handler.setFormatter(formatter)
+        handler.setLevel(level)
+
+        logger.addHandler(handler)
+        logger.propagate = False
+
+        return logger
 
     def __register_repo(self) -> None:
         from colrev_core.environment import EnvironmentManager
@@ -208,9 +261,11 @@ class Initializer:
                 if d.get("name", "") != "exclusion"
             ]
 
-            self.instructions += "Store the file as paper.pdf in the pdfs directory\n"
-            self.instructions += (
-                "Afterwards, run colrev search && colrev load && colrev search\n"
+            self.instructions.append(
+                "Store the file as paper.pdf in the pdfs directory"
+            )
+            self.instructions.append(
+                "Afterwards, run colrev search && colrev load && colrev search"
             )
 
             # TODO : add backward search (only for peer-reviewed pdf)
@@ -274,6 +329,20 @@ class Initializer:
             ]
             settings["screen"]["scripts"] = [{"endpoint": "conditional_screen"}]
             settings["pdf_get"]["scripts"] = []
+            # TODO : Deactivate languages, ...
+            #  exclusion and add a complementary exclusion built-in script
+
+            settings["dedupe"]["scripts"] = [
+                {
+                    "endpoint": "curation_full_outlet_dedupe",
+                    "selected_source": "search/CROSSREF.bib",
+                },
+                {
+                    "endpoint": "curation_full_outlet_dedupe",
+                    "selected_source": "search/pdfs.bib",
+                },
+                {"endpoint": "curation_missing_dedupe"},
+            ]
 
             # curated repo: automatically prescreen/screen-include papers
             # (no data endpoint -> automatically rev_synthesized)
@@ -321,6 +390,32 @@ class Initializer:
         f.close()
         return
 
+    def __post_commit_edits(self) -> None:
+
+        if "curated_masterdata" == self.review_type:
+            self.REVIEW_MANAGER.settings.project.curation_url = "TODO"
+            self.REVIEW_MANAGER.settings.project.curated_fields = ["url", "doi", "TODO"]
+
+            PDF_SOURCE = [
+                s
+                for s in self.REVIEW_MANAGER.settings.sources
+                if "search/pdfs.bib" == str(s.filename)
+            ][0]
+            PDF_SOURCE.search_parameters = (
+                "SCOPE path='pdfs' WITH journal='TODO' "
+                + "AND sub_dir_pattern='TODO:volume_number|year'"
+            )
+
+            self.REVIEW_MANAGER.save_settings()
+
+            self.REVIEW_MANAGER.logger.info("Completed setup.")
+            self.REVIEW_MANAGER.logger.info(
+                f"{colors.ORANGE}Open the settings.json and "
+                f"edit all fields marked with 'TODO'.{colors.END}"
+            )
+
+        return
+
     def __setup_git(self) -> None:
         from subprocess import check_call
         from subprocess import DEVNULL
@@ -344,16 +439,16 @@ class Initializer:
         ]
         for script_to_call in scripts_to_call:
             try:
-                print(" ".join(script_to_call) + "...")
+                self.logger.info(" ".join(script_to_call) + "...")
                 check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "" == " ".join(script_to_call):
-                    print(
+                    self.logger.info(
                         f"{' '.join(script_to_call)} did not succeed "
                         "(Internet connection could not be available)"
                     )
                 else:
-                    print(f"Failed: {' '.join(script_to_call)}")
+                    self.logger.info(f"Failed: {' '.join(script_to_call)}")
                 pass
         git_repo.index.add(
             [
@@ -408,7 +503,7 @@ class Initializer:
         of CoLRev. It focuses on a quick overview of the process and does
         not cover advanced features or special cases."""
 
-        print("Include 30_example_records.bib")
+        self.logger.info("Include 30_example_records.bib")
         self.__retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
             target=Path("search/30_example_records.bib"),
@@ -433,10 +528,10 @@ class Initializer:
             Initializer(
                 project_name="local_index",
                 SHARE_STAT_REQ="PROCESSED",
-                type="curated_masterdata",
+                review_type="curated_masterdata",
                 local_index_repo=True,
             )
-            print("Created local_index repository")
+            self.logger.info("Created local_index repository")
 
         os.chdir(curdir)
         return
