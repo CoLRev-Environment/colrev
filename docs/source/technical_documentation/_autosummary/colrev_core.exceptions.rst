@@ -41,6 +41,7 @@ colrev\_core.exceptions
       NonEmptyDirectoryError
       NotEnoughDataToIdentifyException
       OriginError
+      ParameterError
       ProcessOrderViolation
       PropagatedIDChange
       RecordNotInIndexException

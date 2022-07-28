@@ -51,7 +51,9 @@ class Search(Process):
 
         self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s.search_script for s in self.SOURCES],
+            scripts=[
+                s.search_script for s in self.SOURCES if "endpoint" in s.search_script
+            ],
         )
 
     def save_feed_file(self, records: dict, feed_file: Path) -> None:

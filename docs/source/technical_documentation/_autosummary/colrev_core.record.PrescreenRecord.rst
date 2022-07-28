@@ -50,6 +50,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
+      ~PrescreenRecord.has_overlapping_colrev_id
       ~PrescreenRecord.has_quality_defects
       ~PrescreenRecord.import_provenance
       ~PrescreenRecord.masterdata_is_complete

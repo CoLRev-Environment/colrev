@@ -48,4 +48,5 @@ colrev\_core.environment.LocalIndex
       ~LocalIndex.local_environment_path
       ~LocalIndex.max_len_sha256
       ~LocalIndex.opensearch_index
+      ~LocalIndex.request_timeout
       ~LocalIndex.teiind_path

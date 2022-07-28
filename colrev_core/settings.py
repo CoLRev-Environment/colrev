@@ -245,6 +245,7 @@ class ScreenCriterion:
 
 @dataclass
 class ScreenConfiguration:
+    explanation: typing.Optional[str]
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
 

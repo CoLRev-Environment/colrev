@@ -54,7 +54,7 @@ class Initializer:
                 options=ReviewType._member_names_,
             )
 
-        self.instructions: typing.List[str]
+        self.instructions: typing.List[str] = []
         self.SHARE_STAT_REQ = SHARE_STAT_REQ
         self.review_type = review_type
         self.url = url
@@ -312,8 +312,23 @@ class Initializer:
                     old_string="{{url}}",
                     new_string=self.url,
                 )
+            CROSSREF_SOURCE = {
+                "filename": "search/CROSSREF.bib",
+                "search_type": "DB",
+                "source_name": "CROSSREF",
+                "source_identifier": "https://api.crossref.org/works/{{doi}}",
+                "search_parameters": "",
+                "search_script": {"endpoint": "search_crossref"},
+                "conversion_script": {"endpoint": "bibtex"},
+                "source_prep_scripts": [],
+                "comment": "",
+            }
+            settings["sources"].insert(0, CROSSREF_SOURCE)
             settings["search"]["retrieve_forthcoming"] = False
 
+            # TODO : exclude complementary materials in prep scripts
+            # TODO : exclude get_masterdata_from_citeas etc. from prep
+            settings["prep"]["man_prep_scripts"] = [{"endpoint": "export_man_prep"}]
             settings["prescreen"][
                 "explanation"
             ] = "All records are automatically prescreen included."
@@ -405,6 +420,13 @@ class Initializer:
                 "SCOPE path='pdfs' WITH journal='TODO' "
                 + "AND sub_dir_pattern='TODO:volume_number|year'"
             )
+
+            CROSSREF_SOURCE = [
+                s
+                for s in self.REVIEW_MANAGER.settings.sources
+                if "search/CROSSREF.bib" == str(s.filename)
+            ][0]
+            CROSSREF_SOURCE.search_parameters = "SCOPE journal_issn='TODO'"
 
             self.REVIEW_MANAGER.save_settings()
 
