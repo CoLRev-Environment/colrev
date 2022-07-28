@@ -592,6 +592,7 @@ class LocalIndex:
 
     global_keys = ["doi", "dblp_key", "colrev_pdf_id", "url"]
     max_len_sha256 = 2**256
+    request_timeout = 90
 
     local_environment_path = Path.home().joinpath("colrev")
 
@@ -713,7 +714,9 @@ class LocalIndex:
 
         available = False
         try:
-            self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
+            self.os.get(
+                index=self.RECORD_INDEX, id="test", request_timeout=self.request_timeout
+            )
         except (
             requests.exceptions.RequestException,
             TransportError,
@@ -728,7 +731,11 @@ class LocalIndex:
             print("Waiting until LocalIndex is available")
             for i in tqdm(range(0, 20)):
                 try:
-                    self.os.get(index=self.RECORD_INDEX, id="test", request_timeout=30)
+                    self.os.get(
+                        index=self.RECORD_INDEX,
+                        id="test",
+                        request_timeout=self.request_timeout,
+                    )
                     break
                 except (
                     requests.exceptions.RequestException,
@@ -810,7 +817,7 @@ class LocalIndex:
         toc_item = dict()
         try:
             toc_item_response = self.os.get(
-                index=self.TOC_INDEX, id=toc_key, request_timeout=30
+                index=self.TOC_INDEX, id=toc_key, request_timeout=self.request_timeout
             )
             if "_source" in toc_item_response:
                 toc_item = toc_item_response["_source"]
@@ -822,7 +829,7 @@ class LocalIndex:
 
         try:
             saved_record_response = self.os.get(
-                index=self.RECORD_INDEX, id=hash, request_timeout=30
+                index=self.RECORD_INDEX, id=hash, request_timeout=self.request_timeout
             )
             saved_record = saved_record_response["_source"]
 
@@ -878,7 +885,7 @@ class LocalIndex:
                 index=self.RECORD_INDEX,
                 id=hash,
                 body={"doc": SAVED_RECORD.get_data(stringify=True)},
-                request_timeout=30,
+                request_timeout=self.request_timeout,
             )
         except NotFoundError:
             pass
@@ -967,7 +974,9 @@ class LocalIndex:
                     self.os.index(index=self.TOC_INDEX, id=toc_key, body=toc_item)
                 else:
                     toc_item_response = self.os.get(
-                        index=self.TOC_INDEX, id=toc_key, request_timeout=30
+                        index=self.TOC_INDEX,
+                        id=toc_key,
+                        request_timeout=self.request_timeout,
                     )
                     toc_item = toc_item_response["_source"]
                     if toc_item["toc_key"] == toc_key:
@@ -998,7 +1007,9 @@ class LocalIndex:
             while True:  # Note : while breaks with NotFoundError
                 try:
                     res = self.os.get(
-                        index=self.RECORD_INDEX, id=hash, request_timeout=30
+                        index=self.RECORD_INDEX,
+                        id=hash,
+                        request_timeout=self.request_timeout,
                     )
                     retrieved_record = res["_source"]
                     if cid_to_retrieve in Record(data=retrieved_record).get_colrev_id():
@@ -1021,7 +1032,7 @@ class LocalIndex:
                 resp = self.os.search(
                     index=self.RECORD_INDEX,
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
-                    request_timeout=30,
+                    request_timeout=self.request_timeout,
                 )
 
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
@@ -1239,7 +1250,9 @@ class LocalIndex:
                     break
                 else:
                     saved_record_response = self.os.get(
-                        index=self.RECORD_INDEX, id=hash, request_timeout=30
+                        index=self.RECORD_INDEX,
+                        id=hash,
+                        request_timeout=self.request_timeout,
                     )
                     saved_record = saved_record_response["_source"]
                     saved_record_cid = Record(data=saved_record).create_colrev_id(
@@ -1398,10 +1411,13 @@ class LocalIndex:
                 toc_records_colrev_id = toc_items[0]
                 hash = hashlib.sha256(toc_records_colrev_id.encode("utf-8")).hexdigest()
                 res = self.os.get(
-                    index=self.RECORD_INDEX, id=str(hash), request_timeout=30
+                    index=self.RECORD_INDEX,
+                    id=str(hash),
+                    request_timeout=self.request_timeout,
                 )
-                record = res["_source"]  # type: ignore
-                year = record.get("year", "NA")
+                if "_source" in res:
+                    record = res["_source"]  # type: ignore
+                    year = record.get("year", "NA")
 
             except (
                 colrev_exceptions.NotEnoughDataToIdentifyException,
@@ -1446,7 +1462,9 @@ class LocalIndex:
                         toc_records_colrev_id.encode("utf-8")
                     ).hexdigest()
                     res = self.os.get(
-                        index=self.RECORD_INDEX, id=str(hash), request_timeout=30
+                        index=self.RECORD_INDEX,
+                        id=str(hash),
+                        request_timeout=self.request_timeout,
                     )
                     record = res["_source"]  # type: ignore
                     return self.prep_record_for_return(
@@ -1464,7 +1482,7 @@ class LocalIndex:
             resp = self.os.search(
                 index=index_name,
                 body={"query": {"match_phrase": {key: value}}},
-                request_timeout=30,
+                request_timeout=self.request_timeout,
             )
             res = resp["hits"]["hits"][0]["_source"]
         except (JSONDecodeError, NotFoundError, TransportError, SerialisationError):

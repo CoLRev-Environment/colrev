@@ -1374,6 +1374,7 @@ class CurationDedupeEndpoint:
                         RecordState.md_prepared,
                         RecordState.md_needs_manual_preparation,
                         RecordState.md_imported,
+                        RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     in r["colrev_origin"]
@@ -1457,6 +1458,7 @@ class CurationDedupeEndpoint:
                         RecordState.md_imported,
                         RecordState.md_needs_manual_preparation,
                         RecordState.md_prepared,
+                        RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     not in r["colrev_origin"]
@@ -1487,6 +1489,7 @@ class CurationDedupeEndpoint:
                         RecordState.md_imported,
                         RecordState.md_needs_manual_preparation,
                         RecordState.md_prepared,
+                        RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     not in r["colrev_origin"]
@@ -1540,14 +1543,21 @@ class CurationDedupeEndpoint:
                     else:  # None of the records is curated
                         continue
 
+                    RECORD = Record(data=updated_record)
                     validation_info = (
                         PDF_METADATA_VALIDATION.validates_based_on_metadata(
                             REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER,
-                            RECORD=Record(data=updated_record),
+                            RECORD=RECORD,
                         )
                     )
 
-                    if validation_info["validates"]:
+                    overlapping_colrev_ids = Record(
+                        data=rec1
+                    ).has_overlapping_colrev_id(RECORD=Record(data=rec2))
+                    if overlapping_colrev_ids:
+                        print(rec1)
+                        print(rec2)
+                    if validation_info["validates"] or overlapping_colrev_ids:
 
                         # Note : make sure that we merge into the CURATED record
                         if "file" in rec1:

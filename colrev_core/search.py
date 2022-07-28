@@ -59,9 +59,7 @@ class Search(Process):
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
-            str(r["ID"])
-            .lower()
-            .replace(" ", ""): {
+            str(r["ID"]).replace(" ", ""): {
                 k.lower()
                 .replace(" ", "_")
                 .replace("id", "ID")

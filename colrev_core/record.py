@@ -175,7 +175,7 @@ class Record:
             data_copy = deepcopy(self.data)
 
             # TODO : maybe add to ReviewDataset.list_fields_keys?
-            if ";" in data_copy["colrev_origin"]:
+            if ";" in data_copy.get("colrev_origin", ""):
                 data_copy["colrev_origin"] = ";".join(
                     sorted(list(set(data_copy["colrev_origin"].split(";"))))
                 )
@@ -273,6 +273,16 @@ class Record:
 
         return [c for c in colrev_id if len(c) > 20]
 
+    def has_overlapping_colrev_id(self, *, RECORD) -> bool:
+
+        own_colrev_ids = self.get_colrev_id()
+        other_colrev_ids = RECORD.get_colrev_id()
+        if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
+            if any(cid in own_colrev_ids for cid in other_colrev_ids):
+                return True
+
+        return False
+
     def update_field(
         self,
         *,
@@ -369,6 +379,19 @@ class Record:
             for k, v in self.data.items()
             if k in self.identifying_field_keys
         ):
+            if not any(
+                k in self.data.get("colrev_masterdata_provenance", {})
+                for k in self.identifying_field_keys
+            ):
+                return True
+            else:
+                for k in self.identifying_field_keys:
+                    if k in self.data.get("colrev_masterdata_provenance", {}):
+                        if (
+                            "missing"
+                            in self.data["colrev_masterdata_provenance"][k]["note"]
+                        ):
+                            return False
             return True
         return False
 

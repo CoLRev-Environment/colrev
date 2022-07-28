@@ -43,6 +43,8 @@ class ScopePrescreenEndpoint:
         "back matter",
         "front matter",
         "volume information",
+        "research spotlights",
+        "acknowledgment of reviewers",
     ]
 
     def __init__(self, *, SETTINGS):

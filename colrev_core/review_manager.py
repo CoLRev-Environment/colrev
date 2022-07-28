@@ -675,14 +675,11 @@ class ReviewManager:
                 else:
                     settings["search"]["retrieve_forthcoming"] = True
 
-            settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):
                     settings["project"]["review_type"] = "curated_masterdata"
                 else:
                     settings["project"]["review_type"] = "literature_review"
-
-            settings["prep"]["man_prep_scripts"] = [{"endpoint": "colrev_cli_man_prep"}]
 
             for prep_round in settings["prep"]["prep_rounds"]:
                 prep_round["scripts"] = [
@@ -752,7 +749,12 @@ class ReviewManager:
             if len(records.values()) > 0:
                 for record in records.values():
                     if "exclusion_criteria" in record:
-                        record["screening_criteria"] = record["exclusion_criteria"]
+                        record["screening_criteria"] = (
+                            record["exclusion_criteria"]
+                            .replace("=no", "=in")
+                            .replace("=yes", "=out")
+                        )
+                        del record["exclusion_criteria"]
 
                 self.REVIEW_DATASET.save_records_dict(records=records)
                 self.REVIEW_DATASET.add_record_changes()
