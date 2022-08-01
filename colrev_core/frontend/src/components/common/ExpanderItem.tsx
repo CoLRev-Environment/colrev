@@ -3,21 +3,42 @@ const ExpanderItem: React.FC<{
   id: string;
   parentContainerId: string;
   show: boolean;
+  hasDelete?: boolean;
+  onDelete?: any;
   children: any;
-}> = ({ name, id, parentContainerId, show, children }) => {
+}> = ({
+  name,
+  id,
+  parentContainerId,
+  show,
+  hasDelete = false,
+  onDelete = undefined,
+  children,
+}) => {
   return (
     <div className="accordion-item">
       <h2 className="accordion-header" id={`${id}Heading`}>
-        <button
-          className={"accordion-button " + (show ? "" : "collapsed")}
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target={`#${id}Collapse`}
-          aria-expanded={show}
-          aria-controls={`${id}Collapse`}
-        >
-          {name}
-        </button>
+        <div className="d-flex align-items-center position-relative">
+          <button
+            className={"accordion-button " + (show ? "" : "collapsed")}
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target={`#${id}Collapse`}
+            aria-expanded={show}
+            aria-controls={`${id}Collapse`}
+          >
+            {name}
+          </button>
+          {hasDelete && (
+            <div
+              className="btn btn-danger btn-sm"
+              style={{ position: "absolute", right: "3rem", zIndex: "1000" }}
+              onClick={onDelete}
+            >
+              X
+            </div>
+          )}
+        </div>
       </h2>
       <div
         id={`${id}Collapse`}

@@ -16,7 +16,6 @@ const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
   };
 
   const addScriptHandler = () => {
-    console.log("add");
     const newScripts = [...scripts, new Script()];
     scriptsChanged(newScripts);
   };
@@ -28,7 +27,7 @@ const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
           <div className="card-header d-flex justify-content-between align-items-center">
             <span>Script {index + 1}</span>
             <button
-              className="btn btn-danger"
+              className="btn btn-danger btn-sm"
               type="button"
               onClick={() => deleteScriptHandler(script)}
             >

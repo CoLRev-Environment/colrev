@@ -4,6 +4,8 @@ import httpService from "./httpService";
 import config from "../config.json";
 import Source from "../models/source";
 import Script from "../models/script";
+import Prep from "../models/prep";
+import PrepRound from "../models/prepRound";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -25,6 +27,9 @@ const getSettings = async (): Promise<Settings> => {
     settings.sources.push(source);
   }
 
+  settings.prep = new Prep();
+  prepFromSettings(settings.prep, settingsFile.prep);
+
   settings.data = settingsFile.data;
 
   return Promise.resolve<Settings>(settings);
@@ -35,6 +40,7 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     ...settingsFile,
     project: projectToSettings(settings.project),
     sources: [],
+    prep: prepToSettings(settings.prep),
     data: settings.data,
   };
 
@@ -118,6 +124,35 @@ const sourceToSettings = (source: Source): any => {
   }
 
   return settingsFileSource;
+};
+
+const prepFromSettings = (prep: Prep, settingsPrep: any) => {
+  prep.fieldsToKeep = settingsPrep.fields_to_keep;
+
+  for (const p of settingsPrep.prep_rounds) {
+    const prepRound = new PrepRound();
+    prepRound.name = p.name;
+    prepRound.similarity = p.similarity;
+    prepRound.scripts = p.scripts;
+    prep.prepRounds.push(prepRound);
+  }
+
+  for (const s of settingsPrep.man_prep_scripts) {
+    const script = new Script();
+    script.endpoint = s.endpoint;
+    prep.manPrepScripts.push(script);
+  }
+};
+
+const prepToSettings = (prep: Prep): any => {
+  const settingsFilePrep = {
+    ...settingsFile.prep,
+    fields_to_keep: prep.fieldsToKeep,
+    prep_rounds: prep.prepRounds,
+    man_prep_scripts: prep.manPrepScripts,
+  };
+
+  return settingsFilePrep;
 };
 
 const dataService = {

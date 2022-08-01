@@ -37,7 +37,7 @@ const FiedlsEditor: React.FC<{
               onChange={(event) => fieldChangedHandler(index, event)}
             />
             <button
-              className="btn btn-danger"
+              className="btn btn-danger btn-sm"
               type="button"
               onClick={() => deleteFieldHandler(index)}
             >

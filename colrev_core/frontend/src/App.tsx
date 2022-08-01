@@ -11,10 +11,13 @@ import ExpanderItem from "./components/common/ExpanderItem";
 import { KEY_S } from "keycode-js";
 import SourcesEditor from "./components/sources/SourcesEditor";
 import Source from "./models/source";
+import PrepEditor from "./components/prep/PrepEditor";
+import Prep from "./models/prep";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
   const [sources, setSources] = useState<Source[]>([]);
+  const [prep, setPrep] = useState<Prep>(new Prep());
   const [scripts, setScripts] = useState<Script[]>([]);
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
 
@@ -27,6 +30,7 @@ function App() {
     const settings = await dataService.getSettings();
     setProject(settings.project);
     setSources(settings.sources);
+    setPrep(settings.prep);
     setScripts(settings.data.scripts);
   };
 
@@ -40,6 +44,11 @@ function App() {
     setSources(sources);
   };
 
+  const onPrepChanged = (prep: Prep) => {
+    setIsFileSaved(false);
+    setPrep(prep);
+  };
+
   const onScriptsChanged = (scripts: Script[]) => {
     setIsFileSaved(false);
     setScripts(scripts);
@@ -49,6 +58,7 @@ function App() {
     const settings = new Settings();
     settings.project = project;
     settings.sources = sources;
+    settings.prep = prep;
     settings.data.scripts = scripts;
 
     setIsFileSaved(false);
@@ -96,12 +106,20 @@ function App() {
                 name="Sources"
                 id="sources"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <SourcesEditor
                   sources={sources}
                   sourcesChanged={onSourcesChanged}
                 />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Prep"
+                id="prep"
+                parentContainerId="settingsExpander"
+                show={true}
+              >
+                <PrepEditor prep={prep} prepChanged={onPrepChanged} />
               </ExpanderItem>
               <ExpanderItem
                 name="Data"

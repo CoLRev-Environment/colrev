@@ -44,7 +44,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
           <div className="card-header d-flex justify-content-between align-items-center">
             <span>Source {index + 1}</span>
             <button
-              className="btn btn-danger"
+              className="btn btn-danger btn-sm"
               type="button"
               onClick={() => deleteSourceHandler(source)}
             >
