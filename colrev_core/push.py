@@ -25,7 +25,7 @@ class Push(Process):
     def push_project(self) -> None:
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         origin = git_repo.remotes.origin
-        self.REVIEW_MANAGER.logger.info(f"Pull changes from {git_repo.remotes.origin}")
+        self.REVIEW_MANAGER.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()
         return
 

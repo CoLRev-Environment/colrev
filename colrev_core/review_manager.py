@@ -1177,9 +1177,14 @@ class ReviewManager:
         STATUS = Status(REVIEW_MANAGER=self)
         stat = STATUS.get_status_freq()
         collaboration_instructions = STATUS.get_collaboration_instructions(stat=stat)
-        status_code = all(
-            ["SUCCESS" == x["level"] for x in collaboration_instructions["items"]]
+
+        status_code = not all(
+            [
+                x["level"] in ["SUCCESS", "WARNING"]
+                for x in collaboration_instructions["items"]
+            ]
         )
+
         msgs = "\n ".join(
             [
                 x["level"] + x["title"] + x.get("msg", "")
