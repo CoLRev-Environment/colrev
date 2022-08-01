@@ -15,7 +15,6 @@ import requests
 from dacite.exceptions import MissingValueError
 from git.exc import InvalidGitRepositoryError
 from lxml import etree
-from lxml.etree import SerialisationError
 from opensearchpy import OpenSearch
 from opensearchpy.exceptions import NotFoundError
 from opensearchpy.exceptions import SerializationError
@@ -28,6 +27,8 @@ import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import CheckProcess
 from colrev_core.record import Record
 from colrev_core.record import RecordState
+
+# from lxml.etree import SerialisationError
 
 
 class AdapterManager:
@@ -796,7 +797,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.TEI_Exception,
                 AttributeError,
-                SerialisationError,
+                SerializationError,
                 TransportError,
             ):
                 pass
@@ -876,7 +877,7 @@ class LocalIndex:
                 except (
                     colrev_exceptions.TEI_Exception,
                     AttributeError,
-                    SerialisationError,
+                    SerializationError,
                     TransportError,
                 ):
                     pass
@@ -993,7 +994,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.NotEnoughDataToIdentifyException,
                 TransportError,
-                SerialisationError,
+                SerializationError,
             ):
                 pass
 
@@ -1038,7 +1039,7 @@ class LocalIndex:
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
                     return retrieved_record
-            except (IndexError, NotFoundError, TransportError, SerialisationError):
+            except (IndexError, NotFoundError, TransportError, SerializationError):
                 pass
                 raise colrev_exceptions.RecordNotInIndexException
             except Exception:
@@ -1275,7 +1276,7 @@ class LocalIndex:
         except (
             colrev_exceptions.NotEnoughDataToIdentifyException,
             TransportError,
-            SerialisationError,
+            SerializationError,
         ):
             pass
             return
@@ -1401,7 +1402,7 @@ class LocalIndex:
             if self.os.exists(index=self.TOC_INDEX, id=toc_key):
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
-        except (TransportError, SerialisationError):
+        except (TransportError, SerializationError):
             pass
             toc_items = []
 
@@ -1422,7 +1423,7 @@ class LocalIndex:
             except (
                 colrev_exceptions.NotEnoughDataToIdentifyException,
                 TransportError,
-                SerialisationError,
+                SerializationError,
             ):
                 pass
 
@@ -1439,7 +1440,7 @@ class LocalIndex:
             try:
                 res = self.__retrieve_toc_index(toc_key=toc_key)
                 toc_items = res.get("colrev_ids", [])  # type: ignore
-            except (TransportError, SerialisationError):
+            except (TransportError, SerializationError):
                 pass
                 toc_items = []
 
@@ -1485,7 +1486,7 @@ class LocalIndex:
                 request_timeout=self.request_timeout,
             )
             res = resp["hits"]["hits"][0]["_source"]
-        except (JSONDecodeError, NotFoundError, TransportError, SerialisationError):
+        except (JSONDecodeError, NotFoundError, TransportError, SerializationError):
             pass
         return res
 
@@ -1508,7 +1509,7 @@ class LocalIndex:
             colrev_exceptions.RecordNotInIndexException,
             colrev_exceptions.NotEnoughDataToIdentifyException,
             TransportError,
-            SerialisationError,
+            SerializationError,
         ):
             pass
 
@@ -1535,7 +1536,7 @@ class LocalIndex:
                     JSONDecodeError,
                     KeyError,
                     TransportError,
-                    SerialisationError,
+                    SerializationError,
                 ):
                     pass
 

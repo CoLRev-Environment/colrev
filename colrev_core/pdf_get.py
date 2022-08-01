@@ -448,7 +448,10 @@ class PDF_Retrieval(Process):
     def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
 
         for record in records.values():
-            if record["colrev_status"] == RecordState.rev_prescreen_included:
+            if record["colrev_status"] in [
+                RecordState.rev_prescreen_included,
+                RecordState.pdf_needs_manual_retrieval,
+            ]:
                 if "file" in record:
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
@@ -497,26 +500,33 @@ class PDF_Retrieval(Process):
 
         pdf_get_data = self.__get_data()
 
-        if pdf_get_data["nr_tasks"] == 0:
+        if pdf_get_data["nr_tasks"] > 0:
+
+            retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
+                record_list=retrieved_record_list
+            )
+
+            # Multiprocessing mixes logs of different records.
+            # For better readability:
+            self.REVIEW_MANAGER.reorder_log(
+                IDs=[x["ID"] for x in retrieved_record_list]
+            )
+
+            # Note: rename should be after copy.
+            # Note : do not pass records as an argument.
+            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+                self.rename_pdfs()
+
+            self._print_stats(retrieved_record_list=retrieved_record_list)
+        else:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
-            return
 
-        retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-            record_list=retrieved_record_list
-        )
-
-        # Multiprocessing mixes logs of different records.
-        # For better readability:
-        self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in retrieved_record_list])
-
-        # Note: rename should be after copy.
-        # Note : do not pass records as an argument.
-        if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
-            self.rename_pdfs()
-
-        self._print_stats(retrieved_record_list=retrieved_record_list)
+            # Note: rename should be after copy.
+            # Note : do not pass records as an argument.
+            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+                self.rename_pdfs()
 
         self.REVIEW_MANAGER.create_commit(
             msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args

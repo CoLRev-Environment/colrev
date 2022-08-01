@@ -856,7 +856,7 @@ class ReviewManager:
             if not self.__hooks_up_to_date(installed_hooks=installed_hooks):
                 raise colrev_exceptions.RepoSetupError(
                     "Pre-commit hooks not up-to-date. Use\n"
-                    + "colrev config --update_hooks"
+                    + "colrev settings --update_hooks"
                 )
                 # This could also be a warning, but hooks should not change often.
 

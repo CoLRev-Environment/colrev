@@ -316,8 +316,8 @@ class GlobalIDConsistencyPrep:
                         RECORD.data[
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
-                        RECORD.add_masterdata_provenance_hint(
-                            key=k, hint=f"disagreement with doi metadata ({v})"
+                        RECORD.add_masterdata_provenance_note(
+                            key=k, note=f"disagreement with doi metadata ({v})"
                         )
 
         if "url" in RECORD.data:
@@ -344,9 +344,9 @@ class GlobalIDConsistencyPrep:
                             RECORD.data[
                                 "colrev_status"
                             ] = RecordState.md_needs_manual_preparation
-                            RECORD.add_masterdata_provenance_hint(
+                            RECORD.add_masterdata_provenance_note(
                                 key=k,
-                                hint=f"disagreement with website metadata ({v})",
+                                note=f"disagreement with website metadata ({v})",
                             )
             except AttributeError:
                 pass

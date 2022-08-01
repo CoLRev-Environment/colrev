@@ -30,7 +30,31 @@ class ExportManPrep:
     def prepare_manual(self, PREP_MAN, records):
         from colrev_core.record import RecordState, PrepRecord
 
-        export_path = PREP_MAN.REVIEW_MANAGER.path / Path("records_prep_man.bib")
+        prep_man_path = PREP_MAN.REVIEW_MANAGER.path / Path("prep_man")
+        prep_man_path.mkdir(exist_ok=True)
+
+        export_path = prep_man_path / Path("records_prep_man.bib")
+
+        def copy_files_for_man_prep(records):
+            from PyPDF2 import PdfFileReader
+            from PyPDF2 import PdfFileWriter
+
+            prep_man_path_pdfs = prep_man_path / Path("pdfs")
+            prep_man_path_pdfs.mkdir(exist_ok=True)
+            # TODO : empty prep_man_path_pdfs
+
+            for record in records.values():
+                if "file" in record:
+                    pdfReader = PdfFileReader(record["file"], strict=False)
+                    if pdfReader.getNumPages() >= 1:
+
+                        writer = PdfFileWriter()
+                        writer.addPage(pdfReader.getPage(0))
+                        target_path = prep_man_path / Path(record["file"])
+                        target_path.parents[0].mkdir(exist_ok=True, parents=True)
+                        with open(target_path, "wb") as outfile:
+                            writer.write(outfile)
+            return
 
         if not export_path.is_file():
             PREP_MAN.REVIEW_MANAGER.logger.info(
@@ -45,6 +69,9 @@ class ExportManPrep:
             PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=man_prep_recs, save_path=export_path
             )
+            if any("file" in r for r in man_prep_recs.values()):
+                copy_files_for_man_prep(records=man_prep_recs)
+
         else:
             if "y" == input(f"Import changes from {export_path} [y,n]?"):
 

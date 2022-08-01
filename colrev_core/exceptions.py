@@ -27,7 +27,7 @@ class CoLRevUpgradeError(CoLRevException):
     def __init__(self, old, new):
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
-            "colrev config --upgrade"
+            "colrev settings --upgrade"
         )
         super().__init__(self.message)
 
