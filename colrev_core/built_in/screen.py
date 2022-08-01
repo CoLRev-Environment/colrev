@@ -11,7 +11,7 @@ from colrev_core.record import RecordState
 
 @zope.interface.implementer(ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_screen(self, SCREEN, records: dict, split: list) -> dict:
@@ -26,7 +26,7 @@ class CoLRevCLIScreenEndpoint:
 class SpreadsheetScreenEndpoint:
     spreadsheet_path = Path("screen/screen.csv")
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def export_table(self, SCREEN, records, split, export_table_format="csv") -> None:

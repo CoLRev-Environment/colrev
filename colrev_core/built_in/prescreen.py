@@ -47,7 +47,7 @@ class ScopePrescreenEndpoint:
         "acknowledgment of reviewers",
     ]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         if "TimeScopeFrom" in SETTINGS:
             assert SETTINGS["TimeScopeFrom"] > 1900
         if "TimeScopeFrom" in SETTINGS:
@@ -173,7 +173,7 @@ class ScopePrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
@@ -189,7 +189,7 @@ class ASReviewPrescreenEndpoint:
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
         try:
@@ -402,7 +402,7 @@ class ASReviewPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
@@ -432,7 +432,7 @@ class ConditionalPrescreenEndpoint:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def export_table(

@@ -349,7 +349,7 @@ class CrossrefConnector:
             else:
                 if not PREPARATION.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
-        except requests.exceptions.RequestException as e:
+        except (requests.exceptions.RequestException, IndexError) as e:
             print(e)
             pass
             if not PREPARATION.force_mode:

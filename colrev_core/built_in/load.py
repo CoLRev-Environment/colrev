@@ -14,7 +14,7 @@ class BibPybtexLoader:
 
     supported_extensions = ["bib"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
@@ -105,7 +105,7 @@ class SpreadsheetLoadUtility:
 class CSVLoader:
     supported_extensions = ["csv"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
@@ -138,7 +138,7 @@ class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
@@ -174,7 +174,7 @@ class ZoteroTranslationLoader:
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         from colrev_core.environment import ZoteroTranslationService
 
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
@@ -224,7 +224,7 @@ class MarkdownLoader:
 
     supported_extensions = ["md"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
@@ -270,7 +270,7 @@ class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, LOAD, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):

@@ -8,7 +8,7 @@ from colrev_core.process import DefaultSettings
 
 @zope.interface.implementer(DataEndpoint)
 class CustomData:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):

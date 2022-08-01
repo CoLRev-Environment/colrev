@@ -8,7 +8,7 @@ from colrev_core.process import PDFRetrievalEndpoint
 
 @zope.interface.implementer(PDFRetrievalEndpoint)
 class CustomPDFRetrieval:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_GET, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):

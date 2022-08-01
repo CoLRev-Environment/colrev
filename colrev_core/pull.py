@@ -68,15 +68,16 @@ class Pull(Process):
         from colrev_core.built_in import prep as built_in_prep
         from tqdm import tqdm
 
+        PREPARATION = Preparation(
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
         CROSSREF_PREP = built_in_prep.CrossrefMetadataPrep(
-            SETTINGS={"name": "local_index_prep"}
+            PREPARATION=PREPARATION, SETTINGS={"name": "local_index_prep"}
         )
 
         self.REVIEW_MANAGER.logger.info("Pull records from Crossref")
 
-        PREPARATION = Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         change_counter = 0
@@ -164,8 +165,12 @@ class Pull(Process):
 
         self.REVIEW_MANAGER.logger.info("Pull records from LocalIndex")
 
+        PREPARATION = Preparation(
+            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        )
+
         LOCAL_INDEX_PREP = built_in_prep.LocalIndexPrep(
-            SETTINGS={"name": "local_index_prep"}
+            PREPARATION=PREPARATION, SETTINGS={"name": "local_index_prep"}
         )
 
         # Note : do not use named argument (used in multiprocessing)

@@ -310,9 +310,15 @@ class Loader(Process):
         else:
             search_records = []
 
+        GREEN = "\033[92m"
+        END = "\033[0m"
+
         if len(search_records) == 0:
             SOURCE.to_import = 0
             SOURCE.source_records_list = []
+            self.REVIEW_MANAGER.logger.info(f"{GREEN}No records to load{END}")
+            print()
+
             return
 
         nr_in_bib = get_nr_in_bib(file_path=SOURCE.corresponding_bib_file)
@@ -395,6 +401,10 @@ class Loader(Process):
             records[sr["ID"]] = sr
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+
+        self.REVIEW_MANAGER.logger.info(
+            f"Records loaded: {GREEN}{SOURCE.to_import}{END}"
+        )
 
         if keep_ids:
             print("Not yet fully implemented. Need to check/resolve ID duplicates.")

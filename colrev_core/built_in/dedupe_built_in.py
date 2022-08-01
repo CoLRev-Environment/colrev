@@ -34,7 +34,7 @@ class SimpleDedupeSettings:
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DEDUPE, SETTINGS):
 
         # Set default values (if necessary)
         if "MERGING_NON_DUP_THRESHOLD" not in SETTINGS:
@@ -337,7 +337,7 @@ class SimpleDedupeEndpoint:
 
 @zope.interface.implementer(DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DEDUPE, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def apply_active_learning(self, *, DEDUPE, results, saved_args):
@@ -507,7 +507,10 @@ class ActiveLearningDedupeTrainingEndpoint:
         except AttributeError:
             if len(data_d) < 50:
                 raise colrev_exceptions.DedupeError(
-                    'Sample size too small (use {"endpoint": "simple_dedupe"} instead).'
+                    "Sample size too small for active learning. "
+                    "Use simple_dedupe instead:\n"
+                    "  colrev settings -m 'dedupe.scripts="
+                    '[{"endpoint":"simple_dedupe"}]\''
                 )
 
         # TODO  input('del data_d - check memory')
@@ -736,7 +739,7 @@ class ActiveLearningSettings:
 
 @zope.interface.implementer(DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DEDUPE, SETTINGS):
 
         # Set default values (if necessary)
         if "merge_threshold" not in SETTINGS:
@@ -1200,7 +1203,7 @@ class CurationDedupeEndpoint:
     retrieved from different sources (identifying duplicates in groups of
     volumes/issues or years)"""
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DEDUPE, SETTINGS):
         # TODO : the settings could be used
         # to select the specific files/grouping properties?!
         # -> see selected_source.
@@ -1619,7 +1622,7 @@ class CurationDedupeEndpoint:
 
 @zope.interface.implementer(DedupeEndpoint)
 class CurationMissingDedupeEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DEDUPE, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_dedupe(self, DEDUPE):

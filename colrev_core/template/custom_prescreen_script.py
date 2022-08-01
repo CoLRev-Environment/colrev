@@ -11,7 +11,7 @@ from colrev_core.record import RecordState
 
 @zope.interface.implementer(PrescreenEndpoint)
 class CustomPrescreen:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PRESCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_prescreen(slef, PRESCREEN, records: dict, split: list) -> dict:

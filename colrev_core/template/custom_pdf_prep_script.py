@@ -11,10 +11,10 @@ from colrev_core.process import PDFPreparationEndpoint
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class CustomPDFPrepratation:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
-    def prep_pdf(self, REVIEW_MANAGER, RECORD, PAD):
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
         if random.random() < 0.8:
             RECORD.add_data_provenance_note(key="file", note="custom_issue_detected")

@@ -22,7 +22,7 @@ from colrev_core.record import RecordState
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFCheckOCREndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     # TODO : test whether this is too slow:
@@ -117,7 +117,7 @@ class PDFCheckOCREndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFCoverPageEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     @timeout_decorator.timeout(60, use_signals=False)
@@ -278,7 +278,7 @@ class PDFCoverPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFLastPageEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     @timeout_decorator.timeout(60, use_signals=False)
@@ -375,7 +375,7 @@ class PDFLastPageEndpoint:
 
 @zope.interface.implementer(PDFPreparationEndpoint)
 class PDFMetadataValidationEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def validates_based_on_metadata(self, *, REVIEW_MANAGER, RECORD) -> dict:
@@ -538,7 +538,7 @@ class PDFCompletenessValidationEndpoint:
         r"^M{0,3}(CM|CD|D?C{0,3})?(XC|XL|L?X{0,3})?(IX|IV|V?I{0,3})?$", re.IGNORECASE
     )
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def __longer_with_appendix(self, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):

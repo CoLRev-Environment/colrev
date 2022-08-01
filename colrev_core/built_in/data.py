@@ -31,7 +31,7 @@ class ManuscriptEndpoint:
     If IDs are moved to other parts of the manuscript,
     the corresponding record will be marked as rev_synthesized."""
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):
@@ -229,8 +229,7 @@ class ManuscriptEndpoint:
             )
             try:
                 retrieve_package_file(PAPER_resource_path, PAPER)
-            except Exception as e:
-                print(e)
+            except Exception:
                 PAPER_resource_path = Path("../template/") / PAPER_RELATIVE
                 retrieve_package_file(PAPER_resource_path, PAPER)
                 pass
@@ -341,7 +340,7 @@ class ManuscriptEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class StructuredDataEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):
@@ -473,7 +472,7 @@ class StructuredDataEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class EndnoteEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):
@@ -607,7 +606,7 @@ class EndnoteEndpoint:
 
 @zope.interface.implementer(DataEndpoint)
 class PRISMAEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_default_setup(self):
@@ -711,7 +710,7 @@ class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(data_class=ZettlrSettings, data=SETTINGS)
 
     def get_default_setup(self):

@@ -10,7 +10,7 @@ from colrev_core.process import PreparationManualEndpoint
 
 @zope.interface.implementer(PreparationManualEndpoint)
 class CoLRevCLIManPrep:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREP_MAN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare_manual(self, PREP_MAN, records):
@@ -24,7 +24,7 @@ class CoLRevCLIManPrep:
 
 @zope.interface.implementer(PreparationManualEndpoint)
 class ExportManPrep:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREP_MAN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare_manual(self, PREP_MAN, records):

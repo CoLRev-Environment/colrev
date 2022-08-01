@@ -116,7 +116,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    LOAD=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
 
@@ -132,7 +132,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PREPARATION=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PreparationEndpoint, scripts_dict[endpoint_name])
 
@@ -148,7 +148,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PREP_MAN=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PreparationManualEndpoint, scripts_dict[endpoint_name])
 
@@ -164,7 +164,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    DEDUPE=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
 
@@ -180,7 +180,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PRESCREEN=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
 
@@ -196,7 +196,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PDF_GET=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PDFRetrievalEndpoint, scripts_dict[endpoint_name])
 
@@ -212,7 +212,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PDF_RETRIEVAL_MAN=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PDFRetrievalManualEndpoint, scripts_dict[endpoint_name])
 
@@ -228,7 +228,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PDF_PREPARATION=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PDFPreparationEndpoint, scripts_dict[endpoint_name])
 
@@ -244,7 +244,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    PDF_PREP_MAN=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(PDFPreparationManualEndpoint, scripts_dict[endpoint_name])
 
@@ -260,7 +260,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    SCREEN=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
 
@@ -274,7 +274,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    DATA=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(DataEndpoint, scripts_dict[endpoint_name])
 

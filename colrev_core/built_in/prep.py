@@ -8,6 +8,7 @@ from pathlib import Path
 
 import git
 import requests
+import timeout_decorator
 import zope.interface
 from alphabet_detector import AlphabetDetector
 from dacite import from_dict
@@ -32,9 +33,10 @@ class LoadFixesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
 
@@ -82,9 +84,10 @@ class ExcludeNonLatinAlphabetsPrep:
     always_apply_changes = True
     alphabet_detector = AlphabetDetector()
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         def mostly_latin_alphabet(str_to_check) -> bool:
             assert len(str_to_check) != 0
@@ -114,7 +117,7 @@ class ExcludeLanguagesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
 
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
@@ -133,6 +136,7 @@ class ExcludeLanguagesPrep:
         # TODO : switch language formats to ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         languages_to_include = ["en"]
@@ -197,9 +201,10 @@ class ExcludeCollectionsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if "proceedings" == RECORD.data["ENTRYTYPE"].lower():
             RECORD.prescreen_exclude(reason="collection/proceedings")
@@ -212,9 +217,10 @@ class RemoveError500URLsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         try:
@@ -252,9 +258,10 @@ class RemoveBrokenIDPrep:
     always_apply_changes = True
 
     # check_status: relies on crossref / openlibrary connectors!
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         if "doi" in RECORD.data:
@@ -282,9 +289,10 @@ class GlobalIDConsistencyPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         """When metadata provided by DOI/crossref or on the website (url) differs from
@@ -360,9 +368,10 @@ class CuratedPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if RECORD.masterdata_is_curated():
             if RecordState.md_imported == RECORD.data["colrev_status"]:
@@ -377,9 +386,10 @@ class FormatPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         fields_to_process = [
             "author",
@@ -544,9 +554,10 @@ class BibTexCrossrefResolutionPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         def read_next_record_str() -> typing.Iterator[str]:
             with open(
@@ -607,7 +618,7 @@ class SemanticScholarPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def retrieve_record_from_semantic_scholar(
@@ -677,6 +688,7 @@ class SemanticScholarPrep:
         REC.add_provenance_all(source=record_retrieval_url)
         return REC
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         same_record_type_required = (
@@ -744,9 +756,10 @@ class DOIFromURLsPrep:
     # https://www.crossref.org/blog/dois-and-matching-regular-expressions/
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         same_record_type_required = (
@@ -816,9 +829,10 @@ class DOIMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if "doi" not in RECORD.data:
             return RECORD
@@ -842,9 +856,10 @@ class CrossrefMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         CrossrefConnector.get_masterdata_from_crossref(
             PREPARATION=PREPARATION, RECORD=RECORD
@@ -861,9 +876,10 @@ class DBLPMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if "dblp_key" in RECORD.data:
             return RECORD
@@ -934,9 +950,10 @@ class OpenLibraryMetadataPrep:
     )
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         def open_library_json_to_record(*, item: dict, url=str) -> PrepRecord:
             retrieved_record: dict = {}
@@ -1059,9 +1076,10 @@ class CiteAsPrep:
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         def cite_as_json_to_record(*, data: dict, url=str) -> PrepRecord:
             retrieved_record: dict = {}
@@ -1148,9 +1166,10 @@ class CrossrefYearVolIssPrep:
     )
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         # The year depends on journal x volume x issue
@@ -1220,12 +1239,13 @@ class LocalIndexPrep:
     )
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         from colrev_core.environment import LocalIndex
 
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
         self.LOCAL_INDEX = LocalIndex()
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         # TODO: how to distinguish masterdata and complementary CURATED sources?
@@ -1304,9 +1324,10 @@ class RemoveNicknamesPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if "author" in RECORD.data:
             # Replace nicknames in parentheses
@@ -1322,9 +1343,10 @@ class FormatMinorPRep:
     always_apply_changes = False
     HTML_CLEANER = re.compile("<.*?>")
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         fields_to_process = [
             "author",
@@ -1374,9 +1396,10 @@ class DropFieldsPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         RECORD.drop_fields(PREPARATION)
@@ -1390,9 +1413,10 @@ class RemoveRedundantFieldPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         if "article" == RECORD.data["ENTRYTYPE"]:
@@ -1424,9 +1448,10 @@ class CorrectRecordTypePrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         if RECORD.has_inconsistent_fields() and not RECORD.masterdata_is_curated():
@@ -1499,9 +1524,10 @@ class UpdateMetadataStatusPrep:
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, PREPARATION, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
+    @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
         RECORD.update_metadata_status(REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER)

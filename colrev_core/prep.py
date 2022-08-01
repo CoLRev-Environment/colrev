@@ -5,9 +5,11 @@ import time
 import typing
 from datetime import timedelta
 from pathlib import Path
+from threading import Timer
 
 import git
 import requests_cache
+import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
 from colrev_core.environment import AdapterManager
@@ -19,6 +21,11 @@ from colrev_core.record import RecordState
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
+
+ORANGE = "\033[93m"
+GREEN = "\033[92m"
+END = "\033[0m"
+RED = "\033[91m"
 
 
 class Preparation(Process):
@@ -193,17 +200,7 @@ class Preparation(Process):
         # RETRIEVAL_SIMILARITY = self.RETRIEVAL_SIMILARITY
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
-        self.CPUS = self.CPUS * 1
-
-        required_prep_scripts = [
-            s for r in REVIEW_MANAGER.settings.prep.prep_rounds for s in r.scripts
-        ]
-        required_prep_scripts.append({"endpoint": "update_metadata_status"})
-
-        self.prep_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=required_prep_scripts,
-        )
+        self.CPUS = self.CPUS * 4
 
     def check_DBs_availability(self) -> None:
         from colrev_core.built_in import database_connectors as database_connectors
@@ -259,7 +256,7 @@ class Preparation(Process):
         if not RECORD.status_to_prepare():
             return RECORD.get_data()
 
-        self.REVIEW_MANAGER.logger.info("Prepare " + RECORD.data["ID"])
+        self.REVIEW_MANAGER.logger.info(" prep " + RECORD.data["ID"])
 
         # PREPARATION_RECORD changes with each script and
         # eventually replaces record (if md_prepared or endpoint.always_apply_changes)
@@ -270,36 +267,42 @@ class Preparation(Process):
 
         for prep_round_script in deepcopy(item["prep_round_scripts"]):
 
-            PREP_SCRIPT = self.prep_scripts[prep_round_script["endpoint"]]
+            try:
+                PREP_SCRIPT = self.prep_scripts[prep_round_script["endpoint"]]
 
-            if self.REVIEW_MANAGER.DEBUG_MODE:
-                self.REVIEW_MANAGER.logger.info(
-                    f"{PREP_SCRIPT.SETTINGS.name}(...) called"
+                if self.REVIEW_MANAGER.DEBUG_MODE:
+                    self.REVIEW_MANAGER.logger.info(
+                        f"{PREP_SCRIPT.SETTINGS.name}(...) called"
+                    )
+
+                PRIOR = PREPARATION_RECORD.copy_prep_rec()
+
+                PREPARATION_RECORD = PREP_SCRIPT.prepare(self, PREPARATION_RECORD)
+
+                self.__print_diffs_for_debug(
+                    PRIOR=PRIOR,
+                    PREPARATION_RECORD=PREPARATION_RECORD,
+                    prep_script=PREP_SCRIPT,
                 )
 
-            PRIOR = PREPARATION_RECORD.copy_prep_rec()
+                if PREP_SCRIPT.always_apply_changes:
+                    RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
 
-            PREPARATION_RECORD = PREP_SCRIPT.prepare(self, PREPARATION_RECORD)
+                if PREPARATION_RECORD.preparation_save_condition():
+                    RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
+                    RECORD.update_masterdata_provenance(
+                        UNPREPARED_RECORD=UNPREPARED_RECORD,
+                        REVIEW_MANAGER=self.REVIEW_MANAGER,
+                    )
 
-            self.__print_diffs_for_debug(
-                PRIOR=PRIOR,
-                PREPARATION_RECORD=PREPARATION_RECORD,
-                prep_script=PREP_SCRIPT,
-            )
-
-            if PREP_SCRIPT.always_apply_changes:
-                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
-
-            if PREPARATION_RECORD.preparation_save_condition():
-                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
-                RECORD.update_masterdata_provenance(
-                    UNPREPARED_RECORD=UNPREPARED_RECORD,
-                    REVIEW_MANAGER=self.REVIEW_MANAGER,
+                if PREPARATION_RECORD.preparation_break_condition():
+                    RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
+                    break
+            except timeout_decorator.timeout_decorator.TimeoutError:
+                self.REVIEW_MANAGER.logger.error(
+                    f"{RED}{PREP_SCRIPT.SETTINGS.name}(...) timed out{END}"
                 )
-
-            if PREPARATION_RECORD.preparation_break_condition():
-                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
-                break
+                pass
 
         if self.LAST_ROUND:
             if RECORD.status_to_prepare():
@@ -662,17 +665,38 @@ class Preparation(Process):
                 prep_round.scripts.append({"endpoint": "update_metadata_status"})
 
             self.REVIEW_MANAGER.logger.info(f"Prepare ({prep_round.name})")
-            if self.FIRST_ROUND:
-                self.session.remove_expired_responses()  # Note : this takes long...
 
             self.RETRIEVAL_SIMILARITY = prep_round.similarity  # type: ignore
             saved_args["similarity"] = self.RETRIEVAL_SIMILARITY
             self.REVIEW_MANAGER.report_logger.debug(
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
+
+            required_prep_scripts = [s for s in prep_round.scripts]
+
+            required_prep_scripts.append({"endpoint": "update_metadata_status"})
+
+            self.prep_scripts: typing.Dict[
+                str, typing.Any
+            ] = AdapterManager.load_scripts(
+                PROCESS=self,
+                scripts=required_prep_scripts,
+            )
+
             return
 
         def log_details(*, prepared_records: list) -> None:
+            nr_recs = len(
+                [
+                    record
+                    for record in prepared_records
+                    if record["colrev_status"] == RecordState.md_prepared
+                ]
+            )
+
+            self.REVIEW_MANAGER.logger.info(
+                "Records prepared:".ljust(35) + f"{GREEN}{nr_recs}{END}"
+            )
 
             nr_recs = len(
                 [
@@ -686,6 +710,13 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.report_logger.info(
                     f"Statistics: {nr_recs} records not prepared"
                 )
+                self.REVIEW_MANAGER.logger.info(
+                    "Records to prepare manually:".ljust(35) + f"{ORANGE}{nr_recs}{END}"
+                )
+            else:
+                self.REVIEW_MANAGER.logger.info(
+                    "Records to prepare manually:".ljust(35) + f"{nr_recs}"
+                )
 
             nr_recs = len(
                 [
@@ -698,6 +729,9 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.report_logger.info(
                     f"Statistics: {nr_recs} records (prescreen) excluded "
                     "(non-latin alphabet)"
+                )
+                self.REVIEW_MANAGER.logger.info(
+                    "Records prescreen-excluded:".ljust(35) + f"{GREEN}{nr_recs}{END}"
                 )
 
             return
@@ -727,7 +761,12 @@ class Preparation(Process):
                 # from p_tqdm import p_map
                 # preparation_data = p_map(self.prepare, preparation_data)
 
-                if "exclude_languages" in prep_round.scripts:  # type: ignore
+                script_names = [r["endpoint"] for r in prep_round.scripts]
+                if "exclude_languages" in script_names:  # type: ignore
+                    self.REVIEW_MANAGER.logger.info(
+                        f"{ORANGE}The language detector may take "
+                        f"longer and require RAM{END}"
+                    )
                     pool = ProcessPool(nodes=mp.cpu_count() // 2)
                 else:
                     pool = ProcessPool(nodes=self.CPUS)
@@ -757,6 +796,9 @@ class Preparation(Process):
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
+
+        # Note : this takes long -> asynchronous call
+        Timer(0.1, lambda: self.session.remove_expired_responses()).start()
 
         if not keep_ids and not self.REVIEW_MANAGER.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()
