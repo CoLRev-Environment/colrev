@@ -21,6 +21,7 @@ colrev\_core.built\_in.prep
       :nosignatures:
 
       BibTexCrossrefResolutionPrep
+      CiteAsPrep
       CorrectRecordTypePrep
       CrossrefMetadataPrep
       CrossrefYearVolIssPrep

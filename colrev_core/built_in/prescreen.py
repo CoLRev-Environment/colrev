@@ -8,11 +8,11 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PrescreenEndpoint
 from colrev_core.record import Record
 from colrev_core.record import RecordState
-from colrev_core.review_manager import MissingDependencyError
 
 
 @dataclass
@@ -29,6 +29,24 @@ class ScopePrescreenEndpointSettings:
 
 @zope.interface.implementer(PrescreenEndpoint)
 class ScopePrescreenEndpoint:
+
+    title_complementary_materials_keywords = [
+        "about our authors",
+        "editorial board",
+        "author index",
+        "contents",
+        "index of authors",
+        "list of reviewers",
+        "issue information",
+        "call for papers",
+        "acknowledgments",
+        "back matter",
+        "front matter",
+        "volume information",
+        "research spotlights",
+        "acknowledgment of reviewers",
+    ]
+
     def __init__(self, *, SETTINGS):
         if "TimeScopeFrom" in SETTINGS:
             assert SETTINGS["TimeScopeFrom"] > 1900
@@ -128,17 +146,10 @@ class ScopePrescreenEndpoint:
                 if self.SETTINGS.ExcludeComplementaryMaterials:
                     if "title" in record:
                         # TODO : extend/test the following
-                        if record["title"].lower() in [
-                            "about our authors",
-                            "editorial board",
-                            "author index",
-                            "contents",
-                            "index of authors",
-                            "list of reviewers",
-                            "issue information",
-                            "call for papers",
-                            "acknowledgments",
-                        ]:
+                        if (
+                            record["title"].lower()
+                            in self.title_complementary_materials_keywords
+                        ):
                             Record(data=record).prescreen_exclude(
                                 reason="complementary material"
                             )
@@ -185,7 +196,7 @@ class ASReviewPrescreenEndpoint:
             import asreview  # noqa: F401
         except ImportError or ModuleNotFoundError:
             pass
-            raise MissingDependencyError(
+            raise colrev_exceptions.MissingDependencyError(
                 "Dependency asreview not found. "
                 "Please install it\n  pip install asreview"
             )
@@ -225,6 +236,8 @@ class ASReviewPrescreenEndpoint:
         return
 
     def import_from_asreview(self, PRESCREEN, records):
+        from colrev_core.record import PrescreenRecord
+
         def get_last_modified(input_paths) -> Path:
             import os
 
@@ -234,7 +247,7 @@ class ASReviewPrescreenEndpoint:
         available_files = [
             str(x)
             for x in self.endpoint_path.glob("**/*")
-            if "records_to_screen" not in str(x)
+            if "records_to_screen" not in str(x) and x.suffix in [".csv"]
         ]
         if 0 == len(available_files):
             return
@@ -280,17 +293,17 @@ class ASReviewPrescreenEndpoint:
             #  left_index=True, right_index=True)
 
             # for index, row in to_import.iterrows():
+            #     PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
             #     if 1 == row["included"]:
-            #         PRESCREEN.set_data(
-            #             record={"ID": row["ID"]},
-            #             prescreen_inclusion=True,
-            #         )
+            #       PRESCREEN_RECORD.prescreen(
+            #          REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+            #          prescreen_inclusion=True,
+            #       )
             #     if 0 == row["included"]:
-            #         PRESCREEN.set_data(
-            #             record={"ID": row["ID"]},
-            #             prescreen_inclusion=False,
-            #         )
-
+            #        PRESCREEN_RECORD.prescreen(
+            #            REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+            #            prescreen_inclusion=False,
+            #        )
             # result_json_path = self.endpoint_path / Path("result.json")
             # with open(result_json_path) as json_str:
             #     json_data = json.loads(json_str.read())
@@ -307,17 +320,22 @@ class ASReviewPrescreenEndpoint:
         if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
             to_import = pd.read_csv(asreview_project_file)
             for index, row in to_import.iterrows():
-                if 1 == row["included"]:
-                    PRESCREEN.set_data(
-                        record={"ID": row["ID"]},
+                PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
+                if "1" == str(row["included"]):
+                    PRESCREEN_RECORD.prescreen(
+                        REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=True,
                     )
-                if 0 == row["included"]:
-                    PRESCREEN.set_data(
-                        record={"ID": row["ID"]},
+                elif "0" == str(row["included"]):
+                    PRESCREEN_RECORD.prescreen(
+                        REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
                         prescreen_inclusion=False,
                     )
-            saved_args = {"software": "asreview (version: TODO)"}
+                else:
+                    print(f'not prescreened: {row["ID"]}')
+
+        # TODO: add version
+        saved_args = {"software": "asreview"}
 
         PRESCREEN.REVIEW_MANAGER.create_commit(
             msg="Pre-screening (manual, with asreview)",
@@ -332,15 +350,21 @@ class ASReviewPrescreenEndpoint:
 
         # there may be an optional setting to change the endpoint_path
 
+        endpoint_path_empty = not any(Path(self.endpoint_path).iterdir())
+
         # Note : we always update/overwrite the to_screen csv
         self.export_for_asreview(PRESCREEN, records, split)
 
-        if "y" == input("Start prescreening [y,n]?"):
+        if endpoint_path_empty:
+            start_screen_selected = True
+        else:
+            start_screen_selected = "y" == input("Start prescreen [y,n]?")
+
+        if start_screen_selected:
 
             # Note : the Docker image throws errors for Linux machines
             # The pip package is recommended anyway.
 
-            print("\n\n  ASReview will open shortly.")
             print(
                 "\n  To start the prescreen, create a project and import"
                 f" the following csv file: \n\n     {self.export_filepath}"
@@ -350,6 +374,7 @@ class ASReviewPrescreenEndpoint:
                 f" save in {self.endpoint_path}"
             )
             input("\n  Press Enter to start and ctrl+c to stop ...")
+            print("\n\n  ASReview will open shortly.")
 
             # TODO : if not available: ask to "pip install asreview"
             from asreview.entry_points import LABEntryPoint
@@ -462,7 +487,6 @@ class SpreadsheetPrescreenEndpoint:
                 "abstract": record.get("abstract", ""),
                 "presceen_inclusion": inclusion_1,
             }
-            # row.update    (exclusion_criteria)
             tbl.append(row)
 
         if "csv" == export_table_format.lower():
@@ -489,9 +513,7 @@ class SpreadsheetPrescreenEndpoint:
         screen_df.fillna("", inplace=True)
         screened_records = screen_df.to_dict("records")
 
-        PRESCREEN.REVIEW_MANAGER.logger.warning(
-            "import_table not completed (exclusion_criteria not yet imported)"
-        )
+        PRESCREEN.REVIEW_MANAGER.logger.warning("import_table not completed")
 
         for screened_record in screened_records:
             if screened_record.get("ID", "") in records:

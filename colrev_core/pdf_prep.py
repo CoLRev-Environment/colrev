@@ -225,27 +225,14 @@ class PDF_Preparation(Process):
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.pdf_imported}],
         )
+        self.to_prepare = nr_tasks
 
         prep_data = {
             "nr_tasks": nr_tasks,
-            "items": items,
+            "items": [{"record": item} for item in items],
         }
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
         return prep_data
-
-    def __batch(self, *, items: dict):
-        batch = []
-        for item in items:
-
-            # (Quick) fix if there are multiple files linked:
-            if ";" in item.get("file", ""):
-                item["file"] = item["file"].split(";")[0]
-            batch.append(
-                {
-                    "record": item,
-                }
-            )
-        return batch
 
     def __set_to_reprocess(self):
 
@@ -282,6 +269,49 @@ class PDF_Preparation(Process):
         )
         return
 
+    def _print_stats(self, *, pdf_prep_record_list) -> None:
+
+        self.pdf_prepared = len(
+            [
+                r
+                for r in pdf_prep_record_list
+                if RecordState.pdf_prepared == r["colrev_status"]
+            ]
+        )
+
+        self.not_prepared = self.to_prepare - self.pdf_prepared
+
+        prepared_string = "Prepared:    "
+        if self.pdf_prepared == 0:
+            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += " PDFs"
+        elif self.pdf_prepared == 1:
+            prepared_string += "\033[92m"
+            prepared_string += f"{self.pdf_prepared}".rjust(10, " ")
+            prepared_string += "\033[0m PDF"
+        else:
+            prepared_string += "\033[92m"
+            prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
+            prepared_string += "\033[0m PDFs"
+
+        not_prepared_string = "Not prepared:"
+        if self.not_prepared == 0:
+            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += " PDFs"
+        elif self.not_prepared == 1:
+            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{self.not_prepared}".rjust(10, " ")
+            not_prepared_string += "\033[0m PDF"
+        else:
+            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
+            not_prepared_string += "\033[0m PDFs"
+
+        self.REVIEW_MANAGER.logger.info(prepared_string)
+        self.REVIEW_MANAGER.logger.info(not_prepared_string)
+
+        return
+
     def setup_custom_script(self) -> None:
         import pkgutil
 
@@ -316,12 +346,10 @@ class PDF_Preparation(Process):
         if reprocess:
             self.__set_to_reprocess()
 
-        pdf_prep_data_batch = self.__get_data()
-
-        pdf_prep_batch = self.__batch(items=pdf_prep_data_batch["items"])
+        pdf_prep_data = self.__get_data()
 
         if self.REVIEW_MANAGER.DEBUG_MODE:
-            for item in pdf_prep_batch:
+            for item in pdf_prep_data["items"]:
                 record = item["record"]
                 print(record["ID"])
                 record = self.prepare_pdf(item)
@@ -330,14 +358,16 @@ class PDF_Preparation(Process):
                     record_list=[record]
                 )
         else:
-            pdf_prep_batch = p_map(self.prepare_pdf, pdf_prep_batch)
+            pdf_prep_record_list = p_map(self.prepare_pdf, pdf_prep_data["items"])
             self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                record_list=pdf_prep_batch
+                record_list=pdf_prep_record_list
             )
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_batch])
+            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in pdf_prep_record_list])
+
+        self._print_stats(pdf_prep_record_list=pdf_prep_record_list)
 
         # Note: for formatting...
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()

@@ -7,6 +7,7 @@ from pathlib import Path
 import git
 import pandas as pd
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -26,6 +27,12 @@ class Dedupe(Process):
         },
         "active_learning_automated": {
             "endpoint": built_in_dedupe.ActiveLearningDedupeAutomatedEndpoint,
+        },
+        "curation_full_outlet_dedupe": {
+            "endpoint": built_in_dedupe.CurationDedupeEndpoint,
+        },
+        "curation_missing_dedupe": {
+            "endpoint": built_in_dedupe.CurationMissingDedupeEndpoint,
         },
     }
 
@@ -63,11 +70,6 @@ class Dedupe(Process):
 
         self.REVIEW_MANAGER.report_logger.info("Dedupe")
         self.REVIEW_MANAGER.logger.info("Dedupe")
-
-        self.dedupe_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
-            PROCESS=self,
-            scripts=REVIEW_MANAGER.settings.dedupe.scripts,
-        )
 
     def prep_records(self, *, records_df: pd.DataFrame) -> dict:
         def preProcess(*, key, value):
@@ -215,7 +217,7 @@ class Dedupe(Process):
         return records
 
     def readData(self):
-        from colrev_core.record import Record, NotEnoughDataToIdentifyException
+        from colrev_core.record import Record
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -242,7 +244,7 @@ class Dedupe(Process):
             try:
                 RECORD = Record(data=r)
                 r["colrev_id"] = RECORD.create_colrev_id()
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
                 pass
 
@@ -275,15 +277,15 @@ class Dedupe(Process):
             main_record = rec_ID1
             dupe_record = rec_ID2
 
-        # 3. If a record is md_processed, use it as the dupe record
+        # 3. If a record is md_processed, use the other record as the dupe record
         # -> during the fix_errors procedure, records are in md_processed
         # and beyond.
         elif rec_ID1["colrev_status"] == RecordState.md_processed:
-            main_record = rec_ID2
-            dupe_record = rec_ID1
-        elif rec_ID2["colrev_status"] == RecordState.md_processed:
             main_record = rec_ID1
             dupe_record = rec_ID2
+        elif rec_ID2["colrev_status"] == RecordState.md_processed:
+            main_record = rec_ID2
+            dupe_record = rec_ID1
 
         # 4. Merge into curated record (otherwise)
         else:
@@ -525,8 +527,7 @@ class Dedupe(Process):
         """Exports a spreadsheet to support analyses of records that are not
         in all sources (for curated repositories)"""
 
-        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        source_filenames = [x.filename for x in source_details]
+        source_filenames = [x.filename for x in self.REVIEW_MANAGER.settings.sources]
         print("sources: " + ",".join(source_filenames))
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -668,28 +669,7 @@ class Dedupe(Process):
 
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
-        import itertools
         from collections import Counter
-
-        def __get_toc_key(record: dict) -> str:
-            toc_key = "NA"
-            if "article" == record["ENTRYTYPE"]:
-                toc_key = f"{record.get('journal', '').lower()}"
-                if "year" in record:
-                    toc_key = toc_key + f"|{record['year']}"
-                if "volume" in record:
-                    toc_key = toc_key + f"|{record['volume']}"
-                if "number" in record:
-                    toc_key = toc_key + f"|{record['number']}"
-                else:
-                    toc_key = toc_key + "|"
-            elif "inproceedings" == record["ENTRYTYPE"]:
-                toc_key = (
-                    f"{record.get('booktitle', '').lower()}"
-                    + f"|{record.get('year', '')}"
-                )
-
-            return toc_key
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -697,14 +677,7 @@ class Dedupe(Process):
         origins = [item.split("/")[0] for sublist in origins for item in sublist]
         origins = list(set(origins))
 
-        cuts = {}
         same_source_merges = []
-        for L in range(1, len(origins) + 1):
-            for subset in itertools.combinations(origins, L):
-                cuts["/".join(list(subset))] = {
-                    "colrev_origins": list(subset),
-                    "records": [],
-                }
 
         for record in records.values():
 
@@ -724,32 +697,9 @@ class Dedupe(Process):
                     all_cases.append(f"{ds}: {cases}")
                 same_source_merges.append(f"{record['ID']} ({', '.join(all_cases)})")
 
-            cut_list = [
-                x
-                for k, x in cuts.items()
-                if set(x["colrev_origins"]) == set(rec_sources)
-            ]
-            if len(cut_list) != 1:
-                print(cut_list)
-                print(record["ID"], record["colrev_origin"])
-                continue
-            cut = cut_list[0]
-            cut["records"].append(record["ID"])
-
-            if "toc_items" not in cut:
-                cut["toc_items"] = {}  # type: ignore
-            toc_i = __get_toc_key(record)
-            if toc_i in cut["toc_items"]:
-                cut["toc_items"][toc_i] = cut["toc_items"][toc_i] + 1  # type: ignore
-            else:
-                cut["toc_items"][toc_i] = 1  # type: ignore
-
-        total = len(records.values())
-        for k, det in cuts.items():
-            det["size"] = len(det["records"])  # type: ignore
-            det["fraction"] = det["size"] / total * 100  # type: ignore
-
-        info = {"cuts": cuts, "same_source_merges": same_source_merges}
+        info = {
+            "same_source_merges": same_source_merges,
+        }
         return info
 
     def main(self):
@@ -764,9 +714,15 @@ class Dedupe(Process):
 
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
-            ENDPOINT = self.dedupe_scripts[DEDUPE_SCRIPT["endpoint"]]
+            dedupe_script = AdapterManager.load_scripts(
+                PROCESS=self,
+                scripts=[DEDUPE_SCRIPT],
+            )
+
+            ENDPOINT = dedupe_script[DEDUPE_SCRIPT["endpoint"]]
 
             ENDPOINT.run_dedupe(self)
+            print()
 
         return
 

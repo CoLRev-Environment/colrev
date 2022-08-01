@@ -8,6 +8,7 @@ import zope.interface
 from dacite import from_dict
 from pdfminer.high_level import extract_text
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PDFRetrievalEndpoint
 from colrev_core.record import RecordState
@@ -112,7 +113,7 @@ class LocalIndexEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
-        from colrev_core.environment import LocalIndex, RecordNotInIndexException
+        from colrev_core.environment import LocalIndex
 
         LOCAL_INDEX = LocalIndex()
         try:
@@ -120,7 +121,7 @@ class LocalIndexEndpoint:
                 record=RECORD.data, include_file=True
             )
             # print(Record(retrieved_record))
-        except RecordNotInIndexException:
+        except colrev_exceptions.RecordNotInIndexException:
             pass
             return RECORD
 

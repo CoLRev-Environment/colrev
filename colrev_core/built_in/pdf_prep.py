@@ -12,6 +12,7 @@ from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import LocalIndex
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PDFPreparationEndpoint
@@ -485,8 +486,8 @@ class PDFMetadataValidationEndpoint:
         return validation_info
 
     @timeout_decorator.timeout(60, use_signals=False)
-    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
-        from colrev_core.environment import LocalIndex, RecordNotInIndexException
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD=40):
+        from colrev_core.environment import LocalIndex
 
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
@@ -508,7 +509,7 @@ class PDFMetadataValidationEndpoint:
                     return RECORD.data
                 else:
                     print("colrev_pdf_ids not matching")
-        except RecordNotInIndexException:
+        except colrev_exceptions.RecordNotInIndexException:
             pass
 
         validation_info = self.validates_based_on_metadata(

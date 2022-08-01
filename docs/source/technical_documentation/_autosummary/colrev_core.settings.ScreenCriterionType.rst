@@ -1,20 +1,14 @@
-colrev\_core.settings.SearchConfiguration
+colrev\_core.settings.ScreenCriterionType
 =========================================
 
 .. currentmodule:: colrev_core.settings
 
-.. autoclass:: SearchConfiguration
+.. autoclass:: ScreenCriterionType
    :members:
    :show-inheritance:
    :inherited-members:
    :special-members: __call__, __add__, __mul__
 
-
-
-   .. rubric:: Methods
-
-   .. autosummary::
-      :nosignatures:
 
 
 
@@ -25,4 +19,5 @@ colrev\_core.settings.SearchConfiguration
 
    .. autosummary::
 
-      ~SearchConfiguration.retrieve_forthcoming
+      ~ScreenCriterionType.inclusion_criterion
+      ~ScreenCriterionType.exclusion_criterion

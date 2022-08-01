@@ -94,32 +94,6 @@ class PDFRetrievalMan(Process):
         )
         return pdf_get_man_data
 
-    def set_data(self, *, record, filepath: Path, PAD: int = 40) -> None:
-
-        if filepath is None:
-            record.update(colrev_status=RecordState.pdf_not_available)
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
-            )
-            self.REVIEW_MANAGER.logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "recorded as not_available"
-            )
-
-        else:
-            record.update(colrev_status=RecordState.pdf_imported)
-            record.update(file=str(filepath))
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-            self.REVIEW_MANAGER.logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
-            )
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
-
     def pdfs_retrieved_manually(self) -> bool:
         return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 

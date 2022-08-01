@@ -1,9 +1,9 @@
-colrev\_core.init.Initializer
-=============================
+colrev\_core.pull.colors
+========================
 
-.. currentmodule:: colrev_core.init
+.. currentmodule:: colrev_core.pull
 
-.. autoclass:: Initializer
+.. autoclass:: colors
    :members:
    :show-inheritance:
    :inherited-members:
@@ -25,4 +25,8 @@ colrev\_core.init.Initializer
 
    .. autosummary::
 
-      ~Initializer.SHARE_STAT_REQ_options
+      ~colors.BLUE
+      ~colors.END
+      ~colors.GREEN
+      ~colors.ORANGE
+      ~colors.RED

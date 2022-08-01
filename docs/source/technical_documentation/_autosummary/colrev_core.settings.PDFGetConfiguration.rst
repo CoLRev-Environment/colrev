@@ -26,5 +26,7 @@ colrev\_core.settings.PDFGetConfiguration
    .. autosummary::
 
       ~PDFGetConfiguration.pdf_path_type
+      ~PDFGetConfiguration.pdf_required_for_screen_and_synthesis
+      ~PDFGetConfiguration.rename_pdfs
       ~PDFGetConfiguration.scripts
       ~PDFGetConfiguration.man_pdf_get_scripts

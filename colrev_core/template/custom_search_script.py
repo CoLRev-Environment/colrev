@@ -2,9 +2,11 @@
 from pathlib import Path
 
 import zope.interface
+from dacite import from_dict
 
+import colrev_core.exceptions as colrev_exceptions
+from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
-from colrev_core.search import InvalidQueryException
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -13,8 +15,10 @@ class CustomSearch:
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
-    @classmethod
-    def run_search(cls, REVIEW_MANAGER, params: dict, feed_file: Path) -> None:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def run_search(slef, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.review_dataset import ReviewDataset
 
         max_id = 1
@@ -22,7 +26,7 @@ class CustomSearch:
             records = {}
         else:
             with open(feed_file, encoding="utf8") as bibtex_file:
-                records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                     load_str=bibtex_file.read()
                 )
 
@@ -48,11 +52,13 @@ class CustomSearch:
     @classmethod
     def validate_params(cls, query: str) -> None:
         if " SCOPE " not in query:
-            raise InvalidQueryException("CROSSREF queries require a SCOPE section")
+            raise colrev_exceptions.InvalidQueryException(
+                "CROSSREF queries require a SCOPE section"
+            )
 
         scope = query[query.find(" SCOPE ") :]
         if "journal_issn" not in scope:
-            raise InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "CROSSREF queries require a journal_issn field in the SCOPE section"
             )
         pass

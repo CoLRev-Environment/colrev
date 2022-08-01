@@ -23,7 +23,6 @@ colrev\_core.prescreen.Prescreen
       ~Prescreen.import_table
       ~Prescreen.include_all_in_prescreen
       ~Prescreen.main
-      ~Prescreen.set_data
       ~Prescreen.setup_custom_script
 
 

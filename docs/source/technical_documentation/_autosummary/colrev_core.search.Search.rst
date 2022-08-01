@@ -22,6 +22,7 @@ colrev\_core.search.Search
       ~Search.main
       ~Search.parse_parameters
       ~Search.parse_sources
+      ~Search.remove_forthcoming
       ~Search.save_feed_file
       ~Search.setup_custom_script
       ~Search.validate_query

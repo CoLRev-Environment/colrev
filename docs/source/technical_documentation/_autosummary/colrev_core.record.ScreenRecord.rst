@@ -45,22 +45,29 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
-      ~ScreenRecord.get_source_repo
       ~ScreenRecord.get_text_from_pdf
+      ~ScreenRecord.get_toc_key
       ~ScreenRecord.get_value
       ~ScreenRecord.has_incomplete_fields
       ~ScreenRecord.has_inconsistent_fields
+      ~ScreenRecord.has_overlapping_colrev_id
+      ~ScreenRecord.has_quality_defects
       ~ScreenRecord.import_provenance
       ~ScreenRecord.masterdata_is_complete
       ~ScreenRecord.masterdata_is_curated
       ~ScreenRecord.merge
       ~ScreenRecord.missing_fields
+      ~ScreenRecord.pdf_get_man
+      ~ScreenRecord.pdf_man_prep
+      ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
+      ~ScreenRecord.print_citation_format
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes
       ~ScreenRecord.rename_field
       ~ScreenRecord.reset_pdf_provenance_notes
+      ~ScreenRecord.screen
       ~ScreenRecord.set_fields_complete
       ~ScreenRecord.set_masterdata_complete
       ~ScreenRecord.set_masterdata_consistent

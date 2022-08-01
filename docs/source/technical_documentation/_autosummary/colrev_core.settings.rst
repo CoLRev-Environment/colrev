@@ -34,6 +34,7 @@ colrev\_core.settings
       ReviewType
       ScreenConfiguration
       ScreenCriterion
+      ScreenCriterionType
       SearchConfiguration
       SearchSource
       SearchType

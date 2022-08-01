@@ -53,19 +53,24 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
-      ~PrepRecord.get_source_repo
       ~PrepRecord.get_text_from_pdf
+      ~PrepRecord.get_toc_key
       ~PrepRecord.get_value
       ~PrepRecord.has_incomplete_fields
       ~PrepRecord.has_inconsistent_fields
+      ~PrepRecord.has_overlapping_colrev_id
+      ~PrepRecord.has_quality_defects
       ~PrepRecord.import_provenance
       ~PrepRecord.masterdata_is_complete
       ~PrepRecord.masterdata_is_curated
       ~PrepRecord.merge
       ~PrepRecord.missing_fields
+      ~PrepRecord.pdf_get_man
+      ~PrepRecord.pdf_man_prep
       ~PrepRecord.preparation_break_condition
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
+      ~PrepRecord.print_citation_format
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes

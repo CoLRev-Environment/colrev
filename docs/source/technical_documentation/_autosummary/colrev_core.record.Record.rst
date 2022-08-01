@@ -45,17 +45,22 @@ colrev\_core.record.Record
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed
-      ~Record.get_source_repo
       ~Record.get_text_from_pdf
+      ~Record.get_toc_key
       ~Record.get_value
       ~Record.has_incomplete_fields
       ~Record.has_inconsistent_fields
+      ~Record.has_overlapping_colrev_id
+      ~Record.has_quality_defects
       ~Record.import_provenance
       ~Record.masterdata_is_complete
       ~Record.masterdata_is_curated
       ~Record.merge
       ~Record.missing_fields
+      ~Record.pdf_get_man
+      ~Record.pdf_man_prep
       ~Record.prescreen_exclude
+      ~Record.print_citation_format
       ~Record.remove_accents
       ~Record.remove_field
       ~Record.remove_quality_defect_notes

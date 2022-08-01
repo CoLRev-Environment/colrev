@@ -29,6 +29,8 @@ class ReviewType(Enum):
     conceptual_review = "conceptual_review"
     qualitative_systematic_review = "qualitative_systematic_review"
     meta_analysis = "meta_analysis"
+    scientometric = "scientometric"
+    peer_review = "peer_review"
 
     def __str__(self):
         return (
@@ -106,10 +108,10 @@ class SearchSource:
 
 @dataclass
 class SearchConfiguration:
-    pass
+    retrieve_forthcoming: bool
 
     def __str__(self):
-        return " - TODO"
+        return f" - retrieve_forthcoming: {self.retrieve_forthcoming}"
 
 
 # Load
@@ -192,6 +194,10 @@ class PrescreenConfiguration:
 @dataclass
 class PDFGetConfiguration:
     pdf_path_type: str  # TODO : "symlink" or "copy"
+    pdf_required_for_screen_and_synthesis: bool
+    """With the pdf_required_for_screen_and_synthesis flag, the PDF retrieval
+    can be specified as mandatory (true) or optional (false) for the following steps"""
+    rename_pdfs: bool
     scripts: list
 
     man_pdf_get_scripts: list
@@ -220,17 +226,27 @@ class PDFPrepConfiguration:
 # Screen
 
 
+class ScreenCriterionType(Enum):
+    inclusion_criterion = "inclusion_criterion"
+    exclusion_criterion = "exclusion_criterion"
+
+    def __str__(self):
+        return self.name
+
+
 @dataclass
 class ScreenCriterion:
     explanation: str
     comment: typing.Optional[str]
+    criterion_type: ScreenCriterionType
 
     def __str__(self):
-        return f"{self.name} ({self.explanation})"
+        return f"{self.type} {self.name} ({self.explanation})"
 
 
 @dataclass
 class ScreenConfiguration:
+    explanation: typing.Optional[str]
     criteria: typing.Dict[str, ScreenCriterion]
     scripts: list
 
@@ -270,7 +286,7 @@ class Configuration:
             + "\nSearch\n"
             + str(self.search)
             + "\nSources\n"
-            + str(self.sources)
+            + "\n- ".join([str(s) for s in self.sources])
             + "\nLoad\n"
             + str(self.load)
             + "\nPreparation\n"

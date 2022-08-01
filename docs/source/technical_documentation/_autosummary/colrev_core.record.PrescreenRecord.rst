@@ -45,17 +45,23 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
-      ~PrescreenRecord.get_source_repo
       ~PrescreenRecord.get_text_from_pdf
+      ~PrescreenRecord.get_toc_key
       ~PrescreenRecord.get_value
       ~PrescreenRecord.has_incomplete_fields
       ~PrescreenRecord.has_inconsistent_fields
+      ~PrescreenRecord.has_overlapping_colrev_id
+      ~PrescreenRecord.has_quality_defects
       ~PrescreenRecord.import_provenance
       ~PrescreenRecord.masterdata_is_complete
       ~PrescreenRecord.masterdata_is_curated
       ~PrescreenRecord.merge
       ~PrescreenRecord.missing_fields
+      ~PrescreenRecord.pdf_get_man
+      ~PrescreenRecord.pdf_man_prep
+      ~PrescreenRecord.prescreen
       ~PrescreenRecord.prescreen_exclude
+      ~PrescreenRecord.print_citation_format
       ~PrescreenRecord.remove_accents
       ~PrescreenRecord.remove_field
       ~PrescreenRecord.remove_quality_defect_notes

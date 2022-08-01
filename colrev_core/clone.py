@@ -2,9 +2,9 @@
 import os
 from pathlib import Path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import EnvironmentManager
 from colrev_core.environment import LocalIndex
-from colrev_core.review_manager import RepoSetupError
 from colrev_core.review_manager import ReviewManager
 
 
@@ -27,13 +27,13 @@ class Clone:
         try:
             REVIEW_MANAGER = ReviewManager(path_str=str(self.local_path))
             REVIEW_MANAGER.check_repository_setup()
-        except RepoSetupError:
+        except colrev_exceptions.RepoSetupError:
             pass
             print("Not a CoLRev repository.")
             return
         EnvironmentManager.register_repo(path_to_register=self.local_path)
         LOCAL_INDEX = LocalIndex()
-        LOCAL_INDEX.index_colrev_project(source_url=str(self.local_path))
+        LOCAL_INDEX.index_colrev_project(repo_source_path=str(self.local_path))
         return
 
 

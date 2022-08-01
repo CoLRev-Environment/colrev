@@ -23,5 +23,9 @@ colrev\_core.built\_in.dedupe\_built\_in
       ActiveLearningDedupeAutomatedEndpoint
       ActiveLearningDedupeTrainingEndpoint
       ActiveLearningSettings
+      CurationDedupeEndpoint
+      CurationDedupeSettings
+      CurationMissingDedupeEndpoint
       SimpleDedupeEndpoint
+      SimpleDedupeSettings
       colors

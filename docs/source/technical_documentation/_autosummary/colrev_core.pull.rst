@@ -21,3 +21,4 @@ colrev\_core.pull
       :nosignatures:
 
       Pull
+      colors

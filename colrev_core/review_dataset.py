@@ -12,15 +12,7 @@ from pathlib import Path
 import git
 import pandas as pd
 
-from colrev_core.exceptions import DuplicateIDsError
-from colrev_core.exceptions import FieldValueError
-from colrev_core.exceptions import OriginError
-from colrev_core.exceptions import PropagatedIDChange
-from colrev_core.exceptions import RecordNotInRepoException
-from colrev_core.exceptions import ReviewManagerNotNofiedError
-from colrev_core.exceptions import SearchSettingsError
-from colrev_core.exceptions import StatusFieldValueError
-from colrev_core.exceptions import StatusTransitionError
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.record import RecordState
 
 
@@ -29,8 +21,9 @@ class ReviewDataset:
     # Fields that are stored as lists (items separated by newlines)
     list_fields_keys = [
         "colrev_id",
+        # "colrev_origin",
         # "colrev_pdf_id",
-        # "exclusion_criteria",
+        # "screening_criteria",
     ]
     dict_fields_keys = [
         "colrev_masterdata_provenance",
@@ -42,11 +35,6 @@ class ReviewDataset:
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.RECORDS_FILE_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
         self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
-
-    def load_sources(self) -> list:
-        """Load the source details"""
-        # TODO : this file may no longer be needed...
-        return self.REVIEW_MANAGER.settings.sources
 
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
@@ -118,7 +106,7 @@ class ReviewDataset:
                 load_str=filecontents.decode("utf-8")
             )
             for prior_record in prior_records_dict.values():
-                if str(prior_record["colrev_status"]) != str(condition_state):
+                if str(prior_record.get("colrev_status", "NA")) != str(condition_state):
                     continue
                 for original_record in original_records:
 
@@ -253,7 +241,6 @@ class ReviewDataset:
 
     def load_records_dict(self, *, load_str: str = None) -> dict:
         """Get the records (requires REVIEW_MANAGER.notify(...))"""
-        from colrev_core.review_dataset import ReviewManagerNotNofiedError
         from pybtex.database.input import bibtex
 
         # TODO : optional dict-key as a parameter
@@ -263,7 +250,7 @@ class ReviewDataset:
         pybtex.errors.set_strict_mode(False)
 
         if self.REVIEW_MANAGER.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNofiedError()
 
         RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
         parser = bibtex.Parser()
@@ -275,7 +262,6 @@ class ReviewDataset:
         elif RECORDS_FILE_FILE.is_file():
             bib_data = parser.parse_file(RECORDS_FILE_FILE)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
-
         else:
             records_dict = {}
 
@@ -360,7 +346,7 @@ class ReviewDataset:
                 "colrev_data_provenance",
                 "colrev_id",
                 "colrev_pdf_id",
-                "exclusion_criteria",
+                "screening_criteria",
                 "file",  # Note : do not change this order (parsers rely on it)
                 "prescreen_exclusion",
                 "doi",
@@ -563,7 +549,6 @@ class ReviewDataset:
         raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
-        from colrev_core.environment import RecordNotInIndexException
         from colrev_core.settings import IDPpattern
         from colrev_core.record import PrepRecord
         import re
@@ -601,11 +586,11 @@ class ReviewDataset:
         # (this would break the chain of evidence)
         if raise_error:
             if self.propagated_ID(ID=record["ID"]):
-                raise PropagatedIDChange([record["ID"]])
+                raise colrev_exceptions.PropagatedIDChange([record["ID"]])
         try:
             retrieved_record = self.LOCAL_INDEX.retrieve(record=record)
             temp_ID = retrieved_record["ID"]
-        except RecordNotInIndexException:
+        except colrev_exceptions.RecordNotInIndexException:
             pass
 
             if "" != record.get("author", record.get("editor", "")):
@@ -666,7 +651,7 @@ class ReviewDataset:
             letters = list(string.ascii_lowercase)
             next_unique_ID = temp_ID
             appends: list = []
-            while next_unique_ID in other_ids:
+            while next_unique_ID.lower() in [i.lower() for i in other_ids]:
                 if len(appends) == 0:
                     order += 1
                     appends = [p for p in itertools.product(letters, repeat=order)]
@@ -698,14 +683,14 @@ class ReviewDataset:
             "ID": "NA",
             "colrev_origin": "NA",
             "colrev_status": "NA",
-            "exclusion_criteria": "NA",
+            "screening_criteria": "NA",
             "file": "NA",
             "colrev_masterdata_provenance": "NA",
         }
-        HEADER_ITEMS = len(default)
+        number_required_header_items = len(default)
 
         record_header_items = []
-        record_header_item = default
+        record_header_item = default.copy()
         current_header_item_count = 0
         current_key_value_pair_str = ""
         while True:
@@ -715,11 +700,12 @@ class ReviewDataset:
             if line[:1] == "%" or line == "\n":
                 continue
 
-            if current_header_item_count > HEADER_ITEMS or "}" == line:
+            if current_header_item_count > number_required_header_items or "}" == line:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0
                 continue
+
             if "@" in line[:2] and not "NA" == record_header_item["ID"]:
                 record_header_items.append(record_header_item)
                 record_header_item = default.copy()
@@ -935,13 +921,10 @@ class ReviewDataset:
 
             if record["colrev_status"] in [
                 RecordState.md_needs_manual_preparation,
-                RecordState.md_imported,
             ]:
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=RECORD, REVIEW_MANAGER=self.REVIEW_MANAGER
                 )
-
-            if record["colrev_status"] == RecordState.md_needs_manual_preparation:
                 RECORD.update_metadata_status(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
             if record["colrev_status"] == RecordState.pdf_prepared:
@@ -963,7 +946,7 @@ class ReviewDataset:
             "status_fields": [],
             "status_transitions": [],
             "start_states": [],
-            "exclusion_criteria_list": [],
+            "screening_criteria_list": [],
             "IDs": [],
             "entries_without_origin": [],
             "record_links_in_bib": [],
@@ -992,7 +975,7 @@ class ReviewDataset:
                         file = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_status" == line.lstrip()[:13]:
                         status = line[line.find("{") + 1 : line.rfind("}")]
-                    if "exclusion_criteria" == line.lstrip()[:18]:
+                    if "screening_criteria" == line.lstrip()[:18]:
                         excl_crit = line[line.find("{") + 1 : line.rfind("}")]
                     if "colrev_origin" == line.strip()[:13]:
                         origin = line[line.find("{") + 1 : line.rfind("}")]
@@ -1037,7 +1020,7 @@ class ReviewDataset:
 
                 if "not_set" != excl_crit:
                     ec_case = [ID, status, excl_crit]
-                    data["exclusion_criteria_list"].append(ec_case)
+                    data["screening_criteria_list"].append(ec_case)
 
                 # TODO : the origins of a record could be in multiple states
                 if "colrev_status" in prior:
@@ -1062,11 +1045,13 @@ class ReviewDataset:
                     if len(proc_transition_list) == 0 and prior_status[0] != status:
                         data["start_states"].append(prior_status[0])
                         if prior_status[0] not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(
+                            raise colrev_exceptions.StatusFieldValueError(
                                 ID, "colrev_status", prior_status[0]
                             )
                         if status not in [str(x) for x in RecordState]:
-                            raise StatusFieldValueError(ID, "colrev_status", status)
+                            raise colrev_exceptions.StatusFieldValueError(
+                                ID, "colrev_status", status
+                            )
 
                         data["invalid_state_transitions"].append(
                             f"{ID}: {prior_status[0]} to {status}"
@@ -1165,11 +1150,11 @@ class ReviewDataset:
             if any(cid in Record(data=x).get_colrev_id() for cid in cid_to_retrieve)
         ]
         if len(record_l) != 1:
-            raise RecordNotInRepoException
+            raise colrev_exceptions.RecordNotInRepoException
         return record_l[0]
 
     def update_colrev_ids(self) -> None:
-        from colrev_core.record import Record, NotEnoughDataToIdentifyException
+        from colrev_core.record import Record
         from tqdm import tqdm
 
         self.REVIEW_MANAGER.logger.info("Create colrev_id list from origins")
@@ -1181,7 +1166,7 @@ class ReviewDataset:
                 try:
                     colrev_id = RECORD.create_colrev_id()
                     RECORD.data["colrev_id"] = [colrev_id]
-                except NotEnoughDataToIdentifyException:
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
                     continue
                 origins = RECORD.get_origins()
@@ -1256,12 +1241,12 @@ class ReviewDataset:
         if not len(data["IDs"]) == len(set(data["IDs"])):
             duplicates = [ID for ID in data["IDs"] if data["IDs"].count(ID) > 1]
             if len(duplicates) > 20:
-                raise DuplicateIDsError(
+                raise colrev_exceptions.DuplicateIDsError(
                     "Duplicates in RECORDS_FILE: "
                     f"({','.join(duplicates[0:20])}, ...)"
                 )
             else:
-                raise DuplicateIDsError(
+                raise colrev_exceptions.DuplicateIDsError(
                     f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
                 )
         return
@@ -1271,7 +1256,7 @@ class ReviewDataset:
 
         # Check whether each record has an origin
         if not len(data["entries_without_origin"]) == 0:
-            raise OriginError(
+            raise colrev_exceptions.OriginError(
                 f"Entries without origin: {', '.join(data['entries_without_origin'])}"
             )
 
@@ -1284,7 +1269,7 @@ class ReviewDataset:
                 all_record_links.append(bib_file.name + "/" + x)
         delta = set(data["record_links_in_bib"]) - set(all_record_links)
         if len(delta) > 0:
-            raise OriginError(f"broken origins: {delta}")
+            raise colrev_exceptions.OriginError(f"broken origins: {delta}")
 
         # Check for non-unique origins
         origins = list(itertools.chain(*data["origin_list"]))
@@ -1295,7 +1280,9 @@ class ReviewDataset:
         if non_unique_origins:
             for ID, org in data["origin_list"]:
                 if org in non_unique_origins:
-                    raise OriginError(f'Non-unique origin: origin="{org}"')
+                    raise colrev_exceptions.OriginError(
+                        f'Non-unique origin: origin="{org}"'
+                    )
 
         # TODO : Check for removed origins
         # Raise an exception if origins were removed
@@ -1326,23 +1313,25 @@ class ReviewDataset:
         status_schema = [str(x) for x in RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
         if stat_diff:
-            raise FieldValueError(f"status field(s) {stat_diff} not in {status_schema}")
+            raise colrev_exceptions.FieldValueError(
+                f"status field(s) {stat_diff} not in {status_schema}"
+            )
         return
 
     def check_status_transitions(self, *, data: dict) -> None:
         if len(set(data["start_states"])) > 1:
-            raise StatusTransitionError(
+            raise colrev_exceptions.StatusTransitionError(
                 "multiple transitions from different "
                 f'start states ({set(data["start_states"])})'
             )
-        if len(set(data["invalid_state_transitions"])) > 1:
-            raise StatusTransitionError(
+        if len(set(data["invalid_state_transitions"])) > 0:
+            raise colrev_exceptions.StatusTransitionError(
                 "invalid state transitions: \n    "
                 + "\n    ".join(data["invalid_state_transitions"])
             )
         return
 
-    def __get_exclusion_criteria(self, *, ec_string: str) -> list:
+    def __get_screening_criteria(self, *, ec_string: str) -> list:
         excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
         if [""] == excl_criteria:
             excl_criteria = []
@@ -1350,7 +1339,6 @@ class ReviewDataset:
 
     def check_corrections_of_curated_records(self) -> None:
         from colrev_core.environment import LocalIndex, Resources
-        from colrev_core.environment import RecordNotInIndexException
         from colrev_core.prep import Preparation
         from colrev_core.record import Record
         from dictdiffer import diff
@@ -1471,7 +1459,7 @@ class ReviewDataset:
                                     f"{prov_inf})"
                                 )
                                 continue
-                        except (RecordNotInIndexException, KeyError):
+                        except (colrev_exceptions.RecordNotInIndexException, KeyError):
                             pass
                             original_curated_record = prior_cr.copy()
 
@@ -1510,9 +1498,10 @@ class ReviewDataset:
                     change_items = list(changes)
 
                     keys_to_ignore = [
-                        "exclusion_criteria",
+                        "screening_criteria",
                         "colrev_status",
                         "source_url",
+                        "metadata_source_repository_paths",
                         "ID",
                         "grobid-version",
                         "colrev_pdf_id",
@@ -1602,10 +1591,10 @@ class ReviewDataset:
 
         field_errors = []
 
-        if data["exclusion_criteria_list"]:
-            exclusion_criteria = data["exclusion_criteria_list"][0][2]
-            if exclusion_criteria != "NA":
-                criteria = self.__get_exclusion_criteria(ec_string=exclusion_criteria)
+        if data["screening_criteria_list"]:
+            screening_criteria = data["screening_criteria_list"][0][2]
+            if screening_criteria != "NA":
+                criteria = self.__get_screening_criteria(ec_string=screening_criteria)
                 settings_criteria = list(
                     self.REVIEW_MANAGER.settings.screen.criteria.keys()
                 )
@@ -1614,19 +1603,19 @@ class ReviewDataset:
                         "Mismatch in screening criteria: records:"
                         f" {criteria} vs. settings: {settings_criteria}"
                     )
-                pattern = "=(yes|no);".join(criteria) + "=(yes|no)"
-                pattern_inclusion = "=no;".join(criteria) + "=no"
+                pattern = "=(in|out);".join(criteria) + "=(in|out)"
+                pattern_inclusion = "=in;".join(criteria) + "=in"
             else:
                 criteria = ["NA"]
                 pattern = "^NA$"
                 pattern_inclusion = "^NA$"
-            for [ID, status, excl_crit] in data["exclusion_criteria_list"]:
+            for [ID, status, excl_crit] in data["screening_criteria_list"]:
                 # print([ID, status, excl_crit])
                 if not re.match(pattern, excl_crit):
                     # Note: this should also catch cases of missing
-                    # exclusion criteria
+                    # screening criteria
                     field_errors.append(
-                        "Exclusion criteria field not matching "
+                        "Screening criteria field not matching "
                         f"pattern: {excl_crit} ({ID}; criteria: {criteria})"
                     )
 
@@ -1637,33 +1626,35 @@ class ReviewDataset:
                         else:
                             field_errors.append(f"excl_crit field not NA: {excl_crit}")
 
-                    if "=yes" not in excl_crit:
+                    if "=out" not in excl_crit:
                         logging.error(f"criteria: {criteria}")
                         field_errors.append(
-                            "Excluded record with no exclusion_criterion violated: "
+                            "Excluded record with no screening_criterion violated: "
                             f"{ID}, {status}, {excl_crit}"
                         )
 
                 # Note: we don't have to consider the cases of
                 # status=retrieved/prescreen_included/prescreen_excluded
-                # because they would not have exclusion_criteria.
+                # because they would not have screening_criteria.
                 elif status in [
                     str(RecordState.rev_included),
                     str(RecordState.rev_synthesized),
                 ]:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
-                            "Included record with exclusion_criterion satisfied: "
+                            "Included record with screening_criterion satisfied: "
                             f"{ID}, {status}, {excl_crit}"
                         )
                 else:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
-                            "Record with exclusion_criterion but before "
+                            "Record with screening_criterion but before "
                             f"screen: {ID}, {status}"
                         )
         if len(field_errors) > 0:
-            raise FieldValueError("\n    " + "\n    ".join(field_errors))
+            raise colrev_exceptions.FieldValueError(
+                "\n    " + "\n    ".join(field_errors)
+            )
         return
 
     # def check_screen_data(screen, data):
@@ -1761,7 +1752,7 @@ class ReviewDataset:
         for prior_origin, prior_id in prior["persisted_IDs"]:
             if prior_origin not in [x[0] for x in data["persisted_IDs"]]:
                 # Note: this does not catch origins removed before md_processed
-                raise OriginError(f"origin removed: {prior_origin}")
+                raise colrev_exceptions.OriginError(f"origin removed: {prior_origin}")
             for new_origin, new_id in data["persisted_IDs"]:
                 if new_origin == prior_origin:
                     if new_id != prior_id:
@@ -1772,7 +1763,7 @@ class ReviewDataset:
                             "ID of processed record changed from "
                             f"{prior_id} to {new_id}"
                         )
-                        raise PropagatedIDChange(notifications)
+                        raise colrev_exceptions.PropagatedIDChange(notifications)
         return
 
     def check_sources(self) -> None:
@@ -1789,7 +1780,7 @@ class ReviewDataset:
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
             if str(SOURCE.search_type) not in SearchType._member_names_:
-                raise SearchSettingsError(
+                raise colrev_exceptions.SearchSettingsError(
                     f"{SOURCE.search_type} not in {SearchType._member_names_}"
                 )
 
@@ -1815,7 +1806,7 @@ class ReviewDataset:
         """Get the git repository object (requires REVIEW_MANAGER.notify(...))"""
 
         if self.REVIEW_MANAGER.notified_next_process is None:
-            raise ReviewManagerNotNofiedError()
+            raise colrev_exceptions.ReviewManagerNotNofiedError()
         return self.__git_repo
 
     def has_changes(self) -> bool:

@@ -17,3 +17,13 @@ colrev\_core.built\_in.prescreen.ScopePrescreenEndpoint
       :nosignatures:
 
       ~ScopePrescreenEndpoint.run_prescreen
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~ScopePrescreenEndpoint.title_complementary_materials_keywords

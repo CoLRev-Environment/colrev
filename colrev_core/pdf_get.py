@@ -120,6 +120,7 @@ class PDF_Retrieval(Process):
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
                 RECORD.data.update(colrev_status=RecordState.pdf_imported)
+                break
             else:
                 RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
 
@@ -137,7 +138,7 @@ class PDF_Retrieval(Process):
     def relink_files(self) -> None:
         def relink_pdf_files(records):
             # Relink files in source file
-            SOURCES = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+            SOURCES = self.REVIEW_MANAGER.settings.sources
             feed_filename = ""
             feed_filepath = ""
             source_records = []
@@ -328,36 +329,49 @@ class PDF_Retrieval(Process):
                 continue
 
             file = Path(record["file"])
-            new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
-                f"{record['ID']}.pdf"
-            )
+            new_filename = file.parents[0] / Path(f"{record['ID']}.pdf")
+            # Possible option: move to top (pdfs) directory:
+            # new_filename = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"] / Path(
+            #     f"{record['ID']}.pdf"
+            # )
             if str(file) == str(new_filename):
                 continue
 
+            # This should replace the file fields
+            __inplace_change(
+                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+                old_string="{" + str(file) + "}",
+                new_string="{" + str(new_filename) + "}",
+            )
+            # This should replace the provenance dict fields
+            __inplace_change(
+                filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
+                old_string=":" + str(file) + ";",
+                new_string=":" + str(new_filename) + ";",
+            )
+
+            if pdfs_search_file.is_file():
+                __inplace_change(
+                    filename=pdfs_search_file,
+                    old_string=str(file),
+                    new_string=str(new_filename),
+                )
+
+            if not file.is_file():
+                corrected_path = Path(str(file).replace("  ", " "))
+                if corrected_path.is_file():
+                    file = corrected_path
+
             if file.is_file():
-                if pdfs_search_file.is_file():
-                    __inplace_change(
-                        filename=pdfs_search_file,
-                        old_string=str(file),
-                        new_string=str(new_filename),
-                    )
                 file.rename(new_filename)
-                record["file"] = str(new_filename)
-                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
-            if file.is_symlink():
-                if pdfs_search_file.is_file():
-                    __inplace_change(
-                        filename=pdfs_search_file,
-                        old_string=str(file),
-                        new_string=str(new_filename),
-                    )
+            elif file.is_symlink():
                 os.rename(str(file), str(new_filename))
-                record["file"] = str(new_filename)
-                self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
+
+            record["file"] = str(new_filename)
+            self.REVIEW_MANAGER.logger.info(f"rename {file.name} > {new_filename}")
 
         if pdfs_search_file.is_file():
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(pdfs_search_file))
-        self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
         return
@@ -372,42 +386,77 @@ class PDF_Retrieval(Process):
             ]
         )
 
-        PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
             conditions=[{"colrev_status": RecordState.rev_prescreen_included}],
         )
 
-        prep_data = {
-            "nr_tasks": nr_tasks,
-            "PAD": PAD,
-            "items": items,
-        }
-        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
-        return prep_data
+        self.to_retrieve = nr_tasks
 
-    def __batch(self, *, items: typing.List[typing.Dict]):
-        # TODO : no longer batch...
-        batch = []
-        for item in items:
-            batch.append(
-                {
-                    "record": item,
-                }
-            )
-        yield batch
+        pdf_get_data = {
+            "nr_tasks": nr_tasks,
+            "items": [{"record": item} for item in items],
+        }
+        self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(pdf_get_data))
+
+        self.REVIEW_MANAGER.logger.debug(
+            f"pdf_get_data: {self.REVIEW_MANAGER.pp.pformat(pdf_get_data)}"
+        )
+
+        self.REVIEW_MANAGER.logger.debug(
+            self.REVIEW_MANAGER.pp.pformat(pdf_get_data["items"])
+        )
+
+        return pdf_get_data
+
+    def _print_stats(self, *, retrieved_record_list) -> None:
+
+        self.retrieved = len([r for r in retrieved_record_list if "file" in r])
+
+        self.not_retrieved = self.to_retrieve - self.retrieved
+
+        retrieved_string = "Retrieved: "
+        if self.retrieved == 0:
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += " PDFs"
+        elif self.retrieved == 1:
+            retrieved_string += "\033[92m"
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += "\033[0m PDF"
+        else:
+            retrieved_string += "\033[92m"
+            retrieved_string += f"{self.retrieved}".rjust(11, " ")
+            retrieved_string += "\033[0m PDFs"
+
+        not_retrieved_string = "Missing:   "
+        if self.not_retrieved == 0:
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += " PDFs"
+        elif self.not_retrieved == 1:
+            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += "\033[0m PDF"
+        else:
+            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
+            not_retrieved_string += "\033[0m PDFs"
+
+        self.REVIEW_MANAGER.logger.info(retrieved_string)
+        self.REVIEW_MANAGER.logger.info(not_retrieved_string)
+
+        return
 
     def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
 
         for record in records.values():
-            if record["colrev_status"] == RecordState.rev_prescreen_included:
+            if record["colrev_status"] in [
+                RecordState.rev_prescreen_included,
+                RecordState.pdf_needs_manual_retrieval,
+            ]:
                 if "file" in record:
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
                         record["colrev_status"] = RecordState.pdf_imported
-                        self.REVIEW_MANAGER.logger.info(
-                            f'Set colrev_status to pdf_imported for {record["ID"]}'
-                        )
                     else:
                         print(
                             "Warning: record with file field but no existing PDF "
@@ -450,40 +499,38 @@ class PDF_Retrieval(Process):
         records = self.check_existing_unlinked_pdfs(records=records)
 
         pdf_get_data = self.__get_data()
-        self.REVIEW_MANAGER.logger.debug(
-            f"pdf_get_data: {self.REVIEW_MANAGER.pp.pformat(pdf_get_data)}"
-        )
 
-        self.REVIEW_MANAGER.logger.debug(
-            self.REVIEW_MANAGER.pp.pformat(pdf_get_data["items"])
-        )
+        if pdf_get_data["nr_tasks"] > 0:
 
-        i = 1
-        for retrieval_batch in self.__batch(items=pdf_get_data["items"]):
-
-            print(f"Batch {i}")
-            i += 1
-
-            retrieval_batch = p_map(self.retrieve_pdf, retrieval_batch)
+            retrieved_record_list = p_map(self.retrieve_pdf, pdf_get_data["items"])
 
             self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                record_list=retrieval_batch
+                record_list=retrieved_record_list
             )
 
             # Multiprocessing mixes logs of different records.
             # For better readability:
-            self.REVIEW_MANAGER.reorder_log(IDs=[x["ID"] for x in retrieval_batch])
+            self.REVIEW_MANAGER.reorder_log(
+                IDs=[x["ID"] for x in retrieved_record_list]
+            )
 
             # Note: rename should be after copy.
             # Note : do not pass records as an argument.
-            self.rename_pdfs()
+            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+                self.rename_pdfs()
 
-            self.REVIEW_MANAGER.create_commit(
-                msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
-            )
-
-        if i == 1:
+            self._print_stats(retrieved_record_list=retrieved_record_list)
+        else:
             self.REVIEW_MANAGER.logger.info("No additional pdfs to retrieve")
+
+            # Note: rename should be after copy.
+            # Note : do not pass records as an argument.
+            if self.REVIEW_MANAGER.settings.pdf_get.rename_pdfs:
+                self.rename_pdfs()
+
+        self.REVIEW_MANAGER.create_commit(
+            msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
+        )
 
         return
 

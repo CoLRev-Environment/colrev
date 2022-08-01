@@ -19,3 +19,13 @@ colrev\_core.built\_in.screen.SpreadsheetScreenEndpoint
       ~SpreadsheetScreenEndpoint.export_table
       ~SpreadsheetScreenEndpoint.import_table
       ~SpreadsheetScreenEndpoint.run_screen
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~SpreadsheetScreenEndpoint.spreadsheet_path

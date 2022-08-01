@@ -3,9 +3,8 @@ import re
 import typing
 from pathlib import Path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import AdapterManager
-from colrev_core.exceptions import InvalidQueryException
-from colrev_core.exceptions import NoSearchFeedRegistered
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -48,11 +47,13 @@ class Search(Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.sources = REVIEW_MANAGER.REVIEW_DATASET.load_sources()
+        self.SOURCES = REVIEW_MANAGER.settings.sources
 
         self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
-            scripts=[s.search_script for s in REVIEW_MANAGER.settings.sources],
+            scripts=[
+                s.search_script for s in self.SOURCES if "endpoint" in s.search_script
+            ],
         )
 
     def save_feed_file(self, records: dict, feed_file: Path) -> None:
@@ -60,9 +61,7 @@ class Search(Process):
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
-            str(r["ID"])
-            .lower()
-            .replace(" ", ""): {
+            str(r["ID"]).replace(" ", ""): {
                 k.lower()
                 .replace(" ", "_")
                 .replace("id", "ID")
@@ -153,7 +152,7 @@ class Search(Process):
     def validate_query(self, *, query: str) -> None:
 
         if " FROM " not in query:
-            raise InvalidQueryException('Query missing "FROM" clause')
+            raise colrev_exceptions.InvalidQueryException('Query missing "FROM" clause')
 
         sources = self.parse_sources(query=query)
 
@@ -180,7 +179,7 @@ class Search(Process):
                 violations = [
                     source for source in sources if source in individual_sources
                 ]
-                raise InvalidQueryException(
+                raise colrev_exceptions.InvalidQueryException(
                     "Multiple query sources include a source that can only be"
                     f" used individually: {violations}"
                 )
@@ -238,9 +237,6 @@ class Search(Process):
         # https://medlinetranspose.github.io/documentation.html
         # https://sr-accelerator.com/#/help/polyglot
 
-        # Zotero connector:
-        # https://github.com/urschrei/pyzotero
-
         # Start with basic query
         # RETRIEVE * FROM crossref,dblp WHERE digital AND platform
         # Note: corresponds to "digital[all] AND platform[all]"
@@ -272,14 +268,12 @@ class Search(Process):
             print("Error: missing WHERE or SCOPE clause in query")
             return
 
-        source_details = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-
         for source_name in sources:
             duplicate_source = []
             try:
                 duplicate_source = [
                     x
-                    for x in source_details
+                    for x in self.SOURCES
                     if source_name == x["search_parameters"][0]["endpoint"]
                     and selection == x["search_parameters"][0]["params"]
                 ]
@@ -298,7 +292,8 @@ class Search(Process):
             else:
                 filename = f"{source_name}.bib"
                 i = 0
-                while filename in [x.filename for x in source_details]:
+                # TODO : filename may not yet exist (e.g., in other search feeds)
+                while filename in [x.filename for x in self.SOURCES]:
                     i += 1
                     filename = filename[: filename.find("_query") + 6] + f"_{i}.bib"
 
@@ -337,7 +332,7 @@ class Search(Process):
                 comment="",
             )
             self.REVIEW_MANAGER.pp.pprint(add_source)
-            self.REVIEW_MANAGER.sources.append(add_source)
+            self.REVIEW_MANAGER.settings.sources.append(add_source)
             self.REVIEW_MANAGER.save_settings()
 
             self.REVIEW_MANAGER.create_commit(
@@ -350,17 +345,36 @@ class Search(Process):
 
         return
 
+    def remove_forthcoming(self, *, SOURCE):
+        self.REVIEW_MANAGER.logger.info("Remove forthcoming")
+
+        with open(SOURCE.feed_file, encoding="utf8") as bibtex_file:
+            records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                load_str=bibtex_file.read()
+            )
+
+            record_list = records.values()
+            record_list = [r for r in record_list if "forthcoming" != r.get("year", "")]
+            records = {r["ID"]: r for r in record_list}
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
+                records=records, save_path=SOURCE.feed_file
+            )
+
+        return
+
     def main(self, *, selection_str: str) -> None:
 
         # Reload the settings because the search sources may have been updated
         self.REVIEW_MANAGER.settings = self.REVIEW_MANAGER.load_settings()
 
         # TODO : when the search_file has been filled only query the last years
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
 
         def load_automated_search_sources() -> list:
 
-            AUTOMATED_SOURCES = [x for x in sources if "endpoint" in x.search_script]
+            AUTOMATED_SOURCES = [
+                x for x in self.SOURCES if "endpoint" in x.search_script
+            ]
 
             AUTOMATED_SOURCES_SELECTED = AUTOMATED_SOURCES
             if selection_str is not None:
@@ -375,7 +389,7 @@ class Search(Process):
                         [str(f.filename) for f in AUTOMATED_SOURCES]
                     )
                     print(f"Error: {selection_str} not in {available_options}")
-                    raise NoSearchFeedRegistered()
+                    raise colrev_exceptions.NoSearchFeedRegistered()
 
             for SOURCE in AUTOMATED_SOURCES_SELECTED:
                 SOURCE.feed_file = self.REVIEW_MANAGER.path / Path(SOURCE.filename)
@@ -399,6 +413,9 @@ class Search(Process):
             )
 
             if SOURCE.feed_file.is_file():
+                if not self.REVIEW_MANAGER.settings.search.retrieve_forthcoming:
+                    self.remove_forthcoming(SOURCE=SOURCE)
+
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                     path=str(SOURCE.feed_file)
                 )
@@ -437,9 +454,9 @@ class Search(Process):
         return
 
     def view_sources(self) -> None:
-        sources = self.REVIEW_MANAGER.REVIEW_DATASET.load_sources()
-        for source in sources:
-            self.REVIEW_MANAGER.pp.pprint(source)
+
+        for SOURCE in self.SOURCES:
+            self.REVIEW_MANAGER.pp.pprint(SOURCE)
 
         print("\nOptions:")
         options = ", ".join(list(self.search_scripts.keys()))

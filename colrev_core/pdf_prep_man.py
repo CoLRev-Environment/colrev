@@ -70,25 +70,6 @@ class PDFPrepMan(Process):
         )
         return cpid1
 
-    def set_data(self, *, record: dict) -> None:
-        from colrev_core.record import Record
-
-        record.update(colrev_status=RecordState.pdf_prepared)
-
-        RECORD = Record(data=record)
-        RECORD.reset_pdf_provenance_notes()
-        record = RECORD.get_data()
-
-        pdf_path = Path(self.REVIEW_MANAGER.path / Path(record["file"]))
-        record.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
-            path=str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
-        )
-
-        return
-
     def pdfs_prepared_manually(self) -> bool:
         return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 
@@ -181,7 +162,7 @@ class PDFPrepMan(Process):
             records=records, save_path=prep_bib_path
         )
 
-        bib_db_df = pd.DataFrame.from_records(records.values())
+        bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
         col_names = [
             "ID",

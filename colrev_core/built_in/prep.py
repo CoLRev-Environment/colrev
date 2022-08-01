@@ -13,12 +13,13 @@ from alphabet_detector import AlphabetDetector
 from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from opensearchpy import NotFoundError
+from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.built_in.database_connectors import CrossrefConnector
 from colrev_core.built_in.database_connectors import DBLPConnector
 from colrev_core.built_in.database_connectors import DOIConnector
-from colrev_core.environment import RecordNotInIndexException
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationEndpoint
 from colrev_core.record import PrepRecord
@@ -294,7 +295,7 @@ class GlobalIDConsistencyPrep:
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
         if "doi" in RECORD.data:
-            R_COPY = PrepRecord(data=RECORD.copy_prep_rec())
+            R_COPY = RECORD.copy_prep_rec()
             CROSSREF_MD = CrossrefConnector.get_masterdata_from_crossref(
                 PREPARATION=PREPARATION, RECORD=R_COPY
             )
@@ -315,14 +316,14 @@ class GlobalIDConsistencyPrep:
                         RECORD.data[
                             "colrev_status"
                         ] = RecordState.md_needs_manual_preparation
-                        RECORD.add_masterdata_provenance_hint(
-                            key=k, hint=f"disagreement with doi metadata ({v})"
+                        RECORD.add_masterdata_provenance_note(
+                            key=k, note=f"disagreement with doi metadata ({v})"
                         )
 
         if "url" in RECORD.data:
             try:
                 URL_CONNECTOR = database_connectors.URLConnector()
-                URL_MD = PrepRecord(data=RECORD.copy_prep_rec())
+                URL_MD = RECORD.copy_prep_rec()
                 URL_MD = URL_CONNECTOR.retrieve_md_from_url(
                     RECORD=URL_MD, PREPARATION=PREPARATION
                 )
@@ -343,9 +344,9 @@ class GlobalIDConsistencyPrep:
                             RECORD.data[
                                 "colrev_status"
                             ] = RecordState.md_needs_manual_preparation
-                            RECORD.add_masterdata_provenance_hint(
+                            RECORD.add_masterdata_provenance_note(
                                 key=k,
-                                hint=f"disagreement with website metadata ({v})",
+                                note=f"disagreement with website metadata ({v})",
                             )
             except AttributeError:
                 pass
@@ -404,30 +405,43 @@ class FormatPrep:
                     .replace("}", "")
                 )
 
-        if "author" in RECORD.data:
+        if "author" in RECORD.data and "UNKNOWN" != RECORD.data.get(
+            "author", "UNKNOWN"
+        ):
             # DBLP appends identifiers to non-unique authors
-            RECORD.data.update(
-                author=str(re.sub(r"[0-9]{4}", "", RECORD.data["author"]))
+            RECORD.update_field(
+                key="author",
+                value=str(re.sub(r"[0-9]{4}", "", RECORD.data["author"])),
+                source="FormatPrep",
+                keep_source_if_equal=True,
             )
 
             # fix name format
             if (1 == len(RECORD.data["author"].split(" ")[0])) or (
                 ", " not in RECORD.data["author"]
             ):
-                RECORD.data.update(
-                    author=PrepRecord.format_author_field(
+                RECORD.update_field(
+                    key="author",
+                    value=PrepRecord.format_author_field(
                         input_string=RECORD.data["author"]
-                    )
+                    ),
+                    source="FormatPrep",
+                    keep_source_if_equal=True,
                 )
 
-        if "title" in RECORD.data:
-            RECORD.data.update(
-                title=re.sub(r"\s+", " ", RECORD.data["title"]).rstrip(".")
+        if "title" in RECORD.data and "UNKNOWN" != RECORD.data.get("title", "UNKNOWN"):
+            RECORD.update_field(
+                key="title",
+                value=re.sub(r"\s+", " ", RECORD.data["title"]).rstrip("."),
+                source="FormatPrep",
+                keep_source_if_equal=True,
             )
             if "UNKNOWN" != RECORD.data["title"]:
                 RECORD.format_if_mostly_upper(key="title")
 
-        if "booktitle" in RECORD.data:
+        if "booktitle" in RECORD.data and "UNKNOWN" != RECORD.data.get(
+            "booktitle", "UNKNOWN"
+        ):
             if "UNKNOWN" != RECORD.data["booktitle"]:
                 RECORD.format_if_mostly_upper(key="booktitle", case="title")
 
@@ -441,18 +455,30 @@ class FormatPrep:
                     "Proceedings of the", ""
                 ).replace("Proceedings", "")
                 stripped_btitle = stripped_btitle.lstrip().rstrip()
-                RECORD.data.update(booktitle=stripped_btitle)
+                RECORD.update_field(
+                    key="booktitle",
+                    value=stripped_btitle,
+                    source="FormatPrep",
+                    keep_source_if_equal=True,
+                )
 
         if "date" in RECORD.data and "year" not in RECORD.data:
             year = re.search(r"\d{4}", RECORD.data["date"])
             if year:
-                RECORD.data["year"] = year.group(0)
+                RECORD.update_field(
+                    key="year",
+                    value=year.group(0),
+                    source="FormatPrep",
+                    keep_source_if_equal=True,
+                )
 
-        if "journal" in RECORD.data:
+        if "journal" in RECORD.data and "UNKNOWN" != RECORD.data.get(
+            "journal", "UNKNOWN"
+        ):
             if len(RECORD.data["journal"]) > 10 and "UNKNOWN" != RECORD.data["journal"]:
                 RECORD.format_if_mostly_upper(key="journal", case="title")
 
-        if "pages" in RECORD.data:
+        if "pages" in RECORD.data and "UNKNOWN" != RECORD.data.get("pages", "UNKNOWN"):
             if "N.PAG" == RECORD.data.get("pages", ""):
                 RECORD.remove_field(key="pages")
             else:
@@ -469,20 +495,41 @@ class FormatPrep:
 
         if "language" in RECORD.data:
             # TODO : use https://pypi.org/project/langcodes/
-            RECORD.data["language"] = (
-                RECORD.data["language"].replace("English", "en").replace("ENG", "en")
+            RECORD.update_field(
+                key="language",
+                value=RECORD.data["language"]
+                .replace("English", "en")
+                .replace("ENG", "en"),
+                source="FormatPrep",
+                keep_source_if_equal=True,
             )
 
         if "doi" in RECORD.data:
-            RECORD.data.update(
-                doi=RECORD.data["doi"].replace("http://dx.doi.org/", "").upper()
+            RECORD.update_field(
+                key="doi",
+                value=RECORD.data["doi"].replace("http://dx.doi.org/", "").upper(),
+                source="FormatPrep",
+                keep_source_if_equal=True,
             )
 
         if "number" not in RECORD.data and "issue" in RECORD.data:
-            RECORD.data.update(number=RECORD.data["issue"])
+            RECORD.update_field(
+                key="number",
+                value=RECORD.data["issue"],
+                source="FormatPrep",
+                keep_source_if_equal=True,
+            )
             RECORD.remove_field(key="issue")
-        if "volume" in RECORD.data:
-            RECORD.data.update(volume=RECORD.data["volume"].replace("Volume ", ""))
+
+        if "volume" in RECORD.data and "UNKNOWN" != RECORD.data.get(
+            "volume", "UNKNOWN"
+        ):
+            RECORD.update_field(
+                key="volume",
+                value=RECORD.data["volume"].replace("Volume ", ""),
+                source="FormatPrep",
+                keep_source_if_equal=True,
+            )
 
         if "url" in RECORD.data and "fulltext" in RECORD.data:
             if RECORD.data["url"] == RECORD.data["fulltext"]:
@@ -632,6 +679,9 @@ class SemanticScholarPrep:
 
     def prepare(self, PREPARATION, RECORD):
 
+        same_record_type_required = (
+            PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
+        )
         try:
             search_api_url = (
                 "https://api.semanticscholar.org/graph/v1/paper/search?query="
@@ -646,14 +696,15 @@ class SemanticScholarPrep:
 
             # Remove fields that are not/rarely available before
             # calculating similarity metrics
-            red_record_copy = RECORD.copy_prep_rec()
+            RED_REC_COPY = RECORD.copy_prep_rec()
             for key in ["volume", "number", "number", "pages"]:
-                if key in red_record_copy:
+                if key in RED_REC_COPY.data:
                     RECORD.remove_field(key=key)
-            RED_REC_COPY = PrepRecord(data=red_record_copy)
 
             similarity = PrepRecord.get_retrieval_similarity(
-                RECORD_ORIGINAL=RED_REC_COPY, RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD
+                RECORD_ORIGINAL=RED_REC_COPY,
+                RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+                same_record_type_required=same_record_type_required,
             )
             if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
                 PREPARATION.REVIEW_MANAGER.logger.debug("Found matching record")
@@ -697,6 +748,11 @@ class DOIFromURLsPrep:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
+
+        same_record_type_required = (
+            PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
+        )
+
         url = RECORD.data.get("url", RECORD.data.get("fulltext", "NA"))
         if "NA" != url:
             try:
@@ -732,6 +788,7 @@ class DOIFromURLsPrep:
                         similarity = PrepRecord.get_retrieval_similarity(
                             RECORD_ORIGINAL=RECORD,
                             RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+                            same_record_type_required=same_record_type_required,
                         )
                         if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
                             RECORD.merge(
@@ -811,6 +868,10 @@ class DBLPMetadataPrep:
         if "dblp_key" in RECORD.data:
             return RECORD
 
+        same_record_type_required = (
+            PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
+        )
+
         try:
             query = "" + RECORD.data.get("title", "").replace("-", "_")
             # Note: queries combining title+author/journal do not seem to work any more
@@ -829,7 +890,9 @@ class DBLPMetadataPrep:
                 session=PREPARATION.session,
             ):
                 similarity = PrepRecord.get_retrieval_similarity(
-                    RECORD_ORIGINAL=RECORD, RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD
+                    RECORD_ORIGINAL=RECORD,
+                    RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+                    same_record_type_required=same_record_type_required,
                 )
                 if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
                     PREPARATION.REVIEW_MANAGER.logger.debug("Found matching record")
@@ -991,6 +1054,91 @@ class OpenLibraryMetadataPrep:
 
 
 @zope.interface.implementer(PreparationEndpoint)
+class CiteAsPrep:
+
+    source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
+    always_apply_changes = False
+
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+    def prepare(self, PREPARATION, RECORD):
+        def cite_as_json_to_record(*, data: dict, url=str) -> PrepRecord:
+            retrieved_record: dict = {}
+
+            if "author" in data["metadata"]:
+                authors = data["metadata"]["author"]
+                authors_string = ""
+                for author in authors:
+                    authors_string += author.get("family", "") + ", "
+                    authors_string += author.get("given", "") + " "
+                authors_string = authors_string.lstrip().rstrip().replace("  ", " ")
+                retrieved_record.update(author=authors_string)
+            if "container-title" in data["metadata"]:
+                retrieved_record.update(title=data["metadata"]["container-title"])
+            if "URL" in data["metadata"]:
+                retrieved_record.update(url=data["metadata"]["URL"])
+            if "note" in data["metadata"]:
+                retrieved_record.update(note=data["metadata"]["note"])
+            if "type" in data["metadata"]:
+                retrieved_record.update(ENTRYTYPE=data["metadata"]["type"])
+            if "year" in data["metadata"]:
+                retrieved_record.update(year=data["metadata"]["year"])
+            if "DOI" in data["metadata"]:
+                retrieved_record.update(doi=data["metadata"]["DOI"])
+
+            REC = PrepRecord(data=retrieved_record)
+            REC.add_provenance_all(source=url)
+            return REC
+
+        if RECORD.data.get("ENTRYTYPE", "NA") not in ["misc", "software"]:
+            return RECORD
+        if "title" not in RECORD.data:
+            return RECORD
+
+        same_record_type_required = (
+            PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
+        )
+        try:
+
+            url = (
+                f"https://api.citeas.org/product/{RECORD.data['title']}?"
+                + f"email={PREPARATION.REVIEW_MANAGER.EMAIL}"
+            )
+            ret = PREPARATION.session.request(
+                "GET",
+                url,
+                headers=PREPARATION.requests_headers,
+                timeout=PREPARATION.TIMEOUT,
+            )
+            ret.raise_for_status()
+            PREPARATION.REVIEW_MANAGER.logger.debug(url)
+
+            data = json.loads(ret.text)
+
+            RETRIEVED_RECORD = cite_as_json_to_record(data=data, url=url)
+
+            similarity = PrepRecord.get_retrieval_similarity(
+                RECORD_ORIGINAL=RETRIEVED_RECORD,
+                RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+                same_record_type_required=same_record_type_required,
+            )
+            if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
+
+                RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
+
+        except requests.exceptions.RequestException:
+            pass
+        except UnicodeEncodeError:
+            PREPARATION.REVIEW_MANAGER.logger.error(
+                "UnicodeEncodeError - this needs to be fixed at some time"
+            )
+            pass
+
+        return RECORD
+
+
+@zope.interface.implementer(PreparationEndpoint)
 class CrossrefYearVolIssPrep:
 
     source_correction_hint = (
@@ -1004,43 +1152,35 @@ class CrossrefYearVolIssPrep:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare(self, PREPARATION, RECORD):
+
         # The year depends on journal x volume x issue
         if (
             "journal" in RECORD.data
             and "volume" in RECORD.data
             and "number" in RECORD.data
-        ) and "year" not in RECORD.data:
+        ) and "UNKNOWN" == RECORD.data.get("year", "UNKNOWN"):
             pass
         else:
             return RECORD
 
         try:
-            modified_record = RECORD.copy_prep_rec()
-            modified_record = {
-                k: v
-                for k, v in modified_record.items()
-                if k in ["journal", "volume", "number"]
-            }
-
-            # http://api.crossref.org/works?
-            # query.container-title=%22MIS+Quarterly%22&query=%2216+2%22
 
             RETRIEVED_REC_L = CrossrefConnector.crossref_query(
-                REVIEW_MANAGER=self.REVIEW_MANAGER,
+                REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 RECORD_INPUT=RECORD,
                 jour_vol_iss_list=True,
-                session=self.session,
-                TIMEOUT=self.TIMEOUT,
+                session=PREPARATION.session,
+                TIMEOUT=PREPARATION.TIMEOUT,
             )
             retries = 0
             while not RETRIEVED_REC_L and retries < PREPARATION.MAX_RETRIES_ON_ERROR:
                 retries += 1
                 RETRIEVED_REC_L = CrossrefConnector.crossref_query(
-                    REVIEW_MANAGER=self.REVIEW_MANAGER,
+                    REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                     RECORD_INPUT=RECORD,
                     jour_vol_iss_list=True,
-                    session=self.session,
-                    TIMEOUT=self.TIMEOUT,
+                    session=PREPARATION.session,
+                    TIMEOUT=PREPARATION.TIMEOUT,
                 )
             if 0 == len(RETRIEVED_REC_L):
                 return RECORD
@@ -1052,6 +1192,7 @@ class CrossrefYearVolIssPrep:
                 and REC.data.get("journal", "NA") == RECORD.data.get("journal", "NA")
                 and REC.data.get("number", "NA") == RECORD.data.get("number", "NA")
             ]
+
             years = [r.data["year"] for r in RETRIEVED_RECORDS]
             if len(years) == 0:
                 return RECORD
@@ -1089,6 +1230,17 @@ class LocalIndexPrep:
 
         # TODO: how to distinguish masterdata and complementary CURATED sources?
 
+        # TBD: maybe extract the following three lines as a separate script...
+        if not RECORD.masterdata_is_curated():
+            year = self.LOCAL_INDEX.get_year_from_toc(record=RECORD.get_data())
+            if "NA" != year:
+                RECORD.update_field(
+                    key="year",
+                    value=year,
+                    source="LocalIndexPrep",
+                    keep_source_if_equal=True,
+                )
+
         # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
         # because it creates problems with multiprocessing
         retrieved = False
@@ -1097,7 +1249,7 @@ class LocalIndexPrep:
                 record=RECORD.get_data(), include_file=False
             )
             retrieved = True
-        except (RecordNotInIndexException, NotFoundError):
+        except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
             pass
             try:
                 # Note: Records can be CURATED without being indexed
@@ -1108,7 +1260,11 @@ class LocalIndexPrep:
                         include_file=False,
                     )
                     retrieved = True
-            except (RecordNotInIndexException, NotFoundError):
+            except (
+                colrev_exceptions.RecordNotInIndexException,
+                NotFoundError,
+                TransportError,
+            ):
                 pass
 
         if retrieved:

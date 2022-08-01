@@ -19,20 +19,10 @@ import git
 import yaml
 from dacite import from_dict
 
-from colrev_core import review_dataset
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import EnvironmentManager
-from colrev_core.exceptions import CoLRevUpgradeError
-from colrev_core.exceptions import DirtyRepoAfterProcessingError
-from colrev_core.exceptions import GitConflictError
-from colrev_core.exceptions import MissingDependencyError
-from colrev_core.exceptions import RepoSetupError
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
-from colrev_core.process import UnstagedGitChangesError
-from colrev_core.review_dataset import DuplicateIDsError
-from colrev_core.review_dataset import FieldValueError
-from colrev_core.review_dataset import OriginError
-from colrev_core.review_dataset import PropagatedIDChange
 from colrev_core.settings import Configuration
 
 
@@ -107,8 +97,7 @@ class ReviewManager:
             self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
             self.REVIEW_DATASET = ReviewDataset(REVIEW_MANAGER=self)
             """The review dataset object"""
-            self.sources = self.REVIEW_DATASET.load_sources()
-            """Information on sources (search directory)"""
+
         except Exception as e:
             if force_mode:
                 print(e)
@@ -309,7 +298,7 @@ class ReviewManager:
     def __check_software(self) -> None:
         last_version, current_version = self.__get_colrev_versions()
         if last_version != current_version:
-            raise CoLRevUpgradeError(last_version, current_version)
+            raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
         return
 
     def upgrade_colrev(self) -> None:
@@ -542,7 +531,6 @@ class ReviewManager:
             self.save_settings()
 
             self.REVIEW_DATASET.add_setting_changes()
-            self.sources = self.REVIEW_DATASET.load_sources()
             records = self.REVIEW_DATASET.load_records_dict()
             if len(records.values()) > 0:
                 for record in records.values():
@@ -673,14 +661,25 @@ class ReviewManager:
                     else:
                         source["search_type"] = "DB"
 
-            settings["pdf_get"]["scripts"].append({"endpoint": "website_screenshot"})
+            for round in settings["prep"]["prep_rounds"]:
+                round["scripts"] = [
+                    s
+                    for s in round["scripts"]
+                    if s["endpoint"]
+                    not in ["get_doi_from_sem_scholar", "update_metadata_status"]
+                ]
+
+            if "retrieve_forthcoming" not in settings["search"]:
+                if "colrev/curated_metadata" in str(self.path):
+                    settings["search"]["retrieve_forthcoming"] = False
+                else:
+                    settings["search"]["retrieve_forthcoming"] = True
+
             if settings["project"]["review_type"] == "NA":
                 if "curated_metadata" in str(self.path):
                     settings["project"]["review_type"] = "curated_masterdata"
                 else:
                     settings["project"]["review_type"] = "literature_review"
-
-            settings["prep"]["man_prep_scripts"] = [{"endpoint": "colrev_cli_man_prep"}]
 
             for prep_round in settings["prep"]["prep_rounds"]:
                 prep_round["scripts"] = [
@@ -724,9 +723,15 @@ class ReviewManager:
                     },
                 ]
 
+            if "rename_pdfs" not in settings["pdf_get"]:
+                settings["pdf_get"]["rename_pdfs"] = True
+
             settings["pdf_get"]["man_pdf_get_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_get_man"}
             ]
+            if "pdf_required_for_screen_and_synthesis" not in settings["pdf_get"]:
+                settings["pdf_get"]["pdf_required_for_screen_and_synthesis"] = True
+
             settings["pdf_prep"]["man_pdf_prep_scripts"] = [
                 {"endpoint": "colrev_cli_pdf_prep_man"}
             ]
@@ -742,6 +747,20 @@ class ReviewManager:
             self.settings = self.load_settings()
             self.save_settings()
             self.REVIEW_DATASET.add_setting_changes()
+
+            records = self.REVIEW_DATASET.load_records_dict()
+            if len(records.values()) > 0:
+                for record in records.values():
+                    if "exclusion_criteria" in record:
+                        record["screening_criteria"] = (
+                            record["exclusion_criteria"]
+                            .replace("=no", "=in")
+                            .replace("=yes", "=out")
+                        )
+                        del record["exclusion_criteria"]
+
+                self.REVIEW_DATASET.save_records_dict(records=records)
+                self.REVIEW_DATASET.add_record_changes()
 
             print("Manual steps required to rename references.bib > records.bib.")
 
@@ -817,11 +836,13 @@ class ReviewManager:
 
         # 1. git repository?
         if not self.__is_git_repo(path=self.paths["REPO_DIR"]):
-            raise RepoSetupError("no git repository. Use colrev_core init")
+            raise colrev_exceptions.RepoSetupError(
+                "no git repository. Use colrev_core init"
+            )
 
         # 2. colrev_core project?
         if not self.__is_colrev_core_project():
-            raise RepoSetupError(
+            raise colrev_exceptions.RepoSetupError(
                 "No colrev_core repository."
                 + "To retrieve a shared repository, use colrev_core init."
                 + "To initalize a new repository, "
@@ -836,9 +857,9 @@ class ReviewManager:
         # 4. Pre-commit hooks up-to-date?
         try:
             if not self.__hooks_up_to_date(installed_hooks=installed_hooks):
-                raise RepoSetupError(
+                raise colrev_exceptions.RepoSetupError(
                     "Pre-commit hooks not up-to-date. Use\n"
-                    + "colrev config --update_hooks"
+                    + "colrev settings --update_hooks"
                 )
                 # This could also be a warning, but hooks should not change often.
 
@@ -870,7 +891,7 @@ class ReviewManager:
             list_of_blobs = unmerged_blobs[path]
             for (stage, blob) in list_of_blobs:
                 if stage != 0:
-                    raise GitConflictError(path)
+                    raise colrev_exceptions.GitConflictError(path)
         return
 
     def __is_git_repo(self, *, path: Path) -> bool:
@@ -927,7 +948,7 @@ class ReviewManager:
             missing_hooks = [
                 x for x in required_hooks if x not in installed_hooks["hooks"]
             ]
-            raise RepoSetupError(
+            raise colrev_exceptions.RepoSetupError(
                 f"missing hooks in .pre-commit-config.yaml ({missing_hooks})"
             )
 
@@ -935,11 +956,11 @@ class ReviewManager:
         if pch_file.is_file():
             with open(pch_file, encoding="utf8") as f:
                 if "File generated by pre-commit" not in f.read(4096):
-                    raise RepoSetupError(
+                    raise colrev_exceptions.RepoSetupError(
                         "pre-commit hooks not installed (use pre-commit install)"
                     )
         else:
-            raise RepoSetupError(
+            raise colrev_exceptions.RepoSetupError(
                 "pre-commit hooks not installed (use pre-commit install)"
             )
 
@@ -947,12 +968,12 @@ class ReviewManager:
         if psh_file.is_file():
             with open(psh_file, encoding="utf8") as f:
                 if "File generated by pre-commit" not in f.read(4096):
-                    raise RepoSetupError(
+                    raise colrev_exceptions.RepoSetupError(
                         "pre-commit push hooks not installed "
                         "(use pre-commit install --hook-type pre-push)"
                     )
         else:
-            raise RepoSetupError(
+            raise colrev_exceptions.RepoSetupError(
                 "pre-commit push hooks not installed "
                 "(use pre-commit install --hook-type pre-push)"
             )
@@ -961,12 +982,12 @@ class ReviewManager:
         if pcmh_file.is_file():
             with open(pcmh_file, encoding="utf8") as f:
                 if "File generated by pre-commit" not in f.read(4096):
-                    raise RepoSetupError(
+                    raise colrev_exceptions.RepoSetupError(
                         "pre-commit prepare-commit-msg hooks not installed "
                         "(use pre-commit install --hook-type prepare-commit-msg)"
                     )
         else:
-            raise RepoSetupError(
+            raise colrev_exceptions.RepoSetupError(
                 "pre-commit prepare-commit-msg hooks not installed "
                 "(use pre-commit install --hook-type prepare-commit-msg)"
             )
@@ -1108,15 +1129,15 @@ class ReviewManager:
                         check_script["script"](**check_script["params"])
                 self.logger.debug(f'{check_script["script"].__name__}: passed\n')
             except (
-                MissingDependencyError,
-                GitConflictError,
-                PropagatedIDChange,
-                DuplicateIDsError,
-                OriginError,
-                FieldValueError,
-                review_dataset.StatusTransitionError,
-                UnstagedGitChangesError,
-                review_dataset.StatusFieldValueError,
+                colrev_exceptions.MissingDependencyError,
+                colrev_exceptions.GitConflictError,
+                colrev_exceptions.PropagatedIDChange,
+                colrev_exceptions.DuplicateIDsError,
+                colrev_exceptions.OriginError,
+                colrev_exceptions.FieldValueError,
+                colrev_exceptions.StatusTransitionError,
+                colrev_exceptions.UnstagedGitChangesError,
+                colrev_exceptions.StatusFieldValueError,
             ) as e:
                 pass
                 failure_items.append(f"{type(e).__name__}: {e}")
@@ -1186,7 +1207,10 @@ class ReviewManager:
             self.settings = self.load_settings()
             self.save_settings()
 
-        except (UnstagedGitChangesError, review_dataset.StatusFieldValueError) as e:
+        except (
+            colrev_exceptions.UnstagedGitChangesError,
+            colrev_exceptions.StatusFieldValueError,
+        ) as e:
             pass
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
 
@@ -1610,7 +1634,9 @@ class ReviewManager:
             self.logger.info("Created commit")
             self.reset_log()
             if self.REVIEW_DATASET.has_changes():
-                raise DirtyRepoAfterProcessingError("A clean repository is expected.")
+                raise colrev_exceptions.DirtyRepoAfterProcessingError(
+                    "A clean repository is expected."
+                )
             return True
         else:
             return False

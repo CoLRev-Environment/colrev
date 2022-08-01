@@ -23,6 +23,7 @@
         }
     ],
     "search": {
+        "retrieve_forthcoming": true
     },
     "load": {},
     "prep": {
@@ -171,6 +172,9 @@
                         "endpoint": "get_masterdata_from_dblp"
                     },
                     {
+                        "endpoint": "get_masterdata_from_citeas"
+                    },
+                    {
                         "endpoint": "get_masterdata_from_open_library"
                     },
                     {
@@ -207,9 +211,7 @@
                 "endpoint": "active_learning_training"
             },
             {
-                "endpoint": "active_learning_automated",
-                "merge_threshold": 0.8,
-                "partition_threshold": 0.5
+                "endpoint": "active_learning_automated"
             }
         ]
     },
@@ -227,6 +229,8 @@
     },
     "pdf_get": {
         "pdf_path_type": "symlink",
+        "pdf_required_for_screen_and_synthesis": true,
+        "rename_pdfs": true,
         "scripts": [
             {
                 "endpoint": "unpaywall"

@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.review_manager import ReviewManager
@@ -147,7 +148,6 @@ class Push(Process):
 
     def __apply_correction(self, *, source_url, change_list) -> None:
         from colrev_core.process import CheckProcess
-        from colrev_core.review_dataset import RecordNotInRepoException
         from colrev_core.record import Record
         import git
 
@@ -203,7 +203,7 @@ class Push(Process):
                     original_curated_record, records.values()
                 )
                 found = True
-            except RecordNotInRepoException:
+            except colrev_exceptions.RecordNotInRepoException:
                 pass
                 print(f"record not found: {original_curated_record['colrev_id']}")
 

@@ -12,7 +12,7 @@ import pandas as pd
 from nameparser import HumanName
 from thefuzz import fuzz
 
-from colrev_core.exceptions import NotEnoughDataToIdentifyException
+import colrev_core.exceptions as colrev_exceptions
 
 
 class Record:
@@ -42,6 +42,7 @@ class Record:
         "techreport": ["author", "title", "institution", "year"],
         "unpublished": ["title", "author", "year"],
         "misc": ["author", "title", "year"],
+        "software": ["author", "title", "url"],
     }
     """Fields requirements for respective ENTRYTYPE"""
 
@@ -70,7 +71,7 @@ class Record:
         "MOVED_DUPE",
     ]
 
-    preferred_sources = ["https://api.crossref.org/works/"]
+    preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
 
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -103,6 +104,9 @@ class Record:
         )
 
         return ret_str
+
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
     def copy(self):
         return Record(data=deepcopy(self.data))
@@ -144,7 +148,10 @@ class Record:
             list_to_return = []
             if "colrev_masterdata_provenance" == key:
                 for k, v in input_dict.items():
-                    list_to_return.append(f"{k}:{v['source']};{v['note']};")
+                    formated_node = ",".join(
+                        sorted(e for e in v["note"].split(",") if "" != e)
+                    )
+                    list_to_return.append(f"{k}:{v['source']};{formated_node};")
 
             elif "colrev_data_provenance" == key:
                 for k, v in input_dict.items():
@@ -158,34 +165,50 @@ class Record:
         def list_to_str(*, val: list) -> str:
             return ("\n" + " " * 36).join([f.rstrip() for f in val])
 
+        if not isinstance(self.data.get("colrev_id", []), list):
+            print(self.data)
+        assert isinstance(self.data.get("colrev_id", []), list)
+        assert all(x.startswith("colrev_id") for x in self.data.get("colrev_id", []))
+
         if stringify:
+
+            data_copy = deepcopy(self.data)
+
+            # TODO : maybe add to ReviewDataset.list_fields_keys?
+            if ";" in data_copy.get("colrev_origin", ""):
+                data_copy["colrev_origin"] = ";".join(
+                    sorted(list(set(data_copy["colrev_origin"].split(";"))))
+                )
 
             # separated by \n
             for key in ReviewDataset.list_fields_keys:
-                if key in self.data:
-                    if isinstance(self.data[key], str):
-                        self.data[key] = [
+                if key in data_copy:
+                    if isinstance(data_copy[key], str):
+                        data_copy[key] = [
                             element.lstrip().rstrip()
-                            for element in self.data[key].split(";")
+                            for element in data_copy[key].split(";")
                         ]
                     if "colrev_id" == key:
-                        self.data[key] = sorted(list(set(self.data[key])))
-                    for ind, val in enumerate(self.data[key]):
+                        data_copy[key] = sorted(list(set(data_copy[key])))
+                    for ind, val in enumerate(data_copy[key]):
                         if len(val) > 0:
                             if ";" != val[-1]:
-                                self.data[key][ind] = val + ";"
-                    self.data[key] = list_to_str(val=self.data[key])
+                                data_copy[key][ind] = val + ";"
+                    data_copy[key] = list_to_str(val=data_copy[key])
 
             for key in ReviewDataset.dict_fields_keys:
-                if key in self.data:
-                    if isinstance(self.data[key], dict):
-                        self.data[key] = save_field_dict(
-                            input_dict=self.data[key], key=key
+                if key in data_copy:
+                    if isinstance(data_copy[key], dict):
+                        data_copy[key] = save_field_dict(
+                            input_dict=data_copy[key], key=key
                         )
-                    if isinstance(self.data[key], list):
-                        self.data[key] = list_to_str(val=self.data[key])
+                    if isinstance(data_copy[key], list):
+                        data_copy[key] = list_to_str(val=data_copy[key])
 
-        return self.data
+            return data_copy
+
+        else:
+            return self.data
 
     def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
@@ -198,18 +221,19 @@ class Record:
                 try:
                     colrev_id = self.create_colrev_id()
                     if "colrev_id" not in self.data:
-                        self.data["colrev_id"] = colrev_id
+                        self.data["colrev_id"] = [colrev_id]
                     elif colrev_id not in self.data["colrev_id"]:
-                        self.data["colrev_id"] += ";" + colrev_id
+                        self.data["colrev_id"].append(colrev_id)
 
                     # else should not happen because colrev_ids should only be
                     # created once records are prepared (complete)
-                except NotEnoughDataToIdentifyException:
+                except colrev_exceptions.NotEnoughDataToIdentifyException:
                     pass
             else:
                 target_state = RecordState.md_needs_manual_preparation
 
         self.data["colrev_status"] = target_state
+        return
 
     def get_origins(self) -> list:
         if "colrev_origin" in self.data:
@@ -225,18 +249,6 @@ class Record:
 
     def shares_origins(self, *, other_record) -> bool:
         return any(x in other_record.get_origins() for x in self.get_origins())
-
-    def get_source_repo(self) -> str:
-        # priority: return source_link first (then check for source_path)
-        if "source_link" in self.data:
-            if self.data["source_link"] is not None:
-                if "http" in self.data["source_link"]:
-                    return self.data["source_link"]
-            else:
-                print("source_link: none")
-        if "source_path" in self.data:
-            return self.data["source_path"]
-        return "NO_SOURCE_INFO"
 
     def get_value(self, *, key: str, default=None):
         if default is not None:
@@ -258,7 +270,18 @@ class Record:
                 colrev_id = [cid.lstrip() for cid in self.data["colrev_id"].split(";")]
             elif isinstance(self.data["colrev_id"], list):
                 colrev_id = self.data["colrev_id"]
-        return colrev_id
+
+        return [c for c in colrev_id if len(c) > 20]
+
+    def has_overlapping_colrev_id(self, *, RECORD) -> bool:
+
+        own_colrev_ids = self.get_colrev_id()
+        other_colrev_ids = RECORD.get_colrev_id()
+        if len(own_colrev_ids) > 0 and len(other_colrev_ids) > 0:
+            if any(cid in own_colrev_ids for cid in other_colrev_ids):
+                return True
+
+        return False
 
     def update_field(
         self,
@@ -344,7 +367,7 @@ class Record:
                     self.data["colrev_id"] = colrev_id
                 elif colrev_id not in self.data["colrev_id"]:
                     self.data["colrev_id"].append(colrev_id)
-            except NotEnoughDataToIdentifyException:
+            except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
         return
 
@@ -356,6 +379,19 @@ class Record:
             for k, v in self.data.items()
             if k in self.identifying_field_keys
         ):
+            if not any(
+                k in self.data.get("colrev_masterdata_provenance", {})
+                for k in self.identifying_field_keys
+            ):
+                return True
+            else:
+                for k in self.identifying_field_keys:
+                    if k in self.data.get("colrev_masterdata_provenance", {}):
+                        if (
+                            "missing"
+                            in self.data["colrev_masterdata_provenance"][k]["note"]
+                        ):
+                            return False
             return True
         return False
 
@@ -431,7 +467,8 @@ class Record:
         if "file" in self.data["colrev_data_provenance"]:
             # TODO : check note and remove notes selectively
             # note = d_p_dict['file']['note']
-            self.data["colrev_data_provenance"]["file"]["note"] = ""
+            if "not_available" != self.data["colrev_data_provenance"]["file"]["note"]:
+                self.data["colrev_data_provenance"]["file"]["note"] = ""
         return
 
     def missing_fields(self) -> list:
@@ -647,10 +684,11 @@ class Record:
             default_upper = percent_upper_chars(default)
             candidate_upper = percent_upper_chars(candidate)
 
-            # Relatively simple rule...
-            # catches cases when default is all upper or title case
-            if default_upper > candidate_upper:
-                best_title = candidate
+            if candidate[-1] not in ["*", "1", "2"]:
+                # Relatively simple rule...
+                # catches cases when default is all upper or title case
+                if default_upper > candidate_upper:
+                    best_title = candidate
 
             # self.REVIEW_MANAGER.logger.debug(
             #     f"best_title({default},\n"
@@ -741,14 +779,35 @@ class Record:
                 )
             else:
                 self.data["file"] = MERGING_RECORD.data["file"]
+        elif "UNKNOWN" == self.data.get(
+            key, ""
+        ) and "UNKNOWN" != MERGING_RECORD.data.get(key, ""):
+            self.data[key] = MERGING_RECORD.data[key]
+        elif "UNKNOWN" == MERGING_RECORD.data.get(key, "UNKNOWN"):
+            pass
         else:
-            self.update_field(key=key, value=str(val), source=source, note=note)
+            try:
+                if key in self.identifying_field_keys:
+                    source = MERGING_RECORD.data["colrev_masterdata_provenance"][key][
+                        "source"
+                    ]
+                else:
+                    source = MERGING_RECORD.data["colrev_data_provenance"][key][
+                        "source"
+                    ]
+            except Exception:
+                # print(e)
+                pass
+            self.update_field(
+                key=key, value=str(MERGING_RECORD.data[key]), source=source, note=note
+            )
+            # self.update_field(key=key, value=str(val), source=source, note=note)
         return
 
     @classmethod
     def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
-        record_a = RECORD_A.copy()
-        record_b = RECORD_B.copy()
+        record_a = RECORD_A.copy().get_data()
+        record_b = RECORD_B.copy().get_data()
 
         if "title" not in record_a:
             record_a["title"] = ""
@@ -818,7 +877,7 @@ class Record:
             )
 
             # partial ratio (catching 2010-10 or 2001-2002)
-            year_similarity = fuzz.ratio(df_a["year"], df_b["year"]) / 100
+            year_similarity = fuzz.ratio(str(df_a["year"]), str(df_b["year"])) / 100
 
             outlet_similarity = (
                 fuzz.ratio(df_a["container_title"], df_b["container_title"]) / 100
@@ -1038,13 +1097,11 @@ class Record:
         for key in list(self.data.keys()):
 
             if key in [
-                "source_link",
-                "source_url",
                 "colrev_id",
                 "colrev_status",
                 "ENTRYTYPE",
                 "ID",
-                "source_path",
+                "metadata_source_repository_paths",
                 "local_curated_metadata",
             ]:
                 continue
@@ -1077,11 +1134,14 @@ class Record:
         return list(set(incomplete_field_keys))
 
     def get_quality_defects(self) -> list:
+        def percent_upper_chars(input_string: str) -> float:
+            return sum(map(str.isupper, input_string)) / len(input_string)
+
         defect_field_keys = []
         for key in self.data.keys():
+            if "UNKNOWN" == self.data[key]:
+                continue
             if "author" == key:
-                if "UNKNOWN" == self.data[key]:
-                    continue
                 # Note : patterns like "I N T R O D U C T I O N"
                 # that may result from grobid imports
                 if re.search(r"[A-Z] [A-Z] [A-Z] [A-Z]", self.data[key]):
@@ -1108,7 +1168,14 @@ class Record:
                 ):
                     defect_field_keys.append(key)
 
+            if key in ["title", "author", "journal", "booktitle"]:
+                if percent_upper_chars(self.data[key]) > 0.8:
+                    defect_field_keys.append(key)
+
         return list(set(defect_field_keys))
+
+    def has_quality_defects(self) -> bool:
+        return len(self.get_quality_defects()) > 0
 
     def remove_quality_defect_notes(self) -> None:
 
@@ -1247,7 +1314,7 @@ class Record:
                 RecordState.md_needs_manual_preparation,
             ]:
                 if len(alsoKnownAsRecord) != 0:
-                    raise NotEnoughDataToIdentifyException(
+                    raise colrev_exceptions.NotEnoughDataToIdentifyException(
                         "cannot determine field requirements "
                         "(e.g., volume/number for journal articles)"
                     )
@@ -1277,7 +1344,9 @@ class Record:
                 f for f in required_fields_keys if f not in alsoKnownAsRecord
             ]
             if len(missing_field_keys) > 0:
-                raise NotEnoughDataToIdentifyException(",".join(missing_field_keys))
+                raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                    ",".join(missing_field_keys)
+                )
             record = alsoKnownAsRecord
 
         try:
@@ -1312,7 +1381,9 @@ class Record:
             srep = robust_append(input_string=srep, to_append=record["year"])
             author = format_author_field(record["author"])
             if "" == author.replace("-", ""):
-                raise NotEnoughDataToIdentifyException("author field format error")
+                raise colrev_exceptions.NotEnoughDataToIdentifyException(
+                    "author field format error"
+                )
             srep = robust_append(input_string=srep, to_append=author)
             srep = robust_append(input_string=srep, to_append=record["title"])
 
@@ -1320,7 +1391,7 @@ class Record:
             # pages = record.get("pages", "")
             # srep = robust_append(srep, pages)
         except KeyError as e:
-            raise NotEnoughDataToIdentifyException(str(e))
+            raise colrev_exceptions.NotEnoughDataToIdentifyException(str(e))
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
 
@@ -1505,7 +1576,6 @@ class Record:
                 "colrev_source_identifier",
                 "ID",
                 "ENTRYTYPE",
-                "source_url",
             ]:
                 colrev_data_provenance[key] = {
                     "source": source_identifier_string,
@@ -1522,7 +1592,7 @@ class Record:
                     if self.data.get(required_field, "") not in ["UNKNOWN", ""]:
                         if percent_upper_chars(self.data[required_field]) > 0.8:
                             self.add_masterdata_provenance_note(
-                                key=required_field, note="mostly upper case"
+                                key=required_field, note="quality_defect"
                             )
                     else:
                         # self.data[required_field] = "UNKNOWN"
@@ -1560,6 +1630,90 @@ class Record:
                         key=defect_field, note="quality_defect"
                     )
 
+        return
+
+    def pdf_get_man(self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40) -> None:
+
+        if filepath is not None:
+            self.set_status(target_state=RecordState.pdf_imported)
+            self.data.update(file=str(filepath))
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+            REVIEW_MANAGER.logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "retrieved and linked PDF"
+            )
+        else:
+            if REVIEW_MANAGER.settings.pdf_get.pdf_required_for_screen_and_synthesis:
+                self.set_status(target_state=RecordState.pdf_not_available)
+                REVIEW_MANAGER.report_logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+                )
+                REVIEW_MANAGER.logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ") + "recorded as not_available"
+                )
+            else:
+                self.set_status(target_state=RecordState.pdf_prepared)
+
+                self.add_data_provenance(
+                    key="file", source="pdf-get-man", note="not_available"
+                )
+
+                REVIEW_MANAGER.report_logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+                REVIEW_MANAGER.logger.info(
+                    f" {self.data['ID']}".ljust(PAD, " ")
+                    + "recorded as not_available (and moved to screen)"
+                )
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
+    def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
+
+        self.set_status(target_state=RecordState.pdf_prepared)
+        self.reset_pdf_provenance_notes()
+
+        pdf_path = Path(REVIEW_MANAGER.path / Path(self.data["file"]))
+        self.data.update(colrev_pdf_id=self.get_colrev_pdf_id(path=pdf_path))
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_changes(
+            path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
+        )
+
+        return
+
+    def get_toc_key(self) -> str:
+        toc_key = ""
+        if "article" == self.data["ENTRYTYPE"]:
+            if "journal" in self.data:
+                toc_key += self.data["journal"]
+            if "volume" in self.data:
+                toc_key += self.data["volume"]
+            if "number" in self.data:
+                toc_key += self.data["number"]
+
+        if "inproceedings" == self.data["ENTRYTYPE"]:
+            if "booktitle" in self.data:
+                toc_key += self.data["booktitle"]
+                toc_key += self.data["year"]
+
+        return toc_key
+
+    def print_citation_format(self) -> None:
+
+        formatted_ref = (
+            f"{self.data.get('author', '')} ({self.data.get('year', '')}) "
+            + f"{self.data.get('title', '')}. "
+            + f"{self.data.get('journal', '')}{self.data.get('booktitle', '')}, "
+            + f"{self.data.get('volume', '')} ({self.data.get('number', '')})"
+        )
+        print(formatted_ref)
         return
 
 
@@ -1615,7 +1769,11 @@ class PrepRecord(Record):
 
     @classmethod
     def get_retrieval_similarity(
-        cls, *, RECORD_ORIGINAL: Record, RETRIEVED_RECORD_ORIGINAL: Record
+        cls,
+        *,
+        RECORD_ORIGINAL: Record,
+        RETRIEVED_RECORD_ORIGINAL: Record,
+        same_record_type_required: bool = False,
     ) -> float:
         def format_authors_string_for_comparison(REC_IN):
             if "author" not in REC_IN.data:
@@ -1648,8 +1806,15 @@ class PrepRecord(Record):
             REC_IN.data["author"] = authors_string
             return
 
-        RECORD = PrepRecord(data=RECORD_ORIGINAL.copy_prep_rec())
-        RETRIEVED_RECORD = PrepRecord(data=RETRIEVED_RECORD_ORIGINAL.copy_prep_rec())
+        if same_record_type_required:
+            if RECORD_ORIGINAL.data.get(
+                "ENTRYTYPE", "a"
+            ) != RETRIEVED_RECORD_ORIGINAL.data.get("ENTRYTYPE", "b"):
+                return 0.0
+
+        RECORD = RECORD_ORIGINAL.copy_prep_rec()
+        RETRIEVED_RECORD = RETRIEVED_RECORD_ORIGINAL.copy_prep_rec()
+
         if RECORD.container_is_abbreviated():
             min_len = RECORD.get_abbrev_container_min_len()
             RETRIEVED_RECORD.abbreviate_container(min_len=min_len)
@@ -1725,7 +1890,14 @@ class PrepRecord(Record):
                     .replace("Acm", "ACM")
                     .replace(" And ", " and ")
                 )
-                return
+
+            if key in self.data["colrev_masterdata_provenance"]:
+                note = self.data["colrev_masterdata_provenance"][key]["note"]
+                if "quality_defect" in note:
+                    self.data["colrev_masterdata_provenance"][key][
+                        "note"
+                    ] = note.replace("quality_defect", "")
+
         return
 
     def container_is_abbreviated(self) -> bool:
@@ -1878,13 +2050,14 @@ class PrepRecord(Record):
         )
 
         if (
-            not self.masterdata_is_complete()
-            or self.has_incomplete_fields()
-            or self.has_inconsistent_fields()
+            self.masterdata_is_complete()
+            and not self.has_incomplete_fields()
+            and not self.has_inconsistent_fields()
+            and not self.has_quality_defects()
         ):
-            self.set_status(target_state=RecordState.md_needs_manual_preparation)
-        else:
             self.set_status(target_state=RecordState.md_prepared)
+        else:
+            self.set_status(target_state=RecordState.md_needs_manual_preparation)
 
         return
 
@@ -2002,12 +2175,69 @@ class PrescreenRecord(Record):
 
         return ret_str
 
+    def prescreen(
+        self, *, REVIEW_MANAGER, prescreen_inclusion: bool, PAD: int = 40
+    ) -> None:
+
+        if prescreen_inclusion:
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Included in prescreen"
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+                IDs=[self.data["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_included),
+            )
+        else:
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.replace_field(
+                IDs=[self.data["ID"]],
+                key="colrev_status",
+                val_str=str(RecordState.rev_prescreen_excluded),
+            )
+
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
+
 
 class ScreenRecord(PrescreenRecord):
 
     # Note : currently still identical with PrescreenRecord
-    def __init__(self, data: dict):
+    def __init__(self, *, data: dict):
         super().__init__(data=data)
+
+    def screen(
+        self,
+        *,
+        REVIEW_MANAGER,
+        screen_inclusion: bool,
+        screening_criteria: str,
+        PAD: int = 40,
+    ) -> None:
+
+        """Set data (screening decision for a record)"""
+
+        self.data["screening_criteria"] = screening_criteria
+
+        if screen_inclusion:
+            self.set_status(target_state=RecordState.rev_included)
+
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Included in screen"
+            )
+        else:
+            self.set_status(target_state=RecordState.rev_excluded)
+            REVIEW_MANAGER.report_logger.info(
+                f" {self.data['ID']}".ljust(PAD, " ") + "Excluded in screen"
+            )
+
+        REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
+        REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        return
 
 
 class RecordState(Enum):

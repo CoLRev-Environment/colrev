@@ -48,7 +48,9 @@ class Prescreen(Process):
     def export_table(self, *, export_table_format: str) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            SETTINGS={"name": "export_table"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.export_table(self, records, [])
         return
@@ -56,7 +58,9 @@ class Prescreen(Process):
     def import_table(self, *, import_table_path: str) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
+            SETTINGS={"name": "import_table"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.import_table(self, records, import_table_path)
 
@@ -65,7 +69,9 @@ class Prescreen(Process):
     def include_all_in_prescreen(self) -> None:
         from colrev_core.built_in import prescreen as built_in_prescreen
 
-        ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(SETTINGS={})
+        ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(
+            SETTINGS={"name": "include_all"}
+        )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.run_prescreen(self, records, [])
         return
@@ -87,33 +93,6 @@ class Prescreen(Process):
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))
         return prescreen_data
-
-    def set_data(
-        self, *, record: dict, prescreen_inclusion: bool, PAD: int = 40
-    ) -> None:
-
-        if prescreen_inclusion:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Included in prescreen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                IDs=[record["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_included),
-            )
-        else:
-            self.REVIEW_MANAGER.report_logger.info(
-                f" {record['ID']}".ljust(PAD, " ") + "Excluded in prescreen"
-            )
-            self.REVIEW_MANAGER.REVIEW_DATASET.replace_field(
-                IDs=[record["ID"]],
-                key="colrev_status",
-                val_str=str(RecordState.rev_prescreen_excluded),
-            )
-
-        self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
 
     def create_prescreen_split(self, *, create_split: int) -> list:
         import math

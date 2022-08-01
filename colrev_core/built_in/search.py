@@ -10,12 +10,11 @@ import pandas as pd
 import pandasql as ps
 import requests
 import zope.interface
-from crossref.restful import Journals
 from dacite import from_dict
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
 
-from colrev_core import search
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
 from colrev_core.record import Record
@@ -32,128 +31,123 @@ class CrossrefSearchEndpoint:
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.prep import PrepRecord
+        from colrev_core.built_in.database_connectors import (
+            CrossrefConnector,
+            DOIConnector,
+        )
 
-        from colrev_core.built_in.prep import CrossrefConnector, DOIConnector
+        # Note: not yet implemented/supported
+        if " AND " in params.get("selection_clause", ""):
+            raise colrev_exceptions.InvalidQueryException(
+                "AND not supported in CROSSREF query selection_clause"
+            )
+        # Either one or the other is possible:
+        if not bool("selection_clause" in params) ^ bool(
+            "journal_issn" in params.get("scope", {})
+        ):
+            raise colrev_exceptions.InvalidQueryException(
+                "combined selection_clause and journal_issn (scope) "
+                "not supported in CROSSREF query"
+            )
 
-        if "journal_issn" not in params["scope"]:
-            print("Error: journal_issn not in params")
-            return
-
-        # works = Works()
-        # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
-        # use FACETS!
-        # w1 = works.query(bibliographic='microsourcing')
-        # w1 = works.query(
-        #     container_title="Journal of the Association for Information Systems"
-        # )
-        if "selection_clause" in params:
-            query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-            SEARCH.REVIEW_MANAGER.logger.info(query)
-
-        for journal_issn in params["scope"]["journal_issn"].split("|"):
-
-            journals = Journals()
-            # t = journals.journal('1526-5536')
-            # input(feed_item['search_parameters'].split('=')[1])
-            w1 = journals.works(journal_issn).query()
-            # for it in t:
-            #     pp.pprint(it)
-            #     input('stop')
-
-            available_ids = []
-            max_id = 1
-            if not feed_file.is_file():
-                records = {}
-            else:
-                with open(feed_file, encoding="utf8") as bibtex_file:
-                    records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                        load_str=bibtex_file.read()
-                    )
-
-                available_ids = [x["doi"] for x in records.values() if "doi" in x]
-                max_id = (
-                    max(
-                        [int(x["ID"]) for x in records.values() if x["ID"].isdigit()]
-                        + [1]
-                    )
-                    + 1
+        available_ids = []
+        max_id = 1
+        if not feed_file.is_file():
+            records = {}
+        else:
+            with open(feed_file, encoding="utf8") as bibtex_file:
+                records = SEARCH.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=bibtex_file.read()
                 )
 
+            available_ids = [x["doi"] for x in records.values() if "doi" in x]
+            max_id = (
+                max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
+                + 1
+            )
+
+        CROSSREF = CrossrefConnector(REVIEW_MANAGER=SEARCH.REVIEW_MANAGER)
+
+        def get_crossref_query_return(params):
+            if "selection_clause" in params:
+                crossref_query = {"bibliographic": params["selection_clause"]}
+                # TODO : add the container_title:
+                # crossref_query_return = works.query(
+                #     container_title=
+                #       "Journal of the Association for Information Systems"
+                # )
+                yield from CROSSREF.get_bibliographic_query_return(**crossref_query)
+
+            if "journal_issn" in params.get("scope", {}):
+
+                for journal_issn in params["scope"]["journal_issn"].split("|"):
+                    yield from CROSSREF.get_journal_query_return(
+                        journal_issn=journal_issn
+                    )
+
+        for record in get_crossref_query_return(params):
             try:
-                for item in w1:
-                    if "DOI" in item:
-                        if item["DOI"].upper() not in available_ids:
-                            record = CrossrefConnector.crossref_json_to_record(
-                                item=item
-                            )
+                if record["doi"].upper() not in available_ids:
 
-                            # TODO : collect list of records
-                            # for more efficient selection
-                            # select once (parse result to list of dicts?)
-                            if "selection_clause" in params:
-                                res = []
-                                try:
-                                    rec_df = pd.DataFrame.from_records([record])
-                                    # print(rec_df)
-                                    res = ps.sqldf(query, locals())
-                                except PandaSQLException:
-                                    # print(e)
-                                    pass
+                    # Note : discard "empty" records
+                    if "" == record.get("author", "") and "" == record.get("title", ""):
+                        continue
 
-                                if len(res) == 0:
-                                    continue
+                    SEARCH.REVIEW_MANAGER.logger.info("Retrieved " + record["doi"])
+                    record["ID"] = str(max_id).rjust(6, "0")
 
-                            # Note : do not download "empty" records
-                            if "" == record.get("author", "") and "" == record.get(
-                                "title", ""
-                            ):
-                                continue
+                    PREP_RECORD = PrepRecord(data=record)
+                    DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
+                    record = PREP_RECORD.get_data()
 
-                            SEARCH.REVIEW_MANAGER.logger.info(
-                                "Retrieved " + record["doi"]
-                            )
-                            record["ID"] = str(max_id).rjust(6, "0")
-                            if "ENTRYTYPE" not in record:
-                                record["ENTRYTYPE"] = "misc"
-                            record["source_url"] = (
-                                "https://api.crossref.org/works/" + item["DOI"]
-                            )
-                            PREP_RECORD = PrepRecord(data=record)
-                            DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
-                            record = PREP_RECORD.get_data()
-                            available_ids.append(record["doi"])
-                            records[record["ID"]] = record
-                            max_id += 1
+                    available_ids.append(record["doi"])
+                    records[record["ID"]] = record
+                    max_id += 1
             except requests.exceptions.JSONDecodeError as e:
+                if "504 Gateway Time-out" in str(e):
+                    raise colrev_exceptions.ServiceNotAvailableException(
+                        "Crossref (check https://status.crossref.org/)"
+                    )
                 print(e)
                 pass
 
-            # Note : we may have to set temporary IDs to ensure the sort order
-            # records = sorted(
-            #     records,
-            #     key=lambda e: (
-            #         e.get("year", ""),
-            #         e.get("volume", ""),
-            #         e.get("number", ""),
-            #         e.get("author", ""),
-            #         e.get("title", ""),
-            #     ),
-            # )
+        # Note : for local after-query selection:
+        # if "selection_clause" in params:
+        #     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+        #     SEARCH.REVIEW_MANAGER.logger.info(query)
 
-            SEARCH.save_feed_file(records, feed_file)
+        # TODO : collect list of records
+        # for more efficient selection
+        # select once (parse result to list of dicts?)
+        # if "selection_clause" in params:
+        #     res = []
+        #     try:
+        #         rec_df = pd.DataFrame.from_records([record])
+        #         # print(rec_df)
+        #         res = ps.sqldf(query, locals())
+        #     except PandaSQLException:
+        #         # print(e)
+        #         pass
+
+        #     if len(res) == 0:
+        #         continue
+
+        SEARCH.save_feed_file(records, feed_file)
+
         return
 
     def validate_params(self, query: str) -> None:
-        if " SCOPE " not in query:
-            raise search.InvalidQueryException(
-                "CROSSREF queries require a SCOPE section"
+        if " SCOPE " not in query and " WHERE " not in query:
+            raise colrev_exceptions.InvalidQueryException(
+                "CROSSREF queries require a SCOPE or WHERE section"
             )
 
-        scope = query[query.find(" SCOPE ") :]
-        if "journal_issn" not in scope:
-            raise search.InvalidQueryException(
-                "CROSSREF queries require a journal_issn field in the SCOPE section"
-            )
+        if " SCOPE " in query:
+            scope = query[query.find(" SCOPE ") :]
+            if "journal_issn" not in scope:
+                raise colrev_exceptions.InvalidQueryException(
+                    "CROSSREF queries require a journal_issn field in the SCOPE section"
+                )
         pass
 
 
@@ -248,10 +242,6 @@ class DBLPSearchEndpoint:
                                 del RETRIEVED_RECORD.data["pages"]
                             available_ids.append(RETRIEVED_RECORD.data["dblp_key"])
 
-                            # RETRIEVED_RECORD.data["source_url"] = (
-                            #     RETRIEVED_RECORD.data["dblp_key"] + "?view=bibtex"
-                            # )
-
                             records = [
                                 {
                                     k: v.replace("\n", "").replace("\r", "")
@@ -297,15 +287,17 @@ class DBLPSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException("DBLP queries require a SCOPE section")
+            raise colrev_exceptions.InvalidQueryException(
+                "DBLP queries require a SCOPE section"
+            )
 
         scope = query[query.find(" SCOPE ") :]
         if "venue_key" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "DBLP queries require a venue_key in the SCOPE section"
             )
         if "journal_abbreviated" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "DBLP queries require a journal_abbreviated field in the SCOPE section"
             )
         pass
@@ -328,8 +320,21 @@ class BackwardSearchEndpoint:
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.record import RecordState
 
-        if params["scope"]["colrev_status"] != "rev_included|rev_synthesized":
-            print("scopes other than rev_included|rev_synthesized not yet implemented")
+        if "colrev_status" in params["scope"]:
+            if params["scope"]["colrev_status"] not in [
+                "rev_included|rev_synthesized",
+            ]:
+                print("scope not yet implemented")
+                return
+
+        elif "file" in params["scope"]:
+            if params["scope"]["file"] not in [
+                "paper.pdf",
+            ]:
+                print("scope not yet implemented")
+                return
+        else:
+            print("scope not yet implemented")
             return
 
         if not SEARCH.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
@@ -353,11 +358,22 @@ class BackwardSearchEndpoint:
         for record in records.values():
 
             # rev_included/rev_synthesized
-            if record["colrev_status"] not in [
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
-            ]:
-                continue
+            if "colrev_status" in params["scope"]:
+                if (
+                    params["scope"]["colrev_status"] == "rev_included|rev_synthesized"
+                ) and record["colrev_status"] not in [
+                    RecordState.rev_included,
+                    RecordState.rev_synthesized,
+                ]:
+                    continue
+
+            # Note: this is for peer_reviews
+            if "file" in params["scope"]:
+                if (
+                    params["scope"]["file"] == "paper.pdf"
+                ) and "pdfs/paper.pdf" != record.get("file", ""):
+                    continue
+
             SEARCH.REVIEW_MANAGER.logger.info(
                 f'Running backward search for {record["ID"]} ({record["file"]})'
             )
@@ -389,6 +405,7 @@ class BackwardSearchEndpoint:
 
         feed_file_records_dict = {r["ID"]: r for r in feed_file_records}
         SEARCH.save_feed_file(feed_file_records_dict, feed_file)
+        SEARCH.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(feed_file))
 
         if SEARCH.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
             SEARCH.REVIEW_MANAGER.create_commit(
@@ -466,7 +483,7 @@ class ColrevProjectSearchEndpoint:
         keys_to_drop = [
             "colrev_status",
             "colrev_origin",
-            "exclusion_criteria",
+            "screening_criteria",
         ]
 
         records = [
@@ -484,13 +501,13 @@ class ColrevProjectSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PROJECT queries require a SCOPE section"
             )
 
         scope = query[query.find(" SCOPE ") :]
         if "url" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PROJECT queries require a url field in the SCOPE section"
             )
         return
@@ -568,7 +585,7 @@ class IndexSearchEndpoint:
         keys_to_drop = [
             "colrev_status",
             "colrev_origin",
-            "exclusion_criteria",
+            "screening_criteria",
         ]
         records = [
             {key: item[key] for key in item.keys() if key not in keys_to_drop}
@@ -603,7 +620,6 @@ class PDFSearchEndpoint:
         from colrev_core.environment import GrobidService
 
         from colrev_core.environment import TEIParser
-        from colrev_core.environment import TEI_Exception
         from pdfminer.pdfdocument import PDFDocument
         from pdfminer.pdfinterp import resolve1
         from pdfminer.pdfparser import PDFParser
@@ -693,9 +709,9 @@ class PDFSearchEndpoint:
                 source_ids = list(search_rd.keys())
                 for record in records.values():
                     if str(feed_file.name) in record["colrev_origin"]:
-                        if (
-                            record["colrev_origin"].split(";")[0].split("/")[1]
-                            not in source_ids
+                        if not any(
+                            x.split("/")[1] in source_ids
+                            for x in record["colrev_origin"].split(";")
                         ):
                             print("REMOVE " + record["colrev_origin"])
                             to_remove.append(record["colrev_origin"])
@@ -752,7 +768,17 @@ class PDFSearchEndpoint:
                 )
                 records = list(feed_rd.values())
 
+        def fix_filenames() -> None:
+            overall_pdfs = path.glob("**/*.pdf")
+            for pdf in overall_pdfs:
+                if "  " in str(pdf):
+                    pdf.rename(str(pdf).replace("  ", " "))
+
+            return
+
         path = Path(params["scope"]["path"])
+
+        fix_filenames()
 
         remove_records_if_pdf_no_longer_exists()
 
@@ -1001,7 +1027,7 @@ class PDFSearchEndpoint:
                 # add details based on path
                 record = update_fields_based_on_pdf_dirs(record)
 
-            except TEI_Exception:
+            except colrev_exceptions.TEI_Exception:
                 pass
 
             return record
@@ -1070,13 +1096,13 @@ class PDFSearchEndpoint:
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a SCOPE section"
             )
 
         scope = query[query.find(" SCOPE ") :]
         if "path" not in scope:
-            raise search.InvalidQueryException(
+            raise colrev_exceptions.InvalidQueryException(
                 "PDFS_DIR queries require a path field in the SCOPE section"
             )
 

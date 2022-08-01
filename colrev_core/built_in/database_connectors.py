@@ -6,6 +6,7 @@ import sys
 import urllib
 from datetime import timedelta
 from pathlib import Path
+from sqlite3 import OperationalError
 from urllib.parse import unquote
 
 import requests
@@ -13,6 +14,7 @@ import requests_cache
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import EnvironmentManager
 from colrev_core.record import PrepRecord
 from colrev_core.record import RecordState
@@ -21,7 +23,6 @@ from colrev_core.record import RecordState
 class OpenLibraryConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         test_rec = {
             "ENTRYTYPE": "book",
@@ -38,11 +39,11 @@ class OpenLibraryConnector:
             )
             if ret.status_code != 200:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("OPENLIBRARY")
+                    raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException:
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("OPENLIBRARY")
+                raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
 
         return
 
@@ -153,52 +154,68 @@ class DOIConnector:
         if "doi" not in RECORD.data:
             return RECORD
 
-        if session is None:
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
-
-        # for testing:
-        # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
-        # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
-
         try:
-            url = "http://dx.doi.org/" + RECORD.data["doi"]
-            REVIEW_MANAGER.logger.debug(url)
-            headers = {"accept": "application/vnd.citationstyles.csl+json"}
-            ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
-            ret.raise_for_status()
-            if ret.status_code != 200:
-                REVIEW_MANAGER.report_logger.info(
-                    f' {RECORD.data["ID"]}'
-                    + "metadata for "
-                    + f'doi  {RECORD.data["doi"]} not (yet) available'
+            if session is None:
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
                 )
+                session = requests_cache.CachedSession(
+                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+                )
+
+            # for testing:
+            # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
+            # -H "Content-Type: application/json" http://dx.doi.org/10.1111/joop.12368
+
+            try:
+                url = "http://dx.doi.org/" + RECORD.data["doi"]
+                REVIEW_MANAGER.logger.debug(url)
+                headers = {"accept": "application/vnd.citationstyles.csl+json"}
+                ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
+                ret.raise_for_status()
+                if ret.status_code != 200:
+                    REVIEW_MANAGER.report_logger.info(
+                        f' {RECORD.data["ID"]}'
+                        + "metadata for "
+                        + f'doi  {RECORD.data["doi"]} not (yet) available'
+                    )
+                    return RECORD
+
+                retrieved_json = json.loads(ret.text)
+                retrieved_record = CrossrefConnector.crossref_json_to_record(
+                    item=retrieved_json
+                )
+                RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+                RETRIEVED_RECORD.add_provenance_all(source=url)
+                RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
+                RECORD.set_masterdata_complete()
+                if "colrev_status" in RECORD.data:
+                    RECORD.set_status(target_state=RecordState.md_prepared)
+                if "retracted" in RECORD.data.get("warning", ""):
+                    RECORD.prescreen_exclude(reason="retracted")
+                    RECORD.remove_field(key="warning")
+
+            except json.decoder.JSONDecodeError:
+                pass
+            except requests.exceptions.RequestException:
+                pass
                 return RECORD
+            except OperationalError:
+                pass
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "sqlite, required for requests CachedSession "
+                    "(possibly caused by concurrent operations)"
+                )
 
-            retrieved_json = json.loads(ret.text)
-            retrieved_record = CrossrefConnector.crossref_json_to_record(
-                item=retrieved_json
+            if "title" in RECORD.data:
+                RECORD.format_if_mostly_upper(key="title")
+
+        except OperationalError:
+            pass
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
             )
-            RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
-            RETRIEVED_RECORD.add_provenance_all(source=url)
-            RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
-            RECORD.set_masterdata_complete()
-            if "colrev_status" in RECORD.data:
-                RECORD.set_status(target_state=RecordState.md_prepared)
-            if "retracted" in RECORD.data.get("warning", ""):
-                RECORD.prescreen_exclude(reason="retracted")
-                RECORD.remove_field(key="warning")
-
-        except json.decoder.JSONDecodeError:
-            pass
-        except requests.exceptions.RequestException:
-            pass
-            return RECORD
-
-        if "title" in RECORD.data:
-            RECORD.format_if_mostly_upper(key="title")
 
         return RECORD
 
@@ -212,17 +229,6 @@ class DOIConnector:
     ) -> None:
 
         doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
-
-        if session is None:
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
-
-        requests_headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
-        }
 
         # TODO : retry for 50X
         # from requests.adapters import HTTPAdapter
@@ -247,8 +253,21 @@ class DOIConnector:
                     return str(url)
             return None
 
-        url = doi_url
         try:
+            url = doi_url
+            if session is None:
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
+                )
+                session = requests_cache.CachedSession(
+                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+                )
+
+            requests_headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/39.0.2171.95 Safari/537.36"
+            }
             ret = session.request(
                 "GET",
                 doi_url,
@@ -276,13 +295,34 @@ class DOIConnector:
             RECORD.update_field(key="url", value=str(url), source=doi_url)
         except requests.exceptions.RequestException:
             pass
+        except OperationalError:
+            pass
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            )
+
         return
 
 
 class CrossrefConnector:
+
+    issn_regex = r"^\d{4}-?\d{3}[\dxX]$"
+
+    def __init__(self, *, REVIEW_MANAGER):
+
+        from crossref.restful import Etiquette
+        from importlib.metadata import version
+
+        self.etiquette = Etiquette(
+            "CoLRev",
+            version("colrev_core"),
+            "https://github.com/geritwagner/colrev_core",
+            REVIEW_MANAGER.EMAIL,
+        )
+
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {
@@ -308,13 +348,36 @@ class CrossrefConnector:
                 assert RETURNED_REC.data["author"] == test_rec["author"]
             else:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("CROSSREF")
+                    raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         except requests.exceptions.RequestException as e:
             print(e)
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("CROSSREF")
+                raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         return
+
+    def get_bibliographic_query_return(self, **kwargs):
+        from crossref.restful import Works
+
+        assert all(k in ["bibliographic"] for k in kwargs.keys())
+
+        works = Works(etiquette=self.etiquette)
+        # use facets:
+        # https://api.crossref.org/swagger-ui/index.html#/Works/get_works
+
+        crossref_query_return = works.query(**kwargs)
+        for item in crossref_query_return:
+            yield self.crossref_json_to_record(item=item)
+
+    def get_journal_query_return(self, *, journal_issn):
+        from crossref.restful import Journals
+
+        assert re.match(self.issn_regex, journal_issn)
+
+        journals = Journals(etiquette=self.etiquette)
+        crossref_query_return = journals.works(journal_issn).query()
+        for item in crossref_query_return:
+            yield self.crossref_json_to_record(item=item)
 
     @classmethod
     def crossref_json_to_record(cls, *, item: dict) -> dict:
@@ -449,6 +512,9 @@ class CrossrefConnector:
             # Note : some dois (and their provenance) contain html entities
             record[k] = html.unescape(str(v))
 
+        if "ENTRYTYPE" not in record:
+            record["ENTRYTYPE"] = "misc"
+
         return record
 
     @classmethod
@@ -466,14 +532,21 @@ class CrossrefConnector:
 
         # Note : only returning a multiple-item list for jour_vol_iss_list
 
-        if session is None:
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
-        RECORD = PrepRecord(data=RECORD_INPUT.copy_prep_rec())
+        RECORD = RECORD_INPUT.copy_prep_rec()
 
-        if not jour_vol_iss_list:
+        if jour_vol_iss_list:
+            params = {"rows": "50"}
+            container_title = re.sub(r"[\W]+", " ", RECORD.data["journal"])
+            params["query.container-title"] = container_title.replace("_", " ")
+
+            query_field = ""
+            if "volume" in RECORD.data:
+                query_field = RECORD.data["volume"]
+            if "number" in RECORD.data:
+                query_field = query_field + "+" + RECORD.data["number"]
+            params["query"] = query_field
+
+        else:
             params = {"rows": "15"}
             bibl = (
                 RECORD.data["title"].replace("-", "_")
@@ -495,22 +568,19 @@ class CrossrefConnector:
             author_string = " ".join(author_last_names)
             author_string = re.sub(r"[\W]+", "", author_string.replace(" ", "_"))
             params["query.author"] = author_string.replace("_", " ")
-        else:
-            params = {"rows": "25"}
-            container_title = re.sub(r"[\W]+", " ", RECORD.data["journal"])
-            params["query.container-title"] = container_title.replace("_", " ")
-
-            query_field = ""
-            if "volume" in RECORD.data:
-                query_field = RECORD.data["volume"]
-            if "number" in RECORD.data:
-                query_field = query_field + "+" + RECORD.data["number"]
-            params["query"] = query_field
 
         url = api_url + urllib.parse.urlencode(params)
         headers = {"user-agent": f"{__name__} (mailto:{REVIEW_MANAGER.EMAIL})"}
         record_list = []
         try:
+            if session is None:
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
+                )
+                session = requests_cache.CachedSession(
+                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+                )
+
             REVIEW_MANAGER.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
             ret.raise_for_status()
@@ -569,6 +639,12 @@ class CrossrefConnector:
             pass
         except requests.exceptions.RequestException:
             return []
+        except OperationalError:
+            pass
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            )
 
         if not jour_vol_iss_list:
             record_list = [PrepRecord(data=most_similar_record)]
@@ -628,13 +704,11 @@ class CrossrefConnector:
                         f"crossref similarity: {similarity} "
                         f"(>{PREPARATION.RETRIEVAL_SIMILARITY})"
                     )
-                    source_link = (
+                    source = (
                         f"https://api.crossref.org/works/{RETRIEVED_RECORD.data['doi']}"
                     )
-                    RETRIEVED_RECORD.add_provenance_all(source=source_link)
-                    RECORD.merge(
-                        MERGING_RECORD=RETRIEVED_RECORD, default_source=source_link
-                    )
+                    RETRIEVED_RECORD.add_provenance_all(source=source)
+                    RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=source)
 
                     if "retracted" in RECORD.data.get("warning", ""):
                         RECORD.prescreen_exclude(reason="retracted")
@@ -662,7 +736,6 @@ class CrossrefConnector:
 class DBLPConnector:
     @classmethod
     def check_status(cls, *, PREPARATION) -> None:
-        from colrev_core.exceptions import ServiceNotAvailableException
 
         try:
             test_rec = {
@@ -692,11 +765,11 @@ class DBLPConnector:
                 assert DBLP_REC.data["author"] == test_rec["author"]
             else:
                 if not PREPARATION.force_mode:
-                    raise ServiceNotAvailableException("DBLP")
+                    raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException:
             pass
             if not PREPARATION.force_mode:
-                raise ServiceNotAvailableException("DBLP")
+                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
 
         return
 
@@ -710,14 +783,6 @@ class DBLPConnector:
         session=None,
         TIMEOUT: int = 10,
     ) -> list:
-        assert query is not None or url is not None
-
-        if session is None:
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
-
         def dblp_json_to_dict(item: dict) -> dict:
             # To test in browser:
             # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
@@ -812,30 +877,50 @@ class DBLPConnector:
 
             return retrieved_record
 
-        api_url = "https://dblp.org/search/publ/api?q="
-        items = []
+        try:
 
-        if query:
-            query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
-            url = api_url + query.replace(" ", "+") + "&format=json"
+            assert query is not None or url is not None
 
-        headers = {"user-agent": f"{__name__}  (mailto:{REVIEW_MANAGER.EMAIL})"}
-        REVIEW_MANAGER.logger.debug(url)
-        ret = session.request(
-            "GET", url, headers=headers, timeout=TIMEOUT  # type: ignore
-        )
-        ret.raise_for_status()
-        if ret.status_code == 500:
-            return []
+            if session is None:
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
+                )
+                session = requests_cache.CachedSession(
+                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+                )
 
-        data = json.loads(ret.text)
-        if "hits" not in data["result"]:
-            return []
-        if "hit" not in data["result"]["hits"]:
-            return []
-        hits = data["result"]["hits"]["hit"]
-        items = [hit["info"] for hit in hits]
-        dblp_dicts = [dblp_json_to_dict(item) for item in items]
-        RETRIEVED_RECORDS = [PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts]
-        [R.add_provenance_all(source=R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
+            api_url = "https://dblp.org/search/publ/api?q="
+            items = []
+
+            if query:
+                query = re.sub(r"[\W]+", " ", query.replace(" ", "_"))
+                url = api_url + query.replace(" ", "+") + "&format=json"
+
+            headers = {"user-agent": f"{__name__}  (mailto:{REVIEW_MANAGER.EMAIL})"}
+            REVIEW_MANAGER.logger.debug(url)
+            ret = session.request(
+                "GET", url, headers=headers, timeout=TIMEOUT  # type: ignore
+            )
+            ret.raise_for_status()
+            if ret.status_code == 500:
+                return []
+
+            data = json.loads(ret.text)
+            if "hits" not in data["result"]:
+                return []
+            if "hit" not in data["result"]["hits"]:
+                return []
+            hits = data["result"]["hits"]["hit"]
+            items = [hit["info"] for hit in hits]
+            dblp_dicts = [dblp_json_to_dict(item) for item in items]
+            RETRIEVED_RECORDS = [PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts]
+            [R.add_provenance_all(source=R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
+
+        except OperationalError:
+            pass
+            raise colrev_exceptions.ServiceNotAvailableException(
+                "sqlite, required for requests CachedSession "
+                "(possibly caused by concurrent operations)"
+            )
+
         return RETRIEVED_RECORDS

@@ -30,3 +30,5 @@ colrev\_core.settings.ReviewType
       ~ReviewType.conceptual_review
       ~ReviewType.qualitative_systematic_review
       ~ReviewType.meta_analysis
+      ~ReviewType.scientometric
+      ~ReviewType.peer_review

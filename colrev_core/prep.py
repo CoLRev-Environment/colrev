@@ -138,6 +138,9 @@ class Preparation(Process):
         "get_masterdata_from_open_library": {
             "endpoint": built_in_prep.OpenLibraryMetadataPrep,
         },
+        "get_masterdata_from_citeas": {
+            "endpoint": built_in_prep.CiteAsPrep,
+        },
         "get_year_from_vol_iss_jour_crossref": {
             "endpoint": built_in_prep.CrossrefYearVolIssPrep,
         },
@@ -254,7 +257,7 @@ class Preparation(Process):
         RECORD = item["record"]
 
         if not RECORD.status_to_prepare():
-            return RECORD
+            return RECORD.get_data()
 
         self.REVIEW_MANAGER.logger.info("Prepare " + RECORD.data["ID"])
 
@@ -295,6 +298,7 @@ class Preparation(Process):
                 )
 
             if PREPARATION_RECORD.preparation_break_condition():
+                RECORD.update_by_record(UPDATE=PREPARATION_RECORD)
                 break
 
         if self.LAST_ROUND:
@@ -306,7 +310,7 @@ class Preparation(Process):
                     REVIEW_MANAGER=self.REVIEW_MANAGER,
                 )
 
-        return RECORD
+        return RECORD.get_data()
 
     def reset(self, *, record_list: typing.List[dict]):
         from colrev_core.prep_man import PrepMan
@@ -547,7 +551,7 @@ class Preparation(Process):
             self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
             return prep_data
 
-        def get_preparation_batch(*, prep_round: PrepRound):
+        def get_preparation_data(*, prep_round: PrepRound):
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 prepare_data = load_prep_data_for_debug(
                     debug_ids=debug_ids, debug_file=debug_file
@@ -569,9 +573,9 @@ class Preparation(Process):
                 )
             self.PAD = prepare_data["PAD"]
             items = prepare_data["items"]
-            batch = []
+            prep_data = []
             for item in items:
-                batch.append(
+                prep_data.append(
                     {
                         "record": PrepRecord(data=item),
                         # Note : we cannot load scripts here
@@ -581,7 +585,7 @@ class Preparation(Process):
                         "prep_round": prep_round.name,
                     }
                 )
-            return batch
+            return prep_data
 
         def load_prep_data_for_debug(
             *, debug_ids: str, debug_file: str = "NA"
@@ -668,12 +672,12 @@ class Preparation(Process):
             )
             return
 
-        def log_details(*, preparation_batch: list) -> None:
+        def log_details(*, prepared_records: list) -> None:
 
             nr_recs = len(
                 [
                     record
-                    for record in preparation_batch
+                    for record in prepared_records
                     if record["colrev_status"]
                     == RecordState.md_needs_manual_preparation
                 ]
@@ -686,7 +690,7 @@ class Preparation(Process):
             nr_recs = len(
                 [
                     record
-                    for record in preparation_batch
+                    for record in prepared_records
                     if record["colrev_status"] == RecordState.rev_prescreen_excluded
                 ]
             )
@@ -705,45 +709,46 @@ class Preparation(Process):
 
             setup_prep_round(i=i, prep_round=prep_round)
 
-            preparation_batch = get_preparation_batch(prep_round=prep_round)
-            if len(preparation_batch) == 0:
+            preparation_data = get_preparation_data(prep_round=prep_round)
+
+            if len(preparation_data) == 0:
+                print("No records to prepare.")
                 return
 
             if self.REVIEW_MANAGER.DEBUG_MODE:
-                # Note: preparation_batch is not turned into a list of records.
-                preparation_batch_items = preparation_batch
-                preparation_batch = []
-                for item in preparation_batch_items:
-                    r = self.prepare(item)
-                    preparation_batch.append(r)
+                # Note: preparation_data is not turned into a list of records.
+                prepared_records = []
+                for item in preparation_data:
+                    record = self.prepare(item)
+                    prepared_records.append(record)
             else:
                 # Note : p_map shows the progress (tqdm) but it is inefficient
                 # https://github.com/swansonk14/p_tqdm/issues/34
                 # from p_tqdm import p_map
-                # preparation_batch = p_map(self.prepare, preparation_batch)
+                # preparation_data = p_map(self.prepare, preparation_data)
 
                 if "exclude_languages" in prep_round.scripts:  # type: ignore
                     pool = ProcessPool(nodes=mp.cpu_count() // 2)
                 else:
                     pool = ProcessPool(nodes=self.CPUS)
-                preparation_batch = pool.map(self.prepare, preparation_batch)
+                prepared_records = pool.map(self.prepare, preparation_data)
 
                 pool.close()
                 pool.join()
                 pool.clear()
 
             if not self.REVIEW_MANAGER.DEBUG_MODE:
-                preparation_batch = [x.get_data() for x in preparation_batch]
+                # prepared_records = [x.get_data() for x in prepared_records]
                 self.REVIEW_MANAGER.REVIEW_DATASET.save_record_list_by_ID(
-                    record_list=preparation_batch
+                    record_list=prepared_records
                 )
 
-                log_details(preparation_batch=preparation_batch)
+                log_details(prepared_records=prepared_records)
 
                 # Multiprocessing mixes logs of different records.
                 # For better readability:
-                preparation_batch_IDs = [x["ID"] for x in preparation_batch]
-                self.REVIEW_MANAGER.reorder_log(IDs=preparation_batch_IDs)
+                prepared_records_IDs = [x["ID"] for x in prepared_records]
+                self.REVIEW_MANAGER.reorder_log(IDs=prepared_records_IDs)
 
                 self.REVIEW_MANAGER.create_commit(
                     msg=f"Prepare records ({prep_round.name})",

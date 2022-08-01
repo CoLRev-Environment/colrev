@@ -1,7 +1,7 @@
 #! /usr/bin/env python
 from pathlib import Path
 
-from colrev_core.exceptions import NoPaperEndpointRegistered
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
@@ -15,6 +15,7 @@ class Paper(Process):
         import docker
 
         from colrev_core.environment import EnvironmentManager
+        from colrev_core.built_in.data import ManuscriptEndpoint
 
         paper_endpoint_settings_l = [
             s
@@ -23,7 +24,7 @@ class Paper(Process):
         ]
 
         if len(paper_endpoint_settings_l) != 1:
-            raise NoPaperEndpointRegistered()
+            raise colrev_exceptions.NoPaperEndpointRegistered()
 
         paper_endpoint_settings = paper_endpoint_settings_l[0]
 
@@ -36,8 +37,13 @@ class Paper(Process):
 
         EnvironmentManager.build_docker_images()
 
-        CSL_FILE = paper_endpoint_settings.csl_style
-        WORD_TEMPLATE = paper_endpoint_settings.word_template
+        CSL_FILE = paper_endpoint_settings["csl_style"]
+        WORD_TEMPLATE = paper_endpoint_settings["word_template"]
+
+        if not Path(WORD_TEMPLATE).is_file():
+            ManuscriptEndpoint.retrieve_default_word_template()
+        if not Path(CSL_FILE).is_file():
+            ManuscriptEndpoint.retrieve_default_csl()
         assert Path(WORD_TEMPLATE).is_file()
         assert Path(CSL_FILE).is_file()
 

@@ -27,7 +27,7 @@ class CoLRevUpgradeError(CoLRevException):
     def __init__(self, old, new):
         self.message = (
             f"Detected upgrade from {old} to {new}. To upgrade use\n     "
-            "colrev config --upgrade"
+            "colrev settings --upgrade"
         )
         super().__init__(self.message)
 
@@ -42,6 +42,16 @@ class ReviewManagerNotNofiedError(CoLRevException):
             "create a process and inform the review manager in advance"
             + " to avoid conflicts."
         )
+        super().__init__(self.message)
+
+
+class ParameterError(CoLRevException):
+    """
+    An invalid parameter was passed to CoLRev.
+    """
+
+    def __init__(self, *, parameter, value, options):
+        self.message = f"Invalid parameter {parameter}: {value}.\n Options: {options}"
         super().__init__(self.message)
 
 
@@ -286,7 +296,7 @@ class MissingDependencyError(CoLRevException):
 
 
 class ServiceNotAvailableException(CoLRevException):
-    """The environment service is not available."""
+    """An environment service is not available."""
 
     def __init__(self, msg: str):
         self.message = msg
