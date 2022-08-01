@@ -1360,8 +1360,6 @@ class CurationDedupeEndpoint:
             )
 
             for toc_item in toc_items:
-                print("\n\n")
-                print(toc_item)
 
                 # Note : these would be potential errors (duplicates)
                 # because they have the same selected_source
@@ -1380,6 +1378,8 @@ class CurationDedupeEndpoint:
                     in r["colrev_origin"]
                 ]
                 if 0 == len(processed_same_toc_same_source_records):
+                    print("\n\n")
+                    print(toc_item)
 
                     for sr in sorted(source_records, key=lambda d: d["author"]):
                         if all(sr.get(k, "NA") == v for k, v in toc_item.items()):
@@ -1397,6 +1397,7 @@ class CurationDedupeEndpoint:
                             if all(sr.get(k, "NA") == v for k, v in toc_item.items()):
                                 sr["colrev_status"] = RecordState.md_processed
                 else:
+                    print(toc_item)
                     print("Pre-imported records found for this toc_item (skipping)")
                     # print(processed_same_toc_same_source_records)
                     pass
@@ -1445,8 +1446,7 @@ class CurationDedupeEndpoint:
                 "Processing as a non-pdf source (matching exact colrev_ids)"
             )
 
-            # match based on identical colrev_ids?
-
+            # match based on overlapping  colrev_ids
             for toc_item in tqdm(toc_items):
 
                 processed_same_toc_records = [
@@ -1469,7 +1469,22 @@ class CurationDedupeEndpoint:
                     if all(r.get(k, "NA") == v for k, v in toc_item.items())
                 ]
                 if len(new_same_toc_records) > 0:
-                    input(new_same_toc_records)
+                    # print(new_same_toc_records)
+                    for new_same_toc_record in new_same_toc_records:
+                        for rec2 in processed_same_toc_records:
+                            overlapping_colrev_ids = Record(
+                                data=new_same_toc_record
+                            ).has_overlapping_colrev_id(RECORD=Record(data=rec2))
+                            if overlapping_colrev_ids:
+                                decision_list.append(
+                                    {
+                                        "ID1": new_same_toc_record["ID"],
+                                        "ID2": rec2["ID"],
+                                        "decision": "duplicate",
+                                    }
+                                )
+                                print("TODO : validate whether it merges correctly:")
+                                input(decision_list)
 
         else:
             DEDUPE.REVIEW_MANAGER.logger.info("Processing as a pdf source")
@@ -1554,9 +1569,6 @@ class CurationDedupeEndpoint:
                     overlapping_colrev_ids = Record(
                         data=rec1
                     ).has_overlapping_colrev_id(RECORD=Record(data=rec2))
-                    if overlapping_colrev_ids:
-                        print(rec1)
-                        print(rec2)
                     if validation_info["validates"] or overlapping_colrev_ids:
 
                         # Note : make sure that we merge into the CURATED record
@@ -1664,6 +1676,7 @@ class CurationMissingDedupeEndpoint:
             ]
 
             if len(same_toc_recs) == 0:
+                print("no same toc records")
                 continue
 
             print("\n\n\n")
@@ -1782,6 +1795,8 @@ class CurationMissingDedupeEndpoint:
             for SOURCE in DEDUPE.REVIEW_MANAGER.settings.sources
         ]
 
+        # Note : reload to generate correct statistics
+        records = DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         for source_origin in source_origins:
 
             selected_records = [
