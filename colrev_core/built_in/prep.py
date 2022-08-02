@@ -7,6 +7,7 @@ import typing
 from pathlib import Path
 
 import git
+import pycountry
 import requests
 import timeout_decorator
 import zope.interface
@@ -133,11 +134,8 @@ class ExcludeLanguagesPrep:
         self.language_detector = (
             LanguageDetectorBuilder.from_all_languages_with_latin_script().build()
         )
-        # TODO : switch language formats to ISO 639-1 standard language codes
+        # Language formats: ISO 639-1 standard language codes
         # https://github.com/flyingcircusio/pycountry
-
-    @timeout_decorator.timeout(60, use_signals=False)
-    def prepare(self, PREPARATION, RECORD):
 
         languages_to_include = ["en"]
         if "scope_prescreen" in [
@@ -151,21 +149,27 @@ class ExcludeLanguagesPrep:
                 languages_to_include.extend(
                     scope_prescreen.get("LanguageScope", ["en"])
                 )
-        languages_to_include = list(set(languages_to_include))
+        self.languages_to_include = list(set(languages_to_include))
+
+        self.lang_code_mapping = {}
+        for country in pycountry.languages:
+            try:
+                self.lang_code_mapping[country.name.lower()] = country.alpha_2
+            except AttributeError:
+                pass
+
+    @timeout_decorator.timeout(60, use_signals=False)
+    def prepare(self, PREPARATION, RECORD):
 
         # Note : other languages are not yet supported
-        # becuase the dedupe does not yet support cross-language merges
+        # because the dedupe does not yet support cross-language merges
 
-        assert ["en"] == languages_to_include
         if "language" in RECORD.data:
-            RECORD.data["language"] = (
-                RECORD.data["language"].replace("English", "en").replace("ENG", "en")
-            )
-            if RECORD.data["language"] not in languages_to_include:
+            if RECORD.data["language"] not in self.languages_to_include:
                 RECORD.prescreen_exclude(
                     reason=(
                         "language of title not in "
-                        f"[{','.join(languages_to_include)}]"
+                        f"[{','.join(self.languages_to_include)}]"
                     )
                 )
 
@@ -173,23 +177,38 @@ class ExcludeLanguagesPrep:
 
         # To avoid misclassifications for short titles
         if len(RECORD.data.get("title", "")) < 30:
+            # If language not in record, add language
+            # (always - needed in dedupe.)
+            RECORD.data["language"] = "en"
             return RECORD
 
         confidenceValues = self.language_detector.compute_language_confidence_values(
             text=RECORD.data["title"]
         )
-        # Format: ENGLISH
 
         if PREPARATION.REVIEW_MANAGER.DEBUG_MODE:
             print(RECORD.data["title"].lower())
             PREPARATION.REVIEW_MANAGER.pp.pprint(confidenceValues)
+
+        # If language not in record, add language (always - needed in dedupe.)
+        set_most_likely_language = False
         for lang, conf in confidenceValues:
-            if "ENGLISH" == lang.name:
+
+            predicted_language = "not-found"
+            # Map to ISO 639-3 language code
+            if lang.name.lower() in self.lang_code_mapping:
+                predicted_language = self.lang_code_mapping[lang.name.lower()]
+
+            if not set_most_likely_language:
+                RECORD.data["language"] = predicted_language
+                set_most_likely_language = True
+            if "en" == predicted_language:
                 if conf > 0.95:
+                    RECORD.data["language"] = predicted_language
                     return RECORD
 
         RECORD.prescreen_exclude(
-            reason=f"language of title not in [{','.join(languages_to_include)}]"
+            reason=f"language of title not in [{','.join(self.languages_to_include)}]"
         )
 
         return RECORD
