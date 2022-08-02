@@ -16,10 +16,7 @@ colrev\_core.prep\_man.PrepMan
    .. autosummary::
       :nosignatures:
 
-      ~PrepMan.append_to_non_dupe_db
-      ~PrepMan.apply_prep_man
       ~PrepMan.check_precondition
-      ~PrepMan.extract_needs_prep_man
       ~PrepMan.get_data
       ~PrepMan.main
       ~PrepMan.prep_man_stats

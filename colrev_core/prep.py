@@ -316,8 +316,56 @@ class Preparation(Process):
         return RECORD.get_data()
 
     def reset(self, *, record_list: typing.List[dict]):
-        from colrev_core.prep_man import PrepMan
         from copy import deepcopy
+
+        def append_to_non_dupe_db(
+            *, record_to_unmerge_original: dict, record_original: dict
+        ):
+
+            record_to_unmerge = record_to_unmerge_original.copy()
+            record = record_original.copy()
+
+            non_dupe_db_path = Path.home().joinpath("colrev") / Path(
+                "non_duplicates.bib"
+            )
+
+            non_dupe_db_path.parents[0].mkdir(parents=True, exist_ok=True)
+
+            if non_dupe_db_path.is_file():
+
+                with open(non_dupe_db_path, encoding="utf8") as target_db:
+
+                    non_dupe_recs_dict = (
+                        self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                            target_db.read()
+                        )
+                    )
+
+                max_id = max([int(ID) for ID in non_dupe_recs_dict.keys()] + [1]) + 1
+            else:
+                non_dupe_recs_dict = dict()
+                max_id = 1
+
+            record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
+            max_id += 1
+            record["ID"] = str(max_id).rjust(9, "0")
+
+            record_to_unmerge = {k: str(v) for k, v in record_to_unmerge.items()}
+            record = {k: str(v) for k, v in record.items()}
+
+            del record_to_unmerge["colrev_origin"]
+            del record["colrev_origin"]
+            del record_to_unmerge["colrev_status"]
+            del record["colrev_status"]
+
+            non_dupe_recs_dict[record_to_unmerge["ID"]] = record_to_unmerge
+            non_dupe_recs_dict[record["ID"]] = record
+
+            self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
+                records=non_dupe_recs_dict, save_path=non_dupe_db_path
+            )
+
+            return
 
         record_list = [
             r
@@ -400,13 +448,13 @@ class Preparation(Process):
                 ):
                     break
 
-        PREP_MAN = PrepMan(REVIEW_MANAGER=self.REVIEW_MANAGER)
         # TODO : double-check! resetting the prep does not necessarily mean
         # that wrong records were merged...
         # TODO : if any record_to_unmerge['status'] != RecordState.md_imported:
         # retrieve the original record from the search/source file
         for record_to_unmerge, record in record_reset_list:
-            PREP_MAN.append_to_non_dupe_db(
+            # TODO : think whether we still need the non-dupe-db...
+            append_to_non_dupe_db(
                 record_to_unmerge_original=record_to_unmerge, record_original=record
             )
             record_to_unmerge.update(
