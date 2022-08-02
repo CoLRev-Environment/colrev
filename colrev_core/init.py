@@ -328,7 +328,10 @@ class Initializer:
 
             # TODO : exclude complementary materials in prep scripts
             # TODO : exclude get_masterdata_from_citeas etc. from prep
-            settings["prep"]["man_prep_scripts"] = [{"endpoint": "export_man_prep"}]
+            settings["prep"]["man_prep_scripts"] = [
+                {"endpoint": "prep_man_curation_jupyter"},
+                {"endpoint": "export_man_prep"},
+            ]
             settings["prescreen"][
                 "explanation"
             ] = "All records are automatically prescreen included."

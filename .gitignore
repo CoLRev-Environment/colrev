@@ -71,3 +71,5 @@ analysis/__pycache__/*
 .rstudio/*
 data/*
 data*
+
+.ipynb_checkpoints

@@ -21,4 +21,5 @@ colrev\_core.built\_in.prep\_man
       :nosignatures:
 
       CoLRevCLIManPrep
+      CurationJupyterNotebookManPrep
       ExportManPrep

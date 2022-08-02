@@ -122,3 +122,38 @@ class ExportManPrep:
                 )
 
         return records
+
+
+@zope.interface.implementer(PreparationManualEndpoint)
+class CurationJupyterNotebookManPrep:
+    def __init__(self, *, PREP_MAN, SETTINGS):
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+
+        Path("prep_man").mkdir(exist_ok=True)
+        if not Path("prep_man/prep_man_curation.ipynb").is_file():
+            PREP_MAN.REVIEW_MANAGER.logger.info(
+                f"Activated jupyter notebook to"
+                f"{Path('prep_man/prep_man_curation.ipynb')}"
+            )
+            self.__retrieve_package_file(
+                template_file=Path("../template/prep_man_curation.ipynb"),
+                target=Path("prep_man/prep_man_curation.ipynb"),
+            )
+
+    def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
+        import pkgutil
+
+        filedata = pkgutil.get_data(__name__, str(template_file))
+        if filedata:
+            with open(target, "w", encoding="utf8") as file:
+                file.write(filedata.decode("utf-8"))
+        return
+
+    def prepare_manual(self, PREP_MAN, records):
+
+        input(
+            "Navigate to the jupyter notebook available at\n"
+            "prep_man/prep_man_curation.ipynb\n"
+            "Press Enter to continue."
+        )
+        return records

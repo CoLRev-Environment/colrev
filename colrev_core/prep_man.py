@@ -21,6 +21,9 @@ class PrepMan(Process):
         "export_man_prep": {
             "endpoint": built_in_prep_man.ExportManPrep,
         },
+        "prep_man_curation_jupyter": {
+            "endpoint": built_in_prep_man.CurationJupyterNotebookManPrep,
+        },
     }
 
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):

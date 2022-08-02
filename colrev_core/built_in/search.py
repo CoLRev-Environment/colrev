@@ -93,7 +93,7 @@ class CrossrefSearchEndpoint:
                     if "" == record.get("author", "") and "" == record.get("title", ""):
                         continue
 
-                    SEARCH.REVIEW_MANAGER.logger.info("Retrieved " + record["doi"])
+                    SEARCH.REVIEW_MANAGER.logger.info(" retrieved " + record["doi"])
                     record["ID"] = str(max_id).rjust(6, "0")
 
                     PREP_RECORD = PrepRecord(data=record)
@@ -794,6 +794,7 @@ class PDFSearchEndpoint:
         pdfs_to_index = list(set(overall_pdfs).difference(set(indexed_pdf_paths)))
 
         if skip_duplicates:
+            SEARCH.REVIEW_MANAGER.logger.info("Calculate PDF hashes to skip duplicates")
             pdfs_path_cpid = p_map(get_pdf_cpid_path, pdfs_to_index)
             pdfs_cpid = [x[1] for x in pdfs_path_cpid]
             duplicate_cpids = [
@@ -860,7 +861,7 @@ class PDFSearchEndpoint:
 
                 # Note : no file access here (just parsing the patterns)
                 # no absolute paths needed
-                partial_path = Path(record["file"]).parents[0].stem
+                partial_path = Path(record["file"]).parents[0]
                 if "year" == sub_dir_pattern:
                     r_sub_dir_pattern = re.compile("([1-3][0-9]{3})")
                     # Note: for year-patterns, we allow subfolders
@@ -871,11 +872,11 @@ class PDFSearchEndpoint:
                         record["year"] = year
 
                 if "volume_number" == sub_dir_pattern:
-                    r_sub_dir_pattern = re.compile("([0-9]{1,3})_([0-9]{1,2})")
+                    r_sub_dir_pattern = re.compile("([0-9]{1,3})(_|/)([0-9]{1,2})")
                     match = r_sub_dir_pattern.search(str(partial_path))
                     if match is not None:
                         volume = match.group(1)
-                        number = match.group(2)
+                        number = match.group(3)
                         record["volume"] = volume
                         record["number"] = number
                     else:
@@ -980,8 +981,10 @@ class PDFSearchEndpoint:
 
         def index_pdf(*, pdf_path: Path) -> dict:
 
-            SEARCH.REVIEW_MANAGER.report_logger.info(pdf_path)
-            SEARCH.REVIEW_MANAGER.logger.info(pdf_path)
+            SEARCH.REVIEW_MANAGER.report_logger.info(
+                f" extract metadata from {pdf_path}"
+            )
+            SEARCH.REVIEW_MANAGER.logger.info(f" extract metadata from {pdf_path}")
 
             record: typing.Dict[str, typing.Any] = {
                 "file": str(pdf_path),
@@ -1054,7 +1057,6 @@ class PDFSearchEndpoint:
         ID = int(get_last_ID(bib_file=feed_file))
         for pdf_batch in pdf_batches:
 
-            print("\n")
             lenrec = len(indexed_pdf_paths)
             if len(list(overall_pdfs)) > 0:
                 SEARCH.REVIEW_MANAGER.logger.info(

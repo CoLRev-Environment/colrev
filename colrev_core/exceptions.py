@@ -51,7 +51,10 @@ class ParameterError(CoLRevException):
     """
 
     def __init__(self, *, parameter, value, options):
-        self.message = f"Invalid parameter {parameter}: {value}.\n Options: {options}"
+        options_string = "\n  - ".join(sorted(options))
+        self.message = (
+            f"Invalid parameter {parameter}: {value}.\n Options:\n  - {options_string}"
+        )
         super().__init__(self.message)
 
 
