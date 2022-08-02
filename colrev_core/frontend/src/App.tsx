@@ -13,6 +13,7 @@ import SourcesEditor from "./components/sources/SourcesEditor";
 import Source from "./models/source";
 import PrepEditor from "./components/prep/PrepEditor";
 import Prep from "./models/prep";
+import { Tooltip } from "bootstrap";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
@@ -23,7 +24,19 @@ function App() {
 
   useEffect(() => {
     loadData();
+    initTooltips();
   }, []);
+
+  const initTooltips = () => {
+    Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]')).forEach(
+      (tooltipNode) => {
+        if (!tooltipNode.hasAttribute("data-tooltip-initialized")) {
+          new Tooltip(tooltipNode);
+          tooltipNode.setAttribute("data-tooltip-initialized", "true");
+        }
+      }
+    );
+  };
 
   const loadData = async () => {
     setIsFileSaved(false);
@@ -95,7 +108,7 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={false}
+                show={true}
               >
                 <ProjectEditor
                   project={project}
@@ -117,7 +130,7 @@ function App() {
                 name="Prep"
                 id="prep"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <PrepEditor prep={prep} prepChanged={onPrepChanged} />
               </ExpanderItem>
@@ -127,7 +140,9 @@ function App() {
                 parentContainerId="settingsExpander"
                 show={false}
               >
+                <label>Scripts</label>
                 <ScriptsEditor
+                  id="dataScripts"
                   scripts={scripts}
                   scriptsChanged={onScriptsChanged}
                 />

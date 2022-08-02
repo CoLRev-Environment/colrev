@@ -1,10 +1,14 @@
 import Script from "../../models/script";
+import Expander from "../common/Expander";
+import ExpanderItem from "../common/ExpanderItem";
 import ScriptEditor from "./ScriptEditor";
 
-const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
-  scripts,
-  scriptsChanged,
-}) => {
+const ScriptsEditor: React.FC<{
+  id: string;
+  scripts: Script[];
+  scriptsChanged: any;
+  isEdit?: boolean;
+}> = ({ id, scripts, scriptsChanged, isEdit = true }) => {
   const scriptChangedHandler = () => {
     const newScripts = [...scripts];
     scriptsChanged(newScripts);
@@ -16,39 +20,41 @@ const ScriptsEditor: React.FC<{ scripts: Script[]; scriptsChanged: any }> = ({
   };
 
   const addScriptHandler = () => {
-    const newScripts = [...scripts, new Script()];
+    const newScript = new Script();
+    newScript.endpoint = "new";
+    const newScripts = [...scripts, newScript];
     scriptsChanged(newScripts);
   };
 
   return (
     <div>
-      {scripts.map((script, index) => (
-        <div className="card mb-2" key={index.toString()}>
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <span>Script {index + 1}</span>
-            <button
-              className="btn btn-danger btn-sm"
-              type="button"
-              onClick={() => deleteScriptHandler(script)}
-            >
-              X
-            </button>
-          </div>
-          <div className="card-body">
+      <Expander id={`${id}Expander`}>
+        {scripts.map((script, index) => (
+          <ExpanderItem
+            key={index.toString()}
+            name={script.endpoint}
+            id={`${id}${index + 1}`}
+            parentContainerId={`${id}Expander`}
+            show={false}
+            hasDelete={isEdit}
+            onDelete={() => deleteScriptHandler(script)}
+          >
             <ScriptEditor
               script={script}
               scriptChanged={scriptChangedHandler}
             />
-          </div>
-        </div>
-      ))}
-      <button
-        className="btn btn-primary"
-        type="button"
-        onClick={addScriptHandler}
-      >
-        Add
-      </button>
+          </ExpanderItem>
+        ))}
+      </Expander>
+      {isEdit && (
+        <button
+          className="btn btn-primary mt-1"
+          type="button"
+          onClick={addScriptHandler}
+        >
+          Add
+        </button>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
 import Script from "../../models/script";
 import Source from "../../models/source";
-import ScriptEditor from "../scripts/ScriptEditor";
+import Expander from "../common/Expander";
+import ExpanderItem from "../common/ExpanderItem";
 import ScriptsEditor from "../scripts/ScriptsEditor";
 
 const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
@@ -38,20 +38,18 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
   };
 
   return (
-    <div>
-      {sources.map((source, index) => (
-        <div className="card mb-2" key={index.toString()}>
-          <div className="card-header d-flex justify-content-between align-items-center">
-            <span>Source {index + 1}</span>
-            <button
-              className="btn btn-danger btn-sm"
-              type="button"
-              onClick={() => deleteSourceHandler(source)}
-            >
-              X
-            </button>
-          </div>
-          <div className="card-body">
+    <div className="mb-3">
+      <Expander id="sourcesExpander">
+        {sources.map((source, index) => (
+          <ExpanderItem
+            key={index.toString()}
+            name={source.filename}
+            id={`source${index + 1}`}
+            parentContainerId="sourcesExpander"
+            show={false}
+            hasDelete={true}
+            onDelete={() => deleteSourceHandler(source)}
+          >
             <div className="mb-3">
               <label htmlFor="filename">Filename</label>
               <input
@@ -112,31 +110,34 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
                 }
               />
             </div>
-            <div className="card mb-3">
-              <div className="card-header">
-                <span>Search Script</span>
-              </div>
-              <div className="card-body">
-                <ScriptEditor
-                  script={source.searchScript}
-                  scriptChanged={sourcesChangedHandler}
-                />
-              </div>
+            <div className="mb-3">
+              <label>Search Script</label>
+              <ScriptsEditor
+                id="sourceSearchScript"
+                isEdit={false}
+                scripts={[source.searchScript]}
+                scriptsChanged={(scripts: Script[]) => {
+                  source.searchScript = scripts[0];
+                  sourcesChangedHandler();
+                }}
+              />
             </div>
-            <div className="card mb-3">
-              <div className="card-header">
-                <span>Conversion Script</span>
-              </div>
-              <div className="card-body">
-                <ScriptEditor
-                  script={source.conversionScript}
-                  scriptChanged={sourcesChangedHandler}
-                />
-              </div>
+            <div className="mb-3">
+              <label>Conversion Script</label>
+              <ScriptsEditor
+                id="sourceConversionScript"
+                isEdit={false}
+                scripts={[source.conversionScript]}
+                scriptsChanged={(scripts: Script[]) => {
+                  source.conversionScript = scripts[0];
+                  sourcesChangedHandler();
+                }}
+              />
             </div>
             <div className="mb-3">
               <label>Source Prep Scripts</label>
               <ScriptsEditor
+                id="sourcePrepScripts"
                 scripts={source.sourcePrepScripts}
                 scriptsChanged={(scripts: Script[]) =>
                   sourcePrepScriptsChangedHandler(scripts, source)
@@ -155,11 +156,11 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
                 }
               />
             </div>
-          </div>
-        </div>
-      ))}
+          </ExpanderItem>
+        ))}
+      </Expander>
       <button
-        className="btn btn-primary"
+        className="btn btn-primary mt-1"
         type="button"
         onClick={addSourceHandler}
       >

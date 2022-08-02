@@ -25,7 +25,9 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
   };
 
   const addPrepRoundHandler = () => {
-    const newPrepRounds = [...prep.prepRounds, new PrepRound()];
+    const newPrepRound = new PrepRound();
+    newPrepRound.name = "new";
+    const newPrepRounds = [...prep.prepRounds, newPrepRound];
     const newPrep = {
       ...prep,
       prepRounds: newPrepRounds,
@@ -68,13 +70,14 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
         />
       </div>
       <div className="mb-3">
-        <Expander id={`prepRoundExpander`}>
+        <label>Prep Rounds</label>
+        <Expander id={`prepRoundsExpander`}>
           {prep.prepRounds.map((prepRound, index) => (
             <ExpanderItem
               key={index.toString()}
-              name={`Prep Round ${index + 1}`}
+              name={prepRound.name}
               id={`prepRound${index + 1}`}
-              parentContainerId="prepRoundExpander"
+              parentContainerId="prepRoundsExpander"
               show={false}
               hasDelete={true}
               onDelete={() => deletePrepRoundHandler(prepRound)}
@@ -106,6 +109,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
               <div className="mb-3">
                 <label>Source Prep Scripts</label>
                 <ScriptsEditor
+                  id={`sourcePrepScripts${index.toString()}`}
                   scripts={prepRound.scripts}
                   scriptsChanged={(scripts: Script[]) =>
                     sourcePrepScriptsChangedHandler(scripts, prepRound)
@@ -126,6 +130,7 @@ const PrepEditor: React.FC<{ prep: Prep; prepChanged: any }> = ({
       <div className="mb-3">
         <label>Man Prep Scripts</label>
         <ScriptsEditor
+          id="manPrepScripts"
           scripts={prep.manPrepScripts}
           scriptsChanged={(scripts: Script[]) =>
             mapPrepScriptsChangedHandler(scripts)

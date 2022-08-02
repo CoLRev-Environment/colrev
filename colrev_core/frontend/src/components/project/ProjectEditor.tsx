@@ -91,7 +91,13 @@ const ProjectEditor: React.FC<{ project: Project; projectChanged: any }> = ({
         />
       </div>
       <div className="mb-3">
-        <label htmlFor="idPattern">Id Pattern</label>
+        <label
+          htmlFor="idPattern"
+          data-bs-toggle="tooltip"
+          title="Specify the format of record identifiers (BibTex citation keys)."
+        >
+          ID Pattern
+        </label>
         <input
           className="form-control"
           type="text"
