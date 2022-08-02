@@ -47,6 +47,7 @@ class SearchSources:
     def apply_source_heuristics(self, *, filepath: Path) -> list:
         """Apply heuristics to identify source"""
         from colrev_core.load import Loader
+        import re
 
         data = ""
         try:
@@ -64,12 +65,26 @@ class SearchSources:
                 res["source_prep_scripts"] = (
                     [source_name] if callable(endpoint.prepare) else []
                 )
-                if "conversion_script" not in res:
-                    res["conversion_script"] = Loader.get_conversion_script(
-                        filepath=filepath
-                    )
                 if "search_script" not in res:
                     res["search_script"] = {}
+
+                if "filename" not in res:
+                    # Correct the file extension if necessary
+                    if re.search("%0", data) and filepath.suffix not in [".enl"]:
+                        new_filename = filepath.with_suffix(".enl")
+                        print(
+                            f"\033[92mRenaming to {new_filename} "
+                            "(because the format is .enl)\033[0m"
+                        )
+                        filepath.rename(new_filename)
+                        res["filename"] = new_filename
+                    else:
+                        res["filename"] = filepath
+
+                if "conversion_script" not in res:
+                    res["conversion_script"] = Loader.get_conversion_script(
+                        filepath=res["filename"]
+                    )
 
                 results_list.append(res)
 

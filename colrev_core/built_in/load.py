@@ -5,6 +5,7 @@ import docker
 import zope.interface
 from dacite import from_dict
 
+import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import LoadEndpoint
 
@@ -114,7 +115,7 @@ class CSVLoader:
         try:
             data = pd.read_csv(SOURCE.filename)
         except pd.errors.ParserError:
-            raise LOADER.ImportException(
+            raise colrev_exceptions.ImportException(
                 f"Error: Not a csv file? {SOURCE.filename.name}"
             )
 
@@ -191,7 +192,7 @@ class ZoteroTranslationLoader:
         r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
         headers = {"Content-type": "application/json"}
         if "No suitable translators found" == r.content.decode("utf-8"):
-            raise LOADER.ImportException(
+            raise colrev_exceptions.ImportException(
                 "Zotero translators: No suitable import translators found"
             )
 
@@ -208,7 +209,9 @@ class ZoteroTranslationLoader:
 
         except Exception as e:
             pass
-            raise LOADER.ImportException(f"Zotero import translators failed ({e})")
+            raise colrev_exceptions.ImportException(
+                f"Zotero import translators failed ({e})"
+            )
 
         LOADER.check_bib_file(SOURCE, records)
 
@@ -285,7 +288,9 @@ class BibutilsLoader:
             try:
                 container = client.create_container("bibutils", script, stdin_open=True)
             except docker.errors.ImageNotFound:
-                raise LOADER.ImportException("Docker images for bibutils not found")
+                raise colrev_exceptions.ImportException(
+                    "Docker images for bibutils not found"
+                )
 
             sock = client.attach_socket(
                 container, params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}
@@ -308,7 +313,7 @@ class BibutilsLoader:
         filetype = Path(SOURCE.filename).suffix.replace(".", "")
 
         if filetype in ["enl", "end"]:
-            data = self.bibutils_convert("end2xml", data)
+            data = bibutils_convert("end2xml", data)
         elif filetype in ["copac"]:
             data = bibutils_convert("copac2xml", data)
         elif filetype in ["isi"]:
@@ -318,7 +323,7 @@ class BibutilsLoader:
         elif filetype in ["ris"]:
             data = bibutils_convert("ris2xml", data)
         else:
-            raise LOADER.ImportException(
+            raise colrev_exceptions.ImportException(
                 f"Filetype {filetype} not supported by bibutils"
             )
 

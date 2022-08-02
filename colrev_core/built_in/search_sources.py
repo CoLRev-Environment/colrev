@@ -80,6 +80,14 @@ class AISeLibrarySearchSource:
             # for the enl file:
             if nr_ais_links >= data.count("%U "):
                 result["confidence"] = 0.7
+                result["conversion_script"] = {"endpoint": "bibutils"}
+                new_filename = filename.with_suffix(".enl")
+                print(
+                    f"\033[92mRenaming to {new_filename} "
+                    "(because the format is .enl, not .txt.)\033[0m"
+                )
+                filename.rename(new_filename)
+                result["filename"] = new_filename
                 return result
             # for the bib file:
             if nr_ais_links == data.count("\n}"):
@@ -91,20 +99,6 @@ class AISeLibrarySearchSource:
     def prepare(self, RECORD):
         ais_mapping: dict = {}
         RECORD = apply_field_mapping(RECORD=RECORD, mapping=ais_mapping)
-
-        if RECORD.data.get("journal", "") in [
-            "Research-in-Progress Papers",
-            "Research Papers",
-        ]:
-            if "https://aisel.aisnet.org/ecis" in RECORD.data.get("url", ""):
-                RECORD.update_field(
-                    key="journal", value="ECIS", source="prep_ais_source"
-                )
-
-        if RECORD.data.get("journal", "") == "Management Information Systems Quarterly":
-            RECORD.update_field(
-                key="journal", value="MIS Quarterly", source="prep_ais_source"
-            )
 
         # Note : simple heuristic
         # but at the moment, AISeLibrary only indexes articles and conference papers
@@ -154,6 +148,21 @@ class AISeLibrarySearchSource:
             if "journal" in RECORD.data and "booktitle" not in RECORD.data:
                 RECORD.rename_field(key="journal", new_key="booktitle")
 
+            if RECORD.data.get("booktitle", "") in [
+                "Research-in-Progress Papers",
+                "Research Papers",
+            ]:
+                if "https://aisel.aisnet.org/ecis" in RECORD.data.get("url", ""):
+                    RECORD.update_field(
+                        key="booktitle", value="ECIS", source="prep_ais_source"
+                    )
+
+        if RECORD.data.get("journal", "") == "Management Information Systems Quarterly":
+            RECORD.update_field(
+                key="journal", value="MIS Quarterly", source="prep_ais_source"
+            )
+
+        if "inproceedings" == RECORD.data["ENTRYTYPE"]:
             if "ICIS" in RECORD.data["booktitle"]:
                 RECORD.update_field(
                     key="booktitle",
