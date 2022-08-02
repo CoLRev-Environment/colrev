@@ -2154,24 +2154,29 @@ class PrescreenRecord(Record):
 
     def __str__(self) -> str:
 
-        self.identifying_keys_order = ["ID", "ENTRYTYPE"] + [
-            k for k in self.identifying_field_keys if k in self.data
-        ]
-        complementary_keys_order = [
-            k for k, v in self.data.items() if k not in self.identifying_keys_order
-        ]
+        GREEN = "\033[92m"
+        END = "\033[0m"
 
-        ik_sorted = {
-            k: v for k, v in self.data.items() if k in self.identifying_keys_order
-        }
-        ck_sorted = {
-            k: v
-            for k, v in self.data.items()
-            if k in complementary_keys_order and k not in self.provenance_keys
-        }
         ret_str = (
-            self.pp.pformat(ik_sorted)[:-1] + "\n" + self.pp.pformat(ck_sorted)[1:]
+            f"{GREEN}{self.data.get('title', 'no title')}{END}\n"
+            f"{self.data.get('author', 'no-author')}\n"
         )
+        if "article" == self.data["ENTRYTYPE"]:
+            ret_str += (
+                f"{self.data.get('journal', 'no-journal')} "
+                f"({self.data.get('year', 'no-year')}) "
+                f"{self.data.get('volume', 'no-volume')}"
+                f"({self.data.get('number', '')})\n"
+            )
+        elif "inproceedings" == self.data["ENTRYTYPE"]:
+            ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
+        if "abstract" in self.data:
+            ret_str += f"\n{self.data['abstract']}\n"
+
+        if "url" in self.data:
+            ret_str += f"\n{self.data['url']}\n"
+
+        ret_str += f"\n{self.data['ID']} ({self.data['ENTRYTYPE']})\n"
 
         return ret_str
 
