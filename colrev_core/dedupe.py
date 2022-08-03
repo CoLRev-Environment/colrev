@@ -176,7 +176,7 @@ class Dedupe(Process):
         # df.to_csv('export.csv', index=False)
 
         records_df.drop(
-            records_df.columns.difference(
+            labels=records_df.columns.difference(
                 [
                     "ID",
                     "author",
@@ -192,7 +192,7 @@ class Dedupe(Process):
                     "colrev_status",
                 ]
             ),
-            1,
+            axis=1,
             inplace=True,
         )
         records_df[

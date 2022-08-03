@@ -403,7 +403,8 @@ class Initializer:
             + ".ipynb_checkpoints/\n"
             + "pdfs\n"
             + "requests_cache.sqlite\n"
-            + "__pycache__"
+            + "__pycache__\n"
+            + ".tei"
         )
         f.close()
         return

@@ -35,6 +35,9 @@ class PDF_Preparation(Process):
         "validate_completeness": {
             "endpoint": built_in_pdf_prep.PDFCompletenessValidationEndpoint,
         },
+        "create_tei": {
+            "endpoint": built_in_pdf_prep.TEIEndpoint,
+        },
     }
 
     def __init__(

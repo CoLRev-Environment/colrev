@@ -1723,6 +1723,14 @@ class Record:
         print(formatted_ref)
         return
 
+    def get_tei_filename(self) -> Path:
+        tei_filename = Path(f'.tei/{self.data["ID"]}.tei.xml')
+        if "file" in self.data:
+            tei_filename = Path(
+                self.data["file"].replace("pdfs/", ".tei/")
+            ).with_suffix(".tei.xml")
+        return tei_filename
+
 
 class PrepRecord(Record):
     # Note: add methods that are called multiple times
@@ -2160,6 +2168,7 @@ class PrescreenRecord(Record):
         super().__init__(data=data)
 
     def __str__(self) -> str:
+        import textwrap
 
         GREEN = "\033[92m"
         END = "\033[0m"
@@ -2178,10 +2187,15 @@ class PrescreenRecord(Record):
         elif "inproceedings" == self.data["ENTRYTYPE"]:
             ret_str += f"{self.data.get('booktitle', 'no-booktitle')}\n"
         if "abstract" in self.data:
-            ret_str += f"\n{self.data['abstract']}\n"
+            lines = textwrap.wrap(self.data["abstract"], 100, break_long_words=False)
+            ret_str += f"\nAbstract: {lines.pop(0)}\n"
+            ret_str += "\n".join(lines) + "\n"
 
         if "url" in self.data:
-            ret_str += f"\n{self.data['url']}\n"
+            ret_str += f"\nurl: {self.data['url']}\n"
+
+        if "file" in self.data:
+            ret_str += f"\nfile: {self.data['file']}\n"
 
         ret_str += f"\n{self.data['ID']} ({self.data['ENTRYTYPE']})\n"
 

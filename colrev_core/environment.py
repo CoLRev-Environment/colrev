@@ -2264,6 +2264,25 @@ class TEIParser:
                         doi = res.text
         return doi
 
+    def get_abstract(self) -> str:
+        import re
+
+        CLEANR = re.compile("<.*?>")
+
+        def cleanhtml(raw_html):
+            cleantext = re.sub(CLEANR, "", raw_html)
+            return cleantext
+
+        abstract_text = "NA"
+        profile_description = self.root.find(".//" + self.ns["tei"] + "profileDesc")
+        if profile_description is not None:
+            abstract_node = profile_description.find(
+                ".//" + self.ns["tei"] + "abstract"
+            )
+            html_str = etree.tostring(abstract_node).decode("utf-8")
+            abstract_text = cleanhtml(html_str)
+        return abstract_text
+
     def get_metadata(self) -> dict:
 
         record = {

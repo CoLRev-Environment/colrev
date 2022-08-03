@@ -13,7 +13,9 @@ from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.environment import GrobidService
 from colrev_core.environment import LocalIndex
+from colrev_core.environment import TEIParser
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PDFPreparationEndpoint
 from colrev_core.record import Record
@@ -663,5 +665,30 @@ class PDFCompletenessValidationEndpoint:
                 RECORD.data.update(
                     colrev_status=RecordState.pdf_needs_manual_preparation
                 )
+
+        return RECORD.data
+
+
+@zope.interface.implementer(PDFPreparationEndpoint)
+class TEIEndpoint:
+    def __init__(self, *, PDF_PREPARATION, SETTINGS):
+
+        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE.start()
+        Path(".tei").mkdir(exist_ok=True)
+
+    @timeout_decorator.timeout(180, use_signals=False)
+    def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
+
+        PDF_PREPARATION.REVIEW_MANAGER.logger.info(
+            f" creating tei: {RECORD.data['ID']}"
+        )
+
+        if "file" in RECORD.data:
+            _ = TEIParser(
+                pdf_path=Path(RECORD.data["file"]),
+                tei_path=RECORD.get_tei_filename(),
+            )
 
         return RECORD.data

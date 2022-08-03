@@ -4,6 +4,7 @@ from pathlib import Path
 import zope.interface
 from dacite import from_dict
 
+from colrev_core.environment import TEIParser
 from colrev_core.process import DefaultSettings
 from colrev_core.process import ScreenEndpoint
 from colrev_core.record import RecordState
@@ -14,10 +15,214 @@ class CoLRevCLIScreenEndpoint:
     def __init__(self, *, SCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
-    def run_screen(self, SCREEN, records: dict, split: list) -> dict:
-        from colrev.cli import screen_cli
+    def get_screening_criteria(self, *, SCREEN, records):
+        from colrev_core.record import RecordState
+        from colrev_core.settings import ScreenCriterion, ScreenCriterionType
 
-        records = screen_cli(SCREEN, split)
+        screening_criteria = SCREEN.REVIEW_MANAGER.settings.screen.criteria
+        if len(screening_criteria) == 0 and 0 == len(
+            [
+                r
+                for r in records.values()
+                if r["colrev_status"]
+                in [
+                    RecordState.rev_included,
+                    RecordState.rev_excluded,
+                    RecordState.rev_synthesized,
+                ]
+            ]
+        ):
+
+            screening_criteria = {}
+            while "y" == input("Add screening criterion [y,n]?"):
+                short_name = input("Provide a short name: ")
+                if "i" == input("Inclusion or exclusion criterion [i,e]?: "):
+                    criterion_type = ScreenCriterionType.inclusion_criterion
+                else:
+                    criterion_type = ScreenCriterionType.exclusion_criterion
+                explanation = input("Provide a short explanation: ")
+
+                screening_criteria[short_name] = ScreenCriterion(
+                    explanation=explanation, criterion_type=criterion_type, comment=""
+                )
+
+            SCREEN.set_screening_criteria(screening_criteria=screening_criteria)
+
+        return screening_criteria
+
+    def screen_cli(self, SCREEN, split) -> dict:
+        from colrev_core.record import ScreenRecord
+        from colrev_core.settings import ScreenCriterionType
+
+        screen_data = SCREEN.get_data()
+        stat_len = screen_data["nr_tasks"]
+
+        i, quit_pressed = 0, False
+
+        SCREEN.REVIEW_MANAGER.logger.info("Start screen")
+
+        if 0 == stat_len:
+            SCREEN.REVIEW_MANAGER.logger.info("No records to prescreen")
+
+        records = SCREEN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        screening_criteria = self.get_screening_criteria(SCREEN=SCREEN, records=records)
+
+        print("\n\nIn the screen, the following criteria are applied:\n")
+        for (
+            criterion_name,
+            criterion_settings,
+        ) in SCREEN.REVIEW_MANAGER.settings.screen.criteria.items():
+            color = "\033[92m"
+            if (
+                ScreenCriterionType.exclusion_criterion
+                == criterion_settings.criterion_type
+            ):
+                color = "\033[91m"
+            print(
+                f" - {criterion_name} "
+                f"({color}{criterion_settings.criterion_type}\033[0m): "
+                f"{criterion_settings.explanation}"
+            )
+            if criterion_settings.comment != "":
+                print(f"   {criterion_settings.comment}")
+
+        criteria_available = len(screening_criteria.keys())
+
+        for record in screen_data["items"]:
+            if len(split) > 0:
+                if record["ID"] not in split:
+                    continue
+
+            print("\n\n")
+            i += 1
+            skip_pressed = False
+
+            SCREEN_RECORD = ScreenRecord(data=record)
+            abstract_from_tei = False
+            if "abstract" not in SCREEN_RECORD.data:
+                abstract_from_tei = True
+                TEI = TEIParser(
+                    pdf_path=Path(SCREEN_RECORD.data["file"]),
+                    tei_path=SCREEN_RECORD.get_tei_filename(),
+                )
+                SCREEN_RECORD.data["abstract"] = TEI.get_abstract()
+
+            print(SCREEN_RECORD)
+            if abstract_from_tei:
+                del SCREEN_RECORD.data["abstract"]
+
+            if criteria_available:
+                decisions = []
+
+                for criterion_name, criterion_settings in screening_criteria.items():
+
+                    decision, ret = "NA", "NA"
+                    while ret not in ["y", "n", "q", "s"]:
+                        color = "\033[92m"
+                        if (
+                            ScreenCriterionType.exclusion_criterion
+                            == criterion_settings.criterion_type
+                        ):
+                            color = "\033[91m"
+
+                        ret = input(
+                            # is relevant / should be in the sample / should be retained
+                            f"({i}/{stat_len}) Record should be included according to"
+                            f" {criterion_settings.criterion_type}"
+                            f" {color}{criterion_name}\033[0m"
+                            " [y,n,q,s]? "
+                        )
+                        if "q" == ret:
+                            quit_pressed = True
+                        elif "s" == ret:
+                            skip_pressed = True
+                            continue
+                        elif ret in ["y", "n"]:
+                            decision = ret
+
+                    if quit_pressed or skip_pressed:
+                        break
+
+                    decision = decision.replace("n", "out").replace("y", "in")
+                    decisions.append([criterion_name, decision])
+
+                if skip_pressed:
+                    continue
+                if quit_pressed:
+                    SCREEN.REVIEW_MANAGER.logger.info("Stop screen")
+                    break
+
+                c_field = ""
+                for criterion_name, decision in decisions:
+                    c_field += f";{criterion_name}={decision}"
+                c_field = c_field.replace(" ", "").lstrip(";")
+
+                if all([decision == "in" for _, decision in decisions]):
+                    screen_inclusion = True
+                else:
+                    screen_inclusion = False
+
+                SCREEN_RECORD.screen(
+                    REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                    screen_inclusion=screen_inclusion,
+                    screening_criteria=c_field,
+                    PAD=screen_data["PAD"],
+                )
+
+            else:
+
+                decision, ret = "NA", "NA"
+                while ret not in ["y", "n", "q", "s"]:
+                    ret = input(f"({i}/{stat_len}) Include [y,n,q,s]? ")
+                    if "q" == ret:
+                        quit_pressed = True
+                    elif "s" == ret:
+                        skip_pressed = True
+                        continue
+                    elif ret in ["y", "n"]:
+                        decision = ret
+
+                if quit_pressed:
+                    SCREEN.REVIEW_MANAGER.logger.info("Stop screen")
+                    break
+
+                if decision == "y":
+                    SCREEN_RECORD.screen(
+                        REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                        screen_inclusion=True,
+                        screening_criteria="NA",
+                    )
+                if decision == "n":
+                    SCREEN_RECORD.screen(
+                        REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,
+                        screen_inclusion=False,
+                        screening_criteria="NA",
+                        PAD=screen_data["PAD"],
+                    )
+
+            if quit_pressed:
+                SCREEN.REVIEW_MANAGER.logger.info("Stop screen")
+                break
+
+        if stat_len == 0:
+            SCREEN.REVIEW_MANAGER.logger.info("No records to screen")
+            return records
+
+        SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        if i < stat_len:  # if records remain for screening
+            if "y" != input("Create commit (y/n)?"):
+                return records
+
+        SCREEN.REVIEW_MANAGER.create_commit(
+            msg="Screening (manual)", manual_author=True, saved_args=None
+        )
+        return records
+
+    def run_screen(self, SCREEN, records: dict, split: list) -> dict:
+
+        records = self.screen_cli(SCREEN, split)
 
         return records
 
