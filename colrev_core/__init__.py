@@ -3,6 +3,6 @@
 __author__ = """Gerit Wagner"""
 __email__ = "gerit.wagner@hec.ca"
 
-from . import _version
+from .__version__ import __version__
 
-__version__ = _version.get_versions()["version"]
+__all__ = ["__version__"]

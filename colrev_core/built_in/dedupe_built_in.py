@@ -493,25 +493,24 @@ class ActiveLearningDedupeTrainingEndpoint:
         # look for it and load it in.
         # __Note:__ if you want to train from scratch, delete the training_file
 
-        try:
-            if DEDUPE.training_file.is_file():
-                DEDUPE.REVIEW_MANAGER.logger.info(
-                    "Reading pre-labeled training data from "
-                    f"{DEDUPE.training_file.name} "
-                    "and preparing data"
-                )
-                with open(DEDUPE.training_file, "rb") as f:
-                    deduper.prepare_training(data_d, f)
-            else:
-                deduper.prepare_training(data_d)
-        except AttributeError:
-            if len(data_d) < 50:
-                raise colrev_exceptions.DedupeError(
-                    "Sample size too small for active learning. "
-                    "Use simple_dedupe instead:\n"
-                    "  colrev settings -m 'dedupe.scripts="
-                    '[{"endpoint":"simple_dedupe"}]\''
-                )
+        if len(data_d) < 50:
+            raise colrev_exceptions.DedupeError(
+                "Sample size too small for active learning. "
+                "Use simple_dedupe instead:\n"
+                "  colrev settings -m 'dedupe.scripts="
+                '[{"endpoint":"simple_dedupe"}]\''
+            )
+
+        if DEDUPE.training_file.is_file():
+            DEDUPE.REVIEW_MANAGER.logger.info(
+                "Reading pre-labeled training data from "
+                f"{DEDUPE.training_file.name} "
+                "and preparing data"
+            )
+            with open(DEDUPE.training_file, "rb") as f:
+                deduper.prepare_training(data_d, f)
+        else:
+            deduper.prepare_training(data_d)
 
         # TODO  input('del data_d - check memory')
         del data_d
@@ -541,7 +540,9 @@ class ActiveLearningDedupeTrainingEndpoint:
         """
         from dedupe._typing import Literal
         from dedupe._typing import TrainingData
-        from dedupe._typing import TrainingExample
+        from dedupe._typing import RecordDictPair as TrainingExample
+
+        # from dedupe._typing import TrainingExample
         from dedupe.core import unique
         from colrev_core.environment import LocalIndex
 
@@ -557,7 +558,9 @@ class ActiveLearningDedupeTrainingEndpoint:
         LOCAL_INDEX = LocalIndex()
         finished = False
         use_previous = False
-        keys = unique(field.field for field in DEDUPE.deduper.data_model.primary_fields)
+        keys = unique(
+            field.field for field in DEDUPE.deduper.data_model.primary_variables
+        )
 
         buffer_len = 1  # Max number of previous operations
         examples_buffer: typing.List[

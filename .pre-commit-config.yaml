@@ -20,7 +20,6 @@ repos:
     hooks:
     -   id: flake8
         additional_dependencies: [flake8-typing-imports==1.7.0]
-        exclude: ^versioneer\.py$
         args: ['--max-line-length=88', '--extend-ignore=E203']
 -   repo: https://github.com/asottile/reorder_python_imports
     rev: v3.1.0
