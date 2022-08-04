@@ -1345,6 +1345,43 @@ class CurationDedupeEndpoint:
             == DEDUPE.REVIEW_MANAGER.settings.dedupe.scripts[0]["selected_source"]
         )
 
+        # warn if not all SOURCE.filenames are included in a dedupe script
+        if FIRST_SOURCE:
+            available_sources = [
+                str(s.filename) for s in DEDUPE.REVIEW_MANAGER.settings.sources
+            ]
+            dedupe_sources = [
+                s["selected_source"]
+                for s in DEDUPE.REVIEW_MANAGER.settings.dedupe.scripts
+                if "curation_full_outlet_dedupe" == s["endpoint"]
+            ]
+            sources_missing_in_dedupe = [
+                x for x in available_sources if x not in dedupe_sources
+            ]
+            if len(sources_missing_in_dedupe) > 0:
+                DEDUPE.REVIEW_MANAGER.logger.warning(
+                    "\033[93mSources missing in "
+                    "dedupe.scripts.curation_full_outlet_dedupe: "
+                    f"{','.join(sources_missing_in_dedupe)}\033[0m"
+                )
+                if "y" == input("Add sources [y,n]?"):
+                    for source_missing_in_dedupe in sources_missing_in_dedupe:
+                        penultimate_position = (
+                            len(DEDUPE.REVIEW_MANAGER.settings.dedupe.scripts) - 1
+                        )
+                        dedupe_script_to_add = {
+                            "endpoint": "curation_full_outlet_dedupe",
+                            "selected_source": source_missing_in_dedupe,
+                        }
+                        DEDUPE.REVIEW_MANAGER.settings.dedupe.scripts.insert(
+                            penultimate_position, dedupe_script_to_add
+                        )
+                        DEDUPE.REVIEW_MANAGER.save_settings()
+                        DEDUPE.REVIEW_MANAGER.logger.info(
+                            f"\033[92mAdded {source_missing_in_dedupe} "
+                            "to dedupe.scripts\033[0m"
+                        )
+
         # TODO : create a search/retrieval script that retrieves
         # records based on linked attributes (see cml_assistant)
 
