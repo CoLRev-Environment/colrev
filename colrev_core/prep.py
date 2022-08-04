@@ -5,7 +5,6 @@ import time
 import typing
 from datetime import timedelta
 from pathlib import Path
-from threading import Timer
 
 import git
 import requests_cache
@@ -90,7 +89,6 @@ class Preparation(Process):
         "cited_by_file",
     ]
 
-    # session = requests_cache.CachedSession("requests_cache")
     cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
     session = requests_cache.CachedSession(
         str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -844,9 +842,6 @@ class Preparation(Process):
                 )
                 self.REVIEW_MANAGER.reset_log()
                 print()
-
-        # Note : this takes long -> asynchronous call
-        Timer(0.1, lambda: self.session.remove_expired_responses()).start()
 
         if not keep_ids and not self.REVIEW_MANAGER.DEBUG_MODE:
             self.REVIEW_MANAGER.REVIEW_DATASET.set_IDs()

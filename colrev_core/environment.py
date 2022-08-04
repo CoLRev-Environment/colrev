@@ -8,10 +8,13 @@ import subprocess
 import time
 import typing
 from copy import deepcopy
+from datetime import timedelta
 from pathlib import Path
+from threading import Timer
 
 import docker
 import requests
+import requests_cache
 from dacite.exceptions import MissingValueError
 from git.exc import InvalidGitRepositoryError
 from lxml import etree
@@ -628,6 +631,13 @@ class LocalIndex:
             self.check_opensearch_docker_available()
 
         logging.getLogger("opensearch").setLevel(logging.ERROR)
+
+        # Note : this task takes long and does not need to run often
+        cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
+        session = requests_cache.CachedSession(
+            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+        )
+        Timer(0.1, lambda: session.remove_expired_responses()).start()
 
     def start_opensearch_docker_dashboards(self) -> None:
 
