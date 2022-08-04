@@ -1549,13 +1549,12 @@ class ReviewManager:
         #     return False
 
         if self.REVIEW_DATASET.has_changes():
-
+            self.logger.info("Preparing commit: checks and updates")
             self.update_status_yaml()
             self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
 
-            hook_skipping = False
-            if not self.DEBUG_MODE:
-                hook_skipping = True
+            # TODO : hooks seem to fail most of the time
+            hook_skipping = True
 
             processing_report = ""
             if self.paths["REPORT"].is_file():

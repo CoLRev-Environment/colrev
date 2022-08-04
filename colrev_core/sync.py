@@ -14,7 +14,10 @@ class Sync:
     def get_cited_papers(self) -> None:
         import json
 
-        paper_md = Path("paper.md")
+        if Path("paper.md").is_file():
+            paper_md = Path("paper.md")
+        elif Path("review.md"):
+            paper_md = Path("review.md")
         rst_files = list(Path.cwd().rglob("*.rst"))
 
         IDs_in_bib = self.get_IDs_in_paper()
@@ -48,6 +51,10 @@ class Sync:
         for citation_key in citation_keys:
             if citation_key in IDs_in_bib:
                 continue
+
+            if Path(f"{citation_key}.pdf").is_file():
+                print("TODO - prefer!")
+                # continue if found/extracted
 
             self.LOCAL_INDEX = LocalIndex()
 
