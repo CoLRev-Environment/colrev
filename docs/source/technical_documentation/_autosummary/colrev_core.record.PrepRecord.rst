@@ -53,6 +53,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.get_retrieval_similarity
       ~PrepRecord.get_similarity
       ~PrepRecord.get_similarity_detailed
+      ~PrepRecord.get_tei_filename
       ~PrepRecord.get_text_from_pdf
       ~PrepRecord.get_toc_key
       ~PrepRecord.get_value

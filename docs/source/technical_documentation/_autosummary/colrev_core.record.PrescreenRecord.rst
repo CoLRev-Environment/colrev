@@ -45,6 +45,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.get_record_similarity
       ~PrescreenRecord.get_similarity
       ~PrescreenRecord.get_similarity_detailed
+      ~PrescreenRecord.get_tei_filename
       ~PrescreenRecord.get_text_from_pdf
       ~PrescreenRecord.get_toc_key
       ~PrescreenRecord.get_value

@@ -25,3 +25,4 @@ colrev\_core.built\_in.pdf\_prep
       PDFCoverPageEndpoint
       PDFLastPageEndpoint
       PDFMetadataValidationEndpoint
+      TEIEndpoint

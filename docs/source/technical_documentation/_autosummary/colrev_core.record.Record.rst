@@ -45,6 +45,7 @@ colrev\_core.record.Record
       ~Record.get_record_similarity
       ~Record.get_similarity
       ~Record.get_similarity_detailed
+      ~Record.get_tei_filename
       ~Record.get_text_from_pdf
       ~Record.get_toc_key
       ~Record.get_value

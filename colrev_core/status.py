@@ -6,11 +6,14 @@ from collections import Counter
 from pathlib import Path
 
 import git
+from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
 from colrev_core.process import Process
+from colrev_core.process import ProcessModel
 from colrev_core.process import ProcessType
+from colrev_core.record import RecordState
 from colrev_core.review_manager import ReviewManager
 
 
@@ -48,8 +51,6 @@ class Status(Process):
         return stat["completeness_condition"]
 
     def get_status_freq(self) -> dict:
-        from colrev_core.record import RecordState
-        from colrev_core.process import ProcessModel
 
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
 
@@ -212,7 +213,6 @@ class Status(Process):
         return stat
 
     def get_priority_transition(self, *, current_origin_states_dict: dict) -> list:
-        from colrev_core.process import ProcessModel
 
         # get "earliest" states (going backward)
         earliest_state = []
@@ -248,7 +248,6 @@ class Status(Process):
     def get_active_processing_functions(
         self, *, current_origin_states_dict: dict
     ) -> list:
-        from colrev_core.process import ProcessModel
 
         active_processing_functions = []
         for state in current_origin_states_dict.values():
@@ -258,7 +257,6 @@ class Status(Process):
         return active_processing_functions
 
     def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
-        from git.exc import GitCommandError
 
         nr_commits_behind, nr_commits_ahead = -1, -1
 

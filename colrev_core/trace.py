@@ -72,8 +72,6 @@ class Trace(Process):
                             print(f"Data: {line}")
                             prev_data = line
 
-        return
-
 
 if __name__ == "__main__":
     pass

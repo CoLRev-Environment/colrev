@@ -45,6 +45,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.get_record_similarity
       ~ScreenRecord.get_similarity
       ~ScreenRecord.get_similarity_detailed
+      ~ScreenRecord.get_tei_filename
       ~ScreenRecord.get_text_from_pdf
       ~ScreenRecord.get_toc_key
       ~ScreenRecord.get_value

@@ -2,8 +2,12 @@
 import shutil
 from pathlib import Path
 
+from colrev_core.environment import GrobidService
+from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.settings import SearchSource
+from colrev_core.settings import SearchType
 
 
 class Distribute(Process):
@@ -15,8 +19,6 @@ class Distribute(Process):
         )
 
     def main(self, *, path_str: str, target: Path) -> None:
-        from colrev_core.environment import TEIParser, GrobidService
-        from colrev_core.settings import SearchSource, SearchType
 
         # if no options are given, take the current path/repo
         # optional: target-repo-path
@@ -102,8 +104,6 @@ class Distribute(Process):
                 self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                     path=str(target_bib_file)
                 )
-
-        return
 
 
 if __name__ == "__main__":

@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import pprint
+import re
 import typing
 from pathlib import Path
 
+from colrev_core.built_in import search_sources as built_in_search_sources
 from colrev_core.environment import AdapterManager
+from colrev_core.load import Loader
 from colrev_core.process import ProcessType
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
 
 class SearchSources:
-
-    from colrev_core.built_in import search_sources as built_in_search_sources
 
     built_in_scripts: dict[str, dict[str, typing.Any]] = {
         "dblp": {"endpoint": built_in_search_sources.DBLP},
@@ -46,8 +47,6 @@ class SearchSources:
 
     def apply_source_heuristics(self, *, filepath: Path) -> list:
         """Apply heuristics to identify source"""
-        from colrev_core.load import Loader
-        import re
 
         data = ""
         try:
@@ -60,7 +59,6 @@ class SearchSources:
         for source_name, endpoint in self.search_source_scripts.items():
             res = endpoint.heuristic(filepath, data)
             if res["confidence"] > 0:
-                # TODO : also return the conversion_script
                 res["source_name"] = source_name
                 res["source_prep_scripts"] = (
                     [source_name] if callable(endpoint.prepare) else []

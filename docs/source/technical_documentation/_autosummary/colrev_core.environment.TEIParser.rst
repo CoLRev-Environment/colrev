@@ -16,6 +16,7 @@ colrev\_core.environment.TEIParser
    .. autosummary::
       :nosignatures:
 
+      ~TEIParser.get_abstract
       ~TEIParser.get_author_name_from_node
       ~TEIParser.get_bibliography
       ~TEIParser.get_citations_per_section
