@@ -89,6 +89,18 @@ class Record:
 
     preferred_sources = ["https://api.crossref.org/works/", "citeas.org"]
 
+    # Fields that are stored as lists (items separated by newlines)
+    list_fields_keys = [
+        "colrev_id",
+        # "colrev_origin",
+        # "colrev_pdf_id",
+        # "screening_criteria",
+    ]
+    dict_fields_keys = [
+        "colrev_masterdata_provenance",
+        "colrev_data_provenance",
+    ]
+
     pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
     def __init__(self, *, data: dict):
@@ -156,8 +168,6 @@ class Record:
         return bib_formatted
 
     def get_data(self, *, stringify=False) -> dict:
-        from colrev_core.review_dataset import ReviewDataset
-
         def save_field_dict(*, input_dict: dict, key: str) -> list:
             list_to_return = []
             if "colrev_masterdata_provenance" == key:
@@ -195,7 +205,7 @@ class Record:
                 )
 
             # separated by \n
-            for key in ReviewDataset.list_fields_keys:
+            for key in self.list_fields_keys:
                 if key in data_copy:
                     if isinstance(data_copy[key], str):
                         data_copy[key] = [
@@ -210,7 +220,7 @@ class Record:
                                 data_copy[key][ind] = val + ";"
                     data_copy[key] = list_to_str(val=data_copy[key])
 
-            for key in ReviewDataset.dict_fields_keys:
+            for key in self.dict_fields_keys:
                 if key in data_copy:
                     if isinstance(data_copy[key], dict):
                         data_copy[key] = save_field_dict(

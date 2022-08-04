@@ -30,19 +30,6 @@ from colrev_core.settings import SearchType
 
 
 class ReviewDataset:
-
-    # Fields that are stored as lists (items separated by newlines)
-    list_fields_keys = [
-        "colrev_id",
-        # "colrev_origin",
-        # "colrev_pdf_id",
-        # "screening_criteria",
-    ]
-    dict_fields_keys = [
-        "colrev_masterdata_provenance",
-        "colrev_data_provenance",
-    ]
-
     def __init__(self, *, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
@@ -230,9 +217,9 @@ class ReviewDataset:
                         else v.upper()
                         if ("doi" == k)
                         else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
-                        if k in ReviewDataset.list_fields_keys
+                        if k in Record.list_fields_keys
                         else ReviewDataset.load_field_dict(value=v, field=k)
-                        if k in ReviewDataset.dict_fields_keys
+                        if k in Record.dict_fields_keys
                         else v
                         for k, v in v.fields.items()
                     }

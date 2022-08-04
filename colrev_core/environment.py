@@ -993,9 +993,7 @@ class LocalIndex:
                 resp = self.os.search(
                     index=self.RECORD_INDEX,
                     body={"query": {"match": {"colrev_id": cid_to_retrieve}}},
-                    timeout=self.request_timeout,
                 )
-
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
                     return retrieved_record
@@ -1435,7 +1433,6 @@ class LocalIndex:
             resp = self.os.search(
                 index=index_name,
                 body={"query": {"match_phrase": {key: value}}},
-                timeout=self.request_timeout,
             )
             res = resp["hits"]["hits"][0]["_source"]
         except (JSONDecodeError, NotFoundError, TransportError, SerializationError):

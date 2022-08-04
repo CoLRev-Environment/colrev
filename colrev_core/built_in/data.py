@@ -485,8 +485,6 @@ class EndnoteEndpoint:
         return endnote_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-        from colrev_core.review_dataset import ReviewDataset
-
         def zotero_conversion(data):
 
             ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
@@ -533,7 +531,9 @@ class EndnoteEndpoint:
                 in [RecordState.rev_included, RecordState.rev_synthesized]
             }
 
-            data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
+            data = DATA.REVIEW_MANAGER.REVIEW_DATASET.parse_bibtex_str(
+                recs_dict_in=selected_records
+            )
 
             enl_data = zotero_conversion(data)
 
@@ -568,7 +568,9 @@ class EndnoteEndpoint:
 
             if len(selected_records) > 0:
 
-                data = ReviewDataset.parse_bibtex_str(recs_dict_in=selected_records)
+                data = DATA.REVIEW_MANAGER.REVIEW_DATASET.parse_bibtex_str(
+                    recs_dict_in=selected_records
+                )
 
                 enl_data = zotero_conversion(data)
 
@@ -703,7 +705,6 @@ class ZettlrEndpoint:
         return zettlr_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-        from colrev_core.data import Data
 
         DATA.REVIEW_MANAGER.logger.info("Export to zettlr endpoint")
 
@@ -856,7 +857,7 @@ class ZettlrEndpoint:
 
         records_dict = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        included = Data.get_record_ids_for_synthesis(records_dict)
+        included = DATA.get_record_ids_for_synthesis(records_dict)
 
         missing_records = get_zettlr_missing(endpoint_path, included)
 
