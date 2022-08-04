@@ -1,6 +1,8 @@
 #! /usr/bin/env python
+import csv
 from pathlib import Path
 
+import pandas as pd
 import zope.interface
 from dacite import from_dict
 
@@ -8,6 +10,9 @@ from colrev_core.environment import TEIParser
 from colrev_core.process import DefaultSettings
 from colrev_core.process import ScreenEndpoint
 from colrev_core.record import RecordState
+from colrev_core.record import ScreenRecord
+from colrev_core.settings import ScreenCriterion
+from colrev_core.settings import ScreenCriterionType
 
 
 @zope.interface.implementer(ScreenEndpoint)
@@ -15,9 +20,8 @@ class CoLRevCLIScreenEndpoint:
     def __init__(self, *, SCREEN, SETTINGS):
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
-    def get_screening_criteria(self, *, SCREEN, records):
-        from colrev_core.record import RecordState
-        from colrev_core.settings import ScreenCriterion, ScreenCriterionType
+    @classmethod
+    def get_screening_criteria(cls, *, SCREEN, records):
 
         screening_criteria = SCREEN.REVIEW_MANAGER.settings.screen.criteria
         if len(screening_criteria) == 0 and 0 == len(
@@ -51,8 +55,6 @@ class CoLRevCLIScreenEndpoint:
         return screening_criteria
 
     def screen_cli(self, SCREEN, split) -> dict:
-        from colrev_core.record import ScreenRecord
-        from colrev_core.settings import ScreenCriterionType
 
         screen_data = SCREEN.get_data()
         stat_len = screen_data["nr_tasks"]
@@ -158,7 +160,7 @@ class CoLRevCLIScreenEndpoint:
                     c_field += f";{criterion_name}={decision}"
                 c_field = c_field.replace(" ", "").lstrip(";")
 
-                if all([decision == "in" for _, decision in decisions]):
+                if all(decision == "in" for _, decision in decisions):
                     screen_inclusion = True
                 else:
                     screen_inclusion = False
@@ -238,9 +240,6 @@ class SpreadsheetScreenEndpoint:
         # TODO : add delta (records not yet in the spreadsheet)
         # instead of overwriting
         # TODO : export_table_format as a settings parameter
-        import csv
-        import pandas as pd
-        from colrev.cli import get_screening_criteria
 
         if self.spreadsheet_path.is_file():
             print("File already exists. Please rename it.")
@@ -248,7 +247,9 @@ class SpreadsheetScreenEndpoint:
 
         SCREEN.REVIEW_MANAGER.logger.info("Loading records for export")
 
-        screening_criteria = get_screening_criteria(SCREEN=SCREEN, records=records)
+        screening_criteria = CoLRevCLIScreenEndpoint.get_screening_criteria(
+            SCREEN=SCREEN, records=records
+        )
 
         tbl = []
         for record in records.values():
@@ -326,7 +327,6 @@ class SpreadsheetScreenEndpoint:
         return
 
     def import_table(self, SCREEN, records, import_table_path=None) -> None:
-        import pandas as pd
 
         if import_table_path is None:
             import_table_path = self.spreadsheet_path
@@ -357,22 +357,21 @@ class SpreadsheetScreenEndpoint:
                             f"({screened_record['ID']})"
                         )
                     continue
+                screening_criteria_field = ""
+                for screening_criterion in screening_criteria.keys():
+                    assert screened_record[screening_criterion] in ["in", "out"]
+                    screening_criteria_field += (
+                        screening_criterion
+                        + "="
+                        + screened_record[screening_criterion]
+                        + ";"
+                    )
+                screening_criteria_field = screening_criteria_field.rstrip(";")
+                record["screening_criteria"] = screening_criteria_field
+                if "=out" in screening_criteria_field:
+                    record["colrev_status"] = RecordState.rev_excluded
                 else:
-                    screening_criteria_field = ""
-                    for screening_criterion in screening_criteria.keys():
-                        assert screened_record[screening_criterion] in ["in", "out"]
-                        screening_criteria_field += (
-                            screening_criterion
-                            + "="
-                            + screened_record[screening_criterion]
-                            + ";"
-                        )
-                    screening_criteria_field = screening_criteria_field.rstrip(";")
-                    record["screening_criteria"] = screening_criteria_field
-                    if "=out" in screening_criteria_field:
-                        record["colrev_status"] = RecordState.rev_excluded
-                    else:
-                        record["colrev_status"] = RecordState.rev_included
+                    record["colrev_status"] = RecordState.rev_included
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

@@ -1,21 +1,23 @@
 #! /usr/bin/env python
+import os
 from pathlib import Path
 
+import docker
+
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in.data import ManuscriptEndpoint
+from colrev_core.environment import EnvironmentManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 
 
 class Paper(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+        )
 
     def main(self) -> None:
-        import os
-        import docker
-
-        from colrev_core.environment import EnvironmentManager
-        from colrev_core.built_in.data import ManuscriptEndpoint
 
         paper_endpoint_settings_l = [
             s
@@ -71,7 +73,6 @@ class Paper(Process):
             )
         except docker.errors.ImageNotFound:
             self.REVIEW_MANAGER.logger.error("Docker image not found")
-            pass
 
         return
 

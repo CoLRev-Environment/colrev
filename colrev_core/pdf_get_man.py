@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from colrev_core.built_in import pdf_get_man as built_in_pdf_get_man
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -12,8 +13,6 @@ from colrev_core.record import RecordState
 
 
 class PDFRetrievalMan(Process):
-
-    from colrev_core.built_in import pdf_get_man as built_in_pdf_get_man
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_pdf_get_man": {
@@ -25,7 +24,7 @@ class PDFRetrievalMan(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.pdf_get_man,
+            process_type=ProcessType.pdf_get_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -70,7 +69,6 @@ class PDFRetrievalMan(Process):
             self.REVIEW_MANAGER.logger.info(
                 "Created missing_pdf_files.csv with paper details"
             )
-        return
 
     def get_data(self) -> dict:
 
@@ -108,8 +106,6 @@ class PDFRetrievalMan(Process):
             ENDPOINT = self.pdf_get_man_scripts[PDF_GET_MAN_SCRIPT["endpoint"]]
 
             records = ENDPOINT.get_man_pdf(self, records)
-
-        return
 
 
 if __name__ == "__main__":

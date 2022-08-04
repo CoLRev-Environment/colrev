@@ -4,15 +4,16 @@ import typing
 import pandas as pd
 
 from colrev_core import prep
+from colrev_core.built_in import prep_man as built_in_prep_man
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import PrepRecord
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
 class PrepMan(Process):
-
-    from colrev_core.built_in import prep_man as built_in_prep_man
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_man_prep": {
@@ -29,7 +30,7 @@ class PrepMan(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.prep_man,
+            process_type=ProcessType.prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -43,7 +44,6 @@ class PrepMan(Process):
         )
 
     def prep_man_stats(self) -> None:
-        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
@@ -128,8 +128,6 @@ class PrepMan(Process):
         print("Entry type statistics (needs_manual_preparation):")
         self.REVIEW_MANAGER.pp.pprint(stats["ENTRYTYPE"])
 
-        return
-
     def get_data(self) -> dict:
 
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
@@ -161,7 +159,6 @@ class PrepMan(Process):
         return md_prep_man_data
 
     def set_data(self, *, record, PAD: int = 40) -> None:
-        from colrev_core.record import PrepRecord
 
         PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
         RECORD = PrepRecord(data=record)
@@ -175,8 +172,6 @@ class PrepMan(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
     def main(self) -> None:
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -185,8 +180,6 @@ class PrepMan(Process):
 
             ENDPOINT = self.prep_man_scripts[PREP_MAN_SCRIPT["endpoint"]]
             records = ENDPOINT.prepare_manual(self, records)
-
-        return
 
 
 if __name__ == "__main__":

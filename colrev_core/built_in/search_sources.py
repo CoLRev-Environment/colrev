@@ -470,7 +470,7 @@ class PDFSearchSource:
         result = {"confidence": 0, "source_identifier": self.source_identifier}
         # Note : quick fix (passing the PDFSearchSource settings)
         BSWH = BackwardSearchSearchSource(SETTINGS=asdict(self.SETTINGS))
-        if filename.suffix == ".pdf" and not BSWH.pdf_backward_search_heuristic(
+        if filename.suffix == ".pdf" and not BSWH.heuristic(
             filename=filename, data=data
         ):
             result["confidence"] = 1.0

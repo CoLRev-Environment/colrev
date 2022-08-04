@@ -1,7 +1,7 @@
 #! /usr/bin/env python
-import hashlib
 import re
 import typing
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -11,13 +11,26 @@ import pandasql as ps
 import requests
 import zope.interface
 from dacite import from_dict
+from p_tqdm import p_map
 from pandasql.sqldf import PandaSQLException
 from pdf2image import convert_from_path
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfinterp import resolve1
+from pdfminer.pdfparser import PDFParser
+from tqdm import tqdm
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.environment import EnvironmentManager
+from colrev_core.environment import GrobidService
+from colrev_core.environment import TEIParser
+from colrev_core.load import Loader
+from colrev_core.pdf_prep import PDF_Preparation
+from colrev_core.prep import PrepRecord
 from colrev_core.process import DefaultSettings
 from colrev_core.process import SearchEndpoint
 from colrev_core.record import Record
+from colrev_core.record import RecordState
+from colrev_core.review_manager import ReviewManager
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -30,7 +43,6 @@ class CrossrefSearchEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev_core.prep import PrepRecord
         from colrev_core.built_in.database_connectors import (
             CrossrefConnector,
             DOIConnector,
@@ -65,7 +77,6 @@ class CrossrefSearchEndpoint:
                 max([int(x["ID"]) for x in records.values() if x["ID"].isdigit()] + [1])
                 + 1
             )
-
         CROSSREF = CrossrefConnector(REVIEW_MANAGER=SEARCH.REVIEW_MANAGER)
 
         def get_crossref_query_return(params):
@@ -109,32 +120,8 @@ class CrossrefSearchEndpoint:
                         "Crossref (check https://status.crossref.org/)"
                     )
                 print(e)
-                pass
-
-        # Note : for local after-query selection:
-        # if "selection_clause" in params:
-        #     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
-        #     SEARCH.REVIEW_MANAGER.logger.info(query)
-
-        # TODO : collect list of records
-        # for more efficient selection
-        # select once (parse result to list of dicts?)
-        # if "selection_clause" in params:
-        #     res = []
-        #     try:
-        #         rec_df = pd.DataFrame.from_records([record])
-        #         # print(rec_df)
-        #         res = ps.sqldf(query, locals())
-        #     except PandaSQLException:
-        #         # print(e)
-        #         pass
-
-        #     if len(res) == 0:
-        #         continue
 
         SEARCH.save_feed_file(records, feed_file)
-
-        return
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query and " WHERE " not in query:
@@ -148,7 +135,6 @@ class CrossrefSearchEndpoint:
                 raise colrev_exceptions.InvalidQueryException(
                     "CROSSREF queries require a journal_issn field in the SCOPE section"
                 )
-        pass
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -277,13 +263,10 @@ class DBLPSearchEndpoint:
             pass
         except UnicodeEncodeError:
             print("UnicodeEncodeError - this needs to be fixed at some time")
-            pass
         except requests.exceptions.ReadTimeout:
             pass
         except requests.exceptions.ConnectionError:
             pass
-
-        return
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
@@ -300,7 +283,6 @@ class DBLPSearchEndpoint:
             raise colrev_exceptions.InvalidQueryException(
                 "DBLP queries require a journal_abbreviated field in the SCOPE section"
             )
-        pass
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -310,7 +292,6 @@ class BackwardSearchEndpoint:
     mode = "individual"
 
     def __init__(self, *, SETTINGS):
-        from colrev_core.environment import GrobidService
 
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
@@ -318,7 +299,6 @@ class BackwardSearchEndpoint:
         self.GROBID_SERVICE.start()
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev_core.record import RecordState
 
         if "colrev_status" in params["scope"]:
             if params["scope"]["colrev_status"] not in [
@@ -413,11 +393,9 @@ class BackwardSearchEndpoint:
             )
         else:
             print("No new records added.")
-        return
 
     def validate_params(self, query: str) -> None:
         print("not yet imlemented")
-        pass
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -431,9 +409,6 @@ class ColrevProjectSearchEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev_core.review_manager import ReviewManager
-        from colrev_core.load import Loader
-        from tqdm import tqdm
 
         if not feed_file.is_file():
             records = []
@@ -497,7 +472,6 @@ class ColrevProjectSearchEndpoint:
 
         else:
             print("No records retrieved.")
-        return
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
@@ -510,7 +484,6 @@ class ColrevProjectSearchEndpoint:
             raise colrev_exceptions.InvalidQueryException(
                 "PROJECT queries require a url field in the SCOPE section"
             )
-        return
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -543,34 +516,116 @@ class IndexSearchEndpoint:
         LOCAL_INDEX = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
+
             # Note: we retrieve colrev_ids and full records afterwards
             # because the os.sql.query throws errors when selecting
             # complex fields like lists of alsoKnownAs fields
+
             query = (
                 f"SELECT colrev_id FROM {LOCAL_INDEX.RECORD_INDEX} "
                 f"WHERE {params['selection_clause']}"
             )
-            # TODO : update to opensearch standard
+            # TODO : update to opensearch standard (DSL?)
+            # or use opensearch-sql plugin
             # https://github.com/opensearch-project/opensearch-py/issues/98
+            # client.transport.perform_request
+            #  ('POST', '/_plugins/_sql', body={'query': sql_str})
+            # https://opensearch.org/docs/latest/search-plugins/sql/index/
             # see extract_references.py (methods repo)
-            resp = LOCAL_INDEX.os.sql.query(body={"query": query})
-            IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
+            # resp = LOCAL_INDEX.os.sql.query(body={"query": query})
+
+            print("WARNING: not yet fully implemented.")
+            quick_fix_query = (
+                params["selection_clause"]
+                .replace("title", "")
+                .replace("'", "")
+                .replace("%", "")
+                .replace("like", "")
+                .lstrip()
+                .rstrip()
+            )
+            print(f"Working with quick-fix query: {quick_fix_query}")
+            # input(query.replace(''))
+            # resp = LOCAL_INDEX.os.search(index=LOCAL_INDEX.RECORD_INDEX,
+            # body={"query":{"match_all":{}}})
+
+            print("search currently restricted to title field")
+            selected_fields = []
+            if "title" in params["selection_clause"]:
+                selected_fields.append("title")
+            if "author" in params["selection_clause"]:
+                selected_fields.append("author")
+            if "fulltext" in params["selection_clause"]:
+                selected_fields.append("fulltext")
+            if "abstract" in params["selection_clause"]:
+                selected_fields.append("abstract")
+
+            # TODO : size is set to maximum.
+            # We may iterate (using the from=... parameter)
+            resp = LOCAL_INDEX.os.search(
+                index=LOCAL_INDEX.RECORD_INDEX,
+                body={
+                    "query": {
+                        "simple_query_string": {
+                            "query": quick_fix_query,
+                            "fields": selected_fields,
+                        },
+                    }
+                },
+                size=10000,
+            )
+
+            # TODO : extract the following into a convenience function of search
+            # (maybe even run in parallel/based on whole list and
+            # select based on ?colrev_ids?)
 
             records_to_import = []
-            for ID_to_retrieve in IDs_to_retrieve:
+            for hit in tqdm(resp["hits"]["hits"]):
+                record = hit["_source"]
+                if "fulltext" in record:
+                    del record["fulltext"]
+                # print(record)
+                rec_df = pd.DataFrame.from_records([record])
+                try:
+                    query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+                    res = ps.sqldf(query, locals())
+                except PandaSQLException:
+                    continue
+                if len(res) > 0:
+                    # if res...: append
+                    records_to_import.append(record)
+                    # input('matched')
 
-                hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
-                res = LOCAL_INDEX.os.get(index=LOCAL_INDEX.RECORD_INDEX, id=hash)
-                record_to_import = res["_source"]
-                record_to_import = {k: str(v) for k, v in record_to_import.items()}
-                record_to_import = {
-                    k: v for k, v in record_to_import.items() if "None" != v
-                }
-                record_to_import = LOCAL_INDEX.prep_record_for_return(
-                    record=record_to_import, include_file=False
-                )
+                # else:
+                # input('not_matched')
 
-                records_to_import.append(record_to_import)
+                # input(hit)
+
+            # IDs_to_retrieve = [item for sublist in resp["rows"] for item in sublist]
+
+            # records_to_import = []
+            # for ID_to_retrieve in IDs_to_retrieve:
+
+            #     hash = hashlib.sha256(ID_to_retrieve.encode("utf-8")).hexdigest()
+            #     res = LOCAL_INDEX.os.get(index=LOCAL_INDEX.RECORD_INDEX, id=hash)
+            #     record_to_import = res["_source"]
+            #     record_to_import = {k: str(v) for k, v in record_to_import.items()}
+            #     record_to_import = {
+            #         k: v for k, v in record_to_import.items() if "None" != v
+            #     }
+            #     record_to_import = LOCAL_INDEX.prep_record_for_return(
+            #         record=record_to_import, include_file=False
+            #     )
+
+            #     if "" == params['selection_clause']:
+            #         records_to_import.append(record_to_import)
+            #     else:
+            #         rec_df = pd.DataFrame.from_records([record_to_import])
+            #         query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
+            #         res = ps.sqldf(query, locals())
+            #         input(res)
+            #         # if res...: append
+            #         records_to_import.append(record_to_import)
 
             return records_to_import
 
@@ -598,11 +653,9 @@ class IndexSearchEndpoint:
 
         else:
             print("No records found")
-        return
 
     def validate_params(self, query: str) -> None:
         print("not yet imlemented")
-        pass
 
 
 @zope.interface.implementer(SearchEndpoint)
@@ -615,17 +668,6 @@ class PDFSearchEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        from collections import Counter
-        from p_tqdm import p_map
-        from colrev_core.environment import GrobidService
-
-        from colrev_core.environment import TEIParser
-        from pdfminer.pdfdocument import PDFDocument
-        from pdfminer.pdfinterp import resolve1
-        from pdfminer.pdfparser import PDFParser
-        from colrev_core.pdf_prep import PDF_Preparation
-
-        from colrev_core.record import RecordState
 
         skip_duplicates = True
 
@@ -774,8 +816,6 @@ class PDFSearchEndpoint:
                 if "  " in str(pdf):
                     pdf.rename(str(pdf).replace("  ", " "))
 
-            return
-
         path = Path(params["scope"]["path"])
 
         fix_filenames()
@@ -900,7 +940,6 @@ class PDFSearchEndpoint:
         # curl -v --form input=@./thefile.pdf -H "Accept: application/x-bibtex"
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(*, record) -> dict:
-            from colrev_core.environment import EnvironmentManager
 
             if RecordState.md_prepared == record.get("colrev_status", "NA"):
                 return record
@@ -945,39 +984,39 @@ class PDFSearchEndpoint:
                 if val:
                     record[key] = str(val)
 
-            fp = open(pdf_path, "rb")
-            parser = PDFParser(fp)
-            doc = PDFDocument(parser)
+            with open(pdf_path, "rb") as fp:
+                parser = PDFParser(fp)
+                doc = PDFDocument(parser)
 
-            if record.get("title", "NA") in ["NA", ""]:
-                if "Title" in doc.info[0]:
-                    try:
-                        record["title"] = doc.info[0]["Title"].decode("utf-8")
-                    except UnicodeDecodeError:
-                        pass
-            if record.get("author", "NA") in ["NA", ""]:
-                if "Author" in doc.info[0]:
-                    try:
-                        pdf_md_author = doc.info[0]["Author"].decode("utf-8")
-                        if (
-                            "Mirko Janc" not in pdf_md_author
-                            and "wendy" != pdf_md_author
-                            and "yolanda" != pdf_md_author
-                        ):
-                            record["author"] = pdf_md_author
-                    except UnicodeDecodeError:
-                        pass
+                if record.get("title", "NA") in ["NA", ""]:
+                    if "Title" in doc.info[0]:
+                        try:
+                            record["title"] = doc.info[0]["Title"].decode("utf-8")
+                        except UnicodeDecodeError:
+                            pass
+                if record.get("author", "NA") in ["NA", ""]:
+                    if "Author" in doc.info[0]:
+                        try:
+                            pdf_md_author = doc.info[0]["Author"].decode("utf-8")
+                            if (
+                                "Mirko Janc" not in pdf_md_author
+                                and "wendy" != pdf_md_author
+                                and "yolanda" != pdf_md_author
+                            ):
+                                record["author"] = pdf_md_author
+                        except UnicodeDecodeError:
+                            pass
 
-            if "abstract" in record:
-                del record["abstract"]
-            if "keywords" in record:
-                del record["keywords"]
+                if "abstract" in record:
+                    del record["abstract"]
+                if "keywords" in record:
+                    del record["keywords"]
 
-            # to allow users to update/reindex with newer version:
-            record["grobid-version"] = EnvironmentManager.docker_images[
-                "lfoppiano/grobid"
-            ]
-            return record
+                # to allow users to update/reindex with newer version:
+                record["grobid-version"] = EnvironmentManager.docker_images[
+                    "lfoppiano/grobid"
+                ]
+                return record
 
         def index_pdf(*, pdf_path: Path) -> dict:
 
@@ -993,42 +1032,44 @@ class PDFSearchEndpoint:
             try:
                 record = get_record_from_pdf_grobid(record=record)
 
-                file = open(pdf_path, "rb")
-                parser = PDFParser(file)
-                document = PDFDocument(parser)
-                pages_in_file = resolve1(document.catalog["Pages"])["Count"]
-                if pages_in_file < 6:
-                    RECORD = Record(data=record)
-                    RECORD.get_text_from_pdf(project_path=SEARCH.REVIEW_MANAGER.path)
-                    record = RECORD.get_data()
-                    if "text_from_pdf" in record:
-                        text: str = record["text_from_pdf"]
-                        if "bookreview" in text.replace(" ", "").lower():
-                            record["ENTRYTYPE"] = "misc"
-                            record["note"] = "Book review"
-                        if "erratum" in text.replace(" ", "").lower():
-                            record["ENTRYTYPE"] = "misc"
-                            record["note"] = "Erratum"
-                        if "correction" in text.replace(" ", "").lower():
-                            record["ENTRYTYPE"] = "misc"
-                            record["note"] = "Correction"
-                        if "contents" in text.replace(" ", "").lower():
-                            record["ENTRYTYPE"] = "misc"
-                            record["note"] = "Contents"
-                        if "withdrawal" in text.replace(" ", "").lower():
-                            record["ENTRYTYPE"] = "misc"
-                            record["note"] = "Withdrawal"
-                        del record["text_from_pdf"]
-                    # else:
-                    #     print(f'text extraction error in {record["ID"]}')
-                    if "pages_in_file" in record:
-                        del record["pages_in_file"]
+                with open(pdf_path, "rb") as file:
+                    parser = PDFParser(file)
+                    document = PDFDocument(parser)
+                    pages_in_file = resolve1(document.catalog["Pages"])["Count"]
+                    if pages_in_file < 6:
+                        RECORD = Record(data=record)
+                        RECORD.get_text_from_pdf(
+                            project_path=SEARCH.REVIEW_MANAGER.path
+                        )
+                        record = RECORD.get_data()
+                        if "text_from_pdf" in record:
+                            text: str = record["text_from_pdf"]
+                            if "bookreview" in text.replace(" ", "").lower():
+                                record["ENTRYTYPE"] = "misc"
+                                record["note"] = "Book review"
+                            if "erratum" in text.replace(" ", "").lower():
+                                record["ENTRYTYPE"] = "misc"
+                                record["note"] = "Erratum"
+                            if "correction" in text.replace(" ", "").lower():
+                                record["ENTRYTYPE"] = "misc"
+                                record["note"] = "Correction"
+                            if "contents" in text.replace(" ", "").lower():
+                                record["ENTRYTYPE"] = "misc"
+                                record["note"] = "Contents"
+                            if "withdrawal" in text.replace(" ", "").lower():
+                                record["ENTRYTYPE"] = "misc"
+                                record["note"] = "Withdrawal"
+                            del record["text_from_pdf"]
+                        # else:
+                        #     print(f'text extraction error in {record["ID"]}')
+                        if "pages_in_file" in record:
+                            del record["pages_in_file"]
 
-                record = {k: v for k, v in record.items() if v is not None}
-                record = {k: v for k, v in record.items() if v != "NA"}
+                    record = {k: v for k, v in record.items() if v is not None}
+                    record = {k: v for k, v in record.items() if v != "NA"}
 
-                # add details based on path
-                record = update_fields_based_on_pdf_dirs(record)
+                    # add details based on path
+                    record = update_fields_based_on_pdf_dirs(record)
 
             except colrev_exceptions.TEI_Exception:
                 pass
@@ -1094,7 +1135,6 @@ class PDFSearchEndpoint:
 
         else:
             print("No records found")
-        return
 
     def validate_params(self, query: str) -> None:
         if " SCOPE " not in query:
@@ -1109,4 +1149,3 @@ class PDFSearchEndpoint:
             )
 
         # Note: WITH .. is optional.
-        return

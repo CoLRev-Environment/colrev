@@ -1,14 +1,17 @@
 #! /usr/bin/env python
+import math
+import pkgutil
 import typing
 
+from colrev_core.built_in import screen as built_in_screen
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+from colrev_core.settings import ScreenCriterion
 
 
 class Screen(Process):
-    from colrev_core.built_in import screen as built_in_screen
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_screen": {
@@ -21,7 +24,7 @@ class Screen(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.screen,
+            process_type=ProcessType.screen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -67,8 +70,6 @@ class Screen(Process):
             saved_args=saved_args,
         )
 
-        return
-
     def get_screening_criteria(self) -> list:
         """Get the list of screening criteria from settings"""
 
@@ -77,7 +78,6 @@ class Screen(Process):
     def set_screening_criteria(self, *, screening_criteria) -> None:
         self.REVIEW_MANAGER.settings.screen.criteria = screening_criteria
         self.REVIEW_MANAGER.save_settings()
-        return
 
     def get_data(self) -> dict:
         """Get the data (records to screen)"""
@@ -100,7 +100,6 @@ class Screen(Process):
 
     def add_criterion(self, *, criterion_to_add) -> None:
         """Add a screening criterion to the records and settings"""
-        from colrev_core.settings import ScreenCriterion
 
         assert criterion_to_add.count(",") == 2
         criterion_name, criterion_type, criterion_explanation = criterion_to_add.split(
@@ -123,7 +122,7 @@ class Screen(Process):
             print(f"Error: criterion {criterion_name} already in settings")
             return
 
-        for ID, record in records.items():
+        for record in records.values():
 
             if record["colrev_status"] in [
                 RecordState.rev_included,
@@ -147,8 +146,6 @@ class Screen(Process):
             script_call="colrev screen",
         )
 
-        return
-
     def delete_criterion(self, *, criterion_to_delete) -> None:
         """Delete a screening criterion from the records and settings"""
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -161,7 +158,7 @@ class Screen(Process):
             print(f"Error: criterion {criterion_to_delete} not in settings")
             return
 
-        for ID, record in records.items():
+        for record in records.values():
 
             if record["colrev_status"] in [
                 RecordState.rev_included,
@@ -203,10 +200,7 @@ class Screen(Process):
             script_call="colrev screen",
         )
 
-        return
-
     def create_screen_split(self, *, create_split: int) -> list:
-        import math
 
         screen_splits = []
 
@@ -218,19 +212,17 @@ class Screen(Process):
         )
 
         added: typing.List[str] = []
-        for i in range(0, create_split):
-            while len(added) < nrecs:
-                added.append(next(data["items"])["ID"])
+        while len(added) < nrecs:
+            added.append(next(data["items"])["ID"])
         screen_splits.append("colrev screen --split " + ",".join(added))
 
         return screen_splits
 
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_screen_script.py")
         if filedata:
-            with open("custom_screen_script.py", "w") as file:
+            with open("custom_screen_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_screen_script.py")
@@ -239,8 +231,6 @@ class Screen(Process):
             {"endpoint": "custom_screen_script"}
         )
         self.REVIEW_MANAGER.save_settings()
-
-        return
 
     def main(self, *, split_str: str):
 
@@ -255,8 +245,6 @@ class Screen(Process):
 
             ENDPOINT = self.screen_scripts[SCREEN_SCRIPT["endpoint"]]
             records = ENDPOINT.run_screen(self, records, split)
-
-        return
 
 
 if __name__ == "__main__":

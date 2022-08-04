@@ -1,22 +1,22 @@
 #! /usr/bin/env python
-# import json
 import re
 import typing
+from collections import Counter
 from pathlib import Path
 
 import git
 import pandas as pd
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in import dedupe_built_in as built_in_dedupe
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
 class Dedupe(Process):
-
-    from colrev_core.built_in import dedupe_built_in as built_in_dedupe
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "simple_dedupe": {
@@ -49,7 +49,7 @@ class Dedupe(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.dedupe,
+            process_type=ProcessType.dedupe,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -217,7 +217,6 @@ class Dedupe(Process):
         return records
 
     def readData(self):
-        from colrev_core.record import Record
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -246,7 +245,6 @@ class Dedupe(Process):
                 r["colrev_id"] = RECORD.create_colrev_id()
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
-                pass
 
         records_df = pd.DataFrame.from_dict(records_queue)
         records = self.prep_records(records_df=records_df)
@@ -254,7 +252,6 @@ class Dedupe(Process):
         return records
 
     def select_primary_merge_record(self, rec_ID1, rec_ID2) -> list:
-        from colrev_core.record import Record
 
         # Heuristic
 
@@ -310,7 +307,6 @@ class Dedupe(Process):
         - If the results list contains a 'score value'
 
         """
-        from colrev_core.record import Record
 
         # The merging also needs to consider whether IDs are propagated
         # Completeness of comparisons should be ensured by the
@@ -347,8 +343,6 @@ class Dedupe(Process):
                 f"Prevented same-source merge: ({merge_info})"
             )
 
-            return
-
         def cross_level_merge(main_record, dupe_record) -> bool:
             cross_level_merge_attempt = False
             if main_record["ENTRYTYPE"] in ["proceedings"] or dupe_record[
@@ -366,7 +360,7 @@ class Dedupe(Process):
 
         removed_duplicates = []
         duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
-        for i, dupe in enumerate(duplicates_to_process):
+        for dupe in duplicates_to_process:
 
             rec_ID1 = records[dupe["ID1"]]
             rec_ID2 = records[dupe["ID2"]]
@@ -445,8 +439,6 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
     def apply_manual_deduplication_decisions(self, *, results: list):
         """Apply manual deduplication decisions
 
@@ -456,7 +448,6 @@ class Dedupe(Process):
         active-learning classifier and checking whether the record is not part of
         any other duplicate-cluster
         """
-        from colrev_core.record import Record
 
         # The merging also needs to consider whether IDs are propagated
 
@@ -521,8 +512,6 @@ class Dedupe(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
     def source_comparison(self) -> None:
         """Exports a spreadsheet to support analyses of records that are not
         in all sources (for curated repositories)"""
@@ -554,7 +543,6 @@ class Dedupe(Process):
         records_df = pd.DataFrame.from_records(list(records.values()))
         records_df.to_excel(self.source_comparison_xlsx, index=False)
         print(f"Exported {self.source_comparison_xlsx}")
-        return
 
     def fix_errors(self) -> None:
         """Fix errors as highlighted in the Excel files"""
@@ -602,7 +590,7 @@ class Dedupe(Process):
                         k: v for k, v in records.items() if k not in ID_list_to_unmerge
                     }
 
-                    if all([ID in prior_records_dict for ID in ID_list_to_unmerge]):
+                    if all(ID in prior_records_dict for ID in ID_list_to_unmerge):
                         for r in prior_records_dict.values():
                             if r["ID"] in ID_list_to_unmerge:
                                 # add manual_dedupe/non_dupe decision to the records
@@ -665,11 +653,9 @@ class Dedupe(Process):
             )
         else:
             self.REVIEW_MANAGER.logger.error("No file with potential errors found.")
-        return
 
     def get_info(self) -> dict:
         """Get info on cuts (overlap of search sources) and same source merges"""
-        from collections import Counter
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -723,8 +709,6 @@ class Dedupe(Process):
 
             ENDPOINT.run_dedupe(self)
             print()
-
-        return
 
 
 if __name__ == "__main__":

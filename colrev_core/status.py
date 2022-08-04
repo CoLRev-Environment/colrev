@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import csv
 import io
 import multiprocessing
 import typing
@@ -6,6 +7,7 @@ from collections import Counter
 from pathlib import Path
 
 import git
+import yaml
 from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
@@ -14,12 +16,13 @@ from colrev_core.process import Process
 from colrev_core.process import ProcessModel
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
-from colrev_core.review_manager import ReviewManager
 
 
 class Status(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+        )
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
 
@@ -115,6 +118,7 @@ class Status(Process):
                 }
             ]
             # Go backward through the process model
+            predecessor = None
             while predecessors:
                 predecessors = [
                     t
@@ -265,7 +269,6 @@ class Status(Process):
             try:
                 origin.fetch()
             except GitCommandError:
-                pass  # probably not online
                 return [-1, -1]
 
         if git_repo.active_branch.tracking_branch() is not None:
@@ -340,10 +343,10 @@ class Status(Process):
         # Note : we can use many parallel processes
         # because append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
-        pool = multiprocessing.Pool(processes=30)
-        add_instructions = pool.map(
-            self.append_registered_repo_instructions, registered_paths
-        )
+        with multiprocessing.Pool(processes=30) as pool:
+            add_instructions = pool.map(
+                self.append_registered_repo_instructions, registered_paths
+            )
         environment_instructions += list(filter(None, add_instructions))
 
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
@@ -357,11 +360,12 @@ class Status(Process):
 
     @classmethod
     def append_registered_repo_instructions(cls, registered_path):
+        from colrev_core.review_manager import ReviewManager
+
         # Note: do not use named arguments (multiprocessing)
         try:
             REPO_REVIEW_MANAGER = ReviewManager(path_str=str(registered_path))
         except (NoSuchPathError, InvalidGitRepositoryError):
-            pass
             instruction = {
                 "msg": "Locally registered repo no longer exists.",
                 "cmd": f"colrev env --unregister {registered_path}",
@@ -369,7 +373,6 @@ class Status(Process):
             return instruction
         except Exception as e:
             print(f"Error in {registered_path}: {e}")
-            pass
             return {}
         if "curated_metadata" in str(registered_path):
             if (
@@ -382,7 +385,7 @@ class Status(Process):
                     "cmd": "colrev env --update",
                 }
                 return instruction
-            elif (
+            if (
                 REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote()
                 and REPO_REVIEW_MANAGER.REVIEW_DATASET.remote_ahead()
             ):
@@ -449,14 +452,11 @@ class Status(Process):
             )
             filecontents = list(revlist)[0][1]
         except IndexError:
-            pass
             MAIN_RECS_CHANGED = False
 
         # If changes in RECORDS_FILE are staged, we need to detect the process type
         if MAIN_RECS_CHANGED:
             # Detect and validate transitions
-
-            from colrev_core.process import ProcessModel
 
             committed_origin_states_dict = (
                 self.REVIEW_MANAGER.REVIEW_DATASET.get_origin_state_dict(
@@ -656,9 +656,8 @@ class Status(Process):
         # git_repo = REVIEW_MANAGER.get_repo()
         git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
         unmerged_blobs = git_repo.index.unmerged_blobs()
-        for path in unmerged_blobs:
-            list_of_blobs = unmerged_blobs[path]
-            for (stage, blob) in list_of_blobs:
+        for _, list_of_blobs in unmerged_blobs.items():
+            for (stage, _) in list_of_blobs:
                 if stage != 0:
                     found_a_conflict = True
 
@@ -1005,10 +1004,7 @@ class Status(Process):
             data_info += f'  ({", ".join(data_add_info)})'
         print(data_info)
 
-        return
-
     def get_analytics(self) -> dict:
-        import yaml
 
         analytics_dict = {}
 
@@ -1046,11 +1042,9 @@ class Status(Process):
             except (IndexError, KeyError):
                 pass
 
-        import csv
-
         keys = list(analytics_dict.values())[0].keys()
 
-        with open("analytics.csv", "w", newline="") as output_file:
+        with open("analytics.csv", "w", newline="", encoding="utf8") as output_file:
             dict_writer = csv.DictWriter(output_file, keys)
             dict_writer.writeheader()
             dict_writer.writerows(reversed(analytics_dict.values()))

@@ -1,6 +1,8 @@
 #! /usr/bin/env python
+import io
 import pprint
 import re
+import textwrap
 import typing
 import unicodedata
 from copy import deepcopy
@@ -8,8 +10,22 @@ from enum import auto
 from enum import Enum
 from pathlib import Path
 
+import dictdiffer
+import imagehash
 import pandas as pd
 from nameparser import HumanName
+from pdf2image import convert_from_path
+from pdfminer.converter import TextConverter
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
+from pdfminer.pdfinterp import PDFPageInterpreter
+from pdfminer.pdfinterp import PDFResourceManager
+from pdfminer.pdfinterp import resolve1
+from pdfminer.pdfpage import PDFPage
+from pdfminer.pdfparser import PDFParser
+from pdfminer.pdfparser import PDFSyntaxError
+from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
 
 import colrev_core.exceptions as colrev_exceptions
@@ -116,10 +132,8 @@ class Record:
 
     def update_by_record(self, *, UPDATE):
         self.data = UPDATE.copy_prep_rec().get_data()
-        return
 
     def get_diff(self, *, OTHER_RECORD) -> list:
-        import dictdiffer
 
         diff = list(dictdiffer.diff(self.get_data(), OTHER_RECORD.get_data()))
         return diff
@@ -214,14 +228,12 @@ class Record:
 
             return data_copy
 
-        else:
-            return self.data
+        return self.data
 
     def masterdata_is_curated(self) -> bool:
         return "CURATED" in self.data.get("colrev_masterdata_provenance", {})
 
     def set_status(self, *, target_state) -> None:
-        from colrev_core.record import RecordState
 
         if RecordState.md_prepared == target_state:
             if self.masterdata_is_complete():
@@ -240,7 +252,6 @@ class Record:
                 target_state = RecordState.md_needs_manual_preparation
 
         self.data["colrev_status"] = target_state
-        return
 
     def get_origins(self) -> list:
         if "colrev_origin" in self.data:
@@ -263,7 +274,6 @@ class Record:
                 ret = self.data[key]
                 return ret
             except KeyError:
-                pass
                 return default
         else:
             return self.data[key]
@@ -323,15 +333,11 @@ class Record:
 
         self.remove_field(key=key)
 
-        return
-
     def change_ENTRYTYPE(self, *, NEW_ENTRYTYPE):
 
         self.data["ENTRYTYPE"] = NEW_ENTRYTYPE
 
         # TODO : reapply field requirements
-
-        return
 
     def remove_field(
         self, *, key: str, not_missing_note: bool = False, source=""
@@ -360,8 +366,6 @@ class Record:
                     if key in self.data.get("colrev_data_provenance", ""):
                         del self.data["colrev_data_provenance"][key]
 
-        return
-
     def add_colrev_ids(self, *, records: typing.List[dict]) -> None:
         if "colrev_id" in self.data:
             if isinstance(self.data["colrev_id"], str):
@@ -376,7 +380,6 @@ class Record:
                     self.data["colrev_id"].append(colrev_id)
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 pass
-        return
 
     def masterdata_is_complete(self) -> bool:
         if self.masterdata_is_curated():
@@ -391,14 +394,14 @@ class Record:
                 for k in self.identifying_field_keys
             ):
                 return True
-            else:
-                for k in self.identifying_field_keys:
-                    if k in self.data.get("colrev_masterdata_provenance", {}):
-                        if (
-                            "missing"
-                            in self.data["colrev_masterdata_provenance"][k]["note"]
-                        ):
-                            return False
+
+            for k in self.identifying_field_keys:
+                if k in self.data.get("colrev_masterdata_provenance", {}):
+                    if (
+                        "missing"
+                        in self.data["colrev_masterdata_provenance"][k]["note"]
+                    ):
+                        return False
             return True
         return False
 
@@ -440,8 +443,6 @@ class Record:
                         "note": "not_missing",
                     }
 
-        return
-
     def set_masterdata_consistent(self) -> None:
         if "colrev_masterdata_provenance" not in self.data:
             self.data["colrev_masterdata_provenance"] = {}
@@ -454,7 +455,6 @@ class Record:
                     md_p_dict[identifying_field_key]["note"] = note.replace(
                         "inconsistent with ENTRYTYPE", ""
                     )
-        return
 
     def set_fields_complete(self) -> None:
         for identifying_field_key in self.identifying_field_keys:
@@ -466,7 +466,6 @@ class Record:
                     self.data["colrev_masterdata_provenance"][identifying_field_key][
                         "note"
                     ] = note.replace("incomplete", "")
-        return
 
     def reset_pdf_provenance_notes(self) -> None:
         if "colrev_data_provenance" not in self.data:
@@ -476,11 +475,10 @@ class Record:
             # note = d_p_dict['file']['note']
             if "not_available" != self.data["colrev_data_provenance"]["file"]["note"]:
                 self.data["colrev_data_provenance"]["file"]["note"] = ""
-        return
 
     def missing_fields(self) -> list:
         missing_field_keys = []
-        if self.data["ENTRYTYPE"] in Record.record_field_requirements.keys():
+        if self.data["ENTRYTYPE"] in Record.record_field_requirements:
             reqs = Record.record_field_requirements[self.data["ENTRYTYPE"]]
             missing_field_keys = [
                 x
@@ -495,7 +493,7 @@ class Record:
 
     def get_inconsistencies(self) -> list:
         inconsistent_field_keys = []
-        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
+        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies:
             incons_fields = Record.record_field_inconsistencies[self.data["ENTRYTYPE"]]
             inconsistent_field_keys = [x for x in incons_fields if x in self.data]
         # Note: a thesis should be single-authored
@@ -507,7 +505,7 @@ class Record:
 
     def has_inconsistent_fields(self) -> bool:
         found_inconsistencies = False
-        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies.keys():
+        if self.data["ENTRYTYPE"] in Record.record_field_inconsistencies:
             inconsistencies = self.get_inconsistencies()
             if inconsistencies:
                 found_inconsistencies = True
@@ -603,8 +601,6 @@ class Record:
                         self.update_field(key=key, value=str(val), source=source)
                 else:
                     self.update_field(key=key, value=str(val), source=source, note=note)
-
-        return
 
     def fuse_best_field(self, *, MERGING_RECORD, key, val, source, note) -> None:
         # Note : the assumption is that we need masterdata_provenance notes
@@ -809,7 +805,6 @@ class Record:
                 key=key, value=str(MERGING_RECORD.data[key]), source=source, note=note
             )
             # self.update_field(key=key, value=str(val), source=source, note=note)
-        return
 
     @classmethod
     def get_record_similarity(cls, *, RECORD_A, RECORD_B) -> float:
@@ -985,7 +980,6 @@ class Record:
         except AttributeError:
             similarity_score = 0
             details = ""
-            pass
         return {"score": similarity_score, "details": details}
 
     def get_field_provenance(self, *, key, default_source="ORIGINAL") -> list:
@@ -1027,7 +1021,6 @@ class Record:
                 "source": "ORIGINAL",
                 "note": note,
             }
-        return
 
     def add_data_provenance_note(self, *, key, note):
         if "colrev_data_provenance" not in self.data:
@@ -1044,7 +1037,6 @@ class Record:
                 "source": "ORIGINAL",
                 "note": note,
             }
-        return
 
     def add_masterdata_provenance(self, *, key, source, note: str = ""):
         if "colrev_masterdata_provenance" not in self.data:
@@ -1059,7 +1051,6 @@ class Record:
             md_p_dict[key]["source"] = source
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
-        return
 
     def add_provenance_all(self, *, source):
         if "colrev_masterdata_provenance" not in self.data:
@@ -1078,11 +1069,10 @@ class Record:
                 "colrev_id",
             ]:
                 continue
-            elif key in self.identifying_field_keys:
+            if key in self.identifying_field_keys:
                 md_p_dict[key] = {"source": source, "note": ""}
             else:
                 d_p_dict[key] = {"source": source, "note": ""}
-        return
 
     def add_data_provenance(self, *, key, source, note: str = ""):
         if "colrev_data_provenance" not in self.data:
@@ -1096,7 +1086,6 @@ class Record:
             md_p_dict[key]["source"] = source
         else:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
-        return
 
     def complete_provenance(self, *, source_info) -> bool:
         """Complete provenance information for LocalIndex"""
@@ -1193,7 +1182,6 @@ class Record:
                     self.data["colrev_masterdata_provenance"][key][
                         "note"
                     ] = note.replace("quality_defect", "")
-        return
 
     @classmethod
     def remove_accents(cls, *, input_str: str) -> str:
@@ -1220,7 +1208,6 @@ class Record:
             wo_ac = "".join(wo_ac_list)
         except ValueError:
             wo_ac = input_str
-            pass
         return wo_ac
 
     def get_container_title(self) -> str:
@@ -1239,12 +1226,15 @@ class Record:
         return container_title
 
     def create_colrev_id(
-        self, *, alsoKnownAsRecord: dict = {}, assume_complete=False
+        self, *, alsoKnownAsRecord: dict = None, assume_complete=False
     ) -> str:
         """Returns the colrev_id of the Record.
         If a alsoKnownAsRecord is provided, it returns the colrev_id of the
         alsoKnownAsRecord (using the Record as the reference to decide whether
         required fields are missing)"""
+
+        if alsoKnownAsRecord is None:
+            alsoKnownAsRecord = {}
 
         def format_author_field(input_string: str) -> str:
             input_string = input_string.replace("\n", " ").replace("'", "")
@@ -1430,14 +1420,7 @@ class Record:
         for k in to_drop:
             self.remove_field(key=k)
 
-        return
-
     def extract_text_by_page(self, *, pages: list = None, project_path) -> str:
-        from pdfminer.pdfpage import PDFPage
-        from pdfminer.pdfinterp import PDFResourceManager
-        from pdfminer.converter import TextConverter
-        import io
-        from pdfminer.pdfinterp import PDFPageInterpreter
 
         text_list: list = []
         pdf_path = project_path / Path(self.data["file"])
@@ -1466,9 +1449,6 @@ class Record:
         return "".join(text_list)
 
     def get_pages_in_pdf(self, *, project_path: Path):
-        from pdfminer.pdfparser import PDFParser
-        from pdfminer.pdfinterp import resolve1
-        from pdfminer.pdfdocument import PDFDocument
 
         pdf_path = project_path / Path(self.data["file"])
         with open(pdf_path, "rb") as file:
@@ -1476,11 +1456,8 @@ class Record:
             document = PDFDocument(parser)
             pages_in_file = resolve1(document.catalog["Pages"])["Count"]
         self.data["pages_in_file"] = pages_in_file
-        return
 
     def get_text_from_pdf(self, *, project_path: Path):
-        from pdfminer.pdfparser import PDFSyntaxError
-        from pdfminer.pdfdocument import PDFTextExtractionNotAllowed
 
         self.data["text_from_pdf"] = ""
         try:
@@ -1497,28 +1474,16 @@ class Record:
             # self.REVIEW_MANAGER.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_reader_error")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-            pass
         except PDFTextExtractionNotAllowed:
             # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDF reader error: protection"
             # self.REVIEW_MANAGER.report_logger.error(msg)
             # self.REVIEW_MANAGER.logger.error(msg)
             self.add_data_provenance_note(key="file", note="pdf_protected")
             self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-            pass
-        except PDFSyntaxError:
-            # msg = f'{record["file"]}'.ljust(PAD, " ") + "PDFSyntaxError"
-            # self.REVIEW_MANAGER.report_logger.error(msg)
-            # self.REVIEW_MANAGER.logger.error(msg)
-            self.add_data_provenance_note(key="file", note="pdf_syntax_error")
-            self.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
-            pass
-        return
 
     def extract_pages(
-        self, *, pages: list, type: str, project_path: Path, save_to_path: Path
+        self, *, pages: list, project_path: Path, save_to_path: Path
     ) -> None:
-        from PyPDF2 import PdfFileReader
-        from PyPDF2 import PdfFileWriter
 
         pdf_path = project_path / Path(self.data["file"])
         pdfReader = PdfFileReader(pdf_path, strict=False)
@@ -1536,11 +1501,8 @@ class Record:
             filepath = Path(pdf_path)
             with open(save_to_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)
-        return
 
     def get_colrev_pdf_id(self, *, path: Path) -> str:
-        from pdf2image import convert_from_path
-        import imagehash
 
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
@@ -1570,7 +1532,6 @@ class Record:
                 )
             except KeyError as e:
                 print(e)
-                pass
 
         for key in self.data.keys():
             if key in Record.identifying_field_keys:
@@ -1637,8 +1598,6 @@ class Record:
                         key=defect_field, note="quality_defect"
                     )
 
-        return
-
     def pdf_get_man(self, *, REVIEW_MANAGER, filepath: Path, PAD: int = 40) -> None:
 
         if filepath is not None:
@@ -1678,8 +1637,6 @@ class Record:
         REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
         REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
     def pdf_man_prep(self, *, REVIEW_MANAGER) -> None:
 
         self.set_status(target_state=RecordState.pdf_prepared)
@@ -1692,8 +1649,6 @@ class Record:
         REVIEW_MANAGER.REVIEW_DATASET.add_changes(
             path=str(REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])
         )
-
-        return
 
     def get_toc_key(self) -> str:
         toc_key = ""
@@ -1721,7 +1676,6 @@ class Record:
             + f"{self.data.get('volume', '')} ({self.data.get('number', '')})"
         )
         print(formatted_ref)
-        return
 
     def get_tei_filename(self) -> Path:
         tei_filename = Path(f'.tei/{self.data["ID"]}.tei.xml')
@@ -1740,9 +1694,6 @@ class PrepRecord(Record):
     # 2. processing operation using curated data
     # 3. processing operation using external, non-curated data
     #  (-> merge/fuse_best_field)
-
-    def __init__(self, *, data: dict):
-        super().__init__(data=data)
 
     @classmethod
     def format_author_field(cls, *, input_string: str) -> str:
@@ -1913,8 +1864,6 @@ class PrepRecord(Record):
                         "note"
                     ] = note.replace("quality_defect", "")
 
-        return
-
     def container_is_abbreviated(self) -> bool:
         if "journal" in self.data:
             if self.data["journal"].count(".") > 2:
@@ -1934,7 +1883,6 @@ class PrepRecord(Record):
             self.data["journal"] = " ".join(
                 [x[:min_len] for x in self.data["journal"].split(" ")]
             )
-        return
 
     def get_abbrev_container_min_len(self) -> int:
         min_len = -1
@@ -1962,7 +1910,6 @@ class PrepRecord(Record):
                 self.data["note"] += ", withdrawn (according to DBLP)"
             else:
                 self.data["note"] = "withdrawn (according to DBLP)"
-        return
 
     def unify_pages_field(self) -> None:
         if "pages" not in self.data:
@@ -1978,7 +1925,6 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
-        return
 
     def drop_fields(self, PREPARATION) -> None:
         from colrev_core.environment import LocalIndex
@@ -2011,7 +1957,6 @@ class PrepRecord(Record):
                     )
                     # TODO : we need to keep track of the information
                     # that a certain field is not required
-        return
 
     def preparation_save_condition(self) -> bool:
 
@@ -2073,8 +2018,6 @@ class PrepRecord(Record):
             self.set_status(target_state=RecordState.md_prepared)
         else:
             self.set_status(target_state=RecordState.md_needs_manual_preparation)
-
-        return
 
     def update_masterdata_provenance(
         self, *, UNPREPARED_RECORD, REVIEW_MANAGER
@@ -2160,15 +2103,9 @@ class PrepRecord(Record):
                 f' {self.data["ID"]}' + f"Change score: {round(change, 2)}"
             )
 
-        return
-
 
 class PrescreenRecord(Record):
-    def __init__(self, *, data: dict):
-        super().__init__(data=data)
-
     def __str__(self) -> str:
-        import textwrap
 
         GREEN = "\033[92m"
         END = "\033[0m"
@@ -2226,14 +2163,10 @@ class PrescreenRecord(Record):
 
         REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
 
 class ScreenRecord(PrescreenRecord):
 
     # Note : currently still identical with PrescreenRecord
-    def __init__(self, *, data: dict):
-        super().__init__(data=data)
 
     def screen(
         self,
@@ -2262,8 +2195,6 @@ class ScreenRecord(PrescreenRecord):
 
         REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=self.get_data())
         REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
 
 
 class RecordState(Enum):

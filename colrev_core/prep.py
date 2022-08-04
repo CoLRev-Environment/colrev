@@ -1,8 +1,10 @@
 #! /usr/bin/env python
 import logging
 import multiprocessing as mp
+import pkgutil
 import time
 import typing
+from copy import deepcopy
 from datetime import timedelta
 from pathlib import Path
 
@@ -11,12 +13,16 @@ import requests_cache
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
+from colrev_core.built_in import database_connectors as database_connectors
+from colrev_core.built_in import prep as built_in_prep
 from colrev_core.environment import AdapterManager
 from colrev_core.environment import EnvironmentManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import PrepRecord
 from colrev_core.record import RecordState
+from colrev_core.settings import PrepRound
+
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
@@ -93,8 +99,6 @@ class Preparation(Process):
     session = requests_cache.CachedSession(
         str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
     )
-
-    from colrev_core.built_in import prep as built_in_prep
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "load_fixes": {
@@ -183,7 +187,7 @@ class Preparation(Process):
     ):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.prep,
+            process_type=ProcessType.prep,
             notify_state_transition_process=notify_state_transition_process,
             debug=(debug != "NA"),
         )
@@ -198,10 +202,9 @@ class Preparation(Process):
         # RETRIEVAL_SIMILARITY = self.RETRIEVAL_SIMILARITY
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
-        self.CPUS = self.CPUS * 4
+        self.CPUS: int = self.CPUS * 4
 
     def check_DBs_availability(self) -> None:
-        from colrev_core.built_in import database_connectors as database_connectors
 
         # TODO : check_status as a default method for the PreparationInterface
         # and iterate over it?
@@ -215,7 +218,6 @@ class Preparation(Process):
         self.REVIEW_MANAGER.logger.info("OpenLibraryConnector available")
 
         print()
-        return
 
     def __print_diffs_for_debug(self, PRIOR, PREPARATION_RECORD, prep_script):
         diffs = PRIOR.get_diff(OTHER_RECORD=PREPARATION_RECORD)
@@ -243,11 +245,9 @@ class Preparation(Process):
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 print("\n")
                 time.sleep(0.3)
-        return
 
     # Note : no named arguments for multiprocessing
     def prepare(self, item: dict) -> dict:
-        from copy import deepcopy
 
         RECORD = item["record"]
 
@@ -300,7 +300,6 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.logger.error(
                     f"{RED}{PREP_SCRIPT.SETTINGS.name}(...) timed out{END}"
                 )
-                pass
 
         if self.LAST_ROUND:
             if RECORD.status_to_prepare():
@@ -314,8 +313,6 @@ class Preparation(Process):
         return RECORD.get_data()
 
     def reset(self, *, record_list: typing.List[dict]):
-        from copy import deepcopy
-
         def append_to_non_dupe_db(
             *, record_to_unmerge_original: dict, record_original: dict
         ):
@@ -341,7 +338,7 @@ class Preparation(Process):
 
                 max_id = max([int(ID) for ID in non_dupe_recs_dict.keys()] + [1]) + 1
             else:
-                non_dupe_recs_dict = dict()
+                non_dupe_recs_dict = {}
                 max_id = 1
 
             record_to_unmerge["ID"] = str(max_id).rjust(9, "0")
@@ -362,8 +359,6 @@ class Preparation(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(
                 records=non_dupe_recs_dict, save_path=non_dupe_db_path
             )
-
-            return
 
         record_list = [
             r
@@ -405,7 +400,7 @@ class Preparation(Process):
         )
 
         for commit_id, cmsg, filecontents in list(revlist):
-            cmsg_l1 = str(cmsg).split("\n")[0]
+            cmsg_l1 = str(cmsg).split("\n", maxsplit=1)[0]
             if "colrev load" not in cmsg:
                 print(f"Skip {str(commit_id)} (non-load commit) - {str(cmsg_l1)}")
                 continue
@@ -459,8 +454,6 @@ class Preparation(Process):
                 colrev_status=RecordState.md_needs_manual_preparation
             )
 
-        return
-
     def reset_records(self, *, reset_ids: list) -> None:
         # Note: entrypoint for CLI
 
@@ -482,7 +475,6 @@ class Preparation(Process):
             script_call="colrev prep",
             saved_args=saved_args,
         )
-        return
 
     def reset_ids(self) -> None:
         # Note: entrypoint for CLI
@@ -512,14 +504,11 @@ class Preparation(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
-        return
-
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_prep_script.py")
         if filedata:
-            with open("custom_prep_script.py", "w") as file:
+            with open("custom_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_prep_script.py")
@@ -527,8 +516,6 @@ class Preparation(Process):
         prep_round = self.REVIEW_MANAGER.settings.prep.prep_rounds[-1]
         prep_round.scripts.append({"endpoint": "custom_prep_script"})
         self.REVIEW_MANAGER.save_settings()
-
-        return
 
     def main(
         self,
@@ -538,7 +525,6 @@ class Preparation(Process):
         debug_file: str = "NA",
     ) -> None:
         """Preparation of records"""
-        from colrev_core.settings import PrepRound
 
         saved_args = locals()
 
@@ -559,7 +545,6 @@ class Preparation(Process):
             del saved_args["keep_ids"]
 
         def load_prep_data():
-            from colrev_core.record import RecordState
 
             record_state_list = (
                 self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
@@ -718,7 +703,7 @@ class Preparation(Process):
                 f"Set RETRIEVAL_SIMILARITY={self.RETRIEVAL_SIMILARITY}"
             )
 
-            required_prep_scripts = [s for s in prep_round.scripts]
+            required_prep_scripts = list(prep_round.scripts)
 
             required_prep_scripts.append({"endpoint": "update_metadata_status"})
 
@@ -728,8 +713,6 @@ class Preparation(Process):
                 PROCESS=self,
                 scripts=required_prep_scripts,
             )
-
-            return
 
         def log_details(*, prepared_records: list) -> None:
             nr_recs = len(
@@ -779,8 +762,6 @@ class Preparation(Process):
                 self.REVIEW_MANAGER.logger.info(
                     "Records prescreen-excluded:".ljust(35) + f"{GREEN}{nr_recs}{END}"
                 )
-
-            return
 
         if "NA" != debug_ids:
             self.REVIEW_MANAGER.DEBUG_MODE = True

@@ -1,18 +1,24 @@
 #! /usr/bin/env python
+import pkgutil
 import typing
 from pathlib import Path
 
 import pandas as pd
 import requests
+from lxml import etree
 from urllib3.exceptions import ProtocolError
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in import data as built_in_data
 from colrev_core.environment import AdapterManager
 from colrev_core.environment import GrobidService
 from colrev_core.environment import TEIParser
+from colrev_core.process import CheckProcess
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
 from colrev_core.record import RecordState
+
+# from p_tqdm import p_map
 
 
 class Data(Process):
@@ -20,8 +26,6 @@ class Data(Process):
     data extraction, analysis and synthesis"""
 
     __PAD = 0
-
-    from colrev_core.built_in import data as built_in_data
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "MANUSCRIPT": {
@@ -45,7 +49,7 @@ class Data(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.data,
+            process_type=ProcessType.data,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -66,10 +70,6 @@ class Data(Process):
     def update_tei(
         self, records: typing.Dict, included: typing.List[dict]
     ) -> typing.Dict:
-        from lxml import etree
-        from lxml.etree import XMLSyntaxError
-
-        # from p_tqdm import p_map
 
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
@@ -105,7 +105,6 @@ class Data(Process):
                 ):
                     if "tei_file" in record:
                         del record["tei_file"]
-                    pass
             return
 
         for record in records.values():
@@ -128,8 +127,7 @@ class Data(Process):
                 try:
                     TEI_INSTANCE = TEIParser(self.REVIEW_MANAGER, tei_path=tei_path)
                     TEI_INSTANCE.mark_references(records=records.values())
-                except XMLSyntaxError:
-                    pass
+                except etree.XMLSyntaxError:
                     continue
 
                 # ns = {
@@ -302,21 +300,16 @@ class Data(Process):
 
         self.REVIEW_MANAGER.logger.info(f"Files are available in {output_dir.name}")
 
-        return
-
     def add_data_endpoint(self, data_endpoint) -> None:
 
         self.REVIEW_MANAGER.settings.data.scripts.append(data_endpoint)
         self.REVIEW_MANAGER.save_settings()
 
-        return
-
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_data_script.py")
         if filedata:
-            with open("custom_data_script.py", "w") as file:
+            with open("custom_data_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_data_script.py")
@@ -326,8 +319,6 @@ class Data(Process):
         self.REVIEW_MANAGER.settings.data.scripts.append(NEW_DATA_ENDPOINT)
         self.REVIEW_MANAGER.save_settings()
 
-        return
-
     def main(self, pre_commit_hook=False) -> dict:
 
         if pre_commit_hook:
@@ -335,8 +326,6 @@ class Data(Process):
             # TODO : use self.verbose in the update scripts of data endpoints
         else:
             self.verbose = True
-
-        saved_args = locals()
 
         no_endpoints_registered = 0 == len(self.REVIEW_MANAGER.settings.data.scripts)
 
@@ -360,8 +349,6 @@ class Data(Process):
                 )
 
         else:
-
-            from colrev_core.process import CheckProcess
 
             CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)
             # TBD: do we assume that records are not changed by the processes?

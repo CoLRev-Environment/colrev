@@ -1,11 +1,18 @@
 #! /usr/bin/env python
+import json
 import logging
+import pkgutil
 import typing
 from pathlib import Path
+from subprocess import CalledProcessError
+from subprocess import check_call
+from subprocess import DEVNULL
+from subprocess import STDOUT
 
 import git
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.environment import EnvironmentManager
 from colrev_core.review_manager import ReviewManager
 from colrev_core.settings import ReviewType
 
@@ -110,19 +117,17 @@ class Initializer:
         return logger
 
     def __register_repo(self) -> None:
-        from colrev_core.environment import EnvironmentManager
 
         EnvironmentManager.register_repo(path_to_register=Path.cwd())
-        return
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
         self.REVIEW_MANAGER.report_logger.info("Initialize review repository")
         self.REVIEW_MANAGER.report_logger.info(
-            "Set project title:".ljust(30, " ") + f"{self.project_name}"
+            f'{"Set project title:".ljust(30, " ")}{self.project_name}'
         )
         self.REVIEW_MANAGER.report_logger.info(
-            "Set SHARE_STAT_REQ:".ljust(30, " ") + f"{self.SHARE_STAT_REQ}"
+            f'{"Set SHARE_STAT_REQ:".ljust(30, " ")}{self.SHARE_STAT_REQ}'
         )
         del saved_args["local_index_repo"]
         self.REVIEW_MANAGER.create_commit(
@@ -131,12 +136,8 @@ class Initializer:
             script_call="colrev init",
             saved_args=saved_args,
         )
-        return
 
     def __setup_files(self) -> None:
-        from colrev_core.environment import EnvironmentManager
-        import pkgutil
-        import json
 
         # Note: parse instead of copy to avoid format changes
         filedata = pkgutil.get_data(__name__, "template/settings.json")
@@ -162,7 +163,7 @@ class Initializer:
         for rp, p in files_to_retrieve:
             self.__retrieve_package_file(template_file=rp, target=p)
 
-        with open("settings.json") as f:
+        with open("settings.json", encoding="utf-8") as f:
             settings = json.load(f)
 
         settings["project"]["review_type"] = self.review_type
@@ -365,7 +366,7 @@ class Initializer:
             # curated repo: automatically prescreen/screen-include papers
             # (no data endpoint -> automatically rev_synthesized)
 
-        with open("settings.json", "w") as outfile:
+        with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(settings, outfile, indent=4)
 
         if "review" in self.project_name.lower():
@@ -391,23 +392,21 @@ class Initializer:
 
         # Note: need to write the .gitignore because file would otherwise be
         # ignored in the template directory.
-        f = open(".gitignore", "w", encoding="utf8")
-        f.write(
-            "*.bib.sav\n"
-            + "missing_pdf_files.csv\n"
-            + "manual_cleansing_statistics.csv\n"
-            + "data.csv\n"
-            + "venv\n"
-            + ".records_learned_settings\n"
-            + ".corrections\n"
-            + ".ipynb_checkpoints/\n"
-            + "pdfs\n"
-            + "requests_cache.sqlite\n"
-            + "__pycache__\n"
-            + ".tei"
-        )
-        f.close()
-        return
+        with open(".gitignore", "w", encoding="utf8") as f:
+            f.write(
+                "*.bib.sav\n"
+                + "missing_pdf_files.csv\n"
+                + "manual_cleansing_statistics.csv\n"
+                + "data.csv\n"
+                + "venv\n"
+                + ".records_learned_settings\n"
+                + ".corrections\n"
+                + ".ipynb_checkpoints/\n"
+                + "pdfs\n"
+                + "requests_cache.sqlite\n"
+                + "__pycache__\n"
+                + ".tei"
+            )
 
     def __post_commit_edits(self) -> None:
 
@@ -440,15 +439,7 @@ class Initializer:
                 f"edit all fields marked with 'TODO'.{colors.END}"
             )
 
-        return
-
     def __setup_git(self) -> None:
-        from subprocess import check_call
-        from subprocess import DEVNULL
-        from subprocess import STDOUT
-        from subprocess import CalledProcessError
-
-        from colrev_core.environment import EnvironmentManager
 
         git_repo = git.Repo.init()
 
@@ -465,7 +456,7 @@ class Initializer:
         ]
         for script_to_call in scripts_to_call:
             try:
-                self.logger.info(" ".join(script_to_call) + "...")
+                self.logger.info(f'{" ".join(script_to_call)}...')
                 check_call(script_to_call, stdout=DEVNULL, stderr=STDOUT)
             except CalledProcessError:
                 if "" == " ".join(script_to_call):
@@ -475,7 +466,7 @@ class Initializer:
                     )
                 else:
                     self.logger.info(f"Failed: {' '.join(script_to_call)}")
-                pass
+
         git_repo.index.add(
             [
                 "readme.md",
@@ -487,7 +478,6 @@ class Initializer:
                 "LICENSE.txt",
             ]
         )
-        return
 
     def __require_empty_directory(self):
 
@@ -513,16 +503,13 @@ class Initializer:
         with open(filename, "w", encoding="utf8") as f:
             s = s.replace(old_string, new_string)
             f.write(s)
-        return
 
     def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, str(template_file))
         if filedata:
             with open(target, "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
-        return
 
     def __create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
@@ -537,8 +524,6 @@ class Initializer:
 
         git_repo = git.Repo.init()
         git_repo.index.add(["search/30_example_records.bib"])
-
-        return
 
     def __create_local_index(self) -> None:
         from colrev_core.environment import LocalIndex
@@ -560,7 +545,6 @@ class Initializer:
             self.logger.info("Created local_index repository")
 
         os.chdir(curdir)
-        return
 
 
 if __name__ == "__main__":

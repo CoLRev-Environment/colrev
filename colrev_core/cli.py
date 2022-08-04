@@ -23,9 +23,6 @@ click_completion.core.startswith = __custom_startswith
 click_completion.init()
 
 
-ccs = click_completion.core.shells
-
-
 @click.group()
 @click.pass_context
 def main(ctx):
@@ -38,23 +35,7 @@ def main(ctx):
     """
 
 
-@main.command()
-@click.option("-a", "--activate", is_flag=True, default=False)
-@click.option("-d", "--deactivate", is_flag=True, default=False)
-@click.pass_context
-def debug(ctx, activate, deactivate):
-    """Debug"""
-    from colrev_core import debug
-
-    if activate:
-        print("Debugging activated")
-        debug.set_debug_mode(True)
-
-    elif deactivate:
-        print("Debugging deactivated")
-        debug.set_debug_mode(False)
-    else:
-        debug.main()
+ccs = click_completion.core.shells
 
 
 @main.command(hidden=True)

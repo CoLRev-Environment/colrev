@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 import csv
+import os
+import pkgutil
 import typing
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +13,7 @@ from dacite import from_dict
 import colrev_core.exceptions as colrev_exceptions
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PrescreenEndpoint
+from colrev_core.record import PrescreenRecord
 from colrev_core.record import Record
 from colrev_core.record import RecordState
 
@@ -64,8 +67,6 @@ class ScopePrescreenEndpoint:
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         def load_predatory_journals_beal() -> dict:
-
-            import pkgutil
 
             predatory_journals = {}
 
@@ -194,8 +195,7 @@ class ASReviewPrescreenEndpoint:
 
         try:
             import asreview  # noqa: F401
-        except ImportError or ModuleNotFoundError:
-            pass
+        except (ImportError, ModuleNotFoundError):
             raise colrev_exceptions.MissingDependencyError(
                 "Dependency asreview not found. "
                 "Please install it\n  pip install asreview"
@@ -233,13 +233,8 @@ class ASReviewPrescreenEndpoint:
         to_screen_df = pd.DataFrame.from_dict(records)
         to_screen_df.to_csv(self.export_filepath, quoting=csv.QUOTE_NONNUMERIC)
 
-        return
-
     def import_from_asreview(self, PRESCREEN, records):
-        from colrev_core.record import PrescreenRecord
-
         def get_last_modified(input_paths) -> Path:
-            import os
 
             latest_file = max(input_paths, key=os.path.getmtime)
             return Path(latest_file)
@@ -319,7 +314,7 @@ class ASReviewPrescreenEndpoint:
 
         if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
             to_import = pd.read_csv(asreview_project_file)
-            for index, row in to_import.iterrows():
+            for _, row in to_import.iterrows():
                 PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
                 if "1" == str(row["included"]):
                     PRESCREEN_RECORD.prescreen(
@@ -384,7 +379,6 @@ class ASReviewPrescreenEndpoint:
                 ASREVIEW.execute(argv={})
             except KeyboardInterrupt:
                 print("\n\n\nCompleted prescreen. ")
-                pass
 
         if "y" == input("Import prescreen from asreview [y,n]?"):
             self.import_from_asreview(PRESCREEN, records)
@@ -498,8 +492,6 @@ class SpreadsheetPrescreenEndpoint:
             screen_df = pd.DataFrame(tbl)
             screen_df.to_excel("prescreen.xlsx", index=False, sheet_name="screen")
             PRESCREEN.REVIEW_MANAGER.logger.info("Created prescreen.xlsx")
-
-        return
 
     def import_table(
         self, PRESCREEN, records, import_table_path="prescreen.csv"

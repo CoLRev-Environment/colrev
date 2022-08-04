@@ -16,7 +16,6 @@ def debug_load() -> None:
     # then compare them to the original search_files
 
     from colrev_core.load import Loader
-    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
     LOADER = Loader(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -63,12 +62,12 @@ def debug_load() -> None:
     )
     print(records)
 
-    return
-
 
 def debug_pdf_get():
 
     from colrev_core.pdf_get import PDF_Retrieval
+
+    REVIEW_MANAGER = ReviewManager()
 
     record = {
         "ENTRYTYPE": "article",
@@ -84,27 +83,21 @@ def debug_pdf_get():
         "year": "2021",
         "doi": " 10.25300/MISQ/2020/14947",
     }
-
-    PDF_RETRIEVAL = PDF_Retrieval()
-    PDF_RETRIEVAL.get_pdf_from_unpaywall(record)
-
-    return
+    print(record)
+    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=REVIEW_MANAGER)
+    print(PDF_RETRIEVAL)
 
 
 def debug_data():
 
     from colrev_core.data import Data
-    from colrev_core.review_manager import ReviewManager
 
     REVIEW_MANAGER = ReviewManager()
 
     DATA = Data(REVIEW_MANAGER=REVIEW_MANAGER)
     records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
     included = DATA.get_record_ids_for_synthesis(records)
-
-    DATA.update_manuscript(records, included)
-
-    return
+    print(included)
 
 
 def debug_tei_tools(param) -> None:
@@ -120,12 +113,9 @@ def debug_tei_tools(param) -> None:
     TEI_INSTANCE = TEIParser(pdf_path=filepath)
     res = TEI_INSTANCE.get_metadata()
     print(res)
-    return
 
 
 def debug_pdf_prep():
-
-    from colrev_core.pdf_prep import PDF_Preparation
 
     # from pdfminer.pdfdocument import PDFDocument
     # from pdfminer.pdfinterp import resolve1
@@ -154,10 +144,7 @@ def debug_pdf_prep():
         "doi": " 10.25300/MISQ/2020/14947",
         "pages": "165--187",
     }
-    # pdf_prep.remove_last_page(record, 40)
-    ret = PDF_Preparation.validate_completeness(record, 40)
-    print(ret)
-    return
+    print(record)
 
 
 def get_non_unique_colrev_pdf_ids() -> None:
@@ -202,7 +189,7 @@ def local_index(param):
         "ENTRYTYPE": "article",
         "doi": "10.17705/1JAIS.00570",
     }
-    record = LOCAL_INDEX.retrieve(record)
+    record = LOCAL_INDEX.retrieve(record=record)
     pp.pprint(record)
 
     # To Test retrieval of global ID
@@ -284,8 +271,6 @@ def local_index(param):
     # record4 = LOCAL_INDEX.retrieve(record4)
     # pp.pprint(record4)
 
-    return
-
 
 def corrections():
     REVIEW_MANAGER = ReviewManager()
@@ -294,8 +279,6 @@ def corrections():
 
     CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
     REVIEW_MANAGER.REVIEW_DATASET.check_corrections_of_curated_records()
-
-    return
 
 
 def main(operation: str, param):
@@ -316,8 +299,6 @@ def main(operation: str, param):
     # remove_needs_manual_preparation_records()
 
     # get_non_unique_colrev_pdf_ids()
-
-    return
 
 
 if __name__ == "__main__":

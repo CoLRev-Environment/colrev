@@ -8,12 +8,14 @@ import git
 
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
+from colrev_core.status import Status
 
 
 class Validate(Process):
     def __init__(self, *, REVIEW_MANAGER):
 
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.check)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.check)
 
         self.CPUS = 4
 
@@ -42,7 +44,6 @@ class Validate(Process):
         return records
 
     def __load_prior_records_dict(self, *, target_commit):
-        import git
 
         repo = git.Repo()
 
@@ -72,7 +73,6 @@ class Validate(Process):
     def validate_preparation_changes(
         self, *, records: typing.List[dict], target_commit
     ) -> list:
-        from colrev_core.record import Record
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
@@ -107,7 +107,6 @@ class Validate(Process):
     def validate_merging_changes(
         self, *, records: typing.List[dict], target_commit
     ) -> list:
-        from colrev_core.record import Record
 
         prior_records_dict = self.__load_prior_records_dict(target_commit=target_commit)
 
@@ -160,50 +159,47 @@ class Validate(Process):
             [x.update(changed_in_target_commit="True") for x in records.values()]
             return records.values()
 
-        else:
-            self.REVIEW_MANAGER.logger.info("Loading data from history...")
-            git_repo = git.Repo()
+        self.REVIEW_MANAGER.logger.info("Loading data from history...")
+        git_repo = git.Repo()
 
-            RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
+        RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
 
-            revlist = (
-                (
-                    commit.hexsha,
-                    (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
-                )
-                for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
+        revlist = (
+            (
+                commit.hexsha,
+                (commit.tree / str(RECORDS_FILE_RELATIVE)).data_stream.read(),
             )
-            found = False
-            for commit, filecontents in list(revlist):
-                if found:  # load the RECORDS_FILE_RELATIVE in the following commit
-                    prior_records_dict = (
-                        self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                            load_str=filecontents.decode("utf-8")
-                        )
-                    )
-                    break
-                if commit == target_commit:
-                    records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+            for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
+        )
+        found = False
+        for commit, filecontents in list(revlist):
+            if found:  # load the RECORDS_FILE_RELATIVE in the following commit
+                prior_records_dict = (
+                    self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
                         load_str=filecontents.decode("utf-8")
                     )
-                    found = True
+                )
+                break
+            if commit == target_commit:
+                records_dict = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
+                    load_str=filecontents.decode("utf-8")
+                )
+                found = True
 
-            # determine which records have been changed (prepared or merged)
-            # in the target_commit
-            for record in records_dict.values():
-                prior_record = [
-                    rec for id, rec in prior_records_dict.items() if id == record["ID"]
-                ][0]
-                # Note: the following is an exact comparison of all fields
-                if record != prior_record:
-                    record.update(changed_in_target_commit="True")
+        # determine which records have been changed (prepared or merged)
+        # in the target_commit
+        for record in records_dict.values():
+            prior_record = [
+                rec for id, rec in prior_records_dict.items() if id == record["ID"]
+            ][0]
+            # Note: the following is an exact comparison of all fields
+            if record != prior_record:
+                record.update(changed_in_target_commit="True")
 
-            return records_dict.values()
+        return records_dict.values()
 
     def validate_properties(self, *, target_commit: str = None) -> None:
         # option: --history: check all preceding commits (create a list...)
-
-        from colrev_core.status import Status
 
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
 
@@ -259,7 +255,6 @@ class Validate(Process):
         return
 
     def __set_scope_based_on_target_commit(self, *, target_commit):
-        import git
 
         target_commit = self.REVIEW_MANAGER.REVIEW_DATASET.get_last_commit_sha()
 
@@ -296,12 +291,12 @@ class Validate(Process):
         if target_commit is None and "unspecified" == scope:
             scope = self.__set_scope_based_on_target_commit(target_commit=target_commit)
 
-        if "prepare" == scope or "all" == scope:
+        if scope in ["prepare", "all"]:
             validation_details = self.validate_preparation_changes(
                 records=records, target_commit=target_commit
             )
 
-        if "merge" == scope or "all" == scope:
+        if scope in ["merge", "all"]:
             validation_details = self.validate_merging_changes(
                 records=records, target_commit=target_commit
             )

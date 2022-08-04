@@ -10,6 +10,8 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
+from colrev_core.environment import GrobidService
+from colrev_core.environment import LocalIndex
 from colrev_core.status import Status
 
 
@@ -74,7 +76,7 @@ class Service:
         self.last_file_change_date = datetime.datetime.now()
         self.last_command_run_time = datetime.datetime.now()
 
-        self.logger = self.__setup_logger(logging.INFO)
+        self.logger = self.__setup_logger(level=logging.INFO)
 
         # already start LocalIndex and Grobid (asynchronously)
         self.start_services()
@@ -91,20 +93,20 @@ class Service:
         # TODO : setup search feed (querying all 5-10 minutes?)
 
         # get initial review instructions and add to queue
-        self.STATUS = Status(self.REVIEW_MANAGER)
+        self.STATUS = Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
         stat = self.STATUS.get_status_freq()
-        instructions = self.STATUS.get_review_instructions(stat)
+        instructions = self.STATUS.get_review_instructions(stat=stat)
         for instruction in instructions:
             if "cmd" in instruction:
                 cmd = instruction["cmd"]
                 self.q.put({"name": cmd, "cmd": cmd})
 
-        event_handler = Event(self)
+        event_handler = Event(SERVICE=self)
         observer = Observer()
         observer.schedule(event_handler, self.REVIEW_MANAGER.path, recursive=True)
         observer.start()
         try:
-            while observer.isAlive():
+            while observer.is_alive():
                 observer.join(1)
 
         finally:
@@ -113,12 +115,8 @@ class Service:
 
         # Block until all tasks are done.
         self.q.join()
-        pass
 
     def start_services(self):
-        from colrev_core.environment import LocalIndex
-        from colrev_core.environment import GrobidService
-
         async def _start_grobid():
             GROBID_SERVICE = GrobidService()
             GROBID_SERVICE.start()
@@ -128,7 +126,6 @@ class Service:
 
         asyncio.ensure_future(_start_grobid())
         asyncio.ensure_future(_start_index())
-        return
 
     # function to add commands to queue?
 
@@ -187,7 +184,7 @@ class Service:
 
                 print()
                 self.logger.info(
-                    "Queue: " + ", ".join([q_item["cmd"] for q_item in self.q.queue])
+                    f'Queue: {", ".join(q_item["cmd"] for q_item in self.q.queue)}'
                 )
 
                 item = self.q.get()
@@ -199,8 +196,8 @@ class Service:
                 if "colrev search" == item["cmd"]:
                     from colrev_core.search import Search
 
-                    SEARCH = Search(self.REVIEW_MANAGER)
-                    SEARCH.update(None)
+                    SEARCH = Search(REVIEW_MANAGER=self.REVIEW_MANAGER)
+                    SEARCH.main(selection_str=None)
 
                 elif "colrev load" == item["cmd"]:
                     from colrev_core.load import Loader
@@ -210,7 +207,7 @@ class Service:
 
                         self.logger.info(f"Running {item['name']}")
 
-                        LOADER = Loader(self.REVIEW_MANAGER)
+                        LOADER = Loader(REVIEW_MANAGER=self.REVIEW_MANAGER)
                         print()
                         check_update_sources(LOADER)
                         LOADER.main(keep_ids=False, combine_commits=False)
@@ -222,15 +219,17 @@ class Service:
                     from colrev_core.prep import Preparation
 
                     self.logger.info(f"Running {item['name']}")
-                    PREPARATION = Preparation(self.REVIEW_MANAGER)
+                    PREPARATION = Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     PREPARATION.main()
                 elif "colrev dedupe" == item["cmd"]:
                     from colrev_core.dedupe import Dedupe
+
+                    # TODO : the following has been moved:
                     from colrev.cli import run_dedupe
 
                     self.logger.info(f"Running {item['name']}")
 
-                    DEDUPE = Dedupe(self.REVIEW_MANAGER)
+                    DEDUPE = Dedupe(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     # TODO : check thresholds
                     run_dedupe(
                         DEDUPE,
@@ -243,14 +242,14 @@ class Service:
                     from colrev_core.prescreen import Prescreen
 
                     self.logger.info(f"Running {item['name']}")
-                    PRESCREEN = Prescreen(self.REVIEW_MANAGER)
+                    PRESCREEN = Prescreen(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     PRESCREEN.include_all_in_prescreen()
 
                 elif "colrev pdf-get" == item["cmd"]:
                     from colrev_core.pdf_get import PDF_Retrieval
 
                     self.logger.info(f"Running {item['name']}")
-                    PDF_RETRIEVAL = PDF_Retrieval(self.REVIEW_MANAGER)
+                    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     PDF_RETRIEVAL.main()
 
                 elif "colrev pdf-prep" == item["cmd"]:
@@ -261,11 +260,11 @@ class Service:
                     from colrev_core.pdf_get import PDF_Retrieval
 
                     self.logger.info(f"Running {item['name']}")
-                    PDF_RETRIEVAL = PDF_Retrieval(self.REVIEW_MANAGER)
+                    PDF_RETRIEVAL = PDF_Retrieval(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     PDF_RETRIEVAL.main()
 
                     PDF_PREPARATION = PDF_Preparation(
-                        self.REVIEW_MANAGER, reprocess=False
+                        REVIEW_MANAGER=self.REVIEW_MANAGER, reprocess=False
                     )
                     PDF_PREPARATION.main()
 
@@ -274,7 +273,7 @@ class Service:
 
                     self.logger.info(f"Running {item['name']}")
                     PDF_PREPARATION = PDF_Preparation(
-                        self.REVIEW_MANAGER, reprocess=False
+                        REVIEW_MANAGER=self.REVIEW_MANAGER, reprocess=False
                     )
                     PDF_PREPARATION.main()
 
@@ -282,7 +281,7 @@ class Service:
                     from colrev_core.screen import Screen
 
                     self.logger.info(f"Running {item['name']}")
-                    SCREEN = Screen(self.REVIEW_MANAGER)
+                    SCREEN = Screen(REVIEW_MANAGER=self.REVIEW_MANAGER)
                     SCREEN.include_all_in_screen()
 
                 elif "colrev data" == item["cmd"]:
@@ -319,7 +318,6 @@ class Service:
                 self.q.task_done()
         except KeyboardInterrupt:
             print("Shutting down service")
-            pass
 
 
 if __name__ == "__main__":

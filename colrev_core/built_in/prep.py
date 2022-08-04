@@ -26,6 +26,7 @@ from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationEndpoint
 from colrev_core.record import PrepRecord
 from colrev_core.record import RecordState
+from colrev_core.search_sources import SearchSources
 
 
 @zope.interface.implementer(PreparationEndpoint)
@@ -40,8 +41,6 @@ class LoadFixesPrep:
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
-
-        from colrev_core.search_sources import SearchSources
 
         SEARCH_SCOURCES = SearchSources(REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER)
 
@@ -760,7 +759,6 @@ class SemanticScholarPrep:
             PREPARATION.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-            pass
         except requests.exceptions.RequestException:
             pass
         return RECORD
@@ -807,7 +805,7 @@ class DOIFromURLsPrep:
 
                     if not ret_dois:
                         return RECORD
-                    for doi, freq in ret_dois:
+                    for doi, _ in ret_dois:
                         retrieved_record = {"doi": doi.upper(), "ID": RECORD.data["ID"]}
                         RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
                         DOIConnector.retrieve_doi_metadata(
@@ -839,7 +837,6 @@ class DOIFromURLsPrep:
 
 @zope.interface.implementer(PreparationEndpoint)
 class DOIMetadataPrep:
-    from colrev_core.built_in.prep import DOIConnector
 
     source_correction_hint = (
         "ask the publisher to correct the metadata"
@@ -1084,7 +1081,6 @@ class OpenLibraryMetadataPrep:
             PREPARATION.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-            pass
 
         return RECORD
 
@@ -1170,7 +1166,6 @@ class CiteAsPrep:
             PREPARATION.REVIEW_MANAGER.logger.error(
                 "UnicodeEncodeError - this needs to be fixed at some time"
             )
-            pass
 
         return RECORD
 
@@ -1289,7 +1284,6 @@ class LocalIndexPrep:
             )
             retrieved = True
         except (colrev_exceptions.RecordNotInIndexException, NotFoundError):
-            pass
             try:
                 # Note: Records can be CURATED without being indexed
                 if not RECORD.masterdata_is_curated():

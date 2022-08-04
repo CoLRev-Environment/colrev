@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 import importlib
 import io
+import json
 import logging
 import os
+import pkgutil
 import pprint
 import re
 import shutil
@@ -15,15 +17,21 @@ from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
 
+import dacite
 import git
+import pandas as pd
 import yaml
 from dacite import from_dict
+from git.exc import GitCommandError
+from git.exc import InvalidGitRepositoryError
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import EnvironmentManager
+from colrev_core.process import CheckProcess
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.review_dataset import ReviewDataset
 from colrev_core.settings import Configuration
+from colrev_core.status import Status
 
 
 class ReviewManager:
@@ -42,7 +50,7 @@ class ReviewManager:
         force_mode: bool = False,
         debug_mode: bool = False,
     ) -> None:
-        from colrev_core.review_dataset import ReviewDataset
+        from colrev_core.environment import EnvironmentManager
 
         self.force_mode = force_mode
         """Force mode variable (bool)"""
@@ -65,7 +73,6 @@ class ReviewManager:
         except Exception as e:
             if force_mode:
                 print(e)
-                pass
             else:
                 raise e
 
@@ -81,7 +88,6 @@ class ReviewManager:
         except Exception as e:
             if force_mode:
                 print(e)
-                pass
             else:
                 raise e
 
@@ -101,7 +107,6 @@ class ReviewManager:
         except Exception as e:
             if force_mode:
                 print(e)
-                pass
             else:
                 raise e
 
@@ -111,9 +116,6 @@ class ReviewManager:
             self.logger.debug(f"Settings:\n{self.settings}")
 
     def load_settings(self) -> Configuration:
-        import dacite
-        import json
-        import pkgutil
 
         # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
 
@@ -138,7 +140,7 @@ class ReviewManager:
                 with open(self.paths["SETTINGS"], "w", encoding="utf8") as file:
                     json.dump(settings, file, indent=4)
 
-        with open(self.paths["SETTINGS"]) as f:
+        with open(self.paths["SETTINGS"], encoding="utf-8") as f:
             loaded_settings = json.load(f)
 
         converters = {Path: Path, Enum: Enum}
@@ -154,8 +156,6 @@ class ReviewManager:
         return settings
 
     def save_settings(self) -> None:
-        import json
-
         def custom_asdict_factory(data):
             def convert_value(obj):
                 if isinstance(obj, Enum):
@@ -167,11 +167,9 @@ class ReviewManager:
             return {k: convert_value(v) for k, v in data}
 
         exported_dict = asdict(self.settings, dict_factory=custom_asdict_factory)
-        with open("settings.json", "w") as outfile:
+        with open("settings.json", "w", encoding="utf-8") as outfile:
             json.dump(exported_dict, outfile, indent=4)
         self.REVIEW_DATASET.add_changes(path="settings.json")
-
-        return
 
     def __get_file_paths(self, *, repository_dir_str: Path) -> dict:
         repository_dir = repository_dir_str
@@ -216,18 +214,6 @@ class ReviewManager:
                 return remote_url
 
         return None
-
-    def __actor_fallback(self) -> str:
-        from colrev_core.environment import EnvironmentManager
-
-        name = EnvironmentManager.get_name_mail_from_global_git_config()[0]
-        return name
-
-    def __email_fallback(self) -> str:
-        from colrev_core.environment import EnvironmentManager
-
-        email = EnvironmentManager.get_name_mail_from_global_git_config()[1]
-        return email
 
     def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
         # for logger debugging:
@@ -299,10 +285,8 @@ class ReviewManager:
         last_version, current_version = self.__get_colrev_versions()
         if last_version != current_version:
             raise colrev_exceptions.CoLRevUpgradeError(last_version, current_version)
-        return
 
     def upgrade_colrev(self) -> None:
-        from colrev_core.process import CheckProcess
 
         last_version, current_version = self.__get_colrev_versions()
 
@@ -326,33 +310,28 @@ class ReviewManager:
             with open(filename, "w", encoding="utf8") as f:
                 s = s.replace(old_string, new_string)
                 f.write(s)
-            return
 
         def retrieve_package_file(*, template_file: Path, target: Path) -> None:
-            import pkgutil
 
             filedata = pkgutil.get_data(__name__, str(template_file))
             if filedata:
                 with open(target, "w", encoding="utf8") as file:
                     file.write(filedata.decode("utf-8"))
-            return
 
-        def print_release_notes(version: str):
-            import pkgutil
+        def print_release_notes(selected_version: str):
 
             filedata = pkgutil.get_data(__name__, "../CHANGELOG.md")
             active = False
             if filedata:
                 for line in filedata.decode("utf-8").split("\n"):
-                    if version in line:
+                    if selected_version in line:
                         active = True
-                        print(f"Release notes v{version}")
+                        print(f"Release notes v{selected_version}")
                         continue
-                    if "### [" in line and version not in line:
+                    if "### [" in line and selected_version not in line:
                         active = False
                     if active:
                         print(line)
-            return
 
         def migrate_0_3_0(self) -> bool:
             records = self.REVIEW_DATASET.load_records_dict()
@@ -377,10 +356,6 @@ class ReviewManager:
             return False
 
         def migrate_0_4_0(self) -> bool:
-            import pandas as pd
-            import yaml
-            import json
-            import pkgutil
 
             if not Path("settings.json").is_file():
                 filedata = pkgutil.get_data(__name__, "template/settings.json")
@@ -389,13 +364,13 @@ class ReviewManager:
                     return False
                 settings = json.loads(filedata.decode("utf-8"))
             else:
-                with open("settings.json") as f:
+                with open("settings.json", encoding="utf-8") as f:
                     settings = json.load(f)
 
             old_sources_path = Path("sources.yaml")
             if old_sources_path.is_file():
                 if old_sources_path.is_file():
-                    with open(old_sources_path) as f:
+                    with open(old_sources_path, encoding="utf-8") as f:
                         sources_df = pd.json_normalize(yaml.safe_load(f))
                         sources = sources_df.to_dict("records")
                         print(sources)
@@ -524,7 +499,7 @@ class ReviewManager:
                 else:
                     settings["project"]["review_type"] = "literature_review"
 
-            with open("settings.json", "w") as outfile:
+            with open("settings.json", "w", encoding="utf-8") as outfile:
                 json.dump(settings, outfile, indent=4)
 
             self.settings = self.load_settings()
@@ -592,9 +567,8 @@ class ReviewManager:
             return True
 
         def migrate_0_5_0(self) -> None:
-            import json
 
-            with open("settings.json") as f:
+            with open("settings.json", encoding="utf-8") as f:
                 settings = json.load(f)
 
             settings["pdf_get"]["scripts"] = [
@@ -661,10 +635,10 @@ class ReviewManager:
                     else:
                         source["search_type"] = "DB"
 
-            for round in settings["prep"]["prep_rounds"]:
-                round["scripts"] = [
+            for prep_round in settings["prep"]["prep_rounds"]:
+                prep_round["scripts"] = [
                     s
-                    for s in round["scripts"]
+                    for s in prep_round["scripts"]
                     if s["endpoint"]
                     not in ["get_doi_from_sem_scholar", "update_metadata_status"]
                 ]
@@ -738,7 +712,7 @@ class ReviewManager:
                 del settings["data"]["data_format"]
                 settings["data"]["scripts"] = data_scripts
 
-            with open("settings.json", "w") as outfile:
+            with open("settings.json", "w", encoding="utf-8") as outfile:
                 json.dump(settings, outfile, indent=4)
 
             self.settings = self.load_settings()
@@ -770,8 +744,6 @@ class ReviewManager:
             # git filter-branch --tree-filter
             # "find . \( -name **.md -o -name .pre-commit-config.yaml \)
             # -exec sed -i -e \ 's/references.bib/records.bib/g' {} \;"
-
-            return
 
         # next version should be:
         # ...
@@ -818,7 +790,7 @@ class ReviewManager:
                 msg=f"Upgrade to CoLRev {upcoming_version}",
                 script_call="colrev settings -u",
             )
-            print_release_notes(version=upcoming_version)
+            print_release_notes(selected_version=upcoming_version)
         else:
             self.logger.info("Nothing to do.")
             self.logger.info(
@@ -826,10 +798,7 @@ class ReviewManager:
                 "git commit -n -m --allow-empty 'update colrev'"
             )
 
-        return
-
     def check_repository_setup(self) -> None:
-        from git.exc import GitCommandError
 
         # 1. git repository?
         if not self.__is_git_repo(path=self.paths["REPO_DIR"]):
@@ -865,7 +834,6 @@ class ReviewManager:
                 "No Internet connection, cannot check remote "
                 "colrev-hooks repository for updates."
             )
-        return
 
     def __get_base_prefix_compat(self) -> str:
         return (
@@ -884,15 +852,12 @@ class ReviewManager:
         git_repo = git.Repo(str(self.paths["REPO_DIR"]))
         unmerged_blobs = git_repo.index.unmerged_blobs()
 
-        for path in unmerged_blobs:
-            list_of_blobs = unmerged_blobs[path]
-            for (stage, blob) in list_of_blobs:
+        for path, list_of_blobs in unmerged_blobs.items():
+            for (stage, _) in list_of_blobs:
                 if stage != 0:
                     raise colrev_exceptions.GitConflictError(path)
-        return
 
     def __is_git_repo(self, *, path: Path) -> bool:
-        from git.exc import InvalidGitRepositoryError
 
         try:
             _ = git.Repo(str(path)).git_dir
@@ -911,7 +876,7 @@ class ReviewManager:
         return True
 
     def __get_installed_hooks(self) -> dict:
-        installed_hooks: dict = {"hooks": list()}
+        installed_hooks: dict = {"hooks": []}
         with open(".pre-commit-config.yaml", encoding="utf8") as pre_commit_y:
             pre_commit_config = yaml.load(pre_commit_y, Loader=yaml.FullLoader)
         installed_hooks[
@@ -997,7 +962,6 @@ class ReviewManager:
         """
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.
-
         from colrev_core.environment import EnvironmentManager
 
         # We work with exceptions because each issue may be raised in different checks.
@@ -1012,7 +976,7 @@ class ReviewManager:
             {"script": self.__check_software, "params": []},
         ]
 
-        not self.paths["SEARCHDIR"].mkdir(exist_ok=True)
+        self.paths["SEARCHDIR"].mkdir(exist_ok=True)
 
         failure_items = []
         if not self.paths["RECORDS_FILE"].is_file():
@@ -1063,7 +1027,7 @@ class ReviewManager:
                 },
             ]
 
-            if prior == {}:  # Selected checks if RECORDS_FILE not yet in git history
+            if not prior:  # Selected checks if RECORDS_FILE not yet in git history
                 main_refs_checks = [
                     x
                     for x in main_refs_checks
@@ -1120,7 +1084,7 @@ class ReviewManager:
                     self.logger.debug(
                         f'{check_script["script"].__name__}(params) called'
                     )
-                    if type(check_script["params"]) == list:
+                    if isinstance(check_script["params"], list):
                         check_script["script"](*check_script["params"])
                     else:
                         check_script["script"](**check_script["params"])
@@ -1136,13 +1100,11 @@ class ReviewManager:
                 colrev_exceptions.UnstagedGitChangesError,
                 colrev_exceptions.StatusFieldValueError,
             ) as e:
-                pass
                 failure_items.append(f"{type(e).__name__}: {e}")
 
         if len(failure_items) > 0:
             return {"status": FAIL, "msg": "  " + "\n  ".join(failure_items)}
-        else:
-            return {"status": PASS, "msg": "Everything ok."}
+        return {"status": PASS, "msg": "Everything ok."}
 
     def report(self, *, msg_file: Path) -> dict:
         """Append commit-message report if not already available
@@ -1172,17 +1134,13 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        from colrev_core.status import Status
-
         STATUS = Status(REVIEW_MANAGER=self)
         stat = STATUS.get_status_freq()
         collaboration_instructions = STATUS.get_collaboration_instructions(stat=stat)
 
         status_code = not all(
-            [
-                x["level"] in ["SUCCESS", "WARNING"]
-                for x in collaboration_instructions["items"]
-            ]
+            x["level"] in ["SUCCESS", "WARNING"]
+            for x in collaboration_instructions["items"]
         )
 
         msgs = "\n ".join(
@@ -1213,13 +1171,11 @@ class ReviewManager:
             colrev_exceptions.UnstagedGitChangesError,
             colrev_exceptions.StatusFieldValueError,
         ) as e:
-            pass
             return {"status": FAIL, "msg": f"{type(e).__name__}: {e}"}
 
         if changed:
             return {"status": FAIL, "msg": "records file formatted"}
-        else:
-            return {"status": PASS, "msg": "Everything ok."}
+        return {"status": PASS, "msg": "Everything ok."}
 
     def notify(self, *, process: Process, state_transition=True) -> None:
         """Notify the REVIEW_MANAGER about the next process"""
@@ -1232,7 +1188,6 @@ class ReviewManager:
     def __get_commit_report(
         self, *, script_name: str = None, saved_args: dict = None
     ) -> str:
-        from colrev_core.status import Status
 
         report = "\n\nReport\n\n"
 
@@ -1257,12 +1212,7 @@ class ReviewManager:
         else:
             report = report + " \\ \n"
             for k, v in saved_args.items():
-                if (
-                    isinstance(v, str)
-                    or isinstance(v, bool)
-                    or isinstance(v, int)
-                    or isinstance(v, float)
-                ):
+                if isinstance(v, (bool, float, int, str)):
                     if v == "":
                         report = report + f"     --{k} \\\n"
                     else:
@@ -1388,7 +1338,6 @@ class ReviewManager:
         return flag
 
     def update_status_yaml(self) -> None:
-        from colrev_core.status import Status
 
         STATUS = Status(REVIEW_MANAGER=self)
 
@@ -1398,8 +1347,6 @@ class ReviewManager:
 
         self.REVIEW_DATASET.add_changes(path=self.paths["STATUS_RELATIVE"])
 
-        return
-
     def get_status(self) -> dict:
         status_dict = {}
         with open(self.paths["STATUS"], encoding="utf8") as stream:
@@ -1407,7 +1354,6 @@ class ReviewManager:
                 status_dict = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
-                pass
         return status_dict
 
     def reset_log(self) -> None:
@@ -1425,8 +1371,6 @@ class ReviewManager:
         )
         file_handler.setFormatter(formatter)
         self.report_logger.addHandler(file_handler)
-
-        return
 
     def reorder_log(self, *, IDs: list, criterion=None) -> None:
         """Reorder the report.log according to an ID list (after multiprocessing)"""
@@ -1532,8 +1476,6 @@ class ReviewManager:
         file_handler.setFormatter(formatter)
         self.report_logger.addHandler(file_handler)
 
-        return
-
     def create_commit(
         self,
         *,
@@ -1571,7 +1513,7 @@ class ReviewManager:
                     shutil.copyfileobj(f, temp)
                 # self.paths["REPORT"].rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
-                    self.paths["REPORT"], "w"
+                    self.paths["REPORT"], "w", encoding="utf8"
                 ) as writer:
                     line = reader.readline()
                     while line:
@@ -1639,8 +1581,7 @@ class ReviewManager:
                     "A clean repository is expected."
                 )
             return True
-        else:
-            return False
+        return False
 
 
 if __name__ == "__main__":

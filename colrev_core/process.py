@@ -40,7 +40,7 @@ class Process:
         self,
         *,
         REVIEW_MANAGER,
-        type: ProcessType,
+        process_type: ProcessType,
         notify_state_transition_process=True,
         debug=False,
     ):
@@ -48,7 +48,7 @@ class Process:
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.force_mode = self.REVIEW_MANAGER.force_mode
 
-        self.type = type
+        self.type = process_type
 
         self.notify_state_transition_process = notify_state_transition_process
         if notify_state_transition_process:
@@ -82,7 +82,6 @@ class Process:
                 process=self.type, REVIEW_MANAGER=self.REVIEW_MANAGER
             )
             PROCESS_MODEL.check_process_precondition(process=self)
-            return
 
         def require_clean_repo_general(
             git_repo: git.Repo = None, ignore_pattern: list = None
@@ -223,7 +222,7 @@ class Process:
 
 class FormatProcess(Process):
     def __init__(self, *, REVIEW_MANAGER, notify: bool = True):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.format)
+        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.format)
         if notify:
             self.REVIEW_MANAGER.notify(process=self)
 
@@ -232,7 +231,7 @@ class CheckProcess(Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.check,
+            process_type=ProcessType.check,
             notify_state_transition_process=False,
         )
 
@@ -423,7 +422,6 @@ class ProcessModel:
                 raise colrev_exceptions.ProcessOrderViolation(
                     process, self.state, intersection
                 )
-        return
 
 
 class SearchEndpoint(zope.interface.Interface):

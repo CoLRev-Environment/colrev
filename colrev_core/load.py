@@ -6,6 +6,7 @@ import typing
 from pathlib import Path
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in import load as built_in_load
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -14,8 +15,6 @@ from colrev_core.record import RecordState
 
 
 class Loader(Process):
-
-    from colrev_core.built_in import load as built_in_load
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
@@ -47,7 +46,7 @@ class Loader(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.load,
+            process_type=ProcessType.load,
             notify_state_transition_process=notify_state_transition_process,
         )
         self.verbose = True
@@ -122,8 +121,6 @@ class Loader(Process):
                 f"Import failed (no record with title field): {SOURCE.filename.name}"
             )
 
-        return
-
     def resolve_non_unique_IDs(self, *, SOURCE) -> None:
         def get_unique_id(*, ID: str, ID_list: typing.List[str]) -> str:
 
@@ -135,7 +132,7 @@ class Loader(Process):
             while next_unique_ID in ID_list:
                 if len(appends) == 0:
                     order += 1
-                    appends = [p for p in itertools.product(letters, repeat=order)]
+                    appends = list(itertools.product(letters, repeat=order))
                 next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
 
             return next_unique_ID
@@ -161,7 +158,6 @@ class Loader(Process):
             with open(filename, "w", encoding="utf8") as f:
                 for s in new_file_lines:
                     f.write(s)
-            return
 
         if not SOURCE.corresponding_bib_file.is_file():
             return
@@ -206,8 +202,6 @@ class Loader(Process):
             self.REVIEW_MANAGER.create_commit(
                 f"Resolve non-unique IDs in {SOURCE.corresponding_bib_file.name}"
             )
-
-        return
 
     def load_source_records(self, *, SOURCE, keep_ids) -> None:
         def getbib(*, file: Path) -> typing.List[dict]:
@@ -395,7 +389,7 @@ class Loader(Process):
             while next_unique_ID in records:
                 if len(appends) == 0:
                     order += 1
-                    appends = [p for p in itertools.product(letters, repeat=order)]
+                    appends = list(itertools.product(letters, repeat=order))
                 next_unique_ID = sr["ID"] + "".join(list(appends.pop(0)))
             sr["ID"] = next_unique_ID
             records[sr["ID"]] = sr
@@ -421,8 +415,6 @@ class Loader(Process):
         )
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(SOURCE.filename))
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
-
-        return
 
     def validate_load(self, *, SOURCE) -> None:
 
@@ -455,13 +447,11 @@ class Loader(Process):
 
         print("\n")
 
-        return
-
     def save_records(self, *, records, corresponding_bib_file) -> None:
         """Convenience function for the load script implementations"""
 
         def fix_keys(*, records: typing.Dict) -> typing.Dict:
-            for ID, record in records.items():
+            for record in records.values():
                 record = {
                     re.sub("[0-9a-zA-Z_]+", "1", k.replace(" ", "_")): v
                     for k, v in record.items()
@@ -472,7 +462,7 @@ class Loader(Process):
             # if IDs to set for some records
             if 0 != len([r for r in records if "ID" not in r]):
                 i = 1
-                for ID, record in records.items():
+                for record in records.values():
                     if "ID" not in record:
                         if "UT_(Unique_WOS_ID)" in record:
                             record["ID"] = record["UT_(Unique_WOS_ID)"].replace(
@@ -509,7 +499,6 @@ class Loader(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records, save_path=corresponding_bib_file
             )
-        return
 
     def main(self, *, keep_ids: bool = False, combine_commits=False) -> None:
 
@@ -524,9 +513,7 @@ class Loader(Process):
             REVIEW_DATASET.check_sources()
             SOURCES = []
             for SOURCE in self.REVIEW_MANAGER.settings.sources:
-                if SOURCE.conversion_script["endpoint"] not in list(
-                    self.load_scripts.keys()
-                ):
+                if SOURCE.conversion_script["endpoint"] not in self.load_scripts:
                     if self.verbose:
                         print(
                             f"Error: endpoint not available: {SOURCE.conversion_script}"
@@ -571,7 +558,6 @@ class Loader(Process):
             self.REVIEW_MANAGER.create_commit(
                 msg="Load (multiple)", script_call="colrev load", saved_args=saved_args
             )
-        return
 
 
 if __name__ == "__main__":

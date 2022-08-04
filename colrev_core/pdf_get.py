@@ -1,24 +1,26 @@
 #! /usr/bin/env python
 import os
+import pkgutil
 import shutil
 import typing
+from glob import glob
 from pathlib import Path
 
 import imagehash
 from p_tqdm import p_map
 from pdf2image import convert_from_path
 
+from colrev_core.built_in import pdf_get as built_in_pdf_get
 from colrev_core.environment import AdapterManager
 from colrev_core.environment import GrobidService
 from colrev_core.environment import TEIParser
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
 class PDF_Retrieval(Process):
-
-    from colrev_core.built_in import pdf_get as built_in_pdf_get
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "unpaywall": {
@@ -41,7 +43,7 @@ class PDF_Retrieval(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.pdf_get,
+            process_type=ProcessType.pdf_get,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -77,8 +79,6 @@ class PDF_Retrieval(Process):
                         f'No need to copy PDF - already exits ({record["ID"]})'
                     )
 
-        return
-
     def link_pdf(self, RECORD):
 
         PDF_DIRECTORY_RELATIVE = self.REVIEW_MANAGER.paths["PDF_DIRECTORY_RELATIVE"]
@@ -92,7 +92,6 @@ class PDF_Retrieval(Process):
 
     # Note : no named arguments (multiprocessing)
     def retrieve_pdf(self, item: dict) -> dict:
-        from colrev_core.record import Record
 
         record = item["record"]
 
@@ -121,8 +120,7 @@ class PDF_Retrieval(Process):
                 )
                 RECORD.data.update(colrev_status=RecordState.pdf_imported)
                 break
-            else:
-                RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
+            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
 
         return RECORD.get_data()
 
@@ -161,7 +159,7 @@ class PDF_Retrieval(Process):
             pdf_candidates = {
                 pdf_candidate.relative_to(
                     self.REVIEW_MANAGER.path
-                ): self.get_colrev_pdf_id(pdf_candidate)
+                ): self.get_colrev_pdf_id(path=pdf_candidate)
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
@@ -233,15 +231,11 @@ class PDF_Retrieval(Process):
             msg="Relink PDFs", script_call="colrev pdf-get"
         )
 
-        return
-
     def check_existing_unlinked_pdfs(
         self,
         *,
         records: typing.Dict,
     ) -> typing.Dict:
-        from glob import glob
-        from colrev_core.record import Record
 
         linked_pdfs = [
             str(Path(x["file"]).resolve()) for x in records.values() if "file" in x
@@ -374,8 +368,6 @@ class PDF_Retrieval(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(pdfs_search_file))
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
-        return
-
     def __get_data(self) -> dict:
         record_state_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_state_list()
         nr_tasks = len(
@@ -443,8 +435,6 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.logger.info(retrieved_string)
         self.REVIEW_MANAGER.logger.info(not_retrieved_string)
 
-        return
-
     def __set_status_if_file_linked(self, *, records: typing.Dict) -> typing.Dict:
 
         for record in records.values():
@@ -468,11 +458,10 @@ class PDF_Retrieval(Process):
         return records
 
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_pdf_get_script.py")
         if filedata:
-            with open("custom_pdf_get_script.py", "w") as file:
+            with open("custom_pdf_get_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_get_script.py")
@@ -482,8 +471,6 @@ class PDF_Retrieval(Process):
         )
 
         self.REVIEW_MANAGER.save_settings()
-
-        return
 
     def main(self) -> None:
 
@@ -531,8 +518,6 @@ class PDF_Retrieval(Process):
         self.REVIEW_MANAGER.create_commit(
             msg="Get PDFs", script_call="colrev pdf-get", saved_args=saved_args
         )
-
-        return
 
 
 if __name__ == "__main__":

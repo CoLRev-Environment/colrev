@@ -8,15 +8,16 @@ from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
+from colrev_core.built_in import pdf_prep_man as built_in_pdf_prep_man
 from colrev_core.environment import AdapterManager
+from colrev_core.environment import LocalIndex
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.record import RecordState
 
 
 class PDFPrepMan(Process):
-
-    from colrev_core.built_in import pdf_prep_man as built_in_pdf_prep_man
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_pdf_prep_man": {
@@ -28,7 +29,7 @@ class PDFPrepMan(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.pdf_prep_man,
+            process_type=ProcessType.pdf_prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -74,8 +75,6 @@ class PDFPrepMan(Process):
         return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 
     def pdf_prep_man_stats(self) -> None:
-        import pandas as pd
-        from colrev_core.record import Record
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
@@ -133,8 +132,6 @@ class PDFPrepMan(Process):
             )
             tabulated.to_csv("manual_pdf_preparation_statistics.csv")
 
-        return
-
     def extract_needs_pdf_prep_man(self) -> None:
 
         prep_bib_path = self.REVIEW_MANAGER.paths["REPO_DIR"] / Path("prep-records.bib")
@@ -185,8 +182,6 @@ class PDFPrepMan(Process):
         bib_db_df.to_csv(prep_csv_path, index=False)
         self.REVIEW_MANAGER.logger.info(f"Created {prep_csv_path.name}")
 
-        return
-
     def apply_pdf_prep_man(self) -> None:
 
         if Path("prep-records.csv").is_file():
@@ -229,10 +224,8 @@ class PDFPrepMan(Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.format_records_file()
         self.REVIEW_MANAGER.check_repo()
-        return
 
     def extract_coverpage(self, *, filepath: Path) -> None:
-        from colrev_core.environment import LocalIndex
 
         cp_path = LocalIndex.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
@@ -247,7 +240,6 @@ class PDFPrepMan(Process):
             writer.write(outfile)
         with open(cp_path / filepath.name, "wb") as outfile:
             writer_cp.write(outfile)
-        return
 
     def main(self) -> None:
 
@@ -257,9 +249,7 @@ class PDFPrepMan(Process):
             PDF_PREP_MAN_SCRIPT
         ) in self.REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts:
 
-            if PDF_PREP_MAN_SCRIPT["endpoint"] not in list(
-                self.pdf_prep_man_scripts.keys()
-            ):
+            if PDF_PREP_MAN_SCRIPT["endpoint"] not in self.pdf_prep_man_scripts:
                 if self.verbose:
                     print(f"Error: endpoint not available: {PDF_PREP_MAN_SCRIPT}")
                 continue
@@ -268,8 +258,6 @@ class PDFPrepMan(Process):
 
             ENDPOINT = endpoint["endpoint"]
             records = ENDPOINT.prep_man_pdf(self, records)
-
-        return
 
 
 if __name__ == "__main__":

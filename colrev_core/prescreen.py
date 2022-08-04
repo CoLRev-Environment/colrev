@@ -1,6 +1,9 @@
 #! /usr/bin/env python
+import math
+import pkgutil
 import typing
 
+from colrev_core.built_in import prescreen as built_in_prescreen
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -8,8 +11,6 @@ from colrev_core.record import RecordState
 
 
 class Prescreen(Process):
-
-    from colrev_core.built_in import prescreen as built_in_prescreen
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "scope_prescreen": {
@@ -32,7 +33,7 @@ class Prescreen(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.prescreen,
+            process_type=ProcessType.prescreen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -46,17 +47,14 @@ class Prescreen(Process):
         )
 
     def export_table(self, *, export_table_format: str) -> None:
-        from colrev_core.built_in import prescreen as built_in_prescreen
 
         ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
             PRESCREEN=self, SETTINGS={"name": "export_table"}
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.export_table(self, records, [])
-        return
 
     def import_table(self, *, import_table_path: str) -> None:
-        from colrev_core.built_in import prescreen as built_in_prescreen
 
         ENDPOINT = built_in_prescreen.SpreadsheetPrescreenEndpoint(
             PRESCREEN=self, SETTINGS={"name": "import_table"}
@@ -64,17 +62,13 @@ class Prescreen(Process):
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.import_table(self, records, import_table_path)
 
-        return
-
     def include_all_in_prescreen(self) -> None:
-        from colrev_core.built_in import prescreen as built_in_prescreen
 
         ENDPOINT = built_in_prescreen.ConditionalPrescreenEndpoint(
             PRESCREEN=self, SETTINGS={"name": "include_all"}
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         ENDPOINT.run_prescreen(self, records, [])
-        return
 
     def get_data(self) -> dict:
 
@@ -95,7 +89,6 @@ class Prescreen(Process):
         return prescreen_data
 
     def create_prescreen_split(self, *, create_split: int) -> list:
-        import math
 
         prescreen_splits = []
 
@@ -108,19 +101,17 @@ class Prescreen(Process):
         )
 
         added: typing.List[str] = []
-        for i in range(0, create_split):
-            while len(added) < nrecs:
-                added.append(next(data["items"])["ID"])
+        while len(added) < nrecs:
+            added.append(next(data["items"])["ID"])
         prescreen_splits.append("colrev prescreen --split " + ",".join(added))
 
         return prescreen_splits
 
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_prescreen_script.py")
         if filedata:
-            with open("custom_prescreen_script.py", "w") as file:
+            with open("custom_prescreen_script.py", "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
@@ -131,8 +122,6 @@ class Prescreen(Process):
             {"endpoint": "custom_prescreen_script"}
         )
         self.REVIEW_MANAGER.save_settings()
-
-        return
 
     def main(self, *, split_str: str):
 
@@ -148,8 +137,6 @@ class Prescreen(Process):
             self.REVIEW_MANAGER.logger.info(f"Run {PRESCREEN_SCRIPT['endpoint']}")
             ENDPOINT = self.prescreen_scripts[PRESCREEN_SCRIPT["endpoint"]]
             records = ENDPOINT.run_prescreen(self, records, split)
-
-        return
 
 
 if __name__ == "__main__":

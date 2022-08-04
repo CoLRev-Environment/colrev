@@ -15,6 +15,6 @@ class CoLRevCLIPDFRetrievalManual:
 
         from colrev.cli import pdf_get_man_cli
 
-        records = pdf_get_man_cli(PDF_RETRIEVAL_MAN, records)
+        pdf_get_man_cli(PDF_RETRIEVAL_MAN)
 
         return records

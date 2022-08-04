@@ -1,9 +1,15 @@
 #! /usr/bin/env python
+import json
 import re
 import typing
 from pathlib import Path
 
+import pybtex.errors
+from pybtex.database.input import bibtex
+
 from colrev_core.environment import LocalIndex
+from colrev_core.record import Record
+from colrev_core.review_dataset import ReviewDataset
 
 
 class Sync:
@@ -12,7 +18,6 @@ class Sync:
         self.non_unique_for_import = []
 
     def get_cited_papers(self) -> None:
-        import json
 
         if Path("paper.md").is_file():
             paper_md = Path("paper.md")
@@ -25,7 +30,7 @@ class Sync:
 
         if paper_md.is_file():
             print("Loading cited references from paper.md")
-            content = paper_md.read_text()
+            content = paper_md.read_text(encoding="utf-8")
             res = re.findall(r"(^|\s|\[|;)(@[a-zA-Z0-9_]+)+", content)
             citation_keys = list({r[1].replace("@", "") for r in res})
             print(f"Citations in paper.md: {len(citation_keys)}")
@@ -89,15 +94,12 @@ class Sync:
         return
 
     def get_IDs_in_paper(self) -> typing.List:
-        from pybtex.database.input import bibtex
-        import pybtex.errors
-        from colrev_core.review_dataset import ReviewDataset
 
         pybtex.errors.set_strict_mode(False)
 
         references_file = Path("references.bib")
         if not references_file.is_file():
-            records = dict()
+            records = {}
         else:
 
             parser = bibtex.Parser()
@@ -112,14 +114,8 @@ class Sync:
     def add_to_records_to_import(self, record: dict) -> None:
         if record["ID"] not in [r["ID"] for r in self.records_to_import]:
             self.records_to_import.append(record)
-        return
 
     def add_to_bib(self) -> None:
-
-        from pybtex.database.input import bibtex
-        import pybtex.errors
-        from colrev_core.review_dataset import ReviewDataset
-        from colrev_core.record import Record
 
         pybtex.errors.set_strict_mode(False)
 
@@ -178,8 +174,6 @@ class Sync:
         ReviewDataset.save_records_dict_to_file(
             records=records_dict, save_path=references_file
         )
-
-        return
 
 
 if __name__ == "__main__":

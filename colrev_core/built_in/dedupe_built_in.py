@@ -5,14 +5,22 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import zope.interface
 from colrev.cli import console_duplicate_instance_label
 from dacite import from_dict
+from thefuzz import fuzz
+from tqdm import tqdm
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in.pdf_prep import PDFMetadataValidationEndpoint
+from colrev_core.pdf_prep import PDF_Preparation
 from colrev_core.process import DedupeEndpoint
 from colrev_core.process import DefaultSettings
+from colrev_core.record import PrepRecord
+from colrev_core.record import Record
+from colrev_core.record import RecordState
 
 
 class colors:
@@ -52,7 +60,6 @@ class SimpleDedupeEndpoint:
     def __calculate_similarities_record(
         self, *, DEDUPE, records_df: pd.DataFrame
     ) -> list:
-        from colrev_core.record import Record
 
         # Note: per definition, similarities are needed relative to the last row.
         records_df["similarity"] = 0
@@ -176,9 +183,6 @@ class SimpleDedupeEndpoint:
         This procedure should only be used in small samples on which active learning
         models cannot be trained.
         """
-
-        import pandas as pd
-        from colrev_core.record import RecordState
 
         pd.options.mode.chained_assignment = None  # default='warn'
 
@@ -326,7 +330,6 @@ class SimpleDedupeEndpoint:
             script_call="colrev dedupe",
             saved_args=saved_args,
         )
-        return
 
 
 # # Active-learning deduplication
@@ -351,7 +354,7 @@ class ActiveLearningDedupeTrainingEndpoint:
         # print(deduper.predicates)
 
         # When finished, save our training to disk
-        with open(DEDUPE.training_file, "w") as tf:
+        with open(DEDUPE.training_file, "w", encoding="utf-8") as tf:
             DEDUPE.deduper.write_training(tf)
         DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=DEDUPE.training_file)
 
@@ -368,8 +371,6 @@ class ActiveLearningDedupeTrainingEndpoint:
             saved_args=saved_args,
         )
         # deduper.cleanup_training()
-
-        return
 
     def setup_active_learning_dedupe(self, *, DEDUPE, retrain: bool, in_memory: bool):
         """Prepare data for active learning setup"""
@@ -518,7 +519,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         DEDUPE.REVIEW_MANAGER.logger.info("Reading and preparation completed.")
 
         DEDUPE.deduper = deduper
-        return
 
     def adapted_console_label(
         self,
@@ -545,8 +545,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         # from dedupe._typing import TrainingExample
         from dedupe.core import unique
         from colrev_core.environment import LocalIndex
-
-        from colrev.cli import console_duplicate_instance_label
 
         DEDUPE.REVIEW_MANAGER.logger.info(
             "Note: duplicate associations available in the LocalIndex "
@@ -692,8 +690,6 @@ class ActiveLearningDedupeTrainingEndpoint:
             DEDUPE=DEDUPE, results=manual_dedupe_decision_list, saved_args=saved_args
         )
 
-        return
-
     def run_dedupe(self, DEDUPE):
 
         # def run_active_learning_dedupe(
@@ -729,8 +725,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         #     in_memory=in_memory,
         #     saved_args=saved_args,
         # )
-
-        return
 
 
 @dataclass
@@ -791,15 +785,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
 
-        saved_args.update(merge_threshold=str(self.merge_threshold))
-        saved_args.update(partition_threshold=str(self.partition_threshold))
+        saved_args.update(merge_threshold=str(DEDUPE.merge_threshold))
+        saved_args.update(partition_threshold=str(DEDUPE.partition_threshold))
 
         if in_memory:
             DEDUPE.REVIEW_MANAGER.report_logger.info(
-                f"set partition_threshold: {self.partition_threshold}"
+                f"set partition_threshold: {DEDUPE.partition_threshold}"
             )
 
-            clustered_dupes = deduper.partition(data_d, self.partition_threshold)
+            clustered_dupes = deduper.partition(data_d, DEDUPE.partition_threshold)
 
             # from dedupe.core import BlockingError
             # except BlockingError:
@@ -850,7 +844,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
 
             def record_pairs(result_set):
 
-                for i, row in enumerate(result_set):
+                for row in result_set:
                     ID_a, ID_b = row
                     record_a = (ID_a, records_data[ID_a])
                     record_b = (ID_b, records_data[ID_b])
@@ -913,15 +907,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
         auto_dedupe = []
         ID_list = []
         DEDUPE.REVIEW_MANAGER.report_logger.info(
-            f"set merge_threshold: {self.merge_threshold}"
+            f"set merge_threshold: {DEDUPE.merge_threshold}"
         )
         DEDUPE.REVIEW_MANAGER.logger.info(
-            f"set merge_threshold: {self.merge_threshold}"
+            f"set merge_threshold: {DEDUPE.merge_threshold}"
         )
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:
-                if dedupe_decision["score"] > self.merge_threshold:
+                if dedupe_decision["score"] > DEDUPE.merge_threshold:
                     orig_rec = dedupe_decision["records"].pop()
                     ID_list.append(orig_rec)
                     if 0 == len(dedupe_decision["records"]):
@@ -1024,7 +1018,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
                 )
 
             for i, row in x.iterrows():
-                if i == 0 or i == 1:
+                if i in [0, 1]:
                     continue
                 if len(prev_row) != 0:
                     for j, val in row.items():
@@ -1048,7 +1042,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             if ID in cluster_membership:
                 cur_cluster_membership = cluster_membership[ID]
                 vals.update(cur_cluster_membership)
-                if cur_cluster_membership["confidence_score"] > self.merge_threshold:
+                if cur_cluster_membership["confidence_score"] > DEDUPE.merge_threshold:
                     collected_duplicates.append(vals)
                 else:
                     collected_non_duplicates.append(vals)
@@ -1191,8 +1185,6 @@ class ActiveLearningDedupeAutomatedEndpoint:
         else:
             DEDUPE.REVIEW_MANAGER.logger.info("\nNo same-origin merges detected.")
 
-        return
-
 
 @dataclass
 class CurationDedupeSettings:
@@ -1214,15 +1206,6 @@ class CurationDedupeEndpoint:
         self.SETTINGS = from_dict(data_class=CurationDedupeSettings, data=SETTINGS)
 
     def run_dedupe(self, DEDUPE):
-
-        from thefuzz import fuzz
-        import numpy as np
-        import pandas as pd
-        from colrev_core.record import RecordState
-        from colrev_core.built_in.pdf_prep import PDFMetadataValidationEndpoint
-        from colrev_core.record import Record
-        from tqdm import tqdm
-
         def get_similarity(df_a: pd.DataFrame, df_b: pd.DataFrame) -> float:
 
             author_similarity = fuzz.ratio(df_a["author"], df_b["author"]) / 100
@@ -1292,7 +1275,7 @@ class CurationDedupeEndpoint:
                 #     RecordState.md_prepared,
                 # ]:
                 #     continue
-                toc_item = dict()
+                toc_item = {}
                 if "article" == record["ENTRYTYPE"]:
                     if "journal" in record:
                         toc_item["journal"] = record["journal"]
@@ -1443,7 +1426,6 @@ class CurationDedupeEndpoint:
                     print(toc_item)
                     print("Pre-imported records found for this toc_item (skipping)")
                     # print(processed_same_toc_same_source_records)
-                    pass
 
             [r.pop("container_title") for r in records.values()]
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
@@ -1532,8 +1514,10 @@ class CurationDedupeEndpoint:
         else:
             DEDUPE.REVIEW_MANAGER.logger.info("Processing as a pdf source")
 
+            PDF_PREPARATION = PDF_Preparation(REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER)
             PDF_METADATA_VALIDATION = PDFMetadataValidationEndpoint(
-                SETTINGS={"name": "dedupe_pdf_md_validation"}
+                PDF_PREPARATION=PDF_PREPARATION,
+                SETTINGS={"name": "dedupe_pdf_md_validation"},
             )
 
             for toc_item in tqdm(toc_items):
@@ -1666,7 +1650,6 @@ class CurationMissingDedupeEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def run_dedupe(self, DEDUPE):
-        from colrev_core.record import Record, RecordState, PrepRecord
 
         # export sets of non-merged records
         # (and merged records a different xlsx for easy sort/merge)
@@ -1736,6 +1719,7 @@ class CurationMissingDedupeEndpoint:
                 same_toc_recs, key=lambda d: d["similarity"], reverse=True
             )
 
+            i = 0
             for i, r in enumerate(same_toc_recs):
                 author_title_string = (
                     f"{r.get('author', 'NO_AUTHOR')} : {r.get('title', 'NO_TITLE')}"
@@ -1896,5 +1880,3 @@ class CurationMissingDedupeEndpoint:
                     )
                 records_df.sort_values(by=keys, inplace=True)
                 records_df.to_excel(f"dedupe/{source_origin}.xlsx", index=False)
-
-        return

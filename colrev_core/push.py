@@ -2,15 +2,21 @@
 import json
 from pathlib import Path
 
+import git
+
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.process import CheckProcess
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import Record
 from colrev_core.review_manager import ReviewManager
 
 
 class Push(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+        )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
@@ -20,14 +26,11 @@ class Push(Process):
         if records_only:
             self.push_record_corrections()
 
-        return
-
     def push_project(self) -> None:
         git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
         origin = git_repo.remotes.origin
         self.REVIEW_MANAGER.logger.info(f"Push changes to {git_repo.remotes.origin}")
         origin.push()
-        return
 
     def push_record_corrections(self) -> None:
 
@@ -64,10 +67,10 @@ class Push(Process):
                 print(item["original_curated_record"]["colrev_id"])
                 for change_item in item["changes"]:
                     if "change" == change_item[0]:
-                        type, field, values = change_item
+                        edit_type, field, values = change_item
                         if "colrev_id" == field:
                             continue
-                        prefix = f"{type} {field}"
+                        prefix = f"{edit_type} {field}"
                         print(
                             f"{prefix}"
                             + " " * max(len(prefix), 30 - len(prefix))
@@ -75,8 +78,8 @@ class Push(Process):
                         )
                         print(" " * max(len(prefix), 30) + f"  {values[1]}")
                     elif "add" == change_item[0]:
-                        type, field, values = change_item
-                        prefix = f"{type} {values[0][0]}"
+                        edit_type, field, values = change_item
+                        prefix = f"{edit_type} {values[0][0]}"
                         print(
                             prefix
                             + " " * max(len(prefix), 30 - len(prefix))
@@ -106,8 +109,6 @@ class Push(Process):
                     "by sharing your corrections ❤\n"
                 )
 
-        return
-
     def __share_correction(self, *, source_url, change_list) -> None:
 
         prepared_change_list = []
@@ -135,7 +136,7 @@ class Push(Process):
             )
 
             text = dblp_header + text
-            file_path.write_text(text)
+            file_path.write_text(text, encoding="utf-8")
 
             print(f"\nPlease send the e-mail (prepared in the file {file_path})")
             input("Press Enter to confirm")
@@ -144,12 +145,7 @@ class Push(Process):
                 if Path(change_item["file"]).is_file():
                     Path(change_item["file"]).unlink()
 
-        return
-
     def __apply_correction(self, *, source_url, change_list) -> None:
-        from colrev_core.process import CheckProcess
-        from colrev_core.record import Record
-        import git
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
@@ -204,7 +200,6 @@ class Push(Process):
                 )
                 found = True
             except colrev_exceptions.RecordNotInRepoException:
-                pass
                 print(f"record not found: {original_curated_record['colrev_id']}")
 
                 matching_doi_rec_l = [
@@ -247,18 +242,18 @@ class Push(Process):
 
             rec_for_reset = record.copy()
 
-            for (type, key, change) in list(change_item["changes"]):
+            for (edit_type, key, change) in list(change_item["changes"]):
                 # Note : by retricting changes to essential_md_keys,
                 # we also prevent changes in
                 # "colrev_status", "colrev_origin", "file"
 
                 # Note: the most important thing is to update the metadata.
 
-                if type == "change":
+                if edit_type == "change":
                     if key not in essential_md_keys:
                         continue
                     record[key] = change[1]
-                if type == "add":
+                if edit_type == "add":
                     key = change[0][0]
                     value = change[0][1]
                     if key not in essential_md_keys:

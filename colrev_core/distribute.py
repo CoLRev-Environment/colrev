@@ -14,7 +14,7 @@ class Distribute(Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.explore,
+            process_type=ProcessType.explore,
             notify_state_transition_process=False,
         )
 

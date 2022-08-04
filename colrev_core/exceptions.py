@@ -227,9 +227,6 @@ class NoSearchFeedRegistered(CoLRevException):
 class ImportException(CoLRevException):
     """An error occured in the import functions."""
 
-    def __init__(self, message):
-        super().__init__(message)
-
 
 class UnsupportedImportFormatError(CoLRevException):
     """The file format is not supported."""
@@ -248,9 +245,6 @@ class UnsupportedImportFormatError(CoLRevException):
 
 class BibFileFormatError(CoLRevException):
     """An error in the bib-file format was detected."""
-
-    def __init__(self, message):
-        super().__init__(message)
 
 
 # Dedupe
@@ -279,9 +273,9 @@ class NoPaperEndpointRegistered(CoLRevException):
 class RecordNotInRepoException(CoLRevException):
     """The record was not found in the main records."""
 
-    def __init__(self, id: str = None):
+    def __init__(self, record_id: str = None):
         if id is not None:
-            self.message = f"Record not in index ({id})"
+            self.message = f"Record not in index ({record_id})"
         else:
             self.message = "Record not in index"
         super().__init__(self.message)
@@ -317,9 +311,9 @@ class TEI_Exception(CoLRevException):
 class RecordNotInIndexException(CoLRevException):
     """The requested record was not found in the LocalIndex."""
 
-    def __init__(self, id: str = None):
+    def __init__(self, record_id: str = None):
         if id is not None:
-            self.message = f"Record not in index ({id})"
+            self.message = f"Record not in index ({record_id})"
         else:
             self.message = "Record not in index"
         super().__init__(self.message)

@@ -1,6 +1,10 @@
 #! /usr/bin/env python
+import configparser
 import csv
+import datetime
 import itertools
+import json
+import os
 import pkgutil
 import re
 import tempfile
@@ -14,9 +18,12 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev_core.exceptions as colrev_exceptions
+from colrev_core.environment import ZoteroTranslationService
 from colrev_core.process import DataEndpoint
 from colrev_core.process import DefaultSettings
 from colrev_core.record import RecordState
+from colrev_core.status import Status
 
 
 @zope.interface.implementer(DataEndpoint)
@@ -69,7 +76,7 @@ class ManuscriptEndpoint:
 
     def check_new_record_source_tag(self, REVIEW_MANAGER) -> None:
         PAPER = REVIEW_MANAGER.paths["PAPER"]
-        with open(PAPER) as f:
+        with open(PAPER, encoding="utf-8") as f:
             for line in f:
                 if self.NEW_RECORD_SOURCE_TAG in line:
                     return
@@ -84,17 +91,16 @@ class ManuscriptEndpoint:
         synthesized_record_status_matrix: dict,
     ) -> typing.Dict:
         def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
-            with open(filename) as f:
+            with open(filename, encoding="utf-8") as f:
                 s = f.read()
                 if old_string not in s:
                     REVIEW_MANAGER.logger.info(
                         f'"{old_string}" not found in {filename}.'
                     )
                     return
-            with open(filename, "w") as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 s = s.replace(old_string, new_string)
                 f.write(s)
-            return
 
         def authorship_heuristic() -> str:
             git_repo = REVIEW_MANAGER.REVIEW_DATASET.get_repo()
@@ -112,7 +118,7 @@ class ManuscriptEndpoint:
 
         def get_data_page_missing(PAPER: Path, record_id_list: list) -> list:
             available = []
-            with open(PAPER) as f:
+            with open(PAPER, encoding="utf-8") as f:
                 line = f.read()
                 for record in record_id_list:
                     if record in line:
@@ -126,16 +132,17 @@ class ManuscriptEndpoint:
         def retrieve_package_file(template_file: Path, target: Path) -> None:
             filedata = pkgutil.get_data(__name__, str(template_file))
             if filedata:
-                with open(target, "w") as file:
+                with open(target, "w", encoding="utf-8") as file:
                     file.write(filedata.decode("utf-8"))
-            return
 
         def add_missing_records_to_manuscript(
             *, REVIEW_MANAGER, PAPER: Path, missing_records: list
         ):
             temp = tempfile.NamedTemporaryFile()
             PAPER.rename(temp.name)
-            with open(temp.name) as reader, open(PAPER, "w") as writer:
+            with open(temp.name, encoding="utf-8") as reader, open(
+                PAPER, "w", encoding="utf-8"
+            ) as writer:
                 appended, completed = False, False
                 line = reader.readline()
                 while line != "":
@@ -204,8 +211,6 @@ class ManuscriptEndpoint:
                             f" {missing_record} added"
                         )
 
-            return
-
         if not PAPER.is_file():
             # missing_records = synthesized_record_status_matrix.keys()
 
@@ -215,7 +220,7 @@ class ManuscriptEndpoint:
             title = "Manuscript template"
             readme_file = REVIEW_MANAGER.paths["README"]
             if readme_file.is_file():
-                with open(readme_file) as f:
+                with open(readme_file, encoding="utf-8") as f:
                     title = f.readline()
                     title = title.replace("# ", "").replace("\n", "")
 
@@ -232,7 +237,6 @@ class ManuscriptEndpoint:
             except Exception:
                 PAPER_resource_path = Path("../template/") / PAPER_RELATIVE
                 retrieve_package_file(PAPER_resource_path, PAPER)
-                pass
 
             inplace_change(PAPER, "{{review_type}}", str(review_type))
             inplace_change(PAPER, "{{project_title}}", title)
@@ -281,8 +285,6 @@ class ManuscriptEndpoint:
             DATA.REVIEW_MANAGER, records, synthesized_record_status_matrix
         )
 
-        return
-
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
@@ -291,7 +293,7 @@ class ManuscriptEndpoint:
         ) -> list:
             in_manuscript_to_synthesize = []
             if PAPER.is_file():
-                with open(PAPER) as f:
+                with open(PAPER, encoding="utf-8") as f:
                     for line in f:
                         if self.NEW_RECORD_SOURCE_TAG in line:
                             while line != "":
@@ -335,7 +337,6 @@ class ManuscriptEndpoint:
                 synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
             else:
                 print(f"Error: {syn_ID} not int {synthesized_in_manuscript}")
-        return
 
 
 @zope.interface.implementer(DataEndpoint)
@@ -420,7 +421,6 @@ class StructuredDataEndpoint:
         DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
             path=DATA.REVIEW_MANAGER.paths["DATA_RELATIVE"]
         )
-        return
 
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
@@ -467,7 +467,6 @@ class StructuredDataEndpoint:
                 synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
             else:
                 print(f"Error: {syn_ID} not int " f"{synthesized_record_status_matrix}")
-        return
 
 
 @zope.interface.implementer(DataEndpoint)
@@ -486,15 +485,9 @@ class EndnoteEndpoint:
         return endnote_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-
-        from colrev_core import load as cc_load
         from colrev_core.review_dataset import ReviewDataset
 
         def zotero_conversion(data):
-            import requests
-            import json
-
-            from colrev_core.environment import ZoteroTranslationService
 
             ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
             ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
@@ -507,7 +500,7 @@ class EndnoteEndpoint:
             )
             headers = {"Content-type": "application/json"}
             if "No suitable translators found" == r.content.decode("utf-8"):
-                raise cc_load.ImportException(
+                raise colrev_exceptions.ImportException(
                     "Zotero translators: No suitable import translators found"
                 )
 
@@ -520,8 +513,9 @@ class EndnoteEndpoint:
                 )
 
             except Exception as e:
-                pass
-                raise cc_load.ImportException(f"Zotero import translators failed ({e})")
+                raise colrev_exceptions.ImportException(
+                    f"Zotero import translators failed ({e})"
+                )
 
             return et.content
 
@@ -543,7 +537,7 @@ class EndnoteEndpoint:
 
             enl_data = zotero_conversion(data)
 
-            with open(export_filepath, "w") as w:
+            with open(export_filepath, "w", encoding="utf-8") as w:
                 w.write(enl_data.decode("utf-8"))
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(export_filepath))
 
@@ -554,7 +548,7 @@ class EndnoteEndpoint:
             exported_IDs = []
             for enl_file in enl_files:
                 file_numbers.append(int(re.findall(r"\d+", str(enl_file.name))[0]))
-                with open(enl_file) as ef:
+                with open(enl_file, encoding="utf-8") as ef:
                     for line in ef:
                         if "%F" == line[:2]:
                             ID = line[3:].lstrip().rstrip()
@@ -583,7 +577,7 @@ class EndnoteEndpoint:
                     f"export_part{next_file_number}.enl"
                 )
                 print(export_filepath)
-                with open(export_filepath, "w") as w:
+                with open(export_filepath, "w", encoding="utf-8") as w:
                     w.write(enl_data.decode("utf-8"))
                 DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(
                     path=str(export_filepath)
@@ -592,16 +586,12 @@ class EndnoteEndpoint:
             else:
                 DATA.REVIEW_MANAGER.logger.info("No additional records to export")
 
-        return
-
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
-
-        return
 
 
 @zope.interface.implementer(DataEndpoint)
@@ -617,16 +607,11 @@ class PRISMAEndpoint:
         return prisma_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-
-        from colrev_core.status import Status
-        import os
-
         def retrieve_package_file(template_file: Path, target: Path) -> None:
             filedata = pkgutil.get_data(__name__, str(template_file))
             if filedata:
-                with open(target, "w") as file:
+                with open(target, "w", encoding="utf-8") as file:
                     file.write(filedata.decode("utf-8"))
-            return
 
         PRISMA_resource_path = Path("../template/") / Path("PRISMA.csv")
         PRISMA_path = Path("data/PRISMA.csv")
@@ -685,8 +670,6 @@ class PRISMAEndpoint:
         if not stat["completeness_condition"]:
             print("Warning: review not (yet) complete")
 
-        return
-
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
@@ -694,8 +677,6 @@ class PRISMAEndpoint:
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
-
-        return
 
 
 @dataclass
@@ -723,8 +704,6 @@ class ZettlrEndpoint:
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         from colrev_core.data import Data
-        import configparser
-        import datetime
 
         DATA.REVIEW_MANAGER.logger.info("Export to zettlr endpoint")
 
@@ -736,12 +715,12 @@ class ZettlrEndpoint:
             in_zettelkasten = []
 
             for md_file in endpoint_path.glob("*.md"):
-                with open(md_file) as f:
+                with open(md_file, encoding="utf-8") as f:
                     line = f.readline()
                     while line:
                         if "title:" in line:
-                            id = line[line.find('"') + 1 : line.rfind('"')]
-                            in_zettelkasten.append(id)
+                            paper_id = line[line.find('"') + 1 : line.rfind('"')]
+                            in_zettelkasten.append(paper_id)
                         line = f.readline()
 
             return [x for x in included if x not in in_zettelkasten]
@@ -749,29 +728,29 @@ class ZettlrEndpoint:
         def retrieve_package_file(template_file: Path, target: Path) -> None:
             filedata = pkgutil.get_data(__name__, str(template_file))
             if filedata:
-                with open(target, "w") as file:
+                with open(target, "w", encoding="utf-8") as file:
                     file.write(filedata.decode("utf-8"))
-            return
 
         def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
-            with open(filename) as f:
+            with open(filename, encoding="utf-8") as f:
                 s = f.read()
                 if old_string not in s:
                     DATA.REVIEW_MANAGER.logger.info(
                         f'"{old_string}" not found in {filename}.'
                     )
                     return
-            with open(filename, "w") as f:
+            with open(filename, "w", encoding="utf-8") as f:
                 s = s.replace(old_string, new_string)
                 f.write(s)
-            return
 
         def add_missing_records_to_manuscript(
             *, REVIEW_MANAGER, PAPER: Path, missing_records: list
         ):
             temp = tempfile.NamedTemporaryFile()
             PAPER.rename(temp.name)
-            with open(temp.name) as reader, open(PAPER, "w") as writer:
+            with open(temp.name, encoding="utf-8") as reader, open(
+                PAPER, "w", encoding="utf-8"
+            ) as writer:
                 appended, completed = False, False
                 line = reader.readline()
                 while line != "":
@@ -840,8 +819,6 @@ class ZettlrEndpoint:
                             f" {missing_record} added"
                         )
 
-            return
-
         zettlr_config_path = endpoint_path / Path(".zettlr_config.ini")
         currentDT = datetime.datetime.now()
         if zettlr_config_path.is_file():
@@ -859,7 +836,7 @@ class ZettlrEndpoint:
             zettlr_config = configparser.ConfigParser()
             zettlr_config.add_section("general")
             zettlr_config["general"]["main"] = str(fname)
-            with open(zettlr_config_path, "w") as configfile:
+            with open(zettlr_config_path, "w", encoding="utf-8") as configfile:
                 zettlr_config.write(configfile)
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(zettlr_config_path))
 
@@ -867,7 +844,7 @@ class ZettlrEndpoint:
             title = "PROJECT_NAME"
             readme_file = DATA.REVIEW_MANAGER.paths["README"]
             if readme_file.is_file():
-                with open(readme_file) as f:
+                with open(readme_file, encoding="utf-8") as f:
                     title = f.readline()
                     title = title.replace("# ", "").replace("\n", "")
 
@@ -911,9 +888,9 @@ class ZettlrEndpoint:
             )
 
             for missing_record_field in missing_record_fields:
-                id, r = missing_record_field
-                print(id + r)
-                ZETTLR_path = endpoint_path / Path(id)
+                paper_id, r = missing_record_field
+                print(paper_id + r)
+                ZETTLR_path = endpoint_path / Path(paper_id)
 
                 retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
                 inplace_change(ZETTLR_path, "{{project_name}}", r)
@@ -928,8 +905,6 @@ class ZettlrEndpoint:
 
             print("TODO: recommend zettlr/snippest, adding tags")
 
-        return
-
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
     ):
@@ -939,8 +914,6 @@ class ZettlrEndpoint:
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
             synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
-
-        return
 
 
 class ManuscriptRecordSourceTagError(Exception):

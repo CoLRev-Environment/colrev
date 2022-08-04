@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import logging
 import os
+import pkgutil
 import subprocess
 import typing
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 import timeout_decorator
 from p_tqdm import p_map
 
+from colrev_core.built_in import pdf_prep as built_in_pdf_prep
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
@@ -16,8 +18,6 @@ from colrev_core.record import RecordState
 
 
 class PDF_Preparation(Process):
-
-    from colrev_core.built_in import pdf_prep as built_in_pdf_prep
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "pdf_check_ocr": {
@@ -51,7 +51,7 @@ class PDF_Preparation(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.pdf_prep,
+            process_type=ProcessType.pdf_prep,
             notify_state_transition_process=notify_state_transition_process,
             debug=debug,
         )
@@ -134,7 +134,6 @@ class PDF_Preparation(Process):
                     f'Error for {RECORD.data["ID"]} '
                     f"(in {ENDPOINT.SETTINGS.name} : {err})"
                 )
-                pass
                 RECORD.data["colrev_status"] = RecordState.pdf_needs_manual_preparation
 
             except Exception as e:
@@ -244,13 +243,12 @@ class PDF_Preparation(Process):
             if RecordState.pdf_needs_manual_preparation != record["colrev_stauts"]:
                 continue
 
-            RECORD = Record(record)
+            RECORD = Record(data=record)
             RECORD.data.update(colrev_status=RecordState.pdf_imported)
             RECORD.reset_pdf_provenance_notes()
             record = RECORD.get_data()
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        return
 
     def __update_colrev_pdf_ids(self, *, record: dict) -> dict:
         if "file" in record:
@@ -270,7 +268,6 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.create_commit(
             msg="Update colrev_pdf_ids", script_call="colrev pdf-prep"
         )
-        return
 
     def _print_stats(self, *, pdf_prep_record_list) -> None:
 
@@ -313,14 +310,11 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.logger.info(prepared_string)
         self.REVIEW_MANAGER.logger.info(not_prepared_string)
 
-        return
-
     def setup_custom_script(self) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, "template/custom_pdf_prep_script.py")
         if filedata:
-            with open("custom_pdf_prep_script.py", "w") as file:
+            with open("custom_pdf_prep_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_pdf_prep_script.py")
@@ -330,8 +324,6 @@ class PDF_Preparation(Process):
         )
 
         self.REVIEW_MANAGER.save_settings()
-
-        return
 
     def main(
         self,
@@ -380,8 +372,6 @@ class PDF_Preparation(Process):
         self.REVIEW_MANAGER.create_commit(
             msg="Prepare PDFs", script_call="colrev pdf-prep", saved_args=saved_args
         )
-
-        return
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import io
 import itertools
 import json
 import logging
@@ -6,14 +7,26 @@ import os
 import re
 import shutil
 import string
+import time
 import typing
+import unicodedata
+from copy import deepcopy
 from pathlib import Path
 
 import git
 import pandas as pd
+from dictdiffer import diff
+from git.exc import GitCommandError
+from tqdm import tqdm
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.process import FormatProcess
+from colrev_core.process import ProcessModel
+from colrev_core.record import PrepRecord
+from colrev_core.record import Record
 from colrev_core.record import RecordState
+from colrev_core.settings import IDPpattern
+from colrev_core.settings import SearchType
 
 
 class ReviewDataset:
@@ -61,10 +74,7 @@ class ReviewDataset:
 
         if not self.RECORDS_FILE_FILE.is_file():
             return []
-        return [
-            record_header_item
-            for record_header_item in self.__read_record_header_items()
-        ]
+        return self.__read_record_header_items()
 
     def get_currently_imported_origin_list(self) -> list:
         record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
@@ -101,7 +111,7 @@ class ReviewDataset:
         )
 
         retrieved = []
-        for commit_id, cmsg, filecontents in list(revlist):
+        for _, _, filecontents in list(revlist):
             prior_records_dict = self.load_records_dict(
                 load_str=filecontents.decode("utf-8")
             )
@@ -200,7 +210,7 @@ class ReviewDataset:
             if last:
                 s += join([prelast, last])
             if lineage:
-                s += ", %s" % lineage
+                s += f", {lineage}"
             if first or middle:
                 s += ", "
                 s += join([first, middle])
@@ -281,7 +291,7 @@ class ReviewDataset:
                     )
 
                     records_dict = {
-                        f"{source}/{r['ID']}": {k: v for k, v in r.items()}
+                        f"{source}/{r['ID']}": {r.items()}
                         for r in source_record_dict.values()
                     }
                     origin_records = {**origin_records, **records_dict}
@@ -300,7 +310,7 @@ class ReviewDataset:
             for commit in git_repo.iter_commits(paths=str(RECORDS_FILE_RELATIVE))
         )
 
-        for commit_id, cmsg, filecontents in list(revlist):
+        for _, _, filecontents in list(revlist):
             prior_records_dict = self.load_records_dict(load_str=filecontents)
 
             records_dict = {
@@ -318,15 +328,13 @@ class ReviewDataset:
 
     @classmethod
     def parse_bibtex_str(cls, *, recs_dict_in) -> str:
-        from copy import deepcopy
-        from colrev_core.record import Record
 
         # Note: we need a deepcopy because the parsing modifies dicts
         recs_dict = deepcopy(recs_dict_in)
 
-        def format_field(type, value) -> str:
-            padd = " " * max(0, 28 - len(type))
-            return f",\n   {type} {padd} = {{{value}}}"
+        def format_field(field, value) -> str:
+            padd = " " * max(0, 28 - len(field))
+            return f",\n   {field} {padd} = {{{value}}}"
 
         bibtex_str = ""
 
@@ -336,7 +344,7 @@ class ReviewDataset:
                 bibtex_str += "\n"
             first = False
 
-            bibtex_str += "@%s" % record["ENTRYTYPE"]
+            bibtex_str += f"@{record['ENTRYTYPE']}"
             bibtex_str += "{%s" % ID
 
             field_order = [
@@ -392,7 +400,7 @@ class ReviewDataset:
 
         bibtex_str = ReviewDataset.parse_bibtex_str(recs_dict_in=records)
 
-        with open(save_path, "w") as out:
+        with open(save_path, "w", encoding="utf-8") as out:
             out.write(bibtex_str)
 
         # TBD: the caseing may not be necessary
@@ -409,22 +417,18 @@ class ReviewDataset:
         #      for r in records
         # ]
 
-        return
-
     def save_records_dict(self, *, records) -> None:
         """Save the records dict in RECORDS_FILE"""
 
         RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
         self.save_records_dict_to_file(records=records, save_path=RECORDS_FILE_FILE)
 
-        return
-
-    def reprocess_id(self, *, id: str) -> None:
+    def reprocess_id(self, *, paper_ids: str) -> None:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
 
         saved_args = locals()
 
-        if "all" == id:
+        if "all" == paper_ids:
             # logging.info("Removing/reprocessing all records")
             os.remove(self.RECORDS_FILE_FILE)
             self.__git_repo.index.remove(
@@ -434,23 +438,24 @@ class ReviewDataset:
         else:
             records = self.load_records_dict()
             records = {
-                ID: record for ID, record in records.items() if ID not in id.split(",")
+                ID: record
+                for ID, record in records.items()
+                if ID not in paper_ids.split(",")
             }
             self.save_records_dict(records=records)
             self.add_record_changes()
 
         self.REVIEW_MANAGER.create_commit(msg="Reprocess", saved_args=saved_args)
 
-        return
-
     def set_IDs(
-        self, *, records: typing.Dict = {}, selected_IDs: list = None
+        self, *, records: typing.Dict = None, selected_IDs: list = None
     ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
-
-        from colrev_core.record import Record
         from colrev_core.environment import LocalIndex
+
+        if records is None:
+            records = {}
 
         self.LOCAL_INDEX = LocalIndex()
 
@@ -522,11 +527,14 @@ class ReviewDataset:
         self,
         *,
         record: dict,
-        records: typing.List[dict] = [],
+        records: typing.List[dict] = None,
         record_in_bib_db: bool = False,
         raise_error: bool = True,
     ) -> str:
         """Generate a record ID according to the predefined format"""
+
+        if records is None:
+            records = []
 
         if len(records) == 0:
             ID_blacklist = [record["ID"] for record in records]
@@ -549,10 +557,6 @@ class ReviewDataset:
         raise_error: bool = True,
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
-        from colrev_core.settings import IDPpattern
-        from colrev_core.record import PrepRecord
-        import re
-        import unicodedata
 
         def rmdiacritics(char: str) -> str:
             """
@@ -578,7 +582,6 @@ class ReviewDataset:
                 wo_ac = "".join(wo_ac_list)
             except ValueError:
                 wo_ac = input_str
-                pass
             return wo_ac
 
         # Make sure that IDs that have been propagated to the
@@ -591,7 +594,6 @@ class ReviewDataset:
             retrieved_record = self.LOCAL_INDEX.retrieve(record=record)
             temp_ID = retrieved_record["ID"]
         except colrev_exceptions.RecordNotInIndexException:
-            pass
 
             if "" != record.get("author", record.get("editor", "")):
                 authors_string = record.get("author", record.get("editor", "Anonymous"))
@@ -604,9 +606,9 @@ class ReviewDataset:
             # Use family names
             for author in authors:
                 if "," in author:
-                    author = author.split(",")[0]
+                    author = author.split(",", maxsplit=1)[0]
                 else:
-                    author = author.split(" ")[0]
+                    author = author.split(" ", maxsplit=1)[0]
 
             ID_PATTERN = self.REVIEW_MANAGER.settings.project.id_pattern
 
@@ -654,7 +656,7 @@ class ReviewDataset:
             while next_unique_ID.lower() in [i.lower() for i in other_ids]:
                 if len(appends) == 0:
                     order += 1
-                    appends = [p for p in itertools.product(letters, repeat=order)]
+                    appends = list(itertools.product(letters, repeat=order))
                 next_unique_ID = temp_ID + "".join(list(appends.pop(0)))
             temp_ID = next_unique_ID
 
@@ -663,9 +665,6 @@ class ReviewDataset:
     def __read_record_header_items(self, *, file_object=None) -> list:
 
         # Note : more than 10x faster than load_records_dict()
-
-        if file_object is None:
-            file_object = open(self.RECORDS_FILE_FILE)
 
         def parse_k_v(current_key_value_pair_str):
             if " = " in current_key_value_pair_str:
@@ -678,77 +677,83 @@ class ReviewDataset:
             v = v.lstrip().rstrip().lstrip("{").rstrip("},")
             return k, v
 
-        # Fields required
-        default = {
-            "ID": "NA",
-            "colrev_origin": "NA",
-            "colrev_status": "NA",
-            "screening_criteria": "NA",
-            "file": "NA",
-            "colrev_masterdata_provenance": "NA",
-        }
-        number_required_header_items = len(default)
-
         record_header_items = []
-        record_header_item = default.copy()
-        current_header_item_count = 0
-        current_key_value_pair_str = ""
-        while True:
-            line = file_object.readline()
-            if not line:
-                break
-            if line[:1] == "%" or line == "\n":
-                continue
+        if file_object is None:
+            with open(self.RECORDS_FILE_FILE, encoding="utf-8") as file_object:
 
-            if current_header_item_count > number_required_header_items or "}" == line:
-                record_header_items.append(record_header_item)
+                # Fields required
+                default = {
+                    "ID": "NA",
+                    "colrev_origin": "NA",
+                    "colrev_status": "NA",
+                    "screening_criteria": "NA",
+                    "file": "NA",
+                    "colrev_masterdata_provenance": "NA",
+                }
+                number_required_header_items = len(default)
+
                 record_header_item = default.copy()
                 current_header_item_count = 0
-                continue
-
-            if "@" in line[:2] and not "NA" == record_header_item["ID"]:
-                record_header_items.append(record_header_item)
-                record_header_item = default.copy()
-                current_header_item_count = 0
-
-            current_key_value_pair_str += line
-            if "}," in line or "@" in line[:2]:
-                k, v = parse_k_v(current_key_value_pair_str)
                 current_key_value_pair_str = ""
-                if k in record_header_item:
-                    current_header_item_count += 1
-                    record_header_item[k] = v
+                while True:
+                    line = file_object.readline()
+                    if not line:
+                        break
+                    if line[:1] == "%" or line == "\n":
+                        continue
 
-        record_header_items.append(record_header_item)
+                    if (
+                        current_header_item_count > number_required_header_items
+                        or "}" == line
+                    ):
+                        record_header_items.append(record_header_item)
+                        record_header_item = default.copy()
+                        current_header_item_count = 0
+                        continue
+
+                    if "@" in line[:2] and not "NA" == record_header_item["ID"]:
+                        record_header_items.append(record_header_item)
+                        record_header_item = default.copy()
+                        current_header_item_count = 0
+
+                    current_key_value_pair_str += line
+                    if "}," in line or "@" in line[:2]:
+                        k, v = parse_k_v(current_key_value_pair_str)
+                        current_key_value_pair_str = ""
+                        if k in record_header_item:
+                            current_header_item_count += 1
+                            record_header_item[k] = v
+
+                record_header_items.append(record_header_item)
         return record_header_items
 
     def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
         if file_object is None:
-            file_object = open(self.RECORDS_FILE_FILE, encoding="utf8")
-        data = ""
-        first_entry_processed = False
-        while True:
-            line = file_object.readline()
-            if not line:
-                break
-            if line[:1] == "%" or line == "\n":
-                continue
-            if line[:1] != "@":
-                data += line
-            else:
-                if first_entry_processed:
-                    yield data
-                else:
-                    first_entry_processed = True
-                data = line
-        yield data
+            with open(self.RECORDS_FILE_FILE, encoding="utf8") as file_object:
+                data = ""
+                first_entry_processed = False
+                while True:
+                    line = file_object.readline()
+                    if not line:
+                        break
+                    if line[:1] == "%" or line == "\n":
+                        continue
+                    if line[:1] != "@":
+                        data += line
+                    else:
+                        if first_entry_processed:
+                            yield data
+                        else:
+                            first_entry_processed = True
+                        data = line
+                yield data
 
     def read_next_record(self, *, conditions: list = None) -> typing.Iterator[dict]:
         # Note : matches conditions connected with 'OR'
         records = []
         record_dict = self.load_records_dict()
 
-        for ID, record in record_dict.items():
+        for _, record in record_dict.items():
             if conditions is not None:
                 for condition in conditions:
                     for key, value in condition.items():
@@ -797,7 +802,6 @@ class ReviewDataset:
                         return
                 seekpos = fd.tell()
                 line = fd.readline()
-        return
 
     def update_record_by_ID(self, *, new_record: dict, delete: bool = False) -> None:
 
@@ -835,7 +839,6 @@ class ReviewDataset:
 
                 seekpos = fd.tell()
                 line = fd.readline()
-        return
 
     def save_record_list_by_ID(
         self, *, record_list: list, append_new: bool = False
@@ -903,11 +906,7 @@ class ReviewDataset:
 
         self.add_record_changes()
 
-        return
-
     def format_records_file(self) -> bool:
-        from colrev_core.record import PrepRecord
-        from colrev_core.process import FormatProcess
 
         FormatProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)  # to notify
 
@@ -939,7 +938,6 @@ class ReviewDataset:
         return CHANGED
 
     def retrieve_data(self, *, prior: dict) -> dict:
-        from colrev_core.process import ProcessModel
 
         data: dict = {
             "pdf_not_exists": [],
@@ -1067,7 +1065,6 @@ class ReviewDataset:
         return data
 
     def retrieve_prior(self) -> dict:
-        import io
 
         RECORDS_FILE_RELATIVE = self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"]
         revlist = (
@@ -1135,7 +1132,6 @@ class ReviewDataset:
     def retrieve_by_colrev_id(
         self, *, indexed_record_dict: dict, records: typing.List[typing.Dict]
     ) -> dict:
-        from colrev_core.record import Record
 
         INDEXED_RECORD = Record(data=indexed_record_dict)
 
@@ -1154,8 +1150,6 @@ class ReviewDataset:
         return record_l[0]
 
     def update_colrev_ids(self) -> None:
-        from colrev_core.record import Record
-        from tqdm import tqdm
 
         self.REVIEW_MANAGER.logger.info("Create colrev_id list from origins")
         recs_dict = self.load_records_dict()
@@ -1167,7 +1161,6 @@ class ReviewDataset:
                     colrev_id = RECORD.create_colrev_id()
                     RECORD.data["colrev_id"] = [colrev_id]
                 except colrev_exceptions.NotEnoughDataToIdentifyException:
-                    pass
                     continue
                 origins = RECORD.get_origins()
                 RECORD.add_colrev_ids(
@@ -1190,10 +1183,8 @@ class ReviewDataset:
 
             self.save_records_dict(records=recs_dict)
             self.add_record_changes()
-        return
 
     def get_missing_files(self) -> list:
-        from colrev_core.record import RecordState
 
         # excluding pdf_not_available
         file_required_status = [
@@ -1245,14 +1236,11 @@ class ReviewDataset:
                     "Duplicates in RECORDS_FILE: "
                     f"({','.join(duplicates[0:20])}, ...)"
                 )
-            else:
-                raise colrev_exceptions.DuplicateIDsError(
-                    f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
-                )
-        return
+            raise colrev_exceptions.DuplicateIDsError(
+                f"Duplicates in RECORDS_FILE: {','.join(duplicates)}"
+            )
 
     def check_main_records_origin(self, *, prior: dict, data: dict) -> None:
-        import itertools
 
         # Check whether each record has an origin
         if not len(data["entries_without_origin"]) == 0:
@@ -1278,7 +1266,7 @@ class ReviewDataset:
             if origins.count(org) > 1:
                 non_unique_origins.append(org)
         if non_unique_origins:
-            for ID, org in data["origin_list"]:
+            for _, org in data["origin_list"]:
                 if org in non_unique_origins:
                     raise colrev_exceptions.OriginError(
                         f'Non-unique origin: origin="{org}"'
@@ -1306,7 +1294,6 @@ class ReviewDataset:
         #                 )
         #                 check_propagated_IDs(prior_id, new_id)
         #                 STATUS = FAIL
-        return
 
     def check_fields(self, *, data: dict) -> None:
         # Check status fields
@@ -1316,7 +1303,6 @@ class ReviewDataset:
             raise colrev_exceptions.FieldValueError(
                 f"status field(s) {stat_diff} not in {status_schema}"
             )
-        return
 
     def check_status_transitions(self, *, data: dict) -> None:
         if len(set(data["start_states"])) > 1:
@@ -1329,7 +1315,6 @@ class ReviewDataset:
                 "invalid state transitions: \n    "
                 + "\n    ".join(data["invalid_state_transitions"])
             )
-        return
 
     def __get_screening_criteria(self, *, ec_string: str) -> list:
         excl_criteria = [ec.split("=")[0] for ec in ec_string.split(";") if ec != "NA"]
@@ -1338,11 +1323,8 @@ class ReviewDataset:
         return excl_criteria
 
     def check_corrections_of_curated_records(self) -> None:
-        from colrev_core.environment import LocalIndex, Resources
-        from colrev_core.prep import Preparation
-        from colrev_core.record import Record
-        from dictdiffer import diff
-        import io
+        from colrev_core.environment import LocalIndex
+        from colrev_core.environment import Resources
 
         if not self.RECORDS_FILE_FILE.is_file():
             return
@@ -1351,9 +1333,11 @@ class ReviewDataset:
 
         self.LOCAL_INDEX = LocalIndex()
 
-        self.PREPARATION = Preparation(
-            REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
-        )
+        # TODO : remove the following:
+        # from colrev_core.prep import Preparation
+        # self.PREPARATION = Preparation(
+        #     REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
+        # )
 
         essential_md_keys = [
             "title",
@@ -1383,7 +1367,6 @@ class ReviewDataset:
         try:
             filecontents = list(revlist)[0][1]
         except IndexError:
-            pass
             return
 
         self.REVIEW_MANAGER.logger.debug("Load prior bib")
@@ -1460,7 +1443,6 @@ class ReviewDataset:
                                 )
                                 continue
                         except (colrev_exceptions.RecordNotInIndexException, KeyError):
-                            pass
                             original_curated_record = prior_cr.copy()
 
                         original_curated_record["colrev_id"] = Record(
@@ -1513,15 +1495,15 @@ class ReviewDataset:
 
                     selected_change_items = []
                     for change_item in change_items:
-                        type, key, val = change_item
-                        if "add" == type:
+                        change_type, key, val = change_item
+                        if "add" == change_type:
                             for add_item in val:
                                 add_item_key, add_item_val = add_item
                                 if add_item_key not in keys_to_ignore:
                                     selected_change_items.append(
                                         ("add", "", [(add_item_key, add_item_val)])
                                     )
-                        elif "change" == type:
+                        elif "change" == change_type:
                             if key not in keys_to_ignore:
                                 selected_change_items.append(change_item)
 
@@ -1580,7 +1562,6 @@ class ReviewDataset:
 
         # for testing:
         # raise KeyError
-        return
 
     def check_main_records_screen(self, *, data: dict) -> None:
 
@@ -1623,8 +1604,7 @@ class ReviewDataset:
                     if ["NA"] == criteria:
                         if "NA" == excl_crit:
                             continue
-                        else:
-                            field_errors.append(f"excl_crit field not NA: {excl_crit}")
+                        field_errors.append(f"excl_crit field not NA: {excl_crit}")
 
                     if "=out" not in excl_crit:
                         logging.error(f"criteria: {criteria}")
@@ -1655,7 +1635,6 @@ class ReviewDataset:
             raise colrev_exceptions.FieldValueError(
                 "\n    " + "\n    ".join(field_errors)
             )
-        return
 
     # def check_screen_data(screen, data):
     #     # Check consistency: data -> inclusion_2
@@ -1764,10 +1743,8 @@ class ReviewDataset:
                             f"{prior_id} to {new_id}"
                         )
                         raise colrev_exceptions.PropagatedIDChange(notifications)
-        return
 
     def check_sources(self) -> None:
-        from colrev_core.settings import SearchType
 
         SOURCES = self.REVIEW_MANAGER.settings.sources
 
@@ -1798,8 +1775,6 @@ class ReviewDataset:
             #             f'{SOURCE["start_date"]}'
             #         )
 
-        return
-
     # GIT operations -----------------------------------------------
 
     def get_repo(self) -> git.Repo:
@@ -1814,14 +1789,12 @@ class ReviewDataset:
         return self.__git_repo.is_dirty()
 
     def add_changes(self, *, path: str) -> None:
-        import time
 
         while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(path)])
-        return
 
     def get_untracked_files(self) -> list:
         return self.__git_repo.untracked_files
@@ -1832,7 +1805,6 @@ class ReviewDataset:
             [path],
             working_tree=True,
         )
-        return
 
     def create_commit(
         self, *, msg: str, author: git.Actor, committer: git.Actor, hook_skipping: bool
@@ -1843,7 +1815,6 @@ class ReviewDataset:
             committer=committer,
             skip_hooks=hook_skipping,
         )
-        return
 
     def file_in_history(self, *, filepath: Path) -> bool:
         return str(filepath) in [x.path for x in self.__git_repo.head.commit.tree]
@@ -1856,7 +1827,6 @@ class ReviewDataset:
         return cmsg
 
     def add_record_changes(self) -> None:
-        import time
 
         while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
@@ -1864,32 +1834,27 @@ class ReviewDataset:
         self.__git_repo.index.add(
             [str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])]
         )
-        return
 
     def add_setting_changes(self) -> None:
-        import time
 
         while (self.REVIEW_MANAGER.path / Path(".git/index.lock")).is_file():
             time.sleep(0.5)
             print("Waiting for previous git operation to complete")
 
         self.__git_repo.index.add([str(self.REVIEW_MANAGER.paths["SETTINGS_RELATIVE"])])
-        return
 
     def reset_log_if_no_changes(self) -> None:
         if not self.__git_repo.is_dirty():
             self.REVIEW_MANAGER.reset_log()
-        return
 
     def get_last_commit_sha(self) -> str:
         return str(self.__git_repo.head.commit.hexsha)
 
     def get_tree_hash(self) -> str:
-        hash = self.__git_repo.git.execute(["git", "write-tree"])
-        return str(hash)
+        tree_hash = self.__git_repo.git.execute(["git", "write-tree"])
+        return str(tree_hash)
 
     def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
-        from git.exc import GitCommandError
 
         nr_commits_behind, nr_commits_ahead = -1, -1
 
@@ -1898,7 +1863,6 @@ class ReviewDataset:
             try:
                 origin.fetch()
             except GitCommandError:
-                pass  # probably not online
                 return [-1, -1]
 
         if git_repo.active_branch.tracking_branch() is not None:
@@ -1925,20 +1889,19 @@ class ReviewDataset:
             if origin.exists():
                 (
                     nr_commits_behind,
-                    nr_commits_ahead,
+                    _,
                 ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
         if nr_commits_behind > 0:
             return True
         return False
 
     def remote_ahead(self) -> bool:
-        nr_commits_behind = 0
         CONNECTED_REMOTE = 0 != len(self.__git_repo.remotes)
         if CONNECTED_REMOTE:
             origin = self.__git_repo.remotes.origin
             if origin.exists():
                 (
-                    nr_commits_behind,
+                    _,
                     nr_commits_ahead,
                 ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
         if nr_commits_ahead > 0:
@@ -1949,7 +1912,6 @@ class ReviewDataset:
         if not self.__git_repo.is_dirty():
             o = self.__git_repo.remotes.origin
             o.pull()
-        return
 
 
 if __name__ == "__main__":

@@ -1,11 +1,16 @@
 #! /usr/bin/env python
+import pkgutil
 from pathlib import Path
 
 import zope.interface
 from dacite import from_dict
+from PyPDF2 import PdfFileReader
+from PyPDF2 import PdfFileWriter
 
 from colrev_core.process import DefaultSettings
 from colrev_core.process import PreparationManualEndpoint
+from colrev_core.record import PrepRecord
+from colrev_core.record import RecordState
 
 
 @zope.interface.implementer(PreparationManualEndpoint)
@@ -28,7 +33,6 @@ class ExportManPrep:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def prepare_manual(self, PREP_MAN, records):
-        from colrev_core.record import RecordState, PrepRecord
 
         prep_man_path = PREP_MAN.REVIEW_MANAGER.path / Path("prep_man")
         prep_man_path.mkdir(exist_ok=True)
@@ -36,8 +40,6 @@ class ExportManPrep:
         export_path = prep_man_path / Path("records_prep_man.bib")
 
         def copy_files_for_man_prep(records):
-            from PyPDF2 import PdfFileReader
-            from PyPDF2 import PdfFileWriter
 
             prep_man_path_pdfs = prep_man_path / Path("pdfs")
             prep_man_path_pdfs.mkdir(exist_ok=True)
@@ -54,7 +56,6 @@ class ExportManPrep:
                         target_path.parents[0].mkdir(exist_ok=True, parents=True)
                         with open(target_path, "wb") as outfile:
                             writer.write(outfile)
-            return
 
         if not export_path.is_file():
             PREP_MAN.REVIEW_MANAGER.logger.info(
@@ -141,13 +142,11 @@ class CurationJupyterNotebookManPrep:
             )
 
     def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
-        import pkgutil
 
         filedata = pkgutil.get_data(__name__, str(template_file))
         if filedata:
             with open(target, "w", encoding="utf8") as file:
                 file.write(filedata.decode("utf-8"))
-        return
 
     def prepare_manual(self, PREP_MAN, records):
 

@@ -15,6 +15,6 @@ class CoLRevCLIPDFManPrep:
 
         from colrev.cli import pdf_prep_man_cli
 
-        records = pdf_prep_man_cli(PDF_PREP_MAN, records)
+        pdf_prep_man_cli(PDF_PREP_MAN, records)
 
         return records

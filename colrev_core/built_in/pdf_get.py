@@ -36,8 +36,7 @@ class UnpaywallEndpoint:
                     return self.__unpaywall(
                         REVIEW_MANAGER=REVIEW_MANAGER, doi=doi, retry=retry + 1
                     )
-                else:
-                    return "NA"
+                return "NA"
 
             best_loc = None
             best_loc = r.json()["best_oa_location"]
@@ -53,8 +52,7 @@ class UnpaywallEndpoint:
 
         if best_loc["url_for_pdf"] is None and pdfonly is True:
             return "NA"
-        else:
-            return best_loc["url_for_pdf"]
+        return best_loc["url_for_pdf"]
 
     def __is_pdf(self, *, path_to_file: str) -> bool:
         try:
@@ -122,7 +120,6 @@ class LocalIndexEndpoint:
             )
             # print(Record(retrieved_record))
         except colrev_exceptions.RecordNotInIndexException:
-            pass
             return RECORD
 
         if "file" in retrieved_record:

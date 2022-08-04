@@ -1,7 +1,10 @@
 #! /usr/bin/env python
+import json
 from pathlib import Path
 
 import docker
+import pandas as pd
+import requests
 import zope.interface
 from dacite import from_dict
 
@@ -26,7 +29,6 @@ class BibPybtexLoader:
                 )
 
             LOADER.check_bib_file(SOURCE, records)
-        return
 
 
 class SpreadsheetLoadUtility:
@@ -110,7 +112,6 @@ class CSVLoader:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
-        import pandas as pd
 
         try:
             data = pd.read_csv(SOURCE.filename)
@@ -131,8 +132,6 @@ class CSVLoader:
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )
 
-        return
-
 
 @zope.interface.implementer(LoadEndpoint)
 class ExcelLoader:
@@ -143,7 +142,6 @@ class ExcelLoader:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
-        import pandas as pd
 
         try:
             data = pd.read_excel(
@@ -153,8 +151,7 @@ class ExcelLoader:
             LOADER.REVIEW_MANAGER.logger.error(
                 f"Error: Not an xlsx file: {SOURCE.filename.name}"
             )
-            pass
-            return []
+            return
         data.columns = data.columns.str.replace(" ", "_")
         data.columns = data.columns.str.replace("-", "_")
         data.columns = data.columns.str.lower()
@@ -166,8 +163,6 @@ class ExcelLoader:
         LOADER.save_records(
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )
-
-        return
 
 
 @zope.interface.implementer(LoadEndpoint)
@@ -184,8 +179,6 @@ class ZoteroTranslationLoader:
         self.ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
     def load(self, LOADER, SOURCE):
-        import requests
-        import json
 
         files = {"file": open(SOURCE.filename, "rb")}
         headers = {"Content-type": "text/plain"}
@@ -208,7 +201,6 @@ class ZoteroTranslationLoader:
             )
 
         except Exception as e:
-            pass
             raise colrev_exceptions.ImportException(
                 f"Zotero import translators failed ({e})"
             )
@@ -218,8 +210,6 @@ class ZoteroTranslationLoader:
         LOADER.save_records(
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )
-
-        return
 
 
 @zope.interface.implementer(LoadEndpoint)
@@ -231,7 +221,6 @@ class MarkdownLoader:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def load(self, LOADER, SOURCE):
-        import requests
 
         from colrev_core.environment import GrobidService
 
@@ -264,8 +253,6 @@ class MarkdownLoader:
         LOADER.save_records(
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )
-
-        return
 
 
 @zope.interface.implementer(LoadEndpoint)
@@ -307,7 +294,7 @@ class BibutilsLoader:
 
             return stdout
 
-        with open(SOURCE.filename) as reader:
+        with open(SOURCE.filename, encoding="utf-8") as reader:
             data = reader.read()
 
         filetype = Path(SOURCE.filename).suffix.replace(".", "")
@@ -336,5 +323,3 @@ class BibutilsLoader:
         LOADER.save_records(
             records=records, corresponding_bib_file=SOURCE.corresponding_bib_file
         )
-
-        return

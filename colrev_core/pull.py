@@ -1,6 +1,16 @@
 #! /usr/bin/env python
+import multiprocessing as mp
+from multiprocessing import Value
+
+from pathos.multiprocessing import ProcessPool
+from tqdm import tqdm
+
+from colrev_core.built_in import prep as built_in_prep
+from colrev_core.prep import Preparation
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.record import PrepRecord
+from colrev_core.record import Record
 
 
 class colors:
@@ -16,7 +26,9 @@ change_counter = None
 
 class Pull(Process):
     def __init__(self, *, REVIEW_MANAGER):
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, type=ProcessType.explore)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+        )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
 
@@ -30,8 +42,6 @@ class Pull(Process):
             self.pull_records_from_index()
             self.pull_records_from_crossref()
 
-        return
-
     def pull_project(self) -> None:
         try:
             git_repo = self.REVIEW_MANAGER.REVIEW_DATASET.get_repo()
@@ -44,7 +54,6 @@ class Pull(Process):
             self.REVIEW_MANAGER.logger.info(
                 f"{colors.RED}No remote detected for pull{colors.END}"
             )
-            pass
             return
 
         if 4 == res[0].flags:
@@ -60,13 +69,8 @@ class Pull(Process):
                 f"{colors.RED}Returned flag {res[0].flags}{colors.END}"
             )
         print()
-        return
 
     def pull_records_from_crossref(self) -> None:
-        from colrev_core.prep import Preparation
-        from colrev_core.record import PrepRecord, Record
-        from colrev_core.built_in import prep as built_in_prep
-        from tqdm import tqdm
 
         PREPARATION = Preparation(
             REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
@@ -125,7 +129,6 @@ class Pull(Process):
                                     k
                                 ]["source"]
                             except KeyError:
-                                pass
                                 source = (
                                     "https://api.crossref.org/works/"
                                     + f"{RECORD.data['doi']}"
@@ -152,16 +155,8 @@ class Pull(Process):
         )
 
         print()
-        return
 
     def pull_records_from_index(self) -> None:
-        from colrev_core.prep import Preparation
-        from colrev_core.record import PrepRecord
-        from pathos.multiprocessing import ProcessPool
-        import multiprocessing as mp
-        from multiprocessing import Value
-
-        from colrev_core.built_in import prep as built_in_prep
 
         self.REVIEW_MANAGER.logger.info("Pull records from LocalIndex")
 
@@ -241,7 +236,6 @@ class Pull(Process):
         )
 
         print()
-        return
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import zope.interface
 from dacite import from_dict
 from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
+from PyPDF2 import PdfFileReader
 
 import colrev_core.exceptions as colrev_exceptions
 from colrev_core.environment import GrobidService
@@ -81,8 +82,6 @@ class PDFCheckOCREndpoint:
         RECORD.data["file"] = str(ocred_filename.relative_to(REVIEW_MANAGER.path))
         RECORD.get_text_from_pdf(project_path=REVIEW_MANAGER.path)
 
-        return
-
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
@@ -125,8 +124,6 @@ class PDFCoverPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        from PyPDF2 import PdfFileReader
-
         cp_path = LocalIndex.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
@@ -166,6 +163,7 @@ class PDFCoverPageEndpoint:
                 ["/usr/bin/pdftotext", pdf, "-f", "1", "-l", "1", "-enc", "UTF-8", "-"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                check=True,
             )
             page0 = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
@@ -175,6 +173,7 @@ class PDFCoverPageEndpoint:
                 ["/usr/bin/pdftotext", pdf, "-f", "2", "-l", "2", "-enc", "UTF-8", "-"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                check=True,
             )
             page1 = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
@@ -258,7 +257,7 @@ class PDFCoverPageEndpoint:
             return list(set(coverpages))
 
         coverpages = __get_coverpages(pdf=RECORD.data["file"])
-        if [] == coverpages:
+        if not coverpages:
             return RECORD.data
         if coverpages:
             original = PDF_PREPARATION.REVIEW_MANAGER.path / Path(RECORD.data["file"])
@@ -285,7 +284,6 @@ class PDFLastPageEndpoint:
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
-        from PyPDF2 import PdfFileReader
 
         lp_path = LocalIndex.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
@@ -337,6 +335,7 @@ class PDFLastPageEndpoint:
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                check=True,
             )
             last_page_text = (
                 res.stdout.decode("utf-8").replace(" ", "").replace("\n", "").lower()
@@ -354,7 +353,7 @@ class PDFLastPageEndpoint:
             return list(set(last_pages))
 
         last_pages = __get_last_pages(pdf=RECORD.data["file"])
-        if [] == last_pages:
+        if not last_pages:
             return RECORD.data
         if last_pages:
             original = PDF_PREPARATION.REVIEW_MANAGER.path / Path(RECORD.data["file"])
@@ -389,7 +388,6 @@ class PDFMetadataValidationEndpoint:
             try:
                 desc = unicodedata.name(char)
             except ValueError:
-                pass
                 return ""
             cutoff = desc.find(" WITH ")
             if cutoff != -1:
@@ -411,7 +409,6 @@ class PDFMetadataValidationEndpoint:
                 wo_ac = "".join(wo_ac_str)
             except ValueError:
                 wo_ac = text
-                pass
             return wo_ac
 
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
@@ -489,7 +486,6 @@ class PDFMetadataValidationEndpoint:
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD=40):
-        from colrev_core.environment import LocalIndex
 
         if RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
@@ -509,8 +505,7 @@ class PDFMetadataValidationEndpoint:
                         f"({RECORD.data['ID']})"
                     )
                     return RECORD.data
-                else:
-                    print("colrev_pdf_ids not matching")
+                print("colrev_pdf_ids not matching")
         except colrev_exceptions.RecordNotInIndexException:
             pass
 
@@ -544,7 +539,7 @@ class PDFCompletenessValidationEndpoint:
         self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
 
     def __longer_with_appendix(self, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):
-        if nr_pages_metadata < RECORD.data["pages_in_file"] and nr_pages_metadata > 10:
+        if 10 < nr_pages_metadata < RECORD.data["pages_in_file"]:
             text = RECORD.extract_text_by_page(
                 pages=[
                     RECORD.data["pages_in_file"] - 3,

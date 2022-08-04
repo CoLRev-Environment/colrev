@@ -41,18 +41,14 @@ class OpenLibraryConnector:
                 if not PREPARATION.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
         except requests.exceptions.RequestException:
-            pass
             if not PREPARATION.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
-
-        return
 
 
 class URLConnector:
     @classmethod
     def retrieve_md_from_url(cls, *, RECORD, PREPARATION) -> None:
         from colrev_core.environment import ZoteroTranslationService
-        from colrev_core.record import PrepRecord
 
         """Note: retrieve_md_from_url replaces prior data in RECORD
         (RECORD.copy() - deepcopy() before if necessary)"""
@@ -138,7 +134,6 @@ class URLConnector:
             pass
         except KeyError:
             pass
-        return
 
 
 class DOIConnector:
@@ -198,10 +193,8 @@ class DOIConnector:
             except json.decoder.JSONDecodeError:
                 pass
             except requests.exceptions.RequestException:
-                pass
                 return RECORD
             except OperationalError:
-                pass
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "sqlite, required for requests CachedSession "
                     "(possibly caused by concurrent operations)"
@@ -211,7 +204,6 @@ class DOIConnector:
                 RECORD.format_if_mostly_upper(key="title")
 
         except OperationalError:
-            pass
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
@@ -245,7 +237,7 @@ class DOIConnector:
             soup = BeautifulSoup(content, "lxml")
             result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
             if result:
-                wait, text = result["content"].split(";")
+                _, text = result["content"].split(";")
                 if "http" in text:
                     url = text[text.lower().find("http") :]
                     url = unquote(url, encoding="utf-8", errors="replace")
@@ -276,7 +268,7 @@ class DOIConnector:
             )
             if 503 == ret.status_code:
                 return
-            elif (
+            if (
                 200 == ret.status_code
                 and "doi.org" not in ret.url
                 and "linkinghub" not in ret.url
@@ -296,13 +288,10 @@ class DOIConnector:
         except requests.exceptions.RequestException:
             pass
         except OperationalError:
-            pass
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
             )
-
-        return
 
 
 class CrossrefConnector:
@@ -351,10 +340,8 @@ class CrossrefConnector:
                     raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
         except (requests.exceptions.RequestException, IndexError) as e:
             print(e)
-            pass
             if not PREPARATION.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("CROSSREF")
-        return
 
     def get_bibliographic_query_return(self, **kwargs):
         from crossref.restful import Works
@@ -640,7 +627,6 @@ class CrossrefConnector:
         except requests.exceptions.RequestException:
             return []
         except OperationalError:
-            pass
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
@@ -767,11 +753,8 @@ class DBLPConnector:
                 if not PREPARATION.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
         except requests.exceptions.RequestException:
-            pass
             if not PREPARATION.force_mode:
                 raise colrev_exceptions.ServiceNotAvailableException("DBLP")
-
-        return
 
     @classmethod
     def retrieve_dblp_records(
@@ -787,7 +770,7 @@ class DBLPConnector:
             # To test in browser:
             # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
-            def get_dblp_venue(venue_string: str, type: str) -> str:
+            def get_dblp_venue(venue_string: str, venue_type: str) -> str:
                 # Note : venue_string should be like "behaviourIT"
                 # Note : journals that have been renamed seem to return the latest
                 # journal name. Example:
@@ -804,7 +787,7 @@ class DBLPConnector:
                         return ""
                     hits = data["result"]["hits"]["hit"]
                     for hit in hits:
-                        if hit["info"]["type"] != type:
+                        if hit["info"]["type"] != venue_type:
                             continue
                         if f"/{venue_string.lower()}/" in hit["info"]["url"].lower():
                             venue = hit["info"]["venue"]
@@ -917,7 +900,6 @@ class DBLPConnector:
             [R.add_provenance_all(source=R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
 
         except OperationalError:
-            pass
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"

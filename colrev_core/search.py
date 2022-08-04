@@ -1,17 +1,20 @@
 #! /usr/bin/env python
+import pkgutil
 import re
 import typing
 from pathlib import Path
 
 import colrev_core.exceptions as colrev_exceptions
+from colrev_core.built_in import search as built_in_search
 from colrev_core.environment import AdapterManager
 from colrev_core.process import Process
 from colrev_core.process import ProcessType
+from colrev_core.review_dataset import ReviewDataset
+from colrev_core.settings import SearchSource
+from colrev_core.settings import SearchType
 
 
 class Search(Process):
-
-    from colrev_core.built_in import search as built_in_search
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "search_crossref": {
@@ -43,7 +46,7 @@ class Search(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            type=ProcessType.search,
+            process_type=ProcessType.search,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -57,7 +60,6 @@ class Search(Process):
         )
 
     def save_feed_file(self, records: dict, feed_file: Path) -> None:
-        from colrev_core.review_dataset import ReviewDataset
 
         feed_file.parents[0].mkdir(parents=True, exist_ok=True)
         records = {
@@ -71,8 +73,6 @@ class Search(Process):
             for r in records.values()
         }
         ReviewDataset.save_records_dict_to_file(records=records, save_path=feed_file)
-
-        return
 
     def parse_sources(self, *, query: str) -> list:
         if "WHERE " in query:
@@ -191,8 +191,6 @@ class Search(Process):
                 SCRIPT = self.search_scripts[feed_config["search_script"]["endpoint"]]
                 SCRIPT.validate_params(query=query)  # type: ignore
 
-        return
-
     def get_feed_config(self, *, source_name) -> dict:
 
         conversion_script = {"endpoint": "bibtex"}
@@ -225,8 +223,6 @@ class Search(Process):
         }
 
     def add_source(self, *, query: str) -> None:
-
-        from colrev_core.settings import SearchSource, SearchType
 
         # TODO : parse query (input format changed to sql-like string)
         # TODO : the search query/syntax translation has to be checked carefully
@@ -343,8 +339,6 @@ class Search(Process):
 
         self.main(selection_str="all")
 
-        return
-
     def remove_forthcoming(self, *, SOURCE):
         self.REVIEW_MANAGER.logger.info("Remove forthcoming")
 
@@ -360,8 +354,6 @@ class Search(Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records, save_path=SOURCE.feed_file
             )
-
-        return
 
     def main(self, *, selection_str: str) -> None:
 
@@ -423,15 +415,11 @@ class Search(Process):
                     msg="Run search", script_call="colrev search"
                 )
 
-        return
-
     def setup_custom_script(self) -> None:
-        import pkgutil
-        from colrev_core.settings import SearchSource, SearchType
 
         filedata = pkgutil.get_data(__name__, "template/custom_search_script.py")
         if filedata:
-            with open("custom_search_script.py", "w") as file:
+            with open("custom_search_script.py", "w", encoding="utf-8") as file:
                 file.write(filedata.decode("utf-8"))
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_search_script.py")
@@ -451,8 +439,6 @@ class Search(Process):
         self.REVIEW_MANAGER.settings.sources.append(NEW_SOURCE)
         self.REVIEW_MANAGER.save_settings()
 
-        return
-
     def view_sources(self) -> None:
 
         for SOURCE in self.SOURCES:
@@ -461,7 +447,6 @@ class Search(Process):
         print("\nOptions:")
         options = ", ".join(list(self.search_scripts.keys()))
         print(f"- endpoints: {options}")
-        return
 
 
 if __name__ == "__main__":

@@ -118,8 +118,6 @@ class SearchConfiguration:
 
 @dataclass
 class LoadConfiguration:
-    pass
-
     def __str__(self):
         return " - TODO"
 
@@ -240,7 +238,7 @@ class ScreenCriterion:
     criterion_type: ScreenCriterionType
 
     def __str__(self):
-        return f"{self.type} {self.name} ({self.explanation})"
+        return f"{self.criterion_type} {self.explanation} ({self.explanation})"
 
 
 @dataclass
