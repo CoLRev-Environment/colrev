@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 import csv
 import io
-import multiprocessing
 import typing
 from collections import Counter
 from pathlib import Path
@@ -288,6 +287,7 @@ class Status(Process):
         return [nr_commits_behind, nr_commits_ahead]
 
     def get_environment_instructions(self, *, stat: dict) -> list:
+        from multiprocessing.dummy import Pool as ThreadPool
         from colrev_core.environment import EnvironmentManager
 
         environment_instructions = []
@@ -343,10 +343,11 @@ class Status(Process):
         # Note : we can use many parallel processes
         # because append_registered_repo_instructions mainly waits for the network
         # it does not use a lot of CPU capacity
-        with multiprocessing.Pool(processes=30) as pool:
-            add_instructions = pool.map(
-                self.append_registered_repo_instructions, registered_paths
-            )
+        pool = ThreadPool(50)
+        add_instructions = pool.map(
+            self.append_registered_repo_instructions, registered_paths
+        )
+
         environment_instructions += list(filter(None, add_instructions))
 
         if len(list(self.REVIEW_MANAGER.paths["CORRECTIONS_PATH"].glob("*.json"))) > 0:
@@ -671,7 +672,7 @@ class Status(Process):
                 (
                     nr_commits_behind,
                     nr_commits_ahead,
-                ) = self.get_remote_commit_differences(git_repo=git_repo)
+                ) = self.REVIEW_MANAGER.REVIEW_DATASET.get_remote_commit_differences()
         if CONNECTED_REMOTE:
             collaboration_instructions["title"] = "Versioning and collaboration"
             collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ

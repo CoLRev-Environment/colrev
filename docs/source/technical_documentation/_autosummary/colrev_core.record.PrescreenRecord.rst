@@ -84,7 +84,9 @@ colrev\_core.record.PrescreenRecord
 
    .. autosummary::
 
+      ~PrescreenRecord.dict_fields_keys
       ~PrescreenRecord.identifying_field_keys
+      ~PrescreenRecord.list_fields_keys
       ~PrescreenRecord.pp
       ~PrescreenRecord.preferred_sources
       ~PrescreenRecord.provenance_keys

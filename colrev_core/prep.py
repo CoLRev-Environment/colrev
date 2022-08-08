@@ -13,7 +13,7 @@ import requests_cache
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
-from colrev_core.built_in import database_connectors as database_connectors
+from colrev_core.built_in import database_connectors
 from colrev_core.built_in import prep as built_in_prep
 from colrev_core.environment import AdapterManager
 from colrev_core.environment import EnvironmentManager

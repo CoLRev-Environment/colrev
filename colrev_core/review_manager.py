@@ -1508,9 +1508,10 @@ class ReviewManager:
                     "[('change', 'journal',",
                     "[('change', 'booktitle',",
                 ]
-                temp = tempfile.NamedTemporaryFile(mode="r+b", delete=False)
-                with open(self.paths["REPORT"], "r+b") as f:
-                    shutil.copyfileobj(f, temp)
+
+                with tempfile.NamedTemporaryFile(mode="r+b", delete=False) as temp:
+                    with open(self.paths["REPORT"], "r+b") as f:
+                        shutil.copyfileobj(f, temp)
                 # self.paths["REPORT"].rename(temp.name)
                 with open(temp.name, encoding="utf8") as reader, open(
                     self.paths["REPORT"], "w", encoding="utf8"

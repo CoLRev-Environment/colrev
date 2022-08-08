@@ -85,7 +85,9 @@ colrev\_core.record.ScreenRecord
 
    .. autosummary::
 
+      ~ScreenRecord.dict_fields_keys
       ~ScreenRecord.identifying_field_keys
+      ~ScreenRecord.list_fields_keys
       ~ScreenRecord.pp
       ~ScreenRecord.preferred_sources
       ~ScreenRecord.provenance_keys

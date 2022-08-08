@@ -115,10 +115,10 @@ class CSVLoader:
 
         try:
             data = pd.read_csv(SOURCE.filename)
-        except pd.errors.ParserError:
+        except pd.errors.ParserError as e:
             raise colrev_exceptions.ImportException(
                 f"Error: Not a csv file? {SOURCE.filename.name}"
-            )
+            ) from e
 
         data.columns = data.columns.str.replace(" ", "_")
         data.columns = data.columns.str.replace("-", "_")
@@ -274,10 +274,10 @@ class BibutilsLoader:
             client = docker.APIClient()
             try:
                 container = client.create_container("bibutils", script, stdin_open=True)
-            except docker.errors.ImageNotFound:
+            except docker.errors.ImageNotFound as e:
                 raise colrev_exceptions.ImportException(
                     "Docker images for bibutils not found"
-                )
+                ) from e
 
             sock = client.attach_socket(
                 container, params={"stdin": 1, "stdout": 1, "stderr": 1, "stream": 1}

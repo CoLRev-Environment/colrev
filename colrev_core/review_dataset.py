@@ -33,13 +33,13 @@ class ReviewDataset:
     def __init__(self, *, REVIEW_MANAGER) -> None:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
-        self.RECORDS_FILE_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
+        self.RECORDS_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
         self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
 
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
 
-        if not self.RECORDS_FILE_FILE.is_file():
+        if not self.RECORDS_FILE.is_file():
             record_state_list = []
         else:
             record_state_list = self.__read_record_header_items()
@@ -47,7 +47,7 @@ class ReviewDataset:
 
     def get_origin_state_dict(self, *, file_object=None) -> dict:
         ret_dict = {}
-        if self.RECORDS_FILE_FILE.is_file():
+        if self.RECORDS_FILE.is_file():
             for record_header_item in self.__read_record_header_items(
                 file_object=file_object
             ):
@@ -59,7 +59,7 @@ class ReviewDataset:
     def get_record_header_list(self) -> list:
         """Get the record_header_list"""
 
-        if not self.RECORDS_FILE_FILE.is_file():
+        if not self.RECORDS_FILE.is_file():
             return []
         return self.__read_record_header_items()
 
@@ -72,7 +72,7 @@ class ReviewDataset:
     def get_states_set(self, *, record_state_list: list = None) -> set:
         """Get the record_states_set"""
 
-        if not self.RECORDS_FILE_FILE.is_file():
+        if not self.RECORDS_FILE.is_file():
             return set()
         if record_state_list is None:
             record_state_list = self.get_record_state_list()
@@ -249,15 +249,15 @@ class ReviewDataset:
         if self.REVIEW_MANAGER.notified_next_process is None:
             raise colrev_exceptions.ReviewManagerNotNofiedError()
 
-        RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
+        RECORDS_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
         parser = bibtex.Parser()
 
         if load_str:
             bib_data = parser.parse_string(load_str)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
 
-        elif RECORDS_FILE_FILE.is_file():
-            bib_data = parser.parse_file(RECORDS_FILE_FILE)
+        elif RECORDS_FILE.is_file():
+            bib_data = parser.parse_file(RECORDS_FILE)
             records_dict = self.parse_records_dict(records_dict=bib_data.entries)
         else:
             records_dict = {}
@@ -407,8 +407,8 @@ class ReviewDataset:
     def save_records_dict(self, *, records) -> None:
         """Save the records dict in RECORDS_FILE"""
 
-        RECORDS_FILE_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
-        self.save_records_dict_to_file(records=records, save_path=RECORDS_FILE_FILE)
+        RECORDS_FILE = self.REVIEW_MANAGER.paths["RECORDS_FILE"]
+        self.save_records_dict_to_file(records=records, save_path=RECORDS_FILE)
 
     def reprocess_id(self, *, paper_ids: str) -> None:
         """Remove an ID (set of IDs) from the bib_db (for reprocessing)"""
@@ -417,7 +417,7 @@ class ReviewDataset:
 
         if "all" == paper_ids:
             # logging.info("Removing/reprocessing all records")
-            os.remove(self.RECORDS_FILE_FILE)
+            os.remove(self.RECORDS_FILE)
             self.__git_repo.index.remove(
                 [str(self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"])],
                 working_tree=True,
@@ -509,31 +509,6 @@ class ReviewDataset:
         # TODO : also check data_pages?
 
         return propagated
-
-    def __generate_ID(
-        self,
-        *,
-        record: dict,
-        records: typing.List[dict] = None,
-        record_in_bib_db: bool = False,
-        raise_error: bool = True,
-    ) -> str:
-        """Generate a record ID according to the predefined format"""
-
-        if records is None:
-            records = []
-
-        if len(records) == 0:
-            ID_blacklist = [record["ID"] for record in records]
-        else:
-            ID_blacklist = []
-        ID = self.__generate_ID_blacklist(
-            record=record,
-            ID_blacklist=ID_blacklist,
-            record_in_bib_db=record_in_bib_db,
-            raise_error=raise_error,
-        )
-        return ID
 
     def __generate_ID_blacklist(
         self,
@@ -666,7 +641,7 @@ class ReviewDataset:
 
         record_header_items = []
         if file_object is None:
-            with open(self.RECORDS_FILE_FILE, encoding="utf-8") as file_object:
+            with open(self.RECORDS_FILE, encoding="utf-8") as file_object:
 
                 # Fields required
                 default = {
@@ -715,25 +690,30 @@ class ReviewDataset:
         return record_header_items
 
     def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
-        if file_object is None:
-            with open(self.RECORDS_FILE_FILE, encoding="utf8") as file_object:
-                data = ""
-                first_entry_processed = False
-                while True:
-                    line = file_object.readline()
-                    if not line:
-                        break
-                    if line[:1] == "%" or line == "\n":
-                        continue
-                    if line[:1] != "@":
-                        data += line
+        def yield_from_file(f):
+            data = ""
+            first_entry_processed = False
+            while True:
+                line = f.readline()
+                if not line:
+                    break
+                if line[:1] == "%" or line == "\n":
+                    continue
+                if line[:1] != "@":
+                    data += line
+                else:
+                    if first_entry_processed:
+                        yield data
                     else:
-                        if first_entry_processed:
-                            yield data
-                        else:
-                            first_entry_processed = True
-                        data = line
-                yield data
+                        first_entry_processed = True
+                    data = line
+            yield data
+
+        if file_object is not None:
+            yield from yield_from_file(file_object)
+        else:
+            with open(self.RECORDS_FILE, encoding="utf8") as records_file_object:
+                yield from yield_from_file(records_file_object)
 
     def read_next_record(self, *, conditions: list = None) -> typing.Iterator[dict]:
         # Note : matches conditions connected with 'OR'
@@ -754,7 +734,7 @@ class ReviewDataset:
 
         val = val_str.encode("utf-8")
         current_ID_str = "NA"
-        with open(self.RECORDS_FILE_FILE, "r+b") as fd:
+        with open(self.RECORDS_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -796,7 +776,7 @@ class ReviewDataset:
         replacement = ReviewDataset.parse_bibtex_str(recs_dict_in=new_record_dict)
 
         current_ID_str = "NA"
-        with open(self.RECORDS_FILE_FILE, "r+b") as fd:
+        with open(self.RECORDS_FILE, "r+b") as fd:
             seekpos = fd.tell()
             line = fd.readline()
             while line:
@@ -849,8 +829,8 @@ class ReviewDataset:
         record_list[-1]["record"] = record_list[-1]["record"][:-1]
 
         current_ID_str = "NOTSET"
-        if self.RECORDS_FILE_FILE.is_file():
-            with open(self.RECORDS_FILE_FILE, "r+b") as fd:
+        if self.RECORDS_FILE.is_file():
+            with open(self.RECORDS_FILE, "r+b") as fd:
                 seekpos = fd.tell()
                 line = fd.readline()
                 while line:
@@ -882,7 +862,7 @@ class ReviewDataset:
 
         if len(record_list) > 0:
             if append_new:
-                with open(self.RECORDS_FILE_FILE, "a", encoding="utf8") as m_refs:
+                with open(self.RECORDS_FILE, "a", encoding="utf8") as m_refs:
                     for replacement in record_list:
                         m_refs.write(replacement["record"])
 
@@ -940,7 +920,7 @@ class ReviewDataset:
             "invalid_state_transitions": [],
         }
 
-        with open(self.RECORDS_FILE_FILE, encoding="utf8") as f:
+        with open(self.RECORDS_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(file_object=f):
                 ID, file, status, excl_crit, origin = (
                     "NA",
@@ -1313,7 +1293,7 @@ class ReviewDataset:
         from colrev_core.environment import LocalIndex
         from colrev_core.environment import Resources
 
-        if not self.RECORDS_FILE_FILE.is_file():
+        if not self.RECORDS_FILE.is_file():
             return
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
@@ -1369,7 +1349,7 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER.logger.debug("Load current bib")
         curated_records = []
-        with open(self.RECORDS_FILE_FILE, encoding="utf8") as f:
+        with open(self.RECORDS_FILE, encoding="utf8") as f:
             for record_string in self.__read_next_record_str(file_object=f):
 
                 # TBD: whether/how to detect dblp. Previously:
@@ -1841,29 +1821,29 @@ class ReviewDataset:
         tree_hash = self.__git_repo.git.execute(["git", "write-tree"])
         return str(tree_hash)
 
-    def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
+    def get_remote_commit_differences(self) -> list:
 
         nr_commits_behind, nr_commits_ahead = -1, -1
 
-        origin = git_repo.remotes.origin
+        origin = self.__git_repo.remotes.origin
         if origin.exists():
             try:
                 origin.fetch()
             except GitCommandError:
                 return [-1, -1]
 
-        if git_repo.active_branch.tracking_branch() is not None:
+        if self.__git_repo.active_branch.tracking_branch() is not None:
 
-            branch_name = str(git_repo.active_branch)
-            tracking_branch_name = str(git_repo.active_branch.tracking_branch())
+            branch_name = str(self.__git_repo.active_branch)
+            tracking_branch_name = str(self.__git_repo.active_branch.tracking_branch())
             self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
 
             behind_operation = branch_name + ".." + tracking_branch_name
-            commits_behind = git_repo.iter_commits(behind_operation)
+            commits_behind = self.__git_repo.iter_commits(behind_operation)
             nr_commits_behind = sum(1 for c in commits_behind)
 
             ahead_operation = tracking_branch_name + ".." + branch_name
-            commits_ahead = git_repo.iter_commits(ahead_operation)
+            commits_ahead = self.__git_repo.iter_commits(ahead_operation)
             nr_commits_ahead = sum(1 for c in commits_ahead)
 
         return [nr_commits_behind, nr_commits_ahead]
@@ -1877,7 +1857,7 @@ class ReviewDataset:
                 (
                     nr_commits_behind,
                     _,
-                ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
+                ) = self.get_remote_commit_differences()
         if nr_commits_behind > 0:
             return True
         return False
@@ -1890,7 +1870,7 @@ class ReviewDataset:
                 (
                     _,
                     nr_commits_ahead,
-                ) = self.get_remote_commit_differences(git_repo=self.__git_repo)
+                ) = self.get_remote_commit_differences()
         if nr_commits_ahead > 0:
             return True
         return False

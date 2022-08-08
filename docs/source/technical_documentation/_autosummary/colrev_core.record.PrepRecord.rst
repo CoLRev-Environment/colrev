@@ -97,7 +97,9 @@ colrev\_core.record.PrepRecord
 
    .. autosummary::
 
+      ~PrepRecord.dict_fields_keys
       ~PrepRecord.identifying_field_keys
+      ~PrepRecord.list_fields_keys
       ~PrepRecord.pp
       ~PrepRecord.preferred_sources
       ~PrepRecord.provenance_keys

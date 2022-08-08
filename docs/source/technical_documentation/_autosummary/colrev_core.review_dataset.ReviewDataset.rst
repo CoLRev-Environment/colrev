@@ -71,14 +71,3 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.set_IDs
       ~ReviewDataset.update_colrev_ids
       ~ReviewDataset.update_record_by_ID
-
-
-
-
-
-   .. rubric:: Attributes
-
-   .. autosummary::
-
-      ~ReviewDataset.dict_fields_keys
-      ~ReviewDataset.list_fields_keys

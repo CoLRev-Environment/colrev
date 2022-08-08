@@ -40,9 +40,11 @@ class OpenLibraryConnector:
             if ret.status_code != 200:
                 if not PREPARATION.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
             if not PREPARATION.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException("OPENLIBRARY")
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "OPENLIBRARY"
+                ) from e
 
 
 class URLConnector:
@@ -50,8 +52,8 @@ class URLConnector:
     def retrieve_md_from_url(cls, *, RECORD, PREPARATION) -> None:
         from colrev_core.environment import ZoteroTranslationService
 
-        """Note: retrieve_md_from_url replaces prior data in RECORD
-        (RECORD.copy() - deepcopy() before if necessary)"""
+        # Note: retrieve_md_from_url replaces prior data in RECORD
+        # (RECORD.copy() - deepcopy() before if necessary)
 
         ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
         ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
@@ -194,20 +196,20 @@ class DOIConnector:
                 pass
             except requests.exceptions.RequestException:
                 return RECORD
-            except OperationalError:
+            except OperationalError as e:
                 raise colrev_exceptions.ServiceNotAvailableException(
                     "sqlite, required for requests CachedSession "
                     "(possibly caused by concurrent operations)"
-                )
+                ) from e
 
             if "title" in RECORD.data:
                 RECORD.format_if_mostly_upper(key="title")
 
-        except OperationalError:
+        except OperationalError as e:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
-            )
+            ) from e
 
         return RECORD
 
@@ -287,11 +289,11 @@ class DOIConnector:
             RECORD.update_field(key="url", value=str(url), source=doi_url)
         except requests.exceptions.RequestException:
             pass
-        except OperationalError:
+        except OperationalError as e:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
-            )
+            ) from e
 
 
 class CrossrefConnector:
@@ -626,11 +628,11 @@ class CrossrefConnector:
             pass
         except requests.exceptions.RequestException:
             return []
-        except OperationalError:
+        except OperationalError as e:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
-            )
+            ) from e
 
         if not jour_vol_iss_list:
             record_list = [PrepRecord(data=most_similar_record)]
@@ -752,9 +754,9 @@ class DBLPConnector:
             else:
                 if not PREPARATION.force_mode:
                     raise colrev_exceptions.ServiceNotAvailableException("DBLP")
-        except requests.exceptions.RequestException:
+        except requests.exceptions.RequestException as e:
             if not PREPARATION.force_mode:
-                raise colrev_exceptions.ServiceNotAvailableException("DBLP")
+                raise colrev_exceptions.ServiceNotAvailableException("DBLP") from e
 
     @classmethod
     def retrieve_dblp_records(
@@ -897,12 +899,13 @@ class DBLPConnector:
             items = [hit["info"] for hit in hits]
             dblp_dicts = [dblp_json_to_dict(item) for item in items]
             RETRIEVED_RECORDS = [PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts]
-            [R.add_provenance_all(source=R.data["dblp_key"]) for R in RETRIEVED_RECORDS]
+            for R in RETRIEVED_RECORDS:
+                R.add_provenance_all(source=R.data["dblp_key"])
 
-        except OperationalError:
+        except OperationalError as e:
             raise colrev_exceptions.ServiceNotAvailableException(
                 "sqlite, required for requests CachedSession "
                 "(possibly caused by concurrent operations)"
-            )
+            ) from e
 
         return RETRIEVED_RECORDS

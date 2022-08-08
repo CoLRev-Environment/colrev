@@ -160,10 +160,7 @@ class CoLRevCLIScreenEndpoint:
                     c_field += f";{criterion_name}={decision}"
                 c_field = c_field.replace(" ", "").lstrip(";")
 
-                if all(decision == "in" for _, decision in decisions):
-                    screen_inclusion = True
-                else:
-                    screen_inclusion = False
+                screen_inclusion = all(decision == "in" for _, decision in decisions)
 
                 SCREEN_RECORD.screen(
                     REVIEW_MANAGER=SCREEN.REVIEW_MANAGER,

@@ -195,11 +195,11 @@ class ASReviewPrescreenEndpoint:
 
         try:
             import asreview  # noqa: F401
-        except (ImportError, ModuleNotFoundError):
+        except (ImportError, ModuleNotFoundError) as e:
             raise colrev_exceptions.MissingDependencyError(
                 "Dependency asreview not found. "
                 "Please install it\n  pip install asreview"
-            )
+            ) from e
 
     def export_for_asreview(self, PRESCREEN, records, split) -> None:
 

@@ -82,12 +82,12 @@ class AdapterManager:
                         script_name
                     )
                     scripts_dict[script_name]["custom_flag"] = True
-                except ModuleNotFoundError:
+                except ModuleNotFoundError as e:
                     raise colrev_exceptions.MissingDependencyError(
                         "Dependency " + f"{script_name} not found. "
                         "Please install it\n  pip install "
                         f"{script_name}"
-                    )
+                    ) from e
 
             # 3. Load custom scripts in the directory
             elif Path(script_name + ".py").is_file():
@@ -448,8 +448,8 @@ class EnvironmentManager:
         try:
             with open("/dev/null", "w", encoding="utf8") as null:
                 subprocess.Popen("git", stdout=null, stderr=null)
-        except OSError:
-            raise colrev_exceptions.MissingDependencyError("git")
+        except OSError as e:
+            raise colrev_exceptions.MissingDependencyError("git") from e
 
     @classmethod
     def check_docker_installed(cls) -> None:
@@ -457,8 +457,8 @@ class EnvironmentManager:
         try:
             with open("/dev/null", "w", encoding="utf8") as null:
                 subprocess.Popen("docker", stdout=null, stderr=null)
-        except OSError:
-            raise colrev_exceptions.MissingDependencyError("docker")
+        except OSError as e:
+            raise colrev_exceptions.MissingDependencyError("docker") from e
 
     def get_environment_details(self) -> dict:
 
@@ -997,8 +997,8 @@ class LocalIndex:
                 retrieved_record = resp["hits"]["hits"][0]["_source"]
                 if cid_to_retrieve in retrieved_record.get("colrev_id", "NA"):
                     return retrieved_record
-            except (IndexError, NotFoundError, TransportError, SerializationError):
-                raise colrev_exceptions.RecordNotInIndexException
+            except (IndexError, NotFoundError, TransportError, SerializationError) as e:
+                raise colrev_exceptions.RecordNotInIndexException from e
             except Exception:
                 # print(e)
                 pass
@@ -1256,39 +1256,32 @@ class LocalIndex:
 
             # Add metadata_source_repository_paths : list of repositories from which
             # the record was integrated. Important for is_duplicate(...)
-            [
+
+            for record in records.values():
                 record.update(metadata_source_repository_paths=repo_source_path)
-                for record in records.values()
-            ]
 
             # Set masterdata_provenace to CURATED:{url}
             curation_url = CHECK_PROCESS.REVIEW_MANAGER.settings.project.curation_url
             if CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_masterdata:
-                [
+                for record in records.values():
                     record.update(
                         colrev_masterdata_provenance=f"CURATED:{curation_url};;"
                     )
-                    for record in records.values()
-                ]
 
             # Add curation_url to curated fields (provenance)
             for (
                 curated_field
             ) in CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_fields:
 
-                [
+                for record in records.values():
                     Record(data=record).add_data_provenance(
                         key=curated_field, source=f"CURATED:{curation_url}"
                     )
-                    for record in records.values()
-                ]
 
             # Set absolute file paths (for simpler retrieval)
-            [
-                record.update(file=repo_source_path / Path(record["file"]))
-                for record in records.values()
-                if "file" in record
-            ]
+            for record in records.values():
+                if "file" in record:
+                    record.update(file=repo_source_path / Path(record["file"]))
 
             for record in tqdm(records.values()):
                 self.index_record(record=record)
@@ -1536,7 +1529,6 @@ class LocalIndex:
             r2_index = self.__retrieve_based_on_colrev_id(
                 cids_to_retrieve=record2_colrev_id
             )
-
             # Each record may originate from multiple repositories simultaneously
             # see integration of records in __amend_record(...)
             # This information is stored in metadata_source_repository_paths (list)

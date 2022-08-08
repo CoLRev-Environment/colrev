@@ -83,7 +83,9 @@ colrev\_core.record.Record
 
    .. autosummary::
 
+      ~Record.dict_fields_keys
       ~Record.identifying_field_keys
+      ~Record.list_fields_keys
       ~Record.pp
       ~Record.preferred_sources
       ~Record.provenance_keys

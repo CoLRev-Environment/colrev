@@ -66,7 +66,7 @@ class Initializer:
         self.review_type = review_type
         self.url = url
 
-        self.logger = self.__setup_logger(level=logging.INFO)
+        self.logger = self.__setup_init_logger(level=logging.INFO)
 
         self.__require_empty_directory()
         self.logger.info("Setup files")
@@ -93,15 +93,15 @@ class Initializer:
         for instruction in self.instructions:
             self.REVIEW_MANAGER.logger.info(instruction)
 
-    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
+    def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
 
-        logger = logging.getLogger("colrev_core-init_logger")
+        init_logger = logging.getLogger("colrev_core-init_logger")
 
-        logger.setLevel(level)
+        init_logger.setLevel(level)
 
-        if logger.handlers:
-            for handler in logger.handlers:
-                logger.removeHandler(handler)
+        if init_logger.handlers:
+            for handler in init_logger.handlers:
+                init_logger.removeHandler(handler)
 
         formatter = logging.Formatter(
             fmt="%(asctime)s [%(levelname)s] %(message)s",
@@ -111,10 +111,10 @@ class Initializer:
         handler.setFormatter(formatter)
         handler.setLevel(level)
 
-        logger.addHandler(handler)
-        logger.propagate = False
+        init_logger.addHandler(handler)
+        init_logger.propagate = False
 
-        return logger
+        return init_logger
 
     def __register_repo(self) -> None:
 

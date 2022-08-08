@@ -128,8 +128,9 @@ class SimpleDedupeEndpoint:
             }
 
         elif (
-            max_similarity > self.SETTINGS.MERGING_NON_DUP_THRESHOLD
-            and max_similarity < self.SETTINGS.MERGING_DUP_THRESHOLD
+            self.SETTINGS.MERGING_NON_DUP_THRESHOLD
+            < max_similarity
+            < self.SETTINGS.MERGING_DUP_THRESHOLD
         ):
 
             ID = records_df.loc[records_df["similarity"].idxmax()]["ID"]
@@ -1427,7 +1428,8 @@ class CurationDedupeEndpoint:
                     print("Pre-imported records found for this toc_item (skipping)")
                     # print(processed_same_toc_same_source_records)
 
-            [r.pop("container_title") for r in records.values()]
+            for r in records.values():
+                r.pop("container_title")
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 

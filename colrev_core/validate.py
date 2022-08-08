@@ -156,7 +156,8 @@ class Validate(Process):
         if target_commit is None:
             self.REVIEW_MANAGER.logger.info("Loading data...")
             records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
-            [x.update(changed_in_target_commit="True") for x in records.values()]
+            for x in records.values():
+                x.update(changed_in_target_commit="True")
             return records.values()
 
         self.REVIEW_MANAGER.logger.info("Loading data from history...")

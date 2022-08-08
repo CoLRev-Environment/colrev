@@ -96,8 +96,8 @@ class CrossrefSearchEndpoint:
                         journal_issn=journal_issn
                     )
 
-        for record in get_crossref_query_return(params):
-            try:
+        try:
+            for record in get_crossref_query_return(params):
                 if record["doi"].upper() not in available_ids:
 
                     # Note : discard "empty" records
@@ -114,12 +114,14 @@ class CrossrefSearchEndpoint:
                     available_ids.append(record["doi"])
                     records[record["ID"]] = record
                     max_id += 1
-            except requests.exceptions.JSONDecodeError as e:
-                if "504 Gateway Time-out" in str(e):
-                    raise colrev_exceptions.ServiceNotAvailableException(
-                        "Crossref (check https://status.crossref.org/)"
-                    )
-                print(e)
+        except requests.exceptions.JSONDecodeError as e:
+            if "504 Gateway Time-out" in str(e):
+                raise colrev_exceptions.ServiceNotAvailableException(
+                    "Crossref (check https://status.crossref.org/)"
+                )
+            raise colrev_exceptions.ServiceNotAvailableException(
+                f"Crossref (check https://status.crossref.org/) ({e})"
+            )
 
         SEARCH.save_feed_file(records, feed_file)
 
@@ -564,6 +566,7 @@ class IndexSearchEndpoint:
             # We may iterate (using the from=... parameter)
             resp = LOCAL_INDEX.os.search(
                 index=LOCAL_INDEX.RECORD_INDEX,
+                size=10000,
                 body={
                     "query": {
                         "simple_query_string": {
@@ -572,7 +575,6 @@ class IndexSearchEndpoint:
                         },
                     }
                 },
-                size=10000,
             )
 
             # TODO : extract the following into a convenience function of search
