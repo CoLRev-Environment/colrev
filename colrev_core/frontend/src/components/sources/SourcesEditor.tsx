@@ -114,7 +114,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
               <label>Search Script</label>
               <ScriptsEditor
                 id="sourceSearchScript"
-                isEdit={false}
+                isSingleScript={true}
                 scripts={[source.searchScript]}
                 scriptsChanged={(scripts: Script[]) => {
                   source.searchScript = scripts[0];
@@ -126,7 +126,7 @@ const SourcesEditor: React.FC<{ sources: Source[]; sourcesChanged: any }> = ({
               <label>Conversion Script</label>
               <ScriptsEditor
                 id="sourceConversionScript"
-                isEdit={false}
+                isSingleScript={true}
                 scripts={[source.conversionScript]}
                 scriptsChanged={(scripts: Script[]) => {
                   source.conversionScript = scripts[0];

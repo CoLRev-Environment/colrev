@@ -14,11 +14,17 @@ import Source from "./models/source";
 import PrepEditor from "./components/prep/PrepEditor";
 import Prep from "./models/prep";
 import { Tooltip } from "bootstrap";
+import DedupeEditor from "./components/dedupe/DedupeEditor";
+import Dedupe from "./models/dedupe";
+import Prescreen from "./models/prescreen";
+import PrescreenEditor from "./components/prescreen/PrescreenEditor";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
   const [sources, setSources] = useState<Source[]>([]);
   const [prep, setPrep] = useState<Prep>(new Prep());
+  const [dedupe, setDedupe] = useState<Dedupe>(new Dedupe());
+  const [prescreen, setPrescreen] = useState<Prescreen>(new Prescreen());
   const [scripts, setScripts] = useState<Script[]>([]);
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
 
@@ -44,6 +50,8 @@ function App() {
     setProject(settings.project);
     setSources(settings.sources);
     setPrep(settings.prep);
+    setDedupe(settings.dedupe);
+    setPrescreen(settings.prescreen);
     setScripts(settings.data.scripts);
   };
 
@@ -62,7 +70,17 @@ function App() {
     setPrep(prep);
   };
 
-  const onScriptsChanged = (scripts: Script[]) => {
+  const onDedupeChanged = (dedupe: Dedupe) => {
+    setIsFileSaved(false);
+    setDedupe(dedupe);
+  };
+
+  const onPrescreenChanged = (prescreen: Prescreen) => {
+    setIsFileSaved(false);
+    setPrescreen(prescreen);
+  };
+
+  const onDataScriptsChanged = (scripts: Script[]) => {
     setIsFileSaved(false);
     setScripts(scripts);
   };
@@ -72,6 +90,8 @@ function App() {
     settings.project = project;
     settings.sources = sources;
     settings.prep = prep;
+    settings.dedupe = dedupe;
+    settings.prescreen = prescreen;
     settings.data.scripts = scripts;
 
     setIsFileSaved(false);
@@ -108,7 +128,7 @@ function App() {
                 name="Project"
                 id="project"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <ProjectEditor
                   project={project}
@@ -135,6 +155,25 @@ function App() {
                 <PrepEditor prep={prep} prepChanged={onPrepChanged} />
               </ExpanderItem>
               <ExpanderItem
+                name="Dedupe"
+                id="dedupe"
+                parentContainerId="settingsExpander"
+                show={true}
+              >
+                <DedupeEditor dedupe={dedupe} dedupeChanged={onDedupeChanged} />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Prescreen"
+                id="prescreen"
+                parentContainerId="settingsExpander"
+                show={false}
+              >
+                <PrescreenEditor
+                  prescreen={prescreen}
+                  prescreenChanged={onPrescreenChanged}
+                />
+              </ExpanderItem>
+              <ExpanderItem
                 name="Data"
                 id="data"
                 parentContainerId="settingsExpander"
@@ -144,7 +183,7 @@ function App() {
                 <ScriptsEditor
                   id="dataScripts"
                   scripts={scripts}
-                  scriptsChanged={onScriptsChanged}
+                  scriptsChanged={onDataScriptsChanged}
                 />
               </ExpanderItem>
             </Expander>

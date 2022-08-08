@@ -6,6 +6,11 @@ import Source from "../models/source";
 import Script from "../models/script";
 import Prep from "../models/prep";
 import PrepRound from "../models/prepRound";
+import Dedupe from "../models/dedupe";
+import ScripWithTresholds from "../models/scriptWithTresholds";
+import ScriptWithLanguageScope from "../models/scriptWithLanguageScope";
+import Prescreen from "../models/prescreen";
+import Data from "../models/data";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -30,7 +35,14 @@ const getSettings = async (): Promise<Settings> => {
   settings.prep = new Prep();
   prepFromSettings(settings.prep, settingsFile.prep);
 
-  settings.data = settingsFile.data;
+  settings.dedupe = new Dedupe();
+  dedupeFromSettings(settings.dedupe, settingsFile.dedupe);
+
+  settings.prescreen = new Prescreen();
+  prescreenFromSettings(settings.prescreen, settingsFile.prescreen);
+
+  settings.data = new Data();
+  dataFromSettings(settings.data, settingsFile.data);
 
   return Promise.resolve<Settings>(settings);
 };
@@ -41,7 +53,9 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     project: projectToSettings(settings.project),
     sources: [],
     prep: prepToSettings(settings.prep),
-    data: settings.data,
+    dedupe: dedupeToSettings(settings.dedupe),
+    prescreen: prescreenToSettings(settings.prescreen),
+    data: dataToSettings(settings.data),
   };
 
   for (const source of settings.sources) {
@@ -90,11 +104,9 @@ const sourceFromSettings = (source: Source, settingsSource: any) => {
   source.searchScript.endpoint = settingsSource.search_script.endpoint;
   source.conversionScript.endpoint = settingsSource.conversion_script.endpoint;
 
-  for (const s of settingsSource.source_prep_scripts) {
-    const script = new Script();
-    script.endpoint = s.endpoint;
-    source.sourcePrepScripts.push(script);
-  }
+  source.sourcePrepScripts = scriptsFromSettings(
+    settingsSource.source_prep_scripts
+  );
 
   source.comment = settingsSource.comment;
 };
@@ -113,15 +125,9 @@ const sourceToSettings = (source: Source): any => {
     conversion_script: {
       endpoint: source.conversionScript.endpoint,
     },
-    source_prep_scripts: [{}],
+    source_prep_scripts: scriptsToSettings(source.sourcePrepScripts),
     comment: source.comment,
   };
-
-  settingsFileSource.source_prep_scripts.pop();
-  for (const script of source.sourcePrepScripts) {
-    const settingsScript = { endpoint: script.endpoint };
-    settingsFileSource.source_prep_scripts.push(settingsScript);
-  }
 
   return settingsFileSource;
 };
@@ -133,26 +139,128 @@ const prepFromSettings = (prep: Prep, settingsPrep: any) => {
     const prepRound = new PrepRound();
     prepRound.name = p.name;
     prepRound.similarity = p.similarity;
-    prepRound.scripts = p.scripts;
+    prepRound.scripts = scriptsFromSettings(p.scripts);
     prep.prepRounds.push(prepRound);
   }
 
-  for (const s of settingsPrep.man_prep_scripts) {
-    const script = new Script();
-    script.endpoint = s.endpoint;
-    prep.manPrepScripts.push(script);
-  }
+  prep.manPrepScripts = scriptsFromSettings(settingsPrep.man_prep_scripts);
 };
 
 const prepToSettings = (prep: Prep): any => {
   const settingsFilePrep = {
     ...settingsFile.prep,
     fields_to_keep: prep.fieldsToKeep,
-    prep_rounds: prep.prepRounds,
-    man_prep_scripts: prep.manPrepScripts,
+    prep_rounds: [],
+    man_prep_scripts: scriptsToSettings(prep.manPrepScripts),
   };
 
+  for (const p of prep.prepRounds) {
+    const prep_round = {
+      name: p.name,
+      similarity: p.similarity,
+      scripts: scriptsToSettings(p.scripts),
+    };
+
+    settingsFilePrep.prep_rounds.push(prep_round);
+  }
+
   return settingsFilePrep;
+};
+
+const scriptsFromSettings = (settingsScripts: any) => {
+  const scripts: Script[] = [];
+
+  for (const settingsScript of settingsScripts) {
+    if ("merge_threshold" in settingsScript) {
+      const script = new ScripWithTresholds();
+      script.endpoint = settingsScript.endpoint;
+      script.mergeTreshold = settingsScript.merge_threshold;
+      script.partitionTreshold = settingsScript.partition_threshold;
+      scripts.push(script);
+    } else if ("LanguageScope" in settingsScript) {
+      const script = new ScriptWithLanguageScope();
+      script.endpoint = settingsScript.endpoint;
+      script.languageScope = settingsScript.LanguageScope;
+      scripts.push(script);
+    } else {
+      const script = new Script();
+      script.endpoint = settingsScript.endpoint;
+      scripts.push(script);
+    }
+  }
+
+  return scripts;
+};
+
+const scriptsToSettings = (scripts: Script[]) => {
+  const settingsScripts: any[] = [];
+
+  for (const script of scripts) {
+    if (script instanceof ScripWithTresholds) {
+      const settingsScript = {
+        endpoint: script.endpoint,
+        merge_threshold: script.mergeTreshold,
+        partition_threshold: script.partitionTreshold,
+      };
+      settingsScripts.push(settingsScript);
+    } else if (script instanceof ScriptWithLanguageScope) {
+      const settingsScript = {
+        endpoint: script.endpoint,
+        LanguageScope: script.languageScope,
+      };
+      settingsScripts.push(settingsScript);
+    } else {
+      const settingsScript = {
+        endpoint: script.endpoint,
+      };
+      settingsScripts.push(settingsScript);
+    }
+  }
+
+  return settingsScripts;
+};
+
+const dedupeFromSettings = (dedupe: Dedupe, settingsDedupe: any) => {
+  dedupe.sameSourceMerges = settingsDedupe.same_source_merges;
+  dedupe.scripts = scriptsFromSettings(settingsDedupe.scripts);
+};
+
+const dedupeToSettings = (dedupe: Dedupe): any => {
+  const settingsDedupe = {
+    same_source_merges: dedupe.sameSourceMerges,
+    scripts: scriptsToSettings(dedupe.scripts),
+  };
+
+  return settingsDedupe;
+};
+
+const prescreenFromSettings = (
+  prescreen: Prescreen,
+  settingsPrescreen: any
+) => {
+  prescreen.explanation = settingsPrescreen.explanation;
+  prescreen.scripts = scriptsFromSettings(settingsPrescreen.scripts);
+};
+
+const prescreenToSettings = (prescreen: Prescreen): any => {
+  const settingsPrescreen = {
+    explanation: prescreen.explanation,
+    scripts: scriptsToSettings(prescreen.scripts),
+  };
+
+  return settingsPrescreen;
+};
+
+const dataFromSettings = (data: Data, settingsData: any) => {
+  data.scripts = scriptsFromSettings(settingsData.scripts);
+};
+
+const dataToSettings = (data: Data): any => {
+  const settingsData = {
+    scripts: scriptsToSettings(data.scripts),
+  };
+
+  return settingsData;
 };
 
 const dataService = {

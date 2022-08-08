@@ -1,6 +1,6 @@
-import Script from "../../models/script";
+import Script from "../../../models/script";
 
-const ScriptEditor: React.FC<{ script: Script; scriptChanged: any }> = ({
+const ScriptItem: React.FC<{ script: Script; scriptChanged: any }> = ({
   script,
   scriptChanged,
 }) => {
@@ -23,4 +23,4 @@ const ScriptEditor: React.FC<{ script: Script; scriptChanged: any }> = ({
   );
 };
 
-export default ScriptEditor;
+export default ScriptItem;
