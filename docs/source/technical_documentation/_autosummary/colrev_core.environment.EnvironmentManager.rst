@@ -21,7 +21,7 @@ colrev\_core.environment.EnvironmentManager
       ~EnvironmentManager.check_git_installed
       ~EnvironmentManager.get_curated_outlets
       ~EnvironmentManager.get_environment_details
-      ~EnvironmentManager.get_name_mail_from_global_git_config
+      ~EnvironmentManager.get_name_mail_from_git
       ~EnvironmentManager.load_local_registry
       ~EnvironmentManager.register_repo
       ~EnvironmentManager.save_local_registry

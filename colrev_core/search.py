@@ -4,17 +4,15 @@ import re
 import typing
 from pathlib import Path
 
+import colrev_core.built_in.search as built_in_search
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in import search as built_in_search
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.review_dataset import ReviewDataset
-from colrev_core.settings import SearchSource
-from colrev_core.settings import SearchType
+import colrev_core.process
+import colrev_core.review_dataset
+import colrev_core.settings
 
 
-class Search(Process):
+class Search(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "search_crossref": {
@@ -46,13 +44,15 @@ class Search(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.search,
+            process_type=colrev_core.process.ProcessType.search,
             notify_state_transition_process=notify_state_transition_process,
         )
 
         self.SOURCES = REVIEW_MANAGER.settings.sources
 
-        self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.search_scripts: typing.Dict[
+            str, typing.Any
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.search_script for s in self.SOURCES if "endpoint" in s.search_script
@@ -72,7 +72,9 @@ class Search(Process):
             }
             for r in records.values()
         }
-        ReviewDataset.save_records_dict_to_file(records=records, save_path=feed_file)
+        colrev_core.review_dataset.ReviewDataset.save_records_dict_to_file(
+            records=records, save_path=feed_file
+        )
 
     def parse_sources(self, *, query: str) -> list:
         if "WHERE " in query:
@@ -164,7 +166,7 @@ class Search(Process):
         required_search_scripts = [
             s.search_script for s in self.REVIEW_MANAGER.settings.sources
         ]
-        self.search_scripts = AdapterManager.load_scripts(
+        self.search_scripts = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=scripts + required_search_scripts,
         )
@@ -314,11 +316,11 @@ class Search(Process):
                 source_prep_scripts = []
 
             # NOTE: for now, the parameters are limited to whole journals.
-            add_source = SearchSource(
+            add_source = colrev_core.settings.SearchSource(
                 filename=Path(
                     f"search/{filename}",
                 ),
-                search_type=SearchType(search_type),
+                search_type=colrev_core.settings.SearchType(search_type),
                 source_name=source_name,
                 source_identifier=source_identifier,
                 search_parameters=selection,
@@ -424,9 +426,9 @@ class Search(Process):
 
         self.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="custom_search_script.py")
 
-        NEW_SOURCE = SearchSource(
+        NEW_SOURCE = colrev_core.settings.SearchSource(
             filename=Path("custom_search.bib"),
-            search_type=SearchType.DB,
+            search_type=colrev_core.settings.SearchType.DB,
             source_name="custom_search_script",
             source_identifier="TODO",
             search_parameters="TODO",

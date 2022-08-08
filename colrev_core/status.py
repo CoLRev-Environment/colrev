@@ -11,16 +11,15 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessModel
-from colrev_core.process import ProcessType
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-class Status(Process):
+class Status(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.explore,
         )
 
     def __get_nr_in_bib(self, file_path: Path) -> int:
@@ -82,8 +81,12 @@ class Status(Process):
                 if "out" == decision:
                     screening_statistics[criterion_name] += 1
 
-        stat["colrev_status"]["currently"] = {str(rs): 0 for rs in list(RecordState)}
-        stat["colrev_status"]["overall"] = {str(rs): 0 for rs in list(RecordState)}
+        stat["colrev_status"]["currently"] = {
+            str(rs): 0 for rs in list(colrev_core.record.RecordState)
+        }
+        stat["colrev_status"]["overall"] = {
+            str(rs): 0 for rs in list(colrev_core.record.RecordState)
+        }
 
         currently_stats = dict(Counter(status_list))
         for currently_stat, val in currently_stats.items():
@@ -98,22 +101,24 @@ class Status(Process):
         )
         st_o = stat["colrev_status"]["overall"]
         non_completed = 0
-        current_state = RecordState.rev_synthesized  # start with the last
+        current_state = (
+            colrev_core.record.RecordState.rev_synthesized
+        )  # start with the last
         visited_states = []
         nr_incomplete = 0
         while True:
             self.REVIEW_MANAGER.logger.debug(
                 f"current_state: {current_state} with {st_o[str(current_state)]}"
             )
-            if RecordState.md_prepared == current_state:
+            if colrev_core.record.RecordState.md_prepared == current_state:
                 st_o[str(current_state)] += md_duplicates_removed
 
             states_to_consider = [current_state]
             predecessors: typing.List[typing.Dict[str, typing.Any]] = [
                 {
                     "trigger": "init",
-                    "source": RecordState.md_imported,
-                    "dest": RecordState.md_imported,
+                    "source": colrev_core.record.RecordState.md_imported,
+                    "dest": colrev_core.record.RecordState.md_imported,
                 }
             ]
             # Go backward through the process model
@@ -121,7 +126,7 @@ class Status(Process):
             while predecessors:
                 predecessors = [
                     t
-                    for t in ProcessModel.transitions
+                    for t in colrev_core.process.ProcessModel.transitions
                     if t["source"] in states_to_consider
                     and t["dest"] not in visited_states
                 ]
@@ -143,15 +148,21 @@ class Status(Process):
             atomic_step_number += 1
             # Note : the following does not consider multiple parallel steps.
             for trans_for_completeness in [
-                t for t in ProcessModel.transitions if current_state == t["dest"]
+                t
+                for t in colrev_core.process.ProcessModel.transitions
+                if current_state == t["dest"]
             ]:
                 nr_incomplete += stat["colrev_status"]["currently"][
                     str(trans_for_completeness["source"])
                 ]
 
-            t_list = [t for t in ProcessModel.transitions if current_state == t["dest"]]
+            t_list = [
+                t
+                for t in colrev_core.process.ProcessModel.transitions
+                if current_state == t["dest"]
+            ]
             t: dict = t_list.pop()
-            if current_state == RecordState.md_imported:
+            if current_state == colrev_core.record.RecordState.md_imported:
                 break
             current_state = t["source"]  # go a step back
             non_completed += stat["colrev_status"]["currently"][str(current_state)]
@@ -202,7 +213,7 @@ class Status(Process):
 
         # note: 10 steps
         stat["atomic_steps"] = (
-            10 * st_o[str(RecordState.md_imported)]
+            10 * st_o[str(colrev_core.record.RecordState.md_imported)]
             - 8 * stat["colrev_status"]["currently"]["md_duplicates_removed"]
             - 7 * stat["colrev_status"]["currently"]["rev_prescreen_excluded"]
             - 6 * stat["colrev_status"]["currently"]["pdf_not_available"]
@@ -232,7 +243,7 @@ class Status(Process):
                 ]
             search_states = [
                 str(x["source"])
-                for x in ProcessModel.transitions
+                for x in colrev_core.process.ProcessModel.transitions
                 if str(x["dest"]) in search_states
             ]
             if [] == search_states:
@@ -242,7 +253,7 @@ class Status(Process):
         # next: get the priority transition for the earliest states
         priority_transitions = [
             x["trigger"]
-            for x in ProcessModel.transitions
+            for x in colrev_core.process.ProcessModel.transitions
             if str(x["source"]) in earliest_state
         ]
         # print(f'priority_transitions: {priority_transitions}')
@@ -254,7 +265,7 @@ class Status(Process):
 
         active_processing_functions = []
         for state in current_origin_states_dict.values():
-            srec = ProcessModel(state=state)
+            srec = colrev_core.process.ProcessModel(state=state)
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
         return active_processing_functions
@@ -359,13 +370,15 @@ class Status(Process):
 
         return environment_instructions
 
-    @classmethod
-    def append_registered_repo_instructions(cls, registered_path):
-        from colrev_core.review_manager import ReviewManager
+    def append_registered_repo_instructions(self, registered_path):
+        # from colrev_core.review_manager import ReviewManager
+        import colrev_core.review_manager
 
         # Note: do not use named arguments (multiprocessing)
         try:
-            REPO_REVIEW_MANAGER = ReviewManager(path_str=str(registered_path))
+            REPO_REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+                path_str=str(registered_path)
+            )
         except (NoSuchPathError, InvalidGitRepositoryError):
             instruction = {
                 "msg": "Locally registered repo no longer exists.",
@@ -492,7 +505,7 @@ class Status(Process):
 
                 process_type = [
                     x["trigger"]
-                    for x in ProcessModel.transitions
+                    for x in colrev_core.process.ProcessModel.transitions
                     if str(x["source"]) == transitioned_record["source"]
                     and str(x["dest"]) == transitioned_record["dest"]
                 ]
@@ -831,12 +844,7 @@ class Status(Process):
         return instructions
 
     def print_review_status(self, *, status_info: dict) -> None:
-        class colors:
-            RED = "\033[91m"
-            GREEN = "\033[92m"
-            ORANGE = "\033[93m"
-            BLUE = "\033[94m"
-            END = "\033[0m"
+        import colrev_core.cli_colors as colors
 
         print("")
         print("Status")

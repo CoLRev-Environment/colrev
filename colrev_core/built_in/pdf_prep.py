@@ -13,20 +13,18 @@ from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import GrobidService
-from colrev_core.environment import LocalIndex
-from colrev_core.environment import TEIParser
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PDFPreparationEndpoint
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class PDFCheckOCREndpoint:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     # TODO : test whether this is too slow:
     language_detector = (
@@ -77,14 +75,14 @@ class PDFCheckOCREndpoint:
         )
         subprocess.check_output([command], stderr=subprocess.STDOUT, shell=True)
 
-        RECORD = Record(data=record)
+        RECORD = colrev_core.record.Record(data=record)
         RECORD.add_data_provenance_note(key="file", note="pdf_processed with OCRMYPDF")
         RECORD.data["file"] = str(ocred_filename.relative_to(REVIEW_MANAGER.path))
         RECORD.get_text_from_pdf(project_path=REVIEW_MANAGER.path)
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
-        if RecordState.pdf_imported != RECORD.data["colrev_status"]:
+        if colrev_core.record.RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
         # TODO : allow for other languages in this and the following if statement
@@ -112,19 +110,25 @@ class PDFCheckOCREndpoint:
             )
             PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
             RECORD.add_data_provenance_note(key="file", note="pdf_language_not_english")
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
+            )
         return RECORD.data
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class PDFCoverPageEndpoint:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
+        cp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
+            ".coverpages"
+        )
         cp_path.mkdir(exist_ok=True)
 
         def __get_coverpages(*, pdf):
@@ -277,15 +281,19 @@ class PDFCoverPageEndpoint:
         return RECORD.data
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class PDFLastPageEndpoint:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        lp_path = LocalIndex.local_environment_path / Path(".lastpages")
+        lp_path = colrev_core.environemnt.LocalIndex.local_environment_path / Path(
+            ".lastpages"
+        )
         lp_path.mkdir(exist_ok=True)
 
         def __get_last_pages(*, pdf):
@@ -374,10 +382,12 @@ class PDFLastPageEndpoint:
         return RECORD.data
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class PDFMetadataValidationEndpoint:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def validates_based_on_metadata(self, *, REVIEW_MANAGER, RECORD) -> dict:
         def __rmdiacritics(*, char: str) -> str:
@@ -487,10 +497,10 @@ class PDFMetadataValidationEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD=40):
 
-        if RecordState.pdf_imported != RECORD.data["colrev_status"]:
+        if colrev_core.record.RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
-        LOCAL_INDEX = LocalIndex()
+        LOCAL_INDEX = colrev_core.environment.LocalIndex()
 
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record=RECORD.data)
@@ -518,12 +528,14 @@ class PDFMetadataValidationEndpoint:
 
             notes = ",".join(validation_info["pdf_prep_hints"])
             RECORD.add_data_provenance_note(key="file", note=notes)
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
+            )
 
         return RECORD.data
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class PDFCompletenessValidationEndpoint:
 
     roman_pages_pattern = re.compile(
@@ -536,7 +548,9 @@ class PDFCompletenessValidationEndpoint:
     )
 
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def __longer_with_appendix(self, *, REVIEW_MANAGER, RECORD, nr_pages_metadata):
         if 10 < nr_pages_metadata < RECORD.data["pages_in_file"]:
@@ -554,7 +568,7 @@ class PDFCompletenessValidationEndpoint:
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
-        if RecordState.pdf_imported != RECORD.data["colrev_status"]:
+        if colrev_core.record.RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
         def __romanToInt(*, s):
@@ -608,7 +622,9 @@ class PDFCompletenessValidationEndpoint:
             )
             PDF_PREPARATION.REVIEW_MANAGER.report_logger.error(msg)
             RECORD.add_data_provenance_note(key="file", note="not_full_version")
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
+            )
             return RECORD.data
 
         pages_metadata = RECORD.data.get("pages", "NA")
@@ -628,7 +644,9 @@ class PDFCompletenessValidationEndpoint:
                 + "Could not validate completeness: no pages in metadata"
             )
             RECORD.add_data_provenance_note(key="file", note="no_pages_in_metadata")
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
+            )
             return RECORD.data
 
         nr_pages_metadata = __get_nr_pages_in_metadata(pages_metadata=pages_metadata)
@@ -658,18 +676,20 @@ class PDFCompletenessValidationEndpoint:
                     key="file", note="nr_pages_not_matching"
                 )
                 RECORD.data.update(
-                    colrev_status=RecordState.pdf_needs_manual_preparation
+                    colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
                 )
 
         return RECORD.data
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class TEIEndpoint:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
 
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
-        GROBID_SERVICE = GrobidService()
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
+        GROBID_SERVICE = colrev_core.environment.GrobidService()
         GROBID_SERVICE.start()
         Path(".tei").mkdir(exist_ok=True)
 
@@ -681,7 +701,7 @@ class TEIEndpoint:
         )
 
         if "file" in RECORD.data:
-            _ = TEIParser(
+            _ = colrev_core.environment.TEIParser(
                 pdf_path=Path(RECORD.data["file"]),
                 tei_path=RECORD.get_tei_filename(),
             )

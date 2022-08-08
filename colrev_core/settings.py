@@ -38,8 +38,30 @@ class ReviewType(Enum):
         )
 
 
+# @dataclass
+# class Author:
+#     name: str
+#     initials: str
+#     email: str
+#     orcid: typing.Optional[str]
+#     contributions: typing.Optional[list]
+#     affiliations: typing.Optional[list]
+#     funding: typing.Optional[list]
+#     identifiers: typing.Optional[list]
+
+# @dataclass
+# class Protocol:
+#     url: str
+
+
 @dataclass
 class ProjectConfiguration:
+    # title: str
+    # authors: list[Author]
+    # keywords: list[str]
+    # status ? (development/published?)
+    # protocol: typing.Optional[Protocol]
+    # publication: ... (reference, link, ....)
     review_type: ReviewType
     id_pattern: IDPpattern
     share_stat_req: str

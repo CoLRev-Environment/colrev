@@ -3,15 +3,14 @@ import math
 import pkgutil
 import typing
 
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
+import colrev_core.settings
 from colrev_core.built_in import screen as built_in_screen
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import RecordState
-from colrev_core.settings import ScreenCriterion
 
 
-class Screen(Process):
+class Screen(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_screen": {
@@ -24,13 +23,15 @@ class Screen(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.screen,
+            process_type=colrev_core.process.ProcessType.screen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
         self.verbose = True
 
-        self.screen_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.screen_scripts: typing.Dict[
+            str, typing.Any
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.screen.scripts,
         )
@@ -48,7 +49,7 @@ class Screen(Process):
         saved_args["include_all"] = ""
         PAD = 50
         for record_ID, record in records.items():
-            if record["colrev_status"] != RecordState.pdf_prepared:
+            if record["colrev_status"] != colrev_core.record.RecordState.pdf_prepared:
                 continue
             self.REVIEW_MANAGER.report_logger.info(
                 f" {record_ID}".ljust(PAD, " ") + "Included in screen (automatically)"
@@ -59,7 +60,7 @@ class Screen(Process):
                 record.update(
                     screening_criteria=";".join([e + "=in" for e in screening_criteria])
                 )
-            record.update(colrev_status=RecordState.rev_included)
+            record.update(colrev_status=colrev_core.record.RecordState.rev_included)
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -87,12 +88,13 @@ class Screen(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.pdf_prepared) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.pdf_prepared)
+                == x["colrev_status"]
             ]
         )
         PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.pdf_prepared}]
+            conditions=[{"colrev_status": colrev_core.record.RecordState.pdf_prepared}]
         )
         screen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(screen_data))
@@ -109,7 +111,7 @@ class Screen(Process):
 
         if criterion_name not in self.REVIEW_MANAGER.settings.screen.criteria:
 
-            ADD_CRITERION = ScreenCriterion(
+            ADD_CRITERION = colrev_core.settings.ScreenCriterion(
                 explanation=criterion_explanation,
                 criterion_type=criterion_type,
                 comment="",
@@ -125,14 +127,14 @@ class Screen(Process):
         for record in records.values():
 
             if record["colrev_status"] in [
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
+                colrev_core.record.RecordState.rev_included,
+                colrev_core.record.RecordState.rev_synthesized,
             ]:
                 record["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : we set the status to pdf_prepared because the screening
                 # decisions have to be updated (resulting in inclusion or exclusion)
-                record["colrev_status"] = RecordState.pdf_prepared
-            if record["colrev_status"] == RecordState.rev_excluded:
+                record["colrev_status"] = colrev_core.record.RecordState.pdf_prepared
+            if record["colrev_status"] == colrev_core.record.RecordState.rev_excluded:
                 record["screening_criteria"] += f";{criterion_name}=TODO"
                 # Note : no change in colrev_status
                 # because at least one of the other criteria led to exclusion decision
@@ -161,8 +163,8 @@ class Screen(Process):
         for record in records.values():
 
             if record["colrev_status"] in [
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
+                colrev_core.record.RecordState.rev_included,
+                colrev_core.record.RecordState.rev_synthesized,
             ]:
                 record["screening_criteria"] = (
                     record["screening_criteria"]
@@ -176,7 +178,7 @@ class Screen(Process):
                 # Note : colrev_status does not change
                 # because the other screening criteria do not change
 
-            if record["colrev_status"] in [RecordState.rev_excluded]:
+            if record["colrev_status"] in [colrev_core.record.RecordState.rev_excluded]:
                 record["screening_criteria"] = (
                     record["screening_criteria"]
                     .replace(f"{criterion_to_delete}=TODO", "")
@@ -191,7 +193,9 @@ class Screen(Process):
                     "=out" not in record["screening_criteria"]
                     and "=TODO" not in record["screening_criteria"]
                 ):
-                    record["colrev_status"] = RecordState.rev_included
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.rev_included
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

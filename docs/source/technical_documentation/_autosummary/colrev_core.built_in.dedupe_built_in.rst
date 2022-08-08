@@ -28,4 +28,3 @@ colrev\_core.built\_in.dedupe\_built\_in
       CurationMissingDedupeEndpoint
       SimpleDedupeEndpoint
       SimpleDedupeSettings
-      colors

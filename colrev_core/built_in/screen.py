@@ -6,19 +6,18 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.environment import TEIParser
-from colrev_core.process import DefaultSettings
-from colrev_core.process import ScreenEndpoint
-from colrev_core.record import RecordState
-from colrev_core.record import ScreenRecord
-from colrev_core.settings import ScreenCriterion
-from colrev_core.settings import ScreenCriterionType
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
+import colrev_core.settings
 
 
-@zope.interface.implementer(ScreenEndpoint)
+@zope.interface.implementer(colrev_core.process.ScreenEndpoint)
 class CoLRevCLIScreenEndpoint:
     def __init__(self, *, SCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @classmethod
     def get_screening_criteria(cls, *, SCREEN, records):
@@ -30,9 +29,9 @@ class CoLRevCLIScreenEndpoint:
                 for r in records.values()
                 if r["colrev_status"]
                 in [
-                    RecordState.rev_included,
-                    RecordState.rev_excluded,
-                    RecordState.rev_synthesized,
+                    colrev_core.record.RecordState.rev_included,
+                    colrev_core.record.RecordState.rev_excluded,
+                    colrev_core.record.RecordState.rev_synthesized,
                 ]
             ]
         ):
@@ -41,12 +40,16 @@ class CoLRevCLIScreenEndpoint:
             while "y" == input("Add screening criterion [y,n]?"):
                 short_name = input("Provide a short name: ")
                 if "i" == input("Inclusion or exclusion criterion [i,e]?: "):
-                    criterion_type = ScreenCriterionType.inclusion_criterion
+                    criterion_type = (
+                        colrev_core.settings.ScreenCriterionType.inclusion_criterion
+                    )
                 else:
-                    criterion_type = ScreenCriterionType.exclusion_criterion
+                    criterion_type = (
+                        colrev_core.settings.ScreenCriterionType.exclusion_criterion
+                    )
                 explanation = input("Provide a short explanation: ")
 
-                screening_criteria[short_name] = ScreenCriterion(
+                screening_criteria[short_name] = colrev_core.settings.ScreenCriterion(
                     explanation=explanation, criterion_type=criterion_type, comment=""
                 )
 
@@ -77,7 +80,7 @@ class CoLRevCLIScreenEndpoint:
         ) in SCREEN.REVIEW_MANAGER.settings.screen.criteria.items():
             color = "\033[92m"
             if (
-                ScreenCriterionType.exclusion_criterion
+                colrev_core.settings.ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
                 color = "\033[91m"
@@ -100,11 +103,11 @@ class CoLRevCLIScreenEndpoint:
             i += 1
             skip_pressed = False
 
-            SCREEN_RECORD = ScreenRecord(data=record)
+            SCREEN_RECORD = colrev_core.record.ScreenRecord(data=record)
             abstract_from_tei = False
             if "abstract" not in SCREEN_RECORD.data:
                 abstract_from_tei = True
-                TEI = TEIParser(
+                TEI = colrev_core.environment.TEIParser(
                     pdf_path=Path(SCREEN_RECORD.data["file"]),
                     tei_path=SCREEN_RECORD.get_tei_filename(),
                 )
@@ -123,7 +126,7 @@ class CoLRevCLIScreenEndpoint:
                     while ret not in ["y", "n", "q", "s"]:
                         color = "\033[92m"
                         if (
-                            ScreenCriterionType.exclusion_criterion
+                            colrev_core.settings.ScreenCriterionType.exclusion_criterion
                             == criterion_settings.criterion_type
                         ):
                             color = "\033[91m"
@@ -226,12 +229,14 @@ class CoLRevCLIScreenEndpoint:
         return records
 
 
-@zope.interface.implementer(ScreenEndpoint)
+@zope.interface.implementer(colrev_core.process.ScreenEndpoint)
 class SpreadsheetScreenEndpoint:
     spreadsheet_path = Path("screen/screen.csv")
 
     def __init__(self, *, SCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def export_table(self, SCREEN, records, split, export_table_format="csv") -> None:
         # TODO : add delta (records not yet in the spreadsheet)
@@ -252,7 +257,7 @@ class SpreadsheetScreenEndpoint:
         for record in records.values():
 
             if record["colrev_status"] not in [
-                RecordState.pdf_prepared,
+                colrev_core.record.RecordState.pdf_prepared,
             ]:
                 continue
 
@@ -262,13 +267,13 @@ class SpreadsheetScreenEndpoint:
 
             inclusion_2 = "NA"
 
-            if RecordState.pdf_prepared == record["colrev_status"]:
+            if colrev_core.record.RecordState.pdf_prepared == record["colrev_status"]:
                 inclusion_2 = "TODO (yes/no)"
-            if RecordState.rev_excluded == record["colrev_status"]:
+            if colrev_core.record.RecordState.rev_excluded == record["colrev_status"]:
                 inclusion_2 = "no"
             if record["colrev_status"] in [
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
+                colrev_core.record.RecordState.rev_included,
+                colrev_core.record.RecordState.rev_synthesized,
             ]:
                 inclusion_2 = "yes"
 
@@ -345,9 +350,13 @@ class SpreadsheetScreenEndpoint:
                 record = records[screened_record.get("ID", "")]
                 if "screen_inclusion" in screened_record:
                     if "yes" == screened_record["screen_inclusion"]:
-                        record["colrev_status"] = RecordState.rev_included
+                        record[
+                            "colrev_status"
+                        ] = colrev_core.record.RecordState.rev_included
                     elif "no" == screened_record["screen_inclusion"]:
-                        record["colrev_status"] = RecordState.rev_excluded
+                        record[
+                            "colrev_status"
+                        ] = colrev_core.record.RecordState.rev_excluded
                     else:
                         print(
                             f"Invalid choice: {screened_record['screen_inclusion']} "
@@ -366,9 +375,13 @@ class SpreadsheetScreenEndpoint:
                 screening_criteria_field = screening_criteria_field.rstrip(";")
                 record["screening_criteria"] = screening_criteria_field
                 if "=out" in screening_criteria_field:
-                    record["colrev_status"] = RecordState.rev_excluded
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.rev_excluded
                 else:
-                    record["colrev_status"] = RecordState.rev_included
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.rev_included
 
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         SCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

@@ -7,9 +7,9 @@ from pathlib import Path
 import pybtex.errors
 from pybtex.database.input import bibtex
 
-from colrev_core.environment import LocalIndex
-from colrev_core.record import Record
-from colrev_core.review_dataset import ReviewDataset
+import colrev_core.environment
+import colrev_core.record
+import colrev_core.review_dataset
 
 
 class Sync:
@@ -61,7 +61,7 @@ class Sync:
                 print("TODO - prefer!")
                 # continue if found/extracted
 
-            self.LOCAL_INDEX = LocalIndex()
+            self.LOCAL_INDEX = colrev_core.environment.LocalIndex()
 
             query = json.dumps({"query": {"match_phrase": {"ID": citation_key}}})
             res = self.LOCAL_INDEX.os.search(
@@ -104,7 +104,9 @@ class Sync:
 
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
-            records = ReviewDataset.parse_records_dict(records_dict=bib_data.entries)
+            records = colrev_core.review_dataset.ReviewDataset.parse_records_dict(
+                records_dict=bib_data.entries
+            )
 
         return list(records.keys())
 
@@ -127,7 +129,9 @@ class Sync:
             parser = bibtex.Parser()
             bib_data = parser.parse_file(str(references_file))
             records = list(
-                ReviewDataset.parse_records_dict(records_dict=bib_data.entries).values()
+                colrev_core.review_dataset.ReviewDataset.parse_records_dict(
+                    records_dict=bib_data.entries
+                ).values()
             )
 
         available_ids = [r["ID"] for r in records]
@@ -141,7 +145,7 @@ class Sync:
         if len(added) > 0:
             print("Loaded:")
             for record in added:
-                Record(data=record).print_citation_format()
+                colrev_core.record.Record(data=record).print_citation_format()
 
             print(f"Loaded {len(added)} papers")
 
@@ -171,7 +175,7 @@ class Sync:
 
         records_dict = {r["ID"]: r for r in records if r["ID"] in self.cited_papers}
 
-        ReviewDataset.save_records_dict_to_file(
+        colrev_core.review_dataset.ReviewDataset.save_records_dict_to_file(
             records=records_dict, save_path=references_file
         )
 

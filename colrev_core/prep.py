@@ -13,15 +13,12 @@ import requests_cache
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
-from colrev_core.built_in import database_connectors
-from colrev_core.built_in import prep as built_in_prep
-from colrev_core.environment import AdapterManager
-from colrev_core.environment import EnvironmentManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import PrepRecord
-from colrev_core.record import RecordState
-from colrev_core.settings import PrepRound
+import colrev_core.built_in.database_connectors as db_connectors
+import colrev_core.built_in.prep as built_in_prep
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
+import colrev_core.settings
 
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
@@ -33,7 +30,7 @@ END = "\033[0m"
 RED = "\033[91m"
 
 
-class Preparation(Process):
+class Preparation(colrev_core.process.Process):
 
     PAD = 0
     TIMEOUT = 10
@@ -95,7 +92,9 @@ class Preparation(Process):
         "cited_by_file",
     ]
 
-    cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
+    cache_path = colrev_core.environment.EnvironmentManager.colrev_path / Path(
+        "prep_requests_cache"
+    )
     session = requests_cache.CachedSession(
         str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
     )
@@ -160,7 +159,7 @@ class Preparation(Process):
             "endpoint": built_in_prep.RemoveNicknamesPrep,
         },
         "format_minor": {
-            "endpoint": built_in_prep.FormatMinorPRep,
+            "endpoint": built_in_prep.FormatMinorPrep,
         },
         "drop_fields": {
             "endpoint": built_in_prep.DropFieldsPrep,
@@ -187,7 +186,7 @@ class Preparation(Process):
     ):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.prep,
+            process_type=colrev_core.process.ProcessType.prep,
             notify_state_transition_process=notify_state_transition_process,
             debug=(debug != "NA"),
         )
@@ -210,11 +209,11 @@ class Preparation(Process):
         # and iterate over it?
 
         self.REVIEW_MANAGER.logger.info("Check availability of connectors...")
-        database_connectors.CrossrefConnector.check_status(PREPARATION=self)
+        db_connectors.CrossrefConnector.check_status(PREPARATION=self)
         self.REVIEW_MANAGER.logger.info("CrossrefConnector available")
-        database_connectors.DBLPConnector.check_status(PREPARATION=self)
+        db_connectors.DBLPConnector.check_status(PREPARATION=self)
         self.REVIEW_MANAGER.logger.info("DBLPConnector available")
-        database_connectors.OpenLibraryConnector.check_status(PREPARATION=self)
+        db_connectors.OpenLibraryConnector.check_status(PREPARATION=self)
         self.REVIEW_MANAGER.logger.info("OpenLibraryConnector available")
 
         print()
@@ -365,8 +364,8 @@ class Preparation(Process):
             for r in record_list
             if str(r["colrev_status"])
             in [
-                str(RecordState.md_prepared),
-                str(RecordState.md_needs_manual_preparation),
+                str(colrev_core.record.RecordState.md_prepared),
+                str(colrev_core.record.RecordState.md_needs_manual_preparation),
             ]
         ]
 
@@ -375,8 +374,8 @@ class Preparation(Process):
             for r in record_list
             if str(r["colrev_status"])
             not in [
-                str(RecordState.md_prepared),
-                str(RecordState.md_needs_manual_preparation),
+                str(colrev_core.record.RecordState.md_prepared),
+                str(colrev_core.record.RecordState.md_needs_manual_preparation),
             ]
         ]:
             msg = (
@@ -410,7 +409,9 @@ class Preparation(Process):
                 load_str=filecontents.decode("utf-8")
             )
             for prior_record in prior_records_dict.values():
-                if str(prior_record["colrev_status"]) != str(RecordState.md_imported):
+                if str(prior_record["colrev_status"]) != str(
+                    colrev_core.record.RecordState.md_imported
+                ):
                     continue
                 for record_to_unmerge, record in record_reset_list:
 
@@ -451,7 +452,7 @@ class Preparation(Process):
                 record_to_unmerge_original=record_to_unmerge, record_original=record
             )
             record_to_unmerge.update(
-                colrev_status=RecordState.md_needs_manual_preparation
+                colrev_status=colrev_core.record.RecordState.md_needs_manual_preparation
             )
 
     def reset_records(self, *, reset_ids: list) -> None:
@@ -553,7 +554,8 @@ class Preparation(Process):
                 [
                     x
                     for x in record_state_list
-                    if str(RecordState.md_imported) == x["colrev_status"]
+                    if str(colrev_core.record.RecordState.md_imported)
+                    == x["colrev_status"]
                 ]
             )
 
@@ -562,18 +564,19 @@ class Preparation(Process):
             else:
                 PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
 
+            r_states_to_prepare = [
+                colrev_core.record.RecordState.md_imported,
+                colrev_core.record.RecordState.md_prepared,
+                colrev_core.record.RecordState.md_needs_manual_preparation,
+            ]
             items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-                conditions=[
-                    {"colrev_status": RecordState.md_imported},
-                    {"colrev_status": RecordState.md_prepared},
-                    {"colrev_status": RecordState.md_needs_manual_preparation},
-                ],
+                conditions=[{"colrev_status": s} for s in r_states_to_prepare]
             )
 
             prior_ids = [
                 x["ID"]
                 for x in record_state_list
-                if str(RecordState.md_imported) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.md_imported) == x["colrev_status"]
             ]
 
             prep_data = {
@@ -585,7 +588,7 @@ class Preparation(Process):
             self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prep_data))
             return prep_data
 
-        def get_preparation_data(*, prep_round: PrepRound):
+        def get_preparation_data(*, prep_round: colrev_core.settings.PrepRound):
             if self.REVIEW_MANAGER.DEBUG_MODE:
                 prepare_data = load_prep_data_for_debug(
                     debug_ids=debug_ids, debug_file=debug_file
@@ -611,7 +614,7 @@ class Preparation(Process):
             for item in items:
                 prep_data.append(
                     {
-                        "record": PrepRecord(data=item),
+                        "record": colrev_core.record.PrepRecord(data=item),
                         # Note : we cannot load scripts here
                         # because pathos/multiprocessing
                         # does not support functions as parameters
@@ -635,11 +638,15 @@ class Preparation(Process):
                     )
 
                 for record in records_dict.values():
-                    if RecordState.md_imported != record.get("state", ""):
+                    if colrev_core.record.RecordState.md_imported != record.get(
+                        "state", ""
+                    ):
                         self.REVIEW_MANAGER.logger.info(
                             f"Setting colrev_status to md_imported {record['ID']}"
                         )
-                        record["colrev_status"] = RecordState.md_imported
+                        record[
+                            "colrev_status"
+                        ] = colrev_core.record.RecordState.md_imported
                 debug_ids_list = list(records_dict.keys())
                 debug_ids = ",".join(debug_ids_list)
                 self.REVIEW_MANAGER.logger.info("Imported record (retrieved from file)")
@@ -657,7 +664,7 @@ class Preparation(Process):
                 # self.REVIEW_MANAGER.pp.pprint(original_records)
                 records = REVIEW_DATASET.retrieve_records_from_history(
                     original_records=original_records,
-                    condition_state=RecordState.md_imported,
+                    condition_state=colrev_core.record.RecordState.md_imported,
                 )
                 self.REVIEW_MANAGER.logger.info(
                     "Imported record (retrieved from history)"
@@ -666,7 +673,7 @@ class Preparation(Process):
             if len(records) == 0:
                 prep_data = {"nr_tasks": 0, "PAD": 0, "items": [], "prior_ids": []}
             else:
-                print(PrepRecord(data=records[0]))
+                print(colrev_core.record.PrepRecord(data=records[0]))
                 input("Press Enter to continue")
                 print("\n\n")
                 prep_data = {
@@ -709,7 +716,7 @@ class Preparation(Process):
 
             self.prep_scripts: typing.Dict[
                 str, typing.Any
-            ] = AdapterManager.load_scripts(
+            ] = colrev_core.environment.AdapterManager.load_scripts(
                 PROCESS=self,
                 scripts=required_prep_scripts,
             )
@@ -719,7 +726,8 @@ class Preparation(Process):
                 [
                     record
                     for record in prepared_records
-                    if record["colrev_status"] == RecordState.md_prepared
+                    if record["colrev_status"]
+                    == colrev_core.record.RecordState.md_prepared
                 ]
             )
 
@@ -732,7 +740,7 @@ class Preparation(Process):
                     record
                     for record in prepared_records
                     if record["colrev_status"]
-                    == RecordState.md_needs_manual_preparation
+                    == colrev_core.record.RecordState.md_needs_manual_preparation
                 ]
             )
             if nr_recs > 0:
@@ -751,7 +759,8 @@ class Preparation(Process):
                 [
                     record
                     for record in prepared_records
-                    if record["colrev_status"] == RecordState.rev_prescreen_excluded
+                    if record["colrev_status"]
+                    == colrev_core.record.RecordState.rev_prescreen_excluded
                 ]
             )
             if nr_recs > 0:

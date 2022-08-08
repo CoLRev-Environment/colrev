@@ -10,17 +10,13 @@ import imagehash
 from p_tqdm import p_map
 from pdf2image import convert_from_path
 
-from colrev_core.built_in import pdf_get as built_in_pdf_get
-from colrev_core.environment import AdapterManager
-from colrev_core.environment import GrobidService
-from colrev_core.environment import TEIParser
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.built_in.pdf_get as built_in_pdf_get
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
 
 
-class PDF_Retrieval(Process):
+class PDF_Retrieval(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "unpaywall": {
@@ -43,7 +39,7 @@ class PDF_Retrieval(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.pdf_get,
+            process_type=colrev_core.process.ProcessType.pdf_get,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -55,7 +51,7 @@ class PDF_Retrieval(Process):
 
         self.pdf_retrieval_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_get.scripts,
         )
@@ -95,10 +91,12 @@ class PDF_Retrieval(Process):
 
         record = item["record"]
 
-        if str(RecordState.rev_prescreen_included) != str(record["colrev_status"]):
+        if str(colrev_core.record.RecordState.rev_prescreen_included) != str(
+            record["colrev_status"]
+        ):
             return record
 
-        RECORD = Record(data=record)
+        RECORD = colrev_core.record.Record(data=record)
 
         RECORD = self.link_pdf(RECORD)
 
@@ -118,9 +116,13 @@ class PDF_Retrieval(Process):
                     f"{ENDPOINT.SETTINGS.name}"
                     f'({record["ID"]}): retrieved {record["file"]}'
                 )
-                RECORD.data.update(colrev_status=RecordState.pdf_imported)
+                RECORD.data.update(
+                    colrev_status=colrev_core.record.RecordState.pdf_imported
+                )
                 break
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_retrieval)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_retrieval
+            )
 
         return RECORD.get_data()
 
@@ -249,14 +251,14 @@ class PDF_Retrieval(Process):
         if len(unlinked_pdfs) == 0:
             return records
 
-        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE = colrev_core.environment.GrobidService()
         GROBID_SERVICE.start()
         self.REVIEW_MANAGER.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
             self.REVIEW_MANAGER.logger.info(f"Checking unlinked PDF: {file}")
             if file.stem not in records.keys():
 
-                TEI_INSTANCE = TEIParser(pdf_path=file)
+                TEI_INSTANCE = colrev_core.environment.TEIParser(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:
@@ -265,20 +267,25 @@ class PDF_Retrieval(Process):
                 max_similarity = 0.0
                 max_sim_record = None
                 for record in records.values():
-                    sim = Record.get_record_similarity(
-                        RECORD_A=Record(data=pdf_record),
-                        RECORD_B=Record(data=record.copy()),
+                    sim = colrev_core.record.Record.get_record_similarity(
+                        RECORD_A=colrev_core.record.Record(data=pdf_record),
+                        RECORD_B=colrev_core.record.Record(data=record.copy()),
                     )
                     if sim > max_similarity:
                         max_similarity = sim
                         max_sim_record = record
                 if max_sim_record:
                     if max_similarity > 0.5:
-                        if RecordState.pdf_prepared == max_sim_record["colrev_status"]:
+                        if (
+                            colrev_core.record.RecordState.pdf_prepared
+                            == max_sim_record["colrev_status"]
+                        ):
                             continue
 
                         max_sim_record.update(file=str(file))
-                        max_sim_record.update(colrev_status=RecordState.pdf_imported)
+                        max_sim_record.update(
+                            colrev_status=colrev_core.record.RecordState.pdf_imported
+                        )
 
                         self.REVIEW_MANAGER.report_logger.info(
                             "linked unlinked pdf:" f" {file.name}"
@@ -374,12 +381,15 @@ class PDF_Retrieval(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.rev_prescreen_included) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.rev_prescreen_included)
+                == x["colrev_status"]
             ]
         )
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.rev_prescreen_included}],
+            conditions=[
+                {"colrev_status": colrev_core.record.RecordState.rev_prescreen_included}
+            ],
         )
 
         self.to_retrieve = nr_tasks
@@ -439,14 +449,16 @@ class PDF_Retrieval(Process):
 
         for record in records.values():
             if record["colrev_status"] in [
-                RecordState.rev_prescreen_included,
-                RecordState.pdf_needs_manual_retrieval,
+                colrev_core.record.RecordState.rev_prescreen_included,
+                colrev_core.record.RecordState.pdf_needs_manual_retrieval,
             ]:
                 if "file" in record:
                     if any(
                         Path(fpath).is_file() for fpath in record["file"].split(";")
                     ):
-                        record["colrev_status"] = RecordState.pdf_imported
+                        record[
+                            "colrev_status"
+                        ] = colrev_core.record.RecordState.pdf_imported
                     else:
                         print(
                             "Warning: record with file field but no existing PDF "

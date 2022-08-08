@@ -2,14 +2,15 @@
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.process import DataEndpoint
-from colrev_core.process import DefaultSettings
+import colrev_core.process
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class CustomData:
     def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_default_setup(self):
         custom_endpoint_details = {

@@ -4,20 +4,23 @@ import random
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.pdf_prep import RecordState
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PDFPreparationEndpoint
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(PDFPreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFPreparationEndpoint)
 class CustomPDFPrepratation:
     def __init__(self, *, PDF_PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
         if random.random() < 0.8:
             RECORD.add_data_provenance_note(key="file", note="custom_issue_detected")
-            RECORD.data.update(colrev_status=RecordState.pdf_needs_manual_preparation)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_needs_manual_preparation
+            )
 
         return RECORD.data

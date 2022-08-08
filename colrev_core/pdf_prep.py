@@ -9,15 +9,13 @@ from pathlib import Path
 import timeout_decorator
 from p_tqdm import p_map
 
-from colrev_core.built_in import pdf_prep as built_in_pdf_prep
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.built_in.pdf_prep as built_in_pdf_prep
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
 
 
-class PDF_Preparation(Process):
+class PDF_Preparation(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "pdf_check_ocr": {
@@ -51,7 +49,7 @@ class PDF_Preparation(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.pdf_prep,
+            process_type=colrev_core.process.ProcessType.pdf_prep,
             notify_state_transition_process=notify_state_transition_process,
             debug=debug,
         )
@@ -67,7 +65,7 @@ class PDF_Preparation(Process):
 
         self.pdf_prep_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_prep.scripts,
         )
@@ -85,7 +83,10 @@ class PDF_Preparation(Process):
     def prepare_pdf(self, item: dict) -> dict:
         record = item["record"]
 
-        if RecordState.pdf_imported != record["colrev_status"] or "file" not in record:
+        if (
+            colrev_core.record.RecordState.pdf_imported != record["colrev_status"]
+            or "file" not in record
+        ):
             return record
 
         PAD = len(record["ID"]) + 35
@@ -98,7 +99,7 @@ class PDF_Preparation(Process):
             return record
 
         # RECORD.data.update(colrev_status=RecordState.pdf_prepared)
-        RECORD = Record(data=record)
+        RECORD = colrev_core.record.Record(data=record)
         RECORD.get_text_from_pdf(project_path=self.REVIEW_MANAGER.path)
         original_filename = record["file"]
 
@@ -134,13 +135,18 @@ class PDF_Preparation(Process):
                     f'Error for {RECORD.data["ID"]} '
                     f"(in {ENDPOINT.SETTINGS.name} : {err})"
                 )
-                RECORD.data["colrev_status"] = RecordState.pdf_needs_manual_preparation
+                RECORD.data[
+                    "colrev_status"
+                ] = colrev_core.record.RecordState.pdf_needs_manual_preparation
 
             except Exception as e:
                 print(e)
-                RECORD.data["colrev_status"] = RecordState.pdf_needs_manual_preparation
+                RECORD.data[
+                    "colrev_status"
+                ] = colrev_core.record.RecordState.pdf_needs_manual_preparation
             failed = (
-                RecordState.pdf_needs_manual_preparation == RECORD.data["colrev_status"]
+                colrev_core.record.RecordState.pdf_needs_manual_preparation
+                == RECORD.data["colrev_status"]
             )
             msg = (
                 f'{ENDPOINT.SETTINGS.name}({RECORD.data["ID"]}):'.ljust(PAD, " ") + " "
@@ -155,8 +161,10 @@ class PDF_Preparation(Process):
         # The original PDF is never deleted automatically.
         # If successful, it is renamed to *_backup.pdf
 
-        if RecordState.pdf_imported == RECORD.data["colrev_status"]:
-            RECORD.data.update(colrev_status=RecordState.pdf_prepared)
+        if colrev_core.record.RecordState.pdf_imported == RECORD.data["colrev_status"]:
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_prepared
+            )
             pdf_path = self.REVIEW_MANAGER.path / Path(RECORD.data["file"])
             RECORD.data.update(colrev_pdf_id=RECORD.get_colrev_pdf_id(path=pdf_path))
 
@@ -220,12 +228,13 @@ class PDF_Preparation(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.pdf_imported) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.pdf_imported)
+                == x["colrev_status"]
             ]
         )
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.pdf_imported}],
+            conditions=[{"colrev_status": colrev_core.record.RecordState.pdf_imported}],
         )
         self.to_prepare = nr_tasks
 
@@ -240,11 +249,16 @@ class PDF_Preparation(Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
         for record in records.values():
-            if RecordState.pdf_needs_manual_preparation != record["colrev_stauts"]:
+            if (
+                colrev_core.record.RecordState.pdf_needs_manual_preparation
+                != record["colrev_stauts"]
+            ):
                 continue
 
-            RECORD = Record(data=record)
-            RECORD.data.update(colrev_status=RecordState.pdf_imported)
+            RECORD = colrev_core.record.Record(data=record)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.pdf_imported
+            )
             RECORD.reset_pdf_provenance_notes()
             record = RECORD.get_data()
 
@@ -254,7 +268,9 @@ class PDF_Preparation(Process):
         if "file" in record:
             pdf_path = self.REVIEW_MANAGER.path / Path(record["file"])
             record.update(
-                colrev_pdf_id=Record(data=record).get_colrev_pdf_id(path=pdf_path)
+                colrev_pdf_id=colrev_core.record.Record(data=record).get_colrev_pdf_id(
+                    path=pdf_path
+                )
             )
         return record
 
@@ -275,7 +291,7 @@ class PDF_Preparation(Process):
             [
                 r
                 for r in pdf_prep_record_list
-                if RecordState.pdf_prepared == r["colrev_status"]
+                if colrev_core.record.RecordState.pdf_prepared == r["colrev_status"]
             ]
         )
 

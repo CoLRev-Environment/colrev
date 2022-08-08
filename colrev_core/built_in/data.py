@@ -18,15 +18,14 @@ import requests
 import zope.interface
 from dacite import from_dict
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import ZoteroTranslationService
-from colrev_core.process import DataEndpoint
-from colrev_core.process import DefaultSettings
-from colrev_core.record import RecordState
-from colrev_core.status import Status
+import colrev_core.process
+import colrev_core.record
+import colrev_core.status
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class ManuscriptEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"
@@ -39,7 +38,9 @@ class ManuscriptEndpoint:
     the corresponding record will be marked as rev_synthesized."""
 
     def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_default_setup(self):
 
@@ -339,10 +340,12 @@ class ManuscriptEndpoint:
                 print(f"Error: {syn_ID} not int {synthesized_in_manuscript}")
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class StructuredDataEndpoint:
     def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_default_setup(self):
         structured_endpoint_details = {
@@ -469,10 +472,12 @@ class StructuredDataEndpoint:
                 print(f"Error: {syn_ID} not int " f"{synthesized_record_status_matrix}")
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class EndnoteEndpoint:
     def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_default_setup(self):
         endnote_endpoint_details = {
@@ -487,7 +492,9 @@ class EndnoteEndpoint:
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         def zotero_conversion(data):
 
-            ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
+            ZOTERO_TRANSLATION_SERVICE = (
+                colrev_core.environment.ZoteroTranslationService()
+            )
             ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
             headers = {"Content-type": "text/plain"}
@@ -528,7 +535,10 @@ class EndnoteEndpoint:
                 ID: r
                 for ID, r in records.items()
                 if r["colrev_status"]
-                in [RecordState.rev_included, RecordState.rev_synthesized]
+                in [
+                    colrev_core.record.RecordState.rev_included,
+                    colrev_core.record.RecordState.rev_synthesized,
+                ]
             }
 
             data = DATA.REVIEW_MANAGER.REVIEW_DATASET.parse_bibtex_str(
@@ -563,7 +573,10 @@ class EndnoteEndpoint:
                 ID: r
                 for ID, r in records.items()
                 if r["colrev_status"]
-                in [RecordState.rev_included, RecordState.rev_synthesized]
+                in [
+                    colrev_core.record.RecordState.rev_included,
+                    colrev_core.record.RecordState.rev_synthesized,
+                ]
             }
 
             if len(selected_records) > 0:
@@ -596,10 +609,12 @@ class EndnoteEndpoint:
             synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class PRISMAEndpoint:
     def __init__(self, *, DATA, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_default_setup(self):
         prisma_endpoint_details = {
@@ -623,7 +638,7 @@ class PRISMAEndpoint:
             os.remove(PRISMA_path)
         retrieve_package_file(PRISMA_resource_path, PRISMA_path)
 
-        STATUS = Status(REVIEW_MANAGER=DATA.REVIEW_MANAGER)
+        STATUS = colrev_core.status.Status(REVIEW_MANAGER=DATA.REVIEW_MANAGER)
         stat = STATUS.get_status_freq()
         # print(stat)
 
@@ -688,7 +703,7 @@ class ZettlrSettings:
     config: dict
 
 
-@zope.interface.implementer(DataEndpoint)
+@zope.interface.implementer(colrev_core.process.DataEndpoint)
 class ZettlrEndpoint:
 
     NEW_RECORD_SOURCE_TAG = "<!-- NEW_RECORD_SOURCE -->"

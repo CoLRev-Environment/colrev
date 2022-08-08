@@ -5,29 +5,21 @@ from multiprocessing import Value
 from pathos.multiprocessing import ProcessPool
 from tqdm import tqdm
 
-from colrev_core.built_in import prep as built_in_prep
-from colrev_core.prep import Preparation
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import PrepRecord
-from colrev_core.record import Record
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
+import colrev_core.built_in.prep as built_in_prep
+import colrev_core.cli_colors as colors
+import colrev_core.prep
+import colrev_core.process
+import colrev_core.record
 
 
 change_counter = None
 
 
-class Pull(Process):
+class Pull(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.explore,
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
@@ -72,7 +64,7 @@ class Pull(Process):
 
     def pull_records_from_crossref(self) -> None:
 
-        PREPARATION = Preparation(
+        PREPARATION = colrev_core.prep.Preparation(
             REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
@@ -86,7 +78,7 @@ class Pull(Process):
 
         change_counter = 0
         for record in tqdm(records.values()):
-            RECORD = PrepRecord(data=record)
+            RECORD = colrev_core.record.PrepRecord(data=record)
             PREVIOUS_RECORD = RECORD.copy_prep_rec()
             # TODO : use masterdata_is_curated() for identifying_fields_keys only?
             if "doi" in RECORD.data and not RECORD.masterdata_is_curated():
@@ -120,8 +112,8 @@ class Pull(Process):
                     for k, v in CROSSREF_RECORD.data.items():
                         if (
                             k
-                            not in Record.identifying_field_keys
-                            + Record.provenance_keys
+                            not in colrev_core.record.Record.identifying_field_keys
+                            + colrev_core.record.Record.provenance_keys
                             + ["ID", "ENTRYTYPE", "screening_criteria"]
                         ):
                             try:
@@ -160,7 +152,7 @@ class Pull(Process):
 
         self.REVIEW_MANAGER.logger.info("Pull records from LocalIndex")
 
-        PREPARATION = Preparation(
+        PREPARATION = colrev_core.prep.Preparation(
             REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
@@ -175,7 +167,7 @@ class Pull(Process):
             previouscolrev_pdf_id = record.get("colrev_pdf_id", "")
             prev_dblp_key = record.get("dblp_key", "")
 
-            RECORD = PrepRecord(data=record)
+            RECORD = colrev_core.record.PrepRecord(data=record)
             RETRIEVED_RECORD = LOCAL_INDEX_PREP.prepare(PREPARATION, RECORD)
             source_info = "LOCAL_INDEX"
             if "CURATED:" in RETRIEVED_RECORD.data.get(
@@ -201,7 +193,7 @@ class Pull(Process):
                 record["dblp_key"] = prev_dblp_key
             return record
 
-        PREPARATION = Preparation(
+        PREPARATION = colrev_core.prep.Preparation(
             REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         )
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()

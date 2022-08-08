@@ -4,23 +4,28 @@ import random
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PrescreenEndpoint
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class CustomPrescreen:
     def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_prescreen(slef, PRESCREEN, records: dict, split: list) -> dict:
 
         for record in records.values():
             if random.random() < 0.5:
-                record.update(colrev_status=RecordState.rev_prescreen_included)
+                record.update(
+                    colrev_status=colrev_core.record.RecordState.rev_prescreen_included
+                )
             else:
-                record.update(colrev_status=RecordState.rev_prescreen_excluded)
+                record.update(
+                    colrev_status=colrev_core.record.RecordState.rev_prescreen_excluded
+                )
 
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

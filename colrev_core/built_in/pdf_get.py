@@ -9,15 +9,16 @@ from dacite import from_dict
 from pdfminer.high_level import extract_text
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PDFRetrievalEndpoint
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(PDFRetrievalEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFRetrievalEndpoint)
 class UnpaywallEndpoint:
     def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def __unpaywall(
         self, *, REVIEW_MANAGER, doi: str, retry: int = 0, pdfonly: bool = True
@@ -93,7 +94,7 @@ class UnpaywallEndpoint:
                         )
                         RECORD.data.update(file=str(pdf_filepath))
                         RECORD.data.update(
-                            colrev_status=RecordState.rev_prescreen_included
+                            colrev_status=colrev_core.record.RecordState.rev_prescreen_included
                         )
                     else:
                         os.remove(pdf_filepath)
@@ -105,10 +106,12 @@ class UnpaywallEndpoint:
         return RECORD
 
 
-@zope.interface.implementer(PDFRetrievalEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFRetrievalEndpoint)
 class LocalIndexEndpoint:
     def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
         from colrev_core.environment import LocalIndex
@@ -129,10 +132,12 @@ class LocalIndexEndpoint:
         return RECORD
 
 
-@zope.interface.implementer(PDFRetrievalEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFRetrievalEndpoint)
 class WebsiteScreenshotEndpoint:
     def __init__(self, *, PDF_GET, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
         from colrev_core.environment import ScreenshotService

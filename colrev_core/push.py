@@ -5,17 +5,16 @@ from pathlib import Path
 import git
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import CheckProcess
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.review_manager import ReviewManager
+import colrev_core.process
+import colrev_core.record
+import colrev_core.review_manager
 
 
-class Push(Process):
+class Push(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.explore,
         )
 
     def main(self, *, records_only: bool = False, project_only: bool = False) -> None:
@@ -149,8 +148,12 @@ class Push(Process):
 
         # TBD: other modes of accepting changes?
         # e.g., only-metadata, no-changes, all(including optional fields)
-        check_REVIEW_MANAGER = ReviewManager(path_str=source_url)
-        CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=check_REVIEW_MANAGER)
+        check_REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+            path_str=source_url
+        )
+        CHECK_PROCESS = colrev_core.process.CheckProcess(
+            REVIEW_MANAGER=check_REVIEW_MANAGER
+        )
         REVIEW_DATASET = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET
         git_repo = REVIEW_DATASET.get_repo()
 
@@ -261,7 +264,7 @@ class Push(Process):
                     record[key] = value
                 # TODO : deal with remove/merge
 
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
             RECORD.add_colrev_ids(records=[record])
             cids = RECORD.get_data()["colrev_id"]
             record["colrev_id"] = cids

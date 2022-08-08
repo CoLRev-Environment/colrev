@@ -9,17 +9,18 @@ import zope.interface
 from dacite import from_dict
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import DefaultSettings
-from colrev_core.process import LoadEndpoint
+import colrev_core.process
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class BibPybtexLoader:
 
     supported_extensions = ["bib"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def load(self, LOADER, SOURCE):
         if SOURCE.filename.is_file():
@@ -104,12 +105,14 @@ class SpreadsheetLoadUtility:
         return records_dict
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class CSVLoader:
     supported_extensions = ["csv"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def load(self, LOADER, SOURCE):
 
@@ -133,13 +136,15 @@ class CSVLoader:
         )
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class ExcelLoader:
 
     supported_extensions = ["xls", "xlsx"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def load(self, LOADER, SOURCE):
 
@@ -165,7 +170,7 @@ class ExcelLoader:
         )
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class ZoteroTranslationLoader:
 
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
@@ -173,7 +178,9 @@ class ZoteroTranslationLoader:
     def __init__(self, *, LOAD, SETTINGS):
         from colrev_core.environment import ZoteroTranslationService
 
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
         self.ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
         self.ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
@@ -212,13 +219,15 @@ class ZoteroTranslationLoader:
         )
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class MarkdownLoader:
 
     supported_extensions = ["md"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def load(self, LOADER, SOURCE):
 
@@ -255,13 +264,15 @@ class MarkdownLoader:
         )
 
 
-@zope.interface.implementer(LoadEndpoint)
+@zope.interface.implementer(colrev_core.process.LoadEndpoint)
 class BibutilsLoader:
 
     supported_extensions = ["ris", "end", "enl", "copac", "isi", "med"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def load(self, LOADER, SOURCE):
         def bibutils_convert(script: str, data: str) -> str:

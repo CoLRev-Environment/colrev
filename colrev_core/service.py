@@ -10,17 +10,9 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
-from colrev_core.environment import GrobidService
-from colrev_core.environment import LocalIndex
-from colrev_core.status import Status
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
+import colrev_core.cli_colors as colors
+import colrev_core.environment
+import colrev_core.status
 
 
 class Event(LoggingEventHandler):
@@ -76,7 +68,7 @@ class Service:
         self.last_file_change_date = datetime.datetime.now()
         self.last_command_run_time = datetime.datetime.now()
 
-        self.logger = self.__setup_logger(level=logging.INFO)
+        self.logger = self.__setup_service_logger(level=logging.INFO)
 
         # already start LocalIndex and Grobid (asynchronously)
         self.start_services()
@@ -93,7 +85,7 @@ class Service:
         # TODO : setup search feed (querying all 5-10 minutes?)
 
         # get initial review instructions and add to queue
-        self.STATUS = Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
+        self.STATUS = colrev_core.status.Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
         stat = self.STATUS.get_status_freq()
         instructions = self.STATUS.get_review_instructions(stat=stat)
         for instruction in instructions:
@@ -118,25 +110,25 @@ class Service:
 
     def start_services(self):
         async def _start_grobid():
-            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE = colrev_core.environment.GrobidService()
             GROBID_SERVICE.start()
 
         async def _start_index():
-            LocalIndex()
+            colrev_core.environment.LocalIndex()
 
         asyncio.ensure_future(_start_grobid())
         asyncio.ensure_future(_start_index())
 
     # function to add commands to queue?
 
-    def __setup_logger(self, *, level=logging.INFO) -> logging.Logger:
-        logger = logging.getLogger("colrev_service")
+    def __setup_service_logger(self, *, level=logging.INFO) -> logging.Logger:
+        service_logger = logging.getLogger("colrev_service")
 
-        logger.setLevel(level)
+        service_logger.setLevel(level)
 
-        if logger.handlers:
-            for handler in logger.handlers:
-                logger.removeHandler(handler)
+        if service_logger.handlers:
+            for handler in service_logger.handlers:
+                service_logger.removeHandler(handler)
 
         formatter = logging.Formatter(
             fmt="%(asctime)s [%(levelname)s] CoLRev Service Bot: %(message)s",
@@ -146,10 +138,10 @@ class Service:
         handler.setFormatter(formatter)
         handler.setLevel(level)
 
-        logger.addHandler(handler)
-        logger.propagate = False
+        service_logger.addHandler(handler)
+        service_logger.propagate = False
 
-        return logger
+        return service_logger
 
     def worker(self):
         try:

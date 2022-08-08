@@ -2,14 +2,15 @@
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PDFRetrievalManualEndpoint
+import colrev_core.process
 
 
-@zope.interface.implementer(PDFRetrievalManualEndpoint)
+@zope.interface.implementer(colrev_core.process.PDFRetrievalManualEndpoint)
 class CoLRevCLIPDFRetrievalManual:
     def __init__(self, *, PDF_RETRIEVAL_MAN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def get_man_pdf(self, PDF_RETRIEVAL_MAN, records):
 

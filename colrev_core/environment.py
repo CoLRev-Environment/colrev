@@ -17,6 +17,7 @@ import typing
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
+from json import JSONDecodeError
 from pathlib import Path
 from threading import Timer
 
@@ -36,19 +37,14 @@ from opensearchpy.exceptions import NotFoundError
 from opensearchpy.exceptions import SerializationError
 from opensearchpy.exceptions import TransportError
 from pybtex.database.input import bibtex
-from simplejson.errors import JSONDecodeError
 from thefuzz import fuzz
 from tqdm import tqdm
 from yaml import safe_load
 from zope.interface.verify import verifyObject
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import CheckProcess
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
-from colrev_core.review_dataset import ReviewDataset
-from colrev_core.review_manager import ReviewManager
+import colrev_core.process
+import colrev_core.record
 
 # from lxml.etree import SerialisationError
 
@@ -105,7 +101,7 @@ class AdapterManager:
             ]["endpoint"]
             del scripts_dict[script_name]["settings"]["endpoint"]
 
-        if ProcessType.search == PROCESS.type:
+        if colrev_core.process.ProcessType.search == PROCESS.type:
             from colrev_core.process import SearchEndpoint
 
             for k, val in scripts_dict.items():
@@ -121,7 +117,7 @@ class AdapterManager:
                 )
                 verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.load == PROCESS.type:
+        elif colrev_core.process.ProcessType.load == PROCESS.type:
             from colrev_core.process import LoadEndpoint
 
             for k, val in scripts_dict.items():
@@ -135,7 +131,7 @@ class AdapterManager:
                 )
                 verifyObject(LoadEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.prep == PROCESS.type:
+        elif colrev_core.process.ProcessType.prep == PROCESS.type:
             from colrev_core.process import PreparationEndpoint
 
             for k, val in scripts_dict.items():
@@ -151,7 +147,7 @@ class AdapterManager:
                 )
                 verifyObject(PreparationEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.prep_man == PROCESS.type:
+        elif colrev_core.process.ProcessType.prep_man == PROCESS.type:
             from colrev_core.process import PreparationManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -167,7 +163,7 @@ class AdapterManager:
                 )
                 verifyObject(PreparationManualEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.dedupe == PROCESS.type:
+        elif colrev_core.process.ProcessType.dedupe == PROCESS.type:
             from colrev_core.process import DedupeEndpoint
 
             for k, val in scripts_dict.items():
@@ -183,7 +179,7 @@ class AdapterManager:
                 )
                 verifyObject(DedupeEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.prescreen == PROCESS.type:
+        elif colrev_core.process.ProcessType.prescreen == PROCESS.type:
             from colrev_core.process import PrescreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -199,7 +195,7 @@ class AdapterManager:
                 )
                 verifyObject(PrescreenEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.pdf_get == PROCESS.type:
+        elif colrev_core.process.ProcessType.pdf_get == PROCESS.type:
             from colrev_core.process import PDFRetrievalEndpoint
 
             for k, val in scripts_dict.items():
@@ -215,7 +211,7 @@ class AdapterManager:
                 )
                 verifyObject(PDFRetrievalEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.pdf_get_man == PROCESS.type:
+        elif colrev_core.process.ProcessType.pdf_get_man == PROCESS.type:
             from colrev_core.process import PDFRetrievalManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -231,7 +227,7 @@ class AdapterManager:
                 )
                 verifyObject(PDFRetrievalManualEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.pdf_prep == PROCESS.type:
+        elif colrev_core.process.ProcessType.pdf_prep == PROCESS.type:
             from colrev_core.process import PDFPreparationEndpoint
 
             for k, val in scripts_dict.items():
@@ -247,7 +243,7 @@ class AdapterManager:
                 )
                 verifyObject(PDFPreparationEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.pdf_prep_man == PROCESS.type:
+        elif colrev_core.process.ProcessType.pdf_prep_man == PROCESS.type:
             from colrev_core.process import PDFPreparationManualEndpoint
 
             for k, val in scripts_dict.items():
@@ -263,7 +259,7 @@ class AdapterManager:
                 )
                 verifyObject(PDFPreparationManualEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.screen == PROCESS.type:
+        elif colrev_core.process.ProcessType.screen == PROCESS.type:
             from colrev_core.process import ScreenEndpoint
 
             for k, val in scripts_dict.items():
@@ -279,7 +275,7 @@ class AdapterManager:
                 )
                 verifyObject(ScreenEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.data == PROCESS.type:
+        elif colrev_core.process.ProcessType.data == PROCESS.type:
             from colrev_core.process import DataEndpoint
 
             for k, val in scripts_dict.items():
@@ -293,7 +289,7 @@ class AdapterManager:
                 )
                 verifyObject(DataEndpoint, scripts_dict[endpoint_name])
 
-        elif ProcessType.check == PROCESS.type:
+        elif colrev_core.process.ProcessType.check == PROCESS.type:
             if "SearchSource" == script_type:
                 from colrev_core.process import SearchSourceEndpoint
 
@@ -407,7 +403,7 @@ class EnvironmentManager:
         print(f"Registered path ({path_to_register})")
 
     @classmethod
-    def get_name_mail_from_global_git_config(cls) -> list:
+    def get_name_mail_from_git(cls) -> list:
 
         ggit_conf_path = Path.home() / Path(".gitconfig")
         global_conf_details = []
@@ -462,6 +458,8 @@ class EnvironmentManager:
 
     def get_environment_details(self) -> dict:
 
+        import colrev_core.review_manager
+
         LOCAL_INDEX = LocalIndex()
 
         environment_details = {}
@@ -501,8 +499,12 @@ class EnvironmentManager:
         broken_links = []
         for repo in local_repos:
             try:
-                cp_REVIEW_MANAGER = ReviewManager(path_str=repo["repo_source_path"])
-                CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=cp_REVIEW_MANAGER)
+                cp_REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+                    path_str=repo["repo_source_path"]
+                )
+                CHECK_PROCESS = colrev_core.process.CheckProcess(
+                    REVIEW_MANAGER=cp_REVIEW_MANAGER
+                )
                 repo_stat = CHECK_PROCESS.REVIEW_MANAGER.get_status()
                 repo["size"] = repo_stat["colrev_status"]["overall"]["md_processed"]
                 if repo_stat["atomic_steps"] != 0:
@@ -729,7 +731,7 @@ class LocalIndex:
 
     def __get_record_hash(self, *, record: dict) -> str:
         # Note : may raise NotEnoughDataToIdentifyException
-        string_to_hash = Record(data=record).create_colrev_id()
+        string_to_hash = colrev_core.record.Record(data=record).create_colrev_id()
         return hashlib.sha256(string_to_hash.encode("utf-8")).hexdigest()
 
     def __increment_hash(self, *, paper_hash: str) -> str:
@@ -772,7 +774,7 @@ class LocalIndex:
             ):
                 pass
 
-        RECORD = Record(data=record)
+        RECORD = colrev_core.record.Record(data=record)
 
         if "colrev_status" in RECORD.data:
             del RECORD.data["colrev_status"]
@@ -801,9 +803,11 @@ class LocalIndex:
             )
             saved_record = saved_record_response["_source"]
 
-            SAVED_RECORD = Record(data=self.parse_record(record=saved_record))
+            SAVED_RECORD = colrev_core.record.Record(
+                data=self.parse_record(record=saved_record)
+            )
 
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
 
             # combine metadata_source_repository_paths in a semicolon-separated list
             metadata_source_repository_paths = RECORD.data[
@@ -821,8 +825,10 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
-                # source_info = Record(data=record).get_provenance_field_source(key=k)
-                source_info, _ = Record(data=record).get_field_provenance(
+                # source_info = colrev_core.record.Record(data=record).get_provenance_field_source(key=k)
+                source_info, _ = colrev_core.record.Record(
+                    data=record
+                ).get_field_provenance(
                     key=k,
                     default_source=RECORD.data.get(
                         "metadata_source_repository_paths", "None"
@@ -917,7 +923,7 @@ class LocalIndex:
         return fields_to_remove
 
     def __toc_index(self, *, record) -> None:
-        if not Record(data=record).masterdata_is_curated():
+        if not colrev_core.record.Record(data=record).masterdata_is_curated():
             return
 
         if record.get("ENTRYTYPE", "") in ["article", "inproceedings"]:
@@ -929,7 +935,9 @@ class LocalIndex:
 
             # print(toc_key)
             try:
-                record_colrev_id = Record(data=record).create_colrev_id()
+                record_colrev_id = colrev_core.record.Record(
+                    data=record
+                ).create_colrev_id()
 
                 if not self.os.exists(index=self.TOC_INDEX, id=toc_key):
                     toc_item = {
@@ -975,7 +983,12 @@ class LocalIndex:
                         id=paper_hash,
                     )
                     retrieved_record = res["_source"]
-                    if cid_to_retrieve in Record(data=retrieved_record).get_colrev_id():
+                    if (
+                        cid_to_retrieve
+                        in colrev_core.record.Record(
+                            data=retrieved_record
+                        ).get_colrev_id()
+                    ):
                         return retrieved_record
                     # Collision
                     paper_hash = self.__increment_hash(paper_hash=paper_hash)
@@ -1008,7 +1021,7 @@ class LocalIndex:
     def __retrieve_from_record_index(self, *, record: dict) -> dict:
         # Note : may raise NotEnoughDataToIdentifyException
 
-        RECORD = Record(data=record)
+        RECORD = colrev_core.record.Record(data=record)
         if "colrev_id" in RECORD.data:
             cid_to_retrieve = RECORD.get_colrev_id()
         else:
@@ -1022,6 +1035,7 @@ class LocalIndex:
         return retrieved_record
 
     def parse_record(self, *, record: dict) -> dict:
+        import colrev_core.review_dataset
 
         # Note : we need to parse it through parse_records_dict (pybtex / parse_string)
         # To make sure all fields are formatted /parsed consistently
@@ -1042,7 +1056,9 @@ class LocalIndex:
             + "}"
         )
         bib_data = parser.parse_string(load_str)
-        records_dict = ReviewDataset.parse_records_dict(records_dict=bib_data.entries)
+        records_dict = colrev_core.review_dataset.ReviewDataset.parse_records_dict(
+            records_dict=bib_data.entries
+        )
         record = list(records_dict.values())[0]
 
         return record
@@ -1089,7 +1105,7 @@ class LocalIndex:
             if "colref_pdf_id" in record:
                 del record["colref_pdf_id"]
 
-        record["colrev_status"] = RecordState.md_prepared
+        record["colrev_status"] = colrev_core.record.RecordState.md_prepared
 
         return record
 
@@ -1123,10 +1139,10 @@ class LocalIndex:
         # Note : it is important to exclude md_prepared if the LocalIndex
         # is used to dissociate duplicates
         if record["colrev_status"] in [
-            RecordState.md_retrieved,
-            RecordState.md_imported,
-            RecordState.md_prepared,
-            RecordState.md_needs_manual_preparation,
+            colrev_core.record.RecordState.md_retrieved,
+            colrev_core.record.RecordState.md_imported,
+            colrev_core.record.RecordState.md_prepared,
+            colrev_core.record.RecordState.md_needs_manual_preparation,
         ]:
             return
 
@@ -1137,10 +1153,10 @@ class LocalIndex:
         # Note: if the colrev_pdf_id has not been checked,
         # we cannot use it for retrieval or preparation.
         if record["colrev_status"] not in [
-            RecordState.pdf_prepared,
-            RecordState.rev_excluded,
-            RecordState.rev_included,
-            RecordState.rev_synthesized,
+            colrev_core.record.RecordState.pdf_prepared,
+            colrev_core.record.RecordState.rev_excluded,
+            colrev_core.record.RecordState.rev_included,
+            colrev_core.record.RecordState.rev_synthesized,
         ]:
             if "colrev_pdf_id" in record:
                 del record["colrev_pdf_id"]
@@ -1174,13 +1190,15 @@ class LocalIndex:
 
         try:
 
-            cid_to_index = Record(data=record).create_colrev_id()
+            cid_to_index = colrev_core.record.Record(data=record).create_colrev_id()
             paper_hash = self.__get_record_hash(record=record)
 
             try:
                 # check if the record is already indexed (based on d)
                 retrieved_record = self.retrieve(record=record, include_colrev_ids=True)
-                retrieved_record_cid = Record(data=retrieved_record).get_colrev_id()
+                retrieved_record_cid = colrev_core.record.Record(
+                    data=retrieved_record
+                ).get_colrev_id()
 
                 # if colrev_ids not identical (but overlapping): amend
                 if not set(retrieved_record_cid).isdisjoint([cid_to_index]):
@@ -1207,9 +1225,9 @@ class LocalIndex:
                     id=paper_hash,
                 )
                 saved_record = saved_record_response["_source"]
-                saved_record_cid = Record(data=saved_record).create_colrev_id(
-                    assume_complete=True
-                )
+                saved_record_cid = colrev_core.record.Record(
+                    data=saved_record
+                ).create_colrev_id(assume_complete=True)
                 if saved_record_cid == cid_to_index:
                     # ok - no collision, update the record
                     # Note : do not update (the record from the first repository
@@ -1240,6 +1258,7 @@ class LocalIndex:
         return
 
     def index_colrev_project(self, *, repo_source_path):
+        import colrev_core.review_manager
 
         try:
             if not Path(repo_source_path).is_dir():
@@ -1248,8 +1267,12 @@ class LocalIndex:
 
             print(f"Index records from {repo_source_path}")
             os.chdir(repo_source_path)
-            REVIEW_MANAGER = ReviewManager(path_str=str(repo_source_path))
-            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=REVIEW_MANAGER)
+            REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+                path_str=str(repo_source_path)
+            )
+            CHECK_PROCESS = colrev_core.process.CheckProcess(
+                REVIEW_MANAGER=REVIEW_MANAGER
+            )
             if not CHECK_PROCESS.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
                 return
             records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -1274,7 +1297,7 @@ class LocalIndex:
             ) in CHECK_PROCESS.REVIEW_MANAGER.settings.project.curated_fields:
 
                 for record in records.values():
-                    Record(data=record).add_data_provenance(
+                    colrev_core.record.Record(data=record).add_data_provenance(
                         key=curated_field, source=f"CURATED:{curation_url}"
                     )
 
@@ -1393,7 +1416,9 @@ class LocalIndex:
             try:
                 # TODO : we need to search tocs even if records are not complete:
                 # and a NotEnoughDataToIdentifyException is thrown
-                record_colrev_id = Record(data=record).create_colrev_id()
+                record_colrev_id = colrev_core.record.Record(
+                    data=record
+                ).create_colrev_id()
                 sim_list = []
                 for toc_records_colrev_id in toc_items:
                     # Note : using a simpler similarity measure
@@ -1557,8 +1582,10 @@ class LocalIndex:
             # are not available in the integrated record
 
             colrev_ids_overlap = not set(
-                Record(data=r1_index).get_colrev_id()
-            ).isdisjoint(list(list(Record(data=r2_index).get_colrev_id())))
+                colrev_core.record.Record(data=r1_index).get_colrev_id()
+            ).isdisjoint(
+                list(list(colrev_core.record.Record(data=r2_index).get_colrev_id()))
+            )
 
             if same_repository:
                 if colrev_ids_overlap:
@@ -1808,7 +1835,9 @@ class ScreenshotService:
                 value=str(pdf_filepath),
                 source="browserless/chrome screenshot",
             )
-            RECORD.data.update(colrev_status=RecordState.rev_prescreen_included)
+            RECORD.data.update(
+                colrev_status=colrev_core.record.RecordState.rev_prescreen_included
+            )
             RECORD.update_field(
                 key="urldate", value=urldate, source="browserless/chrome screenshot"
             )
@@ -2532,12 +2561,13 @@ class TEIParser:
             max_sim_record = {}
             for local_record in records:
                 if local_record["status"] not in [
-                    RecordState.rev_included,
-                    RecordState.rev_synthesized,
+                    colrev_core.record.RecordState.rev_included,
+                    colrev_core.record.RecordState.rev_synthesized,
                 ]:
                     continue
-                rec_sim = Record.get_record_similarity(
-                    RECORD_A=Record(data=record), RECORD_B=Record(data=local_record)
+                rec_sim = colrev_core.record.Record.get_record_similarity(
+                    RECORD_A=colrev_core.record.Record(data=record),
+                    RECORD_B=colrev_core.record.Record(data=local_record),
                 )
                 if rec_sim > max_sim:
                     max_sim_record = local_record

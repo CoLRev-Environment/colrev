@@ -5,14 +5,13 @@ from pathlib import Path
 
 import pandas as pd
 
-from colrev_core.built_in import pdf_get_man as built_in_pdf_get_man
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import RecordState
+import colrev_core.built_in.pdf_get_man as built_in_pdf_get_man
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
 
 
-class PDFRetrievalMan(Process):
+class PDFRetrievalMan(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_pdf_get_man": {
@@ -24,14 +23,14 @@ class PDFRetrievalMan(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.pdf_get_man,
+            process_type=colrev_core.process.ProcessType.pdf_get_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
         self.verbose = True
         self.pdf_get_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_get.man_pdf_get_scripts,
         )
@@ -39,7 +38,10 @@ class PDFRetrievalMan(Process):
     def get_pdf_get_man(self, *, records: typing.Dict) -> list:
         missing_records = []
         for record in records.values():
-            if record["colrev_status"] == RecordState.pdf_needs_manual_retrieval:
+            if (
+                record["colrev_status"]
+                == colrev_core.record.RecordState.pdf_needs_manual_retrieval
+            ):
                 missing_records.append(record)
         return missing_records
 
@@ -79,12 +81,17 @@ class PDFRetrievalMan(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.pdf_needs_manual_retrieval) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.pdf_needs_manual_retrieval)
+                == x["colrev_status"]
             ]
         )
         PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.pdf_needs_manual_retrieval}]
+            conditions=[
+                {
+                    "colrev_status": colrev_core.record.RecordState.pdf_needs_manual_retrieval
+                }
+            ]
         )
         pdf_get_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(

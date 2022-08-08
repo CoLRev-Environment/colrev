@@ -7,16 +7,16 @@ from dacite import from_dict
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PreparationManualEndpoint
-from colrev_core.record import PrepRecord
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(PreparationManualEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationManualEndpoint)
 class CoLRevCLIManPrep:
     def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def prepare_manual(self, PREP_MAN, records):
 
@@ -27,10 +27,12 @@ class CoLRevCLIManPrep:
         return records
 
 
-@zope.interface.implementer(PreparationManualEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationManualEndpoint)
 class ExportManPrep:
     def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def prepare_manual(self, PREP_MAN, records):
 
@@ -65,7 +67,8 @@ class ExportManPrep:
             man_prep_recs = {
                 k: v
                 for k, v in records.items()
-                if RecordState.md_needs_manual_preparation == v["colrev_status"]
+                if colrev_core.record.RecordState.md_needs_manual_preparation
+                == v["colrev_status"]
             }
             PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=man_prep_recs, save_path=export_path
@@ -89,12 +92,14 @@ class ExportManPrep:
 
                 records = PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
                 for ID, record in man_prep_recs.items():
-                    RECORD = PrepRecord(data=record)
+                    RECORD = colrev_core.record.PrepRecord(data=record)
                     RECORD.update_masterdata_provenance(
                         UNPREPARED_RECORD=RECORD.copy(),
                         REVIEW_MANAGER=PREP_MAN.REVIEW_MANAGER,
                     )
-                    RECORD.set_status(target_state=RecordState.md_prepared)
+                    RECORD.set_status(
+                        target_state=colrev_core.record.RecordState.md_prepared
+                    )
                     for k in list(RECORD.data.keys()):
                         if k in ["colrev_status"]:
                             continue
@@ -125,10 +130,12 @@ class ExportManPrep:
         return records
 
 
-@zope.interface.implementer(PreparationManualEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationManualEndpoint)
 class CurationJupyterNotebookManPrep:
     def __init__(self, *, PREP_MAN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
         Path("prep_man").mkdir(exist_ok=True)
         if not Path("prep_man/prep_man_curation.ipynb").is_file():

@@ -13,22 +13,12 @@ from dacite import from_dict
 from thefuzz import fuzz
 from tqdm import tqdm
 
+import colrev_core.built_in.pdf_prep
+import colrev_core.cli_colors as colors
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in.pdf_prep import PDFMetadataValidationEndpoint
-from colrev_core.pdf_prep import PDF_Preparation
-from colrev_core.process import DedupeEndpoint
-from colrev_core.process import DefaultSettings
-from colrev_core.record import PrepRecord
-from colrev_core.record import Record
-from colrev_core.record import RecordState
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
+import colrev_core.pdf_prep
+import colrev_core.process
+import colrev_core.record
 
 
 @dataclass
@@ -38,7 +28,7 @@ class SimpleDedupeSettings:
     MERGING_DUP_THRESHOLD: float
 
 
-@zope.interface.implementer(DedupeEndpoint)
+@zope.interface.implementer(colrev_core.process.DedupeEndpoint)
 class SimpleDedupeEndpoint:
     """Simple duplicate identification when the sample size is too small"""
 
@@ -67,7 +57,7 @@ class SimpleDedupeEndpoint:
         sim_col = records_df.columns.get_loc("similarity")
         details_col = records_df.columns.get_loc("details")
         for base_record_i in range(0, records_df.shape[0]):
-            sim_details = Record.get_similarity_detailed(
+            sim_details = colrev_core.record.Record.get_similarity_detailed(
                 df_a=records_df.iloc[base_record_i], df_b=records_df.iloc[-1]
             )
             DEDUPE.REVIEW_MANAGER.report_logger.debug(
@@ -206,16 +196,16 @@ class SimpleDedupeEndpoint:
         IDs_to_dedupe = [
             x["ID"]
             for x in record_state_list
-            if x["colrev_status"] == str(RecordState.md_prepared)
+            if x["colrev_status"] == str(colrev_core.record.RecordState.md_prepared)
         ]
         processed_IDs = [
             x["ID"]
             for x in record_state_list
             if x["colrev_status"]
             not in [
-                str(RecordState.md_imported),
-                str(RecordState.md_prepared),
-                str(RecordState.md_needs_manual_preparation),
+                str(colrev_core.record.RecordState.md_imported),
+                str(colrev_core.record.RecordState.md_prepared),
+                str(colrev_core.record.RecordState.md_needs_manual_preparation),
             ]
         ]
 
@@ -339,10 +329,12 @@ class SimpleDedupeEndpoint:
 # # https://github.com/dedupeio/dedupe-examples/blob/master/csv_example/csv_example.py
 
 
-@zope.interface.implementer(DedupeEndpoint)
+@zope.interface.implementer(colrev_core.process.DedupeEndpoint)
 class ActiveLearningDedupeTrainingEndpoint:
     def __init__(self, *, DEDUPE, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def apply_active_learning(self, *, DEDUPE, results, saved_args):
 
@@ -539,7 +531,6 @@ class ActiveLearningDedupeTrainingEndpoint:
         > deduper.prepare_training(data)
         > dedupe.console_label(deduper)
         """
-        from dedupe._typing import Literal
         from dedupe._typing import TrainingData
         from dedupe._typing import RecordDictPair as TrainingExample
 
@@ -563,7 +554,9 @@ class ActiveLearningDedupeTrainingEndpoint:
 
         buffer_len = 1  # Max number of previous operations
         examples_buffer: typing.List[
-            typing.Tuple[TrainingExample, Literal["match", "distinct", "uncertain"]]
+            typing.Tuple[
+                TrainingExample, typing.Literal["match", "distinct", "uncertain"]
+            ]
         ] = []
         uncertain_pairs: typing.List[TrainingExample] = []
 
@@ -735,7 +728,7 @@ class ActiveLearningSettings:
     partition_threshold: float
 
 
-@zope.interface.implementer(DedupeEndpoint)
+@zope.interface.implementer(colrev_core.process.DedupeEndpoint)
 class ActiveLearningDedupeAutomatedEndpoint:
     def __init__(self, *, DEDUPE, SETTINGS):
 
@@ -1193,7 +1186,7 @@ class CurationDedupeSettings:
     selected_source: str
 
 
-@zope.interface.implementer(DedupeEndpoint)
+@zope.interface.implementer(colrev_core.process.DedupeEndpoint)
 class CurationDedupeEndpoint:
     """Deduplication endpoint for curations with full journals/proceedings
     retrieved from different sources (identifying duplicates in groups of
@@ -1372,7 +1365,7 @@ class CurationDedupeEndpoint:
         source_records = [
             r
             for r in records.values()
-            if r["colrev_status"] == RecordState.md_prepared
+            if r["colrev_status"] == colrev_core.record.RecordState.md_prepared
             and self.SETTINGS.selected_source.replace("search/", "")
             in r["colrev_origin"]
         ]
@@ -1396,10 +1389,10 @@ class CurationDedupeEndpoint:
                     if all(r.get(k, "NA") == v for k, v in toc_item.items())
                     and r["colrev_status"]
                     not in [
-                        RecordState.md_prepared,
-                        RecordState.md_needs_manual_preparation,
-                        RecordState.md_imported,
-                        RecordState.rev_prescreen_excluded,
+                        colrev_core.record.RecordState.md_prepared,
+                        colrev_core.record.RecordState.md_needs_manual_preparation,
+                        colrev_core.record.RecordState.md_imported,
+                        colrev_core.record.RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     in r["colrev_origin"]
@@ -1422,7 +1415,9 @@ class CurationDedupeEndpoint:
                     ):
                         for sr in source_records:
                             if all(sr.get(k, "NA") == v for k, v in toc_item.items()):
-                                sr["colrev_status"] = RecordState.md_processed
+                                sr[
+                                    "colrev_status"
+                                ] = colrev_core.record.RecordState.md_processed
                 else:
                     print(toc_item)
                     print("Pre-imported records found for this toc_item (skipping)")
@@ -1482,10 +1477,10 @@ class CurationDedupeEndpoint:
                     if all(r.get(k, "NA") == v for k, v in toc_item.items())
                     and r["colrev_status"]
                     not in [
-                        RecordState.md_imported,
-                        RecordState.md_needs_manual_preparation,
-                        RecordState.md_prepared,
-                        RecordState.rev_prescreen_excluded,
+                        colrev_core.record.RecordState.md_imported,
+                        colrev_core.record.RecordState.md_needs_manual_preparation,
+                        colrev_core.record.RecordState.md_prepared,
+                        colrev_core.record.RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     not in r["colrev_origin"]
@@ -1499,9 +1494,11 @@ class CurationDedupeEndpoint:
                     # print(new_same_toc_records)
                     for new_same_toc_record in new_same_toc_records:
                         for rec2 in processed_same_toc_records:
-                            overlapping_colrev_ids = Record(
+                            overlapping_colrev_ids = colrev_core.record.Record(
                                 data=new_same_toc_record
-                            ).has_overlapping_colrev_id(RECORD=Record(data=rec2))
+                            ).has_overlapping_colrev_id(
+                                RECORD=colrev_core.record.Record(data=rec2)
+                            )
                             if overlapping_colrev_ids:
                                 decision_list.append(
                                     {
@@ -1516,8 +1513,10 @@ class CurationDedupeEndpoint:
         else:
             DEDUPE.REVIEW_MANAGER.logger.info("Processing as a pdf source")
 
-            PDF_PREPARATION = PDF_Preparation(REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER)
-            PDF_METADATA_VALIDATION = PDFMetadataValidationEndpoint(
+            PDF_PREPARATION = colrev_core.pdf_prep.PDF_Preparation(
+                REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER
+            )
+            PDF_METADATA_VALIDATION = colrev_core.process.PDFMetadataValidationEndpoint(
                 PDF_PREPARATION=PDF_PREPARATION,
                 SETTINGS={"name": "dedupe_pdf_md_validation"},
             )
@@ -1530,10 +1529,10 @@ class CurationDedupeEndpoint:
                     if all(r.get(k, "NA") == v for k, v in toc_item.items())
                     and r["colrev_status"]
                     not in [
-                        RecordState.md_imported,
-                        RecordState.md_needs_manual_preparation,
-                        RecordState.md_prepared,
-                        RecordState.rev_prescreen_excluded,
+                        colrev_core.record.RecordState.md_imported,
+                        colrev_core.record.RecordState.md_needs_manual_preparation,
+                        colrev_core.record.RecordState.md_prepared,
+                        colrev_core.record.RecordState.rev_prescreen_excluded,
                     ]
                     and self.SETTINGS.selected_source.replace("search/", "")
                     not in r["colrev_origin"]
@@ -1587,7 +1586,7 @@ class CurationDedupeEndpoint:
                     else:  # None of the records is curated
                         continue
 
-                    RECORD = Record(data=updated_record)
+                    RECORD = colrev_core.record.Record(data=updated_record)
                     validation_info = (
                         PDF_METADATA_VALIDATION.validates_based_on_metadata(
                             REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER,
@@ -1595,9 +1594,11 @@ class CurationDedupeEndpoint:
                         )
                     )
 
-                    overlapping_colrev_ids = Record(
+                    overlapping_colrev_ids = colrev_core.record.Record(
                         data=rec1
-                    ).has_overlapping_colrev_id(RECORD=Record(data=rec2))
+                    ).has_overlapping_colrev_id(
+                        RECORD=colrev_core.record.Record(data=rec2)
+                    )
                     if validation_info["validates"] or overlapping_colrev_ids:
 
                         # Note : make sure that we merge into the CURATED record
@@ -1646,10 +1647,12 @@ class CurationDedupeEndpoint:
         return
 
 
-@zope.interface.implementer(DedupeEndpoint)
+@zope.interface.implementer(colrev_core.process.DedupeEndpoint)
 class CurationMissingDedupeEndpoint:
     def __init__(self, *, DEDUPE, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_dedupe(self, DEDUPE):
 
@@ -1677,7 +1680,7 @@ class CurationMissingDedupeEndpoint:
             [
                 x
                 for x in records.values()
-                if x["colrev_status"] in [RecordState.md_prepared]
+                if x["colrev_status"] in [colrev_core.record.RecordState.md_prepared]
             ]
         )
         nr_recs_checked = 0
@@ -1685,21 +1688,23 @@ class CurationMissingDedupeEndpoint:
         add_records_to_md_processed_list = []
         records_to_prepare = []
         for record in records.values():
-            if record["colrev_status"] not in [RecordState.md_prepared]:
+            if record["colrev_status"] not in [
+                colrev_core.record.RecordState.md_prepared
+            ]:
                 continue
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
 
             toc_key = RECORD.get_toc_key()
             same_toc_recs = [
                 r
                 for r in records.values()
-                if toc_key == Record(data=r).get_toc_key()
+                if toc_key == colrev_core.record.Record(data=r).get_toc_key()
                 if r["ID"] != RECORD.data["ID"]
                 and r["colrev_status"]
                 not in [
-                    RecordState.md_prepared,
-                    RecordState.md_needs_manual_preparation,
-                    RecordState.md_imported,
+                    colrev_core.record.RecordState.md_prepared,
+                    colrev_core.record.RecordState.md_needs_manual_preparation,
+                    colrev_core.record.RecordState.md_imported,
                 ]
             ]
 
@@ -1713,8 +1718,8 @@ class CurationMissingDedupeEndpoint:
             print("\033[0m")
 
             for r in same_toc_recs:
-                r["similarity"] = PrepRecord.get_record_similarity(
-                    RECORD_A=Record(data=r), RECORD_B=RECORD
+                r["similarity"] = colrev_core.record.PrepRecord.get_record_similarity(
+                    RECORD_A=colrev_core.record.Record(data=r), RECORD_B=RECORD
                 )
 
             same_toc_recs = sorted(
@@ -1775,9 +1780,9 @@ class CurationMissingDedupeEndpoint:
             records = DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
             for ID, record in records.items():
                 if ID in records_to_prepare:
-                    RECORD = Record(data=record)
+                    RECORD = colrev_core.record.Record(data=record)
                     RECORD.set_status(
-                        target_state=RecordState.md_needs_manual_preparation
+                        target_state=colrev_core.record.RecordState.md_needs_manual_preparation
                     )
 
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
@@ -1797,12 +1802,14 @@ class CurationMissingDedupeEndpoint:
             for ID, record in records.items():
                 if ID in add_records_to_md_processed_list:
                     if record["colrev_status"] in [
-                        RecordState.md_prepared,
-                        RecordState.md_needs_manual_preparation,
-                        RecordState.md_imported,
+                        colrev_core.record.RecordState.md_prepared,
+                        colrev_core.record.RecordState.md_needs_manual_preparation,
+                        colrev_core.record.RecordState.md_imported,
                     ]:
-                        RECORD = Record(data=record)
-                        RECORD.set_status(target_state=RecordState.md_processed)
+                        RECORD = colrev_core.record.Record(data=record)
+                        RECORD.set_status(
+                            target_state=colrev_core.record.RecordState.md_processed
+                        )
 
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -1834,9 +1841,9 @@ class CurationMissingDedupeEndpoint:
                 if source_origin in r["colrev_origin"]
                 and r["colrev_status"]
                 in [
-                    RecordState.md_prepared,
-                    RecordState.md_needs_manual_preparation,
-                    RecordState.md_imported,
+                    colrev_core.record.RecordState.md_prepared,
+                    colrev_core.record.RecordState.md_needs_manual_preparation,
+                    colrev_core.record.RecordState.md_imported,
                 ]
             ]
             records_df = pd.DataFrame.from_records(list(selected_records))

@@ -20,13 +20,9 @@ from git.exc import GitCommandError
 from tqdm import tqdm
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import FormatProcess
-from colrev_core.process import ProcessModel
-from colrev_core.record import PrepRecord
-from colrev_core.record import Record
-from colrev_core.record import RecordState
-from colrev_core.settings import IDPpattern
-from colrev_core.settings import SearchType
+import colrev_core.process
+import colrev_core.record
+import colrev_core.settings
 
 
 class ReviewDataset:
@@ -82,7 +78,7 @@ class ReviewDataset:
         self,
         *,
         original_records: typing.List[typing.Dict],
-        condition_state: RecordState,
+        condition_state: colrev_core.record.RecordState,
     ) -> typing.List:
 
         prior_records = []
@@ -212,14 +208,14 @@ class ReviewDataset:
                 **dict(
                     {
                         # Cast status to Enum
-                        k: RecordState[v] if ("colrev_status" == k)
+                        k: colrev_core.record.RecordState[v] if ("colrev_status" == k)
                         # DOIs are case sensitive -> use upper case.
                         else v.upper()
                         if ("doi" == k)
                         else [el.rstrip() for el in (v + " ").split("; ") if "" != el]
-                        if k in Record.list_fields_keys
+                        if k in colrev_core.record.Record.list_fields_keys
                         else ReviewDataset.load_field_dict(value=v, field=k)
-                        if k in Record.dict_fields_keys
+                        if k in colrev_core.record.Record.dict_fields_keys
                         else v
                         for k, v in v.fields.items()
                     }
@@ -302,7 +298,7 @@ class ReviewDataset:
 
             records_dict = {
                 r["ID"]: {
-                    k: RecordState[v]
+                    k: colrev_core.record.RecordState[v]
                     if ("colrev_status" == k)
                     else v.upper()
                     if ("doi" == k)
@@ -360,7 +356,7 @@ class ReviewDataset:
                 "editor",
             ]
 
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
             record = RECORD.get_data(stringify=True)
 
             for ordered_field in field_order:
@@ -453,7 +449,7 @@ class ReviewDataset:
 
         for record_ID in list(records.keys()):
             record = records[record_ID]
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
             if RECORD.masterdata_is_curated():
                 continue
             self.REVIEW_MANAGER.logger.debug(f"Set ID for {record_ID}")
@@ -461,8 +457,8 @@ class ReviewDataset:
                 if record_ID not in selected_IDs:
                     continue
             elif str(record["colrev_status"]) not in [
-                str(RecordState.md_imported),
-                str(RecordState.md_prepared),
+                str(colrev_core.record.RecordState.md_imported),
+                str(colrev_core.record.RecordState.md_prepared),
             ]:
                 continue
 
@@ -559,7 +555,7 @@ class ReviewDataset:
 
             if "" != record.get("author", record.get("editor", "")):
                 authors_string = record.get("author", record.get("editor", "Anonymous"))
-                authors = PrepRecord.format_author_field(
+                authors = colrev_core.record.PrepRecord.format_author_field(
                     input_string=authors_string
                 ).split(" and ")
             else:
@@ -574,12 +570,12 @@ class ReviewDataset:
 
             ID_PATTERN = self.REVIEW_MANAGER.settings.project.id_pattern
 
-            if IDPpattern.first_author_year == ID_PATTERN:
+            if colrev_core.settings.IDPpattern.first_author_year == ID_PATTERN:
                 temp_ID = (
                     f'{author.replace(" ", "")}{str(record.get("year", "NoYear"))}'
                 )
 
-            if IDPpattern.three_authors_year == ID_PATTERN:
+            if colrev_core.settings.IDPpattern.three_authors_year == ID_PATTERN:
                 temp_ID = ""
                 indices = len(authors)
                 if len(authors) > 3:
@@ -875,7 +871,9 @@ class ReviewDataset:
 
     def format_records_file(self) -> bool:
 
-        FormatProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)  # to notify
+        colrev_core.process.FormatProcess(
+            REVIEW_MANAGER=self.REVIEW_MANAGER
+        )  # to notify
 
         records = self.load_records_dict()
         for record in records.values():
@@ -883,17 +881,17 @@ class ReviewDataset:
                 print(f'Error: no status field in record ({record["ID"]})')
                 continue
 
-            RECORD = PrepRecord(data=record)
+            RECORD = colrev_core.record.PrepRecord(data=record)
 
             if record["colrev_status"] in [
-                RecordState.md_needs_manual_preparation,
+                colrev_core.record.RecordState.md_needs_manual_preparation,
             ]:
                 RECORD.update_masterdata_provenance(
                     UNPREPARED_RECORD=RECORD, REVIEW_MANAGER=self.REVIEW_MANAGER
                 )
                 RECORD.update_metadata_status(REVIEW_MANAGER=self.REVIEW_MANAGER)
 
-            if record["colrev_status"] == RecordState.pdf_prepared:
+            if record["colrev_status"] == colrev_core.record.RecordState.pdf_prepared:
                 RECORD.reset_pdf_provenance_notes()
 
             record = RECORD.get_data()
@@ -956,17 +954,17 @@ class ReviewDataset:
                     data["origin_list"].append([ID, org])
 
                 if status in [
-                    str(RecordState.md_processed),
-                    str(RecordState.rev_prescreen_excluded),
-                    str(RecordState.rev_prescreen_included),
-                    str(RecordState.pdf_needs_manual_retrieval),
-                    str(RecordState.pdf_imported),
-                    str(RecordState.pdf_not_available),
-                    str(RecordState.pdf_needs_manual_preparation),
-                    str(RecordState.pdf_prepared),
-                    str(RecordState.rev_excluded),
-                    str(RecordState.rev_included),
-                    str(RecordState.rev_synthesized),
+                    str(colrev_core.record.RecordState.md_processed),
+                    str(colrev_core.record.RecordState.rev_prescreen_excluded),
+                    str(colrev_core.record.RecordState.rev_prescreen_included),
+                    str(colrev_core.record.RecordState.pdf_needs_manual_retrieval),
+                    str(colrev_core.record.RecordState.pdf_imported),
+                    str(colrev_core.record.RecordState.pdf_not_available),
+                    str(colrev_core.record.RecordState.pdf_needs_manual_preparation),
+                    str(colrev_core.record.RecordState.pdf_prepared),
+                    str(colrev_core.record.RecordState.rev_excluded),
+                    str(colrev_core.record.RecordState.rev_included),
+                    str(colrev_core.record.RecordState.rev_synthesized),
                 ]:
                     for origin_part in origin.split(";"):
                         data["persisted_IDs"].append([origin_part, ID])
@@ -1003,17 +1001,21 @@ class ReviewDataset:
                 else:
                     proc_transition_list: list = [
                         x["trigger"]
-                        for x in ProcessModel.transitions
+                        for x in colrev_core.process.ProcessModel.transitions
                         if str(x["source"]) == prior_status[0]
                         and str(x["dest"]) == status
                     ]
                     if len(proc_transition_list) == 0 and prior_status[0] != status:
                         data["start_states"].append(prior_status[0])
-                        if prior_status[0] not in [str(x) for x in RecordState]:
+                        if prior_status[0] not in [
+                            str(x) for x in colrev_core.record.RecordState
+                        ]:
                             raise colrev_exceptions.StatusFieldValueError(
                                 ID, "colrev_status", prior_status[0]
                             )
-                        if status not in [str(x) for x in RecordState]:
+                        if status not in [
+                            str(x) for x in colrev_core.record.RecordState
+                        ]:
                             raise colrev_exceptions.StatusFieldValueError(
                                 ID, "colrev_status", status
                             )
@@ -1057,7 +1059,7 @@ class ReviewDataset:
             if "NA" != ID:
                 for orig in origin.split(";"):
                     prior["colrev_status"].append([orig, status])
-                    if str(RecordState.md_processed) == status:
+                    if str(colrev_core.record.RecordState.md_processed) == status:
                         prior["persisted_IDs"].append([orig, ID])
 
             else:
@@ -1100,7 +1102,7 @@ class ReviewDataset:
         self, *, indexed_record_dict: dict, records: typing.List[typing.Dict]
     ) -> dict:
 
-        INDEXED_RECORD = Record(data=indexed_record_dict)
+        INDEXED_RECORD = colrev_core.record.Record(data=indexed_record_dict)
 
         if "colrev_id" in INDEXED_RECORD.data:
             cid_to_retrieve = INDEXED_RECORD.get_colrev_id()
@@ -1110,7 +1112,10 @@ class ReviewDataset:
         record_l = [
             x
             for x in records
-            if any(cid in Record(data=x).get_colrev_id() for cid in cid_to_retrieve)
+            if any(
+                cid in colrev_core.record.Record(data=x).get_colrev_id()
+                for cid in cid_to_retrieve
+            )
         ]
         if len(record_l) != 1:
             raise colrev_exceptions.RecordNotInRepoException
@@ -1123,7 +1128,7 @@ class ReviewDataset:
         if len(recs_dict) > 0:
             origin_records = self.load_origin_records()
             for rec in tqdm(recs_dict.values()):
-                RECORD = Record(data=rec)
+                RECORD = colrev_core.record.Record(data=rec)
                 try:
                     colrev_id = RECORD.create_colrev_id()
                     RECORD.data["colrev_id"] = [colrev_id]
@@ -1155,12 +1160,12 @@ class ReviewDataset:
 
         # excluding pdf_not_available
         file_required_status = [
-            str(RecordState.pdf_imported),
-            str(RecordState.pdf_needs_manual_preparation),
-            str(RecordState.pdf_prepared),
-            str(RecordState.rev_excluded),
-            str(RecordState.rev_included),
-            str(RecordState.rev_synthesized),
+            str(colrev_core.record.RecordState.pdf_imported),
+            str(colrev_core.record.RecordState.pdf_needs_manual_preparation),
+            str(colrev_core.record.RecordState.pdf_prepared),
+            str(colrev_core.record.RecordState.rev_excluded),
+            str(colrev_core.record.RecordState.rev_included),
+            str(colrev_core.record.RecordState.rev_synthesized),
         ]
         missing_files = []
         if self.REVIEW_MANAGER.paths["RECORDS_FILE"].is_file():
@@ -1264,7 +1269,7 @@ class ReviewDataset:
 
     def check_fields(self, *, data: dict) -> None:
         # Check status fields
-        status_schema = [str(x) for x in RecordState]
+        status_schema = [str(x) for x in colrev_core.record.RecordState]
         stat_diff = set(data["status_fields"]).difference(status_schema)
         if stat_diff:
             raise colrev_exceptions.FieldValueError(
@@ -1386,7 +1391,9 @@ class ReviewDataset:
                     # after the previous condition, we know that the curated record
                     # has been corrected
                     corrected_curated_record = curated_record.copy()
-                    if Record(data=corrected_curated_record).masterdata_is_curated():
+                    if colrev_core.record.Record(
+                        data=corrected_curated_record
+                    ).masterdata_is_curated():
                         # retrieve record from index to identify origin repositories
                         try:
                             original_curated_record = self.LOCAL_INDEX.retrieve(
@@ -1412,7 +1419,9 @@ class ReviewDataset:
                         except (colrev_exceptions.RecordNotInIndexException, KeyError):
                             original_curated_record = prior_cr.copy()
 
-                        original_curated_record["colrev_id"] = Record(
+                        original_curated_record[
+                            "colrev_id"
+                        ] = colrev_core.record.Record(
                             data=original_curated_record
                         ).create_colrev_id()
 
@@ -1567,7 +1576,7 @@ class ReviewDataset:
                         f"pattern: {excl_crit} ({ID}; criteria: {criteria})"
                     )
 
-                elif str(RecordState.rev_excluded) == status:
+                elif str(colrev_core.record.RecordState.rev_excluded) == status:
                     if ["NA"] == criteria:
                         if "NA" == excl_crit:
                             continue
@@ -1584,8 +1593,8 @@ class ReviewDataset:
                 # status=retrieved/prescreen_included/prescreen_excluded
                 # because they would not have screening_criteria.
                 elif status in [
-                    str(RecordState.rev_included),
-                    str(RecordState.rev_synthesized),
+                    str(colrev_core.record.RecordState.rev_included),
+                    str(colrev_core.record.RecordState.rev_synthesized),
                 ]:
                     if not re.match(pattern_inclusion, excl_crit):
                         field_errors.append(
@@ -1723,9 +1732,12 @@ class ReviewDataset:
                 )
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
-            if str(SOURCE.search_type) not in SearchType._member_names_:
+            if (
+                str(SOURCE.search_type)
+                not in colrev_core.settings.SearchType._member_names_
+            ):
                 raise colrev_exceptions.SearchSettingsError(
-                    f"{SOURCE.search_type} not in {SearchType._member_names_}"
+                    f"{SOURCE.search_type} not in {colrev_core.settings.SearchType._member_names_}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"

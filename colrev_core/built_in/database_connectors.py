@@ -14,10 +14,9 @@ import requests_cache
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import EnvironmentManager
-from colrev_core.record import PrepRecord
-from colrev_core.record import RecordState
+import colrev_core.record
 
 
 class OpenLibraryConnector:
@@ -119,7 +118,9 @@ class URLConnector:
             if "url" in item:
                 if "https://doi.org/" in item["url"]:
                     RECORD.data["doi"] = item["url"].replace("https://doi.org/", "")
-                    DUMMY_R = PrepRecord(data={"doi": RECORD.data["doi"]})
+                    DUMMY_R = colrev_core.record.PrepRecord(
+                        data={"doi": RECORD.data["doi"]}
+                    )
                     DOIConnector.get_link_from_doi(RECORD=DUMMY_R)
                     if "https://doi.org/" not in DUMMY_R.data["url"]:
                         RECORD.data["url"] = DUMMY_R.data["url"]
@@ -153,8 +154,9 @@ class DOIConnector:
 
         try:
             if session is None:
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
+                cache_path = (
+                    colrev_core.environment.EnvironmentManager.colrev_path
+                    / Path("prep_requests_cache")
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -182,12 +184,14 @@ class DOIConnector:
                 retrieved_record = CrossrefConnector.crossref_json_to_record(
                     item=retrieved_json
                 )
-                RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+                RETRIEVED_RECORD = colrev_core.record.PrepRecord(data=retrieved_record)
                 RETRIEVED_RECORD.add_provenance_all(source=url)
                 RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=url)
                 RECORD.set_masterdata_complete()
                 if "colrev_status" in RECORD.data:
-                    RECORD.set_status(target_state=RecordState.md_prepared)
+                    RECORD.set_status(
+                        target_state=colrev_core.record.RecordState.md_prepared
+                    )
                 if "retracted" in RECORD.data.get("warning", ""):
                     RECORD.prescreen_exclude(reason="retracted")
                     RECORD.remove_field(key="warning")
@@ -250,8 +254,9 @@ class DOIConnector:
         try:
             url = doi_url
             if session is None:
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
+                cache_path = (
+                    colrev_core.environment.EnvironmentManager.colrev_path
+                    / Path("prep_requests_cache")
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -328,7 +333,7 @@ class CrossrefConnector:
             }
             RETURNED_REC = cls.crossref_query(
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
-                RECORD_INPUT=PrepRecord(data=test_rec),
+                RECORD_INPUT=colrev_core.record.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
                 session=PREPARATION.session,
                 TIMEOUT=PREPARATION.TIMEOUT,
@@ -448,7 +453,7 @@ class CrossrefConnector:
                 not record.get("pages", "no_pages") in retrieved_pages
                 and "-" in retrieved_pages
             ):
-                RECORD = PrepRecord(data=record)
+                RECORD = colrev_core.record.PrepRecord(data=record)
                 RECORD.unify_pages_field()
                 record = RECORD.get_data()
 
@@ -563,8 +568,9 @@ class CrossrefConnector:
         record_list = []
         try:
             if session is None:
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
+                cache_path = (
+                    colrev_core.environment.EnvironmentManager.colrev_path
+                    / Path("prep_requests_cache")
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -594,7 +600,9 @@ class CrossrefConnector:
                     RECORD.data.get("title", "").lower(),
                 )
                 container_similarity = fuzz.partial_ratio(
-                    PrepRecord(data=retrieved_record).get_container_title().lower(),
+                    colrev_core.record.PrepRecord(data=retrieved_record)
+                    .get_container_title()
+                    .lower(),
                     RECORD.get_container_title().lower(),
                 )
                 weights = [0.6, 0.4]
@@ -608,7 +616,7 @@ class CrossrefConnector:
                 # logger.debug(f'similarity: {similarity}')
                 # pp.pprint(retrieved_record)
 
-                RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+                RETRIEVED_RECORD = colrev_core.record.PrepRecord(data=retrieved_record)
                 if "retracted" in RETRIEVED_RECORD.data.get("warning", ""):
                     RETRIEVED_RECORD.prescreen_exclude(reason="retracted")
                     RETRIEVED_RECORD.remove_field(key="warning")
@@ -635,7 +643,7 @@ class CrossrefConnector:
             ) from e
 
         if not jour_vol_iss_list:
-            record_list = [PrepRecord(data=most_similar_record)]
+            record_list = [colrev_core.record.PrepRecord(data=most_similar_record)]
 
         return record_list
 
@@ -647,7 +655,9 @@ class CrossrefConnector:
         # https://api.crossref.org/works/DOI
 
         if session is None:
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
+            cache_path = colrev_core.environment.EnvironmentManager.colrev_path / Path(
+                "prep_requests_cache"
+            )
             session = requests_cache.CachedSession(
                 str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
             )
@@ -683,7 +693,7 @@ class CrossrefConnector:
                 if 0 == len(RETRIEVED_RECORD.data):
                     return RECORD
 
-                similarity = PrepRecord.get_retrieval_similarity(
+                similarity = colrev_core.record.PrepRecord.get_retrieval_similarity(
                     RECORD_ORIGINAL=RECORD, RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD
                 )
                 if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
@@ -704,7 +714,9 @@ class CrossrefConnector:
                     else:
                         DOIConnector.get_link_from_doi(RECORD=RECORD)
                         RECORD.set_masterdata_complete()
-                        RECORD.set_status(target_state=RecordState.md_prepared)
+                        RECORD.set_status(
+                            target_state=colrev_core.record.RecordState.md_prepared
+                        )
 
                 else:
                     PREPARATION.REVIEW_MANAGER.logger.debug(
@@ -737,7 +749,7 @@ class DBLPConnector:
                 "journal": "Communications of the Association for Information Systems",
                 "volume": "46",
                 "year": "2020",
-                "colrev_status": RecordState.md_prepared,  # type: ignore
+                "colrev_status": colrev_core.record.RecordState.md_prepared,  # type: ignore
             }
 
             query = "" + str(test_rec.get("title", "")).replace("-", "_")
@@ -843,7 +855,7 @@ class DBLPConnector:
                         ]
                         authors = [x["text"] for x in authors_nodes if "text" in x]
                         author_string = " and ".join(authors)
-                    author_string = PrepRecord.format_author_field(
+                    author_string = colrev_core.record.PrepRecord.format_author_field(
                         input_string=author_string
                     )
                     retrieved_record["author"] = author_string
@@ -867,8 +879,9 @@ class DBLPConnector:
             assert query is not None or url is not None
 
             if session is None:
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
+                cache_path = (
+                    colrev_core.environment.EnvironmentManager.colrev_path
+                    / Path("prep_requests_cache")
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -898,7 +911,10 @@ class DBLPConnector:
             hits = data["result"]["hits"]["hit"]
             items = [hit["info"] for hit in hits]
             dblp_dicts = [dblp_json_to_dict(item) for item in items]
-            RETRIEVED_RECORDS = [PrepRecord(data=dblp_dict) for dblp_dict in dblp_dicts]
+            RETRIEVED_RECORDS = [
+                colrev_core.record.PrepRecord(data=dblp_dict)
+                for dblp_dict in dblp_dicts
+            ]
             for R in RETRIEVED_RECORDS:
                 R.add_provenance_all(source=R.data["dblp_key"])
 

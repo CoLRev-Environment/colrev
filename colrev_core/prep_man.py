@@ -3,17 +3,14 @@ import typing
 
 import pandas as pd
 
-from colrev_core import prep
-from colrev_core.built_in import prep_man as built_in_prep_man
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import PrepRecord
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.built_in.prep_man as built_in_prep_man
+import colrev_core.environment
+import colrev_core.prep
+import colrev_core.process
+import colrev_core.record
 
 
-class PrepMan(Process):
+class PrepMan(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_man_prep": {
@@ -30,7 +27,7 @@ class PrepMan(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.prep_man,
+            process_type=colrev_core.process.ProcessType.prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -38,7 +35,7 @@ class PrepMan(Process):
 
         self.prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.prep.man_prep_scripts,
         )
@@ -57,7 +54,7 @@ class PrepMan(Process):
         origins = []
         crosstab = []
         for record in records.values():
-            if RecordState.md_imported != record["colrev_status"]:
+            if colrev_core.record.RecordState.md_imported != record["colrev_status"]:
                 if record["ENTRYTYPE"] in overall_types["ENTRYTYPE"]:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = (
                         overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] + 1
@@ -65,7 +62,10 @@ class PrepMan(Process):
                 else:
                     overall_types["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            if RecordState.md_needs_manual_preparation != record["colrev_status"]:
+            if (
+                colrev_core.record.RecordState.md_needs_manual_preparation
+                != record["colrev_status"]
+            ):
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -76,7 +76,7 @@ class PrepMan(Process):
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
             if "colrev_masterdata_provenance" in record:
-                RECORD = Record(data=record)
+                RECORD = colrev_core.record.Record(data=record)
                 prov_d = RECORD.data["colrev_masterdata_provenance"]
                 hints = []
                 for k, v in prov_d.items():
@@ -135,7 +135,8 @@ class PrepMan(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.md_needs_manual_preparation) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.md_needs_manual_preparation)
+                == x["colrev_status"]
             ]
         )
 
@@ -144,7 +145,11 @@ class PrepMan(Process):
         PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 35)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.md_needs_manual_preparation}]
+            conditions=[
+                {
+                    "colrev_status": colrev_core.record.RecordState.md_needs_manual_preparation
+                }
+            ]
         )
 
         md_prep_man_data = {
@@ -160,9 +165,9 @@ class PrepMan(Process):
 
     def set_data(self, *, record, PAD: int = 40) -> None:
 
-        PREPARATION = prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
-        RECORD = PrepRecord(data=record)
-        RECORD.set_status(target_state=RecordState.md_prepared)
+        PREPARATION = colrev_core.prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
+        RECORD = colrev_core.record.PrepRecord(data=record)
+        RECORD.set_status(target_state=colrev_core.record.RecordState.md_prepared)
         RECORD.set_masterdata_complete()
         RECORD.set_masterdata_consistent()
         RECORD.set_fields_complete()

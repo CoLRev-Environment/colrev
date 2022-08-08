@@ -11,18 +11,10 @@ from subprocess import STDOUT
 
 import git
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import EnvironmentManager
-from colrev_core.review_manager import ReviewManager
-from colrev_core.settings import ReviewType
-
-
-class colors:
-    RED = "\033[91m"
-    GREEN = "\033[92m"
-    ORANGE = "\033[93m"
-    BLUE = "\033[94m"
-    END = "\033[0m"
+import colrev_core.review_manager
+import colrev_core.settings
 
 
 class Initializer:
@@ -54,11 +46,11 @@ class Initializer:
                 options=self.SHARE_STAT_REQ_options,
             )
 
-        if review_type not in ReviewType._member_names_:
+        if review_type not in colrev_core.settings.ReviewType._member_names_:
             raise colrev_exceptions.ParameterError(
                 parameter="init.review_type",
                 value=f"'{review_type}'",
-                options=ReviewType._member_names_,
+                options=colrev_core.settings.ReviewType._member_names_,
             )
 
         self.instructions: typing.List[str] = []
@@ -77,7 +69,7 @@ class Initializer:
         if example:
             self.__create_example_repo()
 
-        self.REVIEW_MANAGER = ReviewManager()
+        self.REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
 
         self.__create_commit(saved_args=saved_args)
         if not example:
@@ -118,7 +110,9 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
-        EnvironmentManager.register_repo(path_to_register=Path.cwd())
+        colrev_core.environment.EnvironmentManager.register_repo(
+            path_to_register=Path.cwd()
+        )
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
@@ -385,7 +379,9 @@ class Initializer:
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
             )
 
-        global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+        global_git_vars = (
+            colrev_core.environment.EnvironmentManager.get_name_mail_from_git()
+        )
         if 2 != len(global_git_vars):
             logging.error("Global git variables (user name and email) not available.")
             return
@@ -409,6 +405,7 @@ class Initializer:
             )
 
     def __post_commit_edits(self) -> None:
+        import colrev_core.cli_colors as colors
 
         if "curated_masterdata" == self.review_type:
             self.REVIEW_MANAGER.settings.project.curation_url = "TODO"
@@ -444,7 +441,7 @@ class Initializer:
         git_repo = git.Repo.init()
 
         # To check if git actors are set
-        EnvironmentManager.get_name_mail_from_global_git_config()
+        colrev_core.environment.EnvironmentManager.get_name_mail_from_git()
 
         logging.info("Install latest pre-commmit hooks")
         scripts_to_call = [

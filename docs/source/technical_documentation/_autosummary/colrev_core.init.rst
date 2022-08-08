@@ -21,4 +21,3 @@ colrev\_core.init
       :nosignatures:
 
       Initializer
-      colors

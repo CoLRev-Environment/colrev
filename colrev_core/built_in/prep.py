@@ -18,31 +18,31 @@ from opensearchpy import NotFoundError
 from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
+import colrev_core.built_in.database_connectors
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in.database_connectors import CrossrefConnector
-from colrev_core.built_in.database_connectors import DBLPConnector
-from colrev_core.built_in.database_connectors import DOIConnector
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PreparationEndpoint
-from colrev_core.record import PrepRecord
-from colrev_core.record import RecordState
-from colrev_core.search_sources import SearchSources
+import colrev_core.process
+import colrev_core.record
+import colrev_core.search_sources
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class LoadFixesPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         # TODO : may need to rerun import_provenance
 
-        SEARCH_SCOURCES = SearchSources(REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER)
+        SEARCH_SCOURCES = colrev_core.search_sources.SearchSources(
+            REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER
+        )
 
         origin_source = RECORD.data["colrev_origin"].split("/")[0]
 
@@ -77,7 +77,7 @@ class LoadFixesPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class ExcludeNonLatinAlphabetsPrep:
 
     source_correction_hint = "check with the developer"
@@ -85,7 +85,9 @@ class ExcludeNonLatinAlphabetsPrep:
     alphabet_detector = AlphabetDetector()
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -111,7 +113,7 @@ class ExcludeNonLatinAlphabetsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class ExcludeLanguagesPrep:
 
     source_correction_hint = "check with the developer"
@@ -119,7 +121,9 @@ class ExcludeLanguagesPrep:
 
     def __init__(self, *, PREPARATION, SETTINGS):
 
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
         # Note : Lingua is tested/evaluated relative to other libraries:
         # https://github.com/pemistahl/lingua-py
@@ -213,14 +217,16 @@ class ExcludeLanguagesPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class ExcludeCollectionsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -229,14 +235,16 @@ class ExcludeCollectionsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class RemoveError500URLsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -269,7 +277,7 @@ class RemoveError500URLsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class RemoveBrokenIDPrep:
 
     source_correction_hint = "check with the developer"
@@ -277,7 +285,9 @@ class RemoveBrokenIDPrep:
 
     # check_status: relies on crossref / openlibrary connectors!
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -301,14 +311,16 @@ class RemoveBrokenIDPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class GlobalIDConsistencyPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -316,12 +328,13 @@ class GlobalIDConsistencyPrep:
         """When metadata provided by DOI/crossref or on the website (url) differs from
         the RECORD: set status to md_needs_manual_preparation."""
 
-        from colrev_core.built_in import database_connectors
-
         fields_to_check = ["author", "title", "journal", "year", "volume", "number"]
 
         if "doi" in RECORD.data:
             R_COPY = RECORD.copy_prep_rec()
+            CrossrefConnector = (
+                colrev_core.built_in.database_connectors.CrossrefConnector
+            )
             CROSSREF_MD = CrossrefConnector.get_masterdata_from_crossref(
                 PREPARATION=PREPARATION, RECORD=R_COPY
             )
@@ -341,14 +354,14 @@ class GlobalIDConsistencyPrep:
                     ):
                         RECORD.data[
                             "colrev_status"
-                        ] = RecordState.md_needs_manual_preparation
+                        ] = colrev_core.record.RecordState.md_needs_manual_preparation
                         RECORD.add_masterdata_provenance_note(
                             key=k, note=f"disagreement with doi metadata ({v})"
                         )
 
         if "url" in RECORD.data:
             try:
-                URL_CONNECTOR = database_connectors.URLConnector()
+                URL_CONNECTOR = colrev_core.database_connectors.URLConnector()
                 URL_MD = RECORD.copy_prep_rec()
                 URL_MD = URL_CONNECTOR.retrieve_md_from_url(
                     RECORD=URL_MD, PREPARATION=PREPARATION
@@ -369,7 +382,9 @@ class GlobalIDConsistencyPrep:
                         ):
                             RECORD.data[
                                 "colrev_status"
-                            ] = RecordState.md_needs_manual_preparation
+                            ] = (
+                                colrev_core.record.RecordState.md_needs_manual_preparation
+                            )
                             RECORD.add_masterdata_provenance_note(
                                 key=k,
                                 note=f"disagreement with website metadata ({v})",
@@ -380,58 +395,44 @@ class GlobalIDConsistencyPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class CuratedPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if RECORD.masterdata_is_curated():
-            if RecordState.md_imported == RECORD.data["colrev_status"]:
-                RECORD.data["colrev_status"] = RecordState.md_prepared
+            if (
+                colrev_core.record.RecordState.md_imported
+                == RECORD.data["colrev_status"]
+            ):
+                RECORD.data[
+                    "colrev_status"
+                ] = colrev_core.record.RecordState.md_prepared
 
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class FormatPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        fields_to_process = [
-            "author",
-            "year",
-            "title",
-            "journal",
-            "booktitle",
-            "series",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-            "abstract",
-        ]
-        for field in fields_to_process:
-            if field in RECORD.data:
-                RECORD.data[field] = (
-                    RECORD.data[field]
-                    .replace("\n", " ")
-                    .rstrip()
-                    .lstrip()
-                    .replace("{", "")
-                    .replace("}", "")
-                )
 
         if "author" in RECORD.data and "UNKNOWN" != RECORD.data.get(
             "author", "UNKNOWN"
@@ -450,7 +451,7 @@ class FormatPrep:
             ):
                 RECORD.update_field(
                     key="author",
-                    value=PrepRecord.format_author_field(
+                    value=colrev_core.record.PrepRecord.format_author_field(
                         input_string=RECORD.data["author"]
                     ),
                     source="FormatPrep",
@@ -566,14 +567,16 @@ class FormatPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class BibTexCrossrefResolutionPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -627,7 +630,7 @@ class BibTexCrossrefResolutionPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class SemanticScholarPrep:
 
     source_correction_hint = (
@@ -637,11 +640,13 @@ class SemanticScholarPrep:
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def retrieve_record_from_semantic_scholar(
-        self, *, PREPARATION, url: str, RECORD_IN: PrepRecord
-    ) -> PrepRecord:
+        self, *, PREPARATION, url: str, RECORD_IN: colrev_core.record.PrepRecord
+    ) -> colrev_core.record.PrepRecord:
 
         PREPARATION.REVIEW_MANAGER.logger.debug(url)
         headers = {
@@ -673,7 +678,9 @@ class SemanticScholarPrep:
             authors_string = " and ".join(
                 [author["name"] for author in item["authors"] if "name" in author]
             )
-            authors_string = PrepRecord.format_author_field(input_string=authors_string)
+            authors_string = colrev_core.record.PrepRecord.format_author_field(
+                input_string=authors_string
+            )
             retrieved_record.update(author=authors_string)
         if "abstract" in item:
             retrieved_record.update(abstract=item["abstract"])
@@ -702,7 +709,7 @@ class SemanticScholarPrep:
         for key in keys_to_drop:
             RECORD_IN.remove_field(key=key)
 
-        REC = PrepRecord(data=retrieved_record)
+        REC = colrev_core.record.PrepRecord(data=retrieved_record)
         REC.add_provenance_all(source=record_retrieval_url)
         return REC
 
@@ -731,7 +738,7 @@ class SemanticScholarPrep:
                 if key in RED_REC_COPY.data:
                     RECORD.remove_field(key=key)
 
-            similarity = PrepRecord.get_retrieval_similarity(
+            similarity = colrev_core.record.PrepRecord.get_retrieval_similarity(
                 RECORD_ORIGINAL=RED_REC_COPY,
                 RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
                 same_record_type_required=same_record_type_required,
@@ -764,7 +771,7 @@ class SemanticScholarPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class DOIFromURLsPrep:
 
     source_correction_hint = "check with the developer"
@@ -774,7 +781,9 @@ class DOIFromURLsPrep:
     doi_regex = re.compile(r"10\.\d{4,9}/[-._;/:A-Za-z0-9]*")
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -807,18 +816,22 @@ class DOIFromURLsPrep:
                         return RECORD
                     for doi, _ in ret_dois:
                         retrieved_record = {"doi": doi.upper(), "ID": RECORD.data["ID"]}
-                        RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
-                        DOIConnector.retrieve_doi_metadata(
+                        RETRIEVED_RECORD = colrev_core.record.PrepRecord(
+                            data=retrieved_record
+                        )
+                        colrev_core.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
                             REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                             RECORD=RETRIEVED_RECORD,
                             session=PREPARATION.session,
                             TIMEOUT=PREPARATION.TIMEOUT,
                         )
 
-                        similarity = PrepRecord.get_retrieval_similarity(
-                            RECORD_ORIGINAL=RECORD,
-                            RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
-                            same_record_type_required=same_record_type_required,
+                        similarity = (
+                            colrev_core.record.PrepRecord.get_retrieval_similarity(
+                                RECORD_ORIGINAL=RECORD,
+                                RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
+                                same_record_type_required=same_record_type_required,
+                            )
                         )
                         if similarity > PREPARATION.RETRIEVAL_SIMILARITY:
                             RECORD.merge(
@@ -835,7 +848,7 @@ class DOIFromURLsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class DOIMetadataPrep:
 
     source_correction_hint = (
@@ -846,23 +859,27 @@ class DOIMetadataPrep:
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
         if "doi" not in RECORD.data:
             return RECORD
-        DOIConnector.retrieve_doi_metadata(
+        colrev_core.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
             REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
             RECORD=RECORD,
             session=PREPARATION.session,
             TIMEOUT=PREPARATION.TIMEOUT,
         )
-        DOIConnector.get_link_from_doi(RECORD=RECORD)
+        colrev_core.built_in.database_connectors.DOIConnector.get_link_from_doi(
+            RECORD=RECORD
+        )
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class CrossrefMetadataPrep:
 
     source_correction_hint = (
@@ -873,17 +890,19 @@ class CrossrefMetadataPrep:
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        CrossrefConnector.get_masterdata_from_crossref(
+        colrev_core.built_in.database_connectors.CrossrefConnector.get_masterdata_from_crossref(
             PREPARATION=PREPARATION, RECORD=RECORD
         )
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class DBLPMetadataPrep:
 
     source_correction_hint = (
@@ -893,7 +912,9 @@ class DBLPMetadataPrep:
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -916,12 +937,14 @@ class DBLPMetadataPrep:
             # if "year" in record:
             #     query = query + "_" + record["year"]
 
-            for RETRIEVED_RECORD in DBLPConnector.retrieve_dblp_records(
+            for (
+                RETRIEVED_RECORD
+            ) in colrev_core.built_in.database_connectors.DBLPConnector.retrieve_dblp_records(
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 query=query,
                 session=PREPARATION.session,
             ):
-                similarity = PrepRecord.get_retrieval_similarity(
+                similarity = colrev_core.record.PrepRecord.get_retrieval_similarity(
                     RECORD_ORIGINAL=RECORD,
                     RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
                     same_record_type_required=same_record_type_required,
@@ -937,7 +960,9 @@ class DBLPMetadataPrep:
                         default_source=RETRIEVED_RECORD.data["dblp_key"],
                     )
                     RECORD.set_masterdata_complete()
-                    RECORD.set_status(target_state=RecordState.md_prepared)
+                    RECORD.set_status(
+                        target_state=colrev_core.record.RecordState.md_prepared
+                    )
                     if "Withdrawn (according to DBLP)" in RECORD.data.get(
                         "warning", ""
                     ):
@@ -956,7 +981,7 @@ class DBLPMetadataPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class OpenLibraryMetadataPrep:
 
     source_correction_hint = (
@@ -967,17 +992,23 @@ class OpenLibraryMetadataPrep:
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        def open_library_json_to_record(*, item: dict, url=str) -> PrepRecord:
+        def open_library_json_to_record(
+            *, item: dict, url=str
+        ) -> colrev_core.record.PrepRecord:
             retrieved_record: dict = {}
 
             if "author_name" in item:
                 authors_string = " and ".join(
                     [
-                        PrepRecord.format_author_field(input_string=author)
+                        colrev_core.record.PrepRecord.format_author_field(
+                            input_string=author
+                        )
                         for author in item["author_name"]
                     ]
                 )
@@ -998,7 +1029,7 @@ class OpenLibraryMetadataPrep:
             if "isbn" in item:
                 retrieved_record.update(isbn=str(item["isbn"][0]))
 
-            REC = PrepRecord(data=retrieved_record)
+            REC = colrev_core.record.PrepRecord(data=retrieved_record)
             REC.add_provenance_all(source=url)
             return REC
 
@@ -1085,18 +1116,22 @@ class OpenLibraryMetadataPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class CiteAsPrep:
 
     source_correction_hint = "Search on https://citeas.org/ and click 'modify'"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        def cite_as_json_to_record(*, data: dict, url=str) -> PrepRecord:
+        def cite_as_json_to_record(
+            *, data: dict, url=str
+        ) -> colrev_core.record.PrepRecord:
             retrieved_record: dict = {}
 
             if "author" in data["metadata"]:
@@ -1120,7 +1155,7 @@ class CiteAsPrep:
             if "DOI" in data["metadata"]:
                 retrieved_record.update(doi=data["metadata"]["DOI"])
 
-            REC = PrepRecord(data=retrieved_record)
+            REC = colrev_core.record.PrepRecord(data=retrieved_record)
             REC.add_provenance_all(source=url)
             return REC
 
@@ -1151,7 +1186,7 @@ class CiteAsPrep:
 
             RETRIEVED_RECORD = cite_as_json_to_record(data=data, url=url)
 
-            similarity = PrepRecord.get_retrieval_similarity(
+            similarity = colrev_core.record.PrepRecord.get_retrieval_similarity(
                 RECORD_ORIGINAL=RETRIEVED_RECORD,
                 RETRIEVED_RECORD_ORIGINAL=RETRIEVED_RECORD,
                 same_record_type_required=same_record_type_required,
@@ -1170,7 +1205,7 @@ class CiteAsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class CrossrefYearVolIssPrep:
 
     source_correction_hint = (
@@ -1181,7 +1216,9 @@ class CrossrefYearVolIssPrep:
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -1196,6 +1233,7 @@ class CrossrefYearVolIssPrep:
         else:
             return RECORD
 
+        CrossrefConnector = colrev_core.built_in.database_connectors.CrossrefConnector
         try:
 
             RETRIEVED_REC_L = CrossrefConnector.crossref_query(
@@ -1244,7 +1282,7 @@ class CrossrefYearVolIssPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class LocalIndexPrep:
 
     source_correction_hint = (
@@ -1256,7 +1294,9 @@ class LocalIndexPrep:
     def __init__(self, *, PREPARATION, SETTINGS):
         from colrev_core.environment import LocalIndex
 
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
         self.LOCAL_INDEX = LocalIndex()
 
     @timeout_decorator.timeout(60, use_signals=False)
@@ -1301,7 +1341,7 @@ class LocalIndexPrep:
                 pass
 
         if retrieved:
-            RETRIEVED_RECORD = PrepRecord(data=retrieved_record)
+            RETRIEVED_RECORD = colrev_core.record.PrepRecord(data=retrieved_record)
 
             default_source = "UNDETERMINED"
             if "colrev_masterdata_provenance" in RETRIEVED_RECORD.data:
@@ -1331,14 +1371,16 @@ class LocalIndexPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class RemoveNicknamesPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -1349,51 +1391,32 @@ class RemoveNicknamesPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
-class FormatMinorPRep:
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
+class FormatMinorPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
     HTML_CLEANER = re.compile("<.*?>")
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        fields_to_process = [
-            "author",
-            "year",
-            "title",
-            "journal",
-            "booktitle",
-            "series",
-            "volume",
-            "number",
-            "pages",
-            "doi",
-            "abstract",
-        ]
-        for field in fields_to_process:
-            if field in RECORD.data:
-                RECORD.data[field] = (
-                    str(RECORD.data[field])
-                    .replace("\n", " ")
-                    .rstrip()
-                    .lstrip()
-                    .replace("{", "")
-                    .replace("}", "")
-                    .rstrip(",")
-                )
-                RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
-                if field in [
-                    "colrev_masterdata_provenance",
-                    "colrev_data_provenance",
-                    "doi",
-                ]:
-                    continue
-                # Note : some dois (and their provenance) contain html entities
-                RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
+
+        for field in list(RECORD.data.keys()):
+
+            RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
+            if field in [
+                "colrev_masterdata_provenance",
+                "colrev_data_provenance",
+                "doi",
+            ]:
+                continue
+            # Note : some dois (and their provenance) contain html entities
+            RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
         if RECORD.data.get("volume", "") == "ahead-of-print":
             RECORD.remove_field(key="volume")
@@ -1403,14 +1426,16 @@ class FormatMinorPRep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class DropFieldsPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -1420,14 +1445,16 @@ class DropFieldsPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class RemoveRedundantFieldPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = False
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -1455,14 +1482,16 @@ class RemoveRedundantFieldPrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class CorrectRecordTypePrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
@@ -1531,14 +1560,16 @@ class CorrectRecordTypePrep:
         return RECORD
 
 
-@zope.interface.implementer(PreparationEndpoint)
+@zope.interface.implementer(colrev_core.process.PreparationEndpoint)
 class UpdateMetadataStatusPrep:
 
     source_correction_hint = "check with the developer"
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):

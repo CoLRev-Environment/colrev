@@ -1,9 +1,9 @@
-colrev\_core.built\_in.prep.FormatMinorPRep
+colrev\_core.built\_in.prep.FormatMinorPrep
 ===========================================
 
 .. currentmodule:: colrev_core.built_in.prep
 
-.. autoclass:: FormatMinorPRep
+.. autoclass:: FormatMinorPrep
    :members:
    :show-inheritance:
    :inherited-members:
@@ -16,7 +16,7 @@ colrev\_core.built\_in.prep.FormatMinorPRep
    .. autosummary::
       :nosignatures:
 
-      ~FormatMinorPRep.prepare
+      ~FormatMinorPrep.prepare
 
 
 
@@ -26,6 +26,6 @@ colrev\_core.built\_in.prep.FormatMinorPRep
 
    .. autosummary::
 
-      ~FormatMinorPRep.HTML_CLEANER
-      ~FormatMinorPRep.always_apply_changes
-      ~FormatMinorPRep.source_correction_hint
+      ~FormatMinorPrep.HTML_CLEANER
+      ~FormatMinorPrep.always_apply_changes
+      ~FormatMinorPrep.source_correction_hint

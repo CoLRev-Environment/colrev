@@ -28,6 +28,7 @@
 
    colrev_core.built_in
    colrev_core.cli
+   colrev_core.cli_colors
    colrev_core.clone
    colrev_core.data
    colrev_core.debug

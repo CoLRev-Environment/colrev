@@ -5,10 +5,10 @@ import re
 import typing
 from pathlib import Path
 
-from colrev_core.built_in import search_sources as built_in_search_sources
-from colrev_core.environment import AdapterManager
-from colrev_core.load import Loader
-from colrev_core.process import ProcessType
+import colrev_core.built_in.search_sources as built_in_search_sources
+import colrev_core.environment
+import colrev_core.load
+import colrev_core.process
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
@@ -39,9 +39,11 @@ class SearchSources:
             r for s in REVIEW_MANAGER.settings.sources for r in s.source_prep_scripts
         ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
 
-        self.type = ProcessType.check
+        self.type = colrev_core.process.ProcessType.check
 
-        self.search_source_scripts: dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.search_source_scripts: dict[
+            str, typing.Any
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 
@@ -80,7 +82,9 @@ class SearchSources:
                         res["filename"] = filepath
 
                 if "conversion_script" not in res:
-                    res["conversion_script"] = Loader.get_conversion_script(
+                    res[
+                        "conversion_script"
+                    ] = colrev_core.load.Loader.get_conversion_script(
                         filepath=res["filename"]
                     )
 

@@ -4,14 +4,16 @@ import time
 
 import dictdiffer
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+import colrev_core.process
 
 
-class Trace(Process):
+class Trace(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
 
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.check)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.check,
+        )
 
     def __lpad_multiline(self, *, s: str, lpad: int) -> str:
         lines = s.splitlines()

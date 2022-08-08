@@ -4,10 +4,9 @@ from pathlib import Path
 
 from git import Repo
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import EnvironmentManager
-from colrev_core.environment import LocalIndex
-from colrev_core.review_manager import ReviewManager
+import colrev_core.review_manager
 
 
 class Clone:
@@ -26,15 +25,19 @@ class Clone:
         Repo.clone_from(self.git_url, str(self.local_path))
         os.chdir(str(self.local_path))
         try:
-            REVIEW_MANAGER = ReviewManager(path_str=str(self.local_path))
+            REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+                path_str=str(self.local_path)
+            )
             REVIEW_MANAGER.check_repository_setup()
         except colrev_exceptions.RepoSetupError:
 
             print("Not a CoLRev repository.")
             return
 
-        EnvironmentManager.register_repo(path_to_register=self.local_path)
-        LOCAL_INDEX = LocalIndex()
+        colrev_core.environment.EnvironmentManager.register_repo(
+            path_to_register=self.local_path
+        )
+        LOCAL_INDEX = colrev_core.environment.LocalIndex()
         LOCAL_INDEX.index_colrev_project(repo_source_path=str(self.local_path))
         return
 

@@ -6,16 +6,18 @@ from pathlib import Path
 
 import git
 
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.status import Status
+import colrev_core.process
+import colrev_core.record
+import colrev_core.status
 
 
-class Validate(Process):
+class Validate(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
 
-        super().__init__(REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.check)
+        super().__init__(
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.check,
+        )
 
         self.CPUS = 4
 
@@ -91,8 +93,9 @@ class Validate(Process):
                     if cur_record_link in x["colrev_origin"].split(",")
                 ]
                 for prior_record in prior_records:
-                    similarity = Record.get_record_similarity(
-                        RECORD_A=Record(data=record), RECORD_B=Record(data=prior_record)
+                    similarity = colrev_core.record.Record.get_record_similarity(
+                        RECORD_A=colrev_core.record.Record(data=record),
+                        RECORD_B=colrev_core.record.Record(data=prior_record),
                     )
                     # change_diff.append([record["ID"], cur_record_link, similarity])
                     change_diff.append([prior_record, record, similarity])
@@ -132,9 +135,9 @@ class Validate(Process):
                         if el_2 == x["colrev_origin"]
                     ]
 
-                    similarity = Record.get_record_similarity(
-                        RECORD_A=Record(data=record_1[0]),
-                        RECORD_B=Record(data=record_2[0]),
+                    similarity = colrev_core.record.Record.get_record_similarity(
+                        RECORD_A=colrev_core.record.Record(data=record_1[0]),
+                        RECORD_B=colrev_core.record.Record(data=record_2[0]),
                     )
                     change_diff.append([record_1[0], record_2[0], similarity])
 
@@ -240,7 +243,7 @@ class Validate(Process):
                 "Consistency (based on hooks)".ljust(32, " ") + "NO"
             )
 
-        STATUS = Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
+        STATUS = colrev_core.status.Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
         completeness_condition = STATUS.get_completeness_condition()
         if completeness_condition:
             self.REVIEW_MANAGER.logger.info(

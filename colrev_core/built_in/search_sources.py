@@ -4,9 +4,8 @@ from dataclasses import asdict
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.process import DefaultSettings
-from colrev_core.process import SearchSourceEndpoint
-from colrev_core.record import PrepRecord
+import colrev_core.process
+import colrev_core.record
 
 # TODO
 # IEEEXplore
@@ -45,7 +44,9 @@ from colrev_core.record import PrepRecord
 # TODO : deal with misleading file extensions.
 
 
-def apply_field_mapping(*, RECORD: PrepRecord, mapping: dict) -> PrepRecord:
+def apply_field_mapping(
+    *, RECORD: colrev_core.record.PrepRecord, mapping: dict
+) -> colrev_core.record.PrepRecord:
     """Convenience function for the prep scripts"""
 
     mapping = {k.lower(): v.lower() for k, v in mapping.items()}
@@ -58,7 +59,9 @@ def apply_field_mapping(*, RECORD: PrepRecord, mapping: dict) -> PrepRecord:
     return RECORD
 
 
-def drop_fields(*, RECORD: PrepRecord, drop=list) -> PrepRecord:
+def drop_fields(
+    *, RECORD: colrev_core.record.PrepRecord, drop=list
+) -> colrev_core.record.PrepRecord:
     """Convenience function for the prep scripts"""
 
     for key_to_drop in drop:
@@ -66,12 +69,14 @@ def drop_fields(*, RECORD: PrepRecord, drop=list) -> PrepRecord:
     return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class AISeLibrarySearchSource:
     source_identifier = "https://aisel.aisnet.org/"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -220,12 +225,14 @@ class AISeLibrarySearchSource:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class GoogleScholarSearchSource:
     source_identifier = "https://scholar.google.com/"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -239,14 +246,16 @@ class GoogleScholarSearchSource:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class WebOfScienceSearchSource:
     source_identifier = (
         "https://www.webofscience.com/wos/woscc/full-record/" + "{{unique-id}}"
     )
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
 
@@ -269,12 +278,14 @@ class WebOfScienceSearchSource:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class ScopusSearchSource:
     source_identifier = "{{url}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -326,13 +337,15 @@ class ScopusSearchSource:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class ACMDigitalLibrary:
     # Note : the ID contains the doi
     source_identifier = "https://dl.acm.org/doi/{{ID}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -349,13 +362,15 @@ class ACMDigitalLibrary:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class PubMed:
 
     source_identifier = "https://pubmed.ncbi.nlm.nih.gov/{{pmid}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -394,13 +409,15 @@ class PubMed:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class WileyOnlineLibrary:
 
     source_identifier = "{{url}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -417,13 +434,15 @@ class WileyOnlineLibrary:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class DBLP:
 
     source_identifier = "{{biburl}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -438,13 +457,15 @@ class DBLP:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class TransportResearchInternationalDocumentation:
 
     source_identifier = "{{biburl}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -459,12 +480,14 @@ class TransportResearchInternationalDocumentation:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class PDFSearchSource:
     source_identifier = "{{file}}"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}
@@ -483,12 +506,14 @@ class PDFSearchSource:
         return RECORD
 
 
-@zope.interface.implementer(SearchSourceEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchSourceEndpoint)
 class BackwardSearchSearchSource:
     source_identifier = "{{cited_by_file}} (references)"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def heuristic(self, filename, data):
         result = {"confidence": 0, "source_identifier": self.source_identifier}

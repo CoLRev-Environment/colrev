@@ -4,15 +4,16 @@ import random
 import zope.interface
 from dacite import from_dict
 
-from colrev_core.process import DefaultSettings
-from colrev_core.process import ScreenEndpoint
-from colrev_core.record import ScreenRecord
+import colrev_core.process
+import colrev_core.record
 
 
-@zope.interface.implementer(ScreenEndpoint)
+@zope.interface.implementer(colrev_core.process.ScreenEndpoint)
 class CustomScreen:
     def __init__(self, *, SCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_screen(self, SCREEN, records: dict, split: list) -> dict:
 
@@ -30,7 +31,7 @@ class CustomScreen:
                 if record["ID"] not in split:
                     continue
 
-            SCREEN_RECORD = ScreenRecord(data=record)
+            SCREEN_RECORD = colrev_core.record.ScreenRecord(data=record)
 
             if random.random() < 0.5:
                 if screening_criteria_available:

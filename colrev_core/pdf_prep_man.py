@@ -8,16 +8,13 @@ from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
-from colrev_core.built_in import pdf_prep_man as built_in_pdf_prep_man
-from colrev_core.environment import AdapterManager
-from colrev_core.environment import LocalIndex
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.built_in.pdf_prep_man as built_in_pdf_prep_man
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
 
 
-class PDFPrepMan(Process):
+class PDFPrepMan(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "colrev_cli_pdf_prep_man": {
@@ -29,14 +26,14 @@ class PDFPrepMan(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.pdf_prep_man,
+            process_type=colrev_core.process.ProcessType.pdf_prep_man,
             notify_state_transition_process=notify_state_transition_process,
         )
 
         self.verbose = True
         self.pdf_prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts,
         )
@@ -48,13 +45,18 @@ class PDFPrepMan(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.pdf_needs_manual_preparation) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.pdf_needs_manual_preparation)
+                == x["colrev_status"]
             ]
         )
         PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
 
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.pdf_needs_manual_preparation}]
+            conditions=[
+                {
+                    "colrev_status": colrev_core.record.RecordState.pdf_needs_manual_preparation
+                }
+            ]
         )
         pdf_prep_man_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(
@@ -88,7 +90,10 @@ class PDFPrepMan(Process):
         crosstab = []
         for record in records.values():
 
-            if RecordState.pdf_needs_manual_preparation != record["colrev_status"]:
+            if (
+                colrev_core.record.RecordState.pdf_needs_manual_preparation
+                != record["colrev_status"]
+            ):
                 continue
 
             if record["ENTRYTYPE"] in stats["ENTRYTYPE"]:
@@ -98,7 +103,7 @@ class PDFPrepMan(Process):
             else:
                 stats["ENTRYTYPE"][record["ENTRYTYPE"]] = 1
 
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
             prov_d = RECORD.data["colrev_data_provenance"]
 
             if "file" in prov_d:
@@ -153,7 +158,8 @@ class PDFPrepMan(Process):
         records = {
             record["ID"]: record
             for record in records.values()
-            if RecordState.pdf_needs_manual_preparation == record["colrev_status"]
+            if colrev_core.record.RecordState.pdf_needs_manual_preparation
+            == record["colrev_status"]
         }
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
             records=records, save_path=prep_bib_path
@@ -227,7 +233,9 @@ class PDFPrepMan(Process):
 
     def extract_coverpage(self, *, filepath: Path) -> None:
 
-        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
+        cp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
+            ".coverpages"
+        )
         cp_path.mkdir(exist_ok=True)
 
         pdfReader = PdfFileReader(str(filepath), strict=False)

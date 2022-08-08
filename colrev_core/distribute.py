@@ -2,19 +2,16 @@
 import shutil
 from pathlib import Path
 
-from colrev_core.environment import GrobidService
-from colrev_core.environment import TEIParser
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.settings import SearchSource
-from colrev_core.settings import SearchType
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.settings
 
 
-class Distribute(Process):
+class Distribute(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.explore,
+            process_type=colrev_core.process.ProcessType.explore,
             notify_state_transition_process=False,
         )
 
@@ -40,9 +37,9 @@ class Distribute(Process):
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
-                GROBID_SERVICE = GrobidService()
+                GROBID_SERVICE = colrev_core.environment.GrobidService()
                 GROBID_SERVICE.start()
-                TEI_INSTANCE = TEIParser(
+                TEI_INSTANCE = colrev_core.environment.TEIParser(
                     self.REVIEW_MANAGER,
                     path,
                 )
@@ -70,9 +67,9 @@ class Distribute(Process):
                 else:
                     import_records = []
 
-                    NEW_SOURCE = SearchSource(
+                    NEW_SOURCE = colrev_core.settings.SearchSource(
                         filename=Path("search") / target_bib_file.name,
-                        search_type=SearchType.OTHER,
+                        search_type=colrev_core.settings.SearchType.OTHER,
                         source_name="locally_distributed_references",
                         source_identifier="",
                         search_parameters="",

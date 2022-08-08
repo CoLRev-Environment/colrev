@@ -3,14 +3,13 @@ import math
 import pkgutil
 import typing
 
-from colrev_core.built_in import prescreen as built_in_prescreen
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import RecordState
+import colrev_core.built_in.prescreen as built_in_prescreen
+import colrev_core.environment
+import colrev_core.process
+import colrev_core.record
 
 
-class Prescreen(Process):
+class Prescreen(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "scope_prescreen": {
@@ -33,7 +32,7 @@ class Prescreen(Process):
     def __init__(self, *, REVIEW_MANAGER, notify_state_transition_process: bool = True):
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.prescreen,
+            process_type=colrev_core.process.ProcessType.prescreen,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -41,7 +40,7 @@ class Prescreen(Process):
 
         self.prescreen_scripts: typing.Dict[
             str, typing.Any
-        ] = AdapterManager.load_scripts(
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.prescreen.scripts,
         )
@@ -77,12 +76,13 @@ class Prescreen(Process):
             [
                 x
                 for x in record_state_list
-                if str(RecordState.md_processed) == x["colrev_status"]
+                if str(colrev_core.record.RecordState.md_processed)
+                == x["colrev_status"]
             ]
         )
         PAD = min((max(len(x["ID"]) for x in record_state_list) + 2), 40)
         items = self.REVIEW_MANAGER.REVIEW_DATASET.read_next_record(
-            conditions=[{"colrev_status": RecordState.md_processed}]
+            conditions=[{"colrev_status": colrev_core.record.RecordState.md_processed}]
         )
         prescreen_data = {"nr_tasks": nr_tasks, "PAD": PAD, "items": items}
         self.REVIEW_MANAGER.logger.debug(self.REVIEW_MANAGER.pp.pformat(prescreen_data))

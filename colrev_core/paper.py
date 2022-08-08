@@ -4,17 +4,17 @@ from pathlib import Path
 
 import docker
 
+import colrev_core.built_in.data as built_in_data
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in.data import ManuscriptEndpoint
-from colrev_core.environment import EnvironmentManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
+import colrev_core.process
 
 
-class Paper(Process):
+class Paper(colrev_core.process.Process):
     def __init__(self, *, REVIEW_MANAGER):
         super().__init__(
-            REVIEW_MANAGER=REVIEW_MANAGER, process_type=ProcessType.explore
+            REVIEW_MANAGER=REVIEW_MANAGER,
+            process_type=colrev_core.process.ProcessType.explore,
         )
 
     def main(self) -> None:
@@ -37,15 +37,15 @@ class Paper(Process):
             )
             return
 
-        EnvironmentManager.build_docker_images()
+        colrev_core.environment.EnvironmentManager.build_docker_images()
 
         CSL_FILE = paper_endpoint_settings["csl_style"]
         WORD_TEMPLATE = paper_endpoint_settings["word_template"]
 
         if not Path(WORD_TEMPLATE).is_file():
-            ManuscriptEndpoint.retrieve_default_word_template()
+            built_in_data.ManuscriptEndpoint.retrieve_default_word_template()
         if not Path(CSL_FILE).is_file():
-            ManuscriptEndpoint.retrieve_default_csl()
+            built_in_data.ManuscriptEndpoint.retrieve_default_csl()
         assert Path(WORD_TEMPLATE).is_file()
         assert Path(CSL_FILE).is_file()
 
@@ -61,7 +61,9 @@ class Paper(Process):
 
         client = docker.from_env()
         try:
-            pandoc_img = EnvironmentManager.docker_images["pandoc/ubuntu-latex"]
+            pandoc_img = colrev_core.environment.EnvironmentManager.docker_images[
+                "pandoc/ubuntu-latex"
+            ]
             msg = "Running docker container created from " f"image {pandoc_img}"
             self.REVIEW_MANAGER.report_logger.info(msg)
             self.REVIEW_MANAGER.logger.info(msg)

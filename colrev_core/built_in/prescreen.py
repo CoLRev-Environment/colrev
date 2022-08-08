@@ -11,11 +11,8 @@ import zope.interface
 from dacite import from_dict
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import DefaultSettings
-from colrev_core.process import PrescreenEndpoint
-from colrev_core.record import PrescreenRecord
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
 @dataclass
@@ -30,7 +27,7 @@ class ScopePrescreenEndpointSettings:
     ENTRYTYPEScope: typing.Optional[list]
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class ScopePrescreenEndpoint:
 
     title_complementary_materials_keywords = [
@@ -84,7 +81,7 @@ class ScopePrescreenEndpoint:
         saved_args = locals()
         PAD = 50
         for record in records.values():
-            if record["colrev_status"] != RecordState.md_processed:
+            if record["colrev_status"] != colrev_core.record.RecordState.md_processed:
                 continue
 
             # Note : LanguageScope is covered in prep
@@ -92,7 +89,7 @@ class ScopePrescreenEndpoint:
 
             if self.SETTINGS.ENTRYTYPEScope:
                 if record["ENTRYTYPE"] not in self.SETTINGS.ENTRYTYPEScope:
-                    Record(data=record).prescreen_exclude(
+                    colrev_core.record.Record(data=record).prescreen_exclude(
                         reason="not in ENTRYTYPEScope"
                     )
 
@@ -101,9 +98,9 @@ class ScopePrescreenEndpoint:
                     for r in self.SETTINGS.OutletExclusionScope["values"]:
                         for key, value in r.items():
                             if key in record and record.get(key, "") == value:
-                                Record(data=record).prescreen_exclude(
-                                    reason="in OutletExclusionScope"
-                                )
+                                colrev_core.record.Record(
+                                    data=record
+                                ).prescreen_exclude(reason="in OutletExclusionScope")
                 if "list" in self.SETTINGS.OutletExclusionScope:
                     for r in self.SETTINGS.OutletExclusionScope["list"]:
                         for key, value in r.items():
@@ -113,20 +110,22 @@ class ScopePrescreenEndpoint:
                                         record["journal"].lower()
                                         in predatory_journals_beal
                                     ):
-                                        Record(data=record).prescreen_exclude(
+                                        colrev_core.record.Record(
+                                            data=record
+                                        ).prescreen_exclude(
                                             reason="predatory_journals_beal"
                                         )
 
             if self.SETTINGS.TimeScopeFrom:
                 if int(record.get("year", 0)) < self.SETTINGS.TimeScopeFrom:
-                    Record(data=record).prescreen_exclude(
+                    colrev_core.record.Record(data=record).prescreen_exclude(
                         reason="not in TimeScopeFrom "
                         f"(>{self.SETTINGS.TimeScopeFrom})"
                     )
 
             if self.SETTINGS.TimeScopeTo:
                 if int(record.get("year", 5000)) > self.SETTINGS.TimeScopeTo:
-                    Record(data=record).prescreen_exclude(
+                    colrev_core.record.Record(data=record).prescreen_exclude(
                         reason="not in TimeScopeTo " f"(<{self.SETTINGS.TimeScopeTo})"
                     )
 
@@ -138,7 +137,7 @@ class ScopePrescreenEndpoint:
                             if key in record and record.get(key, "") == value:
                                 in_outlet_scope = True
                 if not in_outlet_scope:
-                    Record(data=record).prescreen_exclude(
+                    colrev_core.record.Record(data=record).prescreen_exclude(
                         reason="not in OutletInclusionScope"
                     )
 
@@ -151,11 +150,14 @@ class ScopePrescreenEndpoint:
                             record["title"].lower()
                             in self.title_complementary_materials_keywords
                         ):
-                            Record(data=record).prescreen_exclude(
+                            colrev_core.record.Record(data=record).prescreen_exclude(
                                 reason="complementary material"
                             )
 
-            if record["colrev_status"] == RecordState.rev_prescreen_excluded:
+            if (
+                record["colrev_status"]
+                == colrev_core.record.RecordState.rev_prescreen_excluded
+            ):
                 PRESCREEN.REVIEW_MANAGER.report_logger.info(
                     f' {record["ID"]}'.ljust(PAD, " ")
                     + "Prescreen excluded (automatically)"
@@ -172,10 +174,12 @@ class ScopePrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class CoLRevCLIPrescreenEndpoint:
     def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         from colrev.cli import prescreen_cli
@@ -184,17 +188,21 @@ class CoLRevCLIPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class ASReviewPrescreenEndpoint:
 
     endpoint_path = Path("prescreen/asreview")
     export_filepath = endpoint_path / Path("records_to_screen.csv")
 
     def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
         try:
             import asreview  # noqa: F401
+
+            _ = asreview
         except (ImportError, ModuleNotFoundError) as e:
             raise colrev_exceptions.MissingDependencyError(
                 "Dependency asreview not found. "
@@ -211,7 +219,7 @@ class ASReviewPrescreenEndpoint:
         records = [
             r
             for ID, r in records.items()
-            if r["colrev_status"] in [RecordState.md_processed]
+            if r["colrev_status"] in [colrev_core.record.RecordState.md_processed]
         ]
         # Casting to string (in particular the RecordState Enum)
         records = [
@@ -315,7 +323,9 @@ class ASReviewPrescreenEndpoint:
         if asreview_project_file.suffix == ".csv":  # "Export results" in asreview
             to_import = pd.read_csv(asreview_project_file)
             for _, row in to_import.iterrows():
-                PRESCREEN_RECORD = PrescreenRecord(data=records[row["ID"]])
+                PRESCREEN_RECORD = colrev_core.record.PrescreenRecord(
+                    data=records[row["ID"]]
+                )
                 if "1" == str(row["included"]):
                     PRESCREEN_RECORD.prescreen(
                         REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
@@ -394,10 +404,12 @@ class ASReviewPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class ConditionalPrescreenEndpoint:
     def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
         # TODO : conditions as a settings/parameter
@@ -405,13 +417,15 @@ class ConditionalPrescreenEndpoint:
         saved_args["include_all"] = ""
         PAD = 50
         for record in records.values():
-            if record["colrev_status"] != RecordState.md_processed:
+            if record["colrev_status"] != colrev_core.record.RecordState.md_processed:
                 continue
             PRESCREEN.REVIEW_MANAGER.report_logger.info(
                 f' {record["ID"]}'.ljust(PAD, " ")
                 + "Included in prescreen (automatically)"
             )
-            record.update(colrev_status=RecordState.rev_prescreen_included)
+            record.update(
+                colrev_status=colrev_core.record.RecordState.rev_prescreen_included
+            )
 
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -424,10 +438,12 @@ class ConditionalPrescreenEndpoint:
         return records
 
 
-@zope.interface.implementer(PrescreenEndpoint)
+@zope.interface.implementer(colrev_core.process.PrescreenEndpoint)
 class SpreadsheetPrescreenEndpoint:
     def __init__(self, *, PRESCREEN, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def export_table(
         self, PRESCREEN, records, split, export_table_format="csv"
@@ -442,17 +458,17 @@ class SpreadsheetPrescreenEndpoint:
         for record in records.values():
 
             if record["colrev_status"] not in [
-                RecordState.md_processed,
-                RecordState.rev_prescreen_excluded,
-                RecordState.rev_prescreen_included,
-                RecordState.pdf_needs_manual_retrieval,
-                RecordState.pdf_imported,
-                RecordState.pdf_not_available,
-                RecordState.pdf_needs_manual_preparation,
-                RecordState.pdf_prepared,
-                RecordState.rev_excluded,
-                RecordState.rev_included,
-                RecordState.rev_synthesized,
+                colrev_core.record.RecordState.md_processed,
+                colrev_core.record.RecordState.rev_prescreen_excluded,
+                colrev_core.record.RecordState.rev_prescreen_included,
+                colrev_core.record.RecordState.pdf_needs_manual_retrieval,
+                colrev_core.record.RecordState.pdf_imported,
+                colrev_core.record.RecordState.pdf_not_available,
+                colrev_core.record.RecordState.pdf_needs_manual_preparation,
+                colrev_core.record.RecordState.pdf_prepared,
+                colrev_core.record.RecordState.rev_excluded,
+                colrev_core.record.RecordState.rev_included,
+                colrev_core.record.RecordState.rev_synthesized,
             ]:
                 continue
 
@@ -460,9 +476,12 @@ class SpreadsheetPrescreenEndpoint:
                 if record["ID"] not in split:
                     continue
 
-            if RecordState.md_processed == record["colrev_status"]:
+            if colrev_core.record.RecordState.md_processed == record["colrev_status"]:
                 inclusion_1 = "TODO"
-            elif RecordState.rev_prescreen_excluded == record["colrev_status"]:
+            elif (
+                colrev_core.record.RecordState.rev_prescreen_excluded
+                == record["colrev_status"]
+            ):
                 inclusion_1 = "no"
             else:
                 inclusion_1 = "yes"
@@ -511,9 +530,13 @@ class SpreadsheetPrescreenEndpoint:
             if screened_record.get("ID", "") in records:
                 record = records[screened_record.get("ID", "")]
                 if "no" == screened_record.get("inclusion_1", ""):
-                    record["colrev_status"] = RecordState.rev_prescreen_excluded
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.rev_prescreen_excluded
                 if "yes" == screened_record.get("inclusion_1", ""):
-                    record["colrev_status"] = RecordState.rev_prescreen_included
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.rev_prescreen_included
 
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()

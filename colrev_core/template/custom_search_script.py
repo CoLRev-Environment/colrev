@@ -5,18 +5,19 @@ import zope.interface
 from dacite import from_dict
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import DefaultSettings
-from colrev_core.process import SearchEndpoint
+import colrev_core.process
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class CustomSearch:
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(slef, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.review_dataset import ReviewDataset

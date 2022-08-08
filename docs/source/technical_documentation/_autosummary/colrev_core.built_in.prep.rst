@@ -33,7 +33,7 @@ colrev\_core.built\_in.prep
       ExcludeCollectionsPrep
       ExcludeLanguagesPrep
       ExcludeNonLatinAlphabetsPrep
-      FormatMinorPRep
+      FormatMinorPrep
       FormatPrep
       GlobalIDConsistencyPrep
       LoadFixesPrep

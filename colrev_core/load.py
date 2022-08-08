@@ -5,16 +5,14 @@ import string
 import typing
 from pathlib import Path
 
+import colrev_core.built_in.load as built_in_load
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in import load as built_in_load
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-class Loader(Process):
+class Loader(colrev_core.process.Process):
 
     # Note : PDFs should be stored in the pdfs directory
     # They should be included through the search scripts (not the load scripts)
@@ -46,12 +44,14 @@ class Loader(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.load,
+            process_type=colrev_core.process.ProcessType.load,
             notify_state_transition_process=notify_state_transition_process,
         )
         self.verbose = True
 
-        self.load_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.load_scripts: typing.Dict[
+            str, typing.Any
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.conversion_script
@@ -228,7 +228,7 @@ class Loader(Process):
                 f'import_record {record["ID"]}: '
                 f"\n{self.REVIEW_MANAGER.pp.pformat(record)}\n\n"
             )
-            if RecordState.md_retrieved != record["colrev_status"]:
+            if colrev_core.record.RecordState.md_retrieved != record["colrev_status"]:
                 return record
 
             # Consistently set keys to lower case
@@ -271,14 +271,14 @@ class Loader(Process):
                 record.update(number=record["issue"])
                 del record["issue"]
 
-            RECORD = Record(data=record)
+            RECORD = colrev_core.record.Record(data=record)
             if "doi" in RECORD.data:
                 RECORD.data.update(
                     doi=RECORD.data["doi"].replace("http://dx.doi.org/", "").upper()
                 )
 
             RECORD.import_provenance(source_identifier=SOURCE.source_identifier)
-            RECORD.set_status(target_state=RecordState.md_imported)
+            RECORD.set_status(target_state=colrev_core.record.RecordState.md_imported)
 
             return RECORD.get_data()
 
@@ -339,22 +339,22 @@ class Loader(Process):
             record = {k: v for k, v in record.items() if v}
 
             if record.get("colrev_status", "") in [
-                str(RecordState.md_processed),
-                str(RecordState.rev_prescreen_included),
-                str(RecordState.rev_prescreen_excluded),
-                str(RecordState.pdf_needs_manual_retrieval),
-                str(RecordState.pdf_not_available),
-                str(RecordState.pdf_needs_manual_preparation),
-                str(RecordState.pdf_prepared),
-                str(RecordState.rev_excluded),
-                str(RecordState.rev_included),
-                str(RecordState.rev_synthesized),
+                str(colrev_core.record.RecordState.md_processed),
+                str(colrev_core.record.RecordState.rev_prescreen_included),
+                str(colrev_core.record.RecordState.rev_prescreen_excluded),
+                str(colrev_core.record.RecordState.pdf_needs_manual_retrieval),
+                str(colrev_core.record.RecordState.pdf_not_available),
+                str(colrev_core.record.RecordState.pdf_needs_manual_preparation),
+                str(colrev_core.record.RecordState.pdf_prepared),
+                str(colrev_core.record.RecordState.rev_excluded),
+                str(colrev_core.record.RecordState.rev_included),
+                str(colrev_core.record.RecordState.rev_synthesized),
             ]:
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
-                record.update(colrev_status=RecordState.md_prepared)
+                record.update(colrev_status=colrev_core.record.RecordState.md_prepared)
             else:
-                record.update(colrev_status=RecordState.md_retrieved)
+                record.update(colrev_status=colrev_core.record.RecordState.md_retrieved)
 
             if "doi" in record:
                 record.update(

@@ -1937,6 +1937,7 @@ class PrepRecord(Record):
         )
 
     def drop_fields(self, PREPARATION) -> None:
+        # TODO : move get_fields_to_remove from LocalIndex to record??
         from colrev_core.environment import LocalIndex
 
         for key in list(self.data.keys()):

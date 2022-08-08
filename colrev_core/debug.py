@@ -2,8 +2,8 @@ import logging
 import pprint
 from pathlib import Path  # noqa F401
 
-from colrev_core.record import RecordState
-from colrev_core.review_manager import ReviewManager
+import colrev_core.record
+import colrev_core.review_manager
 
 logger = logging.getLogger("colrev_core")
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -17,7 +17,7 @@ def debug_load() -> None:
 
     from colrev_core.load import Loader
 
-    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
     LOADER = Loader(REVIEW_MANAGER=REVIEW_MANAGER)
 
     # rec_header_lis = LOADER.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
@@ -67,13 +67,13 @@ def debug_pdf_get():
 
     from colrev_core.pdf_get import PDF_Retrieval
 
-    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
 
     record = {
         "ENTRYTYPE": "article",
         "ID": "GuoLiuNault2021",
         "colrev_origin": "MISQ.bib/0000000826",
-        "colrev_status": RecordState.md_imported,
+        "colrev_status": colrev_core.record.RecordState.md_imported,
         "author": "Guo, Hong and Liu, Yipeng and Nault, Barrie R.",
         "file": "pdfs/GuoLiuNault2021.pdf",
         "journal": "MIS Quarterly",
@@ -92,7 +92,7 @@ def debug_data():
 
     from colrev_core.data import Data
 
-    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
 
     DATA = Data(REVIEW_MANAGER=REVIEW_MANAGER)
     records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -133,7 +133,7 @@ def debug_pdf_prep():
         "ENTRYTYPE": "article",
         "ID": "GuoLiuNault2021",
         "colrev_origin": "MISQ.bib/0000000826",
-        "colrev_status": RecordState.pdf_imported,
+        "colrev_status": colrev_core.record.RecordState.pdf_imported,
         "author": "Bødker, Mads",
         "file": "pdfs/42_1/Hua2018_User Service Innovatio.pdf",
         "journal": "MIS Quarterly",
@@ -150,7 +150,7 @@ def debug_pdf_prep():
 def get_non_unique_colrev_pdf_ids() -> None:
     import pandas as pd
 
-    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
     records = REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
     import collections
@@ -273,7 +273,7 @@ def local_index(param):
 
 
 def corrections():
-    REVIEW_MANAGER = ReviewManager()
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
 
     from colrev_core.process import CheckProcess
 

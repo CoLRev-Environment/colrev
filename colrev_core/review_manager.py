@@ -26,12 +26,10 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.process import CheckProcess
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.review_dataset import ReviewDataset
-from colrev_core.settings import Configuration
-from colrev_core.status import Status
+import colrev_core.process
+import colrev_core.review_dataset
+import colrev_core.settings
+import colrev_core.status
 
 
 class ReviewManager:
@@ -92,7 +90,7 @@ class ReviewManager:
                 raise e
 
         try:
-            global_git_vars = EnvironmentManager.get_name_mail_from_global_git_config()
+            global_git_vars = EnvironmentManager.get_name_mail_from_git()
             if 2 != len(global_git_vars):
                 logging.error(
                     "Global git variables (user name and email) not available."
@@ -101,7 +99,9 @@ class ReviewManager:
             self.COMMITTER, self.EMAIL = global_git_vars
 
             self.pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
-            self.REVIEW_DATASET = ReviewDataset(REVIEW_MANAGER=self)
+            self.REVIEW_DATASET = colrev_core.review_dataset.ReviewDataset(
+                REVIEW_MANAGER=self
+            )
             """The review dataset object"""
 
         except Exception as e:
@@ -115,7 +115,7 @@ class ReviewManager:
             self.logger.debug("Created review manager instance")
             self.logger.debug(f"Settings:\n{self.settings}")
 
-    def load_settings(self) -> Configuration:
+    def load_settings(self) -> colrev_core.settings.Configuration:
 
         # https://tech.preferred.jp/en/blog/working-with-configuration-in-python/
 
@@ -148,7 +148,7 @@ class ReviewManager:
         # TODO : check validation
         # (e..g, non-float values for prep/similarity do not through errors)
         settings = from_dict(
-            data_class=Configuration,
+            data_class=colrev_core.settings.Configuration,
             data=loaded_settings,
             config=dacite.Config(type_hooks=converters, cast=[Enum]),  # type: ignore
         )
@@ -299,7 +299,7 @@ class ReviewManager:
         next_minor = str(int(current_version[current_version.rfind(".") + 1 :]) + 1)
         upcoming_version = cur_major + "." + next_minor
 
-        CheckProcess(REVIEW_MANAGER=self)  # to notify
+        colrev_core.process.CheckProcess(REVIEW_MANAGER=self)  # to notify
 
         def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
             with open(filename, encoding="utf8") as f:
@@ -965,7 +965,7 @@ class ReviewManager:
         from colrev_core.environment import EnvironmentManager
 
         # We work with exceptions because each issue may be raised in different checks.
-        self.notified_next_process = ProcessType.check
+        self.notified_next_process = colrev_core.process.ProcessType.check
         PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
             {"script": EnvironmentManager.check_git_installed, "params": []},
@@ -1134,7 +1134,7 @@ class ReviewManager:
         Entrypoint for pre-commit hooks)
         """
 
-        STATUS = Status(REVIEW_MANAGER=self)
+        STATUS = colrev_core.status.Status(REVIEW_MANAGER=self)
         stat = STATUS.get_status_freq()
         collaboration_instructions = STATUS.get_collaboration_instructions(stat=stat)
 
@@ -1177,7 +1177,9 @@ class ReviewManager:
             return {"status": FAIL, "msg": "records file formatted"}
         return {"status": PASS, "msg": "Everything ok."}
 
-    def notify(self, *, process: Process, state_transition=True) -> None:
+    def notify(
+        self, *, process: colrev_core.process.Process, state_transition=True
+    ) -> None:
         """Notify the REVIEW_MANAGER about the next process"""
 
         if state_transition:
@@ -1228,7 +1230,7 @@ class ReviewManager:
         # url = g.execut['git', 'config', '--get remote.origin.url']
 
         # append status
-        STATUS = Status(REVIEW_MANAGER=self)
+        STATUS = colrev_core.status.Status(REVIEW_MANAGER=self)
         f = io.StringIO()
         with redirect_stdout(f):
             stat = STATUS.get_status_freq()
@@ -1339,7 +1341,7 @@ class ReviewManager:
 
     def update_status_yaml(self) -> None:
 
-        STATUS = Status(REVIEW_MANAGER=self)
+        STATUS = colrev_core.status.Status(REVIEW_MANAGER=self)
 
         status_freq = STATUS.get_status_freq()
         with open(self.paths["STATUS"], "w", encoding="utf8") as f:

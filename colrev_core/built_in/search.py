@@ -19,28 +19,25 @@ from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
 from tqdm import tqdm
 
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.environment import EnvironmentManager
-from colrev_core.environment import GrobidService
-from colrev_core.environment import TEIParser
-from colrev_core.load import Loader
-from colrev_core.pdf_prep import PDF_Preparation
-from colrev_core.prep import PrepRecord
-from colrev_core.process import DefaultSettings
-from colrev_core.process import SearchEndpoint
-from colrev_core.record import Record
-from colrev_core.record import RecordState
-from colrev_core.review_manager import ReviewManager
+import colrev_core.load
+import colrev_core.pdf_prep
+import colrev_core.process
+import colrev_core.record
+import colrev_core.review_manager
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class CrossrefSearchEndpoint:
 
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         from colrev_core.built_in.database_connectors import (
@@ -107,7 +104,7 @@ class CrossrefSearchEndpoint:
                     SEARCH.REVIEW_MANAGER.logger.info(" retrieved " + record["doi"])
                     record["ID"] = str(max_id).rjust(6, "0")
 
-                    PREP_RECORD = PrepRecord(data=record)
+                    PREP_RECORD = colrev_core.record.PrepRecord(data=record)
                     DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
                     record = PREP_RECORD.get_data()
 
@@ -139,17 +136,19 @@ class CrossrefSearchEndpoint:
                 )
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class DBLPSearchEndpoint:
 
     source_identifier = "{{dblp_key}}"
     mode = "all"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        from colrev_core.built_in.prep import DBLPConnector
+        import colrev_core.built_in.database_connectors
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -202,7 +201,9 @@ class DBLPSearchEndpoint:
                     SEARCH.REVIEW_MANAGER.logger.debug(url)
 
                     retrieved = False
-                    for RETRIEVED_RECORD in DBLPConnector.retrieve_dblp_records(
+                    for (
+                        RETRIEVED_RECORD
+                    ) in colrev_core.built_in.database_connectors.DBLPConnector.retrieve_dblp_records(
                         REVIEW_MANAGER=SEARCH.REVIEW_MANAGER, url=url
                     ):
                         if "colrev_data_provenance" in RETRIEVED_RECORD.data:
@@ -287,7 +288,7 @@ class DBLPSearchEndpoint:
             )
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class BackwardSearchEndpoint:
 
     source_identifier = "{{cited_by_file}} (references)"
@@ -295,9 +296,11 @@ class BackwardSearchEndpoint:
 
     def __init__(self, *, SETTINGS):
 
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
-        self.GROBID_SERVICE = GrobidService()
+        self.GROBID_SERVICE = colrev_core.environment.GrobidService()
         self.GROBID_SERVICE.start()
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
@@ -344,8 +347,8 @@ class BackwardSearchEndpoint:
                 if (
                     params["scope"]["colrev_status"] == "rev_included|rev_synthesized"
                 ) and record["colrev_status"] not in [
-                    RecordState.rev_included,
-                    RecordState.rev_synthesized,
+                    colrev_core.record.RecordState.rev_included,
+                    colrev_core.record.RecordState.rev_synthesized,
                 ]:
                     continue
 
@@ -400,7 +403,7 @@ class BackwardSearchEndpoint:
         print("not yet imlemented")
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class ColrevProjectSearchEndpoint:
 
     # TODO : add a colrev_projet_origin field and use it as the identifier?
@@ -408,7 +411,9 @@ class ColrevProjectSearchEndpoint:
     mode = "individual"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
 
@@ -424,8 +429,10 @@ class ColrevProjectSearchEndpoint:
 
             imported_ids = [x["ID"] for x in records]
 
-        PROJECT_REVIEW_MANAGER = ReviewManager(path_str=params["scope"]["url"])
-        Loader(
+        PROJECT_REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
+            path_str=params["scope"]["url"]
+        )
+        colrev_core.load.Loader(
             REVIEW_MANAGER=PROJECT_REVIEW_MANAGER,
             notify_state_transition_process=False,
         )
@@ -488,14 +495,16 @@ class ColrevProjectSearchEndpoint:
             )
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class IndexSearchEndpoint:
 
     source_identifier = "index"
     mode = "individual"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
         assert "selection_clause" in params
@@ -660,20 +669,22 @@ class IndexSearchEndpoint:
         print("not yet imlemented")
 
 
-@zope.interface.implementer(SearchEndpoint)
+@zope.interface.implementer(colrev_core.process.SearchEndpoint)
 class PDFSearchEndpoint:
 
     source_identifier = "{{file}}"
     mode = "all"
 
     def __init__(self, *, SETTINGS):
-        self.SETTINGS = from_dict(data_class=DefaultSettings, data=SETTINGS)
+        self.SETTINGS = from_dict(
+            data_class=colrev_core.process.DefaultSettings, data=SETTINGS
+        )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
 
         skip_duplicates = True
 
-        self.PDF_PREPARATION = PDF_Preparation(
+        self.PDF_PREPARATION = colrev_core.pdf_prep.PDF_Preparation(
             REVIEW_MANAGER=SEARCH.REVIEW_MANAGER, notify_state_transition_process=False
         )
 
@@ -878,7 +889,7 @@ class PDFSearchEndpoint:
         SEARCH.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            GROBID_SERVICE = GrobidService()
+            GROBID_SERVICE = colrev_core.environment.GrobidService()
             GROBID_SERVICE.start()
         else:
             SEARCH.REVIEW_MANAGER.logger.info("No additional PDFs to index")
@@ -943,7 +954,9 @@ class PDFSearchEndpoint:
         # -d "consolidateHeader=0" localhost:8070/api/processHeaderDocument
         def get_record_from_pdf_grobid(*, record) -> dict:
 
-            if RecordState.md_prepared == record.get("colrev_status", "NA"):
+            if colrev_core.record.RecordState.md_prepared == record.get(
+                "colrev_status", "NA"
+            ):
                 return record
 
             pdf_path = SEARCH.REVIEW_MANAGER.path / Path(record["file"])
@@ -976,7 +989,7 @@ class PDFSearchEndpoint:
             # print(f"Response: {r.text}")
             # return {}
 
-            TEI_INSTANCE = TEIParser(
+            TEI_INSTANCE = colrev_core.environment.TEIParser(
                 pdf_path=pdf_path,
             )
 
@@ -1015,7 +1028,9 @@ class PDFSearchEndpoint:
                     del record["keywords"]
 
                 # to allow users to update/reindex with newer version:
-                record["grobid-version"] = EnvironmentManager.docker_images[
+                record[
+                    "grobid-version"
+                ] = colrev_core.environment.EnvironmentManager.docker_images[
                     "lfoppiano/grobid"
                 ]
                 return record
@@ -1039,7 +1054,7 @@ class PDFSearchEndpoint:
                     document = PDFDocument(parser)
                     pages_in_file = resolve1(document.catalog["Pages"])["Count"]
                     if pages_in_file < 6:
-                        RECORD = Record(data=record)
+                        RECORD = colrev_core.record.Record(data=record)
                         RECORD.get_text_from_pdf(
                             project_path=SEARCH.REVIEW_MANAGER.path
                         )
@@ -1124,7 +1139,9 @@ class PDFSearchEndpoint:
                     new_r["ID"] = f"{ID}".rjust(10, "0")
 
                     if "colrev_status" in new_r:
-                        if Record(data=new_r).masterdata_is_curated():
+                        if colrev_core.record.Record(
+                            data=new_r
+                        ).masterdata_is_curated():
                             del new_r["colrev_status"]
                         else:
                             new_r["colrev_status"] = str(new_r["colrev_status"])

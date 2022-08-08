@@ -7,16 +7,14 @@ from pathlib import Path
 import git
 import pandas as pd
 
+import colrev_core.built_in.dedupe_built_in as built_in_dedupe
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in import dedupe_built_in as built_in_dedupe
-from colrev_core.environment import AdapterManager
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import Record
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 
-class Dedupe(Process):
+class Dedupe(colrev_core.process.Process):
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "simple_dedupe": {
@@ -49,7 +47,7 @@ class Dedupe(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.dedupe,
+            process_type=colrev_core.process.ProcessType.dedupe,
             notify_state_transition_process=notify_state_transition_process,
         )
 
@@ -226,7 +224,10 @@ class Dedupe(Process):
             x
             for x in records.values()
             if x["colrev_status"]
-            not in [RecordState.md_imported, RecordState.md_needs_manual_preparation]
+            not in [
+                colrev_core.record.RecordState.md_imported,
+                colrev_core.record.RecordState.md_needs_manual_preparation,
+            ]
         ]
 
         # Do not merge records with non_latin_alphabets:
@@ -234,14 +235,15 @@ class Dedupe(Process):
             x
             for x in records_queue
             if not (
-                RecordState.rev_prescreen_excluded == x["colrev_status"]
+                colrev_core.record.RecordState.rev_prescreen_excluded
+                == x["colrev_status"]
                 and "script:non_latin_alphabet" == x.get("prescreen_exclusion", "")
             )
         ]
 
         for r in records_queue:
             try:
-                RECORD = Record(data=r)
+                RECORD = colrev_core.record.Record(data=r)
                 r["colrev_id"] = RECORD.create_colrev_id()
             except colrev_exceptions.NotEnoughDataToIdentifyException:
                 r["colrev_id"] = "NA"
@@ -267,26 +269,26 @@ class Dedupe(Process):
                 dupe_record = rec_ID1
 
         # 2. If a record is md_prepared, use it as the dupe record
-        elif rec_ID1["colrev_status"] == RecordState.md_prepared:
+        elif rec_ID1["colrev_status"] == colrev_core.record.RecordState.md_prepared:
             main_record = rec_ID2
             dupe_record = rec_ID1
-        elif rec_ID2["colrev_status"] == RecordState.md_prepared:
+        elif rec_ID2["colrev_status"] == colrev_core.record.RecordState.md_prepared:
             main_record = rec_ID1
             dupe_record = rec_ID2
 
         # 3. If a record is md_processed, use the other record as the dupe record
         # -> during the fix_errors procedure, records are in md_processed
         # and beyond.
-        elif rec_ID1["colrev_status"] == RecordState.md_processed:
+        elif rec_ID1["colrev_status"] == colrev_core.record.RecordState.md_processed:
             main_record = rec_ID1
             dupe_record = rec_ID2
-        elif rec_ID2["colrev_status"] == RecordState.md_processed:
+        elif rec_ID2["colrev_status"] == colrev_core.record.RecordState.md_processed:
             main_record = rec_ID2
             dupe_record = rec_ID1
 
         # 4. Merge into curated record (otherwise)
         else:
-            if Record(data=rec_ID2).masterdata_is_curated():
+            if colrev_core.record.Record(data=rec_ID2).masterdata_is_curated():
                 main_record = rec_ID2
                 dupe_record = rec_ID1
             else:
@@ -312,12 +314,7 @@ class Dedupe(Process):
         # Completeness of comparisons should be ensured by the
         # dedupe clustering routine
 
-        class colors:
-            RED = "\033[91m"
-            GREEN = "\033[92m"
-            ORANGE = "\033[93m"
-            BLUE = "\033[94m"
-            END = "\033[0m"
+        import colrev_core.cli_colors as colors
 
         def same_source_merge(main_record: dict, dupe_record: dict) -> bool:
 
@@ -356,7 +353,9 @@ class Dedupe(Process):
 
         for non_dupe in [x["ID1"] for x in results if "no_duplicate" == x["decision"]]:
             if non_dupe in records:
-                records[non_dupe].update(colrev_status=RecordState.md_processed)
+                records[non_dupe].update(
+                    colrev_status=colrev_core.record.RecordState.md_processed
+                )
 
         removed_duplicates = []
         duplicates_to_process = [x for x in results if "duplicate" == x["decision"]]
@@ -383,14 +382,16 @@ class Dedupe(Process):
 
             if same_source_merge(main_record, dupe_record):
                 if "apply" != self.REVIEW_MANAGER.settings.dedupe.same_source_merges:
+                    MAIN_REC = colrev_core.record.Record(data=main_record)
+                    DUPE_REC = colrev_core.record.Record(data=dupe_record)
                     print(
                         f"\n{colors.ORANGE}"
                         "Warning: applying same source merge "
                         f"{colors.END} "
                         f"{main_record.get('colrev_origin', '')}/"
                         f"{dupe_record.get('colrev_origin', '')}\n"
-                        f"  {Record(data=main_record).format_bib_style()}\n"
-                        f"  {Record(data=dupe_record).format_bib_style()}"
+                        f"  {MAIN_REC.format_bib_style()}\n"
+                        f"  {DUPE_REC.format_bib_style()}"
                     )
                 elif (
                     "prevent" == self.REVIEW_MANAGER.settings.dedupe.same_source_merges
@@ -405,9 +406,10 @@ class Dedupe(Process):
                     continue  # with next pair
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
-            MAIN_RECORD = Record(data=main_record)
+            MAIN_RECORD = colrev_core.record.Record(data=main_record)
             MAIN_RECORD.merge(
-                MERGING_RECORD=Record(data=dupe_record), default_source="merged"
+                MERGING_RECORD=colrev_core.record.Record(data=dupe_record),
+                default_source="merged",
             )
             main_record = MAIN_RECORD.get_data()
 
@@ -433,8 +435,13 @@ class Dedupe(Process):
             # Set remaining records to md_processed (not duplicate) because all records
             # have been considered by dedupe
             for record in records.values():
-                if record["colrev_status"] == RecordState.md_prepared:
-                    record["colrev_status"] = RecordState.md_processed
+                if (
+                    record["colrev_status"]
+                    == colrev_core.record.RecordState.md_prepared
+                ):
+                    record[
+                        "colrev_status"
+                    ] = colrev_core.record.RecordState.md_processed
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
         self.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
@@ -491,9 +498,10 @@ class Dedupe(Process):
             self.REVIEW_MANAGER.logger.debug(main_rec_id + " < " + dupe_rec_id)
 
             dupe_record["MOVED_DUPE"] = main_record["ID"]
-            MAIN_RECORD = Record(data=main_record)
+            MAIN_RECORD = colrev_core.record.Record(data=main_record)
             MAIN_RECORD.merge(
-                MERGING_RECORD=Record(data=dupe_record), default_source="merged"
+                MERGING_RECORD=colrev_core.record.Record(data=dupe_record),
+                default_source="merged",
             )
             main_record = MAIN_RECORD.get_data()
 
@@ -597,7 +605,9 @@ class Dedupe(Process):
                                 manual_non_duplicates = ID_list_to_unmerge.copy()
                                 manual_non_duplicates.remove(r["ID"])
 
-                                r["colrev_status"] = RecordState.md_processed
+                                r[
+                                    "colrev_status"
+                                ] = colrev_core.record.RecordState.md_processed
                                 r_dict = {r["ID"]: r}
                                 records.append(r_dict)
                                 self.REVIEW_MANAGER.logger.info(f'Restored {r["ID"]}')
@@ -700,7 +710,7 @@ class Dedupe(Process):
 
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
-            dedupe_script = AdapterManager.load_scripts(
+            dedupe_script = colrev_core.environment.AdapterManager.load_scripts(
                 PROCESS=self,
                 scripts=[DEDUPE_SCRIPT],
             )

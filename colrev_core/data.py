@@ -8,20 +8,16 @@ import requests
 from lxml import etree
 from urllib3.exceptions import ProtocolError
 
+import colrev_core.built_in.data as built_in_data
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.built_in import data as built_in_data
-from colrev_core.environment import AdapterManager
-from colrev_core.environment import GrobidService
-from colrev_core.environment import TEIParser
-from colrev_core.process import CheckProcess
-from colrev_core.process import Process
-from colrev_core.process import ProcessType
-from colrev_core.record import RecordState
+import colrev_core.process
+import colrev_core.record
 
 # from p_tqdm import p_map
 
 
-class Data(Process):
+class Data(colrev_core.process.Process):
     """Class supporting structured and unstructured
     data extraction, analysis and synthesis"""
 
@@ -49,11 +45,13 @@ class Data(Process):
 
         super().__init__(
             REVIEW_MANAGER=REVIEW_MANAGER,
-            process_type=ProcessType.data,
+            process_type=colrev_core.process.ProcessType.data,
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.data_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
+        self.data_scripts: typing.Dict[
+            str, typing.Any
+        ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.data.scripts,
         )
@@ -64,14 +62,17 @@ class Data(Process):
             ID
             for ID, record in records.items()
             if record["colrev_status"]
-            in [RecordState.rev_included, RecordState.rev_synthesized]
+            in [
+                colrev_core.record.RecordState.rev_included,
+                colrev_core.record.RecordState.rev_synthesized,
+            ]
         ]
 
     def update_tei(
         self, records: typing.Dict, included: typing.List[dict]
     ) -> typing.Dict:
 
-        GROBID_SERVICE = GrobidService()
+        GROBID_SERVICE = colrev_core.environment.GrobidService()
         GROBID_SERVICE.start()
 
         def create_tei(record: dict) -> None:
@@ -91,7 +92,9 @@ class Data(Process):
                     return
 
                 try:
-                    TEIParser(pdf_path=pdf_path, tei_path=tei_path)
+                    colrev_core.environment.TEIParser(
+                        pdf_path=pdf_path, tei_path=tei_path
+                    )
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
@@ -125,7 +128,9 @@ class Data(Process):
 
                 tei_path = Path(record["tei_file"])
                 try:
-                    TEI_INSTANCE = TEIParser(self.REVIEW_MANAGER, tei_path=tei_path)
+                    TEI_INSTANCE = colrev_core.environment.TEIParser(
+                        self.REVIEW_MANAGER, tei_path=tei_path
+                    )
                     TEI_INSTANCE.mark_references(records=records.values())
                 except etree.XMLSyntaxError:
                     continue
@@ -228,7 +233,10 @@ class Data(Process):
                 ID
                 for ID, record in records.items()
                 if record["colrev_status"]
-                in [RecordState.rev_synthesized, RecordState.rev_included]
+                in [
+                    colrev_core.record.RecordState.rev_synthesized,
+                    colrev_core.record.RecordState.rev_included,
+                ]
             ]
             observations = prepared_records_df[
                 prepared_records_df["ID"].isin(included_papers)
@@ -350,7 +358,9 @@ class Data(Process):
 
         else:
 
-            CHECK_PROCESS = CheckProcess(REVIEW_MANAGER=self.REVIEW_MANAGER)
+            CHECK_PROCESS = colrev_core.process.CheckProcess(
+                REVIEW_MANAGER=self.REVIEW_MANAGER
+            )
             # TBD: do we assume that records are not changed by the processes?
             records = CHECK_PROCESS.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
@@ -395,7 +405,9 @@ class Data(Process):
 
             for ID, individual_status_dict in synthesized_record_status_matrix.items():
                 if all(x for x in individual_status_dict.values()):
-                    records[ID].update(colrev_status=RecordState.rev_synthesized)
+                    records[ID].update(
+                        colrev_status=colrev_core.record.RecordState.rev_synthesized
+                    )
                     if self.verbose:
                         self.REVIEW_MANAGER.report_logger.info(
                             f" {ID}".ljust(self.__PAD, " ")
@@ -406,7 +418,9 @@ class Data(Process):
                             + "set colrev_status to synthesized"
                         )
                 else:
-                    records[ID].update(colrev_status=RecordState.rev_included)
+                    records[ID].update(
+                        colrev_status=colrev_core.record.RecordState.rev_included
+                    )
 
             # if self.verbose:
             #     self.REVIEW_MANAGER.pp.pprint(synthesized_record_status_matrix)

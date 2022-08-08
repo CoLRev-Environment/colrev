@@ -10,7 +10,7 @@ import zope.interface
 from transitions import Machine
 
 import colrev_core.exceptions as colrev_exceptions
-from colrev_core.record import RecordState
+import colrev_core.record
 
 
 class ProcessType(Enum):
@@ -254,7 +254,7 @@ non_processing_transitions = [
             "dest": state,
         },
     ]
-    for state in list(RecordState)
+    for state in list(colrev_core.record.RecordState)
 ]
 
 
@@ -263,88 +263,88 @@ class ProcessModel:
     transitions = transitions = [
         {
             "trigger": "load",
-            "source": RecordState.md_retrieved,
-            "dest": RecordState.md_imported,
+            "source": colrev_core.record.RecordState.md_retrieved,
+            "dest": colrev_core.record.RecordState.md_imported,
         },
         {
             "trigger": "prep",
-            "source": RecordState.md_imported,
-            "dest": RecordState.md_needs_manual_preparation,
+            "source": colrev_core.record.RecordState.md_imported,
+            "dest": colrev_core.record.RecordState.md_needs_manual_preparation,
         },
         {
             "trigger": "prep",
-            "source": RecordState.md_imported,
-            "dest": RecordState.md_prepared,
+            "source": colrev_core.record.RecordState.md_imported,
+            "dest": colrev_core.record.RecordState.md_prepared,
         },
         {
             "trigger": "prep_man",
-            "source": RecordState.md_needs_manual_preparation,
-            "dest": RecordState.md_prepared,
+            "source": colrev_core.record.RecordState.md_needs_manual_preparation,
+            "dest": colrev_core.record.RecordState.md_prepared,
         },
         {
             "trigger": "dedupe",
-            "source": RecordState.md_prepared,
-            "dest": RecordState.md_processed,
+            "source": colrev_core.record.RecordState.md_prepared,
+            "dest": colrev_core.record.RecordState.md_processed,
         },
         {
             "trigger": "prescreen",
-            "source": RecordState.md_processed,
-            "dest": RecordState.rev_prescreen_excluded,
+            "source": colrev_core.record.RecordState.md_processed,
+            "dest": colrev_core.record.RecordState.rev_prescreen_excluded,
         },
         {
             "trigger": "prescreen",
-            "source": RecordState.md_processed,
-            "dest": RecordState.rev_prescreen_included,
+            "source": colrev_core.record.RecordState.md_processed,
+            "dest": colrev_core.record.RecordState.rev_prescreen_included,
         },
         {
             "trigger": "pdf_get",
-            "source": RecordState.rev_prescreen_included,
-            "dest": RecordState.pdf_imported,
+            "source": colrev_core.record.RecordState.rev_prescreen_included,
+            "dest": colrev_core.record.RecordState.pdf_imported,
         },
         {
             "trigger": "pdf_get",
-            "source": RecordState.rev_prescreen_included,
-            "dest": RecordState.pdf_needs_manual_retrieval,
+            "source": colrev_core.record.RecordState.rev_prescreen_included,
+            "dest": colrev_core.record.RecordState.pdf_needs_manual_retrieval,
         },
         {
             "trigger": "pdf_get_man",
-            "source": RecordState.pdf_needs_manual_retrieval,
-            "dest": RecordState.pdf_not_available,
+            "source": colrev_core.record.RecordState.pdf_needs_manual_retrieval,
+            "dest": colrev_core.record.RecordState.pdf_not_available,
         },
         {
             "trigger": "pdf_get_man",
-            "source": RecordState.pdf_needs_manual_retrieval,
-            "dest": RecordState.pdf_imported,
+            "source": colrev_core.record.RecordState.pdf_needs_manual_retrieval,
+            "dest": colrev_core.record.RecordState.pdf_imported,
         },
         {
             "trigger": "pdf_prep",
-            "source": RecordState.pdf_imported,
-            "dest": RecordState.pdf_needs_manual_preparation,
+            "source": colrev_core.record.RecordState.pdf_imported,
+            "dest": colrev_core.record.RecordState.pdf_needs_manual_preparation,
         },
         {
             "trigger": "pdf_prep",
-            "source": RecordState.pdf_imported,
-            "dest": RecordState.pdf_prepared,
+            "source": colrev_core.record.RecordState.pdf_imported,
+            "dest": colrev_core.record.RecordState.pdf_prepared,
         },
         {
             "trigger": "pdf_prep_man",
-            "source": RecordState.pdf_needs_manual_preparation,
-            "dest": RecordState.pdf_prepared,
+            "source": colrev_core.record.RecordState.pdf_needs_manual_preparation,
+            "dest": colrev_core.record.RecordState.pdf_prepared,
         },
         {
             "trigger": "screen",
-            "source": RecordState.pdf_prepared,
-            "dest": RecordState.rev_excluded,
+            "source": colrev_core.record.RecordState.pdf_prepared,
+            "dest": colrev_core.record.RecordState.rev_excluded,
         },
         {
             "trigger": "screen",
-            "source": RecordState.pdf_prepared,
-            "dest": RecordState.rev_included,
+            "source": colrev_core.record.RecordState.pdf_prepared,
+            "dest": colrev_core.record.RecordState.rev_included,
         },
         {
             "trigger": "data",
-            "source": RecordState.rev_included,
-            "dest": RecordState.rev_synthesized,
+            "source": colrev_core.record.RecordState.rev_included,
+            "dest": colrev_core.record.RecordState.rev_synthesized,
         },
     ]
 
@@ -377,7 +377,7 @@ class ProcessModel:
 
         self.machine = Machine(
             model=self,
-            states=RecordState,
+            states=colrev_core.record.RecordState,
             transitions=self.transitions + self.transitions_non_processing,
             initial=self.state,
         )
@@ -388,7 +388,7 @@ class ProcessModel:
         )
 
     def get_preceding_states(self, *, state) -> set:
-        preceding_states: typing.Set[RecordState] = set()
+        preceding_states: typing.Set[colrev_core.record.RecordState] = set()
         added = True
         while added:
             preceding_states_size = len(preceding_states)

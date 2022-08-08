@@ -22,4 +22,3 @@ colrev\_core.service
 
       Event
       Service
-      colors
