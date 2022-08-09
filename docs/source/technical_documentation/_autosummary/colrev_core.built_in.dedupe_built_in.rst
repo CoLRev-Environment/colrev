@@ -9,6 +9,14 @@ colrev\_core.built\_in.dedupe\_built\_in
 
 
 
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+      :nosignatures:
+
+      console_duplicate_instance_label
+
 
 
 

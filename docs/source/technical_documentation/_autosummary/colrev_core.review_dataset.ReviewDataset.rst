@@ -36,6 +36,7 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.get_currently_imported_origin_list
       ~ReviewDataset.get_last_commit_sha
       ~ReviewDataset.get_missing_files
+      ~ReviewDataset.get_next_ID
       ~ReviewDataset.get_origin_state_dict
       ~ReviewDataset.get_record_header_list
       ~ReviewDataset.get_record_state_list

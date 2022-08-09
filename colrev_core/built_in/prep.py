@@ -3,7 +3,6 @@ import collections
 import json
 import re
 import sys
-import typing
 from pathlib import Path
 
 import git
@@ -19,6 +18,7 @@ from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
 import colrev_core.built_in.database_connectors
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -298,15 +298,17 @@ class RemoveBrokenIDPrep:
             if not d:
                 RECORD.remove_field(key="doi")
         if "isbn" in RECORD.data:
-            isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
-            url = f"https://openlibrary.org/isbn/{isbn}.json"
-            ret = PREPARATION.session.request(
-                "GET",
-                url,
-                headers=PREPARATION.requests_headers,
-                timeout=PREPARATION.TIMEOUT,
-            )
-            if '"error": "notfound"' in ret.text:
+            try:
+                isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
+                url = f"https://openlibrary.org/isbn/{isbn}.json"
+                ret = PREPARATION.session.request(
+                    "GET",
+                    url,
+                    headers=PREPARATION.requests_headers,
+                    timeout=PREPARATION.TIMEOUT,
+                )
+                ret.raise_for_status()
+            except requests.exceptions.RequestException:
                 RECORD.remove_field(key="isbn")
         return RECORD
 
@@ -580,35 +582,15 @@ class BibTexCrossrefResolutionPrep:
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        def read_next_record_str() -> typing.Iterator[str]:
-            with open(
-                PREPARATION.REVIEW_MANAGER.paths["RECORDS_FILE"], encoding="utf8"
-            ) as f:
-                data = ""
-                first_entry_processed = False
-                while True:
-                    line = f.readline()
-                    if not line:
-                        break
-                    if line[:1] == "%" or line == "\n":
-                        continue
-                    if line[:1] != "@":
-                        data += line
-                    else:
-                        if first_entry_processed:
-                            yield data
-                        else:
-                            first_entry_processed = True
-                        data = line
-                yield data
-
         def get_crossref_record(record) -> dict:
             # Note : the ID of the crossrefed record may have changed.
             # we need to trace based on the colrev_origin
             crossref_origin = record["colrev_origin"]
             crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
             crossref_origin = crossref_origin + "/" + record["crossref"]
-            for record_string in read_next_record_str():
+            for (
+                record_string
+            ) in PREPARATION.REVIEW_MANAGER.REVIEW_DATASET.__read_next_record_str():
                 if crossref_origin in record_string:
                     records_dict = (
                         PREPARATION.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
@@ -1407,16 +1389,16 @@ class FormatMinorPrep:
     def prepare(self, PREPARATION, RECORD):
 
         for field in list(RECORD.data.keys()):
-
-            RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
+            # Note : some dois (and their provenance) contain html entities
             if field in [
                 "colrev_masterdata_provenance",
                 "colrev_data_provenance",
                 "doi",
             ]:
                 continue
-            # Note : some dois (and their provenance) contain html entities
-            RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
+            if field in ["author", "title", "journal"]:
+                RECORD.data[field] = re.sub(r"\s+", " ", RECORD.data[field])
+                RECORD.data[field] = re.sub(self.HTML_CLEANER, "", RECORD.data[field])
 
         if RECORD.data.get("volume", "") == "ahead-of-print":
             RECORD.remove_field(key="volume")
@@ -1440,7 +1422,31 @@ class DropFieldsPrep:
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
-        RECORD.drop_fields(PREPARATION)
+        for key in list(RECORD.data.keys()):
+            if key not in PREPARATION.fields_to_keep:
+                RECORD.remove_field(key=key)
+                PREPARATION.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
+
+            elif RECORD.data[key] in ["", "NA"]:
+                RECORD.remove_field(key=key)
+
+        if RECORD.data.get("publisher", "") in ["researchgate.net"]:
+            RECORD.remove_field(key="publisher")
+
+        if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
+            # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
+            # because it creates problems with multiprocessing
+            LOCAL_INDEX = colrev_core.environment.LocalIndex()
+
+            fields_to_remove = LOCAL_INDEX.get_fields_to_remove(
+                record=RECORD.get_data()
+            )
+            for field_to_remove in fields_to_remove:
+                if field_to_remove in RECORD.data:
+                    # TODO : maybe use set_masterdata_complete()?
+                    RECORD.remove_field(
+                        key=field_to_remove, not_missing_note=True, source="local_index"
+                    )
 
         return RECORD
 

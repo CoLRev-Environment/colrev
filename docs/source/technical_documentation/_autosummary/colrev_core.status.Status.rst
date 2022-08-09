@@ -24,9 +24,6 @@ colrev\_core.status.Status
       ~Status.get_completeness_condition
       ~Status.get_environment_instructions
       ~Status.get_instructions
-      ~Status.get_nr_search
       ~Status.get_priority_transition
-      ~Status.get_remote_commit_differences
       ~Status.get_review_instructions
-      ~Status.get_status_freq
       ~Status.print_review_status

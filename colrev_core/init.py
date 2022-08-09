@@ -155,7 +155,9 @@ class Initializer:
             ],
         ]
         for rp, p in files_to_retrieve:
-            self.__retrieve_package_file(template_file=rp, target=p)
+            colrev_core.review_manager.ReviewManager.retrieve_package_file(
+                template_file=rp, target=p
+            )
 
         with open("settings.json", encoding="utf-8") as f:
             settings = json.load(f)
@@ -297,7 +299,7 @@ class Initializer:
 
         elif "curated_masterdata" == self.review_type:
             # replace readme
-            self.__retrieve_package_file(
+            colrev_core.review_manager.ReviewManager.retrieve_package_file(
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
@@ -501,20 +503,13 @@ class Initializer:
             s = s.replace(old_string, new_string)
             f.write(s)
 
-    def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
-
-        filedata = pkgutil.get_data(__name__, str(template_file))
-        if filedata:
-            with open(target, "w", encoding="utf8") as file:
-                file.write(filedata.decode("utf-8"))
-
     def __create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration
         of CoLRev. It focuses on a quick overview of the process and does
         not cover advanced features or special cases."""
 
         self.logger.info("Include 30_example_records.bib")
-        self.__retrieve_package_file(
+        colrev_core.review_manager.ReviewManager.retrieve_package_file(
             template_file=Path("template/example/30_example_records.bib"),
             target=Path("search/30_example_records.bib"),
         )

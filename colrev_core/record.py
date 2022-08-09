@@ -1,4 +1,5 @@
 #! /usr/bin/env python
+import difflib
 import io
 import pprint
 import re
@@ -6,10 +7,12 @@ import textwrap
 import typing
 import unicodedata
 from copy import deepcopy
+from difflib import SequenceMatcher
 from enum import auto
 from enum import Enum
 from pathlib import Path
 
+import ansiwrap
 import dictdiffer
 import imagehash
 import pandas as pd
@@ -28,6 +31,7 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 from thefuzz import fuzz
 
+import colrev_core.cli_colors as colors
 import colrev_core.exceptions as colrev_exceptions
 
 
@@ -385,7 +389,7 @@ class Record:
             try:
                 colrev_id = self.create_colrev_id(alsoKnownAsRecord=r)
                 if "colrev_id" not in self.data:
-                    self.data["colrev_id"] = colrev_id
+                    self.data["colrev_id"] = [colrev_id]
                 elif colrev_id not in self.data["colrev_id"]:
                     self.data["colrev_id"].append(colrev_id)
             except colrev_exceptions.NotEnoughDataToIdentifyException:
@@ -1098,7 +1102,7 @@ class Record:
             md_p_dict[key] = {"source": source, "note": f"{note}"}
 
     def complete_provenance(self, *, source_info) -> bool:
-        """Complete provenance information for LocalIndex"""
+        """Complete provenance information for indexing"""
 
         for key in list(self.data.keys()):
 
@@ -1398,6 +1402,8 @@ class Record:
             # pages = record.get("pages", "")
             # srep = robust_append(srep, pages)
         except KeyError as e:
+            if "ENTRYTYPE" in str(e):
+                print(f"Missing ENTRYTYPE in {record['ID']}")
             raise colrev_exceptions.NotEnoughDataToIdentifyException(str(e))
 
         srep = srep.replace(";", "")  # ";" is the separator in colrev_id list
@@ -1695,6 +1701,47 @@ class Record:
             ).with_suffix(".tei.xml")
         return tei_filename
 
+    @classmethod
+    def print_diff_pair(cls, *, record_pair, keys):
+        def print_diff(change: typing.Tuple) -> str:
+            d = difflib.Differ()
+            letters = list(d.compare(change[1], change[0]))
+            for i, letter in enumerate(letters):
+                if letter.startswith("  "):
+                    letters[i] = letters[i][-1]
+                elif letter.startswith("+ "):
+                    letters[i] = f"{colors.RED}" + letters[i][-1] + f"{colors.END}"
+                elif letter.startswith("- "):
+                    letters[i] = f"{colors.GREEN}" + letters[i][-1] + f"{colors.END}"
+            res = ansiwrap.fill("".join(letters)).replace("\n", " ")
+            return res
+
+        for key in keys:
+            prev_val = "_FIRST_VAL"
+            for rec in record_pair:
+                if prev_val == rec.get(key, "") or prev_val == "_FIRST_VAL":
+                    line = f"{rec.get(key, '')}"
+                else:
+                    similarity = 0.0
+                    if (
+                        prev_val is not None
+                        and rec.get(key, "") != ""
+                        and prev_val != ""
+                        and rec[key] is not None
+                    ):
+                        similarity = SequenceMatcher(None, prev_val, rec[key]).ratio()
+                    if similarity < 0.7 or key in [
+                        "volume",
+                        "number",
+                        "year",
+                    ]:
+                        line = f"{colors.RED}{rec.get(key, '')}{colors.END}"
+                    else:
+                        line = print_diff((prev_val, rec.get(key, "")))
+                print(f"{key} : {line}")
+                prev_val = rec.get(key, "")
+            print()
+
 
 class PrepRecord(Record):
     # Note: add methods that are called multiple times
@@ -1718,7 +1765,10 @@ class PrepRecord(Record):
         # DBLP appends identifiers to non-unique authors
         input_string = str(re.sub(r"[0-9]{4}", "", input_string))
 
-        names = input_string.split(" and ")
+        if " and " in input_string:
+            names = input_string.split(" and ")
+        else:
+            names = input_string.split(", ")
         author_string = ""
         for name in names:
             # Note: https://github.com/derek73/python-nameparser
@@ -1728,13 +1778,23 @@ class PrepRecord(Record):
             if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
                 parsed_name.capitalize(force=True)
 
-            parsed_name.string_format = "{last} {suffix}, {first} {middle}"
-            # '{last} {suffix}, {first} ({nickname}) {middle}'
-            author_name_string = str(parsed_name).replace(" , ", ", ")
-            # Note: there are errors for the following author:
-            # JR Cromwell and HK Gardner
-            # The JR is probably recognized as Junior.
-            # Check whether this is fixed in the Grobid name parser
+            # Fix: when first names are abbreivated, nameparser creates errors:
+            if (
+                len(parsed_name.last) <= 3
+                and parsed_name.last.isupper()
+                and len(parsed_name.first) > 3
+                and not parsed_name.first.isupper()
+            ):
+                # in these casees, first and last names are confused
+                author_name_string = parsed_name.first + ", " + parsed_name.last
+            else:
+                parsed_name.string_format = "{last} {suffix}, {first} {middle}"
+                # '{last} {suffix}, {first} ({nickname}) {middle}'
+                author_name_string = str(parsed_name).replace(" , ", ", ")
+                # Note: there are errors for the following author:
+                # JR Cromwell and HK Gardner
+                # The JR is probably recognized as Junior.
+                # Check whether this is fixed in the Grobid name parser
 
             if author_string == "":
                 author_string = author_name_string
@@ -1935,39 +1995,6 @@ class PrepRecord(Record):
             .replace(" -- ", "--")
             .rstrip(".")
         )
-
-    def drop_fields(self, PREPARATION) -> None:
-        # TODO : move get_fields_to_remove from LocalIndex to record??
-        from colrev_core.environment import LocalIndex
-
-        for key in list(self.data.keys()):
-            if key not in PREPARATION.fields_to_keep:
-                self.remove_field(key=key)
-                PREPARATION.REVIEW_MANAGER.report_logger.info(f"Dropped {key} field")
-
-            # for key in list(RECORD.data.keys()):
-            #     if key in PREPARATION.fields_to_keep:
-            #         continue
-            elif self.data[key] in ["", "NA"]:
-                self.remove_field(key=key)
-
-        if self.data.get("publisher", "") in ["researchgate.net"]:
-            self.remove_field(key="publisher")
-
-        if "volume" in self.data.keys() and "number" in self.data.keys():
-            # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
-            # because it creates problems with multiprocessing
-            LOCAL_INDEX = LocalIndex()
-
-            fields_to_remove = LOCAL_INDEX.get_fields_to_remove(record=self.get_data())
-            for field_to_remove in fields_to_remove:
-                if field_to_remove in self.data:
-                    # TODO : maybe use set_masterdata_complete()?
-                    self.remove_field(
-                        key=field_to_remove, not_missing_note=True, source="local_index"
-                    )
-                    # TODO : we need to keep track of the information
-                    # that a certain field is not required
 
     def preparation_save_condition(self) -> bool:
 

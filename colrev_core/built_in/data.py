@@ -22,7 +22,6 @@ import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
-import colrev_core.status
 
 
 @zope.interface.implementer(colrev_core.process.DataEndpoint)
@@ -57,7 +56,7 @@ class ManuscriptEndpoint:
     def retrieve_default_word_template(cls) -> str:
         template_name = "APA-7.docx"
 
-        filedata = pkgutil.get_data(__name__, str(Path("../template/APA-7.docx")))
+        filedata = pkgutil.get_data(__name__, str(Path("template/APA-7.docx")))
         if filedata:
             with open(Path(template_name), "wb") as file:
                 file.write(filedata)
@@ -129,12 +128,6 @@ class ManuscriptEndpoint:
 
         PAPER = REVIEW_MANAGER.paths["PAPER"]
         PAPER_RELATIVE = REVIEW_MANAGER.paths["PAPER_RELATIVE"]
-
-        def retrieve_package_file(template_file: Path, target: Path) -> None:
-            filedata = pkgutil.get_data(__name__, str(template_file))
-            if filedata:
-                with open(target, "w", encoding="utf-8") as file:
-                    file.write(filedata.decode("utf-8"))
 
         def add_missing_records_to_manuscript(
             *, REVIEW_MANAGER, PAPER: Path, missing_records: list
@@ -231,13 +224,17 @@ class ManuscriptEndpoint:
 
             r_type_path = str(review_type).replace(" ", "_").replace("-", "_")
             PAPER_resource_path = (
-                Path(f"../template/review_type/{r_type_path}/") / PAPER_RELATIVE
+                Path(f"template/review_type/{r_type_path}/") / PAPER_RELATIVE
             )
             try:
-                retrieve_package_file(PAPER_resource_path, PAPER)
+                REVIEW_MANAGER.retrieve_package_file(
+                    template_file=PAPER_resource_path, target=PAPER
+                )
             except Exception:
-                PAPER_resource_path = Path("../template/") / PAPER_RELATIVE
-                retrieve_package_file(PAPER_resource_path, PAPER)
+                PAPER_resource_path = Path("template/") / PAPER_RELATIVE
+                REVIEW_MANAGER.retrieve_package_file(
+                    template_file=PAPER_resource_path, target=PAPER
+                )
 
             inplace_change(PAPER, "{{review_type}}", str(review_type))
             inplace_change(PAPER, "{{project_title}}", title)
@@ -506,7 +503,7 @@ class EndnoteEndpoint:
             headers = {"Content-type": "application/json"}
             if "No suitable translators found" == r.content.decode("utf-8"):
                 raise colrev_exceptions.ImportException(
-                    "Zotero translators: No suitable import translators found"
+                    "Zotero translators: No suitable translators found"
                 )
 
             try:
@@ -519,7 +516,7 @@ class EndnoteEndpoint:
 
             except Exception as e:
                 raise colrev_exceptions.ImportException(
-                    f"Zotero import translators failed ({e})"
+                    f"Zotero translators failed ({e})"
                 )
 
             return et.content
@@ -624,22 +621,18 @@ class PRISMAEndpoint:
         return prisma_endpoint_details
 
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
-        def retrieve_package_file(template_file: Path, target: Path) -> None:
-            filedata = pkgutil.get_data(__name__, str(template_file))
-            if filedata:
-                with open(target, "w", encoding="utf-8") as file:
-                    file.write(filedata.decode("utf-8"))
 
-        PRISMA_resource_path = Path("../template/") / Path("PRISMA.csv")
+        PRISMA_resource_path = Path("template/") / Path("PRISMA.csv")
         PRISMA_path = Path("data/PRISMA.csv")
         PRISMA_path.parent.mkdir(exist_ok=True, parents=True)
 
         if PRISMA_path.is_file():
             os.remove(PRISMA_path)
-        retrieve_package_file(PRISMA_resource_path, PRISMA_path)
+        DATA.REVIEW_MANAGER.retrieve_package_file(
+            template_file=PRISMA_resource_path, target=PRISMA_path
+        )
 
-        STATUS = colrev_core.status.Status(REVIEW_MANAGER=DATA.REVIEW_MANAGER)
-        stat = STATUS.get_status_freq()
+        stat = DATA.REVIEW_MANAGER.get_status_freq()
         # print(stat)
 
         prisma_data = pd.read_csv(PRISMA_path)
@@ -741,12 +734,6 @@ class ZettlrEndpoint:
 
             return [x for x in included if x not in in_zettelkasten]
 
-        def retrieve_package_file(template_file: Path, target: Path) -> None:
-            filedata = pkgutil.get_data(__name__, str(template_file))
-            if filedata:
-                with open(target, "w", encoding="utf-8") as file:
-                    file.write(filedata.decode("utf-8"))
-
         def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
             with open(filename, encoding="utf-8") as f:
                 s = f.read()
@@ -845,7 +832,7 @@ class ZettlrEndpoint:
         else:
 
             unique_timestamp = currentDT + datetime.timedelta(seconds=3)
-            ZETTLR_resource_path = Path("../template/zettlr/") / Path("zettlr.md")
+            ZETTLR_resource_path = Path("template/zettlr/") / Path("zettlr.md")
             fname = Path(unique_timestamp.strftime("%Y%m%d%H%M%S") + ".md")
             ZETTLR_path = endpoint_path / fname
 
@@ -856,7 +843,9 @@ class ZettlrEndpoint:
                 zettlr_config.write(configfile)
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(zettlr_config_path))
 
-            retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
+            DATA.REVIEW_MANAGER.retrieve_package_file(
+                template_file=ZETTLR_resource_path, target=ZETTLR_path
+            )
             title = "PROJECT_NAME"
             readme_file = DATA.REVIEW_MANAGER.paths["README"]
             if readme_file.is_file():
@@ -899,16 +888,16 @@ class ZettlrEndpoint:
 
             DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(ZETTLR_path))
 
-            ZETTLR_resource_path = Path("../template/zettlr/") / Path(
-                "zettlr_bib_item.md"
-            )
+            ZETTLR_resource_path = Path("template/zettlr/") / Path("zettlr_bib_item.md")
 
             for missing_record_field in missing_record_fields:
                 paper_id, r = missing_record_field
                 print(paper_id + r)
                 ZETTLR_path = endpoint_path / Path(paper_id)
 
-                retrieve_package_file(ZETTLR_resource_path, ZETTLR_path)
+                DATA.REVIEW_MANAGER.retrieve_package_file(
+                    template_file=ZETTLR_resource_path, target=ZETTLR_path
+                )
                 inplace_change(ZETTLR_path, "{{project_name}}", r)
                 with ZETTLR_path.open("a") as f:
                     f.write(f"\n\n@{r}\n")

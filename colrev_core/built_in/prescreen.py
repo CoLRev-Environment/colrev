@@ -182,9 +182,79 @@ class CoLRevCLIPrescreenEndpoint:
         )
 
     def run_prescreen(self, PRESCREEN, records: dict, split: list) -> dict:
-        from colrev.cli import prescreen_cli
 
-        records = prescreen_cli(PRESCREEN, split)
+        if not split:
+            split = []
+
+        prescreen_data = PRESCREEN.get_data()
+        if len(split) > 0:
+            stat_len = len(split)
+        else:
+            stat_len = prescreen_data["nr_tasks"]
+
+        i, quit_pressed = 0, False
+
+        if "" == PRESCREEN.REVIEW_MANAGER.settings.prescreen.explanation:
+            PRESCREEN.REVIEW_MANAGER.settings.prescreen.explanation = input(
+                "Provide a short explanation of the prescreen "
+                "(which papers should be included?):"
+            )
+            PRESCREEN.REVIEW_MANAGER.save_settings()
+
+        print("\n\nIn the prescreen, the following process is followed:\n")
+        print("   " + PRESCREEN.REVIEW_MANAGER.settings.prescreen.explanation)
+
+        PRESCREEN.REVIEW_MANAGER.logger.info("Start prescreen")
+
+        if 0 == stat_len:
+            PRESCREEN.REVIEW_MANAGER.logger.info("No records to prescreen")
+
+        for record in prescreen_data["items"]:
+            if len(split) > 0:
+                if record["ID"] not in split:
+                    continue
+
+            PRESCREEN_RECORD = colrev_core.record.PrescreenRecord(data=record)
+
+            print("\n\n")
+            print(PRESCREEN_RECORD)
+
+            ret, inclusion_decision_str = "NA", "NA"
+            i += 1
+            while ret not in ["y", "n", "s", "q"]:
+                ret = input(
+                    f"({i}/{stat_len}) Include this record "
+                    "[enter y,n,q,s for yes,no,quit,skip]? "
+                )
+                if "q" == ret:
+                    quit_pressed = True
+                elif "s" == ret:
+                    continue
+                else:
+                    inclusion_decision_str = ret.replace("y", "yes").replace("n", "no")
+
+            if quit_pressed:
+                PRESCREEN.REVIEW_MANAGER.logger.info("Stop prescreen")
+                break
+
+            inclusion_decision = "yes" == inclusion_decision_str
+            PRESCREEN_RECORD.prescreen(
+                REVIEW_MANAGER=PRESCREEN.REVIEW_MANAGER,
+                prescreen_inclusion=inclusion_decision,
+                PAD=prescreen_data["PAD"],
+            )
+
+        records = PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
+        PRESCREEN.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
+
+        if i < stat_len:  # if records remain for pre-screening
+            if "y" != input("Create commit (y/n)?"):
+                return records
+
+        PRESCREEN.REVIEW_MANAGER.create_commit(
+            msg="Pre-screening (manual)", manual_author=True, saved_args=None
+        )
         return records
 
 

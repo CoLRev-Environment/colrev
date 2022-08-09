@@ -7,6 +7,7 @@ import requests
 import zope.interface
 from dacite import from_dict
 from pdfminer.high_level import extract_text
+from pdfminer.pdftypes import PDFException
 
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
@@ -59,7 +60,7 @@ class UnpaywallEndpoint:
         try:
             extract_text(path_to_file)
             return True
-        except:  # noqa E722
+        except PDFException:
             return False
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):

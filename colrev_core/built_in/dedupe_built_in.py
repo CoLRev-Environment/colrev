@@ -8,7 +8,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import zope.interface
-from colrev.cli import console_duplicate_instance_label
 from dacite import from_dict
 from thefuzz import fuzz
 from tqdm import tqdm
@@ -19,6 +18,68 @@ import colrev_core.exceptions as colrev_exceptions
 import colrev_core.pdf_prep
 import colrev_core.process
 import colrev_core.record
+
+
+def console_duplicate_instance_label(
+    record_pair,
+    keys,
+    manual,
+    index_dupe_info,
+    n_match,
+    n_distinct,
+    examples_buffer,
+) -> str:
+    import time
+
+    if manual:
+        os.system("cls" if os.name == "nt" else "clear")
+
+    if manual:
+        colrev_core.record.Record.print_diff_pair(record_pair=record_pair, keys=keys)
+
+    user_input = "unsure"
+    if "yes" == index_dupe_info:
+        user_input = "y"
+        if manual:
+            print(f"{n_match} positive, {n_distinct} negative")
+            print("#")
+            print("# index_dupe_info: yes/duplicate")
+            print("#")
+            # TODO : add option to validate explicitly  (Enter to confirm)
+            time.sleep(0.6)
+    elif "no" == index_dupe_info:
+        user_input = "n"
+        if manual:
+            print(f"{n_match} positive, {n_distinct} negative")
+            print("#")
+            print("# index_dupe_info: no duplicate")
+            print("#")
+            # TODO : add option to validate explicitly  (Enter to confirm)
+            time.sleep(0.6)
+    else:
+        if manual:
+            print(f"{n_match} positive, {n_distinct} negative")
+
+        if manual:
+            valid_response = False
+            user_input = ""
+
+            while not valid_response:
+                if examples_buffer:
+                    prompt = (
+                        "Duplicate? (y)es / (n)o / (u)nsure /"
+                        + " (f)inished / (p)revious"
+                    )
+                    valid_responses = {"y", "n", "u", "f", "p"}
+                else:
+                    prompt = "Duplicate? (y)es / (n)o / (u)nsure / (f)inished"
+                    valid_responses = {"y", "n", "u", "f"}
+
+                print(prompt)
+                user_input = input()
+                if user_input in valid_responses:
+                    valid_response = True
+    return user_input
 
 
 @dataclass
@@ -779,15 +840,17 @@ class ActiveLearningDedupeAutomatedEndpoint:
         # `partition` will return sets of records that dedupe
         # believes are all referring to the same entity.
 
-        saved_args.update(merge_threshold=str(DEDUPE.merge_threshold))
-        saved_args.update(partition_threshold=str(DEDUPE.partition_threshold))
+        saved_args.update(merge_threshold=str(self.SETTINGS.merge_threshold))
+        saved_args.update(partition_threshold=str(self.SETTINGS.partition_threshold))
 
         if in_memory:
             DEDUPE.REVIEW_MANAGER.report_logger.info(
-                f"set partition_threshold: {DEDUPE.partition_threshold}"
+                f"set partition_threshold: {self.SETTINGS.partition_threshold}"
             )
 
-            clustered_dupes = deduper.partition(data_d, DEDUPE.partition_threshold)
+            clustered_dupes = deduper.partition(
+                data_d, self.SETTINGS.partition_threshold
+            )
 
             # from dedupe.core import BlockingError
             # except BlockingError:
@@ -901,15 +964,15 @@ class ActiveLearningDedupeAutomatedEndpoint:
         auto_dedupe = []
         ID_list = []
         DEDUPE.REVIEW_MANAGER.report_logger.info(
-            f"set merge_threshold: {DEDUPE.merge_threshold}"
+            f"set merge_threshold: {self.SETTINGS.merge_threshold}"
         )
         DEDUPE.REVIEW_MANAGER.logger.info(
-            f"set merge_threshold: {DEDUPE.merge_threshold}"
+            f"set merge_threshold: {self.SETTINGS.merge_threshold}"
         )
         for dedupe_decision in dedupe_decision_list:
 
             if len(dedupe_decision["records"]) > 1:
-                if dedupe_decision["score"] > DEDUPE.merge_threshold:
+                if dedupe_decision["score"] > self.SETTINGS.merge_threshold:
                     orig_rec = dedupe_decision["records"].pop()
                     ID_list.append(orig_rec)
                     if 0 == len(dedupe_decision["records"]):
@@ -1036,7 +1099,10 @@ class ActiveLearningDedupeAutomatedEndpoint:
             if ID in cluster_membership:
                 cur_cluster_membership = cluster_membership[ID]
                 vals.update(cur_cluster_membership)
-                if cur_cluster_membership["confidence_score"] > DEDUPE.merge_threshold:
+                if (
+                    cur_cluster_membership["confidence_score"]
+                    > self.SETTINGS.merge_threshold
+                ):
                     collected_duplicates.append(vals)
                 else:
                     collected_non_duplicates.append(vals)
@@ -1516,9 +1582,11 @@ class CurationDedupeEndpoint:
             PDF_PREPARATION = colrev_core.pdf_prep.PDF_Preparation(
                 REVIEW_MANAGER=DEDUPE.REVIEW_MANAGER
             )
-            PDF_METADATA_VALIDATION = colrev_core.process.PDFMetadataValidationEndpoint(
-                PDF_PREPARATION=PDF_PREPARATION,
-                SETTINGS={"name": "dedupe_pdf_md_validation"},
+            PDF_METADATA_VALIDATION = (
+                colrev_core.built_in.pdf_prep.PDFMetadataValidationEndpoint(
+                    PDF_PREPARATION=PDF_PREPARATION,
+                    SETTINGS={"name": "dedupe_pdf_md_validation"},
+                )
             )
 
             for toc_item in tqdm(toc_items):

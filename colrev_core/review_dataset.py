@@ -327,8 +327,7 @@ class ReviewDataset:
                 bibtex_str += "\n"
             first = False
 
-            bibtex_str += f"@{record['ENTRYTYPE']}"
-            bibtex_str += "{%s" % ID
+            bibtex_str += f"@{record['ENTRYTYPE']}{{{ID}"
 
             field_order = [
                 "colrev_origin",  # must be in second line
@@ -435,12 +434,12 @@ class ReviewDataset:
     ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
-        from colrev_core.environment import LocalIndex
+        import colrev_core.environment
 
         if records is None:
             records = {}
 
-        self.LOCAL_INDEX = LocalIndex()
+        self.LOCAL_INDEX = colrev_core.environment.LocalIndex()
 
         if len(records) == 0:
             records = self.load_records_dict()
@@ -871,10 +870,6 @@ class ReviewDataset:
 
     def format_records_file(self) -> bool:
 
-        colrev_core.process.FormatProcess(
-            REVIEW_MANAGER=self.REVIEW_MANAGER
-        )  # to notify
-
         records = self.load_records_dict()
         for record in records.values():
             if "colrev_status" not in record:
@@ -1156,6 +1151,19 @@ class ReviewDataset:
             self.save_records_dict(records=recs_dict)
             self.add_record_changes()
 
+    def get_next_ID(self, *, bib_file: Path) -> int:
+        IDs = []
+        if bib_file.is_file():
+            with open(bib_file, encoding="utf8") as f:
+                line = f.readline()
+                while line:
+                    if "@" in line[:3]:
+                        current_ID = line[line.find("{") + 1 : line.rfind(",")]
+                        IDs.append(current_ID)
+                    line = f.readline()
+        max_id = max([int(cid) for cid in IDs if cid.isdigit()] + [0]) + 1
+        return max_id
+
     def get_missing_files(self) -> list:
 
         # excluding pdf_not_available
@@ -1295,15 +1303,14 @@ class ReviewDataset:
         return excl_criteria
 
     def check_corrections_of_curated_records(self) -> None:
-        from colrev_core.environment import LocalIndex
-        from colrev_core.environment import Resources
+        import colrev_core.environment
 
         if not self.RECORDS_FILE.is_file():
             return
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
-        self.LOCAL_INDEX = LocalIndex()
+        self.LOCAL_INDEX = colrev_core.environment.LocalIndex()
 
         # TODO : remove the following:
         # from colrev_core.prep import Preparation
@@ -1401,10 +1408,13 @@ class ReviewDataset:
                             )
 
                             # Note : this is a simple heuristic:
-                            curation_path = Resources.curations_path / Path(
-                                original_curated_record["colrev_masterdata_provenance"][
-                                    "source"
-                                ].split("/")[-1]
+                            curation_path = (
+                                colrev_core.environment.Resources.curations_path
+                                / Path(
+                                    original_curated_record[
+                                        "colrev_masterdata_provenance"
+                                    ]["source"].split("/")[-1]
+                                )
                             )
                             if not curation_path.is_dir():
                                 prov_inf = original_curated_record[

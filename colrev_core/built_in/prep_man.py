@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-import pkgutil
 from pathlib import Path
 
 import zope.interface
@@ -20,9 +19,31 @@ class CoLRevCLIManPrep:
 
     def prepare_manual(self, PREP_MAN, records):
 
-        from colrev.cli import prep_man_records_cli
+        # saved_args = locals()
 
-        records = prep_man_records_cli(PREP_MAN, records)
+        md_prep_man_data = PREP_MAN.get_data()
+        stat_len = md_prep_man_data["nr_tasks"]
+
+        if 0 == stat_len:
+            PREP_MAN.REVIEW_MANAGER.logger.info("No records to prepare manually")
+
+        print("Man-prep is not fully implemented (yet).\n")
+        print(
+            "Edit the records.bib directly, set the colrev_status to 'md_prepared' and "
+            "create a commit.\n"  # call this script again to create a commit
+        )
+
+        # if PREP_MAN.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+        #     if "y" == input("Create commit (y/n)?"):
+        #         PREP_MAN.REVIEW_MANAGER.create_commit(
+        #            msg= "Manual preparation of records",
+        #             manual_author=True,
+        #             saved_args=saved_args,
+        #         )
+        #     else:
+        #         input("Press Enter to exit.")
+        # else:
+        #     input("Press Enter to exit.")
 
         return records
 
@@ -143,17 +164,10 @@ class CurationJupyterNotebookManPrep:
                 f"Activated jupyter notebook to"
                 f"{Path('prep_man/prep_man_curation.ipynb')}"
             )
-            self.__retrieve_package_file(
+            PREP_MAN.REVIEW_MANAGER.retrieve_package_file(
                 template_file=Path("../template/prep_man_curation.ipynb"),
                 target=Path("prep_man/prep_man_curation.ipynb"),
             )
-
-    def __retrieve_package_file(self, *, template_file: Path, target: Path) -> None:
-
-        filedata = pkgutil.get_data(__name__, str(template_file))
-        if filedata:
-            with open(target, "w", encoding="utf8") as file:
-                file.write(filedata.decode("utf-8"))
 
     def prepare_manual(self, PREP_MAN, records):
 

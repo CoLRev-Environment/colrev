@@ -15,6 +15,7 @@ from pathos.multiprocessing import ProcessPool
 
 import colrev_core.built_in.database_connectors as db_connectors
 import colrev_core.built_in.prep as built_in_prep
+import colrev_core.cli_colors as colors
 import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
@@ -23,11 +24,6 @@ import colrev_core.settings
 
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 logging.getLogger("requests_cache").setLevel(logging.ERROR)
-
-ORANGE = "\033[93m"
-GREEN = "\033[92m"
-END = "\033[0m"
-RED = "\033[91m"
 
 
 class Preparation(colrev_core.process.Process):
@@ -297,7 +293,7 @@ class Preparation(colrev_core.process.Process):
                     break
             except timeout_decorator.timeout_decorator.TimeoutError:
                 self.REVIEW_MANAGER.logger.error(
-                    f"{RED}{PREP_SCRIPT.SETTINGS.name}(...) timed out{END}"
+                    f"{colors.RED}{PREP_SCRIPT.SETTINGS.name}(...) timed out{colors.END}"
                 )
 
         if self.LAST_ROUND:
@@ -732,7 +728,7 @@ class Preparation(colrev_core.process.Process):
             )
 
             self.REVIEW_MANAGER.logger.info(
-                "Records prepared:".ljust(35) + f"{GREEN}{nr_recs}{END}"
+                "Records prepared:".ljust(35) + f"{colors.GREEN}{nr_recs}{colors.END}"
             )
 
             nr_recs = len(
@@ -748,7 +744,8 @@ class Preparation(colrev_core.process.Process):
                     f"Statistics: {nr_recs} records not prepared"
                 )
                 self.REVIEW_MANAGER.logger.info(
-                    "Records to prepare manually:".ljust(35) + f"{ORANGE}{nr_recs}{END}"
+                    "Records to prepare manually:".ljust(35)
+                    + f"{colors.ORANGE}{nr_recs}{colors.END}"
                 )
             else:
                 self.REVIEW_MANAGER.logger.info(
@@ -769,7 +766,8 @@ class Preparation(colrev_core.process.Process):
                     "(non-latin alphabet)"
                 )
                 self.REVIEW_MANAGER.logger.info(
-                    "Records prescreen-excluded:".ljust(35) + f"{GREEN}{nr_recs}{END}"
+                    "Records prescreen-excluded:".ljust(35)
+                    + f"{colors.GREEN}{nr_recs}{colors.END}"
                 )
 
         if "NA" != debug_ids:
@@ -800,8 +798,8 @@ class Preparation(colrev_core.process.Process):
                 script_names = [r["endpoint"] for r in prep_round.scripts]
                 if "exclude_languages" in script_names:  # type: ignore
                     self.REVIEW_MANAGER.logger.info(
-                        f"{ORANGE}The language detector may take "
-                        f"longer and require RAM{END}"
+                        f"{colors.ORANGE}The language detector may take "
+                        f"longer and require RAM{colors.END}"
                     )
                     pool = ProcessPool(nodes=mp.cpu_count() // 2)
                 else:

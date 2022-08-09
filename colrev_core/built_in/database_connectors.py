@@ -196,8 +196,10 @@ class DOIConnector:
                     RECORD.prescreen_exclude(reason="retracted")
                     RECORD.remove_field(key="warning")
 
-            except json.decoder.JSONDecodeError:
-                pass
+            except TypeError as e:
+                print(e)
+            except json.decoder.JSONDecodeError as e:
+                print(e)
             except requests.exceptions.RequestException:
                 return RECORD
             except OperationalError as e:
@@ -240,6 +242,8 @@ class DOIConnector:
         # print(ret)
 
         def meta_redirect(content: str):
+            if "<!DOCTYPE HTML PUBLIC" not in content:
+                raise TypeError
             soup = BeautifulSoup(content, "lxml")
             result = soup.find("meta", attrs={"http-equiv": "REFRESH"})
             if result:
@@ -283,8 +287,8 @@ class DOIConnector:
                 url = ret.url
             else:
                 # follow the chain of redirects
-                while meta_redirect(ret.content.decode("utf-8")):
-                    url = meta_redirect(ret.content.decode("utf-8"))
+                while meta_redirect(ret.content):
+                    url = meta_redirect(ret.content)
                     ret = session.request(
                         "GET",
                         url,
@@ -292,7 +296,7 @@ class DOIConnector:
                         timeout=TIMEOUT,
                     )
             RECORD.update_field(key="url", value=str(url), source=doi_url)
-        except requests.exceptions.RequestException:
+        except (requests.exceptions.RequestException, TypeError):
             pass
         except OperationalError as e:
             raise colrev_exceptions.ServiceNotAvailableException(
@@ -353,7 +357,7 @@ class CrossrefConnector:
     def get_bibliographic_query_return(self, **kwargs):
         from crossref.restful import Works
 
-        assert all(k in ["bibliographic"] for k in kwargs.keys())
+        assert all(k in ["bibliographic"] for k in kwargs)
 
         works = Works(etiquette=self.etiquette)
         # use facets:

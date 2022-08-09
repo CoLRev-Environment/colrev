@@ -825,7 +825,8 @@ class LocalIndex:
                 if k in saved_record or k in ["colrev_status"]:
                     continue
 
-                # source_info = colrev_core.record.Record(data=record).get_provenance_field_source(key=k)
+                # source_info = colrev_core.record.Record(data=record).
+                # get_provenance_field_source(key=k)
                 source_info, _ = colrev_core.record.Record(
                     data=record
                 ).get_field_provenance(

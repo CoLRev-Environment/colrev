@@ -402,6 +402,11 @@ class PubMed:
             if "publication_year" in RECORD.data:
                 RECORD.rename_field(key="publication_year", new_key="year")
 
+        if "author" in RECORD.data:
+            RECORD.data["author"] = colrev_core.record.PrepRecord.format_author_field(
+                input_string=RECORD.data["author"]
+            )
+
         # TBD: how to distinguish other types?
         RECORD.change_ENTRYTYPE(NEW_ENTRYTYPE="article")
         RECORD.import_provenance(source_identifier=self.source_identifier)

@@ -62,6 +62,7 @@ colrev\_core.record.Record
       ~Record.pdf_man_prep
       ~Record.prescreen_exclude
       ~Record.print_citation_format
+      ~Record.print_diff_pair
       ~Record.remove_accents
       ~Record.remove_field
       ~Record.remove_quality_defect_notes

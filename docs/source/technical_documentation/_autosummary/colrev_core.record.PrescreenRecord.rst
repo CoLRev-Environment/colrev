@@ -63,6 +63,7 @@ colrev\_core.record.PrescreenRecord
       ~PrescreenRecord.prescreen
       ~PrescreenRecord.prescreen_exclude
       ~PrescreenRecord.print_citation_format
+      ~PrescreenRecord.print_diff_pair
       ~PrescreenRecord.remove_accents
       ~PrescreenRecord.remove_field
       ~PrescreenRecord.remove_quality_defect_notes

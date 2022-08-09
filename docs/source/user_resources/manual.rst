@@ -28,6 +28,8 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
    git clone https://github.com/geritwagner/colrev && cd colrev && pip install .
    # or
    pip install colrev_core colrev
+   # Optional: install autocompletion (Bash, Zsh, Fish):
+   colrev_core install-click
 
 Installing the command-line interface automatically installs the CoLRev-core and CoLRev-hooks.
 Extensions are available in the `extensions section <manual/A_appendix.html#extension>`_ and on `GitHub <https://github.com/topics/colrev-extension>`_.

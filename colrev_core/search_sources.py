@@ -40,14 +40,15 @@ class SearchSources:
         ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
 
         self.type = colrev_core.process.ProcessType.check
-
         self.search_source_scripts: dict[
             str, typing.Any
         ] = colrev_core.environment.AdapterManager.load_scripts(
             PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 
-    def apply_source_heuristics(self, *, filepath: Path) -> list:
+    def apply_source_heuristics(
+        self, *, filepath: Path
+    ) -> list[colrev_core.settings.SearchSource]:
         """Apply heuristics to identify source"""
 
         data = ""
@@ -61,6 +62,8 @@ class SearchSources:
         for source_name, endpoint in self.search_source_scripts.items():
             res = endpoint.heuristic(filepath, data)
             if res["confidence"] > 0:
+                search_type = colrev_core.settings.SearchType("DB")
+
                 res["source_name"] = source_name
                 res["source_prep_scripts"] = (
                     [source_name] if callable(endpoint.prepare) else []
@@ -77,18 +80,43 @@ class SearchSources:
                             "(because the format is .enl)\033[0m"
                         )
                         filepath.rename(new_filename)
-                        res["filename"] = new_filename
-                    else:
-                        res["filename"] = filepath
+                        filepath = new_filename
 
                 if "conversion_script" not in res:
                     res[
                         "conversion_script"
-                    ] = colrev_core.load.Loader.get_conversion_script(
-                        filepath=res["filename"]
-                    )
+                    ] = colrev_core.load.Loader.get_conversion_script(filepath=filepath)
 
-                results_list.append(res)
+                SOURCE_CANDIDATE = colrev_core.settings.SearchSource(
+                    filename=filepath,
+                    search_type=search_type,
+                    source_name=source_name,
+                    source_identifier=res["source_identifier"],
+                    search_parameters="",
+                    search_script=res["search_script"],
+                    conversion_script=res["conversion_script"],
+                    source_prep_scripts=[
+                        {"endpoint": s}
+                        for s in res["source_prep_scripts"]  # type: ignore
+                    ],
+                    comment="",
+                )
+
+                results_list.append(SOURCE_CANDIDATE)
+
+        if 0 == len(results_list):
+            SOURCE_CANDIDATE = colrev_core.settings.SearchSource(
+                filename=Path(filepath),
+                search_type=colrev_core.settings.SearchType("DB"),
+                source_name="NA",
+                source_identifier="NA",
+                search_parameters="NA",
+                search_script={},  # Note : primarily adding files (not feeds)
+                conversion_script={"endpoint": "bibtex"},
+                source_prep_scripts=[],
+                comment="",
+            )
+            results_list.append(SOURCE_CANDIDATE)
 
         return results_list
 

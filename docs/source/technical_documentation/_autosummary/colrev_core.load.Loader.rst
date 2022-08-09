@@ -18,6 +18,7 @@ colrev\_core.load.Loader
 
       ~Loader.check_bib_file
       ~Loader.check_precondition
+      ~Loader.check_update_sources
       ~Loader.get_conversion_script
       ~Loader.get_new_search_files
       ~Loader.load_source_records

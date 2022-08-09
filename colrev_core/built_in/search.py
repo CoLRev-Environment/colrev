@@ -19,6 +19,7 @@ from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
 from tqdm import tqdm
 
+import colrev_core.built_in.database_connectors
 import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.load
@@ -148,7 +149,6 @@ class DBLPSearchEndpoint:
         )
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
-        import colrev_core.built_in.database_connectors
 
         # https://dblp.org/search/publ/api?q=ADD_TITLE&format=json
 
@@ -191,6 +191,7 @@ class DBLPSearchEndpoint:
                 # query = params['scope']["venue_key"] + "+" + str(year)
                 f = 0
                 batch_size = 250
+                DBLPConnector = colrev_core.built_in.database_connectors.DBLPConnector
                 while True:
                     url = (
                         api_url
@@ -201,9 +202,7 @@ class DBLPSearchEndpoint:
                     SEARCH.REVIEW_MANAGER.logger.debug(url)
 
                     retrieved = False
-                    for (
-                        RETRIEVED_RECORD
-                    ) in colrev_core.built_in.database_connectors.DBLPConnector.retrieve_dblp_records(
+                    for RETRIEVED_RECORD in DBLPConnector.retrieve_dblp_records(
                         REVIEW_MANAGER=SEARCH.REVIEW_MANAGER, url=url
                     ):
                         if "colrev_data_provenance" in RETRIEVED_RECORD.data:
@@ -1093,26 +1092,13 @@ class PDFSearchEndpoint:
 
             return record
 
-        def get_last_ID(*, bib_file: Path) -> int:
-            IDs = []
-            if bib_file.is_file():
-                with open(bib_file, encoding="utf8") as f:
-                    line = f.readline()
-                    while line:
-                        if "@" in line[:3]:
-                            current_ID = line[line.find("{") + 1 : line.rfind(",")]
-                            IDs.append(current_ID)
-                        line = f.readline()
-            max_id = max([int(cid) for cid in IDs if cid.isdigit()] + [1]) + 1
-            return max_id
-
         batch_size = 10
         pdf_batches = [
             pdfs_to_index[i * batch_size : (i + 1) * batch_size]
             for i in range((len(pdfs_to_index) + batch_size - 1) // batch_size)
         ]
 
-        ID = int(get_last_ID(bib_file=feed_file))
+        ID = int(SEARCH.REVIEW_MANAGER.REVIEW_DATASET.get_next_ID(bib_file=feed_file))
         for pdf_batch in pdf_batches:
 
             lenrec = len(indexed_pdf_paths)

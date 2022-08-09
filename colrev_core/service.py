@@ -10,6 +10,7 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
+import colrev_core.cli
 import colrev_core.cli_colors as colors
 import colrev_core.environment
 import colrev_core.status
@@ -40,7 +41,7 @@ class Event(LoggingEventHandler):
         self.SERVICE.last_file_change_date = datetime.datetime.now()
         self.SERVICE.last_file_changed = event.src_path
 
-        stat = self.SERVICE.STATUS.get_status_freq()
+        stat = self.SERVICE.REVIEW_MANAGER.get_status_freq()
         instructions = self.SERVICE.STATUS.get_review_instructions(stat)
 
         for instruction in instructions:
@@ -86,7 +87,7 @@ class Service:
 
         # get initial review instructions and add to queue
         self.STATUS = colrev_core.status.Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
-        stat = self.STATUS.get_status_freq()
+        stat = self.REVIEW_MANAGER.get_status_freq()
         instructions = self.STATUS.get_review_instructions(stat=stat)
         for instruction in instructions:
             if "cmd" in instruction:
@@ -193,7 +194,6 @@ class Service:
 
                 elif "colrev load" == item["cmd"]:
                     from colrev_core.load import Loader
-                    from colrev.cli import check_update_sources
 
                     if len(list(self.REVIEW_MANAGER.paths["SEARCHDIR"].glob("*"))) > 0:
 
@@ -201,7 +201,7 @@ class Service:
 
                         LOADER = Loader(REVIEW_MANAGER=self.REVIEW_MANAGER)
                         print()
-                        check_update_sources(LOADER)
+                        LOADER.check_update_sources()
                         LOADER.main(keep_ids=False, combine_commits=False)
                     else:
                         self.q.task_done()
@@ -216,19 +216,14 @@ class Service:
                 elif "colrev dedupe" == item["cmd"]:
                     from colrev_core.dedupe import Dedupe
 
-                    # TODO : the following has been moved:
-                    from colrev.cli import run_dedupe
-
                     self.logger.info(f"Running {item['name']}")
 
+                    # Note : settings should be
+                    # simple_dedupe
+                    # merge_threshold=0.5,
+                    # partition_threshold=0.8,
                     DEDUPE = Dedupe(REVIEW_MANAGER=self.REVIEW_MANAGER)
-                    # TODO : check thresholds
-                    run_dedupe(
-                        DEDUPE,
-                        retrain=False,
-                        merge_threshold=0.5,
-                        partition_threshold=0.8,
-                    )
+                    DEDUPE.main()
 
                 elif "colrev prescreen" == item["cmd"]:
                     from colrev_core.prescreen import Prescreen

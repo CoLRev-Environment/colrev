@@ -7,7 +7,6 @@ from pathlib import Path
 
 import git
 import yaml
-from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 from git.exc import NoSuchPathError
 
@@ -22,209 +21,9 @@ class Status(colrev_core.process.Process):
             process_type=colrev_core.process.ProcessType.explore,
         )
 
-    def __get_nr_in_bib(self, file_path: Path) -> int:
-
-        number_in_bib = 0
-        with open(file_path, encoding="utf8") as f:
-            line = f.readline()
-            while line:
-                # Note: the '﻿' occured in some bibtex files
-                # (e.g., Publish or Perish exports)
-                if "@" in line[:3]:
-                    if "@comment" not in line[:10].lower():
-                        number_in_bib += 1
-                line = f.readline()
-        return number_in_bib
-
-    def get_nr_search(self) -> int:
-
-        search_dir = self.REVIEW_MANAGER.paths["SEARCHDIR"]
-        if not search_dir.is_dir():
-            return 0
-        bib_files = search_dir.glob("*.bib")
-        number_search = 0
-        for search_file in bib_files:
-            number_search += self.__get_nr_in_bib(search_file)
-        return number_search
-
     def get_completeness_condition(self) -> bool:
-        stat = self.get_status_freq()
+        stat = self.REVIEW_MANAGER.get_status_freq()
         return stat["completeness_condition"]
-
-    def get_status_freq(self) -> dict:
-
-        record_header_list = self.REVIEW_MANAGER.REVIEW_DATASET.get_record_header_list()
-
-        status_list = [x["colrev_status"] for x in record_header_list]
-        screening_criteria = [
-            x["screening_criteria"]
-            for x in record_header_list
-            if x["screening_criteria"] not in ["", "NA"]
-        ]
-        md_duplicates_removed = sum(
-            (x["colrev_origin"].count(";")) for x in record_header_list
-        )
-
-        origin_list = [x["colrev_origin"] for x in record_header_list]
-        record_links = 0
-        for origin in origin_list:
-            nr_record_links = origin.count(";")
-            record_links += nr_record_links + 1
-
-        stat: dict = {"colrev_status": {}}
-
-        criteria = list(self.REVIEW_MANAGER.settings.screen.criteria.keys())
-        screening_statistics = {crit: 0 for crit in criteria}
-        for screening_case in screening_criteria:
-            for criterion in screening_case.split(";"):
-                criterion_name, decision = criterion.split("=")
-                if "out" == decision:
-                    screening_statistics[criterion_name] += 1
-
-        stat["colrev_status"]["currently"] = {
-            str(rs): 0 for rs in list(colrev_core.record.RecordState)
-        }
-        stat["colrev_status"]["overall"] = {
-            str(rs): 0 for rs in list(colrev_core.record.RecordState)
-        }
-
-        currently_stats = dict(Counter(status_list))
-        for currently_stat, val in currently_stats.items():
-            stat["colrev_status"]["currently"][currently_stat] = val
-            stat["colrev_status"]["overall"][currently_stat] = val
-
-        atomic_step_number = 0
-        completed_atomic_steps = 0
-
-        self.REVIEW_MANAGER.logger.debug(
-            "Set overall colrev_status statistics (going backwards)"
-        )
-        st_o = stat["colrev_status"]["overall"]
-        non_completed = 0
-        current_state = (
-            colrev_core.record.RecordState.rev_synthesized
-        )  # start with the last
-        visited_states = []
-        nr_incomplete = 0
-        while True:
-            self.REVIEW_MANAGER.logger.debug(
-                f"current_state: {current_state} with {st_o[str(current_state)]}"
-            )
-            if colrev_core.record.RecordState.md_prepared == current_state:
-                st_o[str(current_state)] += md_duplicates_removed
-
-            states_to_consider = [current_state]
-            predecessors: typing.List[typing.Dict[str, typing.Any]] = [
-                {
-                    "trigger": "init",
-                    "source": colrev_core.record.RecordState.md_imported,
-                    "dest": colrev_core.record.RecordState.md_imported,
-                }
-            ]
-            # Go backward through the process model
-            predecessor = None
-            while predecessors:
-                predecessors = [
-                    t
-                    for t in colrev_core.process.ProcessModel.transitions
-                    if t["source"] in states_to_consider
-                    and t["dest"] not in visited_states
-                ]
-                for predecessor in predecessors:
-                    self.REVIEW_MANAGER.logger.debug(
-                        f' add {st_o[str(predecessor["dest"])]} '
-                        f'from {str(predecessor["dest"])} '
-                        f'(predecessor transition: {predecessor["trigger"]})'
-                    )
-                    st_o[str(current_state)] = (
-                        st_o[str(current_state)] + st_o[str(predecessor["dest"])]
-                    )
-                    visited_states.append(predecessor["dest"])
-                    if predecessor["dest"] not in states_to_consider:
-                        states_to_consider.append(predecessor["dest"])
-                if len(predecessors) > 0:
-                    if predecessors[0]["trigger"] != "init":
-                        completed_atomic_steps += st_o[str(predecessor["dest"])]
-            atomic_step_number += 1
-            # Note : the following does not consider multiple parallel steps.
-            for trans_for_completeness in [
-                t
-                for t in colrev_core.process.ProcessModel.transitions
-                if current_state == t["dest"]
-            ]:
-                nr_incomplete += stat["colrev_status"]["currently"][
-                    str(trans_for_completeness["source"])
-                ]
-
-            t_list = [
-                t
-                for t in colrev_core.process.ProcessModel.transitions
-                if current_state == t["dest"]
-            ]
-            t: dict = t_list.pop()
-            if current_state == colrev_core.record.RecordState.md_imported:
-                break
-            current_state = t["source"]  # go a step back
-            non_completed += stat["colrev_status"]["currently"][str(current_state)]
-
-        stat["colrev_status"]["currently"]["non_completed"] = non_completed
-
-        stat["colrev_status"]["currently"]["non_processed"] = (
-            stat["colrev_status"]["currently"]["md_imported"]
-            + stat["colrev_status"]["currently"]["md_retrieved"]
-            + stat["colrev_status"]["currently"]["md_needs_manual_preparation"]
-            + stat["colrev_status"]["currently"]["md_prepared"]
-        )
-
-        stat["colrev_status"]["currently"][
-            "md_duplicates_removed"
-        ] = md_duplicates_removed
-        stat["colrev_status"]["overall"]["md_retrieved"] = self.get_nr_search()
-        stat["colrev_status"]["currently"]["md_retrieved"] = (
-            stat["colrev_status"]["overall"]["md_retrieved"] - record_links
-        )
-        stat["completeness_condition"] = (0 == nr_incomplete) and (
-            0 == stat["colrev_status"]["currently"]["md_retrieved"]
-        )
-
-        stat["colrev_status"]["currently"]["exclusion"] = screening_statistics
-
-        stat["colrev_status"]["overall"]["rev_screen"] = stat["colrev_status"][
-            "overall"
-        ]["pdf_prepared"]
-        stat["colrev_status"]["overall"]["rev_prescreen"] = stat["colrev_status"][
-            "overall"
-        ]["md_processed"]
-        stat["colrev_status"]["currently"]["pdf_needs_retrieval"] = stat[
-            "colrev_status"
-        ]["currently"]["rev_prescreen_included"]
-
-        colrev_masterdata_items = [
-            x["colrev_masterdata_provenance"] for x in record_header_list
-        ]
-        stat["colrev_status"]["CURATED_records"] = len(
-            [x for x in colrev_masterdata_items if "CURATED:" in x]
-        )
-        # Note : 'title' in curated_fields: simple heuristic for masterdata curation
-        if self.REVIEW_MANAGER.settings.project.curated_masterdata:
-            stat["colrev_status"]["CURATED_records"] = stat["colrev_status"]["overall"][
-                "md_processed"
-            ]
-
-        # note: 10 steps
-        stat["atomic_steps"] = (
-            10 * st_o[str(colrev_core.record.RecordState.md_imported)]
-            - 8 * stat["colrev_status"]["currently"]["md_duplicates_removed"]
-            - 7 * stat["colrev_status"]["currently"]["rev_prescreen_excluded"]
-            - 6 * stat["colrev_status"]["currently"]["pdf_not_available"]
-            - stat["colrev_status"]["currently"]["rev_excluded"]
-            - stat["colrev_status"]["currently"]["rev_synthesized"]
-        )
-        stat["completed_atomic_steps"] = completed_atomic_steps
-        self.REVIEW_MANAGER.logger.debug(
-            f"stat: {self.REVIEW_MANAGER.pp.pformat(stat)}"
-        )
-        return stat
 
     def get_priority_transition(self, *, current_origin_states_dict: dict) -> list:
 
@@ -269,33 +68,6 @@ class Status(colrev_core.process.Process):
             t = srec.get_valid_transitions()
             active_processing_functions.extend(t)
         return active_processing_functions
-
-    def get_remote_commit_differences(self, *, git_repo: git.Repo) -> list:
-
-        nr_commits_behind, nr_commits_ahead = -1, -1
-
-        origin = git_repo.remotes.origin
-        if origin.exists():
-            try:
-                origin.fetch()
-            except GitCommandError:
-                return [-1, -1]
-
-        if git_repo.active_branch.tracking_branch() is not None:
-
-            branch_name = str(git_repo.active_branch)
-            tracking_branch_name = str(git_repo.active_branch.tracking_branch())
-            self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
-
-            behind_operation = branch_name + ".." + tracking_branch_name
-            commits_behind = git_repo.iter_commits(behind_operation)
-            nr_commits_behind = sum(1 for c in commits_behind)
-
-            ahead_operation = tracking_branch_name + ".." + branch_name
-            commits_ahead = git_repo.iter_commits(ahead_operation)
-            nr_commits_ahead = sum(1 for c in commits_ahead)
-
-        return [nr_commits_behind, nr_commits_ahead]
 
     def get_environment_instructions(self, *, stat: dict) -> list:
         from multiprocessing.dummy import Pool as ThreadPool
@@ -371,7 +143,6 @@ class Status(colrev_core.process.Process):
         return environment_instructions
 
     def append_registered_repo_instructions(self, registered_path):
-        # from colrev_core.review_manager import ReviewManager
         import colrev_core.review_manager
 
         # Note: do not use named arguments (multiprocessing)

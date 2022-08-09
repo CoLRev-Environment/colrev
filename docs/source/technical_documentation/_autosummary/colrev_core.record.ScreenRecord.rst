@@ -63,6 +63,7 @@ colrev\_core.record.ScreenRecord
       ~ScreenRecord.prescreen
       ~ScreenRecord.prescreen_exclude
       ~ScreenRecord.print_citation_format
+      ~ScreenRecord.print_diff_pair
       ~ScreenRecord.remove_accents
       ~ScreenRecord.remove_field
       ~ScreenRecord.remove_quality_defect_notes

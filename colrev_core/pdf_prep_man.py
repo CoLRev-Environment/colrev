@@ -228,7 +228,6 @@ class PDFPrepMan(colrev_core.process.Process):
                         del record[k]
 
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
-        self.REVIEW_MANAGER.format_records_file()
         self.REVIEW_MANAGER.check_repo()
 
     def extract_coverpage(self, *, filepath: Path) -> None:

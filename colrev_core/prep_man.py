@@ -5,7 +5,6 @@ import pandas as pd
 
 import colrev_core.built_in.prep_man as built_in_prep_man
 import colrev_core.environment
-import colrev_core.prep
 import colrev_core.process
 import colrev_core.record
 
@@ -165,13 +164,11 @@ class PrepMan(colrev_core.process.Process):
 
     def set_data(self, *, record, PAD: int = 40) -> None:
 
-        PREPARATION = colrev_core.prep.Preparation(REVIEW_MANAGER=self.REVIEW_MANAGER)
         RECORD = colrev_core.record.PrepRecord(data=record)
-        RECORD.set_status(target_state=colrev_core.record.RecordState.md_prepared)
         RECORD.set_masterdata_complete()
         RECORD.set_masterdata_consistent()
         RECORD.set_fields_complete()
-        RECORD.drop_fields(PREPARATION)
+        RECORD.set_status(target_state=colrev_core.record.RecordState.md_prepared)
         record = RECORD.get_data()
 
         self.REVIEW_MANAGER.REVIEW_DATASET.update_record_by_ID(new_record=record)

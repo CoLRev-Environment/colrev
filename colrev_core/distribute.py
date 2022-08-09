@@ -23,17 +23,6 @@ class Distribute(colrev_core.process.Process):
         # option: chdir (to target repo)?
         # file: copy or move?
 
-        def get_last_ID(bib_file: Path) -> str:
-            current_ID = "1"
-            if bib_file.is_file():
-                with open(bib_file, encoding="utf8") as f:
-                    line = f.readline()
-                    while line:
-                        if "@" in line[:3]:
-                            current_ID = line[line.find("{") + 1 : line.rfind(",")]
-                        line = f.readline()
-            return current_ID
-
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
@@ -84,10 +73,9 @@ class Distribute(colrev_core.process.Process):
                     self.REVIEW_MANAGER.save_settings()
 
                 if 0 != len(import_records):
-                    ID = int(get_last_ID(target_bib_file))
-                    ID += 1
-                else:
-                    ID = 1
+                    ID = int(
+                        self.REVIEW_MANAGER.REVIEW_DATASET.get_next_ID(target_bib_file)
+                    )
 
                 record["ID"] = f"{ID}".rjust(10, "0")
                 record.update(file=str(target_pdf_path))

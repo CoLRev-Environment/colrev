@@ -291,7 +291,7 @@ class PDFLastPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        lp_path = colrev_core.environemnt.LocalIndex.local_environment_path / Path(
+        lp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
             ".lastpages"
         )
         lp_path.mkdir(exist_ok=True)

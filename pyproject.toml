@@ -21,6 +21,9 @@ classifiers = [
 ]
 include = ["CONTRIBUTING.rst", "CHANGELOG.md", "LICENSE", "README.md", "colrev_core/py.typed"]
 
+[tool.poetry.scripts]
+colrev_core = "colrev_core.cli:main"
+
 [tool.poetry.dependencies]
 python = "^3.8"
 alphabet-detector = "^0.0.7"
@@ -60,6 +63,7 @@ transitions = "^0.8.11"
 timeout-decorator = "^0.5.0"
 "zope.interface" = "^5.4.0"
 pycountry = "^22.3.5"
+glom = "^22.1.0"
 
 [tool.poetry.dev-dependencies]
 coverage = "^6.4.2"
@@ -74,4 +78,4 @@ tox = "^3.25.1"
 
 [build-system]
 requires = ["poetry>=1.2.0b1"]
-build-backend = "poetry.masonry.api"
+build-backend = "poetry.core.masonry.api"

@@ -30,7 +30,6 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.copy
       ~PrepRecord.copy_prep_rec
       ~PrepRecord.create_colrev_id
-      ~PrepRecord.drop_fields
       ~PrepRecord.extract_pages
       ~PrepRecord.extract_text_by_page
       ~PrepRecord.format_author_field
@@ -72,6 +71,7 @@ colrev\_core.record.PrepRecord
       ~PrepRecord.preparation_save_condition
       ~PrepRecord.prescreen_exclude
       ~PrepRecord.print_citation_format
+      ~PrepRecord.print_diff_pair
       ~PrepRecord.remove_accents
       ~PrepRecord.remove_field
       ~PrepRecord.remove_quality_defect_notes
