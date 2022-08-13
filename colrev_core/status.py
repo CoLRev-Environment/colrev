@@ -7,8 +7,6 @@ from pathlib import Path
 
 import git
 import yaml
-from git.exc import InvalidGitRepositoryError
-from git.exc import NoSuchPathError
 
 import colrev_core.process
 import colrev_core.record
@@ -20,10 +18,6 @@ class Status(colrev_core.process.Process):
             REVIEW_MANAGER=REVIEW_MANAGER,
             process_type=colrev_core.process.ProcessType.explore,
         )
-
-    def get_completeness_condition(self) -> bool:
-        stat = self.REVIEW_MANAGER.get_status_freq()
-        return stat["completeness_condition"]
 
     def get_priority_transition(self, *, current_origin_states_dict: dict) -> list:
 
@@ -143,45 +137,66 @@ class Status(colrev_core.process.Process):
         return environment_instructions
 
     def append_registered_repo_instructions(self, registered_path):
-        import colrev_core.review_manager
 
-        # Note: do not use named arguments (multiprocessing)
+        instruction = {}
+
         try:
-            REPO_REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(
-                path_str=str(registered_path)
-            )
-        except (NoSuchPathError, InvalidGitRepositoryError):
-            instruction = {
-                "msg": "Locally registered repo no longer exists.",
-                "cmd": f"colrev env --unregister {registered_path}",
-            }
-            return instruction
-        except Exception as e:
-            print(f"Error in {registered_path}: {e}")
-            return {}
-        if "curated_metadata" in str(registered_path):
-            if (
-                REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote()
-                and not REPO_REVIEW_MANAGER.REVIEW_DATASET.remote_ahead()
-            ):
-                instruction = {
-                    "msg": "Updates available for curated repo "
-                    f"({registered_path}).",
-                    "cmd": "colrev env --update",
-                }
-                return instruction
-            if (
-                REPO_REVIEW_MANAGER.REVIEW_DATASET.behind_remote()
-                and REPO_REVIEW_MANAGER.REVIEW_DATASET.remote_ahead()
-            ):
-                instruction = {
-                    "msg": "Local/remote branch diverged for curated repo "
-                    f"({registered_path}).",
-                    "cmd": f"cd '{registered_path}' && git pull --rebase",
-                }
-                return instruction
+            git_repo = git.Repo(registered_path)
 
-        return {}
+            # https://github.com/gitpython-developers/GitPython/issues/652#issuecomment-610511311
+            origin = git_repo.remotes.origin
+
+            if not origin.exists():
+                raise AttributeError
+
+            if git_repo.active_branch.tracking_branch() is None:
+                raise AttributeError
+
+            branch_name = str(git_repo.active_branch)
+            tracking_branch_name = str(git_repo.active_branch.tracking_branch())
+            self.REVIEW_MANAGER.logger.debug(f"{branch_name} - {tracking_branch_name}")
+
+            behind_operation = branch_name + ".." + tracking_branch_name
+            commits_behind = git_repo.iter_commits(behind_operation)
+            nr_commits_behind = sum(1 for c in commits_behind)
+
+            ahead_operation = tracking_branch_name + ".." + branch_name
+            commits_ahead = git_repo.iter_commits(ahead_operation)
+            nr_commits_ahead = sum(1 for c in commits_ahead)
+
+            def pull_condition():
+                # behind_remote and not remote_ahead
+                return nr_commits_behind > 0 and not nr_commits_ahead > 0
+
+            def pull_rebase_condition():
+                # behind_remote and remote_ahead
+                return nr_commits_behind > 0 and nr_commits_ahead > 0
+
+            # Note: do not use named arguments (multiprocessing)
+            if not Path(registered_path).is_dir():
+                instruction = {
+                    "msg": "Locally registered repo no longer exists.",
+                    "cmd": f"colrev env --unregister {registered_path}",
+                }
+
+            elif "curated_metadata" in str(registered_path):
+                if pull_condition():
+                    instruction = {
+                        "msg": "Updates available for curated repo "
+                        f"({registered_path}).",
+                        "cmd": "colrev env --update",
+                    }
+
+                elif pull_rebase_condition():
+                    instruction = {
+                        "msg": "Local/remote branch diverged for curated repo "
+                        f"({registered_path}).",
+                        "cmd": f"cd '{registered_path}' && git pull --rebase",
+                    }
+
+        except AttributeError:
+            pass
+        return instruction
 
     def get_review_instructions(self, *, stat) -> list:
 
@@ -434,177 +449,11 @@ class Status(colrev_core.process.Process):
 
         return review_instructions
 
-    def get_collaboration_instructions(self, *, stat) -> dict:
-
-        SHARE_STAT_REQ = self.REVIEW_MANAGER.settings.project.share_stat_req
-        found_a_conflict = False
-        # git_repo = REVIEW_MANAGER.get_repo()
-        git_repo = git.Repo(str(self.REVIEW_MANAGER.paths["REPO_DIR"]))
-        unmerged_blobs = git_repo.index.unmerged_blobs()
-        for _, list_of_blobs in unmerged_blobs.items():
-            for (stage, _) in list_of_blobs:
-                if stage != 0:
-                    found_a_conflict = True
-
-        nr_commits_behind, nr_commits_ahead = 0, 0
-
-        collaboration_instructions: dict = {"items": []}
-        CONNECTED_REMOTE = 0 != len(git_repo.remotes)
-        if CONNECTED_REMOTE:
-            origin = git_repo.remotes.origin
-            if origin.exists():
-                (
-                    nr_commits_behind,
-                    nr_commits_ahead,
-                ) = self.REVIEW_MANAGER.REVIEW_DATASET.get_remote_commit_differences()
-        if CONNECTED_REMOTE:
-            collaboration_instructions["title"] = "Versioning and collaboration"
-            collaboration_instructions["SHARE_STAT_REQ"] = SHARE_STAT_REQ
-        else:
-            collaboration_instructions[
-                "title"
-            ] = "Versioning (not connected to shared repository)"
-
-        if found_a_conflict:
-            item = {
-                "title": "Git merge conflict detected",
-                "level": "WARNING",
-                "msg": "To resolve:\n  1 https://docs.github.com/en/"
-                + "pull-requests/collaborating-with-pull-requests/"
-                + "addressing-merge-conflicts/resolving-a-merge-conflict-"
-                + "using-the-command-line",
-            }
-            collaboration_instructions["items"].append(item)
-
-        # Notify when changes in bib files are not staged
-        # (this may raise unexpected errors)
-
-        non_staged = [
-            item.a_path
-            for item in git_repo.index.diff(None)
-            if ".bib" == item.a_path[-4:]
-        ]
-        if len(non_staged) > 0:
-            item = {
-                "title": f"Non-staged changes: {','.join(non_staged)}",
-                "level": "WARNING",
-            }
-            collaboration_instructions["items"].append(item)
-
-        elif not found_a_conflict:
-            if CONNECTED_REMOTE:
-                if nr_commits_behind > 0:
-                    item = {
-                        "title": "Remote changes available on the server",
-                        "level": "WARNING",
-                        "msg": "Once you have committed your changes, get the latest "
-                        + "remote changes",
-                        "cmd_after": "git add FILENAME \n  git commit -m 'MSG' \n  "
-                        + "git pull --rebase",
-                    }
-                    collaboration_instructions["items"].append(item)
-
-                if nr_commits_ahead > 0:
-                    # TODO : suggest detailed commands
-                    # (depending on the working directory/index)
-                    item = {
-                        "title": "Local changes not yet on the server",
-                        "level": "WARNING",
-                        "msg": "Once you have committed your changes, upload them "
-                        + "to the shared repository.",
-                        "cmd_after": "git push",
-                    }
-                    collaboration_instructions["items"].append(item)
-
-                if SHARE_STAT_REQ == "NONE":
-                    collaboration_instructions["status"] = {
-                        "title": "Sharing: currently ready for sharing",
-                        "level": "SUCCESS",
-                        "msg": "",
-                        # If consistency checks pass -
-                        # if they didn't pass, the message wouldn't be displayed
-                    }
-
-                # TODO : all the following: should all search results be imported?!
-                if SHARE_STAT_REQ == "PROCESSED":
-                    if 0 == stat["colrev_status"]["currently"]["non_processed"]:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
-
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be processed before sharing "
-                            + "(see instructions above).",
-                        }
-
-                # Note: if we use all(...) in the following,
-                # we do not need to distinguish whether
-                # a PRE_SCREEN or INCLUSION_SCREEN is needed
-                if SHARE_STAT_REQ == "SCREENED":
-                    # TODO : the following condition is probably not sufficient
-                    if 0 == stat["colrev_status"]["currently"]["pdf_prepared"]:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
-
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be screened before sharing "
-                            + "(see instructions above).",
-                        }
-
-                if SHARE_STAT_REQ == "COMPLETED":
-                    if 0 == stat["colrev_status"]["currently"]["non_completed"]:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently ready for sharing",
-                            "level": "SUCCESS",
-                            "msg": "",
-                            # If consistency checks pass -
-                            # if they didn't pass, the message wouldn't be displayed
-                        }
-                    else:
-                        collaboration_instructions["status"] = {
-                            "title": "Sharing: currently not ready for sharing",
-                            "level": "WARNING",
-                            "msg": "All records should be completed before sharing "
-                            + "(see instructions above).",
-                        }
-
-        else:
-            if CONNECTED_REMOTE:
-                collaboration_instructions["status"] = {
-                    "title": "Sharing: currently not ready for sharing",
-                    "level": "WARNING",
-                    "msg": "Merge conflicts need to be resolved first.",
-                }
-
-        if 0 == len(collaboration_instructions["items"]):
-            item = {
-                "title": "Up-to-date",
-                "level": "SUCCESS",
-            }
-            collaboration_instructions["items"].append(item)
-
-        return collaboration_instructions
-
     def get_instructions(self, *, stat: dict) -> dict:
         instructions = {
             "review_instructions": self.get_review_instructions(stat=stat),
             "environment_instructions": self.get_environment_instructions(stat=stat),
-            "collaboration_instructions": self.get_collaboration_instructions(
+            "collaboration_instructions": self.REVIEW_MANAGER.get_collaboration_instructions(
                 stat=stat
             ),
         }
@@ -613,176 +462,6 @@ class Status(colrev_core.process.Process):
             f"instructions: {self.REVIEW_MANAGER.pp.pformat(instructions)}"
         )
         return instructions
-
-    def print_review_status(self, *, status_info: dict) -> None:
-        import colrev_core.cli_colors as colors
-
-        print("")
-        print("Status")
-        print("")
-
-        # NOTE: the first figure should always
-        # refer to the nr of records that completed this step
-
-        stat = status_info["colrev_status"]
-
-        perc_curated = 0
-        denominator = (
-            stat["overall"]["md_prepared"]
-            + stat["currently"]["md_needs_manual_preparation"]
-            - stat["currently"]["md_duplicates_removed"]
-        )
-        if denominator > 0:
-
-            perc_curated = (stat["CURATED_records"] / (denominator)) * 100
-
-        rjust_padd = 7
-        search_info = (
-            "  Search        "
-            + f'{str(stat["overall"]["md_retrieved"]).rjust(rjust_padd, " ")} retrieved'
-        )
-        search_add_info = []
-        if stat["overall"]["md_prepared"] > 0:
-            # search_add_info.append(f"{str(int(perc_curated))}% curated")
-            # Note: do not print percentages becaus
-            # - the other figures are all absolute numbers
-            # - the denominator changes (particularly confusing in the prep when
-            #   the number of curated records remains the same but the percentage
-            #   decreases)
-            if perc_curated < 30:
-                search_add_info.append(
-                    f"only {colors.RED}{str(stat['CURATED_records'])} "
-                    f"curated{colors.END}"
-                )
-            elif perc_curated > 60:
-                search_add_info.append(
-                    f"{colors.GREEN}{str(stat['CURATED_records'])} curated{colors.END}"
-                )
-            else:
-                search_add_info.append(f"{str(stat['CURATED_records'])} curated")
-        if stat["currently"]["md_retrieved"] > 0:
-            search_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["md_retrieved"]}'
-                f" to load{colors.END}"
-            )
-        if len(search_add_info) > 0:
-            search_info += f'    ({", ".join(search_add_info)})'
-        print(search_info)
-
-        metadata_info = (
-            "  Metadata      "
-            + f'{str(stat["overall"]["md_processed"]).rjust(rjust_padd, " ")} processed'
-        )
-        metadata_add_info = []
-        if stat["currently"]["md_duplicates_removed"] > 0:
-            metadata_add_info.append(
-                f'{stat["currently"]["md_duplicates_removed"]} duplicates removed'
-            )
-
-        if stat["currently"]["md_imported"] > 0:
-            metadata_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["md_imported"]}'
-                f" to prepare{colors.END}"
-            )
-
-        if stat["currently"]["md_needs_manual_preparation"] > 0:
-            metadata_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["md_needs_manual_preparation"]} '
-                f"to prepare manually{colors.END}"
-            )
-
-        if stat["currently"]["md_prepared"] > 0:
-            metadata_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["md_prepared"]}'
-                f" to deduplicate{colors.END}"
-            )
-
-        if len(metadata_add_info) > 0:
-            metadata_info += f"    ({', '.join(metadata_add_info)})"
-        print(metadata_info)
-
-        prescreen_info = (
-            "  Prescreen     "
-            + f'{str(stat["overall"]["rev_prescreen_included"]).rjust(rjust_padd, " ")}'
-            " included"
-        )
-        prescreen_add_info = []
-        if stat["currently"]["rev_prescreen_excluded"] > 0:
-            prescreen_add_info.append(
-                f'{stat["currently"]["rev_prescreen_excluded"]} excluded'
-            )
-        if stat["currently"]["md_processed"] > 0:
-            prescreen_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["md_processed"]}'
-                f" to prescreen{colors.END}"
-            )
-        if len(prescreen_add_info) > 0:
-            prescreen_info += f"     ({', '.join(prescreen_add_info)})"
-        print(prescreen_info)
-
-        pdfs_info = (
-            "  PDFs          "
-            + f'{str(stat["overall"]["pdf_prepared"]).rjust(rjust_padd, " ")} prepared'
-        )
-        pdf_add_info = []
-        if stat["currently"]["rev_prescreen_included"] > 0:
-            pdf_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["rev_prescreen_included"]}'
-                f" to retrieve{colors.END}"
-            )
-        if stat["currently"]["pdf_needs_manual_retrieval"] > 0:
-            pdf_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["pdf_needs_manual_retrieval"]}'
-                f" to retrieve manually{colors.END}"
-            )
-        if stat["currently"]["pdf_not_available"] > 0:
-            pdf_add_info.append(
-                f'{stat["currently"]["pdf_not_available"]} not available'
-            )
-        if stat["currently"]["pdf_imported"] > 0:
-            pdf_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["pdf_imported"]}'
-                f" to prepare{colors.END}"
-            )
-        if stat["currently"]["pdf_needs_manual_preparation"] > 0:
-            pdf_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["pdf_needs_manual_preparation"]}'
-                f" to prepare manually{colors.END}"
-            )
-        if len(pdf_add_info) > 0:
-            pdfs_info += f"     ({', '.join(pdf_add_info)})"
-        print(pdfs_info)
-
-        screen_info = (
-            "  Screen        "
-            + f'{str(stat["overall"]["rev_included"]).rjust(rjust_padd, " ")} included'
-        )
-        screen_add_info = []
-        if stat["currently"]["pdf_prepared"] > 0:
-            screen_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["pdf_prepared"]}'
-                f" to screen{colors.END}"
-            )
-        if stat["currently"]["rev_excluded"] > 0:
-            screen_add_info.append(f'{stat["currently"]["rev_excluded"]} excluded')
-        if len(screen_add_info) > 0:
-            screen_info += f"     ({', '.join(screen_add_info)})"
-        print(screen_info)
-
-        data_info = (
-            "  Data          "
-            + f'{str(stat["overall"]["rev_synthesized"]).rjust(rjust_padd, " ")} '
-            "synthesized"
-        )
-        data_add_info = []
-        if stat["currently"]["rev_included"] > 0:
-            data_add_info.append(
-                f'{colors.ORANGE}{stat["currently"]["rev_included"]}'
-                f" to synthesize{colors.END}"
-            )
-        if len(data_add_info) > 0:
-            data_info += f'  ({", ".join(data_add_info)})'
-        print(data_info)
 
     def get_analytics(self) -> dict:
 

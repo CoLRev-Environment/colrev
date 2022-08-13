@@ -7,6 +7,7 @@ import zope.interface
 from dacite import from_dict
 
 import colrev_core.process
+import colrev_core.record
 
 
 @zope.interface.implementer(colrev_core.process.PDFPreparationManualEndpoint)
@@ -21,7 +22,6 @@ class CoLRevCLIPDFManPrep:
         pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
         def man_pdf_prep(PDF_PREP_MAN, records: typing.Dict, item, stat) -> typing.Dict:
-            import colrev_core.record
 
             PDF_PREP_MAN.REVIEW_MANAGER.logger.debug(
                 f"called man_pdf_prep for {pp.pformat(item)}"

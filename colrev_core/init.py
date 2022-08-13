@@ -13,6 +13,7 @@ import git
 
 import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
+import colrev_core.review_dataset
 import colrev_core.review_manager
 import colrev_core.settings
 
@@ -86,7 +87,7 @@ class Initializer:
             self.REVIEW_MANAGER.logger.info(instruction)
 
     def __setup_init_logger(self, *, level=logging.INFO) -> logging.Logger:
-
+        # pylint: disable=duplicate-code
         init_logger = logging.getLogger("colrev_core-init_logger")
 
         init_logger.setLevel(level)
@@ -304,7 +305,7 @@ class Initializer:
                 target=Path("readme.md"),
             )
             if self.url:
-                self.__inplace_change(
+                colrev_core.review_dataset.ReviewDataset.inplace_change(
                     filename=Path("readme.md"),
                     old_string="{{url}}",
                     new_string=self.url,
@@ -366,7 +367,7 @@ class Initializer:
             json.dump(settings, outfile, indent=4)
 
         if "review" in self.project_name.lower():
-            self.__inplace_change(
+            colrev_core.review_dataset.ReviewDataset.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" "),
@@ -375,7 +376,7 @@ class Initializer:
             r_type_suffix = self.review_type.replace("_", " ").replace(
                 "meta analysis", "meta-analysis"
             )
-            self.__inplace_change(
+            colrev_core.review_dataset.ReviewDataset.inplace_change(
                 filename=Path("readme.md"),
                 old_string="{{project_title}}",
                 new_string=self.project_name.rstrip(" ") + f": A {r_type_suffix}",
@@ -490,18 +491,6 @@ class Initializer:
 
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
-
-    def __inplace_change(
-        self, *, filename: Path, old_string: str, new_string: str
-    ) -> None:
-        with open(filename, encoding="utf8") as f:
-            s = f.read()
-            if old_string not in s:
-                logging.info(f'"{old_string}" not found in {filename}.')
-                return
-        with open(filename, "w", encoding="utf8") as f:
-            s = s.replace(old_string, new_string)
-            f.write(s)
 
     def __create_example_repo(self) -> None:
         """The example repository is intended to provide an initial illustration

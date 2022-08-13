@@ -11,6 +11,13 @@ colrev\_core.record.RecordState
 
 
 
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~RecordState.get_post_md_processed_states
+
 
 
 

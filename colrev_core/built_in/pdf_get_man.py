@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 import zope.interface
 from dacite import from_dict
-from dacite.exceptions import MissingValueError
 
+import colrev_core.pdf_get
 import colrev_core.process
+import colrev_core.record
 
 
 @zope.interface.implementer(colrev_core.process.PDFRetrievalManualEndpoint)
@@ -14,11 +15,6 @@ class CoLRevCLIPDFRetrievalManual:
         )
 
     def get_man_pdf(self, PDF_RETRIEVAL_MAN, records):
-
-        import colrev_core.pdf_get
-        import colrev_core.review_manager
-        import colrev_core.record
-
         def get_pdf_from_google(RECORD) -> dict:
             import urllib.parse
 
@@ -32,7 +28,6 @@ class CoLRevCLIPDFRetrievalManual:
             return RECORD
 
         def pdf_get_man_record_cli(*, PDF_RETRIEVAL_MAN, RECORD) -> None:
-            import colrev_core.record
 
             PDF_RETRIEVAL_MAN.REVIEW_MANAGER.logger.debug(
                 f"called pdf_get_man_cli for {RECORD}"
@@ -85,16 +80,11 @@ class CoLRevCLIPDFRetrievalManual:
                         REVIEW_MANAGER=PDF_RETRIEVAL_MAN.REVIEW_MANAGER, filepath=None
                     )
 
-        try:
-            REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
-        except MissingValueError as e:
-            print(f"Error in settings.json: {e}")
-            print("To solve this, use\n  colrev settings --upgrade")
-            return
-
         saved_args = locals()
-        REVIEW_MANAGER.logger.info("Retrieve PDFs manually")
-        PDF_RETRIEVAL = colrev_core.pdf_get.PDF_Retrieval(REVIEW_MANAGER=REVIEW_MANAGER)
+        PDF_RETRIEVAL_MAN.REVIEW_MANAGER.logger.info("Retrieve PDFs manually")
+        PDF_RETRIEVAL = colrev_core.pdf_get.PDF_Retrieval(
+            REVIEW_MANAGER=PDF_RETRIEVAL_MAN.REVIEW_MANAGER
+        )
         PDF_DIRECTORY = PDF_RETRIEVAL_MAN.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
 
         records = PDF_RETRIEVAL_MAN.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
@@ -131,7 +121,7 @@ class CoLRevCLIPDFRetrievalManual:
                     saved_args=saved_args,
                 )
         else:
-            REVIEW_MANAGER.logger.info(
+            PDF_RETRIEVAL_MAN.REVIEW_MANAGER.logger.info(
                 "Retrieve PDFs manually and copy the files to "
                 f"the {PDF_DIRECTORY}. Afterwards, use "
                 "colrev_core pdf-get-man"

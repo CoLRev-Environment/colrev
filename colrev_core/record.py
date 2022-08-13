@@ -624,6 +624,7 @@ class Record:
             return sum(map(str.isupper, input_string)) / len(input_string)
 
         def select_best_author(RECORD: Record, MERGING_RECORD: Record) -> str:
+            # pylint: disable=too-many-return-statements
             if "colrev_masterdata_provenance" not in RECORD.data:
                 RECORD.data["colrev_masterdata_provenance"] = {}
             record_a_prov = RECORD.data["colrev_masterdata_provenance"]
@@ -1333,6 +1334,7 @@ class Record:
         if len(alsoKnownAsRecord) == 0:
             record = self.data
         else:
+            # pylint: disable=duplicate-code
             # TODO : need a better design for selecting required fields
             required_fields_keys = [
                 k
@@ -1518,7 +1520,8 @@ class Record:
             with open(save_to_path / filepath.name, "wb") as outfile:
                 writer_cp.write(outfile)
 
-    def get_colrev_pdf_id(self, *, path: Path) -> str:
+    @classmethod
+    def get_colrev_pdf_id(cls, *, path: Path) -> str:
 
         cpid1 = "cpid1:" + str(
             imagehash.average_hash(
@@ -1778,7 +1781,8 @@ class PrepRecord(Record):
             if mostly_upper_case(input_string.replace(" and ", "").replace("Jr", "")):
                 parsed_name.capitalize(force=True)
 
-            # Fix: when first names are abbreivated, nameparser creates errors:
+            # pylint: disable=chained-comparison
+            # Fix: when first names are abbreviated, nameparser creates errors:
             if (
                 len(parsed_name.last) <= 3
                 and parsed_name.last.isupper()
@@ -2273,6 +2277,22 @@ class RecordState(Enum):
 
     def __str__(self):
         return f"{self.name}"
+
+    @classmethod
+    def get_post_md_processed_states(cls):
+        return [
+            str(RecordState.md_processed),
+            str(RecordState.rev_prescreen_included),
+            str(RecordState.rev_prescreen_excluded),
+            str(RecordState.pdf_needs_manual_retrieval),
+            str(RecordState.pdf_imported),
+            str(RecordState.pdf_not_available),
+            str(RecordState.pdf_needs_manual_preparation),
+            str(RecordState.pdf_prepared),
+            str(RecordState.rev_excluded),
+            str(RecordState.rev_included),
+            str(RecordState.rev_synthesized),
+        ]
 
 
 if __name__ == "__main__":

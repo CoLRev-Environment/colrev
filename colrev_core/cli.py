@@ -13,6 +13,9 @@ import colrev_core.exceptions as colrev_exceptions
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
 
+# pylint: disable=redefined-builtin
+# pylint: disable=redefined-outer-name
+# pylint: disable=too-many-arguments
 
 # Note: autocompletion needs bash/... activation:
 # https://click.palletsprojects.com/en/7.x/bashcomplete/
@@ -57,6 +60,7 @@ class SpecialHelpOrder(click.Group):
         help_priorities = self.help_priorities
 
         def decorator(f):
+            # pylint: disable=super-with-arguments
             cmd = super(SpecialHelpOrder, self).command(*args, **kwargs)(f)
             help_priorities[cmd.name] = help_priority
             return cmd
@@ -113,6 +117,7 @@ def init(ctx, name, type, url, example) -> bool:
 
         cur_content = [str(x) for x in Path.cwd().glob("**/*")]
 
+        # pylint: disable=duplicate-code
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
@@ -256,11 +261,12 @@ def print_progress(stat: dict) -> None:
 
 
 def print_project_status(STATUS) -> None:
+    import colrev_core.data
 
     stat = STATUS.REVIEW_MANAGER.get_status_freq()
     try:
         # if ret_check["status"] + ret_f["status"] == 0:
-        STATUS.print_review_status(status_info=stat)
+        STATUS.REVIEW_MANAGER.print_review_status(status_info=stat)
         print_progress(stat)
     except Exception as e:
         print(f"Status failed ({e})")
@@ -275,7 +281,9 @@ def print_project_status(STATUS) -> None:
     print("Checks\n")
 
     try:
-        ret_check = STATUS.REVIEW_MANAGER.check_repo()
+        ret_check = STATUS.REVIEW_MANAGER.check_repo(
+            DATA=colrev_core.data.Data(REVIEW_MANAGER=STATUS.REVIEW_MANAGER)
+        )
     except colrev_exceptions.RepoSetupError as e:
         ret_check = {"status": 1, "msg": e}
 
@@ -325,10 +333,10 @@ def print_project_status(STATUS) -> None:
 def status(ctx, analytics) -> None:
     """Show status"""
     from git.exc import InvalidGitRepositoryError
+    import colrev_core.status
+    import colrev_core.review_manager
 
     if analytics:
-        import colrev_core.status
-        import colrev_core.review_manager
 
         REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
         STATUS = colrev_core.status.Status(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -339,7 +347,6 @@ def status(ctx, analytics) -> None:
         return
 
     try:
-        import colrev_core.review_manager
 
         REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
         STATUS = colrev_core.status.Status(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -622,6 +629,7 @@ def view_dedupe_details(REVIEW_MANAGER) -> None:
     default=False,
     help="Export a spreadsheet for (non-matched) source comparison",
 )
+@click.option("--force", is_flag=True, default=False)
 @click.pass_context
 def dedupe(
     ctx,
@@ -630,6 +638,7 @@ def dedupe(
     merge_threshold,
     partition_threshold,
     source_comparison,
+    force,
 ) -> None:
     """Deduplicate records
 
@@ -671,7 +680,7 @@ def dedupe(
     import colrev_core.review_manager
 
     try:
-        REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
+        REVIEW_MANAGER = colrev_core.review_manager.ReviewManager(force_mode=force)
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
         print("To solve this, use\n  colrev settings --upgrade")
@@ -806,8 +815,8 @@ def prescreen(
             PRESCREEN.include_all_in_prescreen()
         elif create_split:
             splits = PRESCREEN.create_prescreen_split(create_split=create_split)
-            for split in splits:
-                print(split + "\n")
+            for created_split in splits:
+                print(created_split + "\n")
         elif setup_custom_script:
             PRESCREEN.setup_custom_script()
             print("Activated custom_prescreen_script.py.")
@@ -890,8 +899,8 @@ def screen(
             SCREEN.delete_criterion(criterion_to_delete=delete_criterion)
         elif create_split:
             splits = SCREEN.create_screen_split(create_split=create_split)
-            for split in splits:
-                print(split + "\n")
+            for created_split in splits:
+                print(created_split + "\n")
         elif setup_custom_script:
             SCREEN.setup_custom_script()
             print("Activated custom_screen_script.py.")
@@ -1275,7 +1284,8 @@ def data(
                             "Please select a citation style and provide the link."
                         )
                         r = requests.get(csl_link, allow_redirects=True)
-                        open(Path(csl_link).name, "wb").write(r.content)
+                        with open(Path(csl_link).name, "wb") as f:
+                            f.write(r.content)
                         default_endpoint_conf["csl_style"] = Path(csl_link).name
                     else:
                         print("Adding APA as a default")
@@ -1400,6 +1410,7 @@ def validate(ctx, scope, properties, commit) -> None:
         print("No substantial changes.")
         return
 
+    # pylint: disable=duplicate-code
     keys = [
         "author",
         "title",
@@ -1803,7 +1814,7 @@ def settings(ctx, upgrade, update_hooks, modify):
 
         import json
         import ast
-        from glom import glom
+        import glom
 
         REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
         # TBD: maybe use glom.delete?
@@ -1837,12 +1848,8 @@ def settings(ctx, upgrade, update_hooks, modify):
 
 
 @main.command(help_priority=22)
-# @click.option("-r", "--register", is_flag=True, default=False)
 @click.pass_context
-def sync(
-    ctx,
-    # register,
-):
+def sync(ctx):
     """Sync records from CoLRev environment to non-CoLRev repo"""
     import colrev_core.sync
 

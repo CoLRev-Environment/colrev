@@ -511,6 +511,8 @@ class ScreenEndpoint(zope.interface.Interface):
 
 
 class DataEndpoint(zope.interface.Interface):
+
+    # pylint: disable=no-method-argument
     def get_default_setup() -> dict:  # type: ignore
         return {}
 

@@ -33,10 +33,12 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.file_in_history
       ~ReviewDataset.format_records_file
       ~ReviewDataset.get_commit_message
+      ~ReviewDataset.get_crossref_record
       ~ReviewDataset.get_currently_imported_origin_list
       ~ReviewDataset.get_last_commit_sha
       ~ReviewDataset.get_missing_files
       ~ReviewDataset.get_next_ID
+      ~ReviewDataset.get_nr_in_bib
       ~ReviewDataset.get_origin_state_dict
       ~ReviewDataset.get_record_header_list
       ~ReviewDataset.get_record_state_list
@@ -47,6 +49,7 @@ colrev\_core.review\_dataset.ReviewDataset
       ~ReviewDataset.get_untracked_files
       ~ReviewDataset.has_changes
       ~ReviewDataset.import_file
+      ~ReviewDataset.inplace_change
       ~ReviewDataset.load_field_dict
       ~ReviewDataset.load_from_git_history
       ~ReviewDataset.load_origin_records

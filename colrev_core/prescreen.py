@@ -125,6 +125,7 @@ class Prescreen(colrev_core.process.Process):
 
     def main(self, *, split_str: str):
 
+        # pylint: disable=duplicate-code
         split = []
         if split_str != "NA":
             split = split_str.split(",")

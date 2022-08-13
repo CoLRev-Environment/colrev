@@ -277,6 +277,7 @@ class SpreadsheetScreenEndpoint:
             ]:
                 inclusion_2 = "yes"
 
+            # pylint: disable=duplicate-code
             row = {
                 "ID": record["ID"],
                 "author": record.get("author", ""),
@@ -330,6 +331,7 @@ class SpreadsheetScreenEndpoint:
 
     def import_table(self, SCREEN, records, import_table_path=None) -> None:
 
+        # pylint: disable=duplicate-code
         if import_table_path is None:
             import_table_path = self.spreadsheet_path
 

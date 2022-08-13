@@ -2,9 +2,7 @@
 import typing
 from pathlib import Path
 
-import imagehash
 import pandas as pd
-from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
@@ -64,19 +62,11 @@ class PDFPrepMan(colrev_core.process.Process):
         )
         return pdf_prep_man_data
 
-    def get_colrev_pdf_id(self, *, path: Path) -> str:
-        cpid1 = "cpid1:" + str(
-            imagehash.average_hash(
-                convert_from_path(path, first_page=1, last_page=1)[0],
-                hash_size=32,
-            )
-        )
-        return cpid1
-
     def pdfs_prepared_manually(self) -> bool:
         return self.REVIEW_MANAGER.REVIEW_DATASET.has_changes()
 
     def pdf_prep_man_stats(self) -> None:
+        # pylint: disable=duplicate-code
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
@@ -119,6 +109,7 @@ class PDFPrepMan(colrev_core.process.Process):
         if crosstab_df.empty:
             print("No records to prepare manually.")
         else:
+            # pylint: disable=duplicate-code
             tabulated = pd.pivot_table(
                 crosstab_df[["journal", "hint"]],
                 index=["journal"],
@@ -167,6 +158,7 @@ class PDFPrepMan(colrev_core.process.Process):
 
         bib_db_df = pd.DataFrame.from_records(list(records.values()))
 
+        # pylint: disable=duplicate-code
         col_names = [
             "ID",
             "colrev_origin",

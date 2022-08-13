@@ -2,7 +2,6 @@
 import re
 import shutil
 import subprocess
-import unicodedata
 from pathlib import Path
 
 import imagehash
@@ -223,7 +222,9 @@ class PDFCoverPageEndpoint:
             if (
                 "thisarticlewasdownloadedby" in page0
                 and "fulltermsandconditionsofuse:" in page0
-            ) or (
+            ):
+                coverpages.append(0)
+            if (
                 "thisarticlemaybeusedonlyforthepurposesofresearch" in page0
                 and "abstract" not in page0
                 and "keywords" not in page0
@@ -241,22 +242,17 @@ class PDFCoverPageEndpoint:
                 coverpages.append(0)
 
             # Remove Taylor and Francis First Page
-            if (
-                "pleasescrolldownforarticle" in page0
-                and "abstract" not in page0
-                and "keywords" not in page0
-            ) or (
+            if ("pleasescrolldownforarticle" in page0) or (
                 "viewrelatedarticles" in page0
-                and "abstract" not in page0
-                and "keywords" not in page0
             ):
-                coverpages.append(0)
-                if (
-                    "terms-and-conditions" in page1
-                    and "abstract" not in page1
-                    and "keywords" not in page1
-                ):
-                    coverpages.append(1)
+                if "abstract" not in page0 and "keywords" not in page0:
+                    coverpages.append(0)
+                    if (
+                        "terms-and-conditions" in page1
+                        and "abstract" not in page1
+                        and "keywords" not in page1
+                    ):
+                        coverpages.append(1)
 
             return list(set(coverpages))
 
@@ -390,36 +386,6 @@ class PDFMetadataValidationEndpoint:
         )
 
     def validates_based_on_metadata(self, *, REVIEW_MANAGER, RECORD) -> dict:
-        def __rmdiacritics(*, char: str) -> str:
-            """
-            Return the base character of char, by "removing" any
-            diacritics like accents or curls and strokes and the like.
-            """
-            try:
-                desc = unicodedata.name(char)
-            except ValueError:
-                return ""
-            cutoff = desc.find(" WITH ")
-            if cutoff != -1:
-                desc = desc[:cutoff]
-                try:
-                    char = unicodedata.lookup(desc)
-                except KeyError:
-                    pass  # removing "WITH ..." produced an invalid name
-            return char
-
-        def __remove_accents(*, text: str) -> str:
-            try:
-                nfkd_form = unicodedata.normalize("NFKD", text)
-                wo_ac_str = [
-                    __rmdiacritics(char=c)
-                    for c in nfkd_form
-                    if not unicodedata.combining(c)
-                ]
-                wo_ac = "".join(wo_ac_str)
-            except ValueError:
-                wo_ac = text
-            return wo_ac
 
         validation_info = {"msgs": [], "pdf_prep_hints": [], "validates": True}
 
@@ -428,7 +394,7 @@ class PDFMetadataValidationEndpoint:
 
         text = RECORD.data["text_from_pdf"]
         text = text.replace(" ", "").replace("\n", "").lower()
-        text = __remove_accents(text=text)
+        text = colrev_core.record.Record.remove_accents(input_str=text)
         text = re.sub("[^a-zA-Z ]+", "", text)
 
         title_words = re.sub("[^a-zA-Z ]+", "", RECORD.data["title"]).lower().split()
@@ -474,7 +440,9 @@ class PDFMetadataValidationEndpoint:
             match_count = 0
             for author_name in RECORD.data.get("author", "").split(" and "):
                 author_name = author_name.split(",")[0].lower().replace(" ", "")
-                author_name = __remove_accents(text=author_name)
+                author_name = colrev_core.record.Record.remove_accents(
+                    input_str=author_name
+                )
                 author_name = (
                     author_name.replace("ue", "u").replace("ae", "a").replace("oe", "o")
                 )

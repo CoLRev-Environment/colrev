@@ -176,6 +176,7 @@ class Push(colrev_core.process.Process):
                 )
                 return
 
+        # pylint: disable=duplicate-code
         essential_md_keys = [
             "title",
             "author",

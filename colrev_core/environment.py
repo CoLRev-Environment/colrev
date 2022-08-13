@@ -403,16 +403,16 @@ class EnvironmentManager:
         print(f"Registered path ({path_to_register})")
 
     @classmethod
-    def get_name_mail_from_git(cls) -> list:
+    def get_name_mail_from_git(cls) -> typing.Tuple[str, str]:
 
         ggit_conf_path = Path.home() / Path(".gitconfig")
-        global_conf_details = []
+        global_conf_details = ("NA", "NA")
         if ggit_conf_path.is_file():
             glob_git_conf = git.GitConfigParser([str(ggit_conf_path)], read_only=True)
-            global_conf_details = [
+            global_conf_details = (
                 glob_git_conf.get("user", "name"),
                 glob_git_conf.get("user", "email"),
-            ]
+            )
         return global_conf_details
 
     @classmethod
@@ -440,6 +440,7 @@ class EnvironmentManager:
 
     @classmethod
     def check_git_installed(cls) -> None:
+        # pylint: disable=consider-using-with
 
         try:
             with open("/dev/null", "w", encoding="utf8") as null:
@@ -449,6 +450,7 @@ class EnvironmentManager:
 
     @classmethod
     def check_docker_installed(cls) -> None:
+        # pylint: disable=consider-using-with
 
         try:
             with open("/dev/null", "w", encoding="utf8") as null:
@@ -457,7 +459,7 @@ class EnvironmentManager:
             raise colrev_exceptions.MissingDependencyError("docker") from e
 
     def get_environment_details(self) -> dict:
-
+        # pylint: disable=redefined-outer-name
         import colrev_core.review_manager
 
         LOCAL_INDEX = LocalIndex()
@@ -856,6 +858,10 @@ class LocalIndex:
                 ):
                     pass
 
+            # pylint: disable=unexpected-keyword-arg
+            # Note : update(...) accepts the timeout keyword
+            # https://opensearch-project.github.io/opensearch-py/
+            # api-ref/client.html#opensearchpy.OpenSearch.update
             self.os.update(
                 index=self.RECORD_INDEX,
                 id=paper_hash,
@@ -1036,6 +1042,7 @@ class LocalIndex:
         return retrieved_record
 
     def parse_record(self, *, record: dict) -> dict:
+        # pylint: disable=redefined-outer-name
         import colrev_core.review_dataset
 
         # Note : we need to parse it through parse_records_dict (pybtex / parse_string)
@@ -1259,6 +1266,7 @@ class LocalIndex:
         return
 
     def index_colrev_project(self, *, repo_source_path):
+        # pylint: disable=redefined-outer-name
         import colrev_core.review_manager
 
         try:
@@ -1326,6 +1334,8 @@ class LocalIndex:
         session = requests_cache.CachedSession(
             str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
         )
+        # pylint: disable=unnecessary-lambda
+        # Note : lambda is necessary to prevent immediate function call
         Timer(0.1, lambda: session.remove_expired_responses()).start()
 
         print("Start LocalIndex")
@@ -1879,6 +1889,7 @@ class GrobidService:
         return True
 
     def start(self) -> None:
+        # pylint: disable=consider-using-with
 
         try:
             res = self.check_grobid_availability(wait=False)
@@ -1929,6 +1940,7 @@ class TEIParser:
         - tei_path: read TEI from file
         """
 
+        # pylint: disable=consider-using-with
         assert pdf_path is not None or tei_path is not None
         if pdf_path is not None:
             if pdf_path.is_symlink():

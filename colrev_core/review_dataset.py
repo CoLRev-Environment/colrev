@@ -9,7 +9,6 @@ import shutil
 import string
 import time
 import typing
-import unicodedata
 from copy import deepcopy
 from pathlib import Path
 
@@ -73,6 +72,19 @@ class ReviewDataset:
         if record_state_list is None:
             record_state_list = self.get_record_state_list()
         return {el["colrev_status"] for el in record_state_list}
+
+    def get_nr_in_bib(self, *, file_path: Path) -> int:
+        number_in_bib = 0
+        with open(file_path, encoding="utf8") as f:
+            line = f.readline()
+            while line:
+                # Note: the '﻿' occured in some bibtex files
+                # (e.g., Publish or Perish exports)
+                if "@" in line[:3]:
+                    if "@comment" not in line[:10].lower():
+                        number_in_bib += 1
+                line = f.readline()
+        return number_in_bib
 
     def retrieve_records_from_history(
         self,
@@ -434,6 +446,7 @@ class ReviewDataset:
     ) -> typing.Dict:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
+        # pylint: disable=redefined-outer-name
         import colrev_core.environment
 
         if records is None:
@@ -515,32 +528,6 @@ class ReviewDataset:
     ) -> str:
         """Generate a blacklist to avoid setting duplicate IDs"""
 
-        def rmdiacritics(char: str) -> str:
-            """
-            Return the base character of char, by "removing" any
-            diacritics like accents or curls and strokes and the like.
-            """
-            desc = unicodedata.name(char)
-            cutoff = desc.find(" WITH ")
-            if cutoff != -1:
-                desc = desc[:cutoff]
-                try:
-                    char = unicodedata.lookup(desc)
-                except KeyError:
-                    pass  # removing "WITH ..." produced an invalid name
-            return char
-
-        def remove_accents(input_str: str) -> str:
-            try:
-                nfkd_form = unicodedata.normalize("NFKD", input_str)
-                wo_ac_list = [
-                    rmdiacritics(c) for c in nfkd_form if not unicodedata.combining(c)
-                ]
-                wo_ac = "".join(wo_ac_list)
-            except ValueError:
-                wo_ac = input_str
-            return wo_ac
-
         # Make sure that IDs that have been propagated to the
         # screen or data will not be replaced
         # (this would break the chain of evidence)
@@ -589,7 +576,7 @@ class ReviewDataset:
                 temp_ID = temp_ID.capitalize()
             # Replace special characters
             # (because IDs may be used as file names)
-            temp_ID = remove_accents(temp_ID)
+            temp_ID = colrev_core.record.Record.remove_accents(input_str=temp_ID)
             temp_ID = re.sub(r"\(.*\)", "", temp_ID)
             temp_ID = re.sub("[^0-9a-zA-Z]+", "", temp_ID)
 
@@ -635,53 +622,51 @@ class ReviewDataset:
             return k, v
 
         record_header_items = []
+        # pylint: disable=consider-using-with
         if file_object is None:
-            with open(self.RECORDS_FILE, encoding="utf-8") as file_object:
+            file_object = open(self.RECORDS_FILE, encoding="utf-8")
 
-                # Fields required
-                default = {
-                    "ID": "NA",
-                    "colrev_origin": "NA",
-                    "colrev_status": "NA",
-                    "screening_criteria": "NA",
-                    "file": "NA",
-                    "colrev_masterdata_provenance": "NA",
-                }
-                number_required_header_items = len(default)
+        # Fields required
+        default = {
+            "ID": "NA",
+            "colrev_origin": "NA",
+            "colrev_status": "NA",
+            "screening_criteria": "NA",
+            "file": "NA",
+            "colrev_masterdata_provenance": "NA",
+        }
+        number_required_header_items = len(default)
 
+        record_header_item = default.copy()
+        current_header_item_count = 0
+        current_key_value_pair_str = ""
+        while True:
+            line = file_object.readline()
+            if not line:
+                break
+            if line[:1] == "%" or line == "\n":
+                continue
+
+            if current_header_item_count > number_required_header_items or "}" == line:
+                record_header_items.append(record_header_item)
                 record_header_item = default.copy()
                 current_header_item_count = 0
-                current_key_value_pair_str = ""
-                while True:
-                    line = file_object.readline()
-                    if not line:
-                        break
-                    if line[:1] == "%" or line == "\n":
-                        continue
+                continue
 
-                    if (
-                        current_header_item_count > number_required_header_items
-                        or "}" == line
-                    ):
-                        record_header_items.append(record_header_item)
-                        record_header_item = default.copy()
-                        current_header_item_count = 0
-                        continue
-
-                    if "@" in line[:2] and not "NA" == record_header_item["ID"]:
-                        record_header_items.append(record_header_item)
-                        record_header_item = default.copy()
-                        current_header_item_count = 0
-
-                    current_key_value_pair_str += line
-                    if "}," in line or "@" in line[:2]:
-                        k, v = parse_k_v(current_key_value_pair_str)
-                        current_key_value_pair_str = ""
-                        if k in record_header_item:
-                            current_header_item_count += 1
-                            record_header_item[k] = v
-
+            if "@" in line[:2] and not "NA" == record_header_item["ID"]:
                 record_header_items.append(record_header_item)
+                record_header_item = default.copy()
+                current_header_item_count = 0
+
+            current_key_value_pair_str += line
+            if "}," in line or "@" in line[:2]:
+                k, v = parse_k_v(current_key_value_pair_str)
+                current_key_value_pair_str = ""
+                if k in record_header_item:
+                    current_header_item_count += 1
+                    record_header_item[k] = v
+
+        record_header_items.append(record_header_item)
         return record_header_items
 
     def __read_next_record_str(self, *, file_object=None) -> typing.Iterator[str]:
@@ -724,6 +709,20 @@ class ReviewDataset:
             else:
                 records.append(record)
         yield from records
+
+    def get_crossref_record(self, *, record) -> dict:
+        # Note : the ID of the crossrefed record may have changed.
+        # we need to trace based on the colrev_origin
+        crossref_origin = record["colrev_origin"]
+        crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
+        crossref_origin = crossref_origin + "/" + record["crossref"]
+        for record_string in self.__read_next_record_str():
+            if crossref_origin in record_string:
+                records_dict = self.load_records_dict(load_str=record_string)
+                record = list(records_dict.values())[0]
+                if record["colrev_origin"] == crossref_origin:
+                    return record
+        return {}
 
     def replace_field(self, *, IDs: list, key: str, val_str: str) -> None:
 
@@ -948,19 +947,10 @@ class ReviewDataset:
                 for org in origin.split(";"):
                     data["origin_list"].append([ID, org])
 
-                if status in [
-                    str(colrev_core.record.RecordState.md_processed),
-                    str(colrev_core.record.RecordState.rev_prescreen_excluded),
-                    str(colrev_core.record.RecordState.rev_prescreen_included),
-                    str(colrev_core.record.RecordState.pdf_needs_manual_retrieval),
-                    str(colrev_core.record.RecordState.pdf_imported),
-                    str(colrev_core.record.RecordState.pdf_not_available),
-                    str(colrev_core.record.RecordState.pdf_needs_manual_preparation),
-                    str(colrev_core.record.RecordState.pdf_prepared),
-                    str(colrev_core.record.RecordState.rev_excluded),
-                    str(colrev_core.record.RecordState.rev_included),
-                    str(colrev_core.record.RecordState.rev_synthesized),
-                ]:
+                if (
+                    str(status)
+                    in colrev_core.record.RecordState.get_post_md_processed_states()
+                ):
                     for origin_part in origin.split(";"):
                         data["persisted_IDs"].append([origin_part, ID])
 
@@ -1205,6 +1195,18 @@ class ReviewDataset:
 
         return record
 
+    @classmethod
+    def inplace_change(
+        cls, *, filename: Path, old_string: str, new_string: str
+    ) -> None:
+        with open(filename, encoding="utf8") as f:
+            s = f.read()
+            if old_string not in s:
+                return
+        with open(filename, "w", encoding="utf8") as f:
+            s = s.replace(old_string, new_string)
+            f.write(s)
+
     # CHECKS --------------------------------------------------------------
 
     def check_main_records_duplicates(self, *, data: dict) -> None:
@@ -1303,6 +1305,7 @@ class ReviewDataset:
         return excl_criteria
 
     def check_corrections_of_curated_records(self) -> None:
+        # pylint: disable=redefined-outer-name
         import colrev_core.environment
 
         if not self.RECORDS_FILE.is_file():
@@ -1318,6 +1321,7 @@ class ReviewDataset:
         #     REVIEW_MANAGER=self.REVIEW_MANAGER, notify_state_transition_process=False
         # )
 
+        # pylint: disable=duplicate-code
         essential_md_keys = [
             "title",
             "author",
@@ -1732,6 +1736,7 @@ class ReviewDataset:
 
     def check_sources(self) -> None:
 
+        # pylint: disable=protected-access
         SOURCES = self.REVIEW_MANAGER.settings.sources
 
         for SOURCE in SOURCES:

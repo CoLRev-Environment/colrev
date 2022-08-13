@@ -30,30 +30,29 @@ class UnpaywallEndpoint:
         try:
             r = requests.get(url, params={"email": REVIEW_MANAGER.EMAIL})
 
-            if r.status_code == 404:
-                return "NA"
+            if r.status_code == 500 and retry < 3:
+                return self.__unpaywall(
+                    REVIEW_MANAGER=REVIEW_MANAGER, doi=doi, retry=retry + 1
+                )
 
-            if r.status_code == 500:
-                if retry < 3:
-                    return self.__unpaywall(
-                        REVIEW_MANAGER=REVIEW_MANAGER, doi=doi, retry=retry + 1
-                    )
+            if r.status_code in [404, 500]:
                 return "NA"
 
             best_loc = None
             best_loc = r.json()["best_oa_location"]
-        except json.decoder.JSONDecodeError:
-            return "NA"
-        except KeyError:
-            return "NA"
-        except requests.exceptions.RequestException:
+
+            assert r.json()["is_oa"]
+            assert best_loc is not None
+            assert not (pdfonly and best_loc["url_for_pdf"] is None)
+
+        except (
+            json.decoder.JSONDecodeError,
+            KeyError,
+            requests.exceptions.RequestException,
+            AssertionError,
+        ):
             return "NA"
 
-        if not r.json()["is_oa"] or best_loc is None:
-            return "NA"
-
-        if best_loc["url_for_pdf"] is None and pdfonly is True:
-            return "NA"
         return best_loc["url_for_pdf"]
 
     def __is_pdf(self, *, path_to_file: str) -> bool:

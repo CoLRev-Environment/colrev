@@ -76,7 +76,8 @@ class Pull(colrev_core.process.Process):
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
-        change_counter = 0
+        # pylint: disable=redefined-outer-name
+        change_counter = Value("i", 0)
         for record in tqdm(records.values()):
             RECORD = colrev_core.record.PrepRecord(data=record)
             PREVIOUS_RECORD = RECORD.copy_prep_rec()
@@ -129,11 +130,12 @@ class Pull(colrev_core.process.Process):
                                 key=k, value=v, source=source, keep_source_if_equal=True
                             )
                 if PREVIOUS_RECORD != RECORD:
-                    change_counter += 1
+                    with change_counter.get_lock():
+                        change_counter.value += 1
 
-        if change_counter > 0:
+        if change_counter.value > 0:
             self.REVIEW_MANAGER.logger.info(
-                f"{colors.GREEN}Updated {change_counter} "
+                f"{colors.GREEN}Updated {change_counter.value} "
                 f"records based on Crossref{colors.END}"
             )
         else:
@@ -180,6 +182,7 @@ class Pull(colrev_core.process.Process):
             RECORD.merge(MERGING_RECORD=RETRIEVED_RECORD, default_source=source_info)
 
             if PREVIOUS_RECORD != RECORD:
+                # pylint: disable=global-variable-not-assigned
                 global change_counter
                 with change_counter.get_lock():
                     change_counter.value += 1
@@ -200,6 +203,7 @@ class Pull(colrev_core.process.Process):
 
         self.REVIEW_MANAGER.logger.info("Update records based on LocalIndex")
 
+        # pylint: disable=global-statement
         global change_counter
 
         change_counter = Value("i", 0)

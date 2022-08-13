@@ -8,7 +8,6 @@ import git
 
 import colrev_core.process
 import colrev_core.record
-import colrev_core.status
 
 
 class Validate(colrev_core.process.Process):
@@ -243,8 +242,7 @@ class Validate(colrev_core.process.Process):
                 "Consistency (based on hooks)".ljust(32, " ") + "NO"
             )
 
-        STATUS = colrev_core.status.Status(REVIEW_MANAGER=self.REVIEW_MANAGER)
-        completeness_condition = STATUS.get_completeness_condition()
+        completeness_condition = self.REVIEW_MANAGER.get_completeness_condition()
         if completeness_condition:
             self.REVIEW_MANAGER.logger.info(
                 " Completeness of iteration".ljust(32, " ") + "YES (validated)"

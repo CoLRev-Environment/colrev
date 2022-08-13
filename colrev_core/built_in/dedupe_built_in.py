@@ -20,6 +20,9 @@ import colrev_core.process
 import colrev_core.record
 
 
+# pylint: disable=too-many-arguments
+
+
 def console_duplicate_instance_label(
     record_pair,
     keys,
@@ -240,10 +243,7 @@ class SimpleDedupeEndpoint:
 
         saved_args = locals()
 
-        DEDUPE.REVIEW_MANAGER.logger.info(
-            "Simple duplicate identification "
-            "(not enough records to train active learning model)"
-        )
+        DEDUPE.REVIEW_MANAGER.logger.info("Simple duplicate identification")
 
         DEDUPE.REVIEW_MANAGER.logger.info(
             "Pairwise identification of duplicates based on static similarity measure"
@@ -269,6 +269,20 @@ class SimpleDedupeEndpoint:
                 str(colrev_core.record.RecordState.md_needs_manual_preparation),
             ]
         ]
+        if len(IDs_to_dedupe) > 20:
+            if not DEDUPE.REVIEW_MANAGER.force_mode:
+                DEDUPE.REVIEW_MANAGER.logger.warning(
+                    "Simple duplicate identification selected despite sufficient sample size.\n"
+                    "Active learning algorithms may perform better:\n"
+                    f"{colors.ORANGE}   colrev settings -m 'dedupe.scripts="
+                    '[{"endpoint": "active_learning_training"},'
+                    f'{{"endpoint": "active_learning_automated"}}]\'{colors.END}'
+                )
+                DEDUPE.REVIEW_MANAGER.logger.info(
+                    "To use simple duplicate identification, use\n"
+                    f"{colors.ORANGE}    colrev dedupe --force{colors.END}"
+                )
+                return
 
         nr_tasks = len(IDs_to_dedupe)
         dedupe_data = {
@@ -552,8 +566,8 @@ class ActiveLearningDedupeTrainingEndpoint:
             raise colrev_exceptions.DedupeError(
                 "Sample size too small for active learning. "
                 "Use simple_dedupe instead:\n"
-                "  colrev settings -m 'dedupe.scripts="
-                '[{"endpoint":"simple_dedupe"}]\''
+                f"{colors.ORANGE}  colrev settings -m 'dedupe.scripts="
+                f'[{{"endpoint":"simple_dedupe"}}]\'{colors.END}'
             )
 
         if DEDUPE.training_file.is_file():
@@ -881,6 +895,11 @@ class ActiveLearningDedupeAutomatedEndpoint:
                 deduper.fingerprinter.index(field_data, field)
 
             full_data = ((r["ID"], r) for r in data_d.values())
+
+            # pylint: disable=not-callable
+            # fingerprinter is callable according to
+            # https://github.com/dedupeio/dedupe/blob/
+            # b9d8f111bcd5ffd177659f79f57354d9a9318359/dedupe/blocking.py
             b_data = deduper.fingerprinter(full_data)
 
             # use sqlite: light-weight, file-based
@@ -1063,7 +1082,7 @@ class ActiveLearningDedupeAutomatedEndpoint:
             cur_color_index = -1
             cur_cluster = ""
 
-            prev_row = []
+            prev_row = {}
             for i, row in df.iterrows():
                 if row["cluster_id"] != cur_cluster:
                     cur_color_index += 1

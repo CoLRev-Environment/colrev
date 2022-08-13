@@ -5,7 +5,6 @@ from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
-import imagehash
 import pandas as pd
 import pandasql as ps
 import requests
@@ -13,7 +12,6 @@ import zope.interface
 from dacite import from_dict
 from p_tqdm import p_map
 from pandasql.sqldf import PandaSQLException
-from pdf2image import convert_from_path
 from pdfminer.pdfdocument import PDFDocument
 from pdfminer.pdfinterp import resolve1
 from pdfminer.pdfparser import PDFParser
@@ -367,6 +365,7 @@ class BackwardSearchEndpoint:
                 SEARCH.REVIEW_MANAGER.logger.error(f'File not found for {record["ID"]}')
                 continue
 
+            # pylint: disable=consider-using-with
             options = {"consolidateHeader": "0", "consolidateCitations": "0"}
             r = requests.post(
                 self.GROBID_SERVICE.GROBID_URL + "/api/processReferences",
@@ -451,6 +450,7 @@ class ColrevProjectSearchEndpoint:
             if "selection_clause" in params:
                 res = []
                 try:
+                    # pylint: disable=possibly-unused-variable
                     rec_df = pd.DataFrame.from_records([record_to_import])
                     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
                     res = ps.sqldf(query, locals())
@@ -572,6 +572,10 @@ class IndexSearchEndpoint:
 
             # TODO : size is set to maximum.
             # We may iterate (using the from=... parameter)
+            # pylint: disable=unexpected-keyword-arg
+            # Note : search(...) accepts the size keyword (tested & works)
+            # https://opensearch-project.github.io/opensearch-py/
+            # api-ref/client.html#opensearchpy.OpenSearch.search
             resp = LOCAL_INDEX.os.search(
                 index=LOCAL_INDEX.RECORD_INDEX,
                 size=10000,
@@ -595,6 +599,8 @@ class IndexSearchEndpoint:
                 if "fulltext" in record:
                     del record["fulltext"]
                 # print(record)
+
+                # pylint: disable=possibly-unused-variable
                 rec_df = pd.DataFrame.from_records([record])
                 try:
                     query = f"SELECT * FROM rec_df WHERE {params['selection_clause']}"
@@ -707,7 +713,11 @@ class PDFSearchEndpoint:
                     potential_pdfs = pdf_path.glob("*.pdf")
                     # print(f'search cpid {cpid}')
                     for potential_pdf in potential_pdfs:
-                        cpid_potential_pdf = get_colrev_pdf_id(path=potential_pdf)
+                        cpid_potential_pdf = (
+                            colrev_core.record.Record.get_colrev_pdf_id(
+                                path=potential_pdf
+                            )
+                        )
 
                         # print(f'cpid_potential_pdf {cpid_potential_pdf}')
                         if cpid == cpid_potential_pdf:
@@ -800,17 +810,8 @@ class PDFSearchEndpoint:
                         line = f.readline()
             return pdf_list
 
-        def get_colrev_pdf_id(*, path: Path) -> str:
-            cpid1 = "cpid1:" + str(
-                imagehash.average_hash(
-                    convert_from_path(path, first_page=1, last_page=1)[0],
-                    hash_size=32,
-                )
-            )
-            return cpid1
-
         def get_pdf_cpid_path(path) -> typing.List[str]:
-            cpid = get_colrev_pdf_id(path=path)
+            cpid = colrev_core.record.Record.get_colrev_pdf_id(path=path)
             return [str(path), str(cpid)]
 
         if not feed_file.is_file():

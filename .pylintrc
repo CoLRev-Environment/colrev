@@ -9,7 +9,7 @@
 # can either give multiple identifier separated by comma (,) or put this option
 # multiple time (only on the command line, not in the configuration file where
 # it should appear only once).
-disable=C0321,C0103,C0116,C0115,C0114,R0903,R0914,W0613,W0511,C0302,R0912,R0915,R0902,W0201,R1702,C0415,W0703,W1203,I1101,R1733,E0213,E0239
+disable=C0321,C0103,C0116,C0115,C0114,R0903,R0914,W0613,W0511,C0302,R0912,R0915,R0902,W0201,R1702,C0415,W0703,W1203,I1101,R1733,E0213,E0239,C0411
 
 [TYPECHECK]
 # Note : false positives for dataclass

@@ -37,6 +37,7 @@ class Preparation(colrev_core.process.Process):
         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
     }
 
+    # pylint: disable=duplicate-code
     fields_to_keep = [
         "ID",
         "ENTRYTYPE",

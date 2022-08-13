@@ -11,6 +11,8 @@ import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
+import colrev_core.search_sources
+import colrev_core.settings
 
 
 class Loader(colrev_core.process.Process):
@@ -100,20 +102,8 @@ class Loader(colrev_core.process.Process):
 
         return sorted(list(set(files)))
 
-    @classmethod
-    def get_conversion_script(cls, *, filepath: Path) -> dict:
-
-        filetype = filepath.suffix.replace(".", "")
-
-        for endpoint_name, endpoint_dict in cls.built_in_scripts.items():
-            if filetype in endpoint_dict["endpoint"].supported_extensions:
-                return {"endpoint": endpoint_name}
-
-        raise colrev_exceptions.UnsupportedImportFormatError(filepath)
-
     def check_update_sources(self) -> None:
-        import colrev_core.settings
-        import colrev_core.search_sources
+        # pylint: disable=redefined-outer-name
 
         SOURCES = self.REVIEW_MANAGER.settings.sources
         SEARCH_SCOURCES = colrev_core.search_sources.SearchSources(
@@ -136,9 +126,7 @@ class Loader(colrev_core.process.Process):
                 #     cmd = "Enter search type".ljust(40, " ") + ": "
                 #     search_type_input = input(cmd)
 
-                heuristic_result_list = SEARCH_SCOURCES.apply_source_heuristics(
-                    filepath=sfp
-                )
+                heuristic_result_list = self.apply_source_heuristics(filepath=sfp)
 
                 if 1 == len(heuristic_result_list):
                     HEURISTIC_SOURCE = heuristic_result_list[0]
@@ -362,6 +350,7 @@ class Loader(colrev_core.process.Process):
                     continue
                 record[n_key] = record.pop(key)
 
+            # pylint: disable=duplicate-code
             # For better readability of the git diff:
             fields_to_process = [
                 "author",
@@ -406,19 +395,6 @@ class Loader(colrev_core.process.Process):
 
             return RECORD.get_data()
 
-        def get_nr_in_bib(*, file_path: Path) -> int:
-            number_in_bib = 0
-            with open(file_path, encoding="utf8") as f:
-                line = f.readline()
-                while line:
-                    # Note: the '﻿' occured in some bibtex files
-                    # (e.g., Publish or Perish exports)
-                    if "@" in line[:3]:
-                        if "@comment" not in line[:10].lower():
-                            number_in_bib += 1
-                    line = f.readline()
-            return number_in_bib
-
         if SOURCE.corresponding_bib_file.is_file():
             search_records = getbib(file=SOURCE.corresponding_bib_file)
             self.REVIEW_MANAGER.logger.debug(
@@ -439,7 +415,9 @@ class Loader(colrev_core.process.Process):
 
             return
 
-        nr_in_bib = get_nr_in_bib(file_path=SOURCE.corresponding_bib_file)
+        nr_in_bib = self.REVIEW_MANAGER.REVIEW_DATASET.get_nr_in_bib(
+            file_path=SOURCE.corresponding_bib_file
+        )
         if len(search_records) < nr_in_bib:
             self.REVIEW_MANAGER.logger.error(
                 "broken bib file (not imported all records)"
@@ -462,18 +440,10 @@ class Loader(colrev_core.process.Process):
             # Drop empty fields
             record = {k: v for k, v in record.items() if v}
 
-            if record.get("colrev_status", "") in [
-                str(colrev_core.record.RecordState.md_processed),
-                str(colrev_core.record.RecordState.rev_prescreen_included),
-                str(colrev_core.record.RecordState.rev_prescreen_excluded),
-                str(colrev_core.record.RecordState.pdf_needs_manual_retrieval),
-                str(colrev_core.record.RecordState.pdf_not_available),
-                str(colrev_core.record.RecordState.pdf_needs_manual_preparation),
-                str(colrev_core.record.RecordState.pdf_prepared),
-                str(colrev_core.record.RecordState.rev_excluded),
-                str(colrev_core.record.RecordState.rev_included),
-                str(colrev_core.record.RecordState.rev_synthesized),
-            ]:
+            if (
+                str(record.get("colrev_status", ""))
+                in colrev_core.record.RecordState.get_post_md_processed_states()
+            ):
                 # Note : when importing a record, it always needs to be
                 # deduplicated against the other records in the repository
                 record.update(colrev_status=colrev_core.record.RecordState.md_prepared)
@@ -621,6 +591,98 @@ class Loader(colrev_core.process.Process):
             self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict_to_file(
                 records=records, save_path=corresponding_bib_file
             )
+
+    def apply_source_heuristics(
+        self, *, filepath: Path
+    ) -> typing.List[colrev_core.settings.SearchSource]:
+        """Apply heuristics to identify source"""
+
+        def get_conversion_script(*, filepath: Path) -> dict:
+
+            filetype = filepath.suffix.replace(".", "")
+
+            for (
+                endpoint_name,
+                endpoint_dict,
+            ) in colrev_core.load.Loader.built_in_scripts.items():
+                if filetype in endpoint_dict["endpoint"].supported_extensions:
+                    return {"endpoint": endpoint_name}
+
+            raise colrev_exceptions.UnsupportedImportFormatError(filepath)
+
+        data = ""
+        try:
+            data = filepath.read_text()
+        except UnicodeDecodeError:
+            pass
+
+        results_list = []
+
+        for (
+            source_name,
+            endpoint,
+        ) in colrev_core.search_sources.SearchSources.built_in_scripts.items():
+            # pylint: disable=no-member
+            has_heuristic = getattr(endpoint, "heuristic", None)
+            if not has_heuristic:
+                continue
+            res = endpoint.heuristic(filepath, data)  # type: ignore
+            if res["confidence"] > 0:
+                search_type = colrev_core.settings.SearchType("DB")
+
+                res["source_name"] = source_name
+                res["source_prep_scripts"] = (
+                    [source_name] if callable(endpoint.prepare) else []  # type: ignore
+                )
+                if "search_script" not in res:
+                    res["search_script"] = {}
+
+                if "filename" not in res:
+                    # Correct the file extension if necessary
+                    if re.search("%0", data) and filepath.suffix not in [".enl"]:
+                        new_filename = filepath.with_suffix(".enl")
+                        print(
+                            f"\033[92mRenaming to {new_filename} "
+                            "(because the format is .enl)\033[0m"
+                        )
+                        filepath.rename(new_filename)
+                        filepath = new_filename
+
+                if "conversion_script" not in res:
+                    res["conversion_script"] = get_conversion_script(filepath=filepath)
+
+                SOURCE_CANDIDATE = colrev_core.settings.SearchSource(
+                    filename=filepath,
+                    search_type=search_type,
+                    source_name=source_name,
+                    source_identifier=res["source_identifier"],
+                    search_parameters="",
+                    search_script=res["search_script"],
+                    conversion_script=res["conversion_script"],
+                    source_prep_scripts=[
+                        {"endpoint": s}
+                        for s in res["source_prep_scripts"]  # type: ignore
+                    ],
+                    comment="",
+                )
+
+                results_list.append(SOURCE_CANDIDATE)
+
+        if 0 == len(results_list):
+            SOURCE_CANDIDATE = colrev_core.settings.SearchSource(
+                filename=Path(filepath),
+                search_type=colrev_core.settings.SearchType("DB"),
+                source_name="NA",
+                source_identifier="NA",
+                search_parameters="NA",
+                search_script={},  # Note : primarily adding files (not feeds)
+                conversion_script={"endpoint": "bibtex"},
+                source_prep_scripts=[],
+                comment="",
+            )
+            results_list.append(SOURCE_CANDIDATE)
+
+        return results_list
 
     def main(self, *, keep_ids: bool = False, combine_commits=False) -> None:
 

@@ -70,7 +70,8 @@ class ManuscriptEndpoint:
             + "citation-style-language/styles/master/apa.csl"
         )
         r = requests.get(csl_link, allow_redirects=True)
-        open(Path(csl_link).name, "wb").write(r.content)
+        with open(Path(csl_link).name, "wb") as f:
+            f.write(r.content)
         csl = Path(csl_link).name
         return csl
 
@@ -90,18 +91,6 @@ class ManuscriptEndpoint:
         records: typing.Dict,
         synthesized_record_status_matrix: dict,
     ) -> typing.Dict:
-        def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
-            with open(filename, encoding="utf-8") as f:
-                s = f.read()
-                if old_string not in s:
-                    REVIEW_MANAGER.logger.info(
-                        f'"{old_string}" not found in {filename}.'
-                    )
-                    return
-            with open(filename, "w", encoding="utf-8") as f:
-                s = s.replace(old_string, new_string)
-                f.write(s)
-
         def authorship_heuristic() -> str:
             git_repo = REVIEW_MANAGER.REVIEW_DATASET.get_repo()
             commits_list = list(git_repo.iter_commits())
@@ -132,6 +121,7 @@ class ManuscriptEndpoint:
         def add_missing_records_to_manuscript(
             *, REVIEW_MANAGER, PAPER: Path, missing_records: list
         ):
+            # pylint: disable=consider-using-with
             temp = tempfile.NamedTemporaryFile()
             PAPER.rename(temp.name)
             with open(temp.name, encoding="utf-8") as reader, open(
@@ -236,9 +226,17 @@ class ManuscriptEndpoint:
                     template_file=PAPER_resource_path, target=PAPER
                 )
 
-            inplace_change(PAPER, "{{review_type}}", str(review_type))
-            inplace_change(PAPER, "{{project_title}}", title)
-            inplace_change(PAPER, "{{author}}", author)
+            REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                filename=PAPER,
+                old_string="{{review_type}}",
+                new_string=str(review_type),
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                filename=PAPER, old_string="{{project_title}}", new_string=title
+            )
+            REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                filename=PAPER, old_string="{{author}}", new_string=author
+            )
             REVIEW_MANAGER.logger.info(
                 f"Please update title and authors in {PAPER.name}"
             )
@@ -734,21 +732,10 @@ class ZettlrEndpoint:
 
             return [x for x in included if x not in in_zettelkasten]
 
-        def inplace_change(filename: Path, old_string: str, new_string: str) -> None:
-            with open(filename, encoding="utf-8") as f:
-                s = f.read()
-                if old_string not in s:
-                    DATA.REVIEW_MANAGER.logger.info(
-                        f'"{old_string}" not found in {filename}.'
-                    )
-                    return
-            with open(filename, "w", encoding="utf-8") as f:
-                s = s.replace(old_string, new_string)
-                f.write(s)
-
         def add_missing_records_to_manuscript(
             *, REVIEW_MANAGER, PAPER: Path, missing_records: list
         ):
+            # pylint: disable=consider-using-with
             temp = tempfile.NamedTemporaryFile()
             PAPER.rename(temp.name)
             with open(temp.name, encoding="utf-8") as reader, open(
@@ -853,7 +840,9 @@ class ZettlrEndpoint:
                     title = f.readline()
                     title = title.replace("# ", "").replace("\n", "")
 
-            inplace_change(ZETTLR_path, "{{project_title}}", title)
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                filename=ZETTLR_path, old_string="{{project_title}}", new_string=title
+            )
             # author = authorship_heuristic(REVIEW_MANAGER)
             DATA.REVIEW_MANAGER.create_commit(
                 msg="Add zettlr endpoint", script_call="colrev data"
@@ -898,7 +887,9 @@ class ZettlrEndpoint:
                 DATA.REVIEW_MANAGER.retrieve_package_file(
                     template_file=ZETTLR_resource_path, target=ZETTLR_path
                 )
-                inplace_change(ZETTLR_path, "{{project_name}}", r)
+                DATA.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
+                    filename=ZETTLR_path, old_string="{{project_name}}", new_string=r
+                )
                 with ZETTLR_path.open("a") as f:
                     f.write(f"\n\n@{r}\n")
 

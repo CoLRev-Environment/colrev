@@ -10,7 +10,6 @@ from collections import deque
 from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
-import colrev_core.cli
 import colrev_core.cli_colors as colors
 import colrev_core.environment
 import colrev_core.status
@@ -18,10 +17,11 @@ import colrev_core.status
 
 class Event(LoggingEventHandler):
     def __init__(self, *, SERVICE):
+        super().__init__()
         self.SERVICE = SERVICE
         self.logger = logging.getLogger()
 
-    def on_modified(self, *, event):
+    def on_modified(self, event):
         if event.is_directory:
             return
         if any(x in event.src_path for x in [".git/", "report.log", ".goutputstream"]):

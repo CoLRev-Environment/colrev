@@ -582,28 +582,12 @@ class BibTexCrossrefResolutionPrep:
 
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
-        def get_crossref_record(record) -> dict:
-            # Note : the ID of the crossrefed record may have changed.
-            # we need to trace based on the colrev_origin
-            crossref_origin = record["colrev_origin"]
-            crossref_origin = crossref_origin[: crossref_origin.rfind("/")]
-            crossref_origin = crossref_origin + "/" + record["crossref"]
-            for (
-                record_string
-            ) in PREPARATION.REVIEW_MANAGER.REVIEW_DATASET.__read_next_record_str():
-                if crossref_origin in record_string:
-                    records_dict = (
-                        PREPARATION.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict(
-                            load_str=record_string
-                        )
-                    )
-                    record = records_dict.values()[0]
-                    if record["colrev_origin"] == crossref_origin:
-                        return record
-            return {}
-
         if "crossref" in RECORD.data:
-            crossref_record = get_crossref_record(RECORD.data)
+            crossref_record = (
+                PREPARATION.REVIEW_MANAGER.REVIEW_DATASET.get_crossref_record(
+                    record=RECORD.data
+                )
+            )
             if 0 != len(crossref_record):
                 for k, v in crossref_record.items():
                     if k not in RECORD.data:

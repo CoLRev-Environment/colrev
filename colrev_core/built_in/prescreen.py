@@ -556,6 +556,7 @@ class SpreadsheetPrescreenEndpoint:
             else:
                 inclusion_1 = "yes"
 
+            # pylint: disable=duplicate-code
             row = {
                 "ID": record["ID"],
                 "author": record.get("author", ""),
@@ -585,6 +586,7 @@ class SpreadsheetPrescreenEndpoint:
     def import_table(
         self, PRESCREEN, records, import_table_path="prescreen.csv"
     ) -> None:
+        # pylint: disable=duplicate-code
         if not Path(import_table_path).is_file():
             PRESCREEN.REVIEW_MANAGER.logger.error(
                 f"Did not find {import_table_path} - exiting."

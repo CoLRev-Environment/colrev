@@ -40,6 +40,7 @@ class PrepMan(colrev_core.process.Process):
         )
 
     def prep_man_stats(self) -> None:
+        # pylint: disable=duplicate-code
 
         self.REVIEW_MANAGER.logger.info(
             f"Load {self.REVIEW_MANAGER.paths['RECORDS_FILE_RELATIVE']}"
@@ -103,6 +104,7 @@ class PrepMan(colrev_core.process.Process):
         if crosstab_df.empty:
             print("No records to prepare manually.")
         else:
+            # pylint: disable=duplicate-code
             tabulated = pd.pivot_table(
                 crosstab_df[["colrev_origin", "hint"]],
                 index=["colrev_origin"],

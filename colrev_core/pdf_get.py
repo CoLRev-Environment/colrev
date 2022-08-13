@@ -6,9 +6,7 @@ import typing
 from glob import glob
 from pathlib import Path
 
-import imagehash
 from p_tqdm import p_map
-from pdf2image import convert_from_path
 
 import colrev_core.built_in.pdf_get as built_in_pdf_get
 import colrev_core.environment
@@ -126,15 +124,6 @@ class PDF_Retrieval(colrev_core.process.Process):
 
         return RECORD.get_data()
 
-    def get_colrev_pdf_id(self, *, path: Path) -> str:
-        cpid1 = "cpid1:" + str(
-            imagehash.average_hash(
-                convert_from_path(path, first_page=1, last_page=1)[0],
-                hash_size=32,
-            )
-        )
-        return cpid1
-
     def relink_files(self) -> None:
         def relink_pdf_files(records):
             # Relink files in source file
@@ -161,7 +150,7 @@ class PDF_Retrieval(colrev_core.process.Process):
             pdf_candidates = {
                 pdf_candidate.relative_to(
                     self.REVIEW_MANAGER.path
-                ): self.get_colrev_pdf_id(path=pdf_candidate)
+                ): colrev_core.record.Record.get_colrev_pdf_id(path=pdf_candidate)
                 for pdf_candidate in list(Path("pdfs").glob("**/*.pdf"))
             }
 
@@ -304,21 +293,6 @@ class PDF_Retrieval(colrev_core.process.Process):
     def rename_pdfs(self) -> None:
         self.REVIEW_MANAGER.logger.info("Rename PDFs")
 
-        def __inplace_change(
-            *, filename: Path, old_string: str, new_string: str
-        ) -> None:
-            with open(filename, encoding="utf8") as f:
-                s = f.read()
-                if old_string not in s:
-                    self.REVIEW_MANAGER.logger.info(
-                        f'"{old_string}" not found in {filename}.'
-                    )
-                    return
-            with open(filename, "w", encoding="utf8") as f:
-                s = s.replace(old_string, new_string)
-                f.write(s)
-            return
-
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 
         # We may use other pdfs_search_files from the sources:
@@ -339,20 +313,20 @@ class PDF_Retrieval(colrev_core.process.Process):
                 continue
 
             # This should replace the file fields
-            __inplace_change(
+            self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
                 filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
                 old_string="{" + str(file) + "}",
                 new_string="{" + str(new_filename) + "}",
             )
             # This should replace the provenance dict fields
-            __inplace_change(
+            self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
                 filename=self.REVIEW_MANAGER.paths["RECORDS_FILE_RELATIVE"],
                 old_string=":" + str(file) + ";",
                 new_string=":" + str(new_filename) + ";",
             )
 
             if pdfs_search_file.is_file():
-                __inplace_change(
+                self.REVIEW_MANAGER.REVIEW_DATASET.inplace_change(
                     filename=pdfs_search_file,
                     old_string=str(file),
                     new_string=str(new_filename),

@@ -51,6 +51,7 @@ class PDFRetrievalMan(colrev_core.process.Process):
 
         if len(missing_records) > 0:
             missing_records_df = pd.DataFrame.from_records(missing_records)
+            # pylint: disable=duplicate-code
             col_order = [
                 "ID",
                 "author",

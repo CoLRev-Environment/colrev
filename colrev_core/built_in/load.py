@@ -187,6 +187,8 @@ class ZoteroTranslationLoader:
 
     def load(self, LOADER, SOURCE):
 
+        # pylint: disable=consider-using-with
+
         files = {"file": open(SOURCE.filename, "rb")}
         headers = {"Content-type": "text/plain"}
         r = requests.post("http://127.0.0.1:1969/import", headers=headers, files=files)
@@ -295,6 +297,7 @@ class BibutilsLoader:
             )
             client.start(container)
 
+            # pylint: disable=protected-access
             sock._sock.send(data.encode())
             sock._sock.close()
             sock.close()
