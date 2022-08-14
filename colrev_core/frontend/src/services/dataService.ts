@@ -11,6 +11,9 @@ import ScripWithTresholds from "../models/scriptWithTresholds";
 import ScriptWithLanguageScope from "../models/scriptWithLanguageScope";
 import Prescreen from "../models/prescreen";
 import Data from "../models/data";
+import PdfGet from "../models/pdfGet";
+import PdfPrep from "../models/pdfPrep";
+import Screen from "../models/screen";
 
 const apiEndpoint = config.apiEndpoint + "/api";
 
@@ -41,6 +44,15 @@ const getSettings = async (): Promise<Settings> => {
   settings.prescreen = new Prescreen();
   prescreenFromSettings(settings.prescreen, settingsFile.prescreen);
 
+  settings.pdfGet = new PdfGet();
+  pdfGetFromSettings(settings.pdfGet, settingsFile.pdf_get);
+
+  settings.pdfPrep = new PdfPrep();
+  pdfPrepFromSettings(settings.pdfPrep, settingsFile.pdf_prep);
+
+  settings.screen = new Screen();
+  screenFromSettings(settings.screen, settingsFile.screen);
+
   settings.data = new Data();
   dataFromSettings(settings.data, settingsFile.data);
 
@@ -55,6 +67,9 @@ const saveSettings = async (settings: Settings): Promise<void> => {
     prep: prepToSettings(settings.prep),
     dedupe: dedupeToSettings(settings.dedupe),
     prescreen: prescreenToSettings(settings.prescreen),
+    pdf_get: pdfGetToSettings(settings.pdfGet),
+    pdf_prep: pdfPrepToSettings(settings.pdfPrep),
+    screen: screenToSettings(settings.screen),
     data: dataToSettings(settings.data),
   };
 
@@ -249,6 +264,53 @@ const prescreenToSettings = (prescreen: Prescreen): any => {
   };
 
   return settingsPrescreen;
+};
+
+const pdfGetFromSettings = (pdfGet: PdfGet, settingsPdfGet: any) => {
+  pdfGet.pdfPathType = settingsPdfGet.pdf_path_type;
+  pdfGet.scripts = scriptsFromSettings(settingsPdfGet.scripts);
+  pdfGet.manPdfGetScripts = scriptsFromSettings(
+    settingsPdfGet.man_pdf_get_scripts
+  );
+};
+
+const pdfGetToSettings = (pdfGet: PdfGet): any => {
+  const settingsPdfGet = {
+    pdf_path_type: pdfGet.pdfPathType,
+    scripts: scriptsToSettings(pdfGet.scripts),
+    man_pdf_get_scripts: scriptsToSettings(pdfGet.manPdfGetScripts),
+  };
+
+  return settingsPdfGet;
+};
+
+const pdfPrepFromSettings = (pdfPrep: PdfPrep, settingsPdfGet: any) => {
+  pdfPrep.scripts = scriptsFromSettings(settingsPdfGet.scripts);
+  pdfPrep.manPdfPrepScripts = scriptsFromSettings(
+    settingsPdfGet.man_pdf_prep_scripts
+  );
+};
+
+const pdfPrepToSettings = (pdfPrep: PdfPrep): any => {
+  const settingsPdfPrep = {
+    scripts: scriptsToSettings(pdfPrep.scripts),
+    man_pdf_prep_scripts: scriptsToSettings(pdfPrep.manPdfPrepScripts),
+  };
+
+  return settingsPdfPrep;
+};
+
+const screenFromSettings = (screen: Screen, settingsScreen: any) => {
+  screen.scripts = scriptsFromSettings(settingsScreen.scripts);
+};
+
+const screenToSettings = (screen: Screen): any => {
+  const settingsScreen = {
+    criteria: {},
+    scripts: scriptsToSettings(screen.scripts),
+  };
+
+  return settingsScreen;
 };
 
 const dataFromSettings = (data: Data, settingsData: any) => {

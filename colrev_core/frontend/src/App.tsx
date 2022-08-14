@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import Project from "./models/project";
 import ProjectEditor from "./components/project/ProjectEditor";
-import ScriptsEditor from "./components/scripts/ScriptsEditor";
-import Script from "./models/script";
 import Settings from "./models/settings";
 import dataService from "./services/dataService";
 import Expander from "./components/common/Expander";
@@ -18,6 +16,14 @@ import DedupeEditor from "./components/dedupe/DedupeEditor";
 import Dedupe from "./models/dedupe";
 import Prescreen from "./models/prescreen";
 import PrescreenEditor from "./components/prescreen/PrescreenEditor";
+import DataEditor from "./components/data/DataEditor";
+import Data from "./models/data";
+import PdfGet from "./models/pdfGet";
+import PdfPrep from "./models/pdfPrep";
+import Screen from "./models/screen";
+import PdfGetEditor from "./components/pdf/PdfGetEditor";
+import PdfPrepEditor from "./components/pdf/PdfPrepEditor";
+import ScreenEditor from "./components/screen/ScreenEditor";
 
 function App() {
   const [project, setProject] = useState<Project>(new Project());
@@ -25,7 +31,10 @@ function App() {
   const [prep, setPrep] = useState<Prep>(new Prep());
   const [dedupe, setDedupe] = useState<Dedupe>(new Dedupe());
   const [prescreen, setPrescreen] = useState<Prescreen>(new Prescreen());
-  const [scripts, setScripts] = useState<Script[]>([]);
+  const [data, setData] = useState<Data>(new Data());
+  const [pdfGet, setPdfGet] = useState<PdfGet>(new PdfGet());
+  const [pdfPrep, setPdfPrep] = useState<PdfPrep>(new PdfPrep());
+  const [screen, setScreen] = useState<Screen>(new Screen());
   const [isFileSaved, setIsFileSaved] = useState<boolean>(false);
 
   useEffect(() => {
@@ -52,7 +61,10 @@ function App() {
     setPrep(settings.prep);
     setDedupe(settings.dedupe);
     setPrescreen(settings.prescreen);
-    setScripts(settings.data.scripts);
+    setPdfGet(settings.pdfGet);
+    setPdfPrep(settings.pdfPrep);
+    setScreen(settings.screen);
+    setData(settings.data);
   };
 
   const onProjectChanged = (project: Project) => {
@@ -80,9 +92,24 @@ function App() {
     setPrescreen(prescreen);
   };
 
-  const onDataScriptsChanged = (scripts: Script[]) => {
+  const onPdfGetChanged = (pdfGet: PdfGet) => {
     setIsFileSaved(false);
-    setScripts(scripts);
+    setPdfGet(pdfGet);
+  };
+
+  const onPdfPrepChanged = (pdfPrep: PdfPrep) => {
+    setIsFileSaved(false);
+    setPdfPrep(pdfPrep);
+  };
+
+  const onScreenChanged = (screen: Screen) => {
+    setIsFileSaved(false);
+    setScreen(screen);
+  };
+
+  const onDataChanged = (data: Data) => {
+    setIsFileSaved(false);
+    setData(data);
   };
 
   const onSave = async () => {
@@ -92,7 +119,10 @@ function App() {
     settings.prep = prep;
     settings.dedupe = dedupe;
     settings.prescreen = prescreen;
-    settings.data.scripts = scripts;
+    settings.pdfGet = pdfGet;
+    settings.pdfPrep = pdfPrep;
+    settings.screen = screen;
+    settings.data = data;
 
     setIsFileSaved(false);
 
@@ -158,7 +188,7 @@ function App() {
                 name="Dedupe"
                 id="dedupe"
                 parentContainerId="settingsExpander"
-                show={true}
+                show={false}
               >
                 <DedupeEditor dedupe={dedupe} dedupeChanged={onDedupeChanged} />
               </ExpanderItem>
@@ -174,17 +204,42 @@ function App() {
                 />
               </ExpanderItem>
               <ExpanderItem
+                name="Pdf Get"
+                id="pdfGet"
+                parentContainerId="settingsExpander"
+                show={false}
+              >
+                <PdfGetEditor pdfGet={pdfGet} pdfGetChanged={onPdfGetChanged} />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Pdf Prep"
+                id="pdfPrep"
+                parentContainerId="settingsExpander"
+                show={false}
+              >
+                <PdfPrepEditor
+                  pdfPrep={pdfPrep}
+                  pdfPrepChanged={onPdfPrepChanged}
+                />
+              </ExpanderItem>
+              <ExpanderItem
+                name="Screen"
+                id="screen"
+                parentContainerId="settingsExpander"
+                show={false}
+              >
+                <ScreenEditor screen={screen} screenChanged={onScreenChanged} />
+              </ExpanderItem>
+              <ExpanderItem
                 name="Data"
                 id="data"
                 parentContainerId="settingsExpander"
                 show={false}
               >
-                <label>Scripts</label>
-                <ScriptsEditor
-                  id="dataScripts"
-                  scripts={scripts}
-                  scriptsChanged={onDataScriptsChanged}
-                />
+                <DataEditor
+                  data={data}
+                  dataChanged={onDataChanged}
+                ></DataEditor>
               </ExpanderItem>
             </Expander>
             <div className="mb-3"></div>
