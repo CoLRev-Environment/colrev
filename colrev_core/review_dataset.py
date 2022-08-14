@@ -447,12 +447,14 @@ class ReviewDataset:
         """Set the IDs of records according to predefined formats or
         according to the LocalIndex"""
         # pylint: disable=redefined-outer-name
-        import colrev_core.environment
 
         if records is None:
             records = {}
 
-        self.LOCAL_INDEX = colrev_core.environment.LocalIndex()
+        LocalIndex = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
+        self.LOCAL_INDEX = LocalIndex()
 
         if len(records) == 0:
             records = self.load_records_dict()
@@ -1306,14 +1308,16 @@ class ReviewDataset:
 
     def check_corrections_of_curated_records(self) -> None:
         # pylint: disable=redefined-outer-name
-        import colrev_core.environment
 
         if not self.RECORDS_FILE.is_file():
             return
 
         self.REVIEW_MANAGER.logger.debug("Start corrections")
 
-        self.LOCAL_INDEX = colrev_core.environment.LocalIndex()
+        LocalIndex = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
+        self.LOCAL_INDEX = LocalIndex()
 
         # TODO : remove the following:
         # from colrev_core.prep import Preparation
@@ -1375,6 +1379,9 @@ class ReviewDataset:
                     r = list(records_dict.values())[0]
                     curated_records.append(r)
 
+        Resources = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="Resources"
+        )
         for curated_record in curated_records:
 
             # TODO : use origin-indexed dict (discarding changes during merges)
@@ -1412,13 +1419,10 @@ class ReviewDataset:
                             )
 
                             # Note : this is a simple heuristic:
-                            curation_path = (
-                                colrev_core.environment.Resources.curations_path
-                                / Path(
-                                    original_curated_record[
-                                        "colrev_masterdata_provenance"
-                                    ]["source"].split("/")[-1]
-                                )
+                            curation_path = Resources.curations_path / Path(
+                                original_curated_record["colrev_masterdata_provenance"][
+                                    "source"
+                                ].split("/")[-1]
                             )
                             if not curation_path.is_dir():
                                 prov_inf = original_curated_record[

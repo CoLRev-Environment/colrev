@@ -27,6 +27,7 @@ from git.exc import GitCommandError
 from git.exc import InvalidGitRepositoryError
 
 import colrev_core.cli_colors as colors
+import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -50,7 +51,6 @@ class ReviewManager:
         force_mode: bool = False,
         debug_mode: bool = False,
     ) -> None:
-        from colrev_core.environment import EnvironmentManager
 
         self.force_mode = force_mode
         """Force mode variable (bool)"""
@@ -92,7 +92,9 @@ class ReviewManager:
                 raise e
 
         try:
-            global_git_vars = EnvironmentManager.get_name_mail_from_git()
+            global_git_vars = (
+                colrev_core.environment.EnvironmentManager.get_name_mail_from_git()
+            )
             if 2 != len(global_git_vars):
                 logging.error(
                     "Global git variables (user name and email) not available."
@@ -957,15 +959,23 @@ class ReviewManager:
         """
         # Note : we have to return status code and message
         # because printing from other packages does not work in pre-commit hook.
-        from colrev_core.environment import EnvironmentManager
 
         # We work with exceptions because each issue may be raised in different checks.
         self.notified_next_process = colrev_core.process.ProcessType.check
         PASS, FAIL = 0, 1
         check_scripts: typing.List[typing.Dict[str, typing.Any]] = [
-            {"script": EnvironmentManager.check_git_installed, "params": []},
-            {"script": EnvironmentManager.check_docker_installed, "params": []},
-            {"script": EnvironmentManager.build_docker_images, "params": []},
+            {
+                "script": colrev_core.environment.EnvironmentManager.check_git_installed,
+                "params": [],
+            },
+            {
+                "script": colrev_core.environment.EnvironmentManager.check_docker_installed,
+                "params": [],
+            },
+            {
+                "script": colrev_core.environment.EnvironmentManager.build_docker_images,
+                "params": [],
+            },
             {"script": self.__check_git_conflicts, "params": []},
             {"script": self.check_repository_setup, "params": []},
             {"script": self.__check_software, "params": []},
@@ -2102,6 +2112,23 @@ class ReviewManager:
     def get_completeness_condition(self) -> bool:
         stat = self.get_status_freq()
         return stat["completeness_condition"]
+
+    @classmethod
+    def get_environment_service(cls, *, service_identifier):
+        if "AdapterManager" == service_identifier:
+            return colrev_core.environment.AdapterManager
+        if "GrobidService" == service_identifier:
+            return colrev_core.environment.GrobidService
+        if "TEIParser" == service_identifier:
+            return colrev_core.environment.TEIParser
+        if "EnvironmentManager" == service_identifier:
+            return colrev_core.environment.EnvironmentManager
+        if "ZoteroTranslationService" == service_identifier:
+            return colrev_core.environment.ZoteroTranslationService
+        if "ScreenshotService" == service_identifier:
+            return colrev_core.environment.ScreenshotService
+
+        raise colrev_exceptions.ServiceNotAvailableException(service_identifier)
 
 
 if __name__ == "__main__":

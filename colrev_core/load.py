@@ -7,7 +7,6 @@ from pathlib import Path
 
 import colrev_core.built_in.load as built_in_load
 import colrev_core.cli_colors as colors
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -52,9 +51,11 @@ class Loader(colrev_core.process.Process):
         )
         self.verbose = True
 
-        self.load_scripts: typing.Dict[
-            str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        AdapterManager = REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+
+        self.load_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.conversion_script

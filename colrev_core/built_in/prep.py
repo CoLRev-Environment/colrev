@@ -18,7 +18,6 @@ from opensearchpy.exceptions import TransportError
 from thefuzz import fuzz
 
 import colrev_core.built_in.database_connectors
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -840,7 +839,8 @@ class DOIMetadataPrep:
             TIMEOUT=PREPARATION.TIMEOUT,
         )
         colrev_core.built_in.database_connectors.DOIConnector.get_link_from_doi(
-            RECORD=RECORD
+            RECORD=RECORD,
+            REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
         )
         return RECORD
 
@@ -1258,7 +1258,10 @@ class LocalIndexPrep:
     always_apply_changes = True
 
     def __init__(self, *, PREPARATION, SETTINGS):
-        from colrev_core.environment import LocalIndex
+
+        LocalIndex = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
 
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
@@ -1420,7 +1423,11 @@ class DropFieldsPrep:
         if "volume" in RECORD.data.keys() and "number" in RECORD.data.keys():
             # Note : cannot use LOCAL_INDEX as an attribute of PrepProcess
             # because it creates problems with multiprocessing
-            LOCAL_INDEX = colrev_core.environment.LocalIndex()
+
+            LocalIndex = PREPARATION.REVIEW_MANAGER.get_environment_service(
+                service_identifier="LocalIndex"
+            )
+            LOCAL_INDEX = LocalIndex()
 
             fields_to_remove = LOCAL_INDEX.get_fields_to_remove(
                 record=RECORD.get_data()

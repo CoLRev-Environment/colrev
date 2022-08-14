@@ -4,7 +4,6 @@ import pprint
 import typing
 
 import colrev_core.built_in.search_sources as built_in_search_sources
-import colrev_core.environment
 import colrev_core.process
 
 pp = pprint.PrettyPrinter(indent=4, width=140, compact=False)
@@ -37,9 +36,11 @@ class SearchSources:
         ] + [{"endpoint": k} for k in list(self.built_in_scripts.keys())]
 
         self.type = colrev_core.process.ProcessType.check
-        self.search_source_scripts: dict[
-            str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+
+        Adaptermanager = REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+        self.search_source_scripts: dict[str, typing.Any] = Adaptermanager.load_scripts(
             PROCESS=self, scripts=required_search_scripts, script_type="SearchSource"
         )
 

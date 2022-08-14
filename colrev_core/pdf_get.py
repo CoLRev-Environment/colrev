@@ -9,7 +9,6 @@ from pathlib import Path
 from p_tqdm import p_map
 
 import colrev_core.built_in.pdf_get as built_in_pdf_get
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 
@@ -47,9 +46,12 @@ class PDF_Retrieval(colrev_core.process.Process):
         self.PDF_DIRECTORY = self.REVIEW_MANAGER.paths["PDF_DIRECTORY"]
         self.PDF_DIRECTORY.mkdir(exist_ok=True)
 
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
         self.pdf_retrieval_scripts: typing.Dict[
             str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_get.scripts,
         )
@@ -240,14 +242,20 @@ class PDF_Retrieval(colrev_core.process.Process):
         if len(unlinked_pdfs) == 0:
             return records
 
-        GROBID_SERVICE = colrev_core.environment.GrobidService()
+        GrobidService = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
+        GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
         self.REVIEW_MANAGER.logger.info("Checking unlinked PDFs")
         for file in unlinked_pdfs:
             self.REVIEW_MANAGER.logger.info(f"Checking unlinked PDF: {file}")
             if file.stem not in records.keys():
 
-                TEI_INSTANCE = colrev_core.environment.TEIParser(pdf_path=file)
+                TEIParser = self.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="TEIParser"
+                )
+                TEI_INSTANCE = TEIParser(pdf_path=file)
                 pdf_record = TEI_INSTANCE.get_metadata()
 
                 if "error" in pdf_record:

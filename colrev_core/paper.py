@@ -5,7 +5,6 @@ from pathlib import Path
 import docker
 
 import colrev_core.built_in.data as built_in_data
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 
@@ -37,7 +36,10 @@ class Paper(colrev_core.process.Process):
             )
             return
 
-        colrev_core.environment.EnvironmentManager.build_docker_images()
+        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="EnvironmentManager"
+        )
+        EnvironmentManager.build_docker_images()
 
         CSL_FILE = paper_endpoint_settings["csl_style"]
         WORD_TEMPLATE = paper_endpoint_settings["word_template"]
@@ -61,9 +63,11 @@ class Paper(colrev_core.process.Process):
 
         client = docker.from_env()
         try:
-            pandoc_img = colrev_core.environment.EnvironmentManager.docker_images[
-                "pandoc/ubuntu-latex"
-            ]
+            EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+                service_identifier="EnvironmentManager"
+            )
+
+            pandoc_img = EnvironmentManager.docker_images["pandoc/ubuntu-latex"]
             msg = "Running docker container created from " f"image {pandoc_img}"
             self.REVIEW_MANAGER.report_logger.info(msg)
             self.REVIEW_MANAGER.logger.info(msg)

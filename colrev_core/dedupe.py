@@ -8,7 +8,6 @@ import git
 import pandas as pd
 
 import colrev_core.built_in.dedupe_built_in as built_in_dedupe
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -710,7 +709,10 @@ class Dedupe(colrev_core.process.Process):
 
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
-            dedupe_script = colrev_core.environment.AdapterManager.load_scripts(
+            AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+                service_identifier="AdapterManager"
+            )
+            dedupe_script = AdapterManager.load_scripts(
                 PROCESS=self,
                 scripts=[DEDUPE_SCRIPT],
             )

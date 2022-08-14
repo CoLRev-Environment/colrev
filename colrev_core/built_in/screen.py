@@ -6,7 +6,6 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 import colrev_core.settings
@@ -107,7 +106,10 @@ class CoLRevCLIScreenEndpoint:
             abstract_from_tei = False
             if "abstract" not in SCREEN_RECORD.data:
                 abstract_from_tei = True
-                TEI = colrev_core.environment.TEIParser(
+                TEIParser = SCREEN.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="TEIParser"
+                )
+                TEI = TEIParser(
                     pdf_path=Path(SCREEN_RECORD.data["file"]),
                     tei_path=SCREEN_RECORD.get_tei_filename(),
                 )

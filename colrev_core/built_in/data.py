@@ -18,7 +18,6 @@ import requests
 import zope.interface
 from dacite import from_dict
 
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -487,9 +486,10 @@ class EndnoteEndpoint:
     def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
         def zotero_conversion(data):
 
-            ZOTERO_TRANSLATION_SERVICE = (
-                colrev_core.environment.ZoteroTranslationService()
+            ZoteroTranslationService = DATA.REVIEW_MANAGER.get_environment_service(
+                service_identifier="ZoteroTranslationService"
             )
+            ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
             ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
             headers = {"Content-type": "text/plain"}

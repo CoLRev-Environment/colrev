@@ -3,7 +3,6 @@ import math
 import pkgutil
 import typing
 
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 import colrev_core.settings
@@ -29,9 +28,10 @@ class Screen(colrev_core.process.Process):
 
         self.verbose = True
 
-        self.screen_scripts: typing.Dict[
-            str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+        self.screen_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.screen.scripts,
         )

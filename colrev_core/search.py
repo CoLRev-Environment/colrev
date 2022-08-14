@@ -5,7 +5,6 @@ import typing
 from pathlib import Path
 
 import colrev_core.built_in.search as built_in_search
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.review_dataset
@@ -50,9 +49,10 @@ class Search(colrev_core.process.Process):
 
         self.SOURCES = REVIEW_MANAGER.settings.sources
 
-        self.search_scripts: typing.Dict[
-            str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+        self.search_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=[
                 s.search_script for s in self.SOURCES if "endpoint" in s.search_script
@@ -166,7 +166,11 @@ class Search(colrev_core.process.Process):
         required_search_scripts = [
             s.search_script for s in self.REVIEW_MANAGER.settings.sources
         ]
-        self.search_scripts = colrev_core.environment.AdapterManager.load_scripts(
+
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+        self.search_scripts = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=scripts + required_search_scripts,
         )

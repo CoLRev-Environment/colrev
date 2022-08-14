@@ -12,7 +12,6 @@ from lingua.builder import LanguageDetectorBuilder
 from pdf2image import convert_from_path
 from PyPDF2 import PdfFileReader
 
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -125,9 +124,10 @@ class PDFCoverPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        cp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
-            ".coverpages"
+        LocalIndex = PDF_PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
         )
+        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         def __get_coverpages(*, pdf):
@@ -287,9 +287,10 @@ class PDFLastPageEndpoint:
     @timeout_decorator.timeout(60, use_signals=False)
     def prep_pdf(self, PDF_PREPARATION, RECORD, PAD):
 
-        lp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
-            ".lastpages"
+        LocalIndex = PDF_PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
         )
+        lp_path = LocalIndex.local_environment_path / Path(".lastpages")
         lp_path.mkdir(exist_ok=True)
 
         def __get_last_pages(*, pdf):
@@ -468,7 +469,10 @@ class PDFMetadataValidationEndpoint:
         if colrev_core.record.RecordState.pdf_imported != RECORD.data["colrev_status"]:
             return RECORD.data
 
-        LOCAL_INDEX = colrev_core.environment.LocalIndex()
+        LocalIndex = PDF_PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
+        LOCAL_INDEX = LocalIndex()
 
         try:
             retrieved_record = LOCAL_INDEX.retrieve(record=RECORD.data)
@@ -657,7 +661,11 @@ class TEIEndpoint:
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
-        GROBID_SERVICE = colrev_core.environment.GrobidService()
+
+        GrobidService = PDF_PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
+        GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
         Path(".tei").mkdir(exist_ok=True)
 
@@ -667,9 +675,11 @@ class TEIEndpoint:
         PDF_PREPARATION.REVIEW_MANAGER.logger.info(
             f" creating tei: {RECORD.data['ID']}"
         )
-
         if "file" in RECORD.data:
-            _ = colrev_core.environment.TEIParser(
+            TEIParser = PDF_PREPARATION.REVIEW_MANAGER.get_environment_service(
+                service_identifier="TEIParser"
+            )
+            _ = TEIParser(
                 pdf_path=Path(RECORD.data["file"]),
                 tei_path=RECORD.get_tei_filename(),
             )

@@ -11,7 +11,6 @@ from watchdog.events import LoggingEventHandler
 from watchdog.observers import Observer
 
 import colrev_core.cli_colors as colors
-import colrev_core.environment
 import colrev_core.status
 
 
@@ -111,11 +110,18 @@ class Service:
 
     def start_services(self):
         async def _start_grobid():
-            GROBID_SERVICE = colrev_core.environment.GrobidService()
+            GrobidService = self.REVIEW_MANAGER.get_environment_service(
+                service_identifier="GrobidService"
+            )
+
+            GROBID_SERVICE = GrobidService()
             GROBID_SERVICE.start()
 
         async def _start_index():
-            colrev_core.environment.LocalIndex()
+            LocalIndex = self.REVIEW_MANAGER.get_environment_service(
+                service_identifier="LocalIndex"
+            )
+            LocalIndex()
 
         asyncio.ensure_future(_start_grobid())
         asyncio.ensure_future(_start_index())

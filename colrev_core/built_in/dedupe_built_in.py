@@ -611,7 +611,6 @@ class ActiveLearningDedupeTrainingEndpoint:
 
         # from dedupe._typing import TrainingExample
         from dedupe.core import unique
-        from colrev_core.environment import LocalIndex
 
         DEDUPE.REVIEW_MANAGER.logger.info(
             "Note: duplicate associations available in the LocalIndex "
@@ -620,6 +619,9 @@ class ActiveLearningDedupeTrainingEndpoint:
         DEDUPE.REVIEW_MANAGER.logger.info("Press Enter to start.")
         input()
 
+        LocalIndex = DEDUPE.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
         LOCAL_INDEX = LocalIndex()
         finished = False
         use_previous = False

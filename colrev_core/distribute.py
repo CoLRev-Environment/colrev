@@ -2,7 +2,6 @@
 import shutil
 from pathlib import Path
 
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.settings
 
@@ -26,9 +25,19 @@ class Distribute(colrev_core.process.Process):
         path = Path.cwd() / Path(path_str)
         if path.is_file():
             if path.suffix == ".pdf":
-                GROBID_SERVICE = colrev_core.environment.GrobidService()
+
+                GrobidService = self.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="GrobidService"
+                )
+                GROBID_SERVICE = GrobidService()
+
                 GROBID_SERVICE.start()
-                TEI_INSTANCE = colrev_core.environment.TEIParser(
+
+                TEIParser = self.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="TEIParser"
+                )
+
+                TEI_INSTANCE = TEIParser(
                     self.REVIEW_MANAGER,
                     path,
                 )

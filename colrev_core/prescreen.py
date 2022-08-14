@@ -4,7 +4,6 @@ import pkgutil
 import typing
 
 import colrev_core.built_in.prescreen as built_in_prescreen
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 
@@ -38,9 +37,12 @@ class Prescreen(colrev_core.process.Process):
 
         self.verbose = True
 
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
         self.prescreen_scripts: typing.Dict[
             str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.prescreen.scripts,
         )

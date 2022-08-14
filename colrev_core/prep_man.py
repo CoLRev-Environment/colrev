@@ -4,7 +4,6 @@ import typing
 import pandas as pd
 
 import colrev_core.built_in.prep_man as built_in_prep_man
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 
@@ -32,9 +31,12 @@ class PrepMan(colrev_core.process.Process):
 
         self.verbose = True
 
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
         self.prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.prep.man_prep_scripts,
         )

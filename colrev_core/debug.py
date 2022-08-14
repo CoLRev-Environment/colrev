@@ -101,8 +101,12 @@ def debug_data():
 
 
 def debug_tei_tools(param) -> None:
-    from colrev_core.environment import TEIParser
-    from colrev_core.environment import GrobidService
+
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
+    GrobidService = REVIEW_MANAGER.get_environment_service(
+        service_identifier="GrobidService"
+    )
+    TEIParser = REVIEW_MANAGER.get_environment_service(service_identifier="TEIParser")
 
     logger.debug("Start grobid")
     GROBID_SERVICE = GrobidService()
@@ -170,7 +174,10 @@ def get_non_unique_colrev_pdf_ids() -> None:
 
 
 def local_index(param):
-    from colrev_core.environment import LocalIndex
+    REVIEW_MANAGER = colrev_core.review_manager.ReviewManager()
+
+    # pylint: disable=no-member
+    LocalIndex = REVIEW_MANAGER.get_environment_service(service_identifier="LocalIndex")
 
     LOCAL_INDEX = LocalIndex()
     # To Test retrieval of record:

@@ -18,7 +18,6 @@ from pdfminer.pdfparser import PDFParser
 from tqdm import tqdm
 
 import colrev_core.built_in.database_connectors
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.load
 import colrev_core.pdf_prep
@@ -33,7 +32,7 @@ class CrossrefSearchEndpoint:
     source_identifier = "https://api.crossref.org/works/{{doi}}"
     mode = "all"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
@@ -104,7 +103,9 @@ class CrossrefSearchEndpoint:
                     record["ID"] = str(max_id).rjust(6, "0")
 
                     PREP_RECORD = colrev_core.record.PrepRecord(data=record)
-                    DOIConnector.get_link_from_doi(RECORD=PREP_RECORD)
+                    DOIConnector.get_link_from_doi(
+                        RECORD=PREP_RECORD, REVIEW_MANAGER=SEARCH.REVIEW_MANAGER
+                    )
                     record = PREP_RECORD.get_data()
 
                     available_ids.append(record["doi"])
@@ -141,7 +142,7 @@ class DBLPSearchEndpoint:
     source_identifier = "{{dblp_key}}"
     mode = "all"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
@@ -291,13 +292,16 @@ class BackwardSearchEndpoint:
     source_identifier = "{{cited_by_file}} (references)"
     mode = "individual"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
 
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
 
-        self.GROBID_SERVICE = colrev_core.environment.GrobidService()
+        GrobidService = SEARCH.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
+        self.GROBID_SERVICE = GrobidService()
         self.GROBID_SERVICE.start()
 
     def run_search(self, SEARCH, params: dict, feed_file: Path) -> None:
@@ -408,7 +412,7 @@ class ColrevProjectSearchEndpoint:
     source_identifier = "project"
     mode = "individual"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
@@ -500,7 +504,7 @@ class IndexSearchEndpoint:
     source_identifier = "index"
     mode = "individual"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
@@ -521,8 +525,9 @@ class IndexSearchEndpoint:
 
             imported_ids = [x["ID"] for x in records]
 
-        from colrev_core.environment import LocalIndex
-
+        LocalIndex = SEARCH.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
         LOCAL_INDEX = LocalIndex()
 
         def retrieve_from_index(params) -> typing.List[typing.Dict]:
@@ -680,7 +685,7 @@ class PDFSearchEndpoint:
     source_identifier = "{{file}}"
     mode = "all"
 
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, SEARCH, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
@@ -889,7 +894,10 @@ class PDFSearchEndpoint:
         SEARCH.REVIEW_MANAGER.logger.debug(f"pdfs_to_index: {pdfs_to_index_str}")
 
         if len(pdfs_to_index) > 0:
-            GROBID_SERVICE = colrev_core.environment.GrobidService()
+            GrobidService = SEARCH.REVIEW_MANAGER.get_environment_service(
+                service_identifier="GrobidService"
+            )
+            GROBID_SERVICE = GrobidService()
             GROBID_SERVICE.start()
         else:
             SEARCH.REVIEW_MANAGER.logger.info("No additional PDFs to index")
@@ -989,7 +997,10 @@ class PDFSearchEndpoint:
             # print(f"Response: {r.text}")
             # return {}
 
-            TEI_INSTANCE = colrev_core.environment.TEIParser(
+            TEIParser = SEARCH.REVIEW_MANAGER.get_environment_service(
+                service_identifier="TEIParser"
+            )
+            TEI_INSTANCE = TEIParser(
                 pdf_path=pdf_path,
             )
 
@@ -1027,10 +1038,11 @@ class PDFSearchEndpoint:
                 if "keywords" in record:
                     del record["keywords"]
 
+                EnvironmentManager = SEARCH.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="EnvironmentManager"
+                )
                 # to allow users to update/reindex with newer version:
-                record[
-                    "grobid-version"
-                ] = colrev_core.environment.EnvironmentManager.docker_images[
+                record["grobid-version"] = EnvironmentManager.docker_images[
                     "lfoppiano/grobid"
                 ]
                 return record

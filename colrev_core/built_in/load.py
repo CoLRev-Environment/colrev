@@ -176,12 +176,14 @@ class ZoteroTranslationLoader:
     supported_extensions = ["ris", "rdf", "json", "mods", "xml", "marc", "txt"]
 
     def __init__(self, *, LOAD, SETTINGS):
-        from colrev_core.environment import ZoteroTranslationService
 
         self.SETTINGS = from_dict(
             data_class=colrev_core.process.DefaultSettings, data=SETTINGS
         )
 
+        ZoteroTranslationService = LOAD.REVIEW_MANAGER.get_environment_service(
+            service_identifier="ZoteroTranslationService"
+        )
         self.ZOTERO_TRANSLATION_SERVICE = ZoteroTranslationService()
         self.ZOTERO_TRANSLATION_SERVICE.start_zotero_translators()
 
@@ -233,7 +235,9 @@ class MarkdownLoader:
 
     def load(self, LOADER, SOURCE):
 
-        from colrev_core.environment import GrobidService
+        GrobidService = LOADER.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
 
         GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.check_grobid_availability()

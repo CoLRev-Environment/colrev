@@ -9,7 +9,6 @@ from lxml import etree
 from urllib3.exceptions import ProtocolError
 
 import colrev_core.built_in.data as built_in_data
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.process
 import colrev_core.record
@@ -49,9 +48,10 @@ class Data(colrev_core.process.Process):
             notify_state_transition_process=notify_state_transition_process,
         )
 
-        self.data_scripts: typing.Dict[
-            str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
+        self.data_scripts: typing.Dict[str, typing.Any] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.data.scripts,
         )
@@ -72,7 +72,10 @@ class Data(colrev_core.process.Process):
         self, records: typing.Dict, included: typing.List[dict]
     ) -> typing.Dict:
 
-        GROBID_SERVICE = colrev_core.environment.GrobidService()
+        GrobidService = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
+        GROBID_SERVICE = GrobidService()
         GROBID_SERVICE.start()
 
         def create_tei(record: dict) -> None:
@@ -92,9 +95,10 @@ class Data(colrev_core.process.Process):
                     return
 
                 try:
-                    colrev_core.environment.TEIParser(
-                        pdf_path=pdf_path, tei_path=tei_path
+                    TEIParser = self.REVIEW_MANAGER.get_environment_service(
+                        service_identifier="TEIParser"
                     )
+                    TEIParser(pdf_path=pdf_path, tei_path=tei_path)
 
                     if tei_path.is_file():
                         record["tei_file"] = str(tei_path)
@@ -128,9 +132,10 @@ class Data(colrev_core.process.Process):
 
                 tei_path = Path(record["tei_file"])
                 try:
-                    TEI_INSTANCE = colrev_core.environment.TEIParser(
-                        self.REVIEW_MANAGER, tei_path=tei_path
+                    TEIParser = self.REVIEW_MANAGER.get_environment_service(
+                        service_identifier="TEIParser"
                     )
+                    TEI_INSTANCE = TEIParser(self.REVIEW_MANAGER, tei_path=tei_path)
                     TEI_INSTANCE.mark_references(records=records.values())
                 except etree.XMLSyntaxError:
                     continue

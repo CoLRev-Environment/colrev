@@ -114,7 +114,10 @@ class LocalIndexEndpoint:
         )
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
-        from colrev_core.environment import LocalIndex
+
+        LocalIndex = PDF_RETRIEVAL.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
+        )
 
         LOCAL_INDEX = LocalIndex()
         try:
@@ -140,7 +143,10 @@ class WebsiteScreenshotEndpoint:
         )
 
     def get_pdf(self, PDF_RETRIEVAL, RECORD):
-        from colrev_core.environment import ScreenshotService
+
+        ScreenshotService = PDF_RETRIEVAL.REVIEW_MANAGER.get_environment_service(
+            service_identifier="ScreenshotService"
+        )
 
         if "online" == RECORD.data["ENTRYTYPE"]:
             SCREENSHOT_SERVICE = ScreenshotService()

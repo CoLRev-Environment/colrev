@@ -8,14 +8,17 @@ from subprocess import CalledProcessError
 from subprocess import check_call
 from subprocess import DEVNULL
 from subprocess import STDOUT
+from typing import TYPE_CHECKING
 
 import git
 
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.review_dataset
 import colrev_core.review_manager
 import colrev_core.settings
+
+if TYPE_CHECKING:
+    import colrev_core.environment
 
 
 class Initializer:
@@ -111,9 +114,10 @@ class Initializer:
 
     def __register_repo(self) -> None:
 
-        colrev_core.environment.EnvironmentManager.register_repo(
-            path_to_register=Path.cwd()
+        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="EnvironmentManager"
         )
+        EnvironmentManager.register_repo(path_to_register=Path.cwd())
 
     def __create_commit(self, *, saved_args: dict) -> None:
 
@@ -507,10 +511,14 @@ class Initializer:
         git_repo.index.add(["search/30_example_records.bib"])
 
     def __create_local_index(self) -> None:
-        from colrev_core.environment import LocalIndex
         import os
 
         self.REVIEW_MANAGER.report_logger.handlers = []
+
+        # pylint: disable=no-member
+        LocalIndex: colrev_core.environment.LocalIndex = (
+            self.REVIEW_MANAGER.get_environment_service(service_identifier="LocalIndex")
+        )
 
         local_index_path = LocalIndex.local_environment_path / Path("local_index")
         curdir = Path.cwd()

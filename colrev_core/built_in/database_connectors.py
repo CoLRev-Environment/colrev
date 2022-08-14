@@ -14,7 +14,6 @@ import requests_cache
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
 
-import colrev_core.environment
 import colrev_core.exceptions as colrev_exceptions
 import colrev_core.record
 
@@ -49,7 +48,10 @@ class OpenLibraryConnector:
 class URLConnector:
     @classmethod
     def retrieve_md_from_url(cls, *, RECORD, PREPARATION) -> None:
-        from colrev_core.environment import ZoteroTranslationService
+
+        ZoteroTranslationService = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="ZoteroTranslationService"
+        )
 
         # Note: retrieve_md_from_url replaces prior data in RECORD
         # (RECORD.copy() - deepcopy() before if necessary)
@@ -121,7 +123,9 @@ class URLConnector:
                     DUMMY_R = colrev_core.record.PrepRecord(
                         data={"doi": RECORD.data["doi"]}
                     )
-                    DOIConnector.get_link_from_doi(RECORD=DUMMY_R)
+                    DOIConnector.get_link_from_doi(
+                        RECORD=DUMMY_R, REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER
+                    )
                     if "https://doi.org/" not in DUMMY_R.data["url"]:
                         RECORD.data["url"] = DUMMY_R.data["url"]
                 else:
@@ -154,9 +158,11 @@ class DOIConnector:
 
         try:
             if session is None:
-                cache_path = (
-                    colrev_core.environment.EnvironmentManager.colrev_path
-                    / Path("prep_requests_cache")
+                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
+                    service_identifier="EnvironmentManager"
+                )
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -221,11 +227,7 @@ class DOIConnector:
 
     @classmethod
     def get_link_from_doi(
-        cls,
-        *,
-        RECORD,
-        session=None,
-        TIMEOUT: int = 10,
+        cls, *, RECORD, session=None, TIMEOUT: int = 10, REVIEW_MANAGER
     ) -> None:
 
         doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
@@ -258,9 +260,11 @@ class DOIConnector:
         try:
             url = doi_url
             if session is None:
-                cache_path = (
-                    colrev_core.environment.EnvironmentManager.colrev_path
-                    / Path("prep_requests_cache")
+                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
+                    service_identifier="EnvironmentManager"
+                )
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -572,9 +576,11 @@ class CrossrefConnector:
         record_list = []
         try:
             if session is None:
-                cache_path = (
-                    colrev_core.environment.EnvironmentManager.colrev_path
-                    / Path("prep_requests_cache")
+                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
+                    service_identifier="EnvironmentManager"
+                )
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
@@ -659,9 +665,10 @@ class CrossrefConnector:
         # https://api.crossref.org/works/DOI
 
         if session is None:
-            cache_path = colrev_core.environment.EnvironmentManager.colrev_path / Path(
-                "prep_requests_cache"
+            EnvironmentManager = PREPARATION.REVIEW_MANAGER.get_environment_service(
+                service_identifier="EnvironmentManager"
             )
+            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
             session = requests_cache.CachedSession(
                 str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
             )
@@ -716,7 +723,9 @@ class CrossrefConnector:
                         RECORD.prescreen_exclude(reason="retracted")
                         RECORD.remove_field(key="warning")
                     else:
-                        DOIConnector.get_link_from_doi(RECORD=RECORD)
+                        DOIConnector.get_link_from_doi(
+                            RECORD=RECORD, REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER
+                        )
                         RECORD.set_masterdata_complete()
                         RECORD.set_status(
                             target_state=colrev_core.record.RecordState.md_prepared
@@ -883,9 +892,12 @@ class DBLPConnector:
             assert query is not None or url is not None
 
             if session is None:
-                cache_path = (
-                    colrev_core.environment.EnvironmentManager.colrev_path
-                    / Path("prep_requests_cache")
+
+                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
+                    service_identifier="EnvironmentManager"
+                )
+                cache_path = EnvironmentManager.colrev_path / Path(
+                    "prep_requests_cache"
                 )
                 session = requests_cache.CachedSession(
                     str(cache_path), backend="sqlite", expire_after=timedelta(days=30)

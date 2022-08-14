@@ -16,7 +16,6 @@ from pathos.multiprocessing import ProcessPool
 import colrev_core.built_in.database_connectors as db_connectors
 import colrev_core.built_in.prep as built_in_prep
 import colrev_core.cli_colors as colors
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 import colrev_core.settings
@@ -88,13 +87,6 @@ class Preparation(colrev_core.process.Process):
         "cited_by",
         "cited_by_file",
     ]
-
-    cache_path = colrev_core.environment.EnvironmentManager.colrev_path / Path(
-        "prep_requests_cache"
-    )
-    session = requests_cache.CachedSession(
-        str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-    )
 
     built_in_scripts: typing.Dict[str, typing.Dict[str, typing.Any]] = {
         "load_fixes": {
@@ -199,6 +191,14 @@ class Preparation(colrev_core.process.Process):
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
         self.CPUS: int = self.CPUS * 4
+
+        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="GrobidService"
+        )
+        cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
+        self.session = requests_cache.CachedSession(
+            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+        )
 
     def check_DBs_availability(self) -> None:
 
@@ -711,9 +711,12 @@ class Preparation(colrev_core.process.Process):
 
             required_prep_scripts.append({"endpoint": "update_metadata_status"})
 
+            AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+                service_identifier="AdapterManager"
+            )
             self.prep_scripts: typing.Dict[
                 str, typing.Any
-            ] = colrev_core.environment.AdapterManager.load_scripts(
+            ] = AdapterManager.load_scripts(
                 PROCESS=self,
                 scripts=required_prep_scripts,
             )

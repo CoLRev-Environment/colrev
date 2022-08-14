@@ -7,7 +7,6 @@ from PyPDF2 import PdfFileReader
 from PyPDF2 import PdfFileWriter
 
 import colrev_core.built_in.pdf_prep_man as built_in_pdf_prep_man
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 
@@ -29,9 +28,13 @@ class PDFPrepMan(colrev_core.process.Process):
         )
 
         self.verbose = True
+
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
         self.pdf_prep_man_scripts: typing.Dict[
             str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_prep.man_pdf_prep_scripts,
         )
@@ -224,9 +227,10 @@ class PDFPrepMan(colrev_core.process.Process):
 
     def extract_coverpage(self, *, filepath: Path) -> None:
 
-        cp_path = colrev_core.environment.LocalIndex.local_environment_path / Path(
-            ".coverpages"
+        LocalIndex = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="LocalIndex"
         )
+        cp_path = LocalIndex.local_environment_path / Path(".coverpages")
         cp_path.mkdir(exist_ok=True)
 
         pdfReader = PdfFileReader(str(filepath), strict=False)

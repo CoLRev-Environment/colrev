@@ -10,7 +10,6 @@ import timeout_decorator
 from p_tqdm import p_map
 
 import colrev_core.built_in.pdf_prep as built_in_pdf_prep
-import colrev_core.environment
 import colrev_core.process
 import colrev_core.record
 
@@ -63,9 +62,12 @@ class PDF_Preparation(colrev_core.process.Process):
         self.REPO_DIR = self.REVIEW_MANAGER.paths["REPO_DIR"]
         self.CPUS = 8
 
+        AdapterManager = self.REVIEW_MANAGER.get_environment_service(
+            service_identifier="AdapterManager"
+        )
         self.pdf_prep_scripts: typing.Dict[
             str, typing.Any
-        ] = colrev_core.environment.AdapterManager.load_scripts(
+        ] = AdapterManager.load_scripts(
             PROCESS=self,
             scripts=REVIEW_MANAGER.settings.pdf_prep.scripts,
         )

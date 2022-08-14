@@ -113,7 +113,7 @@ class AdapterManager:
 
             for endpoint_name, script in scripts_dict.items():
                 scripts_dict[endpoint_name] = script["endpoint"](
-                    SETTINGS=script["settings"]
+                    SEARCH=PROCESS, SETTINGS=script["settings"]
                 )
                 verifyObject(SearchEndpoint, scripts_dict[endpoint_name])
 
