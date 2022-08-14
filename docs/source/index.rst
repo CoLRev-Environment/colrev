@@ -29,7 +29,7 @@ Collaborative Literature Reviews
    technical_documentation/api
    technical_documentation/reference_implementation
    technical_documentation/cli
-   Repository <https://github.com/geritwagner/colrev_core>
+   Repository <https://github.com/geritwagner/colrev>
 
 .. toctree::
    :hidden:

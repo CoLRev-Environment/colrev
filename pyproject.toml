@@ -1,13 +1,13 @@
 [tool.poetry]
-name = "colrev_core"
+name = "colrev"
 version = "0.5.0" # automatically injected by poetry-dynamic-versioning
 description = "Core engine for CoLRev (colaborative literature reviews)"
 authors = ["Gerit Wagner <gerit.wagner@hec.ca>", "Julian Prester <julian.prester@sydney.edu.au>"]
 license = "MIT"
 readme = "README.md"
-homepage="https://github.com/geritwagner/colrev_core"
-repository = "https://github.com/geritwagner/colrev_core"
-documentation = "https://github.com/geritwagner/colrev_core"
+homepage="https://github.com/geritwagner/colrev"
+repository = "https://github.com/geritwagner/colrev"
+documentation = "https://github.com/geritwagner/colrev"
 keywords = ["research", "reproducible research", "open science", "literautre", "literauture review", "systematic review", "systematic literature review"]
 classifiers = [
    "Development Status :: 2 - Pre-Alpha",
@@ -19,10 +19,10 @@ classifiers = [
     "Operating System :: OS Independent",
     "Typing :: Typed",
 ]
-include = ["CONTRIBUTING.rst", "CHANGELOG.md", "LICENSE", "README.md", "colrev_core/py.typed"]
+include = ["CONTRIBUTING.rst", "CHANGELOG.md", "LICENSE", "README.md", "colrev/py.typed"]
 
 [tool.poetry.scripts]
-colrev_core = "colrev_core.cli:main"
+colrev = "colrev.cli:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"

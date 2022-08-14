@@ -166,11 +166,11 @@ The main propositions of CoLRev are:
 
 The architecture of CoLRev is divided into three packages:
 
-- The CoLRev core platform, **colrev_core**, operates standardized data structures and a process model on top of git repositories. It also offers an extensible reference implementation covering all process steps of the review process.
+- The CoLRev core platform, **colrev**, operates standardized data structures and a process model on top of git repositories. It also offers an extensible reference implementation covering all process steps of the review process.
 - The CoLRev hooks, **colrev_hooks** (i.e., custom git pre-commit hooks) check conformance with the standardized structures before a new version of the project (git commit) is created.
 - The CoLRev command line interface, **colrev** (cli), provides access to the processing operations and additional features. Complexity is hidden behind the three-step workflow and the ``colrev status`` command that provides instructions based on the context of the project.
 
-The extensible part of **colrev_core** adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
+The extensible part of **colrev** adopts **batteries included but swappable** as a principle to reconcile the need for an efficient end-to-end process with the possibility to select and combine specific tools. Users can -- for each step of the review process -- rely on the powerful reference implementation of CoLRev or select custom tools.
 
 ..
    The **ReviewManager** supports reviewers in dealing with the complexity of the review process (e.g., the order of individual steps and their dependencies) in collaborative settings (e.g., requiring synchronization between distributed local repositories).

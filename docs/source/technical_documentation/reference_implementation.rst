@@ -10,7 +10,7 @@ Reference implementation
 
 CoLRev comes with batteries included, i.e., a reference implementation for all steps of the process.
 At the same time you can easily include other extensions or custom scripts (batteries are swappable).
-Everything is specified in the settings.json (simply add the extension/script name as the endpoint to any of the `scripts elements <https://github.com/geritwagner/colrev_core/blob/main/colrev_core/template/settings.json>`_):
+Everything is specified in the settings.json (simply add the extension/script name as the endpoint to any of the `scripts elements <https://github.com/geritwagner/colrev/blob/main/colrev/template/settings.json>`_):
 
 
 .. code-block:: diff
@@ -34,4 +34,4 @@ The available (built-in) scripts are documented here:
    :template: custom-module-template.rst
    :recursive:
 
-   colrev_core.built_in
+   colrev.built_in

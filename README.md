@@ -4,10 +4,10 @@
 
 # Collaborative Literature Reviews (CoLRev)
 
-[![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
+[![License](https://img.shields.io/github/license/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
+[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
 
 CoLRev is an open-source environment for collaborative reviews.
 To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
@@ -27,10 +27,9 @@ After installing [git](https://git-scm.com/) and [docker](https://www.docker.com
 
 ```
 # Install
-git clone https://github.com/geritwagner/colrev_core && cd colrev_core && pip install . && cd ..
 git clone https://github.com/geritwagner/colrev && cd colrev && pip install .
 # or
-pip install colrev_core colrev
+pip install colrev
 
 # ... and start with the main command
 colrev status
@@ -128,7 +127,7 @@ Several resources are provided as part of the CoLRev project, including
 - The user [manual](docs/build/user_resources/manual.html) and [cheatsheet](docs/build/user_resources/cheatsheet.html)
 - The developer [api reference](docs/build/technical_documentation/api.html)
 - The scientific foundations of the [CoLRev framework](docs/build/technical_documentation/colrev.html) and the [architecture rationales](https://github.com/geritwagner/colrev-architecture-rationales)
-- Contributions are always welcome (see [help page](docs/build/user_resources/help.html) and [github repository](https://github.com/geritwagner/colrev_core))
+- Contributions are always welcome (see [help page](docs/build/user_resources/help.html) and [github repository](https://github.com/geritwagner/colrev))
 - Planned: resources for extension development, content curation, further educational materials (tutorials)
 
 ## Contributing, changes, and releases
@@ -136,10 +135,10 @@ Several resources are provided as part of the CoLRev project, including
 Contributions, code and features are always welcome
 
 - See [contributing guidelines](CONTRIBUTING.md).
-- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev_core/issues) and let us know.
+- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev_core/releases).
+For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev/releases).
 
 ## License
 
@@ -150,4 +149,4 @@ If you contribute to the project, you agree to share your contribution following
 
 Please [cite](docs/_static/colrev_citation.bib) the project as follows:
 
-Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev_core.
+Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev.
