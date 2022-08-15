@@ -67,7 +67,7 @@ class Status(colrev.process.Process):
         from multiprocessing.dummy import Pool as ThreadPool
 
         EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="GrobidService"
+            service_identifier="EnvironmentManager"
         )
 
         environment_instructions = []

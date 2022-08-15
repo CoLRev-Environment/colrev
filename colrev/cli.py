@@ -282,7 +282,10 @@ def print_project_status(STATUS) -> None:
 
     try:
         ret_check = STATUS.REVIEW_MANAGER.check_repo(
-            DATA=colrev.data.Data(REVIEW_MANAGER=STATUS.REVIEW_MANAGER)
+            DATA=colrev.data.Data(
+                REVIEW_MANAGER=STATUS.REVIEW_MANAGER,
+                notify_state_transition_process=False,
+            )
         )
     except colrev_exceptions.RepoSetupError as e:
         ret_check = {"status": 1, "msg": e}

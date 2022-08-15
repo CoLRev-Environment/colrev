@@ -693,14 +693,6 @@ class Dedupe(colrev.process.Process):
 
     def main(self):
 
-        # TODO : TBD: how to address small samples
-        # (considering that scripts are fixed in the settings?)
-        #     if self.sample_size < min_n_active_learning:
-        #         selected_algorithm = self.SIMPLE_SIMILARITY_BASED_DEDUPE
-        # "set or check/update dedupe at runtime "
-        # "(e.g., enough records for active learning dedupe or simple dedupe?)"
-        # " use get_dedupe_algorithm_conf() for that"
-
         for DEDUPE_SCRIPT in self.REVIEW_MANAGER.settings.dedupe.scripts:
 
             AdapterManager = self.REVIEW_MANAGER.get_environment_service(

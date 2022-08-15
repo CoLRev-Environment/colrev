@@ -288,7 +288,7 @@ class ReviewManager:
         last_commit_message = self.REVIEW_DATASET.get_commit_message(commit_nr=0)
         cmsg_lines = last_commit_message.split("\n")
         for cmsg_line in cmsg_lines[0:100]:
-            if "colrev" in cmsg_line and "version" in cmsg_line:
+            if "colrev:" in cmsg_line and "version" in cmsg_line:
                 last_colrev_version = cmsg_line[cmsg_line.find("version ") + 8 :]
 
         return [last_colrev_version, current_colrev_version]
@@ -2121,6 +2121,8 @@ class ReviewManager:
             return colrev.environment.ZoteroTranslationService
         if "ScreenshotService" == service_identifier:
             return colrev.environment.ScreenshotService
+        if "LocalIndex" == service_identifier:
+            return colrev.environment.LocalIndex
 
         raise colrev_exceptions.ServiceNotAvailableException(service_identifier)
 

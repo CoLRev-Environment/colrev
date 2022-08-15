@@ -24,7 +24,6 @@ After installing `git <https://git-scm.com/>`_ and `docker <https://www.docker.c
 .. code-block::
 
    # Install
-   git clone https://github.com/geritwagner/colrev && cd colrev && pip install . && cd ..
    git clone https://github.com/geritwagner/colrev && cd colrev && pip install .
    # or
    pip install colrev colrev

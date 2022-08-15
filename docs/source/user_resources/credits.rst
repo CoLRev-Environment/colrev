@@ -76,7 +76,7 @@ Projects that power CoLRev and its extension scripts:
    * - Preparation
      - Field
      - Size
-   * - `Crossref <https://www.crossref.org/>`_ (officially deposited metadata)
+   * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
      - Cross-disciplinary
      - > 125,000,000
    * - `Semantic Scholar <https://www.semanticscholar.org/>`_ (metadata)

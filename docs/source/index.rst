@@ -17,7 +17,6 @@ Collaborative Literature Reviews
    :caption: User resources
 
    Manual <user_resources/manual>
-   user_resources/cheatsheet
    user_resources/credits
    user_resources/help
 
