@@ -2112,6 +2112,8 @@ class ReviewManager:
 
     @classmethod
     def get_environment_service(cls, *, service_identifier):
+        # pylint: disable=too-many-return-statements
+
         if "AdapterManager" == service_identifier:
             return colrev.environment.AdapterManager
         if "GrobidService" == service_identifier:
@@ -2126,6 +2128,8 @@ class ReviewManager:
             return colrev.environment.ScreenshotService
         if "LocalIndex" == service_identifier:
             return colrev.environment.LocalIndex
+        if "Resources" == service_identifier:
+            return colrev.environment.Resources
 
         raise colrev_exceptions.ServiceNotAvailableException(service_identifier)
 
