@@ -193,7 +193,7 @@ class Preparation(colrev.process.Process):
         self.CPUS: int = self.CPUS * 4
 
         EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="GrobidService"
+            service_identifier="EnvironmentManager"
         )
         cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
         self.session = requests_cache.CachedSession(
