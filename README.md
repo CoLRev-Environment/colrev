@@ -1,32 +1,152 @@
 <p align="center">
-<img src="docs/figures/logo_small.png" width="400">
+<img src="../../figures/logo_small.png" width="400">
 </p>
 
-# CoLRev Framework
+# Collaborative Literature Reviews (CoLRev)
 
-[![License](https://img.shields.io/github/license/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
+[![License](https://img.shields.io/github/license/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
 [![Python 3.8](https://img.shields.io/badge/python-3.8-blue.svg)](https://www.python.org/downloads/release/python-380/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
-[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev_core.svg)](https://github.com/geritwagner/colrev_core/releases/)
+[![GitHub release](https://img.shields.io/github/v/release/geritwagner/colrev.svg)](https://github.com/geritwagner/colrev/releases/)
 
-This repository contains the core engine for the CoLRev framework (**C**olaborative **L**iterature **Rev**iews), the reference implementation, and documentation on the CoLRev standard.
+CoLRev is an open-source environment for collaborative reviews.
+To make major improvements in terms of efficiency and trustworthiness and to automatically augment reviews with community-curated content, CoLRev advances the design of review technology at the intersection of methods, engineering, cognition, and community building.
+Compared to other environments, the following features stand out:
 
-# Usage and Documentation
+- an **extensible and open platform** based on shared data and process standards
+- builds on **git** and its transparent collaboration model for the entire literature review process
+- offers a **self-explanatory, fault-tolerant, and configurable** user workflow
+- implements a **granular data provenance** model and a **robust identification** scheme
+- uses **state-of-the-art algorithms** that provide end-to-end process support
+- enables **typological and methodological pluralism** throughout the process
+- operates a **built-in model for content curation** and reuse
+
+## Getting started
+
+After installing [git](https://git-scm.com/) and [docker](https://www.docker.com/):
+
+```
+# Install
+git clone https://github.com/geritwagner/colrev && cd colrev && pip install .
+# or
+pip install colrev
+
+# ... and start with the main command
+colrev status
+```
+
+**The workflow** consists of three steps. This is all you need to remember. The status command displays the current state of the review and guides you to the next [operation](docs/build/user_resources/manual.html).
+After each step, [validate the changes](docs/build/user_resources/manual/1_workflow.html#colrev-validate).
+
+<p align="center">
+<img src="../../figures/workflow.svg" width="800">
+</p>
+
+<!-- .. figure:: docs/figures/workflow.svg
+   :width: 600
+   :align: center
+   :alt: Workflow cycle -->
+
+**The operations** allow you to complete a literature review. It should be as simple as running the following commands:
+
+```
+# Initialize the project
+colrev init
+# To try colrev: colrev init --example
+
+# Run new search or store search results in the ./search directory
+colrev search --add "FROM crossref WHERE digital"
+
+# Load the search results
+colrev load
+
+# Prepare the metadata
+colrev prep
+
+# Identify and merge duplicates
+colrev dedupe
+
+# Conduct a prescreen
+colrev prescreen
+
+# Get the PDFs for included papers
+colrev pdf-get
+
+# Prepare the PDFs
+colrev pdf-prep
+
+# Conduct a screen (using specific criteria)
+colrev screen
+
+# Complete the data analysis/synthesis
+colrev data
+
+# Build the paper
+colrev paper
+```
+
+For each operation, the **colrev settings** document the tools and parameters. You can rely on the built-in reference implementation of colrev, specify external tools, or include custom scripts. The settings are adapted to the type of review and suggest reasonable defaults. You have the option to customize and adapt.
+
+
+<p align="center">
+<img src="../../figures/settings.svg" width="600">
+</p>
+
+<!-- .. figure:: ../figures/settings.svg
+   :width: 600
+   :align: center
+   :alt: Settings -->
+
+
+**The project collaboration loop** allows you to synchronize the project repository with your team.
+The *colrev pull* and *colrev push* operations make it easy to collaborate on a specific project while reusing and updating record data from multiple curated repositories.
+In essence, a CoLRev repository is a git repository that follows the CoLRev data standard and is augmented with a record-level curation loop.
+
+**The record curation loop** proposes a new vision for the review process.
+Reuse of community-curated data from different sources is built into each operation.
+It can substantially reduce required efforts and improve richness, e.g., through annotations of methods, theories, and findings.
+The more records are curated, the more you can focus on the synthesis.
+
+
+<p align="center">
+<img src="../../figures/reuse-vision_loop.svg" width="800">
+</p>
+
+<!-- .. figure:: ../figures/reuse-vision_loop.svg
+   :width: 800
+   :align: center
+   :alt: Reuse vision -->
+
+
+## Usage and Documentation
 
 See the [documentation](docs/source/index.rst).
 
-# Contributing, changes, and releases
+Several resources are provided as part of the CoLRev project, including
 
+- The user [manual](docs/build/user_resources/manual.html) and [cheatsheet](docs/build/user_resources/cheatsheet.html)
+- The developer [api reference](docs/build/technical_documentation/api.html)
+- The scientific foundations of the [CoLRev framework](docs/build/technical_documentation/colrev.html) and the [architecture rationales](https://github.com/geritwagner/colrev-architecture-rationales)
+- Contributions are always welcome (see [help page](docs/build/user_resources/help.html) and [github repository](https://github.com/geritwagner/colrev))
+- Planned: resources for extension development, content curation, further educational materials (tutorials)
+
+## Contributing, changes, and releases
 
 Contributions, code and features are always welcome
 
 - See [contributing guidelines](CONTRIBUTING.md).
-- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev_core/issues) and let us know.
+- Bug reports or feedback? Please use the [issue tracker](https://github.com/geritwagner/colrev/issues) and let us know.
 - To get your work included, fork the repository, implement your changes, and create a [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
 
-For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev_core/releases).
+For further information, see [changes](CHANGELOG.md) and [releases](https://github.com/geritwagner/colrev/releases).
 
-# License
+## License
 
 This project is distributed under the [MIT License](LICENSE) the documentation is distributed under the [CC-0](https://creativecommons.org/publicdomain/zero/1.0/) license.
 If you contribute to the project, you agree to share your contribution following these licenses.
+
+## Citing CoLRev
+
+Please [cite](docs/_static/colrev_citation.bib) the project as follows:
+
+Wagner, G. and Prester, J. (2022) CoLRev - A Framework for Collaborative Literature Reviews. Available at https://github.com/geritwagner/colrev.

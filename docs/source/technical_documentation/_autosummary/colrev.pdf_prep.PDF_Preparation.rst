@@ -1,0 +1,33 @@
+colrev.pdf\_prep.PDF\_Preparation
+=================================
+
+.. currentmodule:: colrev.pdf_prep
+
+.. autoclass:: PDF_Preparation
+   :members:
+   :show-inheritance:
+   :inherited-members:
+   :special-members: __call__, __add__, __mul__
+
+
+
+   .. rubric:: Methods
+
+   .. autosummary::
+      :nosignatures:
+
+      ~PDF_Preparation.check_precondition
+      ~PDF_Preparation.main
+      ~PDF_Preparation.prepare_pdf
+      ~PDF_Preparation.setup_custom_script
+      ~PDF_Preparation.update_colrev_pdf_ids
+
+
+
+
+
+   .. rubric:: Attributes
+
+   .. autosummary::
+
+      ~PDF_Preparation.built_in_scripts

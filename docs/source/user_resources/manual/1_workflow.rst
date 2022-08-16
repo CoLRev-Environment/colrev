@@ -141,7 +141,7 @@ Note: you can also use a `git client of your choice <https://git-scm.com/downloa
 
       .. code-block:: diff
 
-         Author: script:colrev_core prep main <>  2022-04-06 06:10:52
+         Author: script:colrev prep main <>  2022-04-06 06:10:52
          Committer: Gerit Wagner <gerit.wagner@hec.ca>  2022-04-06 06:10:52
          Parent: 3ad86d73f7e04ee30b8687648b4dea140c526623 (Prepare records (exclusion)*)
          Child:  a7df1f2025e95419989e1d5b4a80223ddf099bc4 (Prepare records (medium_confidence)*)
@@ -179,7 +179,7 @@ Note: you can also use a `git client of your choice <https://git-scm.com/downloa
                                                 --commit INSERT_COMMIT_HASH
 
             Software
-            - colrev_core:               version 0.3.0+180.gc112ca4.dirty
+            - colrev:               version 0.3.0+180.gc112ca4.dirty
             - colrev hooks:              version 0.3.0
             - Python:                    version 3.8.10
             - Git:                       version 2.25.1

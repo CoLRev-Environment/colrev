@@ -69,3 +69,5 @@ Thumbs.db #thumbnail cache on Windows
 analysis/__pycache__/*
 .local/*
 .rstudio/*
+
+.ipynb_checkpoints

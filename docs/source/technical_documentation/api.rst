@@ -13,7 +13,7 @@ API Reference
    :alt: Logo
 
 
-TODO : autodocs summary of zope interfaces (for extensions): `interface definitions (endpoints) <https://github.com/geritwagner/colrev_core/blob/8fba8d94f513ae87c1fad49fc2357665fb2989bf/colrev_core/process.py#L426>`_
+TODO : autodocs summary of zope interfaces (for extensions): `interface definitions (endpoints) <https://github.com/geritwagner/colrev/blob/8fba8d94f513ae87c1fad49fc2357665fb2989bf/colrev/process.py#L426>`_
 
 
 .. autosummary::
@@ -21,4 +21,4 @@ TODO : autodocs summary of zope interfaces (for extensions): `interface definiti
    :template: custom-module-template.rst
    :recursive:
 
-   colrev_core
+   colrev

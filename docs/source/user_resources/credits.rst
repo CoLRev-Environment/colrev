@@ -4,6 +4,12 @@ Credits
 
 The CoLRev reference implementation builds on the shoulders of amazing projects (growing giants) and benefits from their ongoing improvements
 
+Projects that power CoLRev and its extension scripts:
+
+
+
+
+
 .. |pybtexactivity| image:: https://img.shields.io/github/commit-activity/y/live-clones/pybtex?color=green&style=plastic
    :height: 12pt
 
@@ -43,6 +49,9 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
 .. |cslactivity| image:: https://img.shields.io/github/commit-activity/y/citation-style-language/styles?color=green&style=plastic
    :height: 12pt
 
+.. |asreviewactivity| image:: https://img.shields.io/github/commit-activity/y/asreview/asreview?color=green&style=plastic
+   :height: 12pt
+
 .. |opensearchactivity| image:: https://img.shields.io/github/commit-activity/y/opensearch-project/OpenSearch?color=green&style=plastic
    :height: 12pt
 
@@ -50,27 +59,82 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
    :widths: 54 24 22
    :header-rows: 1
 
-   * - Project and functionality
+   * - Load
      - License
      - Activity
-   * - `pybtex <https://bitbucket.org/pybtex-devs/pybtex/src>`_ \*: BibTeX parsing
-     - `MIT <https://bitbucket.org/pybtex-devs/pybtex/src/master/COPYING>`__
-     - |pybtexactivity|
-   * - `git <https://github.com/git/git>`_ \*: versioning and collaboration
-     - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`__
-     - |gitactivity|
-   * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
-     - `MIT <https://github.com/pre-commit/pre-commit/blob/main/LICENSE>`__
-     - |precommitactivity|
-   * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
-     - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`__
-     - |dockerpyactivity|
-   * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
-     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/main/LICENSE>`__
-     - |pandasactivity|
    * - `Zotero translators <https://github.com/zotero/translators>`_ \*: record import
      - GPL
      - |zoterotranslatoractivity|
+   * - `Bibutils <http://bibutils.refbase.org/>`_ \*: record import
+     - `GPL 2 <https://sourceforge.net/p/bibutils/home/Bibutils/>`__
+     - Unknown
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - Preparation
+     - Field
+     - Size
+   * - `Crossref <https://www.crossref.org/>`_ (metadata deposited by publishers)
+     - Cross-disciplinary
+     - > 125,000,000
+   * - `Semantic Scholar <https://www.semanticscholar.org/>`_ (metadata)
+     - Cross-disciplinary
+     - > 175,000,000
+   * - `dblp <https://dblp.org/>`_ (curated metadata)
+     - IT/IS
+     - > 5,750,000
+   * - `Open Library <https://openlibrary.org/>`_ (curated metadata, books)
+     - Cross-disciplinary
+     - > 20,000,000
+   * - `CiteAs.org <https://citeas.org/>`_ (metadata on research software, datasets, etc.)
+     - Cross-disciplinary
+     - ?
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - Dedupe
+     - License
+     - Activity
+   * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification (active learning)
+     - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`__
+     - |dedupeioactivity|
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - Prescreen
+     - License
+     - Activity
+   * - `ASReview <https://github.com/asreview/asreview>`_ : active-learning-based prescreen
+     - Apache-2.0 license
+     - |asreviewactivity|
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - PDF Retrieval
+     - Field
+     - Size
+   * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
+     - Cross-disciplinary
+     - > 30,000,000
+   * - Retrievel of PDFs from local (indexed) repositories
+     - varies
+     - varies
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - PDF Preparation
+     - License
+     - Activity
    * - `PDFMiner.six <https://github.com/pdfminer/pdfminer.six>`_ : PDF management
      - `MIT <https://github.com/pdfminer/pdfminer.six/blob/master/LICENSE>`__
      - |pdfmineractivity|
@@ -83,43 +147,45 @@ The CoLRev reference implementation builds on the shoulders of amazing projects 
    * - `GROBID <https://github.com/kermitt2/grobid>`_ \*: parsing annotated PDF content
      - `Apache 2.0 <https://github.com/kermitt2/grobid/blob/master/LICENSE>`__
      - |grobidactivity|
-   * - `dedupe <https://github.com/dedupeio/dedupe>`_ : duplicate identification
-     - `MIT <https://github.com/dedupeio/dedupe/blob/master/LICENSE>`__
-     - |dedupeioactivity|
+
+.. list-table::
+   :widths: 54 24 22
+   :header-rows: 1
+
+   * - Data & analysis
+     - License
+     - Activity
    * - `pandoc <https://github.com/jgm/pandoc>`_ \*: creating manuscripts
      - `GPL 2 <https://github.com/jgm/pandoc/blob/master/COPYRIGHT>`__
      - |pandocactivity|
    * - `CSL <https://github.com/citation-style-language/styles>`_ \*: formatting citations
      - `CC BY-SA 3.0 <https://github.com/citation-style-language/styles>`__
      - |cslactivity|
-   * - `OpenSearch <https://github.com/opensearch-project/OpenSearch>`_ \*: searching local projects
-     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt>`__
-     - |opensearchactivity|
-
-\* dynamically loaded
 
 .. list-table::
    :widths: 54 24 22
    :header-rows: 1
 
-   * - Sources for data preparation and retrieval
-     - Field
-     - Size
-   * - `Crossref <https://www.crossref.org/>`_ (officially deposited metadata)
-     - Cross-disciplinary
-     - > 125,000,000
-   * - `Semantic Scholar <https://www.semanticscholar.org/>`_ (metadata)
-     - Cross-disciplinary
-     - > 175,000,000
-   * - `dblp <https://dblp.org/>`_ (curated metadata)
-     - IT/IS
-     - > 5,750,000
-   * - `Open Library <https://openlibrary.org/>`_ (curated metadata, books)
-     - Cross-disciplinary
-     - > 20,000,000
-   * - `Unpaywall <https://unpaywall.org/>`_ (legal/OA PDF retrieval)
-     - Cross-disciplinary
-     - > 30,000,000
-   * - `CiteAs.org <https://citeas.org/>`_ (metadata on research software, datasets, etc.)
-     - Cross-disciplinary
-     - ?
+   * - Core functionality
+     - License
+     - Activity
+   * - `git <https://github.com/git/git>`_ \*: versioning and collaboration
+     - `GPL 2 <https://github.com/git/git/blob/master/COPYING>`__
+     - |gitactivity|
+   * - `pre-commit <https://github.com/pre-commit/pre-commit>`_ : checks and reports
+     - `MIT <https://github.com/pre-commit/pre-commit/blob/main/LICENSE>`__
+     - |precommitactivity|
+   * - `docker-py <https://github.com/docker/docker-py>`_ : accessing microservices
+     - `Apache-2.0 <https://github.com/docker/docker-py/blob/master/LICENSE>`__
+     - |dockerpyactivity|
+   * - `pybtex <https://bitbucket.org/pybtex-devs/pybtex/src>`_ \*: Saving and loading record data (BiBTeX)
+     - `MIT <https://bitbucket.org/pybtex-devs/pybtex/src/master/COPYING>`__
+     - |pybtexactivity|
+   * - `pandas <https://github.com/pandas-dev/pandas>`_ for record management
+     - `BSD 3 <https://github.com/pandas-dev/pandas/blob/main/LICENSE>`__
+     - |pandasactivity|
+   * - `OpenSearch <https://github.com/opensearch-project/OpenSearch>`_ \*: local record indexing and searching
+     - `Apache v2.0 <https://github.com/opensearch-project/OpenSearch/blob/main/LICENSE.txt>`__
+     - |opensearchactivity|
+
+\* dynamically loaded

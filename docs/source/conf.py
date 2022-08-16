@@ -2,9 +2,9 @@ import os
 import sys
 
 try:
-    from colrev_core import __version__ as colrev_core_version
+    from colrev import __version__ as colrev_version
 except Exception:
-    colrev_core_version = ""
+    colrev_version = ""
 
 # Configuration file for the Sphinx documentation builder.
 #
@@ -21,7 +21,7 @@ except Exception:
 # from root project dir...
 
 sys.path.insert(
-    0, os.path.abspath("../../colrev_core")
+    0, os.path.abspath("../../colrev")
 )  # Source code dir relative to this file
 sys.path.insert(
     0, os.path.abspath("../../colrev")
@@ -34,7 +34,7 @@ copyright = "2022, Gerit Wagner and Julian Prester"
 author = "Gerit Wagner and Julian Prester"
 
 # The full version, including alpha/beta/rc tags
-release = colrev_core_version
+release = colrev_version
 
 # -- General configuration ---------------------------------------------------
 
@@ -49,7 +49,12 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx_click",
+    "m2r2",
 ]
+
+source_suffix = [".rst", ".md"]
+
+m2r_parse_relative_links = True
 
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
 autoclass_content = "both"  # Add __init__ doc (ie. params) to class summaries
@@ -86,3 +91,11 @@ html_css_files = ["custom.css"]  # Override some CSS settings
 html_static_path = ["_static"]
 # html_logo = "logo_small.png"
 html_favicon = "favicon.png"
+
+html_context = {
+    "display_github": True,  # Integrate GitHub
+    "github_user": "geritwagner",  # Username
+    "github_repo": "colrev",  # Repo name
+    "github_version": "master",  # Version
+    "conf_py_path": "docs/source/",  # Path in the checkout to the docs root
+}
