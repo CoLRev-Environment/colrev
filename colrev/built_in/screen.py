@@ -6,6 +6,7 @@ import pandas as pd
 import zope.interface
 from dacite import from_dict
 
+import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 import colrev.settings
@@ -77,15 +78,15 @@ class CoLRevCLIScreenEndpoint:
             criterion_name,
             criterion_settings,
         ) in SCREEN.REVIEW_MANAGER.settings.screen.criteria.items():
-            color = "\033[92m"
+            color = colors.GREEN
             if (
                 colrev.settings.ScreenCriterionType.exclusion_criterion
                 == criterion_settings.criterion_type
             ):
-                color = "\033[91m"
+                color = colors.RED
             print(
                 f" - {criterion_name} "
-                f"({color}{criterion_settings.criterion_type}\033[0m): "
+                f"({color}{criterion_settings.criterion_type}{colors.END}): "
                 f"{criterion_settings.explanation}"
             )
             if criterion_settings.comment != "":
@@ -126,18 +127,18 @@ class CoLRevCLIScreenEndpoint:
 
                     decision, ret = "NA", "NA"
                     while ret not in ["y", "n", "q", "s"]:
-                        color = "\033[92m"
+                        color = colors.GREEN
                         if (
                             colrev.settings.ScreenCriterionType.exclusion_criterion
                             == criterion_settings.criterion_type
                         ):
-                            color = "\033[91m"
+                            color = colors.RED
 
                         ret = input(
                             # is relevant / should be in the sample / should be retained
                             f"({i}/{stat_len}) Record should be included according to"
                             f" {criterion_settings.criterion_type}"
-                            f" {color}{criterion_name}\033[0m"
+                            f" {color}{criterion_name}{colors.END}"
                             " [y,n,q,s]? "
                         )
                         if "q" == ret:

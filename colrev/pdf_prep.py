@@ -10,6 +10,7 @@ import timeout_decorator
 from p_tqdm import p_map
 
 import colrev.built_in.pdf_prep as built_in_pdf_prep
+import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
@@ -299,26 +300,26 @@ class PDF_Preparation(colrev.process.Process):
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
             prepared_string += " PDFs"
         elif self.pdf_prepared == 1:
-            prepared_string += "\033[92m"
+            prepared_string += f"{colors.GREEN}"
             prepared_string += f"{self.pdf_prepared}".rjust(10, " ")
-            prepared_string += "\033[0m PDF"
+            prepared_string += f"{colors.END} PDF"
         else:
-            prepared_string += "\033[92m"
+            prepared_string += f"{colors.GREEN}"
             prepared_string += f"{self.pdf_prepared}".rjust(11, " ")
-            prepared_string += "\033[0m PDFs"
+            prepared_string += f"{colors.END} PDFs"
 
         not_prepared_string = "Not prepared:"
         if self.not_prepared == 0:
             not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
             not_prepared_string += " PDFs"
         elif self.not_prepared == 1:
-            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{colors.ORANGE}"
             not_prepared_string += f"{self.not_prepared}".rjust(10, " ")
-            not_prepared_string += "\033[0m PDF"
+            not_prepared_string += f"{colors.END} PDF"
         else:
-            not_prepared_string += "\033[93m"
+            not_prepared_string += f"{colors.ORANGE}"
             not_prepared_string += f"{self.not_prepared}".rjust(11, " ")
-            not_prepared_string += "\033[0m PDFs"
+            not_prepared_string += f"{colors.END} PDFs"
 
         self.REVIEW_MANAGER.logger.info(prepared_string)
         self.REVIEW_MANAGER.logger.info(not_prepared_string)

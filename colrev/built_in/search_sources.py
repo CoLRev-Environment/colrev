@@ -4,6 +4,7 @@ from dataclasses import asdict
 import zope.interface
 from dacite import from_dict
 
+import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
@@ -88,8 +89,8 @@ class AISeLibrarySearchSource:
                 result["conversion_script"] = {"endpoint": "bibutils"}
                 new_filename = filename.with_suffix(".enl")
                 print(
-                    f"\033[92mRenaming to {new_filename} "
-                    "(because the format is .enl, not .txt.)\033[0m"
+                    f"{colors.GREEN}Renaming to {new_filename} "
+                    f"(because the format is .enl, not .txt.){colors.END}"
                 )
                 filename.rename(new_filename)
                 result["filename"] = new_filename

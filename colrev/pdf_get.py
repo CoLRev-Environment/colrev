@@ -9,6 +9,7 @@ from pathlib import Path
 from p_tqdm import p_map
 
 import colrev.built_in.pdf_get as built_in_pdf_get
+import colrev.cli_colors as colors
 import colrev.process
 import colrev.record
 
@@ -401,26 +402,26 @@ class PDF_Retrieval(colrev.process.Process):
             retrieved_string += f"{self.retrieved}".rjust(11, " ")
             retrieved_string += " PDFs"
         elif self.retrieved == 1:
-            retrieved_string += "\033[92m"
+            retrieved_string += f"{colors.GREEN}"
             retrieved_string += f"{self.retrieved}".rjust(11, " ")
-            retrieved_string += "\033[0m PDF"
+            retrieved_string += f"{colors.END} PDF"
         else:
-            retrieved_string += "\033[92m"
+            retrieved_string += f"{colors.GREEN}"
             retrieved_string += f"{self.retrieved}".rjust(11, " ")
-            retrieved_string += "\033[0m PDFs"
+            retrieved_string += f"{colors.END} PDFs"
 
         not_retrieved_string = "Missing:   "
         if self.not_retrieved == 0:
             not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
             not_retrieved_string += " PDFs"
         elif self.not_retrieved == 1:
-            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{colors.ORANGE}"
             not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
-            not_retrieved_string += "\033[0m PDF"
+            not_retrieved_string += f"{colors.END} PDF"
         else:
-            not_retrieved_string += "\033[93m"
+            not_retrieved_string += f"{colors.ORANGE}"
             not_retrieved_string += f"{self.not_retrieved}".rjust(11, " ")
-            not_retrieved_string += "\033[0m PDFs"
+            not_retrieved_string += f"{colors.END} PDFs"
 
         self.REVIEW_MANAGER.logger.info(retrieved_string)
         self.REVIEW_MANAGER.logger.info(not_retrieved_string)

@@ -254,11 +254,9 @@ class Data(colrev.process.Process):
                 self.REVIEW_MANAGER.logger.info(f"No outlet: {missing_outlet}")
             return observations
 
-        # RED = "\033[91m"
-        # END = "\033[0m"
         # if not status.get_completeness_condition():
         #     self.REVIEW_MANAGER.logger.warning(
-        #  f"{RED}Sample not completely processed!{END}")
+        #  f"{colors.RED}Sample not completely processed!{colors.END}")
 
         records = self.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
 

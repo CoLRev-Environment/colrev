@@ -405,13 +405,12 @@ class Loader(colrev.process.Process):
         else:
             search_records = []
 
-        GREEN = "\033[92m"
-        END = "\033[0m"
-
         if len(search_records) == 0:
             SOURCE.to_import = 0
             SOURCE.source_records_list = []
-            self.REVIEW_MANAGER.logger.info(f"{GREEN}No records to load{END}")
+            self.REVIEW_MANAGER.logger.info(
+                f"{colors.GREEN}No records to load{colors.END}"
+            )
             print()
 
             return
@@ -492,7 +491,7 @@ class Loader(colrev.process.Process):
         self.REVIEW_MANAGER.REVIEW_DATASET.save_records_dict(records=records)
 
         self.REVIEW_MANAGER.logger.info(
-            f"Records loaded: {GREEN}{SOURCE.to_import}{END}"
+            f"Records loaded: {colors.GREEN}{SOURCE.to_import}{colors.END}"
         )
 
         if keep_ids:
@@ -643,8 +642,8 @@ class Loader(colrev.process.Process):
                     if re.search("%0", data) and filepath.suffix not in [".enl"]:
                         new_filename = filepath.with_suffix(".enl")
                         print(
-                            f"\033[92mRenaming to {new_filename} "
-                            "(because the format is .enl)\033[0m"
+                            f"{colors.GREEN}Renaming to {new_filename} "
+                            f"(because the format is .enl){colors.END}"
                         )
                         filepath.rename(new_filename)
                         filepath = new_filename

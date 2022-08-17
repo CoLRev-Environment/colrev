@@ -1424,9 +1424,9 @@ class CurationDedupeEndpoint:
             ]
             if len(sources_missing_in_dedupe) > 0:
                 DEDUPE.REVIEW_MANAGER.logger.warning(
-                    "\033[93mSources missing in "
+                    f"{colors.ORANGE}Sources missing in "
                     "dedupe.scripts.curation_full_outlet_dedupe: "
-                    f"{','.join(sources_missing_in_dedupe)}\033[0m"
+                    f"{','.join(sources_missing_in_dedupe)}{colors.END}"
                 )
                 if "y" == input("Add sources [y,n]?"):
                     for source_missing_in_dedupe in sources_missing_in_dedupe:
@@ -1442,8 +1442,8 @@ class CurationDedupeEndpoint:
                         )
                         DEDUPE.REVIEW_MANAGER.save_settings()
                         DEDUPE.REVIEW_MANAGER.logger.info(
-                            f"\033[92mAdded {source_missing_in_dedupe} "
-                            "to dedupe.scripts\033[0m"
+                            f"{colors.GREEN}Added {source_missing_in_dedupe} "
+                            f"to dedupe.scripts{colors.END}"
                         )
 
         # TODO : create a search/retrieval script that retrieves
@@ -1516,7 +1516,9 @@ class CurationDedupeEndpoint:
             DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.add_record_changes()
 
             if DEDUPE.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
-                DEDUPE.REVIEW_MANAGER.logger.info("\033[92mCommit changes\033[0m")
+                DEDUPE.REVIEW_MANAGER.logger.info(
+                    f"{colors.GREEN}Commit changes{colors.END}"
+                )
                 DEDUPE.REVIEW_MANAGER.create_commit(
                     msg=(
                         "Merge duplicate records (set unique records from "
@@ -1527,7 +1529,9 @@ class CurationDedupeEndpoint:
                     saved_args={},
                 )
             else:
-                DEDUPE.REVIEW_MANAGER.logger.info("\033[92mNo duplicates found\033[0m")
+                DEDUPE.REVIEW_MANAGER.logger.info(
+                    f"{colors.GREEN}No duplicates found{colors.END}"
+                )
 
             return
 
@@ -1715,7 +1719,9 @@ class CurationDedupeEndpoint:
         # Note : DEDUPE.apply_merges reloads the records and
         # thereby discards previous changes
         if len(decision_list) > 0:
-            DEDUPE.REVIEW_MANAGER.logger.info("\033[92mDuplicates identified\033[0m")
+            DEDUPE.REVIEW_MANAGER.logger.info(
+                f"{colors.GREEN}Duplicates identified{colors.END}"
+            )
             print(decision_list)
             DEDUPE.apply_merges(results=decision_list)
 
@@ -1728,7 +1734,7 @@ class CurationDedupeEndpoint:
             )
         else:
             DEDUPE.REVIEW_MANAGER.logger.info(
-                "\033[92mNo merge-candidates identified between sets\033[0m"
+                f"{colors.GREEN}No merge-candidates identified between sets{colors.END}"
             )
 
         return
@@ -1798,9 +1804,9 @@ class CurationMissingDedupeEndpoint:
                 continue
 
             print("\n\n\n")
-            print("\033[93m")
+            print(colors.ORANGE)
             RECORD.print_citation_format()
-            print("\033[0m")
+            print(colors.END)
 
             for r in same_toc_recs:
                 r["similarity"] = colrev.record.PrepRecord.get_record_similarity(
@@ -1818,7 +1824,7 @@ class CurationMissingDedupeEndpoint:
                 )
 
                 if r["similarity"] > 0.8:
-                    print(f"{i + 1} - \033[93m{author_title_string}\033[0m")
+                    print(f"{i + 1} - {colors.ORANGE}{author_title_string}{colors.END}")
 
                 else:
                     print(f"{i + 1} - {author_title_string}")
@@ -1934,11 +1940,11 @@ class CurationMissingDedupeEndpoint:
             records_df = pd.DataFrame.from_records(list(selected_records))
             if records_df.shape[0] == 0:
                 DEDUPE.REVIEW_MANAGER.logger.info(
-                    f"\033[92mSource {source_origin} fully merged\033[0m"
+                    f"{colors.GREEN}Source {source_origin} fully merged{colors.END}"
                 )
             else:
                 DEDUPE.REVIEW_MANAGER.logger.info(
-                    f"\033[93mSource {source_origin} not fully merged\033[0m"
+                    f"{colors.ORANGE}Source {source_origin} not fully merged{colors.END}"
                 )
                 DEDUPE.REVIEW_MANAGER.logger.info(
                     f"Exporting details to dedupe/{source_origin}.xlsx"

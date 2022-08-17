@@ -1241,11 +1241,11 @@ class ReviewManager:
         # Remove colors for commit message
         status_page = (
             f.getvalue()
-            .replace("\033[91m", "")
-            .replace("\033[92m", "")
-            .replace("\033[93m", "")
-            .replace("\033[94m", "")
-            .replace("\033[0m", "")
+            .replace(colors.RED, "")
+            .replace(colors.GREEN, "")
+            .replace(colors.ORANGE, "")
+            .replace(colors.BLUE, "")
+            .replace(colors.END, "")
         )
         status_page = status_page.replace("Status\n\n", "Status\n")
         report = report + status_page

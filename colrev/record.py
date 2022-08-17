@@ -1420,11 +1420,9 @@ class Record:
             and "retracted" == reason
             and print_warning
         ):
-            red = "\033[91m"
-            end = "\033[0m"
             print(
-                f"\n{red}Paper retracted and prescreen "
-                f"excluded: {self.data['ID']}{end}\n"
+                f"\n{colors.RED}Paper retracted and prescreen "
+                f"excluded: {self.data['ID']}{colors.END}\n"
             )
 
         self.data["prescreen_exclusion"] = reason
@@ -2149,11 +2147,8 @@ class PrepRecord(Record):
 class PrescreenRecord(Record):
     def __str__(self) -> str:
 
-        GREEN = "\033[92m"
-        END = "\033[0m"
-
         ret_str = (
-            f"{GREEN}{self.data.get('title', 'no title')}{END}\n"
+            f"{colors.GREEN}{self.data.get('title', 'no title')}{colors.END}\n"
             f"{self.data.get('author', 'no-author')}\n"
         )
         if "article" == self.data["ENTRYTYPE"]:
