@@ -16,6 +16,11 @@ class IDPpattern(Enum):
     first_author_year = "FIRST_AUTHOR_YEAR"
     three_authors_year = "THREE_AUTHORS_YEAR"
 
+    @classmethod
+    def get_options(cls):
+        # pylint: disable=no-member
+        return cls._member_names_
+
 
 class ReviewType(Enum):
     curated_masterdata = "curated_masterdata"
@@ -32,35 +37,40 @@ class ReviewType(Enum):
     scientometric = "scientometric"
     peer_review = "peer_review"
 
+    @classmethod
+    def get_options(cls):
+        return cls._member_names_
+
     def __str__(self):
         return (
             f"{self.name.replace('_', ' ').replace('meta analysis', 'meta-analysis')}"
         )
 
 
-# @dataclass
-# class Author:
-#     name: str
-#     initials: str
-#     email: str
-#     orcid: typing.Optional[str]
-#     contributions: typing.Optional[list]
-#     affiliations: typing.Optional[list]
-#     funding: typing.Optional[list]
-#     identifiers: typing.Optional[list]
+@dataclass
+class Author:
+    name: str
+    initials: str
+    email: str
+    orcid: typing.Optional[str]
+    contributions: typing.Optional[list]
+    affiliations: typing.Optional[list]
+    funding: typing.Optional[list]
+    identifiers: typing.Optional[list]
 
-# @dataclass
-# class Protocol:
-#     url: str
+
+@dataclass
+class Protocol:
+    url: str
 
 
 @dataclass
 class ProjectConfiguration:
-    # title: str
-    # authors: list[Author]
-    # keywords: list[str]
+    title: str
+    authors: typing.List[Author]
+    keywords: typing.List[str]
     # status ? (development/published?)
-    # protocol: typing.Optional[Protocol]
+    protocol: typing.Optional[Protocol]
     # publication: ... (reference, link, ....)
     review_type: ReviewType
     id_pattern: IDPpattern
@@ -86,6 +96,10 @@ class SearchType(Enum):
     FORWARD_SEARCH = "FORWARD_SEARCH"
     PDFS = "PDFS"
     OTHER = "OTHER"
+
+    @classmethod
+    def get_options(cls):
+        return cls._member_names_
 
     def __str__(self):
         return f"{self.name}"
@@ -249,6 +263,11 @@ class PDFPrepConfiguration:
 class ScreenCriterionType(Enum):
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
+
+    @classmethod
+    def get_options(cls):
+        # pylint: disable=no-member
+        return cls._member_names_
 
     def __str__(self):
         return self.name

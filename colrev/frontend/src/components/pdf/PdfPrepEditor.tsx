@@ -29,7 +29,7 @@ const PdfPrepEditor: React.FC<{
         />
       </div>
       <div className="mb-3">
-        <label>Man Pdf Prep Scripts</label>
+        <label>Man PDF Prep Scripts</label>
         <ScriptsEditor
           id="pdfPrepManPdfPrepScripts"
           scripts={pdfPrep.manPdfPrepScripts}

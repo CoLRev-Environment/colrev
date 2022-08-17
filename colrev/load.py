@@ -122,8 +122,8 @@ class Loader(colrev.process.Process):
 
                 # Assuming that all other search types are added by query
                 # search_type_input = "NA"
-                # while search_type_input not in SearchType._member_names_:
-                #     print(f"Search type options: {SearchType._member_names_}")
+                # while search_type_input not in SearchType.get_options():
+                #     print(f"Search type options: {SearchType.get_options()}")
                 #     cmd = "Enter search type".ljust(40, " ") + ": "
                 #     search_type_input = input(cmd)
 

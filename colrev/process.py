@@ -51,10 +51,14 @@ class Process:
         self.type = process_type
 
         self.notify_state_transition_process = notify_state_transition_process
-        if notify_state_transition_process:
-            self.REVIEW_MANAGER.notify(process=self)
-        else:
-            self.REVIEW_MANAGER.notify(process=self, state_transition=False)
+        try:
+            if notify_state_transition_process:
+                self.REVIEW_MANAGER.notify(process=self)
+            else:
+                self.REVIEW_MANAGER.notify(process=self, state_transition=False)
+        except AttributeError as e:
+            if not self.force_mode:
+                raise e
 
         if debug:
             self.REVIEW_MANAGER.DEBUG_MODE = True

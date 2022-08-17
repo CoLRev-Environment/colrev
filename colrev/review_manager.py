@@ -712,6 +712,22 @@ class ReviewManager:
                 del settings["data"]["data_format"]
                 settings["data"]["scripts"] = data_scripts
 
+            if "title" not in settings["project"]:
+                settings["project"]["title"] = str(self.path.parents[0].stem)
+
+            if "authors" not in settings["project"]:
+                settings["project"]["authors"] = [
+                    {
+                        "name": self.COMMITTER,
+                        "initials": "".join(
+                            part[0] for part in self.COMMITTER.split(" ")
+                        ),
+                        "email": self.EMAIL,
+                    }
+                ]
+            if "keywords" not in settings["project"]:
+                settings["project"]["keywords"] = ["TODO"]
+
             with open("settings.json", "w", encoding="utf-8") as outfile:
                 json.dump(settings, outfile, indent=4)
 

@@ -204,7 +204,7 @@ function App() {
                 />
               </ExpanderItem>
               <ExpanderItem
-                name="Pdf Get"
+                name="PDF Get"
                 id="pdfGet"
                 parentContainerId="settingsExpander"
                 show={false}
@@ -212,7 +212,7 @@ function App() {
                 <PdfGetEditor pdfGet={pdfGet} pdfGetChanged={onPdfGetChanged} />
               </ExpanderItem>
               <ExpanderItem
-                name="Pdf Prep"
+                name="PDF Prep"
                 id="pdfPrep"
                 parentContainerId="settingsExpander"
                 show={false}

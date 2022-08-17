@@ -24,7 +24,7 @@ const PdfGetEditor: React.FC<{
   return (
     <div>
       <div className="mb-3">
-        <label htmlFor="pdfPathType">Pdf Path Type</label>
+        <label htmlFor="pdfPathType">PDF Path Type</label>
         <input
           className="form-control"
           type="text"
@@ -44,7 +44,7 @@ const PdfGetEditor: React.FC<{
         />
       </div>
       <div className="mb-3">
-        <label>Man Pdf Get Scripts</label>
+        <label>Man PDF Get Scripts</label>
         <ScriptsEditor
           id="pdfGetManPdfGetScripts"
           scripts={pdfGet.manPdfGetScripts}

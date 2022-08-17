@@ -16,6 +16,7 @@ import git
 import pandas as pd
 from dictdiffer import diff
 from git.exc import GitCommandError
+from git.exc import InvalidGitRepositoryError
 from tqdm import tqdm
 
 import colrev.exceptions as colrev_exceptions
@@ -29,7 +30,13 @@ class ReviewDataset:
 
         self.REVIEW_MANAGER = REVIEW_MANAGER
         self.RECORDS_FILE = REVIEW_MANAGER.paths["RECORDS_FILE"]
-        self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
+        try:
+            self.__git_repo = git.Repo(self.REVIEW_MANAGER.path)
+        except InvalidGitRepositoryError as e:
+            if not self.REVIEW_MANAGER.force_mode:
+                raise colrev_exceptions.RepoSetupError(
+                    "Not a CoLRev/git repository."
+                ) from e
 
     def get_record_state_list(self) -> list:
         """Get the record_state_list"""
@@ -1736,7 +1743,6 @@ class ReviewDataset:
 
     def check_sources(self) -> None:
 
-        # pylint: disable=protected-access
         SOURCES = self.REVIEW_MANAGER.settings.sources
 
         for SOURCE in SOURCES:
@@ -1747,9 +1753,9 @@ class ReviewDataset:
                 )
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
-            if str(SOURCE.search_type) not in colrev.settings.SearchType._member_names_:
+            if str(SOURCE.search_type) not in colrev.settings.SearchType.get_options():
                 raise colrev_exceptions.SearchSettingsError(
-                    f"{SOURCE.search_type} not in {colrev.settings.SearchType._member_names_}"
+                    f"{SOURCE.search_type} not in {colrev.settings.SearchType.get_options()}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"

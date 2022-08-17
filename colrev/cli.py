@@ -109,6 +109,7 @@ def main(ctx):
 def init(ctx, name, type, url, example) -> bool:
     """Initialize repository"""
     import colrev.init
+    import colrev.settings_editor
 
     try:
         # We check this again when calling init.initialize_repo()
@@ -129,13 +130,14 @@ def init(ctx, name, type, url, example) -> bool:
             return False
 
         # Set reasonable defaults
-        SHARE_STAT_REQ = "PROCESSED"
+        # SHARE_STAT_REQ = "PROCESSED"
+        colrev.init.Initializer.setup_initial_configuration(path=os.getcwd())
+
+        REVIEW_MANAGER = colrev.review_manager.ReviewManager(force_mode=True)
+        SETTINGS = colrev.settings_editor.Settings(REVIEW_MANAGER=REVIEW_MANAGER)
+        SETTINGS.open_settings_editor()
 
         colrev.init.Initializer(
-            project_name=name,
-            SHARE_STAT_REQ=SHARE_STAT_REQ,
-            review_type=type,
-            url=url,
             example=example,
         )
 
@@ -365,7 +367,9 @@ def status(ctx, analytics) -> None:
         return
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
     except KeyboardInterrupt:
         print("Stopped...")
 
@@ -423,7 +427,9 @@ def search(ctx, add, view, selected, setup_custom_script, force_mode) -> None:
 
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
     except colrev_exceptions.NoSearchFeedRegistered as e:
         print(e)
     except colrev_exceptions.ServiceNotAvailableException as e:
@@ -458,7 +464,9 @@ def load(ctx, keep_ids, combine_commits) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -547,7 +555,9 @@ def prep(
         )
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     PREPARATION = colrev.prep.Preparation(
@@ -686,7 +696,9 @@ def dedupe(
         REVIEW_MANAGER = colrev.review_manager.ReviewManager(force_mode=force)
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -739,7 +751,9 @@ def prep_man(ctx, stats) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     PREP_MAN = colrev.prep_man.PrepMan(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -804,7 +818,9 @@ def prescreen(
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -889,7 +905,9 @@ def screen(
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -951,7 +969,9 @@ def pdf_get(ctx, copy_to_repo, rename, relink_files, setup_custom_script) -> Non
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1025,7 +1045,9 @@ def pdf_prep(ctx, update_colrev_pdf_ids, reprocess, debug, setup_custom_script) 
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1065,7 +1087,9 @@ def pdf_get_man(ctx, export) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1166,7 +1190,9 @@ def pdf_prep_man(ctx, delete_first_page, stats, extract, apply) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1234,7 +1260,9 @@ def data(
         REVIEW_MANAGER = colrev.review_manager.ReviewManager(force_mode=force)
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1389,7 +1417,9 @@ def validate(ctx, scope, properties, commit) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     VALIDATE = colrev.validate.Validate(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -1450,7 +1480,9 @@ def trace(ctx, id) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     TRACE = colrev.trace.Trace(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -1468,7 +1500,9 @@ def paper(ctx) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     try:
@@ -1507,7 +1541,9 @@ def distribute(ctx, path) -> None:
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     DISTRIBUTE = colrev.distribute.Distribute(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -1889,7 +1925,9 @@ def pull(ctx, records_only, project_only):
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     PULL = colrev.pull.Pull(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -1932,7 +1970,9 @@ def push(ctx, records_only, project_only):
         REVIEW_MANAGER = colrev.review_manager.ReviewManager()
     except MissingValueError as e:
         print(f"Error in settings.json: {e}")
-        print("To solve this, use\n  colrev settings --upgrade")
+        print(
+            f"To solve this, use\n  {colors.ORANGE}colrev settings --upgrade{colors.END}"
+        )
         return
 
     PUSH = colrev.push.Push(REVIEW_MANAGER=REVIEW_MANAGER)
@@ -2056,6 +2096,29 @@ def show(ctx, keyword, callback=validate_show, required=True):
             )
     else:
         print("Keyword unknown")
+
+
+@main.command()
+@click.option("-a", "--activate", is_flag=True, default=False)
+@click.option("-d", "--deactivate", is_flag=True, default=False)
+@click.pass_context
+def debug(ctx, activate, deactivate):
+    """Debug"""
+    import colrev.debug
+
+    if activate:
+        print("Debugging activated")
+        print("TODO")
+        # colrev.debug.set_debug_mode(True)
+
+    elif deactivate:
+        print("Debugging deactivated")
+        print("TODO")
+        # colrev.debug.set_debug_mode(False)
+    else:
+        operation = input("operation")
+        param = input("param")
+        colrev.debug.main(operation, param)
 
 
 @main.command(hidden=True)

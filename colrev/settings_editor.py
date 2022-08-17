@@ -73,20 +73,24 @@ class Settings(colrev.process.Process):
         @app.route("/api/getOptions")
         def getOptions():
 
+            # TODO : get options individually (path as a parameter of getOptions)
+            # TODO : add getRequiredFields() (e.g., title, ...)
             setting_options = {
                 "project": {
-                    "review_type": colrev.settings.ReviewType._member_names_,
-                    "id_pattern": colrev.settings.IDPpattern._member_names_,
-                },
-                "source": {
-                    "conversion_script": list(
-                        colrev.load.Loader.built_in_scripts.keys()
-                    )
-                    + ["CUSTOM_VALUE"]
+                    "review_type": colrev.settings.ReviewType.get_options(),
+                    "id_pattern": colrev.settings.IDPpattern.get_options(),
                 },
             }
 
             return jsonify(setting_options)
+
+        @app.route("/api/getScripts")
+        def getScripts(script_type):
+            script_options = []
+            if "source_conversion_script" == script_type:
+                script_options = list(colrev.load.Loader.built_in_scripts.keys())
+
+            return jsonify(script_options)
 
         self._open_browser()
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)

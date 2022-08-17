@@ -24,46 +24,25 @@ if TYPE_CHECKING:
 
 class Initializer:
 
-    SHARE_STAT_REQ_options = ["NONE", "PROCESSED", "SCREENED", "COMPLETED"]
+    SHARE_STAT_REQ_options = ["none", "processed", "screened", "completed"]
 
     def __init__(
         self,
         *,
-        project_name: str,
-        SHARE_STAT_REQ: str,
-        review_type: str,
-        url: str = "NA",
         example: bool = False,
         local_index_repo: bool = False,
     ) -> None:
 
         saved_args = locals()
-
         assert not (example and local_index_repo)
-        if project_name is not None:
-            self.project_name = project_name
-        else:
-            self.project_name = str(Path.cwd().name)
-        if SHARE_STAT_REQ not in self.SHARE_STAT_REQ_options:
-            raise colrev_exceptions.ParameterError(
-                parameter="init.SHARE_STAT_REQ",
-                value=SHARE_STAT_REQ,
-                options=self.SHARE_STAT_REQ_options,
-            )
+        assert Path("settings.json").is_file()
 
-        if review_type not in colrev.settings.ReviewType._member_names_:
-            raise colrev_exceptions.ParameterError(
-                parameter="init.review_type",
-                value=f"'{review_type}'",
-                options=colrev.settings.ReviewType._member_names_,
-            )
-
+        # TODO : this will change to project.title
+        self.project_name = str(Path.cwd().name)
         self.instructions: typing.List[str] = []
-        self.SHARE_STAT_REQ = SHARE_STAT_REQ
-        self.review_type = review_type
-        self.url = url
-
         self.logger = self.__setup_init_logger(level=logging.INFO)
+
+        self.REVIEW_MANAGER = colrev.review_manager.ReviewManager(force_mode=True)
 
         self.__require_empty_directory()
         self.logger.info("Setup files")
@@ -75,7 +54,6 @@ class Initializer:
             self.__create_example_repo()
 
         self.REVIEW_MANAGER = colrev.review_manager.ReviewManager()
-
         self.__create_commit(saved_args=saved_args)
         if not example:
             self.REVIEW_MANAGER.logger.info("Register repo")
@@ -123,12 +101,6 @@ class Initializer:
     def __create_commit(self, *, saved_args: dict) -> None:
 
         self.REVIEW_MANAGER.report_logger.info("Initialize review repository")
-        self.REVIEW_MANAGER.report_logger.info(
-            f'{"Set project title:".ljust(30, " ")}{self.project_name}'
-        )
-        self.REVIEW_MANAGER.report_logger.info(
-            f'{"Set SHARE_STAT_REQ:".ljust(30, " ")}{self.SHARE_STAT_REQ}'
-        )
         del saved_args["local_index_repo"]
         self.REVIEW_MANAGER.create_commit(
             msg="Initial commit",
@@ -137,14 +109,16 @@ class Initializer:
             saved_args=saved_args,
         )
 
-    def __setup_files(self) -> None:
-
+    @classmethod
+    def setup_initial_configuration(cls, *, path) -> None:
         # Note: parse instead of copy to avoid format changes
         filedata = pkgutil.get_data(__name__, "template/settings.json")
         if filedata:
             settings = json.loads(filedata.decode("utf-8"))
             with open("settings.json", "w", encoding="utf8") as file:
                 json.dump(settings, file, indent=4)
+
+    def __setup_files(self) -> None:
 
         Path("search").mkdir()
         Path("pdfs").mkdir()
@@ -167,6 +141,35 @@ class Initializer:
 
         with open("settings.json", encoding="utf-8") as f:
             settings = json.load(f)
+
+        settings["project"]["authors"] = [
+            {
+                "name": self.REVIEW_MANAGER.COMMITTER,
+                "initials": "".join(
+                    part[0] for part in self.REVIEW_MANAGER.COMMITTER.split(" ")
+                ),
+                "email": self.REVIEW_MANAGER.EMAIL,
+            }
+        ]
+
+        if settings["project"]["share_stat_req"] not in self.SHARE_STAT_REQ_options:
+            raise colrev_exceptions.ParameterError(
+                parameter="settings.project.share_stat_req",
+                value=settings["project"]["share_stat_req"],
+                options=self.SHARE_STAT_REQ_options,
+            )
+
+        if (
+            settings["project"]["review_type"]
+            not in colrev.settings.ReviewType.get_options()
+        ):
+            raise colrev_exceptions.ParameterError(
+                parameter="settings.project.review_type",
+                value=f"'{settings['project']['review_type']}'",
+                options=colrev.settings.ReviewType.get_options(),
+            )
+
+        self.review_type = settings["project"]["review_type"]
 
         colrev_version = version("colrev_core")
         colrev_version = colrev_version[: colrev_version.find("+")]
@@ -313,11 +316,11 @@ class Initializer:
                 template_file=Path("template/review_type/curated_masterdata/readme.md"),
                 target=Path("readme.md"),
             )
-            if self.url:
+            if settings["project"]["curation_url"]:
                 colrev.review_dataset.ReviewDataset.inplace_change(
                     filename=Path("readme.md"),
                     old_string="{{url}}",
-                    new_string=self.url,
+                    new_string=settings["project"]["curation_url"],
                 )
             CROSSREF_SOURCE = {
                 "filename": "search/CROSSREF.bib",
@@ -488,13 +491,15 @@ class Initializer:
 
     def __require_empty_directory(self):
 
-        cur_content = [str(x) for x in Path.cwd().glob("**/*")]
+        cur_content = [str(x.name) for x in Path.cwd().glob("**/*")]
 
         if "venv" in cur_content:
             cur_content.remove("venv")
             # Note: we can use paths directly when initiating the project
         if "report.log" in cur_content:
             cur_content.remove("report.log")
+        if "settings.json" in cur_content:
+            cur_content.remove("settings.json")
 
         if 0 != len(cur_content):
             raise colrev_exceptions.NonEmptyDirectoryError()
@@ -528,10 +533,11 @@ class Initializer:
         if not local_index_path.is_dir():
             local_index_path.mkdir(parents=True, exist_ok=True)
             os.chdir(local_index_path)
+            # TODO : set up a settings.json with the following parameters:
+            # project_name="local_index",
+            # SHARE_STAT_REQ="PROCESSED",
+            # review_type="curated_masterdata",
             Initializer(
-                project_name="local_index",
-                SHARE_STAT_REQ="PROCESSED",
-                review_type="curated_masterdata",
                 local_index_repo=True,
             )
             self.logger.info("Created local_index repository")
