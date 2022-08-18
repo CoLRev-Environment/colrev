@@ -147,6 +147,8 @@ class Initializer:
 
         Path("search").mkdir()
         Path("pdfs").mkdir()
+        colrev_path = Path.home() / Path("colrev")
+        colrev_path.mkdir(exist_ok=True, parents=True)
 
         files_to_retrieve = [
             [Path("template/readme.md"), Path("readme.md")],
@@ -156,7 +158,7 @@ class Initializer:
             [Path("template/LICENSE-CC-BY-4.0.txt"), Path("LICENSE.txt")],
             [
                 Path("template/docker-compose.yml"),
-                Path.home() / Path("colrev/docker-compose.yml"),
+                colrev_path / Path("docker-compose.yml"),
             ],
         ]
         for rp, p in files_to_retrieve:
