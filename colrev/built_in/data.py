@@ -915,7 +915,7 @@ class ZettlrEndpoint:
 
 @zope.interface.implementer(colrev.process.DataEndpoint)
 class GithubPagesEndpoint:
-    def __init__(self, *, SETTINGS):
+    def __init__(self, *, DATA, SETTINGS):
         self.SETTINGS = from_dict(
             data_class=colrev.process.DefaultSettings, data=SETTINGS
         )
@@ -1004,8 +1004,6 @@ class GithubPagesEndpoint:
         )
 
         git_repo.git.checkout(active_branch)
-
-        return
 
     def update_record_status_matrix(
         self, DATA, synthesized_record_status_matrix, endpoint_identifier
