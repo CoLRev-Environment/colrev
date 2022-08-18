@@ -954,6 +954,7 @@ class GithubPagesEndpoint:
         else:
             # if branch does not exist: create and add index.html
             DATA.REVIEW_MANAGER.logger.info("Setup github pages")
+            git_repo.create_head(gh_pages_branch_name)
             git_repo.git.checkout(gh_pages_branch_name)
             __retrieve_package_file(
                 template_file=Path("../template/github_pages/index.html"),
@@ -982,26 +983,26 @@ class GithubPagesEndpoint:
             msg="Update sample", script_call="colrev data"
         )
 
-        DATA.REVIEW_MANAGER.logger.info("Push to github pages")
-        try:
-            remote_refs = git_repo.remote().refs
-        except ValueError:
-            remote_refs = []
+        # DATA.REVIEW_MANAGER.logger.info("Push to github pages")
+        # try:
+        #     remote_refs = git_repo.remote().refs
+        # except ValueError:
+        #     remote_refs = []
 
-        if "origin/gh-pages" in [r.name for r in remote_refs]:
-            git_repo.git.push("origin", gh_pages_branch_name)
-        else:
-            git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name)
+        # if "origin/gh-pages" in [r.name for r in remote_refs]:
+        #     git_repo.git.push("origin", gh_pages_branch_name)
+        # else:
+        #     git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name)
 
-        username, project = (
-            git_repo.remote()
-            .url.replace("https://github.com/", "")
-            .replace(".git", "")
-            .split("/")
-        )
-        DATA.REVIEW_MANAGER.logger.info(
-            f"Data available at: http://{username}.github.io/{project}/"
-        )
+        # username, project = (
+        #     git_repo.remote()
+        #     .url.replace("https://github.com/", "")
+        #     .replace(".git", "")
+        #     .split("/")
+        # )
+        # DATA.REVIEW_MANAGER.logger.info(
+        #     f"Data available at: http://{username}.github.io/{project}/"
+        # )
 
         git_repo.git.checkout(active_branch)
 
