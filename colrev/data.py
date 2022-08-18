@@ -352,12 +352,8 @@ class Data(colrev.process.Process):
         included = self.get_record_ids_for_synthesis(records)
         if 0 == len(included):
             if self.verbose:
-                self.REVIEW_MANAGER.report_logger.info(
-                    "No records included yet (use colrev screen)"
-                )
-                self.REVIEW_MANAGER.logger.info(
-                    "No records included yet (use colrev screen)"
-                )
+                self.REVIEW_MANAGER.report_logger.info("No records included yet")
+                self.REVIEW_MANAGER.logger.info("No records included yet")
 
         else:
 
