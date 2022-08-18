@@ -71,3 +71,6 @@ analysis/__pycache__/*
 .rstudio/*
 
 .ipynb_checkpoints
+
+# PyCharm
+.idea/
