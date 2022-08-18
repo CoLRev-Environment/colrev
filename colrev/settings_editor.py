@@ -74,7 +74,7 @@ class Settings(colrev.process.Process):
         def getOptions():
 
             # Decision: get the whole list of setting_options (not individually)
-            # "similarity": {'type': 'flot', 'min': 0, 'max': 1}
+            # "similarity": {'type': 'float', 'min': 0, 'max': 1}
 
             # setting_options = {
             #     "project": {
@@ -88,12 +88,13 @@ class Settings(colrev.process.Process):
         @app.route("/api/getTootip")
         def getTootip():
 
-            # TODO : develop
             # Note: do not include cases where we don't need tooltips
-            setting_tooltips = {
-                "project": {"review_type": "This is the type of review"},
-            }
-            return jsonify(setting_tooltips)
+
+            # setting_tooltips = {
+            #     "project": {"review_type": "This is the type of review"},
+            # }
+
+            return jsonify(colrev.settings.Configuration.getTooltips())
 
         @app.route("/api/getRequired")
         def getRequired():

@@ -13,6 +13,8 @@ from pathlib import Path
 
 
 class IDPpattern(Enum):
+    """Pattern for generating IDs"""
+
     first_author_year = "FIRST_AUTHOR_YEAR"
     three_authors_year = "THREE_AUTHORS_YEAR"
 
@@ -23,6 +25,8 @@ class IDPpattern(Enum):
 
 
 class ReviewType(Enum):
+    """The type of review"""
+
     curated_masterdata = "curated_masterdata"
     realtime = "realtime"
     literature_review = "literature_review"
@@ -65,6 +69,7 @@ class Protocol:
 
 
 class ShareStatReq(Enum):
+    """Record status requirements for sharing"""
 
     none = "none"
     processed = "processed"
@@ -79,8 +84,10 @@ class ShareStatReq(Enum):
 
 @dataclass
 class ProjectConfiguration:
+    """Project settings"""
+
     title: str
-    """The title of the review"""
+    __doc_title__ = "The title of the review"
     authors: typing.List[Author]
     keywords: typing.List[str]
     # status ? (development/published?)
@@ -104,6 +111,8 @@ class ProjectConfiguration:
 
 
 class SearchType(Enum):
+    """Type of search source"""
+
     DB = "DB"
     TOC = "TOC"
     BACKWARD_SEARCH = "BACKWARD_SEARCH"
@@ -212,6 +221,7 @@ class PrepConfiguration:
 
 
 class SameSourceMergePolicy(Enum):
+    """Policy for applying merges within the same search source"""
 
     prevent = "prevent"
     apply = "apply"
@@ -287,6 +297,8 @@ class PDFPrepConfiguration:
 
 
 class ScreenCriterionType(Enum):
+    """Type of screening criterion"""
+
     inclusion_criterion = "inclusion_criterion"
     exclusion_criterion = "exclusion_criterion"
 
@@ -371,30 +383,6 @@ class Configuration:
         )
 
     @classmethod
-    def getTooltips(cls):
-
-        import inspect
-
-        # def getConfigurationTooltips(conf_input):
-        # TODO : similar to getConfigurationOptions
-
-        tooltips = {}
-
-        # for key, value in cls.__dict__["__dataclass_fields__"].items():
-        #     tooltips[key] = getConfigurationTooltips(value.type)
-        # print(cls.__dict__["__dataclass_fields__"]['prep'].type.__dataclass_fields__['prep_rounds'].type)
-        # tooltips['prep']['prep_rounds'] = cls.__dict__["__dataclass_fields__"]['prep'].__doc__
-        input(
-            inspect.getdoc(
-                cls.__dict__["__dataclass_fields__"]["project"]
-                .type.__dataclass_fields__["title"]
-                .type
-            )
-        )
-        tooltips["project"]["title"] = cls.__dict__["__dataclass_fields__"]["project"]
-        return tooltips
-
-    @classmethod
     def getOptions(cls):
         import inspect
 
@@ -460,6 +448,51 @@ class Configuration:
         for key, value in cls.__dict__["__dataclass_fields__"].items():
             options_dict[key] = getConfigurationOptions(value.type)
         return options_dict
+
+    @classmethod
+    def getTooltips(cls):
+
+        import inspect
+        from enum import EnumMeta
+
+        # https://peps.python.org/pep-0224/
+        # the pep was rejected. we follow the suggestion of adding
+        # attribute docstrings as __doc_<attributename>__
+
+        # Note : currently, only fields have tooltips (not objects)
+
+        def getConfigurationTooltips(conf_input):
+            conf_tooltips_dict = {}
+
+            if hasattr(conf_input.type, "__dict__"):
+
+                if "__dataclass_fields__" in conf_input.type.__dict__:
+                    for key, value in conf_input.type.__dict__[
+                        "__dataclass_fields__"
+                    ].items():
+
+                        if value.type in (str, int, float, bool):
+                            if hasattr(conf_input.type, f"__doc_{key}__"):
+                                conf_tooltips_dict[key] = getattr(
+                                    conf_input.type, f"__doc_{key}__"
+                                )
+                            continue
+
+                        if isinstance(value.type, EnumMeta):
+                            conf_tooltips_dict[key] = value.type.__doc__
+                            continue
+
+                        if inspect.isclass(value.type):
+                            conf_tooltips_dict[key] = getConfigurationTooltips(value)
+
+            return conf_tooltips_dict
+
+        tooltips = {}
+
+        for key, value in cls.__dict__["__dataclass_fields__"].items():
+            tooltips[key] = getConfigurationTooltips(value)
+
+        return tooltips
 
 
 if __name__ == "__main__":
