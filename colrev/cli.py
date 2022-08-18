@@ -1251,9 +1251,9 @@ def data(
             print("Please update the data_format in settings.json and commit.")
         elif add_endpoint:
 
-            if add_endpoint in DATA.data_scripts:
-                endpoint = DATA.data_scripts[add_endpoint]["endpoint"]
-                ENDPOINT = endpoint()
+            if add_endpoint in DATA.built_in_scripts:
+                endpoint = DATA.built_in_scripts[add_endpoint]["endpoint"]
+                ENDPOINT = endpoint(DATA=DATA, SETTINGS={"name": add_endpoint})
 
                 default_endpoint_conf = ENDPOINT.get_default_setup()
 
