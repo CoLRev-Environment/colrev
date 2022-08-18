@@ -39,7 +39,7 @@ class Settings(colrev.process.Process):
 
         app.config["path"] = str(self.REVIEW_MANAGER.path / Path("settings.json"))
 
-        print("Settings File Path: ", app.config["path"])
+        # print("Settings File Path: ", app.config["path"])
 
         @app.route("/", defaults={"path": ""})
         def serve(path):
@@ -73,16 +73,36 @@ class Settings(colrev.process.Process):
         @app.route("/api/getOptions")
         def getOptions():
 
-            # TODO : get options individually (path as a parameter of getOptions)
-            # TODO : add getRequiredFields() (e.g., title, ...)
-            setting_options = {
-                "project": {
-                    "review_type": colrev.settings.ReviewType.get_options(),
-                    "id_pattern": colrev.settings.IDPpattern.get_options(),
-                },
-            }
+            # Decision: get the whole list of setting_options (not individually)
+            # "similarity": {'type': 'flot', 'min': 0, 'max': 1}
 
-            return jsonify(setting_options)
+            # setting_options = {
+            #     "project": {
+            #         "review_type": colrev.settings.ReviewType.getOptions(),
+            #         "id_pattern": colrev.settings.IDPpattern.getOptions(),
+            #     },
+            # }
+
+            return jsonify(colrev.settings.Configuration.getOptions())
+
+        @app.route("/api/getTootip")
+        def getTootip():
+
+            # TODO : develop
+            # Note: do not include cases where we don't need tooltips
+            setting_tooltips = {
+                "project": {"review_type": "This is the type of review"},
+            }
+            return jsonify(setting_tooltips)
+
+        @app.route("/api/getRequired")
+        def getRequired():
+
+            # TODO: add documentation/comments
+            setting_required = {
+                "project": {"review_type": True},
+            }
+            return jsonify(setting_required)
 
         @app.route("/api/getScripts")
         def getScripts(script_type):
@@ -90,7 +110,47 @@ class Settings(colrev.process.Process):
             if "source_conversion_script" == script_type:
                 script_options = list(colrev.load.Loader.built_in_scripts.keys())
 
+            if "prep_script" == script_type:
+                # TODO : generate list based on script discovery
+                script_options = [
+                    {
+                        "endpoint": "crossref_prep",
+                        "description": "The script retrieves metadata from Crossref ...",
+                    }
+                ]
+
             return jsonify(script_options)
+
+        @app.route("/api/getScriptsParametersOptions")
+        def getScriptsParametersOptions(script_type, endpoint_name, endpoint_version):
+            # TODO : generate based on script discovery
+            if "prep_script" == script_type:
+                if "crossref_prep" == endpoint_name:
+                    if "1.0.0" == endpoint_version:
+                        script_options = {
+                            "retrieval_similarity": {"type": "flot", "min": 0, "max": 1}
+                        }
+            return jsonify(script_options)
+
+        @app.route("/api/getScriptsParametersTooltip")
+        def getScriptsParametersTooltip(script_type, endpoint_name, endpoint_version):
+            # TODO : generate based on script discovery
+            if "prep_script" == script_type:
+                if "crossref_prep" == endpoint_name:
+                    if "1.0.0" == endpoint_version:
+                        script_tooltip = {
+                            "retrieval_similarity": "The similarity threshold for matching records."
+                        }
+            return jsonify(script_tooltip)
+
+        @app.route("/api/getScriptsParametersRequired")
+        def getScriptsParametersRequired(script_type, endpoint_name, endpoint_version):
+            # TODO : generate based on script discovery
+            if "prep_script" == script_type:
+                if "crossref_prep" == endpoint_name:
+                    if "1.0.0" == endpoint_version:
+                        script_required = {"retrieval_similarity": True}
+            return jsonify(script_required)
 
         self._open_browser()
         app.run(host="0.0.0.0", port="5000", debug=True, use_reloader=False)

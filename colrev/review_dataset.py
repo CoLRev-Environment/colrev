@@ -1753,9 +1753,9 @@ class ReviewDataset:
                 )
                 # raise SearchSettingsError('File not found: "
                 #                       f"{SOURCE["filename"]}')
-            if str(SOURCE.search_type) not in colrev.settings.SearchType.get_options():
+            if str(SOURCE.search_type) not in colrev.settings.SearchType.getOptions():
                 raise colrev_exceptions.SearchSettingsError(
-                    f"{SOURCE.search_type} not in {colrev.settings.SearchType.get_options()}"
+                    f"{SOURCE.search_type} not in {colrev.settings.SearchType.getOptions()}"
                 )
 
             # date_regex = r"^\d{4}-\d{2}-\d{2}$"

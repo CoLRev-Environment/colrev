@@ -17,7 +17,7 @@ class IDPpattern(Enum):
     three_authors_year = "THREE_AUTHORS_YEAR"
 
     @classmethod
-    def get_options(cls):
+    def getOptions(cls):
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -38,7 +38,7 @@ class ReviewType(Enum):
     peer_review = "peer_review"
 
     @classmethod
-    def get_options(cls):
+    def getOptions(cls):
         return cls._member_names_
 
     def __str__(self):
@@ -64,9 +64,23 @@ class Protocol:
     url: str
 
 
+class ShareStatReq(Enum):
+
+    none = "none"
+    processed = "processed"
+    screened = "screened"
+    completed = "completed"
+
+    @classmethod
+    def getOptions(cls):
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
 @dataclass
 class ProjectConfiguration:
     title: str
+    """The title of the review"""
     authors: typing.List[Author]
     keywords: typing.List[str]
     # status ? (development/published?)
@@ -74,7 +88,7 @@ class ProjectConfiguration:
     # publication: ... (reference, link, ....)
     review_type: ReviewType
     id_pattern: IDPpattern
-    share_stat_req: str
+    share_stat_req: ShareStatReq
     delay_automated_processing: bool
     curation_url: typing.Optional[str]
     curated_masterdata: bool
@@ -98,7 +112,7 @@ class SearchType(Enum):
     OTHER = "OTHER"
 
     @classmethod
-    def get_options(cls):
+    def getOptions(cls):
         return cls._member_names_
 
     def __str__(self):
@@ -197,9 +211,21 @@ class PrepConfiguration:
 # Dedupe
 
 
+class SameSourceMergePolicy(Enum):
+
+    prevent = "prevent"
+    apply = "apply"
+    warn = "warn"
+
+    @classmethod
+    def getOptions(cls):
+        # pylint: disable=no-member
+        return cls._member_names_
+
+
 @dataclass
 class DedupeConfiguration:
-    same_source_merges: str  # TODO : "prevent" or "apply"
+    same_source_merges: SameSourceMergePolicy
     scripts: list
 
     def __str__(self):
@@ -265,7 +291,7 @@ class ScreenCriterionType(Enum):
     exclusion_criterion = "exclusion_criterion"
 
     @classmethod
-    def get_options(cls):
+    def getOptions(cls):
         # pylint: disable=no-member
         return cls._member_names_
 
@@ -343,6 +369,97 @@ class Configuration:
             + "\nData\n"
             + str(self.data)
         )
+
+    @classmethod
+    def getTooltips(cls):
+
+        import inspect
+
+        # def getConfigurationTooltips(conf_input):
+        # TODO : similar to getConfigurationOptions
+
+        tooltips = {}
+
+        # for key, value in cls.__dict__["__dataclass_fields__"].items():
+        #     tooltips[key] = getConfigurationTooltips(value.type)
+        # print(cls.__dict__["__dataclass_fields__"]['prep'].type.__dataclass_fields__['prep_rounds'].type)
+        # tooltips['prep']['prep_rounds'] = cls.__dict__["__dataclass_fields__"]['prep'].__doc__
+        input(
+            inspect.getdoc(
+                cls.__dict__["__dataclass_fields__"]["project"]
+                .type.__dataclass_fields__["title"]
+                .type
+            )
+        )
+        tooltips["project"]["title"] = cls.__dict__["__dataclass_fields__"]["project"]
+        return tooltips
+
+    @classmethod
+    def getOptions(cls):
+        import inspect
+
+        def getConfigurationOptions(conf_input):
+            conf_options_dict = {}
+            # conf_cls = conf_input.type
+            conf_cls = conf_input
+
+            # https://stackoverflow.com/questions/50563546/validating-detailed-types-in-python-dataclasses
+            if hasattr(conf_cls, "__dict__"):
+                if "__dataclass_fields__" not in conf_cls.__dict__:
+
+                    if conf_cls == type(None):  # noqa: E721
+                        return "optional"
+
+                    if conf_cls in (int, str, float, bool):
+                        return conf_cls
+
+                    if conf_cls in [list]:
+                        # input(conf_cls)
+                        return []
+
+                    print(f"Error: {conf_cls}")
+
+                else:
+                    for key, value in conf_cls.__dict__["__dataclass_fields__"].items():
+
+                        if value.type in (int, str, float, bool):
+                            conf_options_dict[key] = value.type
+                            continue
+
+                        getOptions = getattr(value.type, "getOptions", None)
+                        if callable(getOptions):
+                            conf_options_dict[key] = value.type.getOptions()
+                            continue
+
+                        if typing.get_origin(value.type) in [list, typing.Union]:
+                            conf_options_dict[key] = []
+                            for element in typing.get_args(value.type):
+                                conf_options_dict[key].append(
+                                    getConfigurationOptions(element)
+                                )
+                            continue
+
+                        if typing.get_origin(value.type) in [dict]:
+                            conf_options_dict[key] = {}
+                            dict_key, dict_value = typing.get_args(value.type)
+                            conf_options_dict[key][dict_key] = getConfigurationOptions(
+                                dict_value
+                            )
+
+                        elif inspect.isclass(value.type):
+                            conf_options_dict[key] = getConfigurationOptions(value.type)
+                        else:
+                            print(f"Error: {conf_cls}")
+
+            else:
+                print(f"not hasattr __dict_: {conf_cls}")
+
+            return conf_options_dict
+
+        options_dict = {}
+        for key, value in cls.__dict__["__dataclass_fields__"].items():
+            options_dict[key] = getConfigurationOptions(value.type)
+        return options_dict
 
 
 if __name__ == "__main__":

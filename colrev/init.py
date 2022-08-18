@@ -161,12 +161,12 @@ class Initializer:
 
         if (
             settings["project"]["review_type"]
-            not in colrev.settings.ReviewType.get_options()
+            not in colrev.settings.ReviewType.getOptions()
         ):
             raise colrev_exceptions.ParameterError(
                 parameter="settings.project.review_type",
                 value=f"'{settings['project']['review_type']}'",
-                options=colrev.settings.ReviewType.get_options(),
+                options=colrev.settings.ReviewType.getOptions(),
             )
 
         self.review_type = settings["project"]["review_type"]
