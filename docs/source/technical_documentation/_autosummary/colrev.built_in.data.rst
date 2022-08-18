@@ -21,6 +21,7 @@ colrev.built\_in.data
       :nosignatures:
 
       EndnoteEndpoint
+      GithubPagesEndpoint
       ManuscriptEndpoint
       PRISMAEndpoint
       StructuredDataEndpoint

@@ -35,6 +35,9 @@ class Data(colrev.process.Process):
         "PRISMA": {
             "endpoint": built_in_data.PRISMAEndpoint,
         },
+        "GITHUB_PAGES": {
+            "endpoint": built_in_data.GithubPagesEndpoint,
+        },
         "ZETTLR": {
             "endpoint": built_in_data.ZettlrEndpoint,
         },

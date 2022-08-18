@@ -13,6 +13,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 
+import git
 import pandas as pd
 import requests
 import zope.interface
@@ -909,6 +910,108 @@ class ZettlrEndpoint:
 
         # Note : automatically set all to True / synthesized
         for syn_ID in list(synthesized_record_status_matrix.keys()):
+            synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
+
+
+@zope.interface.implementer(colrev.process.DataEndpoint)
+class GithubPagesEndpoint:
+    def __init__(self, *, SETTINGS):
+        self.SETTINGS = from_dict(
+            data_class=colrev.process.DefaultSettings, data=SETTINGS
+        )
+
+    def get_default_setup(self):
+        structured_endpoint_details = {"endpoint": "GITHUB_PAGES"}
+        return structured_endpoint_details
+
+    def update_data(self, DATA, records: dict, synthesized_record_status_matrix: dict):
+        # pylint: disable=redefined-outer-name
+
+        import colrev.review_dataset
+
+        def __retrieve_package_file(*, template_file: Path, target: Path) -> None:
+
+            filedata = pkgutil.get_data(__name__, str(template_file))
+            if filedata:
+                with open(target, "w", encoding="utf8") as file:
+                    file.write(filedata.decode("utf-8"))
+
+        if DATA.REVIEW_MANAGER.REVIEW_DATASET.has_changes():
+            DATA.REVIEW_MANAGER.logger.error(
+                "Cannot update github pages becuase there are uncommited changes."
+            )
+
+        records = DATA.REVIEW_MANAGER.REVIEW_DATASET.load_records_dict()
+
+        git_repo = git.Repo()
+        repo_heads_names = [h.name for h in git_repo.heads]
+
+        active_branch = git_repo.active_branch
+        gh_pages_branch_name = "gh-pages"
+
+        if gh_pages_branch_name in repo_heads_names:
+            git_repo.git.checkout(gh_pages_branch_name)
+        else:
+            # if branch does not exist: create and add index.html
+            DATA.REVIEW_MANAGER.logger.info("Setup github pages")
+            git_repo.git.checkout(gh_pages_branch_name)
+            __retrieve_package_file(
+                template_file=Path("../template/github_pages/index.html"),
+                target=Path("index.html"),
+            )
+            DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path="index.html")
+
+        DATA.REVIEW_MANAGER.logger.info("Update data on github pages")
+
+        included_records = {
+            r["ID"]: r
+            for r in records.values()
+            if r["colrev_status"]
+            in [
+                colrev.record.RecordState.rev_synthesized,
+                colrev.record.RecordState.rev_included,
+            ]
+        }
+        data_file = Path("data.bib")
+        colrev.review_dataset.ReviewDataset.save_records_dict_to_file(
+            records=included_records, save_path=data_file
+        )
+        DATA.REVIEW_MANAGER.REVIEW_DATASET.add_changes(path=str(data_file))
+
+        DATA.REVIEW_MANAGER.create_commit(
+            msg="Update sample", script_call="colrev data"
+        )
+
+        DATA.REVIEW_MANAGER.logger.info("Push to github pages")
+        try:
+            remote_refs = git_repo.remote().refs
+        except ValueError:
+            remote_refs = []
+
+        if "origin/gh-pages" in [r.name for r in remote_refs]:
+            git_repo.git.push("origin", gh_pages_branch_name)
+        else:
+            git_repo.git.push("--set-upstream", "origin", gh_pages_branch_name)
+
+        username, project = (
+            git_repo.remote()
+            .url.replace("https://github.com/", "")
+            .replace(".git", "")
+            .split("/")
+        )
+        DATA.REVIEW_MANAGER.logger.info(
+            f"Data available at: http://{username}.github.io/{project}/"
+        )
+
+        git_repo.git.checkout(active_branch)
+
+        return
+
+    def update_record_status_matrix(
+        self, DATA, synthesized_record_status_matrix, endpoint_identifier
+    ):
+
+        for syn_ID in synthesized_record_status_matrix:
             synthesized_record_status_matrix[syn_ID][endpoint_identifier] = True
 
 
