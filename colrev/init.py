@@ -406,6 +406,7 @@ class Initializer:
                 + ".corrections\n"
                 + ".ipynb_checkpoints/\n"
                 + "pdfs\n"
+                + "report.log\n"
                 + "requests_cache.sqlite\n"
                 + "__pycache__\n"
                 + ".tei"
