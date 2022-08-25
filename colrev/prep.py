@@ -5,11 +5,8 @@ import pkgutil
 import time
 import typing
 from copy import deepcopy
-from datetime import timedelta
-from pathlib import Path
 
 import git
-import requests_cache
 import timeout_decorator
 from pathos.multiprocessing import ProcessPool
 
@@ -191,14 +188,6 @@ class Preparation(colrev.process.Process):
         # saved_args["RETRIEVAL_SIMILARITY"] = similarity
 
         self.CPUS: int = self.CPUS * 4
-
-        EnvironmentManager = self.REVIEW_MANAGER.get_environment_service(
-            service_identifier="EnvironmentManager"
-        )
-        cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-        self.session = requests_cache.CachedSession(
-            str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-        )
 
     def check_DBs_availability(self) -> None:
 

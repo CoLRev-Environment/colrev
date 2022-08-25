@@ -14,6 +14,7 @@ import typing
 from collections import Counter
 from contextlib import redirect_stdout
 from dataclasses import asdict
+from datetime import timedelta
 from enum import Enum
 from importlib.metadata import version
 from pathlib import Path
@@ -21,6 +22,7 @@ from pathlib import Path
 import dacite
 import git
 import pandas as pd
+import requests_cache
 import yaml
 from dacite import from_dict
 from git.exc import GitCommandError
@@ -2119,6 +2121,14 @@ class ReviewManager:
             return colrev.environment.TEIParser
         if "EnvironmentManager" == service_identifier:
             return colrev.environment.EnvironmentManager
+        if "CachedSession" == service_identifier:
+            cache_path = colrev.environment.EnvironmentManager.colrev_path / Path(
+                "prep_requests_cache"
+            )
+            session = requests_cache.CachedSession(
+                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
+            )
+            return session
         if "ZoteroTranslationService" == service_identifier:
             return colrev.environment.ZoteroTranslationService
         if "ScreenshotService" == service_identifier:

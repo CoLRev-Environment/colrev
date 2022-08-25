@@ -4,13 +4,10 @@ import json
 import re
 import sys
 import urllib
-from datetime import timedelta
-from pathlib import Path
 from sqlite3 import OperationalError
 from urllib.parse import unquote
 
 import requests
-import requests_cache
 from bs4 import BeautifulSoup
 from thefuzz import fuzz
 
@@ -148,23 +145,16 @@ class DOIConnector:
         *,
         REVIEW_MANAGER,
         RECORD,
-        session=None,
         TIMEOUT: int = 10,
     ):
         if "doi" not in RECORD.data:
             return RECORD
 
         try:
-            if session is None:
-                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
-                    service_identifier="EnvironmentManager"
-                )
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
-                )
-                session = requests_cache.CachedSession(
-                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-                )
+
+            session = REVIEW_MANAGER.get_environment_service(
+                service_identifier="CachedSession"
+            )
 
             # for testing:
             # curl -iL -H "accept: application/vnd.citationstyles.csl+json"
@@ -224,9 +214,7 @@ class DOIConnector:
         return RECORD
 
     @classmethod
-    def get_link_from_doi(
-        cls, *, RECORD, session=None, TIMEOUT: int = 10, REVIEW_MANAGER
-    ) -> None:
+    def get_link_from_doi(cls, *, RECORD, TIMEOUT: int = 10, REVIEW_MANAGER) -> None:
 
         doi_url = f"https://www.doi.org/{RECORD.data['doi']}"
 
@@ -257,16 +245,10 @@ class DOIConnector:
 
         try:
             url = doi_url
-            if session is None:
-                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
-                    service_identifier="EnvironmentManager"
-                )
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
-                )
-                session = requests_cache.CachedSession(
-                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-                )
+
+            session = REVIEW_MANAGER.get_environment_service(
+                service_identifier="CachedSession"
+            )
 
             requests_headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) "
@@ -341,7 +323,6 @@ class CrossrefConnector:
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 RECORD_INPUT=colrev.record.PrepRecord(data=test_rec),
                 jour_vol_iss_list=False,
-                session=PREPARATION.session,
                 TIMEOUT=PREPARATION.TIMEOUT,
             )[0]
 
@@ -524,7 +505,6 @@ class CrossrefConnector:
         REVIEW_MANAGER,
         RECORD_INPUT,
         jour_vol_iss_list: bool = False,
-        session=None,
         TIMEOUT: int = 10,
     ) -> list:
         # https://github.com/CrossRef/rest-api-doc
@@ -573,16 +553,10 @@ class CrossrefConnector:
         headers = {"user-agent": f"{__name__} (mailto:{REVIEW_MANAGER.EMAIL})"}
         record_list = []
         try:
-            if session is None:
-                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
-                    service_identifier="EnvironmentManager"
-                )
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
-                )
-                session = requests_cache.CachedSession(
-                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-                )
+
+            session = REVIEW_MANAGER.get_environment_service(
+                service_identifier="CachedSession"
+            )
 
             REVIEW_MANAGER.logger.debug(url)
             ret = session.request("GET", url, headers=headers, timeout=TIMEOUT)
@@ -656,20 +630,9 @@ class CrossrefConnector:
         return record_list
 
     @classmethod
-    def get_masterdata_from_crossref(
-        cls, *, PREPARATION, RECORD, session=None, TIMEOUT: int = 10
-    ):
+    def get_masterdata_from_crossref(cls, *, PREPARATION, RECORD, TIMEOUT: int = 10):
         # To test the metadata provided for a particular DOI use:
         # https://api.crossref.org/works/DOI
-
-        if session is None:
-            EnvironmentManager = PREPARATION.REVIEW_MANAGER.get_environment_service(
-                service_identifier="EnvironmentManager"
-            )
-            cache_path = EnvironmentManager.colrev_path / Path("prep_requests_cache")
-            session = requests_cache.CachedSession(
-                str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-            )
 
         # https://github.com/OpenAPC/openapc-de/blob/master/python/import_dois.py
         if len(RECORD.data.get("title", "")) > 35:
@@ -679,7 +642,6 @@ class CrossrefConnector:
                     REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                     RECORD_INPUT=RECORD,
                     jour_vol_iss_list=False,
-                    session=session,
                     TIMEOUT=TIMEOUT,
                 )
                 RETRIEVED_RECORD = RETRIEVED_REC_L.pop()
@@ -694,7 +656,6 @@ class CrossrefConnector:
                         REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                         RECORD_INPUT=RECORD,
                         jour_vol_iss_list=False,
-                        session=session,
                         TIMEOUT=TIMEOUT,
                     )
                     RETRIEVED_RECORD = RETRIEVED_REC_L.pop()
@@ -722,7 +683,8 @@ class CrossrefConnector:
                         RECORD.remove_field(key="warning")
                     else:
                         DOIConnector.get_link_from_doi(
-                            RECORD=RECORD, REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER
+                            RECORD=RECORD,
+                            REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                         )
                         RECORD.set_masterdata_complete()
                         RECORD.set_status(
@@ -768,7 +730,6 @@ class DBLPConnector:
             DBLP_REC = DBLPConnector.retrieve_dblp_records(
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 query=query,
-                session=PREPARATION.session,
             )[0]
 
             if 0 != len(DBLP_REC.data):
@@ -788,7 +749,6 @@ class DBLPConnector:
         REVIEW_MANAGER,
         query: str = None,
         url: str = None,
-        session=None,
         TIMEOUT: int = 10,
     ) -> list:
         def dblp_json_to_dict(item: dict) -> dict:
@@ -889,17 +849,9 @@ class DBLPConnector:
 
             assert query is not None or url is not None
 
-            if session is None:
-
-                EnvironmentManager = REVIEW_MANAGER.get_environment_service(
-                    service_identifier="EnvironmentManager"
-                )
-                cache_path = EnvironmentManager.colrev_path / Path(
-                    "prep_requests_cache"
-                )
-                session = requests_cache.CachedSession(
-                    str(cache_path), backend="sqlite", expire_after=timedelta(days=30)
-                )
+            session = REVIEW_MANAGER.get_environment_service(
+                service_identifier="CachedSession"
+            )
 
             api_url = "https://dblp.org/search/publ/api?q="
             items = []

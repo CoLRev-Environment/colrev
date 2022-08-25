@@ -248,9 +248,13 @@ class RemoveError500URLsPrep:
     @timeout_decorator.timeout(60, use_signals=False)
     def prepare(self, PREPARATION, RECORD):
 
+        session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="CachedSession"
+        )
+
         try:
             if "url" in RECORD.data:
-                r = PREPARATION.session.request(
+                r = session.request(
                     "GET",
                     RECORD.data["url"],
                     headers=PREPARATION.requests_headers,
@@ -262,7 +266,7 @@ class RemoveError500URLsPrep:
             pass
         try:
             if "fulltext" in RECORD.data:
-                r = PREPARATION.session.request(
+                r = session.request(
                     "GET",
                     RECORD.data["fulltext"],
                     headers=PREPARATION.requests_headers,
@@ -298,9 +302,13 @@ class RemoveBrokenIDPrep:
                 RECORD.remove_field(key="doi")
         if "isbn" in RECORD.data:
             try:
+                session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+                    service_identifier="CachedSession"
+                )
+
                 isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = PREPARATION.session.request(
+                ret = session.request(
                     "GET",
                     url,
                     headers=PREPARATION.requests_headers,
@@ -604,13 +612,15 @@ class SemanticScholarPrep:
         self, *, PREPARATION, url: str, RECORD_IN: colrev.record.PrepRecord
     ) -> colrev.record.PrepRecord:
 
+        session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="CachedSession"
+        )
+
         PREPARATION.REVIEW_MANAGER.logger.debug(url)
         headers = {
             "user-agent": f"{__name__} (mailto:{PREPARATION.REVIEW_MANAGER.EMAIL})"
         }
-        ret = PREPARATION.session.request(
-            "GET", url, headers=headers, timeout=PREPARATION.TIMEOUT
-        )
+        ret = session.request("GET", url, headers=headers, timeout=PREPARATION.TIMEOUT)
         ret.raise_for_status()
 
         data = json.loads(ret.text)
@@ -623,7 +633,7 @@ class SemanticScholarPrep:
         paper_id = items[0]["paperId"]
         record_retrieval_url = "https://api.semanticscholar.org/v1/paper/" + paper_id
         PREPARATION.REVIEW_MANAGER.logger.debug(record_retrieval_url)
-        ret_ent = PREPARATION.session.request(
+        ret_ent = session.request(
             "GET", record_retrieval_url, headers=headers, timeout=PREPARATION.TIMEOUT
         )
         ret_ent.raise_for_status()
@@ -748,6 +758,10 @@ class DOIFromURLsPrep:
             PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
         )
 
+        session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="CachedSession"
+        )
+
         url = RECORD.data.get("url", RECORD.data.get("fulltext", "NA"))
         if "NA" != url:
             try:
@@ -756,7 +770,7 @@ class DOIFromURLsPrep:
                     "user-agent": f"{__name__}  "
                     f"(mailto:{PREPARATION.REVIEW_MANAGER.EMAIL})"
                 }
-                ret = PREPARATION.session.request(
+                ret = session.request(
                     "GET", url, headers=headers, timeout=PREPARATION.TIMEOUT
                 )
                 ret.raise_for_status()
@@ -778,7 +792,6 @@ class DOIFromURLsPrep:
                         colrev.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
                             REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                             RECORD=RETRIEVED_RECORD,
-                            session=PREPARATION.session,
                             TIMEOUT=PREPARATION.TIMEOUT,
                         )
 
@@ -824,7 +837,6 @@ class DOIMetadataPrep:
         colrev.built_in.database_connectors.DOIConnector.retrieve_doi_metadata(
             REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
             RECORD=RECORD,
-            session=PREPARATION.session,
             TIMEOUT=PREPARATION.TIMEOUT,
         )
         colrev.built_in.database_connectors.DOIConnector.get_link_from_doi(
@@ -897,7 +909,6 @@ class DBLPMetadataPrep:
             ) in colrev.built_in.database_connectors.DBLPConnector.retrieve_dblp_records(
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 query=query,
-                session=PREPARATION.session,
             ):
                 similarity = colrev.record.PrepRecord.get_retrieval_similarity(
                     RECORD_ORIGINAL=RECORD,
@@ -991,13 +1002,17 @@ class OpenLibraryMetadataPrep:
         if RECORD.data.get("ENTRYTYPE", "NA") != "book":
             return RECORD
 
+        session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+            service_identifier="CachedSession"
+        )
+
         try:
             # TODO : integrate more functionality into open_library_json_to_record()
             url = "NA"
             if "isbn" in RECORD.data:
                 isbn = RECORD.data["isbn"].replace("-", "").replace(" ", "")
                 url = f"https://openlibrary.org/isbn/{isbn}.json"
-                ret = PREPARATION.session.request(
+                ret = session.request(
                     "GET",
                     url,
                     headers=PREPARATION.requests_headers,
@@ -1035,7 +1050,7 @@ class OpenLibraryMetadataPrep:
                 if ":" in title:
                     title = title[: title.find(":")]  # To catch sub-titles
                 url = url + "&title=" + title.replace(" ", "+")
-                ret = PREPARATION.session.request(
+                ret = session.request(
                     "GET",
                     url,
                     headers=PREPARATION.requests_headers,
@@ -1117,16 +1132,20 @@ class CiteAsPrep:
         if "title" not in RECORD.data:
             return RECORD
 
-        same_record_type_required = (
-            PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
-        )
         try:
 
+            same_record_type_required = (
+                PREPARATION.REVIEW_MANAGER.settings.project.curated_masterdata
+            )
+
+            session = PREPARATION.REVIEW_MANAGER.get_environment_service(
+                service_identifier="CachedSession"
+            )
             url = (
                 f"https://api.citeas.org/product/{RECORD.data['title']}?"
                 + f"email={PREPARATION.REVIEW_MANAGER.EMAIL}"
             )
-            ret = PREPARATION.session.request(
+            ret = session.request(
                 "GET",
                 url,
                 headers=PREPARATION.requests_headers,
@@ -1193,7 +1212,6 @@ class CrossrefYearVolIssPrep:
                 REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                 RECORD_INPUT=RECORD,
                 jour_vol_iss_list=True,
-                session=PREPARATION.session,
                 TIMEOUT=PREPARATION.TIMEOUT,
             )
             retries = 0
@@ -1203,7 +1221,6 @@ class CrossrefYearVolIssPrep:
                     REVIEW_MANAGER=PREPARATION.REVIEW_MANAGER,
                     RECORD_INPUT=RECORD,
                     jour_vol_iss_list=True,
-                    session=PREPARATION.session,
                     TIMEOUT=PREPARATION.TIMEOUT,
                 )
             if 0 == len(RETRIEVED_REC_L):
